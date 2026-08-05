@@ -88,6 +88,7 @@
                             @click="editItem(item)"
                         />
                         <ActionButton
+                            v-if="canDelete"
                             action="delete"
                             :title="t('common.delete')"
                             @click="deleteItem(item)"
@@ -130,18 +131,21 @@
                             ? t('workflow.state_workflow.add_state_association')
                             : t('workflow.state_workflow.edit_state_association')
                     "
-                    :show-save="isEditable"
+                    :show-save="canSave"
                     :saving="saving"
                     @cancel="requestClose"
                     @save="saveAndClose"
                 />
                 <v-card-text>
-                    <v-form ref="formRef">
+                    <v-form
+                        ref="formRef"
+                        :disabled="!canSave"
+                    >
                         <v-select
                             v-model="editedItem.entity_type"
                             :items="entityTypeFilter"
                             :label="t('workflow.state_workflow.entity_type')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             variant="outlined"
                             density="comfortable"
                             class="mb-3"
@@ -154,7 +158,7 @@
                             item-title="display_name"
                             item-value="id"
                             :label="t('workflow.state_workflow.state')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             variant="outlined"
                             density="comfortable"
                             class="mb-3"
@@ -165,7 +169,7 @@
                             v-model="editedItem.state_type"
                             :items="stateTypeOptions"
                             :label="t('workflow.state_workflow.state_type')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             variant="outlined"
                             density="comfortable"
                             class="mb-3"
@@ -174,7 +178,7 @@
                         <v-text-field
                             v-model.number="editedItem.sort_order"
                             :label="t('workflow.state_workflow.sort_order')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             variant="outlined"
                             type="number"
                             density="comfortable"
@@ -184,7 +188,7 @@
                         <v-switch
                             v-model="editedItem.is_active"
                             :label="t('workflow.state_workflow.is_active')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             color="primary"
                         />
                     </v-form>
@@ -296,8 +300,11 @@
     ]
 
     const canCreate = computed(() => checkPermission('CONFIG_WORKFLOW_CREATE'))
+    const canUpdate = computed(() => checkPermission('CONFIG_WORKFLOW_UPDATE'))
+    const canDelete = computed(() => checkPermission('CONFIG_WORKFLOW_DELETE'))
 
     const isEditable = computed(() => editedIndex.value === -1 || editedItem.value.editable)
+    const canSave = computed(() => isEditable.value && (editedIndex.value === -1 ? canCreate.value : canUpdate.value))
 
     const availableStates = computed<StateDefinition[]>(() =>
         Array.isArray(configStore.stateDefinitions.items) ? (configStore.stateDefinitions.items as StateDefinition[]) : []
@@ -347,6 +354,7 @@
     }
 
     function addItem(): void {
+        if (!canCreate.value) return
         editedIndex.value = -1
         editedItem.value = { ...defaultItem }
         dialogEdit.value = true
@@ -360,7 +368,7 @@
     }
 
     function deleteItem(item: StateEntityTypeRecord): void {
-        if (!item.editable) return
+        if (!canDelete.value || !item.editable) return
         const records = filteredRecords.value
         editedIndex.value = records.indexOf(item)
         editedItem.value = { ...item }
@@ -381,6 +389,7 @@
     // Persists the form. Returns true on success so the unsaved-changes guard can
     // decide whether to close the dialog (it closes only on a successful save).
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         const { valid } = (await formRef.value?.validate()) as FormValidationResult
         if (!valid) {
             return false
@@ -441,7 +450,7 @@
     )
 
     async function deleteRecord(): Promise<void> {
-        if (!editedItem.value.editable) {
+        if (!canDelete.value || !editedItem.value.editable) {
             closeDelete()
             return
         }

@@ -51,6 +51,7 @@
                         @click="handleEdit(asDataProviderItem(item))"
                     />
                     <ActionButton
+                        v-if="canDelete"
                         action="delete"
                         :title="t('common.delete')"
                         @click="handleDelete(asDataProviderItem(item))"
@@ -69,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
+    import { computed, ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteDataProvider } from '@/api/config'
@@ -77,6 +78,7 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import SearchField from '@/components/common/SearchField.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { useAuth } from '@/composables/useAuth'
 
     type HeaderEntry = {
         title: string
@@ -99,6 +101,8 @@
 
     const { t } = useI18n()
     const configStore = useConfigStore()
+    const { checkPermission } = useAuth()
+    const canDelete = computed(() => checkPermission('CONFIG_DATA_PROVIDER_DELETE'))
 
     const search = ref('')
     const editItem = ref<DataProviderItem | null>(null)
@@ -133,12 +137,13 @@
     }
 
     const handleDelete = (item: DataProviderItem): void => {
+        if (!canDelete.value) return
         itemToDelete.value = item
         deleteDialog.value = true
     }
 
     const confirmDelete = async (): Promise<void> => {
-        if (!itemToDelete.value) {
+        if (!canDelete.value || !itemToDelete.value) {
             return
         }
         try {

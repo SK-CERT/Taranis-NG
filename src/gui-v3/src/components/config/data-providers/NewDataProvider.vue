@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('data_providers.data.edit') : t('data_providers.data.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -184,9 +186,11 @@
 
     const canCreate = computed(() => checkPermission('CONFIG_DATA_PROVIDER_CREATE'))
     const isEdit = computed(() => !!localItem.value.id)
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_DATA_PROVIDER_UPDATE' : 'CONFIG_DATA_PROVIDER_CREATE'))
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 
