@@ -250,4 +250,46 @@ describe('SSE consumer components', () => {
             wrapper?.unmount()
         }
     })
+
+    it('coalesces full resynchronization for active Assess, Analyze, and Publish lists without changing selections', async () => {
+        vi.useFakeTimers()
+        const wrappers = [
+            mountWithPlugins(ContentDataAssess, {
+                props: { analyze_selector: false },
+                global: { stubs: commonStubs }
+            }),
+            mountWithPlugins(ContentDataAnalyze, {
+                props: { remoteReports: false },
+                global: { stubs: commonStubs }
+            }),
+            mountWithPlugins(ContentDataPublish, {
+                props: { selection: [] },
+                global: { stubs: commonStubs }
+            })
+        ]
+
+        try {
+            await flushPromises()
+            vi.clearAllMocks()
+
+            for (let i = 0; i < 8; i++) window.dispatchEvent(new CustomEvent('sse-resync'))
+            await vi.advanceTimersByTimeAsync(100)
+            await flushPromises()
+
+            expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(1)
+            expect(mockAnalyzeStore.loadReportItems).toHaveBeenCalledTimes(1)
+            expect(mockAnalyzeStore.loadReportItemTypes).toHaveBeenCalledTimes(1)
+            expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
+            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(1)
+            expect(mockAssessStore.select).not.toHaveBeenCalled()
+            expect(mockAssessStore.deselect).not.toHaveBeenCalled()
+            expect(mockAnalyzeStore.selectReport).not.toHaveBeenCalled()
+            expect(mockAnalyzeStore.deselectReport).not.toHaveBeenCalled()
+            expect(mockPublishStore.select).not.toHaveBeenCalled()
+            expect(mockPublishStore.deselect).not.toHaveBeenCalled()
+        } finally {
+            wrappers.forEach((wrapper) => wrapper.unmount())
+            vi.useRealTimers()
+        }
+    })
 })

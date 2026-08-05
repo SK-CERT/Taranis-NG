@@ -79,6 +79,7 @@
     import { getAllUserProductTypes } from '@/api/user'
     import CardProduct from './CardProduct.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
+    import { useSseResync } from '@/composables/useSseResync'
 
     type ProductItem = {
         id: string | number
@@ -277,6 +278,8 @@
         // The animation will trigger when the deleted item is missing from the new data
         updateData(false, true)
     }
+
+    useSseResync(() => updateData(false, true))
 
     onMounted(() => {
         updateData(false, false)

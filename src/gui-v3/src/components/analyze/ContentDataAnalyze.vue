@@ -82,6 +82,7 @@
     import { useAnalyzeStore } from '@/stores/analyze'
     import CardAnalyze from './CardAnalyze.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
+    import { useSseResync } from '@/composables/useSseResync'
 
     type ReportItem = {
         id: string | number
@@ -309,6 +310,8 @@
     const handleReportItemsUpdate = (): void => {
         updateData(false, true)
     }
+
+    useSseResync(() => updateData(false, true))
 
     onMounted(() => {
         updateData(false, false)

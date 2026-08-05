@@ -48,6 +48,7 @@
     import { useRoute, useRouter } from 'vue-router'
     import GroupNavList from '@/components/common/GroupNavList.vue'
     import { useAssetsStore } from '@/stores/assets'
+    import { useSseResync } from '@/composables/useSseResync'
 
     const store = useAssetsStore()
     const route = useRoute()
@@ -82,20 +83,22 @@
         if (!hasActiveGroup) await router.replace(firstGroup.route)
     }
 
-    const loadGroups = (): Promise<void> => {
+    const fetchGroups = (silent: boolean): Promise<void> => {
         if (loadPromise) return loadPromise
 
         loadPromise = (async () => {
-            loading.value = true
-            loadError.value = false
-            groupsLoaded.value = false
+            if (!silent) {
+                loading.value = true
+                loadError.value = false
+                groupsLoaded.value = false
+            }
             try {
                 await store.loadAssetGroups({ search: '' })
                 groupsLoaded.value = true
             } catch {
-                loadError.value = true
+                if (!silent) loadError.value = true
             } finally {
-                loading.value = false
+                if (!silent) loading.value = false
                 loadPromise = null
             }
 
@@ -104,6 +107,10 @@
 
         return loadPromise
     }
+
+    const loadGroups = (): Promise<void> => fetchGroups(false)
+
+    useSseResync(() => fetchGroups(true))
 
     watch(activeGroupId, () => void reconcileRoute())
     onMounted(() => void loadGroups())

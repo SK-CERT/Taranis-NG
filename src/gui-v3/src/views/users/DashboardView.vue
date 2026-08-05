@@ -266,6 +266,7 @@
     import { format } from 'date-fns'
     import gitMeta from '../../../git-info.json'
     import packageJson from '../../../package.json'
+    import { useSseResync } from '@/composables/useSseResync'
 
     const dashboardStore = useDashboardStore()
     const { t, te, locale } = useI18n()
@@ -404,6 +405,7 @@
     })
 
     let refreshInterval: ReturnType<typeof setInterval> | null = null
+    let refreshPromise: Promise<void> | null = null
 
     /**
      * Get translated state display name
@@ -423,17 +425,29 @@
     /**
      * Refresh dashboard data
      */
-    const refreshDashboard = async (): Promise<void> => {
-        if (refreshing.value) return
-        refreshing.value = true
-        try {
-            await dashboardStore.loadDashboardData()
-        } catch (error) {
-            console.error('[Dashboard] Error refreshing data:', error)
-        } finally {
-            refreshing.value = false
-        }
+    const refreshDashboard = (): Promise<void> => {
+        if (refreshPromise) return refreshPromise
+
+        refreshPromise = (async () => {
+            refreshing.value = true
+            try {
+                await dashboardStore.loadDashboardData()
+            } catch (error) {
+                console.error('[Dashboard] Error refreshing data:', error)
+            } finally {
+                refreshing.value = false
+                refreshPromise = null
+            }
+        })()
+        return refreshPromise
     }
+
+    const resyncDashboard = async (): Promise<void> => {
+        if (refreshPromise) await refreshPromise
+        await refreshDashboard()
+    }
+
+    useSseResync(resyncDashboard)
 
     /**
      * Component mount

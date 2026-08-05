@@ -10,6 +10,7 @@ export const useAssetsStore = defineStore('assets', () => {
     const assetGroups = ref<ListResponse<AssetGroup>>(empty())
     const notificationTemplates = ref<ListResponse<NotificationTemplate>>(empty())
     const assets = ref<ListResponse<Asset>>(empty())
+    let assetLoadSequence = 0
 
     async function loadAssetGroups(filter: { search?: string } = {}): Promise<ApiResponse<ListResponse<AssetGroup>>> {
         const response = (await getAllAssetGroups(filter)) as ApiResponse<ListResponse<AssetGroup>>
@@ -24,8 +25,9 @@ export const useAssetsStore = defineStore('assets', () => {
     }
 
     async function loadAssets(data: { group_id: string; filter: AssetFilter }): Promise<ApiResponse<ListResponse<Asset>>> {
+        const requestId = ++assetLoadSequence
         const response = (await getAllAssets(data)) as ApiResponse<ListResponse<Asset>>
-        assets.value = response.data || empty()
+        if (requestId === assetLoadSequence) assets.value = response.data || empty()
         return response
     }
 
