@@ -5,7 +5,7 @@ organisations. It supports OSINT gathering, analysis and reporting;
 team-to-team collaboration; and includes a user portal for simple self-service
 asset management.
 
-![](docs/images/screenshot.png)
+![Taranis NG Vue 3 dashboard, assessment workflow, and generated bulletin](docs/images/screenshot_vue3.png)
 
 Taranis crawls various **data sources** such as web sites or tweets to gather
 unstructured **news items**. These are processed by analysts to create
