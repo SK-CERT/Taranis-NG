@@ -225,6 +225,11 @@
     }
 
     type DescriptionMode = 'new' | 'edit' | 'detail'
+    type FileInputControl = {
+        click: () => void
+        files: ArrayLike<File> | null
+        value: string
+    }
 
     const props = withDefaults(
         defineProps<{
@@ -246,7 +251,7 @@
     // Besides the field-editing helpers, this composable keeps the values synchronized when
     // another analyst uploads, updates, or deletes an attachment over SSE.
     useAttributes(props)
-    const fileInput = ref<HTMLInputElement | null>(null)
+    const fileInput = ref<FileInputControl | null>(null)
     const dragActive = ref(false)
     const operationError = ref(false)
     const pendingFiles = ref<File[]>([])
@@ -292,7 +297,7 @@
     }
 
     const handleFileInput = (event: Event): void => {
-        const input = event.target as HTMLInputElement
+        const input = event.target as unknown as FileInputControl
         acceptFiles(Array.from(input.files ?? []))
         input.value = ''
     }
