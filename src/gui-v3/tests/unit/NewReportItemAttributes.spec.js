@@ -71,7 +71,8 @@ vi.mock('@/api/analyze', () => ({
     getReportItem: vi.fn(),
     getReportItemData: vi.fn(),
     getReportItemLocks: vi.fn(),
-    aiGenerate: vi.fn()
+    aiGenerate: vi.fn(),
+    uploadAttachment: vi.fn()
 }))
 
 const VDialogStub = {

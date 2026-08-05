@@ -171,6 +171,20 @@ export function removeAttachment(data) {
     return ApiService.delete('/analyze/report-items/' + data.report_item_id + '/file-attributes/' + data.attribute_id)
 }
 
+export function uploadAttachment(report_item_id, attribute_group_item_id, file, description = '') {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('attribute_group_item_id', String(attribute_group_item_id))
+    formData.append('description', description)
+    return ApiService.upload('/analyze/report-items/' + report_item_id + '/file-attributes', formData)
+}
+
+export function updateAttachmentDescription(data) {
+    return ApiService.put('/analyze/report-items/' + data.report_item_id + '/file-attributes/' + data.attribute_id, {
+        description: data.description
+    })
+}
+
 export function aiGenerate(attribute_id, news_item_agreggate_ids) {
     return ApiService.post('/analyze/report-item-attributes/' + attribute_id + '/llm-generate', {
         news_item_agreggate_ids

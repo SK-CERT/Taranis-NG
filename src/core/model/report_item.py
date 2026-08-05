@@ -1136,6 +1136,38 @@ class ReportItem(db.Model):
         return data
 
     @classmethod
+    def update_attachment_description(  # noqa: A002
+        cls, id: int, attribute_id: int, user: User, description: str
+    ) -> dict:
+        """Update an attachment's human-readable description.
+
+        The attachment resource already owns upload, download, and deletion. Keeping the
+        description update on that resource avoids treating binary metadata as an ordinary
+        text attribute while extending the API without changing any existing contract.
+        """
+        report_item = db.session.get(cls, id)
+        attribute = cls._find_attribute(report_item, attribute_id) if report_item is not None else None
+        if attribute is None or attribute.binary_mime_type is None:
+            raise ValueError("Attachment not found")
+
+        if attribute.binary_description != description:
+            attribute.binary_description = description
+            attribute.user = user
+            attribute.last_updated = datetime.now(TZ)
+            attribute.version = (attribute.version or 1) + 1
+            report_item.last_updated = datetime.now(TZ)
+            db.session.commit()
+
+        return {
+            "update": True,
+            "user_id": user.id,
+            "report_item_id": int(id),
+            "attribute_id": attribute.id,
+            "binary_description": attribute.binary_description,
+            "attribute_version": attribute.version or 1,
+        }
+
+    @classmethod
     def delete_report_item(cls, id: int) -> tuple[str, int] | None:  # noqa: A002
         """Delete a report item by its ID.
 

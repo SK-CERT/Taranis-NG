@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createNewReportItem } from '@/api/analyze'
+import { createNewReportItem, updateAttachmentDescription, uploadAttachment } from '@/api/analyze'
 import ApiService from '@/services/api_service'
 
 vi.mock('@/services/api_service', () => ({
     default: {
-        post: vi.fn()
+        post: vi.fn(),
+        put: vi.fn(),
+        upload: vi.fn()
     }
 }))
 
@@ -40,5 +42,24 @@ describe('analyze api', () => {
             remote_report_items: [{ id: 22 }],
             attributes: [{ id: -1, attribute_group_item_id: 5, value: 'test' }]
         })
+    })
+
+    it('uploads an attachment with the backend multipart field names', () => {
+        const file = new File(['evidence'], 'evidence.txt', { type: 'text/plain' })
+
+        uploadAttachment(42, 7, file, 'Collected evidence')
+
+        expect(ApiService.upload).toHaveBeenCalledOnce()
+        const [url, formData] = ApiService.upload.mock.calls[0]
+        expect(url).toBe('/analyze/report-items/42/file-attributes')
+        expect(formData.get('file')).toBe(file)
+        expect(formData.get('attribute_group_item_id')).toBe('7')
+        expect(formData.get('description')).toBe('Collected evidence')
+    })
+
+    it('updates an attachment description on the existing attachment resource', () => {
+        updateAttachmentDescription({ report_item_id: 42, attribute_id: 9, description: 'Updated' })
+
+        expect(ApiService.put).toHaveBeenCalledWith('/analyze/report-items/42/file-attributes/9', { description: 'Updated' })
     })
 })

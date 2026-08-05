@@ -437,7 +437,8 @@
         getReportItem,
         getReportItemData,
         getReportItemLocks,
-        aiGenerate
+        aiGenerate,
+        uploadAttachment
     } from '@/api/analyze'
     import { getEntityTypeStates } from '@/api/state'
     import AttributeContainer from '@/components/common/attribute/AttributeContainer.vue'
@@ -694,8 +695,18 @@
         }
 
         try {
-            const response = await createNewReportItem(report_item)
-            report_item.id = response.data
+            if (!report_item.id) {
+                const response = await createNewReportItem(report_item)
+                report_item.id = response.data
+            }
+
+            const attachmentsUploaded = await uploadPendingAttachments(report_item.id)
+            if (!attachmentsUploaded) {
+                show_error.value = true
+                overlay.value = false
+                return false
+            }
+
             overlay.value = false
             closeDialog()
             emit('data-updated')
@@ -707,6 +718,41 @@
             overlay.value = false
             return false
         }
+    }
+
+    const uploadPendingAttachments = async (reportItemId: number): Promise<boolean> => {
+        let allUploaded = true
+
+        for (const group of attribute_groups.value) {
+            for (const attributeItem of group.attribute_group_items) {
+                if (attributeItem.attribute_group_item.attribute.type !== 'ATTACHMENT') continue
+
+                for (const value of attributeItem.values) {
+                    if (!(value.file instanceof File)) continue
+
+                    value.uploading = true
+                    value.uploadError = false
+                    try {
+                        const response = await uploadAttachment(
+                            reportItemId,
+                            attributeItem.attribute_group_item.id,
+                            value.file,
+                            value.binary_description || ''
+                        )
+                        value.id = Number(response.data.attribute_id)
+                        delete value.file
+                        value.uploading = false
+                    } catch (error) {
+                        console.error('Failed to upload report attachment:', error)
+                        value.uploading = false
+                        value.uploadError = true
+                        allUploaded = false
+                    }
+                }
+            }
+        }
+
+        return allUploaded
     }
 
     const saveReportItem = (field_id: ReportField) => {
