@@ -83,6 +83,7 @@
     import CardAnalyze from './CardAnalyze.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
     import { useSseResync } from '@/composables/useSseResync'
+    import { getAnalyzeGroupName } from '@/utils/analyze-routing'
 
     type ReportItem = {
         id: string | number
@@ -154,17 +155,6 @@
         emit('show-report-item-detail', item)
     }
 
-    const getNormalizedScope = (): string => {
-        const scope = route.params['scope']
-        if (typeof scope === 'string') {
-            return scope
-        }
-        if (Array.isArray(scope)) {
-            return scope[0] || 'local'
-        }
-        return 'local'
-    }
-
     const infiniteScrolling = (isIntersecting: boolean): void => {
         const totalCount = analyzeStore.getReportItems.total_count || 0
         // Don't attempt to load more when there are no items to load
@@ -197,21 +187,11 @@
             offset = 0
         }
 
-        let group = ''
-        if (props.remoteReports) {
-            group = typeof analyzeStore.getCurrentReportItemGroup === 'string' ? analyzeStore.getCurrentReportItemGroup : ''
-        } else {
-            // Extract scope from route params
-            const scope = getNormalizedScope()
-            if (scope !== 'local') {
-                // If scope starts with 'group-', extract the group name
-                if (scope.startsWith('group-')) {
-                    group = scope.substring(6).replaceAll('-', ' ')
-                } else {
-                    group = scope.replaceAll('-', ' ')
-                }
-            }
-        }
+        const group = props.remoteReports
+            ? typeof analyzeStore.getCurrentReportItemGroup === 'string'
+                ? analyzeStore.getCurrentReportItemGroup
+                : ''
+            : getAnalyzeGroupName(route)
 
         try {
             // Load the report items list and the report-item-type catalog in

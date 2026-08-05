@@ -446,6 +446,7 @@
     import NewsItemSelector from '@/components/analyze/NewsItemSelector.vue'
     import RemoteReportItemSelector from '@/components/analyze/RemoteReportItemSelector.vue'
     import StateSelector from '@/components/common/StateSelector.vue'
+    import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
 
     type FormRef = {
         resetValidation?: () => void
@@ -517,7 +518,6 @@
     const expand_group_items = ref<any[]>([])
     const autoGenerateIcon = reactive<Record<string | number, string>>({})
     const autoGenerateIconTimer = reactive<Record<string | number, ReturnType<typeof setTimeout> | null>>({})
-    const local_reports = ref<boolean>(true)
 
     const field_locks = reactive({
         title_prefix: false,
@@ -549,7 +549,7 @@
 
     // Computed
     const canCreate = computed<boolean>(() => {
-        return checkPermission('ANALYZE_CREATE') && local_reports.value === true
+        return checkPermission('ANALYZE_CREATE') && !isRemoteAnalyzeRoute(route)
     })
 
     const canModify = computed<boolean>(() => {
@@ -1346,17 +1346,9 @@
         }
     })
 
-    watch(
-        () => route.path,
-        () => {
-            local_reports.value = !window.location.pathname.includes('/group/')
-        }
-    )
-
     // Lifecycle
     onMounted(async () => {
         loadAvailableStates()
-        local_reports.value = !window.location.pathname.includes('/group/')
         await loadReportTypes()
 
         window.addEventListener('report-item-locked', reportItemLockedEvent)

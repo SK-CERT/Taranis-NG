@@ -6,6 +6,7 @@ import AuthService from '@/services/auth_service'
 import Permissions from '@/services/permissions'
 import { getFirstConfigRoute } from '@/config/config-nav-links'
 import type { PermissionKey } from '@/types/permissions'
+import { createLegacyAnalyzeRedirect } from '@/utils/analyze-routing'
 
 interface RouteMetaAuth {
     requiresAuth?: boolean
@@ -44,8 +45,20 @@ const routes: RouteRecordRaw[] = [
         })
     },
     {
+        path: '/enter',
+        redirect: {
+            name: 'assess',
+            params: { groupId: 'all' },
+            query: { manualEntry: 'true' }
+        }
+    },
+    {
         path: '/analyze',
         redirect: '/analyze/local'
+    },
+    {
+        path: '/analyze/group/:groupName',
+        redirect: createLegacyAnalyzeRedirect
     },
     {
         path: '/analyze/:scope',
@@ -332,6 +345,9 @@ router.beforeEach((to) => {
             if (AuthService.hasPermission(Permissions.ASSESS_ACCESS)) {
                 return { path: '/dashboard' }
             }
+            if (AuthService.hasPermission(Permissions.ASSESS_CREATE)) {
+                return { path: '/enter' }
+            }
             if (AuthService.hasPermission(Permissions.CONFIG_ACCESS)) {
                 return { path: '/config' }
             }
@@ -345,6 +361,15 @@ router.beforeEach((to) => {
         const requiredPermissions = (to.meta as RouteMetaAuth).requiresPerm
         if (requiredPermissions && requiredPermissions.length > 0) {
             if (AuthService.hasAnyPermission(requiredPermissions)) {
+                return true
+            }
+
+            // Manual entry deliberately reuses the Assess view, but creating an item has
+            // always required ASSESS_CREATE rather than ASSESS_ACCESS. Restrict the exception
+            // to the two handoff query parameters so /assess itself remains inaccessible.
+            const isManualEntryHandoff =
+                to.name === 'assess' && (to.query['manualSource'] !== undefined || to.query['manualEntry'] === 'true')
+            if (isManualEntryHandoff && AuthService.hasPermission(Permissions.ASSESS_CREATE)) {
                 return true
             }
             return { path: '/' }

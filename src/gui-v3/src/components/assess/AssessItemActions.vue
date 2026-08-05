@@ -183,6 +183,8 @@
         dislikes?: number
         important?: boolean
         read?: boolean
+        modify?: boolean
+        entityType?: 'news_item' | 'news_item_aggregate'
         link?: string
         news_items?: Array<{
             news_item_data?: {
@@ -278,11 +280,13 @@
     }
 
     const canModify = computed(() => {
-        return checkPermission(PERMISSIONS.ASSESS_UPDATE)
+        const itemAllowsModification = props.item.entityType !== 'news_item' || props.item.modify === true
+        return checkPermission(PERMISSIONS.ASSESS_UPDATE) && itemAllowsModification
     })
 
     const canDelete = computed(() => {
-        return checkPermission(PERMISSIONS.ASSESS_DELETE)
+        const itemAllowsDeletion = props.item.entityType !== 'news_item' || props.item.modify === true
+        return checkPermission(PERMISSIONS.ASSESS_DELETE) && itemAllowsDeletion
     })
 
     const canCreateReport = computed(() => {

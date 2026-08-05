@@ -43,4 +43,14 @@ describe('legacy route redirects', () => {
             query: { from: 'bookmark', manualSource: 'manual-42' }
         })
     })
+
+    it('maps the legacy manual-entry root to an explicit Assess dialog handoff', () => {
+        const route = router.getRoutes().find((candidate) => candidate.path === '/enter')
+
+        expect(route?.redirect).toEqual({
+            name: 'assess',
+            params: { groupId: 'all' },
+            query: { manualEntry: 'true' }
+        })
+    })
 })

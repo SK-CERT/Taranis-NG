@@ -337,6 +337,10 @@
     }
 
     const handleDelete = async (): Promise<void> => {
+        if (!checkPermission('ASSESS_DELETE')) {
+            return
+        }
+
         try {
             await deleteNewsItemAggregate('', props.card.id)
             emit('delete-item', props.card)

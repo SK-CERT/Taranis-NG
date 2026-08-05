@@ -5,7 +5,7 @@ import { mountWithPlugins } from '../helpers/mount-helpers'
 import AssessView from '@/views/users/AssessView.vue'
 
 const authState = vi.hoisted(() => ({
-    allowed: true,
+    permissions: new Set(),
     checkPermission: vi.fn()
 }))
 
@@ -77,8 +77,8 @@ async function mountLegacyEntry() {
 describe('legacy manual-entry route', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        authState.allowed = true
-        authState.checkPermission.mockImplementation(() => authState.allowed)
+        authState.permissions = new Set(['ASSESS_ACCESS', 'ASSESS_CREATE'])
+        authState.checkPermission.mockImplementation((permission) => authState.permissions.has(permission))
     })
 
     it('opens manual entry with the requested source and canonicalizes the URL', async () => {
@@ -91,12 +91,21 @@ describe('legacy manual-entry route', () => {
     })
 
     it('does not load sources or open manual entry without ASSESS_CREATE', async () => {
-        authState.allowed = false
+        authState.permissions.clear()
         const assessApi = await import('@/api/assess')
         const { router, wrapper } = await mountLegacyEntry()
 
         expect(assessApi.getManualOSINTSources).not.toHaveBeenCalled()
         expect(wrapper.findComponent({ name: 'AddNewsItemDialog' }).exists()).toBe(false)
         expect(router.currentRoute.value.fullPath).toBe('/assess/group/all')
+    })
+
+    it('retains the guarded handoff URL for create-only users so refresh remains authorized', async () => {
+        authState.permissions = new Set(['ASSESS_CREATE'])
+        const { router, wrapper } = await mountLegacyEntry()
+
+        expect(wrapper.findComponent({ name: 'AddNewsItemDialog' }).props('modelValue')).toBe(true)
+        expect(wrapper.findComponent({ name: 'ContentDataAssess' }).exists()).toBe(false)
+        expect(router.currentRoute.value.fullPath).toBe('/assess/group/all?manualSource=manual-42')
     })
 })

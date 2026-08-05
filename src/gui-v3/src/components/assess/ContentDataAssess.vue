@@ -137,6 +137,8 @@
     import ReportsListDialog from './ReportsListDialog.vue'
     import { Action, type ActionKey } from '@/types/actions'
     import { useSseResync } from '@/composables/useSseResync'
+    import { useAuth } from '@/composables/useAuth'
+    import Permissions from '@/services/permissions'
 
     type NewsItem = {
         id: string | number
@@ -145,6 +147,7 @@
         title?: string
         description?: string
         comments?: string
+        modify?: boolean
         [key: string]: unknown
     }
 
@@ -190,6 +193,7 @@
     const emit = defineEmits(['new-data-loaded', 'card-items-reindex', 'update-showing-count'])
 
     const { t } = useI18n()
+    const { checkPermission } = useAuth()
     const route = useRoute()
     const assessStore = useAssessStore()
     const routeQuery = route.query ?? {}
@@ -410,6 +414,10 @@
      */
     const applyItemAction = async (action: ActionKey, item: NewsItem, group_id: string): Promise<boolean> => {
         const isChildNewsItem = item.entityType === 'news_item'
+        const mutatingActions: readonly ActionKey[] = [Action.LIKE, Action.DISLIKE, Action.IMPORTANT, Action.READ, Action.UNGROUP]
+        if (mutatingActions.includes(action) && (!checkPermission(Permissions.ASSESS_UPDATE) || (isChildNewsItem && item.modify !== true))) {
+            return false
+        }
         switch (action) {
             case Action.LIKE:
                 await (isChildNewsItem ? voteNewsItem(group_id, item.id, 1) : assessStore.voteNewsItemAggregate(group_id, item.id, 1))
@@ -443,6 +451,12 @@
         const { action, newsItem } = payload
         const group_id = current_group_id.value || getNormalizedGroupId()
         const isChildNewsItem = newsItem.entityType === 'news_item'
+        if (
+            (action === Action.COMMENT || action === Action.UPDATE_AGGREGATE) &&
+            (!checkPermission(Permissions.ASSESS_UPDATE) || (isChildNewsItem && newsItem.modify !== true))
+        ) {
+            return
+        }
         const toolbarActions: readonly ActionKey[] = [Action.LIKE, Action.DISLIKE, Action.IMPORTANT, Action.READ, Action.UNGROUP]
         const isToolbarAction = toolbarActions.includes(action)
         if (isToolbarAction && detailActionPending.value) {
@@ -514,9 +528,13 @@
     }
 
     const handleDetailDelete = async (newsItem: NewsItem) => {
+        const isChildNewsItem = newsItem.entityType === 'news_item'
+        if (!checkPermission(Permissions.ASSESS_DELETE) || (isChildNewsItem && newsItem.modify !== true)) {
+            return
+        }
         try {
             const group_id = current_group_id.value || getNormalizedGroupId()
-            if (newsItem.entityType === 'news_item') {
+            if (isChildNewsItem) {
                 await deleteNewsItem(group_id, newsItem.id)
             } else {
                 await assessStore.deleteNewsItemAggregate(group_id, newsItem.id)
@@ -549,7 +567,24 @@
         }
     }
 
-    const handleDelete = async (): Promise<void> => {
+    const handleDelete = async (newsItem?: NewsItem): Promise<void> => {
+        // Aggregate cards delete themselves before notifying us. Child cards hand us the item,
+        // so perform that request here and repeat the permission/ACL check at the handler edge.
+        if (newsItem?.entityType === 'news_item') {
+            if (newsItem.modify !== true || !checkPermission(Permissions.ASSESS_DELETE)) {
+                return
+            }
+
+            try {
+                const groupId = current_group_id.value || getNormalizedGroupId()
+                await deleteNewsItem(groupId, newsItem.id)
+                notify({ type: 'success', loc: 'assess.item_deleted' })
+            } catch (error) {
+                notifyActionError(error, 'Error deleting item:', 'assess.error_deleting')
+                return
+            }
+        }
+
         // Reload current view after successful deletion
         // The animation will trigger when the deleted item is missing from the new data
         await refreshData()

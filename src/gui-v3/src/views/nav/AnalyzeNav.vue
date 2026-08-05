@@ -34,6 +34,7 @@
     import { useTheme } from 'vuetify'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { type GroupNavItem } from '@/types/routing'
+    import { createRemoteAnalyzePath } from '@/utils/analyze-routing'
 
     const router = useRouter()
     const route = useRoute()
@@ -70,13 +71,13 @@
                 if (group === undefined || group === null) {
                     continue
                 }
-                const groupId = String(group).replaceAll(' ', '-')
+                const groupName = String(group)
                 links.value.push({
-                    id: groupId,
+                    id: groupName,
                     icon: 'mdi-arrow-down-bold-circle-outline',
-                    title: String(group),
+                    title: groupName,
                     translate: false,
-                    route: '/analyze/group-' + groupId
+                    route: createRemoteAnalyzePath(groupName)
                 })
             }
 

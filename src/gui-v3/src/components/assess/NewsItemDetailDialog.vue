@@ -59,9 +59,6 @@
                     <v-tab value="attributes">
                         {{ t('assess.attributes') }}
                     </v-tab>
-                    <v-tab value="comments">
-                        {{ t('assess.comments') }}
-                    </v-tab>
                 </template>
 
                 <!-- Aggregate Tabs: Info, Comments -->
@@ -209,6 +206,7 @@
                             density="comfortable"
                             variant="outlined"
                             class="mb-4"
+                            :readonly="!canModifyItem"
                             @blur="autoSaveAggregateInfo"
                         />
                         <v-textarea
@@ -218,6 +216,7 @@
                             variant="outlined"
                             rows="6"
                             class="mb-4"
+                            :readonly="!canModifyItem"
                             @blur="autoSaveAggregateInfo"
                         />
                         <div class="text-caption text-grey">{{ t('assess.auto_save_blur') }}</div>
@@ -226,12 +225,14 @@
 
                 <!-- Comments Tab -->
                 <div
+                    v-if="isAggregate"
                     class="pane tab-pane"
                     :class="{ 'pane--active': activeTab === 'comments' }"
                 >
                     <Editor
                         v-model="commentText"
                         editor-style="height: 250px"
+                        :readonly="!canModifyItem"
                         @text-change="debounceAutoSave"
                     />
                     <div class="text-caption text-grey mt-2">{{ t('assess.auto_save_changes') }}</div>
@@ -283,9 +284,11 @@
 
     type NewsItemModel = {
         id?: number | string
+        entityType?: 'news_item' | 'news_item_aggregate'
         title?: string
         description?: string
         comments?: string
+        modify?: boolean
         news_items?: NestedNewsItem[]
         [key: string]: any
     }
@@ -404,12 +407,9 @@
         return attributes
     })
 
-    const canCreateReport = computed(() => {
-        return checkPermission(PERMISSIONS.ANALYZE_CREATE)
-    })
-
-    const canDelete = computed(() => {
-        return checkPermission(PERMISSIONS.ASSESS_DELETE)
+    const canModifyItem = computed(() => {
+        const itemAllowsModification = newsItem.value.entityType !== 'news_item' || newsItem.value.modify === true
+        return checkPermission(PERMISSIONS.ASSESS_UPDATE) && itemAllowsModification
     })
 
     const handleClose = (): void => {
@@ -437,6 +437,9 @@
     let saveTimeout: ReturnType<typeof setTimeout> | null = null
 
     const debounceAutoSave = (): void => {
+        if (!canModifyItem.value || !isAggregate.value) {
+            return
+        }
         if (saveTimeout) {
             clearTimeout(saveTimeout)
         }
@@ -446,6 +449,9 @@
     }
 
     const saveComment = (): void => {
+        if (!canModifyItem.value || !isAggregate.value) {
+            return
+        }
         emit('action', {
             action: Action.COMMENT,
             newsItem: newsItem.value,
@@ -458,6 +464,9 @@
     }
 
     const autoSaveAggregateInfo = (): void => {
+        if (!canModifyItem.value || !isAggregate.value) {
+            return
+        }
         // Only save if content has changed
         if (editTitle.value !== newsItem.value.title || editDescription.value !== newsItem.value.description) {
             saveAggregateInfo()

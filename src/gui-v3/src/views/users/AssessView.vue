@@ -32,6 +32,7 @@
 
         <template #content>
             <ContentDataAssess
+                v-if="canAccessAssess"
                 ref="contentData"
                 :analyze_selector="analyze_selector"
                 :selection="assessStore.getSelection"
@@ -82,6 +83,7 @@
     const requestedManualSourceId = ref<string | null>(null)
     const newReportItem = ref<any>(null)
     const canCreateNewsItem = computed(() => checkPermission(Permissions.ASSESS_CREATE))
+    const canAccessAssess = computed(() => checkPermission(Permissions.ASSESS_ACCESS))
     const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
 
     const newDataLoaded = (count: number): void => {
@@ -148,10 +150,14 @@
         const manualSourceQuery = route.query['manualSource']
         const sourceId = Array.isArray(manualSourceQuery) ? manualSourceQuery[0] : manualSourceQuery
         requestedManualSourceId.value = sourceId ?? null
+        const manualEntryRequested = route.query['manualEntry'] === 'true'
 
-        if (manualSourceQuery !== undefined) {
+        // Keep the handoff marker in the URL for create-only users: without it a refresh would
+        // correctly fail the ASSESS_ACCESS route guard. Full Assess users get the canonical URL.
+        if ((manualSourceQuery !== undefined || manualEntryRequested) && (canAccessAssess.value || !canCreateNewsItem.value)) {
             const query = { ...route.query }
             delete query['manualSource']
+            delete query['manualEntry']
             await router.replace({ name: 'assess', params: { groupId: route.params['groupId'] }, query })
         }
 
@@ -160,14 +166,15 @@
             try {
                 await assessStore.loadManualOSINTSources()
                 if (
-                    requestedManualSourceId.value &&
-                    assessStore.getManualOSINTSourcesList.some(
-                        (source) =>
-                            typeof source === 'object' &&
-                            source !== null &&
-                            'id' in source &&
-                            String(source.id) === requestedManualSourceId.value
-                    )
+                    manualEntryRequested ||
+                    (requestedManualSourceId.value &&
+                        assessStore.getManualOSINTSourcesList.some(
+                            (source) =>
+                                typeof source === 'object' &&
+                                source !== null &&
+                                'id' in source &&
+                                String(source.id) === requestedManualSourceId.value
+                        ))
                 ) {
                     showAddNewsItemDialog.value = true
                 }
