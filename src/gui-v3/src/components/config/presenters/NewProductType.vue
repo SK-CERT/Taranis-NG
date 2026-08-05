@@ -110,6 +110,7 @@
                                 density="comfortable"
                                 :disabled="saving || !canSave"
                                 :placeholder="String(param.default_value ?? '')"
+                                :rules="dynamicParameterRules(param, t('error.required'))"
                             >
                                 <template
                                     v-if="param.description"
@@ -265,6 +266,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { useConfigStore } from '@/stores/config'
     import { createNewProductType, updateProductType, getAllPresentersNodes } from '@/api/config'
+    import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
 
     type PresenterParameter = {
         id?: string | number
@@ -272,6 +274,7 @@
         name?: string
         description?: string
         default_value?: string
+        required?: boolean
         [key: string]: unknown
     }
 

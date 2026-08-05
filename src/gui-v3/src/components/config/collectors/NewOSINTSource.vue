@@ -99,6 +99,7 @@
                                 density="comfortable"
                                 :disabled="saving || !canSave"
                                 :placeholder="String(param.default_value ?? '')"
+                                :rules="dynamicParameterRules(param, t('error.required'))"
                             >
                                 <template
                                     v-if="param.description"
@@ -187,6 +188,7 @@
     import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
     import { createNewOSINTSource, updateOSINTSource, getAllCollectorsNodes } from '@/api/config'
     import NewOSINTSourceGroup from '@/components/config/collectors/NewOSINTSourceGroup.vue'
+    import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
 
     type CollectorParameter = {
         id?: string | number
@@ -194,6 +196,7 @@
         name?: string
         description?: string
         default_value?: string
+        required?: boolean
         [key: string]: unknown
     }
 

@@ -21,6 +21,10 @@ import {
 
 export type NodeType = 'collectors' | 'presenters' | 'publishers' | 'bots'
 
+export function isNonBlankNodeApiKey(value: unknown): boolean {
+    return String(value ?? '').trim().length > 0
+}
+
 export type NodeTypeConfig = {
     /** i18n key prefix for the dialog/labels (e.g. "collectors_node"). */
     i18nPrefix: string
@@ -33,7 +37,7 @@ export type NodeTypeConfig = {
     createFn: (node: unknown) => Promise<unknown>
     updateFn: (node: unknown) => Promise<unknown>
     deleteFn: (node: unknown) => Promise<unknown>
-    /** Whether the API key is mandatory (true for bots). */
+    /** Whether the API key is mandatory. All service-node APIs authenticate with it. */
     apiKeyRequired: boolean
 }
 
@@ -46,7 +50,7 @@ export const NODE_TYPES: Record<NodeType, NodeTypeConfig> = {
         createFn: createNewCollectorsNode,
         updateFn: updateCollectorsNode,
         deleteFn: deleteCollectorsNode,
-        apiKeyRequired: false
+        apiKeyRequired: true
     },
     presenters: {
         i18nPrefix: 'presenters.nodes',
@@ -56,7 +60,7 @@ export const NODE_TYPES: Record<NodeType, NodeTypeConfig> = {
         createFn: createNewPresentersNode,
         updateFn: updatePresentersNode,
         deleteFn: deletePresentersNode,
-        apiKeyRequired: false
+        apiKeyRequired: true
     },
     publishers: {
         i18nPrefix: 'publishers.nodes',
@@ -66,7 +70,7 @@ export const NODE_TYPES: Record<NodeType, NodeTypeConfig> = {
         createFn: createNewPublishersNode,
         updateFn: updatePublishersNode,
         deleteFn: deletePublishersNode,
-        apiKeyRequired: false
+        apiKeyRequired: true
     },
     bots: {
         i18nPrefix: 'bots.nodes',
