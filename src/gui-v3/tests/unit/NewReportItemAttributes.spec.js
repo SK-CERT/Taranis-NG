@@ -129,6 +129,7 @@ describe('NewReportItem — label-only attributes (max_occurrence 0)', () => {
 
     beforeEach(async () => {
         vi.clearAllMocks()
+        localStorage.removeItem('TNGVericalView')
         mockCheckPermission.mockReturnValue(true)
         mockAnalyzeStore.getReportItemTypes = { items: [makeReportType()] }
         mockAnalyzeStore.loadReportItemTypes.mockResolvedValue({ data: mockAnalyzeStore.getReportItemTypes })
@@ -212,5 +213,24 @@ describe('NewReportItem — label-only attributes (max_occurrence 0)', () => {
         expect(tooltip.exists()).toBe(true)
         expect(tooltip.props('text')).toBe(EDITABLE_DESCRIPTION)
         expect(undescribedPanel.findComponent({ name: 'VTooltip' }).exists()).toBe(false)
+    })
+
+    it('restores and immediately persists the side-by-side layout preference', async () => {
+        localStorage.setItem('TNGVericalView', 'true')
+
+        const wrapper = mountWithPlugins(NewReportItem, {
+            props: { showButton: false },
+            global: { stubs: { VDialog: VDialogStub, VOverlay: VOverlayStub } }
+        })
+        await flushPromises()
+
+        const layoutSwitch = wrapper.findComponent({ name: 'VSwitch' })
+        expect(layoutSwitch.props('modelValue')).toBe(true)
+
+        layoutSwitch.vm.$emit('update:modelValue', false)
+        await flushPromises()
+
+        expect(layoutSwitch.props('modelValue')).toBe(false)
+        expect(localStorage.getItem('TNGVericalView')).toBe('false')
     })
 })
