@@ -50,10 +50,7 @@ def upgrade() -> None:
         return
 
     connection.execute(
-        sa.update(settings)
-        .where(settings.c.key == "UI_LANGUAGE")
-        .where(settings.c.options == stored_options)
-        .values(options=None),
+        sa.update(settings).where(settings.c.key == "UI_LANGUAGE").where(settings.c.options == stored_options).values(options=None),
     )
 
 
