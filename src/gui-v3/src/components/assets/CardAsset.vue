@@ -11,9 +11,7 @@
 
         <div class="asset-card__identity">
             <strong>{{ asset.name || asset.title }}</strong>
-            <span v-if="showSerial">
-                {{ t('asset.serial') }}: {{ asset.serial }}
-            </span>
+            <span v-if="showSerial"> {{ t('asset.serial') }}: {{ asset.serial }} </span>
         </div>
 
         <p class="asset-card__description">

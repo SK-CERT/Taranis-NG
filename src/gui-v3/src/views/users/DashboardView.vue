@@ -135,7 +135,6 @@
                     viewport-fit
                     @select-word="openWordSearch"
                 />
-
             </article>
 
             <aside class="dashboard-rail">
@@ -368,7 +367,7 @@
             icon: 'mdi-package-variant-closed',
             tone: 'amber',
             to: '/publish'
-        },
+        }
     ])
 
     const toDisplayStates = (states: Record<string, DashboardStateInfo>): DisplayState[] =>
@@ -709,8 +708,7 @@
     .dashboard-cloud :deep(.word-cloud-container) {
         border-radius: 0;
         background:
-            radial-gradient(circle at 45% 48%, rgba(var(--v-theme-primary), 0.1), transparent 64%),
-            rgba(var(--v-theme-surface-variant), 0.1);
+            radial-gradient(circle at 45% 48%, rgba(var(--v-theme-primary), 0.1), transparent 64%), rgba(var(--v-theme-surface-variant), 0.1);
     }
 
     .dashboard-rail {
