@@ -115,15 +115,87 @@
                         <h2>{{ t('dashboard.assess.trending') }}</h2>
                         <p>{{ t('dashboard.assess.tagcloud') }}</p>
                     </div>
-                    <v-btn
-                        to="/assess"
-                        icon="mdi-arrow-right"
-                        size="small"
-                        variant="tonal"
-                        color="primary"
-                        :title="t('main_menu.assess')"
-                    />
+                    <div class="dashboard-cloud__header-actions">
+                        <div
+                            class="dashboard-cloud__period-control"
+                            role="group"
+                            :aria-label="t('dashboard.assess.tagcloud')"
+                        >
+                            <v-btn-toggle
+                                class="dashboard-cloud__period-toggle"
+                                color="primary"
+                                density="compact"
+                                mandatory
+                                variant="outlined"
+                                :model-value="tagCloudPeriod"
+                            >
+                                <v-btn
+                                    v-for="period in tagCloudPeriodOptions"
+                                    :key="period.value"
+                                    :value="period.value"
+                                    size="small"
+                                    @click="selectTagCloudPeriod(period.value)"
+                                >
+                                    {{ period.label }}
+                                </v-btn>
+                            </v-btn-toggle>
+                        </div>
+
+                        <v-btn
+                            to="/assess"
+                            icon="mdi-arrow-right"
+                            size="small"
+                            variant="tonal"
+                            color="primary"
+                            :title="t('main_menu.assess')"
+                        />
+                    </div>
                 </header>
+
+                <v-dialog
+                    v-model="customRangeDialog"
+                    max-width="460"
+                >
+                    <v-card>
+                        <v-card-title>{{ t('toolbar_filter.custom_filter') }}</v-card-title>
+                        <v-card-text class="dashboard-cloud__range-fields">
+                            <v-text-field
+                                v-model="draftDateFrom"
+                                density="comfortable"
+                                type="date"
+                                variant="outlined"
+                                :label="t('analyze.from')"
+                                :max="draftDateTo || latestCustomDate"
+                            />
+                            <v-text-field
+                                v-model="draftDateTo"
+                                density="comfortable"
+                                type="date"
+                                variant="outlined"
+                                :label="t('analyze.to')"
+                                :min="draftDateFrom"
+                                :max="latestCustomDate"
+                            />
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-spacer />
+                            <v-btn
+                                variant="text"
+                                @click="customRangeDialog = false"
+                            >
+                                {{ t('common.cancel') }}
+                            </v-btn>
+                            <v-btn
+                                color="primary"
+                                variant="flat"
+                                :disabled="!customRangeValid"
+                                @click="applyCustomRange"
+                            >
+                                {{ t('common.done') }}
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
 
                 <WordCloud
                     :data="tagCloud"
@@ -258,10 +330,11 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, onMounted, onUnmounted } from 'vue'
+    import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRouter } from 'vue-router'
     import { useDashboardStore } from '@/stores/dashboard'
+    import type { TagCloudQuery } from '@/api/dashboard'
     import WordCloud from '@/components/dashboard/WordCloud.vue'
     import { format } from 'date-fns'
     import gitMeta from '../../../git-info.json'
@@ -304,6 +377,8 @@
         name: string
     }
 
+    type TagCloudPeriod = 'lastSevenDays' | 'today' | 'yesterday' | 'custom'
+
     const emptyDashboardData = (): DashboardData => ({
         total_news_items: 0,
         total_products: 0,
@@ -328,6 +403,41 @@
     })
     const tagCloud = computed(() => (Array.isArray(dashboardData.value.tag_cloud) ? dashboardData.value.tag_cloud : []))
     const refreshing = ref(false)
+
+    const previousDay = (): string => {
+        const date = new Date()
+        date.setDate(date.getDate() - 1)
+        return format(date, 'yyyy-MM-dd')
+    }
+
+    const latestCustomDate = ref(previousDay())
+    const customDateFrom = ref(latestCustomDate.value)
+    const customDateTo = ref(latestCustomDate.value)
+    const draftDateFrom = ref(latestCustomDate.value)
+    const draftDateTo = ref(latestCustomDate.value)
+    const customRangeDialog = ref(false)
+    const tagCloudPeriod = ref<TagCloudPeriod>('lastSevenDays')
+    const yesterdayLabel = computed(() => new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' }).format(-1, 'day'))
+    const tagCloudPeriodOptions = computed<Array<{ value: TagCloudPeriod; label: string }>>(() => [
+        { value: 'lastSevenDays', label: t('toolbar_filter.last_7_days') },
+        { value: 'today', label: t('toolbar_filter.today') },
+        { value: 'yesterday', label: yesterdayLabel.value },
+        { value: 'custom', label: t('toolbar_filter.custom_filter') }
+    ])
+    const tagCloudQuery = computed<TagCloudQuery>(() => {
+        if (tagCloudPeriod.value === 'lastSevenDays') return { range: 'LAST_7_DAYS' }
+        if (tagCloudPeriod.value === 'today') return { range: 'TODAY' }
+        if (tagCloudPeriod.value === 'yesterday') {
+            return { dateFrom: latestCustomDate.value, dateTo: latestCustomDate.value }
+        }
+        return { dateFrom: customDateFrom.value, dateTo: customDateTo.value }
+    })
+    const customRangeValid = computed(
+        () =>
+            Boolean(draftDateFrom.value && draftDateTo.value) &&
+            draftDateFrom.value <= draftDateTo.value &&
+            draftDateTo.value <= latestCustomDate.value
+    )
 
     const ingestionData = computed(() => {
         const dailyCounts = dashboardData.value.news_items_by_day || []
@@ -431,7 +541,7 @@
         refreshPromise = (async () => {
             refreshing.value = true
             try {
-                await dashboardStore.loadDashboardData()
+                await dashboardStore.loadDashboardData(tagCloudQuery.value)
             } catch (error) {
                 console.error('[Dashboard] Error refreshing data:', error)
             } finally {
@@ -446,6 +556,40 @@
         if (refreshPromise) await refreshPromise
         await refreshDashboard()
     }
+
+    const refreshSelectedPeriod = async (): Promise<void> => {
+        if (refreshPromise) await refreshPromise
+        await refreshDashboard()
+    }
+
+    const selectTagCloudPeriod = (period: TagCloudPeriod | null): void => {
+        if (!period) return
+        if (period !== 'custom') {
+            tagCloudPeriod.value = period
+            return
+        }
+
+        latestCustomDate.value = previousDay()
+        draftDateFrom.value = customDateFrom.value
+        draftDateTo.value = customDateTo.value
+        customRangeDialog.value = true
+    }
+
+    const applyCustomRange = (): void => {
+        if (!customRangeValid.value) return
+
+        const refreshExistingCustomRange = tagCloudPeriod.value === 'custom'
+        customDateFrom.value = draftDateFrom.value
+        customDateTo.value = draftDateTo.value
+        tagCloudPeriod.value = 'custom'
+        customRangeDialog.value = false
+
+        if (refreshExistingCustomRange) void refreshSelectedPeriod()
+    }
+
+    watch(tagCloudPeriod, () => {
+        void refreshSelectedPeriod()
+    })
 
     useSseResync(resyncDashboard)
 
@@ -717,6 +861,46 @@
         font-weight: 720;
         letter-spacing: -0.02em;
         line-height: 1.2;
+    }
+
+    .dashboard-cloud__header-actions,
+    .dashboard-cloud__period-control {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+    }
+
+    .dashboard-cloud__header-actions {
+        flex: 1 1 auto;
+        justify-content: flex-end;
+        gap: 0.8rem;
+    }
+
+    .dashboard-cloud__period-control {
+        justify-content: flex-end;
+        gap: 0.45rem;
+    }
+
+    .dashboard-cloud__period-toggle {
+        height: 30px;
+        border-color: rgba(var(--v-theme-outline), 0.2);
+        background: rgba(var(--v-theme-surface-variant), 0.12);
+    }
+
+    .dashboard-cloud__period-toggle :deep(.v-btn) {
+        min-width: 0;
+        height: 30px;
+        padding-inline: 0.55rem;
+        font-size: 0.66rem;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .dashboard-cloud__range-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.8rem;
+        padding-top: 0.65rem;
     }
 
     .dashboard-cloud :deep(.word-cloud-container) {
@@ -1050,6 +1234,25 @@
 
         .dashboard-hero__freshness {
             white-space: normal;
+        }
+
+        .dashboard-cloud .dashboard-card__header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .dashboard-cloud__header-actions {
+            width: 100%;
+        }
+
+        .dashboard-cloud__period-control {
+            flex: 1 1 auto;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-cloud__range-fields {
+            grid-template-columns: 1fr;
         }
 
         .dashboard-rail,

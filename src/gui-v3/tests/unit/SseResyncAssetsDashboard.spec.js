@@ -44,12 +44,17 @@ vi.mock('@/composables/useAuth', () => ({ useAuth: () => ({ checkPermission: () 
 const stubs = {
     CardAsset: { template: '<div class="asset-card-stub" />' },
     GroupNavList: { template: '<div class="group-nav-stub" />' },
-    WordCloud: { template: '<div class="word-cloud-stub" />' }
+    WordCloud: { template: '<div class="word-cloud-stub" />' },
+    VDialog: {
+        props: ['modelValue'],
+        template: '<div v-if="modelValue" class="dialog-stub"><slot /></div>'
+    }
 }
 
 describe('SSE resynchronization for Assets and Dashboard', () => {
     beforeEach(() => {
         vi.useFakeTimers()
+        vi.setSystemTime(new Date(2026, 7, 6, 12, 0, 0))
         vi.clearAllMocks()
     })
 
@@ -95,6 +100,49 @@ describe('SSE resynchronization for Assets and Dashboard', () => {
             await flushPromises()
 
             expect(mocks.dashboardStore.loadDashboardData).toHaveBeenCalledTimes(1)
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('loads the selected tag-cloud interval and excludes today from custom dates', async () => {
+        const wrapper = mountWithPlugins(DashboardView, { global: { stubs } })
+
+        try {
+            await flushPromises()
+            expect(mocks.dashboardStore.loadDashboardData).toHaveBeenLastCalledWith({ range: 'LAST_7_DAYS' })
+
+            const button = (label) => wrapper.findAll('button').find((candidate) => candidate.text().trim() === label)
+
+            await button('Today').trigger('click')
+            await flushPromises()
+            expect(mocks.dashboardStore.loadDashboardData).toHaveBeenLastCalledWith({ range: 'TODAY' })
+
+            await button('yesterday').trigger('click')
+            await flushPromises()
+            expect(mocks.dashboardStore.loadDashboardData).toHaveBeenLastCalledWith({
+                dateFrom: '2026-08-05',
+                dateTo: '2026-08-05'
+            })
+
+            await button('Custom Filter').trigger('click')
+            await flushPromises()
+            const dateInputs = wrapper.findAll('input[type="date"]')
+            expect(dateInputs).toHaveLength(2)
+            expect(dateInputs[1].attributes('max')).toBe('2026-08-05')
+
+            await dateInputs[0].setValue('2026-08-02')
+            await dateInputs[1].setValue('2026-08-04')
+            await button('Done').trigger('click')
+            await flushPromises()
+            expect(mocks.dashboardStore.loadDashboardData).toHaveBeenLastCalledWith({
+                dateFrom: '2026-08-02',
+                dateTo: '2026-08-04'
+            })
+
+            await button('Custom Filter').trigger('click')
+            await flushPromises()
+            expect(wrapper.findAll('input[type="date"]')).toHaveLength(2)
         } finally {
             wrapper.unmount()
         }
