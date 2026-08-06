@@ -5,7 +5,6 @@
             :show-selection-checkbox="true"
             :preselected="preselected"
             card-class="review-list__row"
-            :card-color="selectedColor"
             :card-id="card.id"
             @card-click="cardItemClick"
             @selection-change="selectionChanged"
@@ -149,10 +148,6 @@
     const showDeleteDialog = ref<boolean>(false)
 
     const multiSelectActive = computed(() => publishStore.getMultiSelect)
-
-    const selectedColor = computed(() => {
-        return publishStore.selectedProducts.has(props.card.id) ? 'orange-lighten-4' : ''
-    })
 
     const canDelete = computed(() => {
         // Check permission - modify check may not be needed or property may be named differently

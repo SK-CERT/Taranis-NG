@@ -88,7 +88,7 @@ html.light-mode {
     --color-drawer-divider: var(--color-light-drawer-divider);
     --review-workspace: #d7e1e9;
     --review-list-row: #ffffff;
-    --review-list-row-hover: #edf6fc;
+    --review-list-row-selected: #fff3cd;
     --review-list-border: rgba(52, 82, 104, 0.34);
     --review-panel-border: rgba(52, 82, 104, 0.58);
     --filter-controls-bg: #d8e3eb;
@@ -103,7 +103,7 @@ html.dark-mode {
     --color-drawer-divider: var(--color-dark-drawer-divider);
     --review-workspace: #07141e;
     --review-list-row: #132838;
-    --review-list-row-hover: #19364b;
+    --review-list-row-selected: rgba(var(--v-theme-primary), 0.22);
     --review-list-border: rgba(126, 169, 198, 0.38);
     --review-panel-border: rgba(126, 169, 198, 0.58);
     --filter-controls-bg: #0a1b28;

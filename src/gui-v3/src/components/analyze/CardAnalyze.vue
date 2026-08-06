@@ -5,7 +5,6 @@
             :show-selection-checkbox="!isRemote"
             :preselected="preselected"
             card-class="review-list__row"
-            :card-color="selectedColor"
             :card-id="card.id"
             @card-click="cardItemClick"
             @selection-change="selectionChanged"
@@ -202,10 +201,6 @@
 
     const multiSelectActive = computed(() => {
         return analyzeStore.getMultiSelectReport
-    })
-
-    const selectedColor = computed(() => {
-        return analyzeStore.selectedReports.has(props.card.id) ? 'orange-lighten-4' : ''
     })
 
     const itemStatus = computed(() => {
