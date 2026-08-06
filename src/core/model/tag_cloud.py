@@ -72,16 +72,28 @@ class TagCloud(db.Model):
 
     @classmethod
     def get_grouped_words(cls, number_of_days: int) -> list[dict]:
-        """Retrieve grouped words from the tag cloud for a specific day.
+        """Retrieve grouped words using the legacy relative-day interval.
 
         :param number_of_days: The number of days ago to filter the tag cloud.
         :return: List of grouped words with their quantities.
         """
-        day_filter = (datetime.datetime.now(TZ) - datetime.timedelta(days=number_of_days)).date()
+        date_to = datetime.datetime.now(TZ).date()
+        date_from = date_to - datetime.timedelta(days=number_of_days)
+        return cls.get_grouped_words_between(date_from, date_to)
+
+    @classmethod
+    def get_grouped_words_between(cls, date_from: datetime.date, date_to: datetime.date) -> list[dict]:
+        """Retrieve grouped words collected in an inclusive date interval.
+
+        :param date_from: First collection date to include.
+        :param date_to: Last collection date to include.
+        :return: List of grouped words with their quantities.
+        """
         stopwords = WordListEntry.stopwords_subquery()
         grouped_words = (
             db.session.query(TagCloud.word, label("word_quantity", func.sum(TagCloud.word_quantity)))
-            .filter(TagCloud.collected >= day_filter)
+            .filter(TagCloud.collected >= date_from)
+            .filter(TagCloud.collected <= date_to)
             .filter(func.lower(TagCloud.word).notin_(stopwords))
             .group_by(TagCloud.word)
             .order_by(db.desc("word_quantity"))
