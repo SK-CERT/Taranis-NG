@@ -4,7 +4,6 @@
             :multi-select-active="multiSelectActive"
             :show-selection-checkbox="true"
             :preselected="preselected"
-            :card-color="selectedColor"
             card-class="review-list__row"
             :class="{ 'read-item': card.read }"
             :card-id="card.id"
@@ -277,9 +276,6 @@
     const highlightWords = computed(() => collectHighlightWords(settingsStore.getProfileWordLists))
 
     const multiSelectActive = computed(() => assessStore.getMultiSelect)
-    const selectedColor = computed(() => {
-        return assessStore.selectedItems.has(props.card.id) ? 'orange-lighten-4' : ''
-    })
 
     const hasComments = computed(() => {
         if (!props.card.comments) return false
