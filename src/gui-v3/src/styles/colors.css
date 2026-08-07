@@ -71,11 +71,11 @@
     }
 }
 
-html.light-mode {
+html.light-mode .v-theme--light {
     color-scheme: light;
 }
 
-html.dark-mode {
+html.dark-mode .v-theme--dark {
     color-scheme: dark;
 }
 

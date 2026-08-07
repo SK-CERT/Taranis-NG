@@ -27,7 +27,7 @@
                 <template #activator="{ props: menuProps }">
                     <v-btn
                         v-bind="menuProps"
-                        class="attribute-provenance__activator"
+                        class="attribute-provenance__activator ml-1"
                         :icon="ICONS.CLOCK"
                         variant="text"
                         density="compact"
@@ -162,7 +162,7 @@
     }
 
     .attribute-provenance__activator {
-        color: rgb(var(--v-theme-on-surface-variant));
+        color: rgb(var(--v-theme-outline));
     }
 
     .attribute-provenance__details {

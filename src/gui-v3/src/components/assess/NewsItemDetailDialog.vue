@@ -234,7 +234,7 @@
                     <Editor
                         v-model="commentText"
                         :pt="editorPassThrough"
-                        editor-style="height: 250px"
+                        editor-style="height: 250px; font-size: 16px;"
                         :readonly="!canModifyItem"
                         @text-change="debounceAutoSave"
                     />
@@ -571,16 +571,5 @@
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 600px;
-    }
-
-    /* PrimeVue / Quill comment editor. */
-    :deep(.p-editor-container) {
-        border-radius: 4px;
-    }
-
-    :deep(.ql-editor) {
-        min-height: 200px;
-        font-family: inherit;
-        font-size: 14px;
     }
 </style>

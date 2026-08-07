@@ -32,9 +32,8 @@
                             v-model="value.value"
                             :pt="editorPassThrough"
                             :read-only="false"
-                            theme="snow"
                             placeholder="Enter rich text..."
-                            style="height: 250px"
+                            editor-style="height: 250px; font-size: 16px;"
                             @blur="onBlur(index)"
                         />
                     </template>
@@ -97,15 +96,6 @@
 </script>
 
 <style scoped>
-    /* Rich text editor styling */
-    :deep(.p-editor) {
-        border-radius: 4px;
-    }
-
-    :deep(.ql-editor) {
-        min-height: 250px;
-    }
-
     .prose {
         color: var(--p-text-color);
     }
