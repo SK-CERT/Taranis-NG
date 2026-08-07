@@ -62,7 +62,7 @@
                 <!-- Score Header -->
                 <v-sheet
                     class="text-center pa-2"
-                    color="surface-variant"
+                    color="on-surface"
                 >
                     <v-text-field
                         v-model="vectorInput"

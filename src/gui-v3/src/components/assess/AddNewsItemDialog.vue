@@ -93,7 +93,7 @@
                         <Editor
                             v-model="editorContent"
                             :pt="editorPassThrough"
-                            editor-style="min-height: 250px"
+                            editor-style="height: 200px; font-size: 16px;"
                         />
                     </div>
 
@@ -356,9 +356,3 @@
         }
     }
 </script>
-
-<style scoped>
-    :deep(.ql-editor) {
-        min-height: 250px;
-    }
-</style>

@@ -41,7 +41,7 @@
                     <Editor
                         v-model="form.message_body"
                         :pt="editorPassThrough"
-                        editor-style="min-height: 220px"
+                        editor-style="height: 220px; font-size: 16px;"
                         class="mb-4"
                     />
                     <RecipientTable v-model="recipients" />
