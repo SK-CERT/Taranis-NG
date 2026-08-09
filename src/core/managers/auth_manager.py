@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 from enum import Enum, auto
 from functools import wraps
 from http import HTTPStatus
+from pathlib import Path
+from types import SimpleNamespace
 
 import jwt
 from auth.base_authenticator import BaseAuthenticator
@@ -50,6 +52,80 @@ current_authenticator = None
 
 SCOPED_TOKEN_MINUTES = 5
 OAUTH_STATE_MINUTES = 10
+AUTH_GENERATION_CLAIM = "auth_generation"
+
+
+def _auth_generation_is_current(_jwt_header: dict, jwt_payload: dict) -> bool:
+    """Accept only tokens carrying the current positive integer generation."""
+    claimed_generation = jwt_payload.get(AUTH_GENERATION_CLAIM)
+    if type(claimed_generation) is not int or claimed_generation < 1:  # bool is intentionally invalid
+        return False
+    try:
+        return claimed_generation == SecuritySettings.get_auth_generation()
+    except Exception as ex:
+        log_manager.store_auth_error_activity("Authentication generation could not be verified", ex)
+        return False
+
+
+def _auth_generation_rejected(_jwt_header: dict, _jwt_payload: dict) -> tuple[dict, HTTPStatus]:
+    """Return the uniform response for a missing, malformed, or stale generation."""
+    return {"error": "Authentication token is no longer valid"}, HTTPStatus.UNAUTHORIZED
+
+
+def _configure_auth_generation_verification(jwt_manager: JWTManager) -> None:
+    """Install the central JWT generation callbacks on Flask-JWT-Extended."""
+    jwt_manager.token_verification_loader(_auth_generation_is_current)
+    jwt_manager.token_verification_failed_loader(_auth_generation_rejected)
+
+
+class LegacyEnvironmentLDAPAuthenticator(BaseAuthenticator):
+    """Compatibility adapter for one explicitly selected environment LDAP server."""
+
+    def __init__(self) -> None:
+        """Translate the legacy LDAP environment variables into one provider adapter."""
+        ca_path = os.getenv("LDAP_CA_CERT_PATH")
+        if not ca_path:
+            default_ca = Path(__file__).resolve().parents[1] / "auth" / "ldap_ca.pem"
+            ca_path = str(default_ca) if default_ca.is_file() else None
+
+        ca_cert = None
+        if ca_path:
+            try:
+                ca_cert = Path(ca_path).read_text()
+            except OSError as ex:
+                msg = f"Configured LDAP CA certificate could not be read: {ca_path}"
+                raise RuntimeError(msg) from ex
+        else:
+            log_manager.store_auth_error_activity("No LDAP CA certificate found; the legacy LDAP adapter will use system trust")
+
+        base_dn = os.getenv("LDAP_BASE_DN") or ""
+        config = {
+            "server_url": os.getenv("LDAP_SERVER"),
+            "use_tls": True,
+            "ca_cert": ca_cert,
+            "user_dn_template": f"uid={{username}},{base_dn}",
+            "username_attr": "uid",
+            "name_attr": "cn",
+        }
+        self._provider = SimpleNamespace(
+            name="Legacy environment LDAP",
+            config=config,
+            get_secret_plaintext=lambda: None,
+        )
+
+    def get_required_credentials(self) -> list:
+        """Return the legacy Vue 2 environment-LDAP form fields."""
+        return ["username", "password"]
+
+    def authenticate(self, credentials: dict) -> tuple[dict, HTTPStatus]:
+        """Authenticate against exactly the LDAP server selected by the environment.
+
+        As in the removed environment-backed LDAP authenticator, a successful
+        directory bind identifies an already-existing local ``User`` by username;
+        this compatibility path does not provision or link database accounts.
+        """
+        identity = LDAPAuthenticator(self._provider).verify(credentials or {})
+        return BaseAuthenticator.generate_jwt(identity.username) if identity else BaseAuthenticator.generate_error()
 
 
 def cleanup_token_blacklist(app: Flask) -> None:
@@ -72,12 +148,11 @@ def initialize(app: Flask) -> None:
     """
     global current_authenticator  # noqa: PLW0603
 
-    JWTManager(app)
+    jwt_manager = JWTManager(app)
+    _configure_auth_generation_verification(jwt_manager)
 
-    # DEPRECATED: env-based keycloak/openid stay supported for existing deployments.
-    # All other values are handled by the auth providers configured in the database
-    # (a "Local accounts" provider - and an LDAP provider when previously configured
-    # via env - are seeded by migration).
+    # DEPRECATED: retain the explicitly selected legacy adapters for deployments
+    # that have not yet converted their environment configuration to providers.
     which = os.getenv("TARANIS_NG_AUTHENTICATOR")
     if which is not None:
         which = which.lower()
@@ -85,6 +160,8 @@ def initialize(app: Flask) -> None:
         current_authenticator = OpenIDAuthenticator()
     elif which == "keycloak":
         current_authenticator = KeycloakAuthenticator()
+    elif which == "ldap":
+        current_authenticator = LegacyEnvironmentLDAPAuthenticator()
     else:
         current_authenticator = None
 
@@ -383,10 +460,12 @@ def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[d
 
 
 def authenticate_with_provider(provider_id: object, credentials: dict) -> tuple[dict, HTTPStatus]:
-    """Authenticate form credentials against one (or the fallback chain of) providers.
+    """Authenticate form credentials against one selected database provider.
 
-    Without a provider_id (legacy clients), local providers are tried first,
-    then LDAP providers, in id order.
+    Without a provider ID, legacy clients use local login only. Database LDAP
+    providers require explicit selection so a local password is never fanned out
+    to every configured directory. The separate environment LDAP compatibility
+    adapter is selected during :func:`initialize` and does not enter this path.
 
     Args:
         provider_id: The chosen provider ID (may be None or a string).
@@ -408,7 +487,7 @@ def authenticate_with_provider(provider_id: object, credentials: dict) -> tuple[
             provider = None
         providers = [provider] if provider and provider.enabled and provider.kind in FORM_KINDS else []
     else:
-        providers = AuthProvider.get_enabled_by_kind(("local",)) + AuthProvider.get_enabled_by_kind(("ldap",))
+        providers = AuthProvider.get_enabled_by_kind(("local",))
 
     for provider in providers:
         if provider.kind == "local":
@@ -1078,6 +1157,9 @@ def decode_user_from_jwt(jwt_token: str) -> User:
     if decoded.get("scope"):
         # single-purpose tokens (MFA step, OAuth state) must never open a session
         log_manager.store_auth_error_activity("Scoped token rejected as session JWT")
+        return None
+    if not _auth_generation_is_current({}, decoded):
+        log_manager.store_auth_error_activity("Session JWT rejected because its authentication generation is stale or missing")
         return None
     return _find_active_user(decoded["sub"])
 

@@ -9,10 +9,14 @@ from config import Config
 from flask import Response, make_response, redirect
 from flask_jwt_extended import get_jwt
 from flask_restful import Api, Resource, ResponseBase, reqparse, request
-from managers import auth_manager
+from managers import auth_manager, auth_transaction_manager
 from managers.auth_manager import jwt_token_required, no_auth
+from managers.auth_transaction_manager import AuthTransactionKind
 from managers.cache_manager import redis_client
 from managers.log_manager import logger
+
+REDIRECT_REDEMPTION_COOKIE = "auth_redemption"
+REDIRECT_REDEMPTION_SECONDS = 60
 
 
 class Login(Resource):
@@ -23,19 +27,17 @@ class Login(Resource):
         """Handle GET requests for authentication.
 
         This method attempts to authenticate a user using the `auth_manager`.
-        If the authentication response is not an instance of `ResponseBase` and
-        contains an `access_token`, it will redirect the user to the URL specified
-        in the `gotoUrl` request argument and set a cookie with the JWT.
+        If the authentication response contains an access token, redirect the
+        user to ``gotoUrl`` with an HttpOnly one-time redemption handle.
 
         Returns:
-            response: A redirect response with a JWT cookie if authentication is successful,
+            response: A redirect response with a redemption cookie if authentication is successful,
                       otherwise the original response from `auth_manager.authenticate`.
         """
         response = auth_manager.authenticate(None)
-        if not isinstance(response, ResponseBase) and "gotoUrl" in request.args and "access_token" in response:
-            redirect_response = make_response(redirect(_safe_goto_url(request.args["gotoUrl"])))
-            redirect_response.set_cookie("jwt", response["access_token"], **_login_cookie_kwargs())
-            return redirect_response
+        payload = response[0] if isinstance(response, tuple) and response and isinstance(response[0], dict) else response
+        if isinstance(payload, dict) and "gotoUrl" in request.args and "access_token" in payload:
+            return _finish_redirect_login(_safe_goto_url(request.args["gotoUrl"]), payload)
 
         return response
 
@@ -163,17 +165,55 @@ def _safe_goto_url(goto_url: str | None) -> str:
     return goto_url if goto_url and _is_safe_goto_url(goto_url) else "/"
 
 
+def _redirect_provider_goto_url(goto_url: str | None) -> str | None:
+    """Accept only the Vue 3 mount as a database redirect-provider target.
+
+    Vue 3, mounted at ``/v2``, can redeem the opaque redirect-login handle.
+    Legacy Vue 2 is mounted at root paths and has no redemption client, so
+    sending an OAuth/SAML round trip there could authenticate successfully but
+    leave the user unable to establish the GUI session.
+    """
+    if not goto_url or not _is_safe_goto_url(goto_url):
+        return None
+    parsed = urllib.parse.urlparse(goto_url)
+    if parsed.scheme and (parsed.scheme != request.scheme or parsed.netloc != request.host):
+        return None
+    path = parsed.path
+    return goto_url if path == "/v2" or path.startswith("/v2/") else None
+
+
+def _invalid_redirect_provider_target() -> tuple[dict, HTTPStatus]:
+    """Return a clear compatibility error for a non-Vue-3 redirect target."""
+    return {"error": "Redirect login requires a same-origin /v2 target"}, HTTPStatus.BAD_REQUEST
+
+
 def _login_cookie_kwargs() -> dict:
-    """Cookie flags for the tokens handed to the GUI across a redirect login.
+    """Cookie flags for the one-time redirect-login redemption handle.
 
     ``Secure`` follows the request scheme (ProxyFix reflects the proxy's
     ``X-Forwarded-Proto``), so the cookie is protected over HTTPS in production
-    without breaking plain-HTTP local/E2E runs. ``SameSite=Lax`` lets the cookie
-    survive the top-level redirect back from the IdP while blocking cross-site
-    POSTs. ``HttpOnly`` is deliberately NOT set: the GUI reads the value from
-    ``document.cookie`` to adopt it and then clears it.
+    without breaking plain-HTTP local/E2E runs. The handle is HttpOnly, restricted
+    to the redemption endpoint, short-lived, and sent only on same-site requests.
     """
-    return {"secure": request.is_secure, "samesite": "Lax"}
+    return {
+        "secure": request.is_secure,
+        "httponly": True,
+        "samesite": "Strict",
+        "path": "/api/v1/auth/redeem",
+        "max_age": REDIRECT_REDEMPTION_SECONDS,
+    }
+
+
+def _is_same_origin_request() -> bool:
+    """Reject browser redemption requests originating outside this exact origin."""
+    fetch_site = request.headers.get("Sec-Fetch-Site")
+    if fetch_site and fetch_site not in ("same-origin", "none"):
+        return False
+    origin = request.headers.get("Origin")
+    if not origin:
+        return True
+    parsed = urllib.parse.urlparse(origin)
+    return parsed.scheme == request.scheme and parsed.netloc == request.host and parsed.path in ("", "/")
 
 
 def _oauth_redirect_uri(provider_slug: str, config: dict) -> str:
@@ -213,10 +253,9 @@ def _login_error_redirect(goto_url: str, code: str) -> Response:
 def _finish_redirect_login(goto_url: str, response: dict) -> Response:
     """Hand the login verdict to the GUI at the end of a redirect (OIDC/OAuth2/SAML) flow.
 
-    The browser is mid-redirect, so there is no JSON body to answer with: the verdict
-    travels in cookies the GUI consumes on arrival. Either the JWT, or - when the user
-    still owes a second factor - the short-lived scoped token that lets the login page
-    finish the MFA step it would have run for a form login.
+    The browser is mid-redirect, so there is no JSON body to answer with. Store
+    the verdict server-side and set only an opaque one-time handle in an HttpOnly
+    cookie. The GUI redeems it with a same-origin POST after arrival.
 
     Args:
         goto_url (str): The GUI URL to return to.
@@ -225,25 +264,46 @@ def _finish_redirect_login(goto_url: str, response: dict) -> Response:
     Returns:
         Response: The redirect response.
     """
-    cookies: dict[str, str] = {}
     code = response.get("code", "auth_failed")
 
-    if "access_token" in response:
-        cookies["jwt"] = response["access_token"]
-    elif code == "MFA_REQUIRED" and response.get("mfa_token"):
-        cookies["mfa_token"] = response["mfa_token"]
-        # percent-encoded: a bare comma makes werkzeug quote the whole value
-        cookies["mfa_methods"] = urllib.parse.quote(",".join(response.get("methods") or ["totp"]))
-    elif code == "MFA_ENROLLMENT_REQUIRED" and response.get("enroll_token"):
-        cookies["mfa_enroll"] = response["enroll_token"]
-        cookies["mfa_methods"] = urllib.parse.quote(",".join(response.get("methods") or ["totp"]))
-    else:
+    redeemable = (
+        "access_token" in response
+        or (code == "MFA_REQUIRED" and response.get("mfa_token"))
+        or (code == "MFA_ENROLLMENT_REQUIRED" and response.get("enroll_token"))
+    )
+    if not redeemable:
         return _login_error_redirect(goto_url, code)
 
+    handle = auth_transaction_manager.create(
+        AuthTransactionKind.REDIRECT_REDEMPTION,
+        {"response": response},
+        REDIRECT_REDEMPTION_SECONDS,
+    )
     redirect_response = make_response(redirect(goto_url))
-    for name, value in cookies.items():
-        redirect_response.set_cookie(name, value, **_login_cookie_kwargs())
+    redirect_response.set_cookie(REDIRECT_REDEMPTION_COOKIE, handle, **_login_cookie_kwargs())
+    redirect_response.headers["Cache-Control"] = "no-store"
     return redirect_response
+
+
+class AuthRedemption(Resource):
+    """Redeem a redirect-login result exactly once from the same origin."""
+
+    @no_auth
+    def post(self) -> Response:
+        """Consume the HttpOnly redemption handle and return the stored login result."""
+        if not _is_same_origin_request():
+            return {"error": "Cross-origin redemption is not allowed"}, HTTPStatus.FORBIDDEN
+
+        handle = request.cookies.get(REDIRECT_REDEMPTION_COOKIE, "")
+        transaction = auth_transaction_manager.consume(AuthTransactionKind.REDIRECT_REDEMPTION, handle)
+        response_data = transaction.get("response") if transaction else None
+        if not isinstance(response_data, dict):
+            response = make_response({"error": "Invalid or expired redemption handle"}, HTTPStatus.UNAUTHORIZED)
+        else:
+            response = make_response(response_data, HTTPStatus.OK)
+        response.delete_cookie(REDIRECT_REDEMPTION_COOKIE, path="/api/v1/auth/redeem")
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
 
 class OAuthLoginRedirect(Resource):
@@ -263,21 +323,23 @@ class OAuthLoginRedirect(Resource):
         if not authenticator:
             return {"error": "Unknown login method"}, HTTPStatus.NOT_FOUND
         provider_id = authenticator.provider.id
-        goto_url = _safe_goto_url(request.args.get("gotoUrl"))
+        goto_url = _redirect_provider_goto_url(request.args.get("gotoUrl"))
+        if not goto_url:
+            return _invalid_redirect_provider_target()
         nonce = uuid.uuid4().hex
-        # When PKCE is enabled for this provider, generate a fresh
-        # code_verifier per login attempt and carry it inside the signed state
-        # JWT so it survives the browser round-trip to the IdP and back.
+        # The browser receives only an opaque transaction handle. The verifier
+        # and nonce remain server-side until the callback consumes the state.
         code_verifier = authenticator.generate_code_verifier() if authenticator.uses_pkce() else None
-        state = auth_manager.make_scoped_token(
-            f"provider:{provider_id}",
-            "oauth_state",
-            expires_minutes=auth_manager.OAUTH_STATE_MINUTES,
-            pid=provider_id,
-            gotoUrl=goto_url,
-            nonce=nonce,
-            code_verifier=code_verifier,
-            pkce_method=authenticator.pkce_method(),
+        state = auth_transaction_manager.create(
+            AuthTransactionKind.OAUTH_STATE,
+            {
+                "provider_id": provider_id,
+                "goto_url": goto_url,
+                "nonce": nonce,
+                "code_verifier": code_verifier,
+                "pkce_method": authenticator.pkce_method(),
+            },
+            auth_manager.OAUTH_STATE_MINUTES * 60,
         )
         redirect_uri = _oauth_redirect_uri(provider_slug, authenticator.config)
         try:
@@ -294,9 +356,8 @@ class OAuthCallback(Resource):
     def get(self, provider_slug: str) -> Response:
         """Finish the authorization-code flow and redirect to the GUI.
 
-        The verdict reaches the GUI in cookies: the JWT on success, or the scoped
-        MFA token when the user still owes a second factor; on failure the GUI
-        login page receives a login_error query parameter.
+        State is atomically consumed before the code exchange. The verdict is
+        stored behind a second one-time handle for same-origin GUI redemption.
 
         Args:
             provider_slug (str): The auth provider the flow was started with.
@@ -304,11 +365,11 @@ class OAuthCallback(Resource):
         Returns:
             Response: A redirect response.
         """
+        state = auth_transaction_manager.consume(AuthTransactionKind.OAUTH_STATE, request.args.get("state", ""))
         authenticator = auth_manager.get_oauth_authenticator(provider_slug)
-        state = auth_manager.decode_scoped_token(request.args.get("state", ""), "oauth_state")
-        if not authenticator or not state or state.get("pid") != authenticator.provider.id:
+        if not authenticator or not state or state.get("provider_id") != authenticator.provider.id:
             return {"error": "Invalid state"}, HTTPStatus.UNAUTHORIZED
-        goto_url = state.get("gotoUrl") or "/"
+        goto_url = _safe_goto_url(state.get("goto_url"))
 
         code = request.args.get("code")
         if not code:
@@ -376,7 +437,9 @@ class SamlLoginRedirect(Resource):
         if not authenticator:
             return {"error": "Unknown login method"}, HTTPStatus.NOT_FOUND
         provider_id = authenticator.provider.id
-        goto_url = _safe_goto_url(request.args.get("gotoUrl"))
+        goto_url = _redirect_provider_goto_url(request.args.get("gotoUrl"))
+        if not goto_url:
+            return _invalid_redirect_provider_target()
         try:
             if authenticator.is_federation():
                 # Send the user to the discovery service to pick their IdP. Our
@@ -637,6 +700,7 @@ def initialize(api: Api) -> None:
     """
     api.add_resource(Login, "/api/v1/auth/login")
     api.add_resource(LoginMethods, "/api/v1/auth/methods")
+    api.add_resource(AuthRedemption, "/api/v1/auth/redeem")
     api.add_resource(OAuthLoginRedirect, "/api/v1/auth/oauth/<string:provider_slug>/login")
     api.add_resource(OAuthCallback, "/api/v1/auth/oauth/<string:provider_slug>/callback")
     api.add_resource(SamlLoginRedirect, "/api/v1/auth/saml/<string:provider_slug>/login")

@@ -484,7 +484,10 @@ class User(db.Model):
             user.password = None
         if "email" in updated_user:
             user.email = updated_user["email"]
-        user.require_mfa = bool(updated_user.get("require_mfa"))
+        # Legacy Vue 2 does not know this field and omits it from its PUT.
+        # Absence means "leave unchanged"; an explicit false still clears it.
+        if "require_mfa" in data:
+            user.require_mfa = bool(updated_user.get("require_mfa"))
         if updated_user.get("status") in USER_STATUSES and updated_user["status"] != user.status:
             cls._check_status_change(user, updated_user["status"])
             user.status = updated_user["status"]

@@ -91,10 +91,11 @@ def test_migrations_use_frozen_local_objects_not_application_models() -> None:
     assert "db.Model" not in data_source
 
 
-def test_data_revision_owns_exactly_four_permissions_and_local_provider() -> None:
+def test_data_revision_owns_permissions_local_provider_and_generation_one_settings() -> None:
     module = _module(DATA_MIGRATION)
     permissions = _assignment(module, "PERMISSIONS")
     local_provider = _assignment(module, "LOCAL_PROVIDER")
+    security_settings = _assignment(module, "SECURITY_SETTINGS")
 
     assert {permission["id"] for permission in permissions} == {
         "CONFIG_AUTH_PROVIDER_ACCESS",
@@ -116,6 +117,27 @@ def test_data_revision_owns_exactly_four_permissions_and_local_provider() -> Non
         "secret": None,
         "updated_by": None,
     }
+    assert security_settings == {
+        "id": 1,
+        "passkey_enabled": False,
+        "passkey_second_factor": True,
+        "require_mfa": False,
+        "auth_generation": 1,
+        "rp_id": None,
+        "rp_name": "Taranis NG",
+        "origins": None,
+        "updated_by": None,
+    }
+
+
+def test_auth_generation_is_revision_frozen_and_downgrade_protected() -> None:
+    schema_source = SCHEMA_MIGRATION.read_text(encoding="utf-8")
+    data_source = DATA_MIGRATION.read_text(encoding="utf-8")
+
+    assert 'sa.Column("auth_generation", sa.INTEGER(), nullable=False, server_default=sa.text("1"))' in schema_source
+    assert 'sa.column("auth_generation", sa.Integer())' in data_source
+    assert "security_settings_row != SECURITY_SETTINGS" in data_source
+    assert 'sa.delete(security_settings).where(security_settings.c.id == SECURITY_SETTINGS["id"])' in data_source
 
 
 def test_schema_downgrade_refuses_loss_instead_of_inventing_passwords() -> None:

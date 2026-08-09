@@ -28,6 +28,7 @@ class SecuritySettings(db.Model):
         passkey_second_factor (bool): Whether a registered passkey may satisfy the
             second-factor step. Off means TOTP is the only accepted second factor.
         require_mfa (bool): Whether every user must have a second factor.
+        auth_generation (int): Revision counter invalidating all older JWTs.
         rp_id (str): WebAuthn relying-party ID (the site's registrable domain).
         rp_name (str): Relying-party display name shown by the authenticator.
         origins (str): Comma-separated list of allowed origins.
@@ -41,6 +42,7 @@ class SecuritySettings(db.Model):
     passkey_enabled = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
     passkey_second_factor = db.Column(db.Boolean, nullable=False, default=True, server_default="true")
     require_mfa = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
+    auth_generation = db.Column(db.Integer, nullable=False, default=1, server_default="1")
     rp_id = db.Column(db.String(), nullable=True)
     rp_name = db.Column(db.String(), nullable=True)
     origins = db.Column(db.String(), nullable=True)
@@ -61,6 +63,7 @@ class SecuritySettings(db.Model):
             record.passkey_enabled = False
             record.passkey_second_factor = True
             record.require_mfa = False
+            record.auth_generation = 1
             record.rp_name = "Taranis NG"
             db.session.add(record)
             db.session.commit()
@@ -127,3 +130,12 @@ class SecuritySettings(db.Model):
     def mfa_required(cls) -> bool:
         """Tell whether this installation demands a second factor of every user."""
         return bool(cls.get().require_mfa)
+
+    @classmethod
+    def get_auth_generation(cls) -> int:
+        """Return the positive integer generation required in every JWT."""
+        generation = cls.get().auth_generation
+        if type(generation) is not int or generation < 1:  # bool is intentionally invalid
+            msg = "Security settings contain an invalid authentication generation"
+            raise RuntimeError(msg)
+        return generation

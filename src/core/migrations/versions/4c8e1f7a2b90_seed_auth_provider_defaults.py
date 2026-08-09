@@ -1,4 +1,4 @@
-"""Seed local authentication and auth-provider administration permissions.
+"""Seed local authentication, auth generation, and provider permissions.
 
 The lightweight tables below are frozen migration-local snapshots.  This
 revision must not import application ORM models, which can change over time.
@@ -57,6 +57,18 @@ LOCAL_PROVIDER = {
     "updated_by": None,
 }
 
+SECURITY_SETTINGS = {
+    "id": 1,
+    "passkey_enabled": False,
+    "passkey_second_factor": True,
+    "require_mfa": False,
+    "auth_generation": 1,
+    "rp_id": None,
+    "rp_name": "Taranis NG",
+    "origins": None,
+    "updated_by": None,
+}
+
 permission = sa.table(
     "permission",
     sa.column("id", sa.String()),
@@ -95,10 +107,22 @@ auth_provider_role = sa.table(
     sa.column("role_id", sa.Integer()),
 )
 user_auth_identity = sa.table("user_auth_identity", sa.column("auth_provider_id", sa.Integer()))
+security_settings = sa.table(
+    "security_settings",
+    sa.column("id", sa.Integer()),
+    sa.column("passkey_enabled", sa.Boolean()),
+    sa.column("passkey_second_factor", sa.Boolean()),
+    sa.column("require_mfa", sa.Boolean()),
+    sa.column("auth_generation", sa.Integer()),
+    sa.column("rp_id", sa.String()),
+    sa.column("rp_name", sa.String()),
+    sa.column("origins", sa.String()),
+    sa.column("updated_by", sa.String()),
+)
 
 
 def upgrade() -> None:
-    """Add the four permissions, exact Admin links, and local provider."""
+    """Add permissions, Admin links, local provider, and generation-one settings."""
     connection = op.get_bind()
     admin_role_id = connection.execute(sa.select(role.c.id).where(role.c.name == "Admin")).scalar_one_or_none()
     if admin_role_id is None:
@@ -111,12 +135,14 @@ def upgrade() -> None:
         [{"role_id": admin_role_id, "permission_id": item["id"]} for item in PERMISSIONS],
     )
     op.bulk_insert(auth_provider, [LOCAL_PROVIDER])
+    op.bulk_insert(security_settings, [SECURITY_SETTINGS])
 
 
 def _assert_safe_downgrade(
     connection: sa.engine.Connection,
     admin_role_id: int | None,
     local_provider_row: dict[str, object] | None,
+    security_settings_row: dict[str, object] | None,
 ) -> None:
     """Refuse to remove migration-owned rows after authentication use or reassignment."""
     permission_ids = tuple(item["id"] for item in PERMISSIONS)
@@ -167,6 +193,19 @@ def _assert_safe_downgrade(
         message = "Refusing to remove authentication permissions: the Admin role is missing"
         raise RuntimeError(message)
 
+    if security_settings_row is None:
+        message = "Refusing to remove authentication defaults: the singleton security settings row is missing"
+        raise RuntimeError(message)
+    if security_settings_row != SECURITY_SETTINGS:
+        message = "Refusing to remove authentication defaults because security settings or auth generation have changed"
+        raise RuntimeError(message)
+    another_settings_row = connection.execute(
+        sa.select(sa.literal(1)).select_from(security_settings).where(security_settings.c.id != SECURITY_SETTINGS["id"]).limit(1),
+    ).scalar()
+    if another_settings_row:
+        message = "Refusing to remove authentication defaults because additional security settings rows exist"
+        raise RuntimeError(message)
+
 
 def downgrade() -> None:
     """Remove exactly the rows owned by this revision when still safe."""
@@ -196,7 +235,26 @@ def downgrade() -> None:
     )
     local_provider_row = dict(local_provider_row) if local_provider_row is not None else None
 
-    _assert_safe_downgrade(connection, admin_role_id, local_provider_row)
+    security_settings_row = (
+        connection.execute(
+            sa.select(
+                security_settings.c.id,
+                security_settings.c.passkey_enabled,
+                security_settings.c.passkey_second_factor,
+                security_settings.c.require_mfa,
+                security_settings.c.auth_generation,
+                security_settings.c.rp_id,
+                security_settings.c.rp_name,
+                security_settings.c.origins,
+                security_settings.c.updated_by,
+            ).where(security_settings.c.id == SECURITY_SETTINGS["id"]),
+        )
+        .mappings()
+        .one_or_none()
+    )
+    security_settings_row = dict(security_settings_row) if security_settings_row is not None else None
+
+    _assert_safe_downgrade(connection, admin_role_id, local_provider_row, security_settings_row)
     local_provider_id = local_provider_row["id"]
 
     permission_ids = tuple(item["id"] for item in PERMISSIONS)
@@ -207,3 +265,4 @@ def downgrade() -> None:
     )
     connection.execute(sa.delete(auth_provider).where(auth_provider.c.id == local_provider_id))
     connection.execute(sa.delete(permission).where(permission.c.id.in_(permission_ids)))
+    connection.execute(sa.delete(security_settings).where(security_settings.c.id == SECURITY_SETTINGS["id"]))

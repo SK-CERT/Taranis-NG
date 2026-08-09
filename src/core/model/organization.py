@@ -156,7 +156,10 @@ class Organization(db.Model):
         organization = db.session.get(cls, organization_id)
         organization.name = updated_organization.name
         organization.description = updated_organization.description
-        organization.require_mfa = updated_organization.require_mfa
+        # Legacy Vue 2 does not know this field and omits it from its PUT.
+        # Absence means "leave unchanged"; an explicit false still clears it.
+        if "require_mfa" in data:
+            organization.require_mfa = updated_organization.require_mfa
         organization.address.street = updated_organization.address.street
         organization.address.city = updated_organization.address.city
         organization.address.zip = updated_organization.address.zip

@@ -12,6 +12,7 @@ from http import HTTPStatus
 
 from flask_jwt_extended import create_access_token
 from managers import log_manager
+from model.security_settings import SecuritySettings
 from model.token_blacklist import TokenBlacklist
 from model.user import User
 
@@ -149,6 +150,7 @@ class BaseAuthenticator:
         access_token = create_access_token(
             identity=user.username,
             additional_claims={
+                "auth_generation": SecuritySettings.get_auth_generation(),
                 "user_claims": {
                     "id": user.id,
                     "name": user.name,
