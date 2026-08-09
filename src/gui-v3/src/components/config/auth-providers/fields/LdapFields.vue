@@ -28,6 +28,7 @@
             />
         </v-col>
         <v-col
+            v-if="useTls"
             cols="12"
             class="mb-n4"
         >
@@ -40,35 +41,65 @@
                 :hint="t('auth_provider.ca_cert_hint')"
                 persistent-hint
                 :disabled="saving"
+                data-test="ldap-ca-certificate"
             />
         </v-col>
 
-        <!-- Bind mode switch: Direct bind (bind as the user) vs Search & bind (service account).
+        <!-- Both bind modes stay visible; selecting one clears the other mode's fields.
              The backend derives the path from which field is set, checking user_dn_template
              first, so switching clears the other mode's fields to avoid ambiguity. -->
         <v-col cols="12">
-            <v-switch
+            <div class="text-subtitle-2 mb-1">{{ t('auth_provider.ldap_bind_mode') }}</div>
+            <v-radio-group
                 v-model="bindMode"
-                color="primary"
+                inline
                 hide-details
+                aria-describedby="ldap-bind-mode-help"
                 :disabled="saving"
-                :false-value="'direct'"
-                :true-value="'search'"
-                class="mb-n4"
+                data-test="ldap-bind-mode"
             >
-                <template #label>
-                    <span class="text-body-2">
-                        {{ bindMode === 'direct' ? t('auth_provider.ldap_bind_mode_direct') : t('auth_provider.ldap_bind_mode_search') }}
-                    </span>
-                    <v-icon
-                        size="x-small"
-                        class="ml-1"
-                        :title="t('auth_provider.ldap_bind_mode_hint')"
-                    >
-                        {{ ICONS.INFORMATION_OUTLINE }}
-                    </v-icon>
-                </template>
-            </v-switch>
+                <v-radio
+                    value="direct"
+                    color="primary"
+                    data-test="ldap-bind-direct"
+                >
+                    <template #label>
+                        <span>{{ t('auth_provider.ldap_bind_mode_direct') }}</span>
+                        <v-tooltip
+                            location="top"
+                            :text="t('auth_provider.ldap_bind_mode_direct_hint')"
+                        >
+                            <template #activator="{ props: tooltipProps }">
+                                <v-btn
+                                    v-bind="tooltipProps"
+                                    icon
+                                    variant="text"
+                                    size="x-small"
+                                    class="ml-1"
+                                    :aria-label="t('auth_provider.ldap_bind_mode_direct_hint')"
+                                    data-test="ldap-direct-bind-help"
+                                    @click.stop
+                                >
+                                    <v-icon size="small">{{ ICONS.HELP }}</v-icon>
+                                </v-btn>
+                            </template>
+                        </v-tooltip>
+                    </template>
+                </v-radio>
+                <v-radio
+                    value="search"
+                    color="primary"
+                    :label="t('auth_provider.ldap_bind_mode_search')"
+                    data-test="ldap-bind-search"
+                />
+            </v-radio-group>
+            <AuthProviderHelp
+                id="ldap-bind-mode-help"
+                class="mt-1"
+                data-test="ldap-bind-mode-help"
+            >
+                {{ t(bindMode === 'direct' ? 'auth_provider.ldap_bind_mode_direct_hint' : 'auth_provider.ldap_bind_mode_search_hint') }}
+            </AuthProviderHelp>
         </v-col>
 
         <!-- Direct bind: bind as the user with a DN built from the template. No bind password. -->
@@ -183,7 +214,7 @@
     /**
      * LdapFields - the LDAP connection, binding and attribute-mapping fields.
      *
-     * A switch selects the bind mode, matching the two paths the backend's
+     * A radio group selects the bind mode, matching the two paths the backend's
      * LDAPAuthenticator.verify() takes at runtime:
      *
      *   Direct bind   - the user is authenticated by binding as a DN built from
@@ -208,6 +239,7 @@
     import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
+    import AuthProviderHelp from '../AuthProviderHelp.vue'
     import type { ProviderConfig } from '../types'
 
     /** The two bind modes, named to mirror the backend paths in ldap_authenticator.py. */
@@ -266,5 +298,9 @@
             // falls through to the bind_dn + search_base branch.
             delete props.config.user_dn_template
         }
+        // This input means a service-account password only in search mode.
+        // Clear newly typed text in either direction; an existing stored secret
+        // remains omitted from the update payload and is never exposed here.
+        secretModel.value = ''
     })
 </script>

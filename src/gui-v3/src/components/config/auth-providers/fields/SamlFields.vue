@@ -9,7 +9,6 @@
         <v-tab value="general">{{ t('auth_provider.saml_tab_general') }}</v-tab>
         <v-tab value="service">{{ t('auth_provider.saml_tab_service_information') }}</v-tab>
         <v-tab value="keypair">{{ t('auth_provider.saml_tab_sp_keypair') }}</v-tab>
-        <v-tab value="roles">{{ t('auth_provider.default_roles') }}</v-tab>
     </v-tabs>
 
     <v-window
@@ -19,27 +18,35 @@
         <!-- General: the federation toggle, the single-IdP or federation block, the SP identity
              and attribute mapping, and the URLs to hand to the identity provider. -->
         <v-window-item value="general">
-            <!-- Target a single identity provider, or connect to a whole federation:
-                 the user then picks their IdP at a discovery service (WAYF). -->
-            <v-switch
+            <!-- Both mutually exclusive connection modes remain visible. -->
+            <div class="text-subtitle-2 ml-4">{{ t('auth_provider.saml_connection_mode') }}</div>
+            <v-radio-group
                 v-model="federationModel"
-                color="primary"
-                density="comfortable"
+                inline
                 hide-details
                 :disabled="saving"
-                class="mb-2 ml-4"
+                class="mb-1 ml-4"
+                data-test="saml-connection-mode"
             >
-                <template #label>
-                    <span class="text-body-2">{{ t('auth_provider.saml_use_federation') }}</span>
-                    <v-icon
-                        size="x-small"
-                        class="ml-1"
-                        :title="t('auth_provider.saml_use_federation_hint')"
-                    >
-                        {{ ICONS.INFORMATION_OUTLINE }}
-                    </v-icon>
-                </template>
-            </v-switch>
+                <v-radio
+                    :value="false"
+                    color="primary"
+                    :label="t('auth_provider.saml_single_idp')"
+                    data-test="saml-mode-single"
+                />
+                <v-radio
+                    :value="true"
+                    color="primary"
+                    :label="t('auth_provider.saml_use_federation')"
+                    data-test="saml-mode-federation"
+                />
+            </v-radio-group>
+            <div
+                class="text-caption text-medium-emphasis mb-3 ml-4"
+                data-test="saml-connection-mode-help"
+            >
+                {{ t(federationModel ? 'auth_provider.saml_use_federation_hint' : 'auth_provider.saml_single_idp_hint') }}
+            </div>
 
             <template v-if="!federationModel">
                 <!-- The three fields below all live in the IdP's metadata; read them
@@ -517,19 +524,12 @@
                 </v-col>
             </v-row>
         </v-window-item>
-
-        <!-- Default roles for auto-created users. Rendered by the parent through the
-             `roles` slot, so the EntitySelectTable and its permission/autosave
-             gating stay owned by the parent (NewAuthProvider owns selectedRoles). -->
-        <v-window-item value="roles">
-            <slot name="roles" />
-        </v-window-item>
     </v-window>
 </template>
 
 <script setup lang="ts">
     /**
-     * SamlFields - the SAML 2.0 provider fields, organized into four tabs:
+     * SamlFields - the SAML 2.0 provider fields, organized into three tabs:
      *
      *   General             - the federation toggle, the single-IdP or federation
      *                         block, the SP identity & attribute mapping, and the
@@ -538,9 +538,6 @@
      *                         (display name, description, organization, contact).
      *   SP keypair          - the encryption keypair an identity provider encrypts
      *                         the assertion to.
-     *   Default roles       - the roles auto-created users get (rendered through
-     *                         the `roles` slot by the parent, which owns
-     *                         selectedRoles and the permission/autosave gating).
      *
      * The shared `config` object is mutated in place (the project disables
      * `vue/no-mutating-props`, and the object is the same reactive reference
@@ -553,7 +550,6 @@
     import { ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import SuggestField from '@/components/common/SuggestField.vue'
-    import { ICONS } from '@/config/ui-constants'
     import type { ProviderConfig } from '../types'
 
     withDefaults(

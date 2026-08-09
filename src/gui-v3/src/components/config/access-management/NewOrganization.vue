@@ -23,18 +23,28 @@
             />
 
             <v-card-text>
+                <p
+                    id="organization-required-fields-hint"
+                    class="text-caption text-medium-emphasis mb-3"
+                >
+                    {{ t('access_management.organizations.required_fields_hint') }}
+                </p>
                 <v-form
                     ref="formRef"
                     :disabled="!canSave"
+                    aria-describedby="organization-required-fields-hint"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
                         v-model="localItem.name"
                         :spellcheck="spellcheck"
-                        :label="t('access_management.organizations.name')"
+                        :label="`${t('access_management.organizations.name')} *`"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
+                        required
+                        aria-required="true"
+                        data-test="organization-name"
                         :rules="[(v) => !!v || t('error.required')]"
                         :disabled="saving"
                     />

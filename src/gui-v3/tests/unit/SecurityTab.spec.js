@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import SecurityTab from '@/components/config/access-management/SecurityTab.vue'
+import SuggestField from '@/components/common/SuggestField.vue'
 import { getSecuritySettings, updateSecuritySettings } from '@/api/config'
 
 vi.mock('@/api/config', () => ({
@@ -68,6 +69,38 @@ describe('SecurityTab (passkey relying-party settings)', () => {
         const wrapper = await mountTab()
         expect(wrapper.vm.suggestedRpId).toBe(window.location.hostname)
         expect(wrapper.vm.suggestedOrigin).toBe(window.location.origin)
+    })
+
+    it('suggests a safe relying-party host from configured origins and applies it with the wand', async () => {
+        const wrapper = await mountTab({
+            require_mfa: false,
+            passkey_enabled: false,
+            passkey_second_factor: true,
+            rp_id: '',
+            rp_name: '',
+            origins: 'https://login.example.org:8443, https://backup.example.org'
+        })
+        const field = wrapper.findComponent(SuggestField)
+
+        expect(wrapper.vm.suggestedRpId).toBe('login.example.org')
+        expect(field.props('suggested')).toBe('login.example.org')
+        field.vm.applySuggested()
+        await wrapper.vm.$nextTick()
+        expect(wrapper.vm.settings.rp_id).toBe('login.example.org')
+    })
+
+    it('changes the global MFA and passkey explanations with their switch state', async () => {
+        const wrapper = await mountTab()
+
+        expect(wrapper.vm.requireMfaHint).toContain('no site-wide MFA requirement')
+        expect(wrapper.vm.passkeyEnabledHint).toContain('unavailable')
+
+        wrapper.vm.settings.require_mfa = true
+        wrapper.vm.settings.passkey_enabled = true
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.vm.requireMfaHint).toContain('Every user must enroll')
+        expect(wrapper.vm.passkeyEnabledHint).toContain('is offered')
     })
 
     // ── Validation ────────────────────────────────

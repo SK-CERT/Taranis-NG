@@ -4,6 +4,7 @@
         max-width="900"
         persistent
         scrollable
+        :aria-label="dialogTitle"
         @keydown.esc="requestClose"
     >
         <template #activator="{ props: activatorProps }">
@@ -15,7 +16,7 @@
 
         <v-card>
             <DialogToolbar
-                :title="isEdit ? t('auth_provider.edit') : t('auth_provider.add_new')"
+                :title="dialogTitle"
                 :saving="saving"
                 @cancel="requestClose"
                 @save="saveAndClose"
@@ -36,12 +37,14 @@
                                  stored value (localItem.name) is left untouched so it is
                                  re-sent unchanged on save. Every other kind is freely named. -->
                             <v-text-field
+                                ref="nameInputRef"
                                 :model-value="isLocalProvider ? t('auth_provider.local_name') : localItem.name"
                                 :label="t('auth_provider.name')"
                                 variant="outlined"
                                 density="comfortable"
                                 :rules="isLocalProvider ? [] : [(v) => !!v || t('error.required')]"
                                 :disabled="saving || isLocalProvider"
+                                :autofocus="!isLocalProvider"
                                 :hint="isLocalProvider ? t('auth_provider.local_name_hint') : undefined"
                                 :persistent-hint="isLocalProvider"
                                 @update:model-value="(v) => (localItem.name = v)"
@@ -67,10 +70,15 @@
                         >
                             <v-switch
                                 v-model="localItem.enabled"
-                                :label="t('auth_provider.enabled')"
+                                :label="t('auth_provider.enabled_for_sign_in')"
                                 color="primary"
                                 :disabled="saving"
+                                aria-describedby="auth-provider-enabled-help"
+                                data-test="auth-provider-enabled"
                             />
+                            <AuthProviderHelp id="auth-provider-enabled-help">
+                                {{ providerEnabledHint }}
+                            </AuthProviderHelp>
                         </v-col>
                     </v-row>
 
@@ -104,7 +112,7 @@
                         <v-row>
                             <v-col
                                 cols="12"
-                                md="4"
+                                :md="isAutoCreate ? 4 : 12"
                                 class="mb-4"
                             >
                                 <v-select
@@ -113,12 +121,15 @@
                                     :label="t('auth_provider.provisioning_mode')"
                                     variant="outlined"
                                     density="comfortable"
-                                    :hint="t('auth_provider.provisioning_mode_hint')"
-                                    persistent-hint
+                                    aria-describedby="auth-provider-provisioning-help"
                                     :disabled="saving"
                                 />
+                                <AuthProviderHelp id="auth-provider-provisioning-help">
+                                    {{ t('auth_provider.provisioning_mode_hint') }}
+                                </AuthProviderHelp>
                             </v-col>
                             <v-col
+                                v-if="isAutoCreate"
                                 cols="12"
                                 md="4"
                             >
@@ -133,6 +144,7 @@
                                 />
                             </v-col>
                             <v-col
+                                v-if="isAutoCreate"
                                 cols="12"
                                 md="4"
                             >
@@ -163,10 +175,13 @@
                                 v-model="localItem.require_mfa"
                                 :label="t('auth_provider.require_mfa')"
                                 color="primary"
-                                :hint="t('auth_provider.require_mfa_hint')"
-                                persistent-hint
+                                aria-describedby="auth-provider-mfa-help"
                                 :disabled="saving"
+                                data-test="auth-provider-require-mfa"
                             />
+                            <AuthProviderHelp id="auth-provider-mfa-help">
+                                {{ mfaRequirementHint }}
+                            </AuthProviderHelp>
                         </v-col>
                     </v-row>
 
@@ -182,8 +197,7 @@
                             :config="config"
                             :saving="saving"
                             :has-secret="hasSecret"
-                            :is-edit="isEdit"
-                            :redirect-uri="oauthRedirectUri"
+                            :redirect-uri="hasValidSlug ? oauthRedirectUri : ''"
                             scopes-placeholder="openid profile email"
                         />
                     </template>
@@ -200,6 +214,7 @@
                             :config="config"
                             :saving="saving"
                             :has-secret="hasSecret"
+                            :redirect-uri="hasValidSlug ? oauthRedirectUri : ''"
                         />
                     </template>
 
@@ -227,17 +242,7 @@
                             @load-metadata="loadMetadata"
                             @verify-federation="verifyFederation"
                             @generate-keypair="generateKeypair"
-                        >
-                            <template #roles>
-                                <EntitySelectTable
-                                    v-model="selectedRoles"
-                                    :title="t('auth_provider.default_roles')"
-                                    :items="roles"
-                                    :headers="roleHeaders"
-                                    :disabled="saving || !isAutoCreate"
-                                />
-                            </template>
-                        </SamlFields>
+                        />
                     </template>
 
                     <!-- LDAP fields -->
@@ -251,23 +256,25 @@
                         />
                     </template>
 
-                    <!-- Default roles for auto-created users (only meaningful when auto-creation is on).
-                         Rendered inline for non-SAML external kinds; SAML shows it in its
-                         own "Default roles" tab inside SamlFields (see the #roles slot above). -->
-                    <template v-if="isExternalKind && localItem.kind !== 'saml'">
+                    <!-- One consistent location for every external provider kind. -->
+                    <template v-if="isExternalKind && isAutoCreate">
                         <v-divider class="my-4" />
-                        <EntitySelectTable
-                            v-model="selectedRoles"
-                            :title="t('auth_provider.default_roles')"
-                            :items="roles"
-                            :headers="roleHeaders"
-                            :disabled="saving || !isAutoCreate"
-                        />
+                        <section data-test="auth-provider-default-roles">
+                            <EntitySelectTable
+                                v-model="selectedRoles"
+                                :title="t('auth_provider.default_roles')"
+                                :items="roles"
+                                :headers="roleHeaders"
+                                :disabled="saving || !isAutoCreate"
+                            />
+                        </section>
                     </template>
 
                     <v-alert
                         v-if="showValidationError"
                         type="error"
+                        role="alert"
+                        aria-live="assertive"
                         density="compact"
                         class="mb-3 mt-4"
                     >
@@ -277,6 +284,8 @@
                     <v-alert
                         v-if="showError"
                         type="error"
+                        role="alert"
+                        aria-live="assertive"
                         density="compact"
                         class="mb-3 mt-4"
                     >
@@ -302,6 +311,7 @@
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
+    import AuthProviderHelp from './AuthProviderHelp.vue'
     import OidcFields from './fields/OidcFields.vue'
     import Oauth2Fields from './fields/Oauth2Fields.vue'
     import OauthSharedFields from './fields/OauthSharedFields.vue'
@@ -374,6 +384,7 @@
 
     const dialog = ref(false)
     const formRef = ref<any>(null)
+    const nameInputRef = ref<any>(null)
     const saving = ref(false)
     const showValidationError = ref(false)
     const showError = ref(false)
@@ -403,6 +414,10 @@
     const isExternalKind = computed(() => ['oidc', 'oauth2', 'saml', 'ldap'].includes(localItem.value.kind))
     // The built-in local accounts provider is a singleton and cannot be renamed.
     const isLocalProvider = computed(() => localItem.value.kind === 'local')
+    const dialogTitle = computed(() => (isEdit.value ? t('auth_provider.edit') : t('auth_provider.add_new')))
+    const providerEnabledHint = computed(() =>
+        t(localItem.value.enabled ? 'auth_provider.enabled_for_sign_in_hint' : 'auth_provider.disabled_for_sign_in_hint')
+    )
 
     // Reading the IdP metadata fills in the three fields it contains, so nobody has to
     // copy an entityID, an SSO endpoint and a base64 certificate out of an XML document.
@@ -517,11 +532,25 @@
         (v: string) => !!(v && v.trim()) || t('error.required'),
         (v: string) => /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(v || '') || t('auth_provider.slug_invalid')
     ]
+    const hasValidSlug = computed(() => slugRules.every((rule) => rule(localItem.value.slug || '') === true))
     watch(
         () => localItem.value.name,
         (name) => {
             if (!isEdit.value && !slugManuallyEdited.value) {
                 localItem.value.slug = slugify(name)
+            }
+        }
+    )
+    watch(
+        () => localItem.value.kind,
+        (kind, previousKind) => {
+            if (previousKind && kind !== previousKind && !isEdit.value) {
+                // Client secrets, LDAP bind passwords and SAML private keys are
+                // not interchangeable when a new provider changes kind.
+                secretInput.value = ''
+                if (kind === 'ldap') {
+                    config.value.use_tls = true
+                }
             }
         }
     )
@@ -532,9 +561,12 @@
     const suggestedEntityId = computed(() => samlMetadataUrl.value)
     // Auto-creation settings (domain filter, default roles) only apply when unknown users get accounts
     const isAutoCreate = computed(() => localItem.value.provisioning_mode !== 'manual')
+    const mfaRequirementHint = computed(() =>
+        t(localItem.value.require_mfa ? 'auth_provider.require_mfa_enabled_hint' : 'auth_provider.require_mfa_disabled_hint')
+    )
 
     const kindOptions = computed(() => [
-        { title: t('auth_provider.kinds.local'), value: 'local' },
+        ...(isEdit.value && isLocalProvider.value ? [{ title: t('auth_provider.kinds.local'), value: 'local' }] : []),
         { title: t('auth_provider.kinds.oidc'), value: 'oidc' },
         { title: t('auth_provider.kinds.oauth2'), value: 'oauth2' },
         { title: t('auth_provider.kinds.saml'), value: 'saml' },
@@ -645,7 +677,6 @@
         if (kind === 'ldap') {
             const ldapConfig = pick([
                 'server_url',
-                'ca_cert',
                 'user_dn_template',
                 'bind_dn',
                 'search_base',
@@ -654,6 +685,9 @@
                 'name_attr'
             ])
             ldapConfig.use_tls = !!source.use_tls
+            if (source.use_tls && source.ca_cert) {
+                ldapConfig.ca_cert = source.ca_cert
+            }
             return ldapConfig
         }
         if (kind === 'saml') {
@@ -715,10 +749,10 @@
                 kind: localItem.value.kind,
                 enabled: localItem.value.enabled,
                 provisioning_mode: localItem.value.provisioning_mode,
-                allowed_domains: localItem.value.allowed_domains || '',
+                allowed_domains: isAutoCreate.value ? localItem.value.allowed_domains || '' : '',
                 require_mfa: localItem.value.require_mfa,
-                organization: organizationId.value ? { id: organizationId.value } : null,
-                default_roles: selectedRoles.value.map((id) => ({ id })),
+                organization: isAutoCreate.value && organizationId.value ? { id: organizationId.value } : null,
+                default_roles: isAutoCreate.value ? selectedRoles.value.map((id) => ({ id })) : [],
                 config: buildConfig(),
                 secret: secretInput.value || null
             }
@@ -751,7 +785,15 @@
     })
 
     const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
-        getState: () => ({ item: localItem.value, config: config.value, org: organizationId.value, roles: selectedRoles.value }),
+        // Only the presence of a newly entered write-only secret is snapshotted.
+        // The secret text never enters the dirty-tracking JSON baseline.
+        getState: () => ({
+            item: localItem.value,
+            config: config.value,
+            org: organizationId.value,
+            roles: selectedRoles.value,
+            secretChanged: !!secretInput.value
+        }),
         save: persist,
         close: closeDialog
     })

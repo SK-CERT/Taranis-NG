@@ -1,6 +1,34 @@
 <template>
     <v-row>
         <v-col
+            v-if="redirectUri"
+            cols="12"
+        >
+            <v-alert
+                type="info"
+                variant="tonal"
+                density="compact"
+                data-test="oauth-callback-uri"
+            >
+                <div class="d-flex flex-wrap align-center ga-2">
+                    <div class="flex-grow-1">
+                        <div class="text-subtitle-2">{{ t('auth_provider.callback_uri') }}</div>
+                        <code data-test="oauth-callback-uri-value">{{ redirectUri }}</code>
+                    </div>
+                    <v-btn
+                        variant="text"
+                        size="small"
+                        prepend-icon="mdi-content-copy"
+                        :aria-label="t('auth_provider.copy_callback_uri')"
+                        data-test="copy-oauth-callback-uri"
+                        @click="copyRedirectUri"
+                    >
+                        {{ t('auth_provider.copy_callback_uri') }}
+                    </v-btn>
+                </div>
+            </v-alert>
+        </v-col>
+        <v-col
             cols="12"
             md="4"
         >
@@ -122,6 +150,8 @@
         hasSecret?: boolean
         /** Placeholder for the scopes field: "openid profile email" for OIDC, empty otherwise. */
         scopesPlaceholder?: string
+        /** Derived callback URI to register with either an OIDC or OAuth2 provider. */
+        redirectUri?: string
     }>()
 
     const secretModel = defineModel<string>({ default: '' })
@@ -138,4 +168,16 @@
         { title: t('auth_provider.pkce_method_none'), value: 'none' },
         { title: t('auth_provider.pkce_method_s256'), value: 'S256' }
     ])
+
+    const copyRedirectUri = async (): Promise<void> => {
+        if (!props.redirectUri) {
+            return
+        }
+        try {
+            await navigator.clipboard.writeText(props.redirectUri)
+            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'auth_provider.callback_uri_copied' } }))
+        } catch (error) {
+            console.error('Could not copy the OAuth callback URI:', error)
+        }
+    }
 </script>

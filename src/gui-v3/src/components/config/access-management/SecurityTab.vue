@@ -18,7 +18,7 @@
                     <v-switch
                         v-model="settings.require_mfa"
                         :label="t('access_management.security.require_mfa')"
-                        :hint="t('access_management.security.require_mfa_hint')"
+                        :hint="requireMfaHint"
                         persistent-hint
                         color="primary"
                         :disabled="!canUpdate || saving"
@@ -43,7 +43,7 @@
                             <v-switch
                                 v-model="settings.passkey_enabled"
                                 :label="t('access_management.security.passkey_enabled')"
-                                :hint="t('access_management.security.passkey_enabled_hint')"
+                                :hint="passkeyEnabledHint"
                                 persistent-hint
                                 color="primary"
                                 :disabled="!canUpdate || saving"
@@ -67,16 +67,15 @@
                             cols="12"
                             md="4"
                         >
-                            <v-text-field
+                            <SuggestField
                                 v-model="settings.rp_id"
+                                :suggested="suggestedRpId"
                                 :label="t('access_management.security.rp_id')"
-                                variant="outlined"
-                                density="comfortable"
-                                :placeholder="suggestedRpId"
                                 :hint="t('access_management.security.rp_id_hint', { host: suggestedRpId })"
-                                persistent-hint
+                                :tooltip-label="t('access_management.security.rp_id_use_suggested')"
                                 :rules="rpIdRules"
                                 :disabled="!canUpdate || saving"
+                                data-test="security-rp-id"
                             />
                         </v-col>
                         <v-col
@@ -159,6 +158,7 @@
     import { ref, computed, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
+    import SuggestField from '@/components/common/SuggestField.vue'
     import { getSecuritySettings, updateSecuritySettings } from '@/api/config'
 
     type SecuritySettingsItem = {
@@ -196,8 +196,37 @@
 
     // The relying-party ID must be the site's domain, and the origin must be the
     // exact URL the browser is on - so the current location is the right suggestion.
-    const suggestedRpId = computed(() => window.location.hostname)
+    const safeHostname = (origin: string): string => {
+        try {
+            const url = new URL(origin)
+            return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password ? url.hostname : ''
+        } catch {
+            return ''
+        }
+    }
+
+    const suggestedRpId = computed(() => {
+        const configuredOrigin = settings.value.origins
+            .split(',')
+            .map((origin) => origin.trim())
+            .find((origin) => !!safeHostname(origin))
+        return (configuredOrigin && safeHostname(configuredOrigin)) || window.location.hostname
+    })
     const suggestedOrigin = computed(() => window.location.origin)
+    const requireMfaHint = computed(() =>
+        t(
+            settings.value.require_mfa
+                ? 'access_management.security.require_mfa_enabled_hint'
+                : 'access_management.security.require_mfa_disabled_hint'
+        )
+    )
+    const passkeyEnabledHint = computed(() =>
+        t(
+            settings.value.passkey_enabled
+                ? 'access_management.security.passkey_enabled_on_hint'
+                : 'access_management.security.passkey_enabled_off_hint'
+        )
+    )
 
     // Only enforced when passkeys are switched on: an incomplete draft may be saved
     // while the feature is off, and the backend applies the same rule.

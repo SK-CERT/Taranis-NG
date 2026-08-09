@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewAuthProvider from '@/components/config/auth-providers/NewAuthProvider.vue'
 import OauthSharedFields from '@/components/config/auth-providers/fields/OauthSharedFields.vue'
+import LdapFields from '@/components/config/auth-providers/fields/LdapFields.vue'
+import SamlFields from '@/components/config/auth-providers/fields/SamlFields.vue'
+import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
 import { createNewAuthProvider, updateAuthProvider, importSamlMetadata, generateSamlKeypair } from '@/api/config'
 
 vi.mock('@/api/config', () => ({
@@ -75,11 +78,11 @@ describe('NewAuthProvider dialog', () => {
     })
 
     // ── Kinds ─────────────────────────────────────
-    it('offers every provider kind, including SAML 2.0 but not passkeys', async () => {
+    it('offers external provider kinds for creation, but not local accounts or passkeys', async () => {
         const wrapper = await mountDialog()
         const kinds = wrapper.vm.kindOptions.map((option) => option.value)
-        // passkeys are credentials owned by users, configured in the Security tab
-        expect(kinds).toEqual(['local', 'oidc', 'oauth2', 'saml', 'ldap'])
+        // Local accounts are migration-owned; passkeys are credentials owned by users.
+        expect(kinds).toEqual(['oidc', 'oauth2', 'saml', 'ldap'])
     })
 
     it('treats oidc, oauth2, saml and ldap as external kinds (provisioning applies)', async () => {
@@ -99,6 +102,58 @@ describe('NewAuthProvider dialog', () => {
 
         expect(wrapper.vm.localItem.kind).toBe('oidc')
         expect(wrapper.vm.localItem.enabled).toBe(false)
+        expect(wrapper.vm.providerEnabledHint).toContain('cannot choose this login method')
+    })
+
+    it('retains local only while editing the seeded row and preserves its stored name', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            id: 1,
+            name: 'Local accounts',
+            kind: 'local',
+            enabled: true,
+            provisioning_mode: 'manual',
+            allowed_domains: '',
+            require_mfa: false
+        })
+
+        expect(wrapper.vm.kindOptions.map((option) => option.value)).toContain('local')
+        wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+        await wrapper.vm.persist()
+        expect(updateAuthProvider.mock.calls[0][0].name).toBe('Local accounts')
+    })
+
+    it('clears a typed secret when a new provider changes kind', async () => {
+        const wrapper = await mountDialog()
+        wrapper.vm.secretInput = 'oidc-client-secret'
+        wrapper.vm.localItem.kind = 'ldap'
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.vm.secretInput).toBe('')
+        expect(wrapper.vm.config.use_tls).toBe(true)
+    })
+
+    it('preserves an existing LDAP provider whose TLS setting is off', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: { server_url: 'ldap://ldap.example.org', use_tls: false, user_dn_template: 'uid={username},dc=x' }
+        })
+
+        expect(wrapper.vm.config.use_tls).toBe(false)
+    })
+
+    it('treats a newly entered write-only secret as dirty without exposing an existing one', async () => {
+        const wrapper = await mountDialog()
+        wrapper.vm.dialog = true
+        await wrapper.vm.$nextTick()
+
+        wrapper.vm.secretInput = 'never-put-this-in-the-snapshot'
+        wrapper.vm.requestClose()
+
+        expect(wrapper.vm.confirmVisible).toBe(true)
     })
 
     it('does not offer insecure PKCE plain and normalizes legacy plain values to S256', () => {
@@ -132,6 +187,48 @@ describe('NewAuthProvider dialog', () => {
         wrapper.vm.localItem.provisioning_mode = 'automatic'
         await wrapper.vm.$nextTick()
         expect(wrapper.vm.isAutoCreate).toBe(true)
+    })
+
+    it.each(['oidc', 'oauth2', 'saml', 'ldap'])('shows Default roles in the same parent-level section for %s', async (kind) => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, { ...OIDC_PROVIDER, id: `${kind}-id`, kind, provisioning_mode: 'approval' })
+
+        expect(wrapper.findComponent(EntitySelectTable).exists()).toBe(true)
+        if (kind === 'saml') {
+            expect(wrapper.findComponent(SamlFields).text()).not.toContain('Default roles')
+        }
+    })
+
+    it('explains the selected MFA requirement state', async () => {
+        const wrapper = await mountDialog()
+        wrapper.vm.localItem.kind = 'ldap'
+        wrapper.vm.localItem.require_mfa = false
+        await wrapper.vm.$nextTick()
+        expect(wrapper.vm.mfaRequirementHint).toContain('adds no MFA requirement')
+
+        wrapper.vm.localItem.require_mfa = true
+        await wrapper.vm.$nextTick()
+        expect(wrapper.vm.mfaRequirementHint).toContain('must use TOTP or a passkey')
+    })
+
+    it('hides provisioning-only controls and drops dormant values in manual mode', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            provisioning_mode: 'manual',
+            allowed_domains: 'stale.example',
+            organization: { id: 1, name: 'CERT' },
+            default_roles: [{ id: 5, name: 'User' }]
+        })
+
+        expect(wrapper.findComponent(EntitySelectTable).exists()).toBe(false)
+        wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+        await wrapper.vm.persist()
+
+        const payload = updateAuthProvider.mock.calls[0][0]
+        expect(payload.allowed_domains).toBe('')
+        expect(payload.organization).toBeNull()
+        expect(payload.default_roles).toEqual([])
     })
 
     // ── Edit mode hydration ───────────────────────
@@ -229,6 +326,23 @@ describe('NewAuthProvider dialog', () => {
         expect(config.server_url).toBe('ldaps://ldap.example.org')
     })
 
+    it('does not send a hidden CA certificate when TLS is disabled', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: {
+                server_url: 'ldap://ldap.example.org',
+                use_tls: false,
+                ca_cert: '-----BEGIN CERTIFICATE-----\nSTALE\n-----END CERTIFICATE-----',
+                user_dn_template: 'uid={username},dc=x'
+            }
+        })
+
+        expect(wrapper.vm.buildConfig()).not.toHaveProperty('ca_cert')
+    })
+
     // ── Persisting ────────────────────────────────
     it('creates with the -1 id sentinel and a null secret when none was typed', async () => {
         const wrapper = await mountDialog()
@@ -264,6 +378,30 @@ describe('NewAuthProvider dialog', () => {
         expect(payload.secret).toBe('new-client-secret')
         expect(payload.organization).toEqual({ id: 1 })
         expect(payload.default_roles).toEqual([{ id: 5 }])
+    })
+
+    it('omits an unchanged stored secret while editing', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, OIDC_PROVIDER)
+        wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+
+        await wrapper.vm.persist()
+
+        expect(updateAuthProvider.mock.calls[0][0].secret).toBeNull()
+    })
+
+    it.each(['oidc', 'oauth2'])('shows and copies the derived callback URI for %s', async (kind) => {
+        const writeText = vi.fn().mockResolvedValue(undefined)
+        Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, { ...OIDC_PROVIDER, kind, slug: `corp-${kind}` })
+
+        const fields = wrapper.findComponent(OauthSharedFields)
+        expect(fields.props('redirectUri')).toBe(`${window.location.origin}/api/v1/auth/oauth/corp-${kind}/callback`)
+        expect(fields.find('[data-test="copy-oauth-callback-uri"]').exists()).toBe(true)
+
+        await fields.vm.copyRedirectUri()
+        expect(writeText).toHaveBeenCalledWith(fields.props('redirectUri'))
     })
 
     // ── IdP metadata import ───────────────────────
@@ -374,5 +512,64 @@ describe('NewAuthProvider dialog', () => {
         expect(saved).toBe(false)
         expect(createNewAuthProvider).not.toHaveBeenCalled()
         expect(wrapper.vm.showValidationError).toBe(true)
+    })
+})
+
+describe('LDAP provider fields', () => {
+    it('shows the optional CA input only while TLS is selected', async () => {
+        const config = { use_tls: false }
+        const wrapper = mountWithPlugins(LdapFields, { props: { config, saving: false } })
+
+        expect(wrapper.find('[data-test="ldap-ca-certificate"]').exists()).toBe(false)
+
+        wrapper.vm.useTls = true
+        await wrapper.vm.$nextTick()
+
+        const caField = wrapper.findComponent({ name: 'VTextarea' })
+        expect(caField.exists()).toBe(true)
+        expect(caField.props('label')).toContain('optional')
+    })
+
+    it('keeps both bind modes visible and wires Direct bind help to a real tooltip', async () => {
+        const wrapper = mountWithPlugins(LdapFields, { props: { config: {}, saving: false } })
+
+        expect(wrapper.find('[data-test="ldap-bind-direct"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="ldap-bind-search"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="ldap-direct-bind-help"]').exists()).toBe(true)
+        expect(wrapper.findComponent({ name: 'VTooltip' }).props('text')).toContain("Build the user's DN")
+        expect(wrapper.find('[data-test="ldap-bind-mode"] .v-selection-control-group').attributes('aria-describedby')).toBe(
+            'ldap-bind-mode-help'
+        )
+        expect(wrapper.find('[data-test="ldap-bind-mode-help"]').classes()).toContain('auth-provider-help')
+
+        wrapper.vm.bindMode = 'search'
+        await wrapper.vm.$nextTick()
+        expect(wrapper.find('[data-test="ldap-bind-mode-help"]').text()).toContain('service account')
+    })
+
+    it('clears a newly typed bind password when the LDAP bind mode changes', async () => {
+        const wrapper = mountWithPlugins(LdapFields, {
+            props: { modelValue: 'typed-bind-password', config: { user_dn_template: 'uid={username},dc=x' }, saving: false }
+        })
+
+        wrapper.vm.bindMode = 'search'
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([''])
+    })
+})
+
+describe('SAML provider fields', () => {
+    it('shows single-IdP and federation as mutually exclusive radio choices', async () => {
+        const wrapper = mountWithPlugins(SamlFields, { props: { config: {}, saving: false } })
+
+        expect(wrapper.find('[data-test="saml-mode-single"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="saml-mode-federation"]').exists()).toBe(true)
+        expect(wrapper.vm.federationModel).toBe(false)
+        expect(wrapper.find('[data-test="saml-connection-mode-help"]').text()).toContain('one identity provider')
+
+        wrapper.vm.federationModel = true
+        await wrapper.vm.$nextTick()
+        expect(wrapper.find('[data-test="saml-connection-mode-help"]').text()).toContain('whole federation')
     })
 })

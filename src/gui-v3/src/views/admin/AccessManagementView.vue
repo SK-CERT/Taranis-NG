@@ -22,23 +22,19 @@
             </v-tab>
         </v-tabs>
 
-        <v-window v-model="activeTab">
-            <v-window-item
-                v-for="tab in availableTabs"
-                :key="tab.value"
-                :value="tab.value"
-            >
-                <component
-                    :is="tab.component"
-                    v-if="activeTab === tab.value"
-                />
-            </v-window-item>
-        </v-window>
+        <!-- Render exactly one panel. Keeping every panel in a v-window allowed an
+             outgoing panel to remain visible during/after a tab transition. The key
+             also guarantees that stateful panels are unmounted when their tab closes. -->
+        <component
+            :is="activeTabDefinition.component"
+            v-if="activeTabDefinition"
+            :key="activeTabDefinition.value"
+        />
     </v-container>
 </template>
 
 <script setup lang="ts">
-    import type { Component } from 'vue'
+    import { computed, type Component } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
@@ -113,4 +109,5 @@
     ]
 
     const { availableTabs, activeTab } = usePermissionTabs(tabs)
+    const activeTabDefinition = computed(() => availableTabs.value.find((tab) => tab.value === activeTab.value))
 </script>
