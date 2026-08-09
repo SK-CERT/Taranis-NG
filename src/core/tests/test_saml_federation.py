@@ -159,6 +159,23 @@ def test_verify_metadata_counts_usable_identity_providers(monkeypatch: pytest.Mo
     assert result["valid_until"] == "2099-01-01T00:00:00+00:00"
 
 
+def test_metadata_past_valid_until_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    expired = (datetime.now(UTC) - timedelta(minutes=1)).isoformat()
+    signed, anchor = _signed_aggregate([("https://idp.example.org/a", True, True)], valid_until=expired)
+    monkeypatch.setattr(saml_federation, "_fetch", lambda _url: signed)
+
+    with pytest.raises(ValueError, match="expired at validUntil"):
+        saml_federation.verify_metadata("https://metadata.example.org/aggregate", anchor)
+
+
+def test_malformed_valid_until_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    signed, anchor = _signed_aggregate([("https://idp.example.org/a", True, True)], valid_until="not-a-time")
+    monkeypatch.setattr(saml_federation, "_fetch", lambda _url: signed)
+
+    with pytest.raises(ValueError, match="invalid validUntil"):
+        saml_federation.verify_metadata("https://metadata.example.org/aggregate", anchor)
+
+
 def test_missing_url_or_anchor_is_rejected() -> None:
     with pytest.raises(ValueError, match="metadata URL and its signing certificate"):
         saml_federation.verify_metadata("", "anchor")
@@ -215,3 +232,25 @@ def test_stale_metadata_is_served_when_a_refresh_fails(monkeypatch: pytest.Monke
 
     resolved = saml_federation.resolve_idp(provider, "https://idp.example.org/a")
     assert resolved is not None  # stale entry served rather than locking users out
+
+
+def test_stale_metadata_is_not_served_past_valid_until(monkeypatch: pytest.MonkeyPatch) -> None:
+    valid_until = (datetime.now(UTC) + timedelta(minutes=10)).isoformat()
+    signed, anchor = _signed_aggregate(
+        [("https://idp.example.org/a", True, True)],
+        valid_until=valid_until,
+    )
+    monkeypatch.setattr(saml_federation, "_fetch", lambda _url: signed)
+    provider = _provider(anchor)
+    saml_federation.resolve_idp(provider, "https://idp.example.org/a")
+    saml_federation._cache[provider.id].expires_at = datetime.now(UTC) - timedelta(seconds=1)
+    saml_federation._cache[provider.id].valid_until = datetime.now(UTC) - timedelta(seconds=1)
+
+    def _boom(_url: str) -> bytes:
+        msg = "network down"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(saml_federation, "_fetch", _boom)
+
+    with pytest.raises(ValueError, match="could not be loaded"):
+        saml_federation.resolve_idp(provider, "https://idp.example.org/a")

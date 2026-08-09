@@ -39,7 +39,7 @@ re-entering all provider secrets and re-enrolling TOTP.**
 Register this callback URL at your identity provider:
 
 ```
-https://<your-host>/api/v1/auth/oauth/<provider_id>/callback
+https://<your-host>/api/v1/auth/oauth/<provider_slug>/callback
 ```
 
 The URL is derived from the incoming request (honoring the reverse proxy's
@@ -48,8 +48,7 @@ provider's *Redirect URI override* field explicitly.
 
 ## PKCE (OIDC / OAuth 2.0)
 
-Per-provider *PKCE code challenge method* selector (RFC 7636). The imported
-implementation exposes three values:
+Per-provider *PKCE code challenge method* selector (RFC 7636):
 
 - `none` (default) -- no PKCE. Do not select this for a new production
   provider.
@@ -57,15 +56,12 @@ implementation exposes three values:
   generated per login attempt, `code_challenge = BASE64URL(SHA256(verifier))`
   is sent on the authorization request, and the verifier is replayed on the
   token exchange. Required by IdPs that mandate PKCE for confidential clients.
-- `Plain code challenge` (`plain`) -- legacy compatibility exposed by the
-  imported implementation. It reveals the verifier as the challenge and must
-  not be used. Providers that cannot use `S256` must remain disabled.
+- `plain` is rejected. It reveals the verifier in the browser-visible
+  authorization request and does not provide PKCE interception protection.
 
-**Security status:** use `S256` only. The imported implementation carries the
-`code_verifier` inside a signed but readable `state` JWT. Signature validation
-prevents modification, but it does not keep the verifier secret and it does not
-make the state one-time. Keep OAuth/OIDC providers disabled until the state is
-replaced by an opaque, atomically consumed server-side transaction.
+Use `S256` whenever the provider supports it. The verifier and nonce are stored
+behind an opaque Redis transaction handle and the callback atomically consumes
+that handle, so they are neither carried through the browser nor replayable.
 
 ## SAML 2.0
 
@@ -133,12 +129,17 @@ Rotating the SP keypair means re-registering the new certificate at the IdP;
 until then it keeps encrypting to the old key and logins fail.
 
 Responses are signature-verified and checked for issuer, audience and validity
-window (2 minutes clock skew allowed). The imported flow also compares
-`InResponseTo`, but its current conditional does not reject an omitted value.
-Its signed RelayState is readable and replayable until expiry. Keep SAML login
-disabled until RelayState and request IDs are opaque, atomically consumed
-server-side transactions, exact `InResponseTo` matching is enforced, and
-response/assertion replay protection is active.
+window (2 minutes clock skew allowed). RelayState and discovery state are opaque,
+one-time Redis transactions. The signed bearer confirmation must bind both its
+`InResponseTo` and Recipient to the stored request and ACS URL; a signed Response
+Destination must match when present. Verified Response and Assertion IDs are
+claimed atomically until the assertion expires, and oversized or non-canonical
+HTTP-POST responses are rejected before XML validation.
+
+Deployments upgraded while a SAML browser round-trip is already in progress
+must restart that login: older signed-JWT RelayState values are deliberately not
+accepted by the opaque-state flow. Keep a provider disabled until its metadata,
+certificate, ACS registration and representative login have been tested.
 
 ### Identifying a returning user
 
@@ -254,11 +255,11 @@ applies: exclusive canonicalization, an enveloped signature and SHA-256; a
 federation that signs its metadata with SHA-1 or a different transform set is out
 of scope.
 
-The verified metadata is cached in memory and refreshed automatically. The
-imported implementation can currently serve a stale cached document after its
-`validUntil` when refresh fails, so federation login must remain disabled until
-expiry fails closed. Press *Verify federation* in the dialog to fetch and verify
-the metadata and report how many identity providers it yields before saving.
+The verified metadata is cached in memory and refreshed automatically. A newly
+fetched document whose `validUntil` is malformed or expired is rejected, and a
+stale cached document is never served after its signed `validUntil`. Press
+*Verify federation* in the dialog to fetch and verify the metadata and report
+how many identity providers it yields before saving.
 
 #### Restricting the identity provider list (discovery filter)
 
@@ -329,12 +330,10 @@ existing sessions on their next request.
   completes without a further step. See `mfa_required()` in
   [auth_manager](../managers/auth_manager.py).
 - A redirect login (OIDC/OAuth2/SAML) is mid-browser-redirect when the challenge
-  is raised, so it cannot be answered with a JSON body. The core hands the
-  short-lived scoped token to the GUI in a cookie, and the login page runs the
-  same TOTP/passkey step a form login would have run. This imported cookie
-  bridge exposes the bearer token to JavaScript and is temporary; redirect
-  login must remain disabled until it carries only an opaque, one-time
-  redemption handle exchanged through a same-origin request.
+  is raised, so it cannot be answered with a JSON body. The core stores the
+  result behind an opaque one-time redemption handle in an HttpOnly cookie; the
+  GUI exchanges it through the same-origin redemption endpoint and then runs
+  the same TOTP/passkey step a form login would have run.
 - When passkey sign-in is enabled in *Access Management → Security*, the login
   page offers passwordless "Sign in with a passkey" (discoverable credentials).
   Whether a passkey may also satisfy the *second-factor* step is a separate

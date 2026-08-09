@@ -100,6 +100,7 @@ class _Federation:
 
     entities: dict[str, ResolvedIdp]
     expires_at: datetime
+    valid_until: datetime | None
 
 
 _cache: dict[int, _Federation] = {}
@@ -119,8 +120,9 @@ def _parse_valid_until(value: str | None) -> datetime | None:
         return None
     try:
         parsed = datetime.fromisoformat(value)
-    except ValueError:
-        return None
+    except ValueError as ex:
+        msg = "Federation metadata has an invalid validUntil timestamp"
+        raise ValueError(msg) from ex
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
@@ -220,7 +222,11 @@ def _fetch_verify_index(metadata_url: str | None, cert_pem: str | None) -> tuple
     trust_anchors = set(load_idp_certificates(cert_pem))
     raw = _fetch(metadata_url)
     verified, _ = extract_verified_element_and_certificate(xml=raw, certificates=trust_anchors, config=VERIFY_CONFIG)
-    return _index_idps(verified), _parse_valid_until(verified.get("validUntil"))
+    valid_until = _parse_valid_until(verified.get("validUntil"))
+    if valid_until is not None and valid_until <= datetime.now(UTC):
+        msg = f"Federation metadata expired at validUntil {valid_until.isoformat()}"
+        raise ValueError(msg)
+    return _index_idps(verified), valid_until
 
 
 def _load(provider: AuthProvider) -> _Federation:
@@ -252,7 +258,8 @@ def _load(provider: AuthProvider) -> _Federation:
         entities, valid_until = _fetch_verify_index(config.get("federation_metadata_url"), config.get("federation_metadata_cert"))
     except Exception as ex:
         stale = _cache.get(provider.id)
-        if stale:
+        fallback_now = datetime.now(UTC)
+        if stale and (stale.valid_until is None or stale.valid_until > fallback_now):
             log_manager.logger.warning(
                 f"Serving stale federation metadata for provider '{provider.name}' after refresh failed: {ex}",
             )
@@ -264,10 +271,8 @@ def _load(provider: AuthProvider) -> _Federation:
     expires_at = now + timedelta(hours=float(refresh_hours))
     if valid_until:
         expires_at = min(expires_at, valid_until - VALID_UNTIL_SKEW)
-        if valid_until <= now:
-            log_manager.logger.warning(f"Federation metadata for provider '{provider.name}' is past its validUntil ({valid_until})")
 
-    federation = _Federation(entities=entities, expires_at=expires_at)
+    federation = _Federation(entities=entities, expires_at=expires_at, valid_until=valid_until)
     with _lock:
         _cache[provider.id] = federation
     return federation

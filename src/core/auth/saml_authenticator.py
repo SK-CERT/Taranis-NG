@@ -37,21 +37,28 @@ Attributes are looked up by their SAML ``Name`` (an OID when the IdP uses the
 URI name-format), never by ``FriendlyName``.
 
 The flow uses the HTTP-Redirect binding for the AuthnRequest and the
-HTTP-POST binding for the response. CSRF/replay protection: the RelayState is
-a short-lived signed JWT carrying the AuthnRequest ID, which must match the
-InResponseTo of the (signature-verified) response.
+HTTP-POST binding for the response. RelayState is an opaque one-time Redis
+handle carrying the AuthnRequest binding server-side.
 """
 
 from __future__ import annotations
 
 import base64
+import binascii
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from xml.sax.saxutils import escape, quoteattr
 
+from auth import saml_replay
 from auth.base_authenticator import BaseAuthenticator, ExternalIdentity
-from auth.saml_xml import decrypt_assertion, extract_signed_assertion
+from auth.saml_xml import (
+    MAX_SAML_XML_BYTES,
+    VerifiedSamlDetails,
+    decrypt_assertion,
+    extract_signed_assertion,
+    inspect_verified_saml,
+)
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -67,6 +74,50 @@ if TYPE_CHECKING:
 # Tolerated clock skew between Taranis NG and the IdP when checking the
 # assertion's NotBefore/NotOnOrAfter conditions.
 CLOCK_SKEW = timedelta(minutes=2)
+
+# One MiB is ample for an assertion while bounding base64 and XML work at the
+# public ACS. The form allowance covers worst-case percent-encoding overhead.
+MAX_SAML_RESPONSE_ENCODED_BYTES = 4 * ((MAX_SAML_XML_BYTES + 2) // 3)
+MAX_SAML_FORM_BYTES = 3 * MAX_SAML_RESPONSE_ENCODED_BYTES + 4096
+
+
+def _decode_saml_response(saml_response: str) -> bytes:
+    """Strictly decode one bounded HTTP-POST SAMLResponse value."""
+    if not isinstance(saml_response, str) or not saml_response or len(saml_response) > MAX_SAML_RESPONSE_ENCODED_BYTES:
+        msg = "The encoded SAMLResponse is empty or too large"
+        raise ValueError(msg)
+    try:
+        encoded_response = saml_response.encode("ascii")
+        raw_response = base64.b64decode(encoded_response, validate=True)
+    except (UnicodeEncodeError, binascii.Error, ValueError) as ex:
+        msg = "The SAMLResponse is not strict base64"
+        raise ValueError(msg) from ex
+    if not raw_response or len(raw_response) > MAX_SAML_XML_BYTES:
+        msg = f"The decoded SAMLResponse is empty or exceeds {MAX_SAML_XML_BYTES} bytes"
+        raise ValueError(msg)
+    return raw_response
+
+
+def _enforce_saml_binding(details: VerifiedSamlDetails, request_id: str, expected_acs_url: str) -> None:
+    """Require one signed bearer confirmation bound to this request and ACS."""
+    if not request_id or not expected_acs_url:
+        msg = "The SAML request binding is incomplete"
+        raise ValueError(msg)
+    if (expected_acs_url, request_id) not in details.bearer_confirmations:
+        msg = "No signed bearer confirmation matches the AuthnRequest and ACS Recipient"
+        raise ValueError(msg)
+    if details.destination is not None and details.destination != expected_acs_url:
+        msg = "SAML Response Destination does not match the ACS"
+        raise ValueError(msg)
+
+
+def _claim_saml_message(provider_id: int, details: VerifiedSamlDetails) -> None:
+    """Claim verified message IDs atomically for the accepted assertion window."""
+    replay_expires_at = details.not_on_or_after + CLOCK_SKEW
+    if not saml_replay.claim(provider_id, details.identifiers, replay_expires_at):
+        msg = "SAML Response or Assertion ID has already been used"
+        raise ValueError(msg)
+
 
 PEM_HEADER = "-----BEGIN CERTIFICATE-----"
 PEM_FOOTER = "-----END CERTIFICATE-----"
@@ -500,7 +551,8 @@ class SamlAuthenticator(BaseAuthenticator):
     def handle_response(
         self,
         saml_response: str,
-        request_id: str | None,
+        request_id: str,
+        expected_acs_url: str,
         chosen_entity_id: str | None = None,
     ) -> ExternalIdentity | None:
         """Validate a posted SAMLResponse and resolve the external identity.
@@ -515,7 +567,8 @@ class SamlAuthenticator(BaseAuthenticator):
 
         Args:
             saml_response (str): The base64 SAMLResponse form field.
-            request_id (str): The AuthnRequest ID from the signed RelayState.
+            request_id (str): The AuthnRequest ID from one-time server-side state.
+            expected_acs_url (str): The ACS URL stored with that request.
             chosen_entity_id (str): In federation mode, the IdP entityID carried
                 in the signed RelayState (set at the DiscoveryResponse step).
 
@@ -523,6 +576,7 @@ class SamlAuthenticator(BaseAuthenticator):
             ExternalIdentity: The authenticated identity, or None on failure.
         """
         try:
+            raw_response = _decode_saml_response(saml_response)
             idp_certificate, idp_issuer = self._idp_trust_material(chosen_entity_id)
 
             # every certificate is tried, so an IdP key rollover (metadata
@@ -534,11 +588,12 @@ class SamlAuthenticator(BaseAuthenticator):
             # encrypted to our public key (a federation requirement), and a response
             # signed alongside its assertion (which minisignxml refuses - it verifies a
             # single signature). Everything else is passed through as it arrived.
-            raw_response = base64.b64decode(saml_response)
             assertion = decrypt_assertion(raw_response, self.load_sp_private_key()) or extract_signed_assertion(raw_response)
+            verification_xml = assertion if assertion is not None else raw_response
 
-            # validate_response base64-decodes its input; raw XML would be mangled
-            data = base64.b64encode(assertion) if assertion is not None else saml_response
+            # Always pass canonical base64. The public input was decoded strictly
+            # above, and minisaml base64-decodes its own input.
+            data = base64.b64encode(verification_xml)
 
             response = validate_response(
                 data=data,
@@ -547,12 +602,11 @@ class SamlAuthenticator(BaseAuthenticator):
                 idp_issuer=idp_issuer,
                 allowed_time_drift=TimeDriftLimits(not_before_max_drift=CLOCK_SKEW, not_on_or_after_max_drift=CLOCK_SKEW),
             )
+            details = inspect_verified_saml(verification_xml, certificates)
+            _enforce_saml_binding(details, request_id, expected_acs_url)
+            _claim_saml_message(self.provider.id, details)
         except Exception as ex:
             log_manager.store_auth_error_activity(f"SAML response validation failed for provider '{self.provider.name}'", ex)
-            return None
-
-        if request_id and response.in_response_to and response.in_response_to != request_id:
-            log_manager.store_auth_error_activity(f"SAML InResponseTo mismatch for provider '{self.provider.name}'")
             return None
 
         attributes = response.attrs

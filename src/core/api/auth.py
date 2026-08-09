@@ -445,12 +445,10 @@ class SamlLoginRedirect(Resource):
                 # Send the user to the discovery service to pick their IdP. Our
                 # state rides along in the return URL; the WAYF preserves that
                 # query string and appends the chosen entityID to it.
-                disco_state = auth_manager.make_scoped_token(
-                    f"provider:{provider_id}",
-                    "saml_disco",
-                    expires_minutes=auth_manager.OAUTH_STATE_MINUTES,
-                    pid=provider_id,
-                    gotoUrl=goto_url,
+                disco_state = auth_transaction_manager.create(
+                    AuthTransactionKind.SAML_DISCOVERY,
+                    {"provider_id": provider_id, "goto_url": goto_url},
+                    auth_manager.OAUTH_STATE_MINUTES * 60,
                 )
                 return_url = f"{_saml_disco_url(provider_slug)}?state={urllib.parse.quote(disco_state)}"
                 return redirect(authenticator.get_discovery_redirect_url(return_url))
@@ -458,15 +456,17 @@ class SamlLoginRedirect(Resource):
             # xsd:ID values must not start with a digit; the AuthnRequest ID is
             # verified against the response's InResponseTo at the ACS.
             request_id = f"_{uuid.uuid4().hex}"
-            relay_state = auth_manager.make_scoped_token(
-                f"provider:{provider_id}",
-                "saml_state",
-                expires_minutes=auth_manager.OAUTH_STATE_MINUTES,
-                pid=provider_id,
-                gotoUrl=goto_url,
-                request_id=request_id,
-            )
             acs_url = _saml_acs_url(provider_slug, authenticator.config)
+            relay_state = auth_transaction_manager.create(
+                AuthTransactionKind.SAML_STATE,
+                {
+                    "provider_id": provider_id,
+                    "goto_url": goto_url,
+                    "request_id": request_id,
+                    "acs_url": acs_url,
+                },
+                auth_manager.OAUTH_STATE_MINUTES * 60,
+            )
             return redirect(authenticator.get_login_redirect_url(acs_url, relay_state, request_id))
         except Exception as ex:
             logger.exception(f"Building the SAML request failed: {ex}")
@@ -492,11 +492,11 @@ class SamlDisco(Resource):
             Response: A redirect to the chosen IdP, or a login-error redirect.
         """
         authenticator = auth_manager.get_saml_authenticator(provider_slug)
-        state = auth_manager.decode_scoped_token(request.args.get("state", ""), "saml_disco")
-        if not authenticator or not state or state.get("pid") != authenticator.provider.id:
+        state = auth_transaction_manager.consume(AuthTransactionKind.SAML_DISCOVERY, request.args.get("state", ""))
+        if not authenticator or not state or state.get("provider_id") != authenticator.provider.id:
             return {"error": "Invalid state"}, HTTPStatus.UNAUTHORIZED
         provider_id = authenticator.provider.id
-        goto_url = state.get("gotoUrl") or "/"
+        goto_url = state.get("goto_url") or "/"
 
         entity_id = request.args.get(saml_authenticator.DISCOVERY_RETURN_ID_PARAM)
         if not entity_id:
@@ -509,16 +509,18 @@ class SamlDisco(Resource):
                 logger.warning(f"SAML discovery: '{entity_id}' is not an IdP in the federation for provider {provider_id}")
                 return _login_error_redirect(goto_url, "auth_failed")
             request_id = f"_{uuid.uuid4().hex}"
-            relay_state = auth_manager.make_scoped_token(
-                f"provider:{provider_id}",
-                "saml_state",
-                expires_minutes=auth_manager.OAUTH_STATE_MINUTES,
-                pid=provider_id,
-                gotoUrl=goto_url,
-                request_id=request_id,
-                idp_entity_id=entity_id,
-            )
             acs_url = _saml_acs_url(provider_slug, authenticator.config)
+            relay_state = auth_transaction_manager.create(
+                AuthTransactionKind.SAML_STATE,
+                {
+                    "provider_id": provider_id,
+                    "goto_url": goto_url,
+                    "request_id": request_id,
+                    "acs_url": acs_url,
+                    "idp_entity_id": entity_id,
+                },
+                auth_manager.OAUTH_STATE_MINUTES * 60,
+            )
             return redirect(authenticator.get_authn_request_url(resolved.sso_url, acs_url, relay_state, request_id))
         except Exception as ex:
             logger.exception(f"Building the SAML request after discovery failed: {ex}")
@@ -554,9 +556,8 @@ class SamlAcs(Resource):
     def post(self, provider_slug: str) -> Response:
         """Finish the SAML flow and redirect to the GUI.
 
-        The verdict reaches the GUI in cookies: the JWT on success, or the scoped
-        MFA token when the user still owes a second factor; on failure the GUI
-        login page receives a login_error query parameter.
+        The state and final verdict are opaque one-time Redis transactions. On
+        failure the GUI login page receives a login_error query parameter.
 
         Args:
             provider_slug (str): The auth provider the flow was started with.
@@ -564,17 +565,26 @@ class SamlAcs(Resource):
         Returns:
             Response: A redirect response.
         """
+        request.max_content_length = saml_authenticator.MAX_SAML_FORM_BYTES
+        if request.content_length is not None and request.content_length > saml_authenticator.MAX_SAML_FORM_BYTES:
+            return {"error": "SAML response is too large"}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+
         authenticator = auth_manager.get_saml_authenticator(provider_slug)
-        relay_state = auth_manager.decode_scoped_token(request.form.get("RelayState", ""), "saml_state")
-        if not authenticator or not relay_state or relay_state.get("pid") != authenticator.provider.id:
+        relay_state = auth_transaction_manager.consume(AuthTransactionKind.SAML_STATE, request.form.get("RelayState", ""))
+        if not authenticator or not relay_state or relay_state.get("provider_id") != authenticator.provider.id:
             return {"error": "Invalid state"}, HTTPStatus.UNAUTHORIZED
-        goto_url = relay_state.get("gotoUrl") or "/"
+        goto_url = relay_state.get("goto_url") or "/"
 
         saml_response = request.form.get("SAMLResponse")
         if not saml_response:
             return _login_error_redirect(goto_url, "auth_failed")
 
-        identity = authenticator.handle_response(saml_response, relay_state.get("request_id"), relay_state.get("idp_entity_id"))
+        identity = authenticator.handle_response(
+            saml_response,
+            relay_state.get("request_id"),
+            relay_state.get("acs_url"),
+            relay_state.get("idp_entity_id"),
+        )
         if not identity:
             return _login_error_redirect(goto_url, "auth_failed")
 
