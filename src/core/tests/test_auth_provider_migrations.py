@@ -12,6 +12,7 @@ CORE_ROOT = Path(__file__).parents[1]
 MIGRATIONS = CORE_ROOT / "migrations" / "versions"
 SCHEMA_MIGRATION = MIGRATIONS / "e3f9d1a7c8b5_auth_providers.py"
 DATA_MIGRATION = MIGRATIONS / "4c8e1f7a2b90_seed_auth_provider_defaults.py"
+AUTH_GENERATION_MIGRATION = MIGRATIONS / "a6b7c8d9e0f1_add_auth_generation.py"
 AUTH_PROVIDER_MODEL = CORE_ROOT / "model" / "auth_provider.py"
 
 
@@ -35,14 +36,17 @@ def _function(module: ast.Module, name: str) -> ast.FunctionDef:
     raise AssertionError(message)
 
 
-def test_auth_migrations_extend_the_current_head_in_two_steps() -> None:
+def test_auth_migrations_extend_the_current_head_in_three_steps() -> None:
     schema = _module(SCHEMA_MIGRATION)
     data = _module(DATA_MIGRATION)
+    auth_generation = _module(AUTH_GENERATION_MIGRATION)
 
     assert _assignment(schema, "revision") == "e3f9d1a7c8b5"
     assert _assignment(schema, "down_revision") == "6f3a8d9c2e11"
     assert _assignment(data, "revision") == "4c8e1f7a2b90"
     assert _assignment(data, "down_revision") == "e3f9d1a7c8b5"
+    assert _assignment(auth_generation, "revision") == "a6b7c8d9e0f1"
+    assert _assignment(auth_generation, "down_revision") == "4c8e1f7a2b90"
 
     revisions: set[str] = set()
     referenced_revisions: set[str] = set()
@@ -58,7 +62,7 @@ def test_auth_migrations_extend_the_current_head_in_two_steps() -> None:
         elif parent:
             referenced_revisions.update(parent)
 
-    assert revisions - referenced_revisions == {"4c8e1f7a2b90"}
+    assert revisions - referenced_revisions == {"a6b7c8d9e0f1"}
 
 
 def test_schema_upgrade_is_deterministic_and_schema_only() -> None:
@@ -75,7 +79,7 @@ def test_schema_upgrade_is_deterministic_and_schema_only() -> None:
 
 
 def test_migrations_use_frozen_local_objects_not_application_models() -> None:
-    for path in (SCHEMA_MIGRATION, DATA_MIGRATION):
+    for path in (SCHEMA_MIGRATION, DATA_MIGRATION, AUTH_GENERATION_MIGRATION):
         module = _module(path)
         application_imports = [
             node
@@ -91,7 +95,7 @@ def test_migrations_use_frozen_local_objects_not_application_models() -> None:
     assert "db.Model" not in data_source
 
 
-def test_data_revision_owns_permissions_local_provider_and_generation_one_settings() -> None:
+def test_data_revision_owns_permissions_local_provider_and_security_settings() -> None:
     module = _module(DATA_MIGRATION)
     permissions = _assignment(module, "PERMISSIONS")
     local_provider = _assignment(module, "LOCAL_PROVIDER")
@@ -122,7 +126,6 @@ def test_data_revision_owns_permissions_local_provider_and_generation_one_settin
         "passkey_enabled": False,
         "passkey_second_factor": True,
         "require_mfa": False,
-        "auth_generation": 1,
         "rp_id": None,
         "rp_name": "Taranis NG",
         "origins": None,
@@ -130,14 +133,33 @@ def test_data_revision_owns_permissions_local_provider_and_generation_one_settin
     }
 
 
-def test_auth_generation_is_revision_frozen_and_downgrade_protected() -> None:
+def test_auth_generation_is_added_after_the_previously_released_data_revision() -> None:
     schema_source = SCHEMA_MIGRATION.read_text(encoding="utf-8")
     data_source = DATA_MIGRATION.read_text(encoding="utf-8")
+    generation_source = AUTH_GENERATION_MIGRATION.read_text(encoding="utf-8")
 
-    assert 'sa.Column("auth_generation", sa.INTEGER(), nullable=False, server_default=sa.text("1"))' in schema_source
-    assert 'sa.column("auth_generation", sa.Integer())' in data_source
-    assert "security_settings_row != SECURITY_SETTINGS" in data_source
-    assert 'sa.delete(security_settings).where(security_settings.c.id == SECURITY_SETTINGS["id"])' in data_source
+    # Existing databases may already be stamped at 4c8 with the original schema,
+    # so neither already-released revision may claim ownership of this column.
+    assert "auth_generation" not in schema_source
+    assert "auth_generation" not in data_source
+
+    assert "op.add_column(" in generation_source
+    assert 'sa.Column("auth_generation", sa.INTEGER(), nullable=False, server_default=sa.text("1"))' in generation_source
+    assert '"auth_generation > 0"' in generation_source
+    assert 'op.drop_column("security_settings", "auth_generation")' in generation_source
+    assert "Refusing to remove auth_generation after it has advanced" in generation_source
+
+
+def test_auth_generation_revision_is_frozen_and_has_no_orm_imports() -> None:
+    module = _module(AUTH_GENERATION_MIGRATION)
+    imports = [
+        node
+        for node in module.body
+        if isinstance(node, ast.ImportFrom) and node.module and (node.module == "model" or node.module.startswith("model."))
+    ]
+
+    assert imports == []
+    assert not any(isinstance(node, ast.ClassDef) for node in module.body)
 
 
 def test_schema_downgrade_refuses_loss_instead_of_inventing_passwords() -> None:

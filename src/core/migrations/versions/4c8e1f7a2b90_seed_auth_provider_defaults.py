@@ -1,4 +1,4 @@
-"""Seed local authentication, auth generation, and provider permissions.
+"""Seed local authentication, security settings, and provider permissions.
 
 The lightweight tables below are frozen migration-local snapshots.  This
 revision must not import application ORM models, which can change over time.
@@ -62,7 +62,6 @@ SECURITY_SETTINGS = {
     "passkey_enabled": False,
     "passkey_second_factor": True,
     "require_mfa": False,
-    "auth_generation": 1,
     "rp_id": None,
     "rp_name": "Taranis NG",
     "origins": None,
@@ -113,7 +112,6 @@ security_settings = sa.table(
     sa.column("passkey_enabled", sa.Boolean()),
     sa.column("passkey_second_factor", sa.Boolean()),
     sa.column("require_mfa", sa.Boolean()),
-    sa.column("auth_generation", sa.Integer()),
     sa.column("rp_id", sa.String()),
     sa.column("rp_name", sa.String()),
     sa.column("origins", sa.String()),
@@ -197,7 +195,7 @@ def _assert_safe_downgrade(
         message = "Refusing to remove authentication defaults: the singleton security settings row is missing"
         raise RuntimeError(message)
     if security_settings_row != SECURITY_SETTINGS:
-        message = "Refusing to remove authentication defaults because security settings or auth generation have changed"
+        message = "Refusing to remove authentication defaults because security settings have changed"
         raise RuntimeError(message)
     another_settings_row = connection.execute(
         sa.select(sa.literal(1)).select_from(security_settings).where(security_settings.c.id != SECURITY_SETTINGS["id"]).limit(1),
@@ -242,7 +240,6 @@ def downgrade() -> None:
                 security_settings.c.passkey_enabled,
                 security_settings.c.passkey_second_factor,
                 security_settings.c.require_mfa,
-                security_settings.c.auth_generation,
                 security_settings.c.rp_id,
                 security_settings.c.rp_name,
                 security_settings.c.origins,

@@ -65,7 +65,6 @@ _UNSAFE_DOWNGRADE_CHECKS = (
                 WHERE passkey_enabled
                    OR NOT passkey_second_factor
                    OR require_mfa
-                   OR auth_generation <> 1
                    OR rp_id IS NOT NULL
                    OR origins IS NOT NULL
                    OR updated_by IS NOT NULL
@@ -173,7 +172,6 @@ def upgrade() -> None:
         sa.Column("passkey_enabled", sa.BOOLEAN(), nullable=False, server_default=sa.text("false")),
         sa.Column("passkey_second_factor", sa.BOOLEAN(), nullable=False, server_default=sa.text("true")),
         sa.Column("require_mfa", sa.BOOLEAN(), nullable=False, server_default=sa.text("false")),
-        sa.Column("auth_generation", sa.INTEGER(), nullable=False, server_default=sa.text("1")),
         sa.Column("rp_id", sa.VARCHAR(), nullable=True),
         sa.Column("rp_name", sa.VARCHAR(), nullable=True),
         sa.Column("origins", sa.VARCHAR(), nullable=True),
