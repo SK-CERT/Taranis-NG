@@ -54,6 +54,23 @@ describe('SecurityTab (passkey relying-party settings)', () => {
         expect(wrapper.vm.settings.origins).toBe('https://taranis.example.org')
     })
 
+    it('normalizes nullable relying-party fields from a freshly migrated database', async () => {
+        const wrapper = await mountTab({
+            require_mfa: false,
+            passkey_enabled: false,
+            passkey_second_factor: true,
+            rp_id: null,
+            rp_name: null,
+            origins: null
+        })
+
+        expect(wrapper.vm.settings.rp_id).toBe('')
+        expect(wrapper.vm.settings.rp_name).toBe('')
+        expect(wrapper.vm.settings.origins).toBe('')
+        expect(wrapper.vm.suggestedRpId).toBe(window.location.hostname)
+        expect(wrapper.text()).toContain('Passkeys (WebAuthn)')
+    })
+
     it('explains that passkeys are user credentials, not an identity provider', async () => {
         const wrapper = await mountTab()
         expect(wrapper.text()).toContain('Passkeys (WebAuthn)')

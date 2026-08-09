@@ -172,6 +172,12 @@
         updated_at?: string
     }
 
+    type SecuritySettingsResponse = Omit<SecuritySettingsItem, 'rp_id' | 'rp_name' | 'origins'> & {
+        rp_id: string | null
+        rp_name: string | null
+        origins: string | null
+    }
+
     type FormValidationResult = {
         valid: boolean
     }
@@ -244,10 +250,23 @@
             t('access_management.security.origins_invalid')
     ])
 
+    // A freshly migrated row stores the optional relying-party fields as NULL.
+    // Normalize that API representation once, at the component boundary, so
+    // every input and computed value can keep the simpler string-only contract.
+    const applyResponse = (data: SecuritySettingsResponse): void => {
+        settings.value = {
+            ...settings.value,
+            ...data,
+            rp_id: data.rp_id ?? '',
+            rp_name: data.rp_name ?? '',
+            origins: data.origins ?? ''
+        }
+    }
+
     const loadData = async (): Promise<void> => {
         try {
-            const response = (await getSecuritySettings()) as { data: SecuritySettingsItem }
-            settings.value = { ...settings.value, ...response.data }
+            const response = (await getSecuritySettings()) as { data: SecuritySettingsResponse }
+            applyResponse(response.data)
         } catch (error) {
             console.error('Error loading security settings:', error)
         }
@@ -262,8 +281,8 @@
 
         saving.value = true
         try {
-            const response = (await updateSecuritySettings(settings.value)) as { data: SecuritySettingsItem }
-            settings.value = { ...settings.value, ...response.data }
+            const response = (await updateSecuritySettings(settings.value)) as { data: SecuritySettingsResponse }
+            applyResponse(response.data)
             window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'common.updated_successfully' } }))
         } catch (error) {
             const data = (error as { response?: { data?: { error?: string } } })?.response?.data
