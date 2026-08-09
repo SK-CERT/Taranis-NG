@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { getDashboardData } from '@/api/dashboard'
+import { getDashboardData, type TagCloudQuery } from '@/api/dashboard'
 
 type DailyNewsItemCount = {
     date: string
@@ -87,9 +87,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const getDashboardDataComputed = computed(() => dashboard_data.value)
 
     // Actions
-    async function loadDashboardData(): Promise<void> {
+    async function loadDashboardData(tagCloudQuery?: TagCloudQuery): Promise<void> {
         try {
-            const response = await getDashboardData()
+            const response = await getDashboardData(tagCloudQuery)
             if (response && response.data) {
                 dashboard_data.value = toDashboardData(response.data)
             } else {
