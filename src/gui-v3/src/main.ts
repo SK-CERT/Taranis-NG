@@ -14,7 +14,7 @@ import App from './App.vue'
 import router from './router'
 import ApiService from './services/api_service'
 import { messages, resolveLocale } from './i18n'
-import { consumeJwtCookie } from './services/jwt_cookie'
+import { bootstrapTestingToken } from './services/testing_auth'
 
 // Wait for stylesheets to be applied before mounting.
 // This prevents "Layout was forced before page fully loaded" warnings.
@@ -145,9 +145,9 @@ const app = createApp(App)
 
 app.use(pinia)
 
-// Before the router runs: a redirect login lands here with the JWT in a cookie, and
-// the auth guard would otherwise treat that arrival as anonymous.
-consumeJwtCookie(pinia)
+// Keep the explicit E2E-only token hook without placing credentials in cookies.
+// Redirect authentication itself is completed by Login.vue through /auth/redeem.
+bootstrapTestingToken(pinia)
 
 app.use(router)
 app.use(vuetify)

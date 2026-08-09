@@ -2,7 +2,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import Login from '@/views/Login.vue'
 import { useAuthStore } from '@/stores/auth'
-import { getLoginMethods, mfaTotp, mfaTotpEnroll, mfaWebauthnEnroll, passkeyLoginBegin, passkeyLoginFinish } from '@/api/auth'
+import {
+    getLoginMethods,
+    mfaTotp,
+    mfaTotpEnroll,
+    mfaWebauthnEnroll,
+    passkeyLoginBegin,
+    passkeyLoginFinish,
+    redeemRedirectLogin
+} from '@/api/auth'
 
 const push = vi.fn()
 let routeQuery = {}
@@ -17,6 +25,7 @@ vi.mock('@/api/auth', () => ({
     logout: vi.fn(),
     refresh: vi.fn(),
     getLoginMethods: vi.fn().mockResolvedValue({ data: { items: [] } }),
+    redeemRedirectLogin: vi.fn(),
     mfaTotp: vi.fn(),
     mfaTotpEnroll: vi.fn(),
     mfaWebauthnEnroll: vi.fn(),
@@ -62,14 +71,21 @@ function loginRejection(data) {
     return Promise.reject(error)
 }
 
+function redemptionRejection(status = 401) {
+    const error = new Error('redemption failed')
+    error.response = { status, data: { error: 'Invalid or expired redemption handle' } }
+    return Promise.reject(error)
+}
+
 describe('Login page', () => {
     beforeEach(() => {
         localStorage.clear()
         routeQuery = {}
-        for (const name of ['mfa_token', 'mfa_methods', 'mfa_enroll']) {
+        for (const name of ['jwt', 'mfa_token', 'mfa_methods', 'mfa_enroll']) {
             document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
         }
         vi.clearAllMocks()
+        redeemRedirectLogin.mockImplementation(() => redemptionRejection())
     })
 
     // ── Method rendering ──────────────────────────
@@ -285,12 +301,23 @@ describe('Login page', () => {
         expect(authStore.finishLogin).toHaveBeenCalledWith('jwt-after-enroll')
     })
 
-    // ── MFA after a redirect login (OIDC/OAuth2/SAML) ──
-    // The core is mid-redirect and cannot answer with a JSON challenge, so it hands the
-    // scoped token over in a cookie; this page runs the same step a form login would.
-    it('challenges for TOTP when a redirect login left a second factor owed', async () => {
-        document.cookie = 'mfa_token=mfa-from-idp; path=/'
-        document.cookie = 'mfa_methods=totp,passkey; path=/'
+    // ── One-time redirect redemption (OIDC/OAuth2/SAML) ──
+    it('redeems a redirect login and adopts the returned access token', async () => {
+        routeQuery = { redirect: '/assess' }
+        redeemRedirectLogin.mockResolvedValue({ data: { access_token: 'jwt-from-idp' } })
+
+        const { authStore } = await mountLogin()
+
+        expect(redeemRedirectLogin).toHaveBeenCalledTimes(1)
+        expect(authStore.jwt).toBe('jwt-from-idp')
+        expect(push).toHaveBeenCalledWith('/assess')
+        expect(document.cookie).not.toContain('jwt-from-idp')
+    })
+
+    it('challenges for TOTP when the redeemed login still owes a second factor', async () => {
+        redeemRedirectLogin.mockResolvedValue({
+            data: { code: 'MFA_REQUIRED', methods: ['totp', 'passkey'], mfa_token: 'mfa-from-idp' }
+        })
 
         const { wrapper } = await mountLogin()
         await wrapper.vm.$nextTick()
@@ -298,12 +325,13 @@ describe('Login page', () => {
         expect(wrapper.vm.step).toBe('mfa')
         expect(wrapper.vm.mfaToken).toBe('mfa-from-idp')
         expect(wrapper.vm.mfaMethods).toEqual(['totp', 'passkey'])
-        // the token is single-use: leaving it in the jar would replay it on the next visit
         expect(document.cookie).not.toContain('mfa-from-idp')
     })
 
-    it('starts TOTP enrollment when a redirect provider requires MFA and the user has none', async () => {
-        document.cookie = 'mfa_enroll=enroll-from-idp; path=/'
+    it('starts enrollment when the redeemed login requires MFA and the user has none', async () => {
+        redeemRedirectLogin.mockResolvedValue({
+            data: { code: 'MFA_ENROLLMENT_REQUIRED', methods: ['totp'], enroll_token: 'enroll-from-idp' }
+        })
         mfaTotpEnroll.mockResolvedValue({ data: { otpauth_uri: 'otpauth://totp/Taranis:jsmith?secret=ABC' } })
 
         const { wrapper } = await mountLogin()
@@ -314,10 +342,23 @@ describe('Login page', () => {
         expect(document.cookie).not.toContain('enroll-from-idp')
     })
 
-    it('shows the plain credentials form when no challenge cookie came back', async () => {
+    it('shows the provider chooser when the redemption handle is missing or expired', async () => {
+        redeemRedirectLogin.mockImplementation(() => redemptionRejection(401))
+
         const { wrapper } = await mountLogin()
 
         expect(wrapper.vm.step).toBe('credentials')
+        expect(wrapper.vm.showLoginError).toBe(false)
+    })
+
+    it('does not consume legacy JS-readable redirect-token cookies', async () => {
+        document.cookie = 'jwt=legacy-jwt; path=/'
+        document.cookie = 'mfa_token=legacy-mfa; path=/'
+
+        const { wrapper, authStore } = await mountLogin()
+
+        expect(wrapper.vm.step).toBe('credentials')
+        expect(authStore.jwt).toBe('')
     })
 
     // ── Passkeys ──────────────────────────────────

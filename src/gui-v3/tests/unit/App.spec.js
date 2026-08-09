@@ -107,7 +107,6 @@ describe('App SSE boot flow', () => {
         })
         mockSettingsStore.getProfileLanguage = 'en'
 
-        document.cookie = 'jwt=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
         vi.stubGlobal('requestAnimationFrame', (callback) => {
             callback()
             return 1
@@ -119,7 +118,6 @@ describe('App SSE boot flow', () => {
         wrapper = null
         vi.useRealTimers()
         vi.unstubAllGlobals()
-        document.cookie = 'jwt=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
     })
 
     it('should initialize settings and register SSE listeners on authenticated mount', async () => {
@@ -151,8 +149,7 @@ describe('App SSE boot flow', () => {
     })
 
     it('should not start a session when the stored token is absent', async () => {
-        // the "jwt" cookie is adopted by main.ts before the router runs, so App only
-        // ever sees the resulting store state
+        // Session bootstrap happens before App mounts, so App only sees store state.
         mockAuthStore.jwt = ''
         mockAuthStore.isAuthenticated = false
         mockAuthStore.getUserData = null

@@ -10,6 +10,7 @@ import {
 } from '@/api/config'
 import {
     getLoginMethods,
+    redeemRedirectLogin,
     mfaTotp,
     mfaTotpEnroll,
     mfaWebauthnBegin,
@@ -84,6 +85,11 @@ describe('Auth API (login methods, MFA, passkeys)', () => {
     it('fetches the public login methods', () => {
         getLoginMethods()
         expect(ApiService.get).toHaveBeenCalledWith('/auth/methods')
+    })
+
+    it('redeems redirect login state with the HttpOnly cookie included', () => {
+        redeemRedirectLogin()
+        expect(ApiService.post).toHaveBeenCalledWith('/auth/redeem', null, { withCredentials: true })
     })
 
     it('submits a TOTP code with the scoped MFA token', () => {

@@ -29,6 +29,11 @@ export function getLoginMethods() {
     return ApiService.get('/auth/methods')
 }
 
+/** Redeem the HttpOnly, one-time handle left by a redirect-based login. */
+export function redeemRedirectLogin() {
+    return ApiService.post('/auth/redeem', null, { withCredentials: true })
+}
+
 export function mfaTotp(mfa_token: string, code: string) {
     return ApiService.post('/auth/mfa/totp', { mfa_token, code })
 }

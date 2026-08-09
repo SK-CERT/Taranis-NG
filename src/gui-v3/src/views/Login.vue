@@ -306,7 +306,8 @@
         mfaWebauthnBegin,
         mfaWebauthnFinish,
         passkeyLoginBegin,
-        passkeyLoginFinish
+        passkeyLoginFinish,
+        redeemRedirectLogin
     } from '@/api/auth'
     import type { LoginErrorResponse, LoginMethod } from '@/types/auth'
     import lightLogo from '@/assets/taranis-logo-nav.svg'
@@ -648,11 +649,9 @@
         const apiBase: string = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
         const coreOrigin = new URL(apiBase, window.location.origin).origin
         const base: string = import.meta.env.BASE_URL || '/'
-        // Send the IdP round-trip straight back into the app, not to this page: the
-        // core redirects to gotoUrl with the JWT in a cookie, main.ts adopts it before
-        // the router's first navigation, and the user never sees the login screen
-        // again. On failure the core appends ?login_error= to the same URL, and the
-        // auth guard forwards that back here.
+        // Send the IdP round-trip back to the requested app route. The auth guard
+        // forwards the anonymous return to this login view, which redeems the
+        // HttpOnly one-time handle and then continues to the requested route.
         const requestedRedirect = redirectQuery()
         const safeRedirect = requestedRedirect.startsWith('/') && !requestedRedirect.startsWith('//') ? requestedRedirect : '/dashboard'
         const gotoUrl = new URL(base.replace(/\/$/, '') + safeRedirect, window.location.origin).toString()
@@ -665,41 +664,54 @@
         window.location.href = authStore.getLoginURL
     }
 
-    /** Read a cookie the core set on the way back from a redirect login, and clear it. */
-    const takeCookie = (name: string): string => {
-        const match = document.cookie.split(';').find((cookie) => cookie.trim().startsWith(`${name}=`))
-        if (!match) {
-            return ''
-        }
-        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
-        return decodeURIComponent(match.trim().slice(name.length + 1))
-    }
-
     /**
-     * Pick up a second factor still owed after an OIDC/OAuth2/SAML login.
-     *
-     * The core cannot answer a browser redirect with an MFA challenge in a JSON body,
-     * so it hands the scoped token over in a cookie and lets this page run the same
-     * TOTP/passkey step a form login would have run.
+     * Redeem the opaque, HttpOnly handle left after an OIDC/OAuth2/SAML login.
+     * The returned verdict uses the same access-token/MFA/enrollment payloads as
+     * form login; no credential or scoped token is exposed through document.cookie.
      */
-    const resumeMfaFromRedirect = async (): Promise<boolean> => {
-        const enrollFromRedirect = takeCookie('mfa_enroll')
-        if (enrollFromRedirect) {
-            enrollToken.value = enrollFromRedirect
-            mfaMethods.value = (takeCookie('mfa_methods') || 'totp').split(',').filter(Boolean)
-            await beginTotpEnrollment()
-            return true
-        }
+    const redeemRedirectLoginState = async (): Promise<boolean> => {
+        try {
+            const response = (await redeemRedirectLogin()) as { data: LoginErrorResponse & { access_token?: string } }
+            const data = response.data
+            if (data.access_token) {
+                finishLoginWithToken(data.access_token)
+                return true
+            }
 
-        const tokenFromRedirect = takeCookie('mfa_token')
-        if (!tokenFromRedirect) {
+            const code = data.code?.toUpperCase()
+            if (code === 'MFA_REQUIRED' && data.mfa_token) {
+                mfaToken.value = data.mfa_token
+                mfaMethods.value = data.methods || ['totp']
+                totpCode.value = ''
+                step.value = 'mfa'
+                return true
+            }
+            if (code === 'MFA_ENROLLMENT_REQUIRED' && data.enroll_token) {
+                enrollToken.value = data.enroll_token
+                mfaMethods.value = data.methods || ['totp']
+                if (mfaMethods.value.includes('totp')) {
+                    await beginTotpEnrollment()
+                } else {
+                    step.value = 'enroll'
+                }
+                return true
+            }
+            if (data.code) {
+                showError(data.code)
+                return true
+            }
+        } catch (error) {
+            const status = (error as { response?: { status?: number } })?.response?.status
+            // A normal visit to /login has no redemption handle. An expired or
+            // already-used handle has the same 401 response and falls back safely
+            // to the provider chooser without exposing authentication state.
+            if (status !== 401) {
+                console.error('[Login] Redirect redemption error:', error)
+                showError()
+            }
             return false
         }
-        mfaToken.value = tokenFromRedirect
-        mfaMethods.value = (takeCookie('mfa_methods') || 'totp').split(',').filter(Boolean)
-        totpCode.value = ''
-        step.value = 'mfa'
-        return true
+        return false
     }
 
     /**
@@ -737,8 +749,8 @@
             selectedProviderId.value = firstForm.id
         }
 
-        // Loaded first, so that backing out of the challenge lands on a usable form
-        await resumeMfaFromRedirect()
+        // Loaded first, so that backing out of the challenge lands on a usable form.
+        await redeemRedirectLoginState()
     })
 </script>
 
