@@ -11,11 +11,10 @@ Provider ``config`` keys:
 The client secret is the provider's encrypted secret. ID tokens are verified
 against the issuer's JWKS (signature, issuer, audience, expiry, nonce).
 
-When ``pkce_method`` is ``S256`` or ``plain``, a random ``code_verifier`` is
-generated per login attempt and sent as ``code_challenge`` (with the matching
-``code_challenge_method``) on the authorization request, then replayed on the
-token exchange. The verifier is carried inside the signed ``state`` JWT so it
-survives the browser round-trip without server-side state.
+When ``pkce_method`` is ``S256``, a random ``code_verifier`` is generated per
+login attempt and retained in the opaque server-side authentication
+transaction until the token exchange. ``plain`` is rejected because it exposes
+the verifier in the browser-visible authorization request.
 """
 
 from __future__ import annotations
@@ -24,28 +23,26 @@ import secrets
 from typing import TYPE_CHECKING
 
 import jwt as pyjwt
-import requests
-from auth.base_authenticator import BaseAuthenticator, ExternalIdentity
 from authlib.integrations.requests_client import OAuth2Session
-from jwt import PyJWKClient
+
+from auth.base_authenticator import BaseAuthenticator, ExternalIdentity
+from auth.url_guard import OUTBOUND_TIMEOUT, assert_auth_endpoint_url, fetch_auth_json, read_limited_json
 from managers import log_manager
 
 if TYPE_CHECKING:
     from model.auth_provider import AuthProvider
 
-HTTP_TIMEOUT = 10
 ID_TOKEN_ALGORITHMS = ["RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512"]
 # PKCE code_verifier: 43-128 chars of the unreserved set [A-Z][a-z][0-9]-._~.
 # token_urlsafe(64) yields 86 chars in that alphabet, comfortably in range.
 PKCE_VERIFIER_BYTES = 64
-# Supported PKCE code_challenge_method values (RFC 7636 §4.2).
-# "none" disables PKCE; "S256" hashes the verifier; "plain" sends the
-# verifier verbatim as the challenge.
-PKCE_METHODS = ("none", "S256", "plain")
+# ``none`` remains for providers that do not implement PKCE. ``plain`` is not
+# accepted because the browser-visible challenge would disclose the verifier.
+PKCE_METHODS = ("none", "S256")
 
 # per-provider caches, invalidated when the provider row is updated
 _metadata_cache: dict[int, tuple[str, dict]] = {}
-_jwk_client_cache: dict[int, tuple[str, PyJWKClient]] = {}
+_jwks_cache: dict[int, tuple[str, dict]] = {}
 
 
 class OAuth2Authenticator(BaseAuthenticator):
@@ -71,9 +68,26 @@ class OAuth2Authenticator(BaseAuthenticator):
         if cached and cached[0] == marker:
             return cached[1]
         issuer = (self.config.get("issuer_url") or "").rstrip("/")
-        response = requests.get(f"{issuer}/.well-known/openid-configuration", timeout=HTTP_TIMEOUT)
-        response.raise_for_status()
-        metadata = response.json()
+        if not issuer:
+            msg = f"OIDC provider '{self.provider.name}' has no issuer URL"
+            raise ValueError(msg)
+        metadata = fetch_auth_json(f"{issuer}/.well-known/openid-configuration")
+        discovered_issuer = metadata.get("issuer")
+        if not isinstance(discovered_issuer, str) or discovered_issuer.rstrip("/") != issuer:
+            msg = f"OIDC discovery issuer does not match the configured issuer for provider '{self.provider.name}'"
+            raise ValueError(msg)
+        for key in ("authorization_endpoint", "token_endpoint", "jwks_uri"):
+            endpoint = metadata.get(key)
+            if not isinstance(endpoint, str) or not endpoint:
+                msg = f"OIDC discovery document has no valid '{key}' for provider '{self.provider.name}'"
+                raise ValueError(msg)
+            assert_auth_endpoint_url(endpoint)
+        userinfo_endpoint = metadata.get("userinfo_endpoint")
+        if userinfo_endpoint is not None:
+            if not isinstance(userinfo_endpoint, str) or not userinfo_endpoint:
+                msg = f"OIDC discovery document has an invalid 'userinfo_endpoint' for provider '{self.provider.name}'"
+                raise ValueError(msg)
+            assert_auth_endpoint_url(userinfo_endpoint)
         _metadata_cache[self.provider.id] = (marker, metadata)
         return metadata
 
@@ -88,13 +102,22 @@ class OAuth2Authenticator(BaseAuthenticator):
                 "jwks_uri": metadata.get("jwks_uri"),
                 "issuer": metadata.get("issuer"),
             }
-        return {
+        endpoints = {
             "authorize": self.config.get("authorize_url"),
             "token": self.config.get("token_url"),
             "userinfo": self.config.get("userinfo_url"),
             "jwks_uri": None,
             "issuer": None,
         }
+        for key in ("authorize", "token"):
+            endpoint = endpoints[key]
+            if not isinstance(endpoint, str) or not endpoint:
+                msg = f"OAuth provider '{self.provider.name}' has no valid {key} URL"
+                raise ValueError(msg)
+            assert_auth_endpoint_url(endpoint)
+        if endpoints["userinfo"]:
+            assert_auth_endpoint_url(endpoints["userinfo"])
+        return endpoints
 
     def _scopes(self) -> str:
         """Return the configured scopes (with kind-appropriate defaults)."""
@@ -102,9 +125,12 @@ class OAuth2Authenticator(BaseAuthenticator):
         return self.config.get("scopes") or default
 
     def _pkce_method(self) -> str:
-        """Return the configured PKCE method (``none``, ``S256``, or ``plain``)."""
+        """Return the configured PKCE method (``none`` or ``S256``)."""
         method = (self.config.get("pkce_method") or "none").strip()
-        return method if method in PKCE_METHODS else "none"
+        if method not in PKCE_METHODS:
+            msg = f"Unsupported PKCE method '{method}' for provider '{self.provider.name}'; use S256 or none"
+            raise ValueError(msg)
+        return method
 
     def _use_pkce(self) -> bool:
         """Return whether this provider requests PKCE on the auth flow."""
@@ -131,8 +157,7 @@ class OAuth2Authenticator(BaseAuthenticator):
             state (str): Signed state parameter (CSRF protection).
             nonce (str): Nonce to be bound into the ID token (oidc only).
             code_verifier (str): PKCE code_verifier. Required when the
-                provider's ``pkce_method`` is ``S256`` or ``plain``; ignored
-                otherwise.
+                provider's ``pkce_method`` is ``S256``; ignored otherwise.
 
         Returns:
             str: The authorization URL.
@@ -150,19 +175,13 @@ class OAuth2Authenticator(BaseAuthenticator):
         extra: dict[str, str] = {}
         if self.provider.kind == "oidc":
             extra["nonce"] = nonce
-        if pkce_method != "none":
+        if pkce_method == "S256":
             if not code_verifier:
                 msg = f"PKCE method '{pkce_method}' enabled for provider '{self.provider.name}' but no code_verifier was supplied"
                 raise ValueError(msg)
-            if pkce_method == "S256":
-                # Authlib derives code_challenge = BASE64URL(SHA256(code_verifier))
-                # and adds code_challenge_method=S256 automatically.
-                extra["code_verifier"] = code_verifier
-            else:  # "plain"
-                # RFC 7636 §4.2: ``code_challenge`` IS the verifier itself.
-                # Authlib only handles S256 natively, so emit the params here.
-                extra["code_challenge"] = code_verifier
-                extra["code_challenge_method"] = "plain"
+            # Authlib derives code_challenge = BASE64URL(SHA256(code_verifier))
+            # and adds code_challenge_method=S256 automatically.
+            extra["code_verifier"] = code_verifier
         url, _ = session.create_authorization_url(endpoints["authorize"], state=state, **extra)
         return url
 
@@ -174,8 +193,8 @@ class OAuth2Authenticator(BaseAuthenticator):
             code (str): The authorization code returned by the IdP.
             nonce (str): The nonce bound into the state (oidc only).
             code_verifier (str): PKCE code_verifier, required when the
-                provider's ``pkce_method`` is ``S256`` or ``plain``; must match
-                the verifier sent on the authorize request. Ignored otherwise.
+                provider's ``pkce_method`` is ``S256``; must match the verifier
+                sent on the authorize request. Ignored otherwise.
 
         Returns:
             ExternalIdentity: The authenticated identity, or None on failure.
@@ -193,7 +212,15 @@ class OAuth2Authenticator(BaseAuthenticator):
                     )
                     return None
                 fetch_kwargs["code_verifier"] = code_verifier
-            token = session.fetch_token(endpoints["token"], code=code, grant_type="authorization_code", **fetch_kwargs)
+            assert_auth_endpoint_url(endpoints["token"])
+            token = session.fetch_token(
+                endpoints["token"],
+                code=code,
+                grant_type="authorization_code",
+                timeout=OUTBOUND_TIMEOUT,
+                allow_redirects=False,
+                **fetch_kwargs,
+            )
 
             claims = {}
             if self.provider.kind == "oidc":
@@ -203,9 +230,17 @@ class OAuth2Authenticator(BaseAuthenticator):
 
             username_claim = self.config.get("username_claim") or "preferred_username"
             if username_claim not in claims and endpoints["userinfo"]:
-                userinfo = session.get(endpoints["userinfo"], timeout=HTTP_TIMEOUT)
-                userinfo.raise_for_status()
-                claims = {**userinfo.json(), **claims}
+                assert_auth_endpoint_url(endpoints["userinfo"])
+                userinfo = session.get(
+                    endpoints["userinfo"],
+                    timeout=OUTBOUND_TIMEOUT,
+                    allow_redirects=False,
+                    stream=True,
+                )
+                try:
+                    claims = {**read_limited_json(userinfo), **claims}
+                finally:
+                    userinfo.close()
 
             username = claims.get(username_claim)
             if not username:
@@ -239,17 +274,33 @@ class OAuth2Authenticator(BaseAuthenticator):
         if not id_token or not endpoints["jwks_uri"]:
             log_manager.store_auth_error_activity(f"Provider '{self.provider.name}' returned no verifiable ID token")
             return None
+        assert_auth_endpoint_url(endpoints["jwks_uri"])
         marker = self._cache_marker()
-        cached = _jwk_client_cache.get(self.provider.id)
+        cached = _jwks_cache.get(self.provider.id)
         if cached and cached[0] == marker:
-            jwk_client = cached[1]
+            jwks = cached[1]
         else:
-            jwk_client = PyJWKClient(endpoints["jwks_uri"], timeout=HTTP_TIMEOUT)
-            _jwk_client_cache[self.provider.id] = (marker, jwk_client)
-        signing_key = jwk_client.get_signing_key_from_jwt(id_token)
+            jwks = fetch_auth_json(endpoints["jwks_uri"])
+            _jwks_cache[self.provider.id] = (marker, jwks)
+        header = pyjwt.get_unverified_header(id_token)
+        algorithm = header.get("alg")
+        if algorithm not in ID_TOKEN_ALGORITHMS:
+            msg = f"ID token from provider '{self.provider.name}' uses an unsupported algorithm"
+            raise ValueError(msg)
+        key_id = header.get("kid")
+        candidates = self._matching_signing_keys(jwks, algorithm, key_id)
+        if len(candidates) != 1 and cached:
+            # Normal IdP key rollover must not require an administrator to edit
+            # the provider merely to invalidate our provider-row cache marker.
+            jwks = fetch_auth_json(endpoints["jwks_uri"])
+            _jwks_cache[self.provider.id] = (marker, jwks)
+            candidates = self._matching_signing_keys(jwks, algorithm, key_id)
+        if len(candidates) != 1:
+            msg = f"ID token from provider '{self.provider.name}' has no unique matching signing key"
+            raise ValueError(msg)
         claims = pyjwt.decode(
             id_token,
-            signing_key.key,
+            candidates[0].key,
             algorithms=ID_TOKEN_ALGORITHMS,
             audience=self.config.get("client_id"),
             issuer=endpoints["issuer"],
@@ -259,3 +310,12 @@ class OAuth2Authenticator(BaseAuthenticator):
             log_manager.store_auth_error_activity(f"Nonce mismatch in ID token from provider '{self.provider.name}'")
             return None
         return claims
+
+    @staticmethod
+    def _matching_signing_keys(jwks: dict, algorithm: str, key_id: str | None) -> list[pyjwt.PyJWK]:
+        """Return signature keys matching the token header without ambiguity."""
+        return [
+            key
+            for key in pyjwt.PyJWKSet.from_dict(jwks).keys
+            if key.algorithm_name == algorithm and key.public_key_use in (None, "sig") and (key_id is None or key.key_id == key_id)
+        ]

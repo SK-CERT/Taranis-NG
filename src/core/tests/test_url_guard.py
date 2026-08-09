@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from auth.url_guard import assert_public_url
 
 
