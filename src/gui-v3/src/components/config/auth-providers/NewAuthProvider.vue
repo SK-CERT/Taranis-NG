@@ -241,7 +241,7 @@
                             :saml-disco-url="samlDiscoUrl"
                             @load-metadata="loadMetadata"
                             @verify-federation="verifyFederation"
-                            @generate-keypair="generateKeypair"
+                            @generate-keypair="requestGenerateKeypair"
                         />
                     </template>
 
@@ -302,6 +302,15 @@
             @discard="discardAndClose"
         />
     </v-dialog>
+
+    <ConfirmationDialog
+        v-model="replaceKeypairDialog"
+        :message="t('auth_provider.sp_keypair_replace_message')"
+        title-key="auth_provider.sp_keypair_replace_title"
+        confirm-label-key="auth_provider.sp_keypair_replace_confirm"
+        icon="mdi-key-alert"
+        @confirm="confirmReplaceKeypair"
+    />
 </template>
 
 <script setup lang="ts">
@@ -310,6 +319,7 @@
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
     import AuthProviderHelp from './AuthProviderHelp.vue'
     import OidcFields from './fields/OidcFields.vue'
@@ -456,8 +466,13 @@
     // The identity provider encrypts the assertion to this certificate, so the keypair is
     // generated server-side; the private key rides along in the write-only `secret` field.
     const generatingKeypair = ref(false)
+    const replaceKeypairDialog = ref(false)
+    const hasExistingKeypair = computed(() => hasSecret.value || !!secretInput.value.trim() || !!config.value.sp_certificate?.trim())
 
     const generateKeypair = async (): Promise<void> => {
+        if (generatingKeypair.value || saving.value) {
+            return
+        }
         generatingKeypair.value = true
         try {
             const response = (await generateSamlKeypair(config.value.sp_entity_id || '')) as {
@@ -472,6 +487,22 @@
         } finally {
             generatingKeypair.value = false
         }
+    }
+
+    const requestGenerateKeypair = (): void => {
+        if (generatingKeypair.value || saving.value) {
+            return
+        }
+        if (hasExistingKeypair.value) {
+            replaceKeypairDialog.value = true
+            return
+        }
+        void generateKeypair()
+    }
+
+    const confirmReplaceKeypair = (): void => {
+        replaceKeypairDialog.value = false
+        void generateKeypair()
     }
 
     // Federation mode: connect to a whole federation and let the user pick their IdP at a
@@ -619,6 +650,7 @@
         samlUseFederation.value = false
         federationMessage.value = ''
         federationError.value = false
+        replaceKeypairDialog.value = false
         slugManuallyEdited.value = false
         organizationId.value = null
         selectedRoles.value = []

@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewAuthProvider from '@/components/config/auth-providers/NewAuthProvider.vue'
 import OauthSharedFields from '@/components/config/auth-providers/fields/OauthSharedFields.vue'
 import LdapFields from '@/components/config/auth-providers/fields/LdapFields.vue'
 import SamlFields from '@/components/config/auth-providers/fields/SamlFields.vue'
 import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
+import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 import { createNewAuthProvider, updateAuthProvider, importSamlMetadata, generateSamlKeypair } from '@/api/config'
 
 vi.mock('@/api/config', () => ({
@@ -469,12 +471,100 @@ describe('NewAuthProvider dialog', () => {
             }
         })
 
-        await wrapper.vm.generateKeypair()
+        wrapper.vm.requestGenerateKeypair()
+        await flushPromises()
 
         expect(generateSamlKeypair).toHaveBeenCalledWith('taranis-ng')
         // the private key travels in the write-only secret field, the certificate in the config
         expect(wrapper.vm.secretInput).toContain('BEGIN PRIVATE KEY')
         expect(wrapper.vm.config.sp_certificate).toContain('BEGIN CERTIFICATE')
+    })
+
+    it('asks before replacing stored or entered key material and cancel preserves it', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            has_secret: true,
+            config: { ...SAML_PROVIDER.config, sp_certificate: '-----BEGIN CERTIFICATE-----\nOLD\n-----END CERTIFICATE-----' }
+        })
+        wrapper.vm.secretInput = '-----BEGIN PRIVATE KEY-----\nOLD\n-----END PRIVATE KEY-----'
+
+        wrapper.vm.requestGenerateKeypair()
+        await wrapper.vm.$nextTick()
+
+        const confirmation = wrapper.findComponent(ConfirmationDialog)
+        expect(wrapper.vm.replaceKeypairDialog).toBe(true)
+        expect(confirmation.props('titleKey')).toBe('auth_provider.sp_keypair_replace_title')
+        expect(confirmation.props('confirmLabelKey')).toBe('auth_provider.sp_keypair_replace_confirm')
+        expect(generateSamlKeypair).not.toHaveBeenCalled()
+
+        confirmation.vm.$emit('update:modelValue', false)
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.vm.secretInput).toContain('\nOLD\n')
+        expect(wrapper.vm.config.sp_certificate).toContain('\nOLD\n')
+        expect(generateSamlKeypair).not.toHaveBeenCalled()
+    })
+
+    it.each([
+        ['a stored private key', true, ''],
+        ['a newly entered private key', false, '-----BEGIN PRIVATE KEY-----\nTYPED\n-----END PRIVATE KEY-----']
+    ])('asks before replacing %s even when no certificate is present', async (_label, hasSecret, enteredSecret) => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, { ...SAML_PROVIDER, has_secret: hasSecret })
+        wrapper.vm.secretInput = enteredSecret
+
+        wrapper.vm.requestGenerateKeypair()
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.vm.replaceKeypairDialog).toBe(true)
+        expect(generateSamlKeypair).not.toHaveBeenCalled()
+    })
+
+    it('asks when only an existing certificate is present, then replaces both values after confirmation', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            config: { ...SAML_PROVIDER.config, sp_certificate: '-----BEGIN CERTIFICATE-----\nOLD\n-----END CERTIFICATE-----' }
+        })
+        generateSamlKeypair.mockResolvedValue({
+            data: {
+                private_key: '-----BEGIN PRIVATE KEY-----\nNEW\n-----END PRIVATE KEY-----\n',
+                certificate: '-----BEGIN CERTIFICATE-----\nNEW\n-----END CERTIFICATE-----\n'
+            }
+        })
+
+        wrapper.vm.requestGenerateKeypair()
+        expect(generateSamlKeypair).not.toHaveBeenCalled()
+
+        wrapper.findComponent(ConfirmationDialog).vm.$emit('confirm')
+        await flushPromises()
+
+        expect(generateSamlKeypair).toHaveBeenCalledTimes(1)
+        expect(wrapper.vm.secretInput).toContain('\nNEW\n')
+        expect(wrapper.vm.config.sp_certificate).toContain('\nNEW\n')
+    })
+
+    it('does not start a second keypair request while generation is in flight', async () => {
+        let finishRequest
+        generateSamlKeypair.mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    finishRequest = resolve
+                })
+        )
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, { ...SAML_PROVIDER, has_secret: true })
+
+        wrapper.vm.confirmReplaceKeypair()
+        wrapper.vm.confirmReplaceKeypair()
+
+        expect(wrapper.vm.generatingKeypair).toBe(true)
+        expect(generateSamlKeypair).toHaveBeenCalledTimes(1)
+
+        finishRequest({ data: { private_key: 'NEW PRIVATE', certificate: 'NEW CERTIFICATE' } })
+        await flushPromises()
+        expect(wrapper.vm.generatingKeypair).toBe(false)
     })
 
     it('persists the certificate in the config and the private key as the secret', async () => {
@@ -571,5 +661,16 @@ describe('SAML provider fields', () => {
         wrapper.vm.federationModel = true
         await wrapper.vm.$nextTick()
         expect(wrapper.find('[data-test="saml-connection-mode-help"]').text()).toContain('whole federation')
+    })
+
+    it('disables keypair generation while a generation request is in flight', async () => {
+        const wrapper = mountWithPlugins(SamlFields, {
+            props: { config: {}, saving: false, generatingKeypair: true }
+        })
+        wrapper.vm.activeTab = 'keypair'
+        await wrapper.vm.$nextTick()
+
+        const button = wrapper.find('[data-test="saml-generate-keypair"]')
+        expect(button.attributes('disabled')).toBeDefined()
     })
 })

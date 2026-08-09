@@ -490,7 +490,8 @@
                     size="small"
                     prepend-icon="mdi-key-plus"
                     :loading="generatingKeypair"
-                    :disabled="saving"
+                    :disabled="saving || generatingKeypair"
+                    data-test="saml-generate-keypair"
                     @click="$emit('generate-keypair')"
                 >
                     {{ t('auth_provider.sp_keypair_generate') }}
