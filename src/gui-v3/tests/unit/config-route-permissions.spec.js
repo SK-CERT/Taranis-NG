@@ -3,6 +3,13 @@ import router from '@/router'
 import { configLinks, filterConfigLinks } from '@/config/config-nav-links'
 
 const groupedRoutes = {
+    access_management: [
+        'CONFIG_USER_ACCESS',
+        'CONFIG_ROLE_ACCESS',
+        'CONFIG_ACL_ACCESS',
+        'CONFIG_ORGANIZATION_ACCESS',
+        'CONFIG_AUTH_PROVIDER_ACCESS'
+    ],
     collectors: ['CONFIG_OSINT_SOURCE_ACCESS', 'CONFIG_OSINT_SOURCE_GROUP_ACCESS', 'CONFIG_COLLECTORS_NODE_ACCESS'],
     presenters: ['CONFIG_PRODUCT_TYPE_ACCESS', 'CONFIG_PRESENTERS_NODE_ACCESS'],
     publishers: ['CONFIG_PUBLISHER_PRESET_ACCESS', 'CONFIG_PUBLISHERS_NODE_ACCESS'],

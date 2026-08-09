@@ -21,7 +21,7 @@
             class="mb-n6"
         >
             <v-switch
-                v-model="config.use_tls"
+                v-model="useTls"
                 :label="t('auth_provider.use_tls')"
                 color="primary"
                 :disabled="saving"
@@ -205,7 +205,7 @@
      * config (so an existing provider reopens on the mode it uses), and nothing
      * about it is persisted as an explicit field.
      */
-    import { ref, watch } from 'vue'
+    import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import type { ProviderConfig } from '../types'
@@ -224,6 +224,12 @@
 
     const secretModel = defineModel<string>({ default: '' })
     const { t } = useI18n()
+    const useTls = computed({
+        get: () => props.config.use_tls ?? false,
+        set: (value: boolean) => {
+            props.config.use_tls = value
+        }
+    })
 
     /**
      * The bind mode. A real local ref (not derived from config field presence)

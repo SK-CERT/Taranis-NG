@@ -385,7 +385,7 @@
         id: null,
         name: '',
         kind: 'oidc',
-        enabled: true,
+        enabled: false,
         provisioning_mode: 'manual',
         allowed_domains: '',
         require_mfa: false
@@ -610,7 +610,7 @@
             for (const key of keys) {
                 const value = source[key]
                 if (value !== undefined && value !== null && value !== '') {
-                    result[key] = value
+                    result[key] = key === 'pkce_method' && value === 'plain' ? 'S256' : value
                 }
             }
             return result as ProviderConfig

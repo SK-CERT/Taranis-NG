@@ -556,38 +556,43 @@
     import { ICONS } from '@/config/ui-constants'
     import type { ProviderConfig } from '../types'
 
-    defineProps<{
-        /** Shared reactive provider config (mutated in place). */
-        config: ProviderConfig
-        /** Disables every field while a save is in flight. */
-        saving: boolean
-        /** Whether a private key is already stored (shows the chip / changes hints). */
-        hasSecret?: boolean
-        /** Whether the provider is being edited (gates the "give these URLs" box). */
-        isEdit?: boolean
-        /** "Load metadata" button is in flight. */
-        importing?: boolean
-        /** "Verify federation" button is in flight. */
-        verifyingFederation?: boolean
-        /** "Generate keypair" button is in flight. */
-        generatingKeypair?: boolean
-        /** Message shown after importing IdP metadata (display-only). */
-        metadataMessage?: string
-        /** Whether the metadata-import message is an error (display-only). */
-        metadataError?: boolean
-        /** Message shown after verifying the federation (display-only). */
-        federationMessage?: string
-        /** Whether the federation-verify message is an error (display-only). */
-        federationError?: boolean
-        /** SP entityID suggestion (the SAML endpoint base). */
-        suggestedEntityId?: string
-        /** Computed metadata URL, shown once the provider is saved. */
-        samlMetadataUrl?: string
-        /** Computed ACS URL, shown once the provider is saved. */
-        samlAcsUrl?: string
-        /** Computed discovery-response URL, shown once the provider is saved. */
-        samlDiscoUrl?: string
-    }>()
+    withDefaults(
+        defineProps<{
+            /** Shared reactive provider config (mutated in place). */
+            config: ProviderConfig
+            /** Disables every field while a save is in flight. */
+            saving: boolean
+            /** Whether a private key is already stored (shows the chip / changes hints). */
+            hasSecret?: boolean
+            /** Whether the provider is being edited (gates the "give these URLs" box). */
+            isEdit?: boolean
+            /** "Load metadata" button is in flight. */
+            importing?: boolean
+            /** "Verify federation" button is in flight. */
+            verifyingFederation?: boolean
+            /** "Generate keypair" button is in flight. */
+            generatingKeypair?: boolean
+            /** Message shown after importing IdP metadata (display-only). */
+            metadataMessage?: string
+            /** Whether the metadata-import message is an error (display-only). */
+            metadataError?: boolean
+            /** Message shown after verifying the federation (display-only). */
+            federationMessage?: string
+            /** Whether the federation-verify message is an error (display-only). */
+            federationError?: boolean
+            /** SP entityID suggestion (the SAML endpoint base). */
+            suggestedEntityId?: string
+            /** Computed metadata URL, shown once the provider is saved. */
+            samlMetadataUrl?: string
+            /** Computed ACS URL, shown once the provider is saved. */
+            samlAcsUrl?: string
+            /** Computed discovery-response URL, shown once the provider is saved. */
+            samlDiscoUrl?: string
+        }>(),
+        {
+            suggestedEntityId: ''
+        }
+    )
 
     defineEmits<{
         (e: 'load-metadata'): void

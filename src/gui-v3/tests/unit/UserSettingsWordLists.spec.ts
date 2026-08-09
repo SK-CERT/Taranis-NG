@@ -1,6 +1,6 @@
 /* eslint-disable vue/one-component-per-file -- compact test-only Vuetify stubs */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent } from 'vue'
+import { defineComponent, nextTick } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import UserSettings from '@/components/UserSettings.vue'
 
@@ -64,7 +64,8 @@ const mountDialog = () =>
                 VRow: passthroughStub,
                 VCol: passthroughStub,
                 VProgressLinear: passthroughStub,
-                SettingsTable: true
+                SettingsTable: true,
+                SecuritySettings: true
             }
         }
     })
@@ -94,6 +95,17 @@ describe('UserSettings word-list selection', () => {
         const table = wrapper.findComponent(DataTableStub)
         expect(table.props('items')).toEqual(settingsStore.getAvailableWordListsComputed)
         expect(table.props('modelValue')).toEqual([2])
+    })
+
+    it('does not instantiate security settings until the Security tab is selected', async () => {
+        const wrapper = mountDialog()
+
+        expect(wrapper.findComponent({ name: 'SecuritySettings' }).exists()).toBe(false)
+
+        ;(wrapper.vm as unknown as { activeTab: string }).activeTab = 'security'
+        await nextTick()
+
+        expect(wrapper.findComponent({ name: 'SecuritySettings' }).exists()).toBe(true)
     })
 
     it('saves selected IDs using the backend object schema and supports an empty selection', async () => {

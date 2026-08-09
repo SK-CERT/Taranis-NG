@@ -58,7 +58,7 @@
             md="6"
         >
             <v-select
-                v-model="config.pkce_method"
+                v-model="pkceMethod"
                 :label="t('auth_provider.pkce_method')"
                 variant="outlined"
                 density="comfortable"
@@ -127,9 +127,15 @@
     const secretModel = defineModel<string>({ default: '' })
     const { t } = useI18n()
 
+    const pkceMethod = computed({
+        get: () => (props.config.pkce_method === 'none' ? 'none' : 'S256'),
+        set: (value: string) => {
+            props.config.pkce_method = value
+        }
+    })
+
     const pkceMethodOptions = computed(() => [
         { title: t('auth_provider.pkce_method_none'), value: 'none' },
-        { title: t('auth_provider.pkce_method_s256'), value: 'S256' },
-        { title: t('auth_provider.pkce_method_plain'), value: 'plain' }
+        { title: t('auth_provider.pkce_method_s256'), value: 'S256' }
     ])
 </script>

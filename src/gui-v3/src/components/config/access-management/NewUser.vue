@@ -175,7 +175,7 @@
 
                         <template #form="{ item }">
                             <v-select
-                                v-model="item.auth_provider_id"
+                                :model-value="item.auth_provider_id ?? null"
                                 :items="externalProviders"
                                 item-title="name"
                                 item-value="id"
@@ -184,6 +184,7 @@
                                 density="comfortable"
                                 class="mb-3"
                                 :rules="[(v) => !!v || t('error.required')]"
+                                @update:model-value="item.auth_provider_id = $event"
                             />
                             <v-text-field
                                 v-model="item.external_username"
@@ -363,7 +364,7 @@
         password?: string
         email?: string | null
         status?: string
-        require_mfa?: boolean
+        require_mfa: boolean
         identities?: IdentityRow[]
         has_password?: boolean
         mfa?: { totp?: boolean; passkeys?: number }
@@ -524,7 +525,7 @@
         () => props.editItem,
         (newVal) => {
             if (newVal) {
-                localItem.value = { ...defaultItem, ...newVal }
+                localItem.value = { ...defaultItem, ...newVal, require_mfa: newVal.require_mfa ?? false }
 
                 // Set selected items
                 selectedOrganizations.value = newVal.organizations?.map((org) => org.id) || []
@@ -533,7 +534,11 @@
 
                 email.value = (newVal.email as string) || ''
                 status.value = (newVal.status as string) || 'active'
-                identities.value = JSON.parse(JSON.stringify(newVal.identities || [])) as IdentityRow[]
+                identities.value = (newVal.identities || []).map((identity) => ({
+                    ...identity,
+                    auth_provider_id: identity.auth_provider_id ?? null,
+                    external_username: identity.external_username ?? ''
+                }))
                 hasStoredPassword.value = !!newVal.has_password
                 userMfa.value = (newVal.mfa as { totp?: boolean; passkeys?: number }) || {}
                 clearPassword.value = false

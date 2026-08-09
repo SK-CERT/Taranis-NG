@@ -74,7 +74,10 @@
 
                     <!-- Security (TOTP, passkeys) -->
                     <v-window-item value="security">
-                        <SecuritySettings :load-trigger="securityLoadTrigger" />
+                        <SecuritySettings
+                            v-if="activeTab === 'security'"
+                            :load-trigger="securityLoadTrigger"
+                        />
                     </v-window-item>
 
                     <!-- Word Lists -->

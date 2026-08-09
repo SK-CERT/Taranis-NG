@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewAuthProvider from '@/components/config/auth-providers/NewAuthProvider.vue'
+import OauthSharedFields from '@/components/config/auth-providers/fields/OauthSharedFields.vue'
 import { createNewAuthProvider, updateAuthProvider, importSamlMetadata, generateSamlKeypair } from '@/api/config'
 
 vi.mock('@/api/config', () => ({
@@ -91,6 +92,31 @@ describe('NewAuthProvider dialog', () => {
         wrapper.vm.localItem.kind = 'local'
         await wrapper.vm.$nextTick()
         expect(wrapper.vm.isExternalKind, 'local should not be external').toBe(false)
+    })
+
+    it('keeps newly configured external providers disabled until explicitly enabled', async () => {
+        const wrapper = await mountDialog()
+
+        expect(wrapper.vm.localItem.kind).toBe('oidc')
+        expect(wrapper.vm.localItem.enabled).toBe(false)
+    })
+
+    it('does not offer insecure PKCE plain and normalizes legacy plain values to S256', () => {
+        const config = { pkce_method: 'plain' }
+        const wrapper = mountWithPlugins(OauthSharedFields, { props: { config, saving: false } })
+
+        expect(wrapper.vm.pkceMethodOptions.map((option) => option.value)).toEqual(['none', 'S256'])
+        expect(wrapper.vm.pkceMethod).toBe('S256')
+    })
+
+    it('does not send a legacy PKCE plain value back to the API', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: { ...OIDC_PROVIDER.config, pkce_method: 'plain' }
+        })
+
+        expect(wrapper.vm.buildConfig().pkce_method).toBe('S256')
     })
 
     // ── Auto-create gating ────────────────────────
