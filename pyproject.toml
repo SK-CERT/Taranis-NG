@@ -92,6 +92,7 @@ ignore = [
 "scripts/check_tool_versions.py" = ["T201"]
 "scripts/check_shared_lock_consistency.py" = ["T201"]
 "scripts/bump_version.py" = ["T201", "S603"]
+"src/core/tests/**/*.py" = ["D103", "PLR2004", "S101"]
 
 [tool.ruff.format]
 line-ending = "lf"

@@ -108,7 +108,7 @@ class AuthProvider(db.Model):
     name = db.Column(db.String(), nullable=False, unique=True)
     slug = db.Column(db.String(), nullable=False, unique=True)
     kind = db.Column(db.String(16), nullable=False)
-    enabled = db.Column(db.Boolean, nullable=False, default=True, server_default="true")
+    enabled = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
     organization_id = db.Column(db.Integer, db.ForeignKey("organization.id"), nullable=True)
     provisioning_mode = db.Column(db.String(16), nullable=False, default="manual", server_default="manual")
     allowed_domains = db.Column(db.String(), nullable=True)
@@ -126,7 +126,7 @@ class AuthProvider(db.Model):
         name: str,
         kind: str,
         slug: str | None = None,
-        enabled: bool = True,
+        enabled: bool = False,
         organization: object | None = None,
         default_roles: list | None = None,
         provisioning_mode: str = "manual",
@@ -440,7 +440,16 @@ class UserAuthIdentity(db.Model):
     created_at = db.Column(db.DateTime)
     last_login_at = db.Column(db.DateTime)
 
-    __table_args__ = (db.UniqueConstraint("auth_provider_id", "external_username", name="uq_identity_provider_username"),)
+    __table_args__ = (
+        db.UniqueConstraint("auth_provider_id", "external_username", name="uq_identity_provider_username"),
+        db.Index(
+            "uq_identity_provider_external",
+            "auth_provider_id",
+            "external_id",
+            unique=True,
+            postgresql_where=db.text("external_id IS NOT NULL"),
+        ),
+    )
 
     user = db.relationship("User", back_populates="auth_identities")
     provider = db.relationship("AuthProvider")
