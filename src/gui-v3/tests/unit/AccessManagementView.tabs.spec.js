@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
-import { createMemoryHistory, createRouter } from 'vue-router'
+import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import AccessManagementView from '@/views/admin/AccessManagementView.vue'
 
@@ -44,5 +44,39 @@ describe('AccessManagementView tab panels', () => {
         expect(wrapper.text()).not.toContain('Two-factor authentication')
         expect(wrapper.text()).not.toContain('Passkeys')
         expect(wrapper.find('[data-test="login-methods-content"]').exists()).toBe(true)
+    })
+
+    it('does not let Security tab query synchronization hijack navigation to Dashboard', async () => {
+        const DashboardStub = { template: '<div data-test="dashboard-content">Dashboard content</div>' }
+        const RouterHost = {
+            components: { RouterView },
+            template: '<RouterView />'
+        }
+        const router = createRouter({
+            history: createMemoryHistory(),
+            routes: [
+                { path: '/config/access-management', component: AccessManagementView },
+                { path: '/dashboard', component: DashboardStub }
+            ]
+        })
+        await router.push({ path: '/config/access-management', query: { tab: 'security' } })
+        await router.isReady()
+
+        const wrapper = mountWithPlugins(RouterHost, {
+            global: {
+                plugins: [router],
+                stubs: { ...tabStubs, 'RouterView': false, 'router-view': false }
+            }
+        })
+        await flushPromises()
+        expect(wrapper.find('[data-test="security-content"]').exists()).toBe(true)
+
+        await router.push('/dashboard')
+        await flushPromises()
+
+        expect(router.currentRoute.value.path).toBe('/dashboard')
+        expect(router.currentRoute.value.query).toEqual({})
+        expect(wrapper.find('[data-test="security-content"]').exists()).toBe(false)
+        expect(wrapper.find('[data-test="dashboard-content"]').exists()).toBe(true)
     })
 })
