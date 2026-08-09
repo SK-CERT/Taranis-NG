@@ -193,6 +193,7 @@
     import { getAllReportItemsUnpaginated, deleteReportItem } from '@/api/analyze'
     import { getAllProductsUnpaginated, deleteProduct } from '@/api/publish'
     import { Action, type ActionKey } from '@/types/actions'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type ViewMode = 'assess' | 'analyze' | 'publish'
     type GenericFilter = Record<string, unknown>
@@ -213,6 +214,7 @@
         timeout?: number
         loc?: string
         params?: Record<string, unknown>
+        pluralCount?: number
     }
 
     type ApiErrorShape = {
@@ -238,6 +240,7 @@
     const route = useRoute()
     const router = useRouter()
     const { t } = useI18n()
+    const { formatNumber } = useLocaleFormatters()
     const { checkPermission } = useAuth()
 
     const notify = (detail: NotificationDetail): void => {
@@ -398,7 +401,7 @@
         notify({
             id: 'select-all-progress',
             type: 'info',
-            message: 'Fetching all items...',
+            loc: 'common.fetching_items',
             persistent: true,
             timeout: 0
         })
@@ -429,13 +432,14 @@
                     id: 'select-all-progress',
                     type: 'success',
                     loc: 'assess.select_all_success',
-                    params: { count: response.data.items.length },
+                    params: { count: formatNumber(response.data.items.length) },
+                    pluralCount: response.data.items.length,
                     timeout: 2000
                 })
                 window.dispatchEvent(new CustomEvent('sync-assess-selection'))
             } else {
                 console.warn('[ToolbarGroup] No items in response:', response)
-                notify({ type: 'warning', message: 'No items to select' })
+                notify({ type: 'warning', loc: 'common.no_items_to_select' })
             }
         } catch (error: unknown) {
             console.error('[ToolbarGroup] Error selecting all:', error)
@@ -459,7 +463,7 @@
         notify({
             id: 'select-all-progress',
             type: 'info',
-            message: 'Fetching all items...',
+            loc: 'common.fetching_items',
             persistent: true,
             timeout: 0
         })
@@ -487,7 +491,8 @@
                     id: 'select-all-progress',
                     type: 'success',
                     loc: 'analyze.select_all_success',
-                    params: { count: response.data.items.length },
+                    params: { count: formatNumber(response.data.items.length) },
+                    pluralCount: response.data.items.length,
                     timeout: 2000
                 })
                 window.dispatchEvent(new CustomEvent('sync-analyze-selection'))
@@ -515,7 +520,7 @@
         notify({
             id: 'select-all-progress',
             type: 'info',
-            message: 'Fetching all items...',
+            loc: 'common.fetching_items',
             persistent: true,
             timeout: 0
         })
@@ -539,7 +544,8 @@
                     id: 'select-all-progress',
                     type: 'success',
                     loc: 'publish.select_all_success',
-                    params: { count: response.data.items.length },
+                    params: { count: formatNumber(response.data.items.length) },
+                    pluralCount: response.data.items.length,
                     timeout: 2000
                 })
                 window.dispatchEvent(new CustomEvent('sync-publish-selection'))
@@ -609,12 +615,12 @@
         const items = selection.map((s) => ({ type: normalizeSelectionType(s.type), id: s.id }))
 
         if (type === Action.GROUP && items.length < 2) {
-            notify({ type: 'warning', message: 'Select at least two items to group.' })
+            notify({ type: 'warning', loc: 'common.select_at_least_two_to_group' })
             return
         }
 
         if (type === Action.UNGROUP && !canUngroupSelection.value) {
-            notify({ type: 'warning', message: 'No grouped items selected.' })
+            notify({ type: 'warning', loc: 'common.no_grouped_items_selected' })
             return
         }
 
@@ -625,7 +631,9 @@
             notify({
                 id: 'assess-action-progress',
                 type: 'info',
-                message: `Processing ${items.length} item(s)...`,
+                loc: 'common.processing_items',
+                params: { count: formatNumber(items.length) },
+                pluralCount: items.length,
                 persistent: true,
                 timeout: 0
             })
@@ -673,7 +681,9 @@
                 notify({
                     id: 'analyze-delete-progress',
                     type: 'info',
-                    message: `Deleting ${selection.length} item(s)...`,
+                    loc: 'common.deleting_items',
+                    params: { count: formatNumber(selection.length) },
+                    pluralCount: selection.length,
                     persistent: true,
                     timeout: 0
                 })
@@ -707,7 +717,9 @@
                 notify({
                     id: 'publish-delete-progress',
                     type: 'info',
-                    message: `Deleting ${selection.length} item(s)...`,
+                    loc: 'common.deleting_items',
+                    params: { count: formatNumber(selection.length) },
+                    pluralCount: selection.length,
                     persistent: true,
                     timeout: 0
                 })

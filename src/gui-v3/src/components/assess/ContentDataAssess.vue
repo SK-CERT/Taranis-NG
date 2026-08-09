@@ -21,7 +21,7 @@
                 <v-icon start>
                     {{ ICONS.ARROW_UP }}
                 </v-icon>
-                {{ t('assess.show_new_items', { count: pendingNewItems.length }) }}
+                {{ pendingNewItemsMessage }}
             </v-btn>
         </div>
 
@@ -138,6 +138,7 @@
     import { Action, type ActionKey } from '@/types/actions'
     import { useSseResync } from '@/composables/useSseResync'
     import { useAuth } from '@/composables/useAuth'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import Permissions from '@/services/permissions'
 
     type NewsItem = {
@@ -193,6 +194,7 @@
     const emit = defineEmits(['new-data-loaded', 'card-items-reindex', 'update-showing-count'])
 
     const { t } = useI18n()
+    const { formatNumber } = useLocaleFormatters()
     const { checkPermission } = useAuth()
     const route = useRoute()
     const assessStore = useAssessStore()
@@ -206,6 +208,10 @@
     // every card the user is reading down the viewport. They come in when the user scrolls
     // back to the top, or clicks the pill - so the rendered list stays a stable window.
     const pendingNewItems = ref<NewsItem[]>([])
+    const pendingNewItemsMessage = computed(() => {
+        const count = pendingNewItems.value.length
+        return t('assess.show_new_items', { count: formatNumber(count) }, count)
+    })
 
     // Empty means the shared .card-list-move FLIP animation (BaseCard.vue), which slides a card
     // from where it was to where it now is - the gap closing when an item leaves the list. It is

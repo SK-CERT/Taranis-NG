@@ -188,8 +188,11 @@
                 dark
             >
                 <v-card-text class="white--text">
-                    {{ t('settings.press_key') }}
-                    <strong>{{ t('settings.' + currentHotkeyAlias) }}</strong>
+                    <i18n-t keypath="settings.press_key_for">
+                        <template #action>
+                            <strong>{{ t('settings.' + currentHotkeyAlias) }}</strong>
+                        </template>
+                    </i18n-t>
                     <v-progress-linear
                         indeterminate
                         color="white"
@@ -477,7 +480,7 @@
         background: var(--review-list-row);
         color: rgb(var(--v-theme-on-surface));
         cursor: pointer;
-        text-align: left;
+        text-align: start;
     }
 
     .hotkey-card:hover,

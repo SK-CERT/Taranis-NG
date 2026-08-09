@@ -109,6 +109,19 @@ describe('OSINT source bulk actions', () => {
         expect(exportOSINTSources).toHaveBeenCalledWith({ selection: ['source-1', 'source-3'] })
     })
 
+    it('plural-selects and locale-formats the selected source count', () => {
+        const selectedIds = Array.from({ length: 1234 }, (_, index) => `source-${index}`)
+        const wrapper = mountActions({ selectedIds, sourceCount: selectedIds.length })
+
+        expect(wrapper.text()).toContain(`${new Intl.NumberFormat('en').format(selectedIds.length)} OSINT sources selected`)
+    })
+
+    it('isolates server-provided collector node names', () => {
+        const wrapper = mountActions()
+
+        expect(wrapper.vm.nodeTitle({ id: 'node-7', name: 'Node العربية' })).toBe('\u2068Node العربية\u2069')
+    })
+
     it('reports a direct export request failure without triggering a download', async () => {
         exportOSINTSources.mockRejectedValue(new Error('failed'))
         const notifications = []

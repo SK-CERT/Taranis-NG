@@ -223,9 +223,9 @@
                     }
                     const reportType = reportTypes.find((x) => x.id == item.report_item_type_id)
                     if (reportType) {
-                        item.report_type_name = String(reportType['title'] || 'Report Item')
+                        item.report_type_name = String(reportType['title'] || t('workflow.entity_types.report_item'))
                     } else {
-                        item.report_type_name = 'Report Item'
+                        item.report_type_name = t('workflow.entity_types.report_item')
                     }
                 }
             }

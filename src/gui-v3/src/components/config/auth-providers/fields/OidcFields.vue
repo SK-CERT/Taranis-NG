@@ -3,6 +3,7 @@
         <v-col cols="12">
             <v-text-field
                 v-model="config.issuer_url"
+                dir="ltr"
                 :label="t('auth_provider.issuer_url')"
                 variant="outlined"
                 density="comfortable"

@@ -10,7 +10,7 @@
             :viewBox="`0 0 ${layoutSize.width} ${layoutSize.height}`"
             preserveAspectRatio="xMidYMid meet"
             role="group"
-            aria-label="Word cloud"
+            :aria-label="t('word_cloud.label')"
         >
             <g :transform="`translate(${layoutSize.width / 2} ${layoutSize.height / 2})`">
                 <text
@@ -24,12 +24,13 @@
                     :fill="word.color"
                     tabindex="0"
                     role="button"
-                    :aria-label="`${wordActionLabel}: ${word.text} (${word.quantity})`"
+                    dir="auto"
+                    :aria-label="wordAccessibleLabel(word)"
                     @click="emit('select-word', word.text)"
                     @keydown.enter.prevent="emit('select-word', word.text)"
                     @keydown.space.prevent="emit('select-word', word.text)"
                 >
-                    <title>{{ wordActionLabel }}: {{ word.text }} ({{ word.quantity }})</title>
+                    <title>{{ wordAccessibleLabel(word) }}</title>
                     {{ word.text }}
                 </text>
             </g>
@@ -43,7 +44,7 @@
                 type="info"
                 variant="tonal"
             >
-                {{ emptyMessage }}
+                {{ effectiveEmptyMessage }}
             </v-alert>
         </div>
     </div>
@@ -52,6 +53,8 @@
 <script setup lang="ts">
     import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import cloud, { type Word as D3CloudWord } from 'd3-cloud'
+    import { useI18n } from 'vue-i18n'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type WordCloudItem = {
         word: string
@@ -87,9 +90,7 @@
             minFontSize: 14,
             maxFontSize: 50,
             colorScheme: () => ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef'],
-            emptyMessage: 'No data available',
-            viewportFit: false,
-            wordActionLabel: 'Search'
+            viewportFit: false
         }
     )
 
@@ -97,10 +98,31 @@
         (event: 'select-word', word: string): void
     }>()
 
+    const { t } = useI18n()
+    const { formatNumber } = useLocaleFormatters()
+
+    const effectiveEmptyMessage = computed(() => props.emptyMessage ?? t('common.no_data'))
+    const effectiveWordActionLabel = computed(() => props.wordActionLabel ?? t('toolbar_filter.search'))
+
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+    const isolateWord = (word: string): string => `${FIRST_STRONG_ISOLATE}${word}${POP_DIRECTIONAL_ISOLATE}`
+
     const containerRef = ref<HTMLElement | null>(null)
     const layoutWords = ref<RenderWord[]>([])
     const layoutSize = ref({ width: 800, height: 420 })
     const layingOut = ref(false)
+
+    const wordAccessibleLabel = (word: RenderWord): string =>
+        t(
+            'word_cloud.word_action_count',
+            {
+                action: effectiveWordActionLabel.value,
+                word: isolateWord(word.text),
+                count: formatNumber(word.quantity)
+            },
+            word.quantity
+        )
 
     let resizeObserver: { observe: (target: Element) => void; disconnect: () => void } | null = null
     let resizeFrame = 0

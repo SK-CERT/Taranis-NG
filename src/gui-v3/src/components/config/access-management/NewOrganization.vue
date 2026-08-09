@@ -38,7 +38,6 @@
                     <v-text-field
                         v-model="localItem.name"
                         :spellcheck="spellcheck"
-                        :label="`${t('access_management.organizations.name')} *`"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -47,7 +46,16 @@
                         data-test="organization-name"
                         :rules="[(v) => !!v || t('error.required')]"
                         :disabled="saving"
-                    />
+                    >
+                        <template #label>
+                            <span>{{ t('access_management.organizations.name') }}</span>
+                            <span
+                                class="text-error ms-1"
+                                aria-hidden="true"
+                                >*</span
+                            >
+                        </template>
+                    </v-text-field>
 
                     <v-textarea
                         v-model="localItem.description"

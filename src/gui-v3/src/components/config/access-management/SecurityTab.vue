@@ -6,7 +6,7 @@
         >
             <v-card class="mb-4">
                 <v-card-title class="d-flex align-center">
-                    <v-icon class="mr-2">mdi-shield-lock</v-icon>
+                    <v-icon class="me-2">mdi-shield-lock</v-icon>
                     {{ t('access_management.security.mfa_title') }}
                 </v-card-title>
 
@@ -29,7 +29,7 @@
 
             <v-card>
                 <v-card-title class="d-flex align-center">
-                    <v-icon class="mr-2">mdi-fingerprint</v-icon>
+                    <v-icon class="me-2">mdi-fingerprint</v-icon>
                     {{ t('access_management.security.passkeys_title') }}
                 </v-card-title>
 
@@ -134,7 +134,14 @@
                             v-if="settings.updated_by"
                             class="text-caption text-medium-emphasis"
                         >
-                            {{ t('access_management.security.last_updated', { user: settings.updated_by, at: settings.updated_at }) }}
+                            <i18n-t keypath="access_management.security.last_updated">
+                                <template #user>
+                                    <bdi dir="auto">{{ settings.updated_by }}</bdi>
+                                </template>
+                                <template #at>
+                                    <bdi dir="auto">{{ updatedAtDisplay }}</bdi>
+                                </template>
+                            </i18n-t>
                         </span>
                         <v-spacer />
                         <v-btn
@@ -158,6 +165,7 @@
     import { ref, computed, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import SuggestField from '@/components/common/SuggestField.vue'
     import { getSecuritySettings, updateSecuritySettings } from '@/api/config'
 
@@ -183,6 +191,7 @@
     }
 
     const { t } = useI18n()
+    const { formatDateTime } = useLocaleFormatters()
     const { checkPermission } = useAuth()
 
     const formRef = ref<any>(null)
@@ -199,6 +208,11 @@
     })
 
     const canUpdate = computed(() => checkPermission('CONFIG_AUTH_PROVIDER_UPDATE'))
+    const updatedAtDisplay = computed(() => {
+        const value = settings.value.updated_at
+        if (!value) return ''
+        return formatDateTime(value) || value
+    })
 
     // The relying-party ID must be the site's domain, and the origin must be the
     // exact URL the browser is on - so the current location is the right suggestion.

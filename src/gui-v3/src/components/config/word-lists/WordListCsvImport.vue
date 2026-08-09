@@ -138,7 +138,7 @@
     const readingFile = ref(false)
     const normalizedSourceUrl = computed(() => props.sourceUrl.trim())
     const dialogTitle = computed(() => (sourceMode.value === 'url' ? t('word_lists.download_from_link') : t('word_lists.import_from_csv')))
-    const importErrorMessage = computed(() => `${dialogTitle.value}: ${t('common.error')}`)
+    const importErrorMessage = computed(() => (sourceMode.value === 'url' ? t('word_lists.download_error') : t('word_lists.import_error')))
 
     const reset = (): void => {
         csvFile.value = null

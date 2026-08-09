@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
+import { createI18n } from 'vue-i18n'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
 
@@ -73,10 +74,28 @@ const commonStubs = {
     NewReportItem: true
 }
 
-const mountAssess = () =>
+const mountAssess = (i18n) =>
     mountWithPlugins(ContentDataAssess, {
         props: { analyze_selector: false },
-        global: { stubs: commonStubs }
+        global: { stubs: commonStubs, plugins: i18n ? [i18n] : [] }
+    })
+
+const createPluralTestI18n = () =>
+    createI18n({
+        legacy: false,
+        locale: 'de-DE',
+        fallbackLocale: 'de-DE',
+        messages: {
+            'de-DE': {
+                assess: {
+                    show_new_items: 'Keine neuen Elemente | {count} neues Element | {count} neue Elemente'
+                },
+                common: {
+                    loading_more: 'Mehr laden',
+                    end_of_list: 'Listenende'
+                }
+            }
+        }
     })
 
 /**
@@ -265,7 +284,32 @@ describe('ContentDataAssess list reloads', () => {
 
             expect(idsOf(wrapper.vm.news_items_data)).toEqual(idsOf(makeItems(20)))
             expect(idsOf(wrapper.vm.pendingNewItems)).toEqual([101, 102])
-            expect(wrapper.text()).toContain('Show new items (2)')
+            expect(wrapper.text()).toContain('Show 2 new items')
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('pluralizes and locale-formats the held-back item count without changing the banner interaction', async () => {
+        const wrapper = mountAssess(createPluralTestI18n())
+
+        try {
+            await flushPromises()
+            expect(wrapper.find('.new-items-banner__button').exists()).toBe(false)
+
+            wrapper.vm.pendingNewItems = freshItems(1)
+            await flushPromises()
+            expect(wrapper.find('.new-items-banner__button').text()).toContain('1 neues Element')
+
+            wrapper.vm.pendingNewItems = freshItems(12000)
+            await flushPromises()
+            const button = wrapper.find('.new-items-banner__button')
+            expect(button.text()).toContain('12.000 neue Elemente')
+
+            await button.trigger('click')
+            await flushPromises()
+            expect(wrapper.vm.pendingNewItems).toHaveLength(0)
+            expect(wrapper.find('.new-items-banner__button').exists()).toBe(false)
         } finally {
             wrapper.unmount()
         }

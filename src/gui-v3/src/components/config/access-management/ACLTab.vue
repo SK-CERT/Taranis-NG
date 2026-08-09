@@ -12,7 +12,7 @@
                     </v-col>
                     <v-col
                         cols="4"
-                        class="text-right"
+                        class="text-end"
                     >
                         <NewACL
                             :edit-item="editItem"
@@ -47,7 +47,7 @@
                     <ActionButton
                         action="edit"
                         :title="t('common.edit')"
-                        class="mr-1"
+                        class="me-1"
                         @click="handleEdit(asACLItem(item))"
                     />
                     <ActionButton

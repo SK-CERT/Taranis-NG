@@ -1,7 +1,6 @@
 <template>
     <v-app-bar
         app
-        clipped-left
         height="60"
         color="surface"
         class="main-menu"

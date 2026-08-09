@@ -10,21 +10,37 @@
         </div>
 
         <div class="asset-card__identity">
-            <strong>{{ asset.name || asset.title }}</strong>
-            <span v-if="showSerial"> {{ t('asset.serial') }}: {{ asset.serial }} </span>
+            <strong
+                ><bdi dir="auto">{{ asset.name || asset.title }}</bdi></strong
+            >
+            <i18n-t
+                v-if="showSerial"
+                keypath="asset.serial_with_value"
+                tag="span"
+            >
+                <template #value>
+                    <bdi dir="ltr">{{ asset.serial }}</bdi>
+                </template>
+            </i18n-t>
         </div>
 
         <p class="asset-card__description">
-            {{ asset.description || asset.subtitle }}
+            <bdi dir="auto">{{ asset.description || asset.subtitle }}</bdi>
         </p>
 
         <div
             v-if="asset.asset_cpes?.length"
             class="asset-card__cpes"
-            :title="t('asset.cpes')"
+            :title="cpeCountMessage"
         >
-            <v-icon size="17">mdi-tag-multiple-outline</v-icon>
-            <strong>{{ asset.asset_cpes.length }}</strong>
+            <span class="d-sr-only">{{ cpeCountMessage }}</span>
+            <v-icon
+                size="17"
+                aria-hidden="true"
+            >
+                mdi-tag-multiple-outline
+            </v-icon>
+            <strong aria-hidden="true">{{ formatNumber(cpeCount) }}</strong>
         </div>
 
         <v-chip
@@ -34,7 +50,14 @@
             variant="tonal"
         >
             <v-icon start>{{ vulnerable ? 'mdi-shield-alert' : 'mdi-shield-check' }}</v-icon>
-            {{ vulnerable ? `${t('asset.vulnerabilities_count')}${asset.vulnerabilities_count}` : t('asset.no_vulnerabilities') }}
+            <i18n-t
+                keypath="asset.vulnerabilities_count"
+                :plural="vulnerabilityCount"
+            >
+                <template #count>
+                    <strong>{{ formatNumber(vulnerabilityCount) }}</strong>
+                </template>
+            </i18n-t>
         </v-chip>
 
         <div
@@ -52,9 +75,10 @@
     <ConfirmationDialog
         v-model="confirmDelete"
         title-key="common.messagebox.delete"
-        :message="asset.name || asset.title || ''"
         @confirm="emit('delete', asset)"
-    />
+    >
+        <bdi dir="auto">{{ asset.name || asset.title || '' }}</bdi>
+    </ConfirmationDialog>
 </template>
 
 <script setup lang="ts">
@@ -64,12 +88,17 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import type { Asset } from '@/types/assets'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     const props = defineProps<{ asset: Asset }>()
     const emit = defineEmits<{ (e: 'edit', asset: Asset): void; (e: 'delete', asset: Asset): void }>()
     const { t } = useI18n()
+    const { formatNumber } = useLocaleFormatters()
     const { checkPermission } = useAuth()
     const confirmDelete = ref(false)
-    const vulnerable = computed(() => (props.asset.vulnerabilities_count || 0) > 0)
+    const vulnerabilityCount = computed(() => Math.max(0, Number(props.asset.vulnerabilities_count ?? 0)))
+    const cpeCount = computed(() => props.asset.asset_cpes?.length ?? 0)
+    const vulnerable = computed(() => vulnerabilityCount.value > 0)
+    const cpeCountMessage = computed(() => t('asset.cpe_count', { count: formatNumber(cpeCount.value) }, cpeCount.value))
     const canModify = computed(() => checkPermission('MY_ASSETS_CREATE'))
     const showSerial = computed(() => Boolean(props.asset.serial) && props.asset.serial !== (props.asset.name || props.asset.title))
 </script>
@@ -160,8 +189,8 @@
         display: flex;
         align-items: center;
         min-height: 36px;
-        padding-left: 0.55rem;
-        border-left: 1px solid rgba(var(--v-theme-outline), 0.18);
+        padding-inline-start: 0.55rem;
+        border-inline-start: 1px solid rgba(var(--v-theme-outline), 0.18);
     }
 
     .status-alert .asset-card__icon {

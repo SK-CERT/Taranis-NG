@@ -11,6 +11,7 @@ import * as directives from 'vuetify/directives'
 import { createI18n } from 'vue-i18n'
 import { createPinia, setActivePinia } from 'pinia'
 import en from '@/i18n/en.json'
+import { pluralRules } from '@/i18n'
 
 // Singleton Vuetify instance (stateless, safe to share)
 const vuetify = createVuetify({ components, directives })
@@ -24,7 +25,8 @@ export function createTestI18n() {
         legacy: false,
         locale: 'en',
         fallbackLocale: 'en',
-        messages: { en }
+        messages: { en },
+        pluralRules
     })
 }
 

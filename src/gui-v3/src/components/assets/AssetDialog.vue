@@ -23,8 +23,8 @@
                 <v-tab value="vulnerabilities">
                     {{ t('asset.vulnerabilities') }}
                     <v-badge
-                        class="ml-3"
-                        :content="unsolvedCount"
+                        class="ms-3"
+                        :content="formatNumber(unsolvedCount)"
                         :color="unsolvedCount ? 'error' : 'success'"
                         inline
                     />
@@ -40,6 +40,7 @@
                         >
                             <v-text-field
                                 v-model="form.name"
+                                dir="auto"
                                 :spellcheck="spellcheck"
                                 :label="t('asset.name')"
                                 :rules="[required]"
@@ -49,6 +50,7 @@
                             />
                             <v-text-field
                                 v-model="form.serial"
+                                dir="ltr"
                                 :spellcheck="false"
                                 :label="t('asset.serial')"
                                 :disabled="saving || !canModify"
@@ -57,6 +59,7 @@
                             />
                             <v-textarea
                                 v-model="form.description"
+                                dir="auto"
                                 :spellcheck="spellcheck"
                                 :label="t('asset.description')"
                                 :disabled="saving || !canModify"
@@ -88,14 +91,14 @@
                                 :key="vulnerability.report_item.id"
                             >
                                 <v-expansion-panel-title>
-                                    <div class="d-flex align-center w-100 pr-4">
+                                    <div class="d-flex align-center w-100 pe-4">
                                         <v-icon
                                             :color="vulnerability.solved ? 'success' : 'error'"
-                                            class="mr-3"
+                                            class="me-3"
                                         >
                                             {{ vulnerability.solved ? 'mdi-shield-check' : 'mdi-shield-alert' }}
                                         </v-icon>
-                                        <span>{{ vulnerability.report_item.title }}</span>
+                                        <bdi dir="auto">{{ vulnerability.report_item.title }}</bdi>
                                         <v-spacer />
                                         <v-switch
                                             :model-value="vulnerability.solved"
@@ -136,6 +139,7 @@
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import { useSpellcheck } from '@/composables/useSpellcheck'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { createNewAsset, solveVulnerability, updateAsset } from '@/api/assets'
     import CpeEditor, { type CpeEntry } from './CpeEditor.vue'
@@ -146,6 +150,7 @@
     const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'saved'): void }>()
     const { t } = useI18n()
     const spellcheck = useSpellcheck()
+    const { formatNumber } = useLocaleFormatters()
     const { checkPermission } = useAuth()
 
     const open = computed({ get: () => props.modelValue, set: (value) => emit('update:modelValue', value) })

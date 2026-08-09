@@ -11,7 +11,7 @@
             >
                 <v-icon
                     color="error"
-                    class="mr-2"
+                    class="me-2"
                 >
                     {{ icon }}
                 </v-icon>

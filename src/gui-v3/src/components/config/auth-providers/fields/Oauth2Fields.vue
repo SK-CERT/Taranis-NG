@@ -6,6 +6,7 @@
         >
             <v-text-field
                 v-model="config.authorize_url"
+                dir="ltr"
                 :label="t('auth_provider.authorize_url')"
                 variant="outlined"
                 density="comfortable"
@@ -19,6 +20,7 @@
         >
             <v-text-field
                 v-model="config.token_url"
+                dir="ltr"
                 :label="t('auth_provider.token_url')"
                 variant="outlined"
                 density="comfortable"
@@ -32,6 +34,7 @@
         >
             <v-text-field
                 v-model="config.userinfo_url"
+                dir="ltr"
                 :label="t('auth_provider.userinfo_url')"
                 variant="outlined"
                 density="comfortable"

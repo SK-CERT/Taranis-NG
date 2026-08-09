@@ -20,7 +20,7 @@
                         class="time-number text--disabled"
                         >{{ index + 1 }}.</span
                     >
-                    {{ value.value || '–' }}
+                    <bdi dir="ltr">{{ value.value || '–' }}</bdi>
                 </span>
 
                 <!-- Editable -->
@@ -98,13 +98,12 @@
     )
 
     const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
-
     onMounted(addInitialValues)
 </script>
 
 <style scoped>
     .time-number {
-        margin-right: 8px;
+        margin-inline-end: 8px;
         user-select: none;
         min-width: 24px;
         display: inline-block;

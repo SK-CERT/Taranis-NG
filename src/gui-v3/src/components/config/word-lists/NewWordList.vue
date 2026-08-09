@@ -34,6 +34,7 @@
                                 v-model="localItem.name"
                                 :spellcheck="spellcheck"
                                 :label="t('word_lists.name')"
+                                dir="auto"
                                 variant="outlined"
                                 density="comfortable"
                                 :rules="[(v) => !!v || t('error.required')]"
@@ -77,14 +78,16 @@
                     >
                         <template #item.name="{ item }">
                             <v-icon
-                                class="mr-2 text-medium-emphasis"
+                                class="me-2 text-medium-emphasis"
                                 size="small"
                                 >mdi-folder-outline</v-icon
                             >
-                            <strong>{{ item.name || t('word_lists.category') }}</strong>
+                            <strong
+                                ><bdi dir="auto">{{ item.name || t('word_lists.category') }}</bdi></strong
+                            >
                         </template>
                         <template #item.word_count="{ item }">
-                            {{ (item.entries || []).length }}
+                            {{ n((item.entries || []).length) }}
                         </template>
 
                         <template #form="{ item }">
@@ -92,6 +95,7 @@
                                 v-model="item.name"
                                 :spellcheck="spellcheck"
                                 :label="t('word_lists.name')"
+                                dir="auto"
                                 variant="outlined"
                                 density="comfortable"
                                 class="mb-3"
@@ -247,7 +251,7 @@
         (e: 'saved'): void
     }>()
 
-    const { t } = useI18n()
+    const { t, n } = useI18n()
     const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 

@@ -54,7 +54,7 @@ const AttributeValueLayoutStub = {
 // Stub PrimeVue Editor (used by AttributeRichText only)
 const EditorStub = {
     name: 'Editor',
-    props: ['modelValue', 'readonly'],
+    props: ['modelValue', 'readonly', 'placeholder'],
     template: '<div class="editor-stub"><slot /></div>',
     emits: ['update:modelValue']
 }
@@ -233,6 +233,20 @@ describe('AttributeNumber', () => {
         expect(wrapper.find('.numbered-value').exists()).toBe(true)
     })
 
+    it('locale-formats zero and large numbers without mutating raw values, while null stays empty', async () => {
+        const values = [makeValue({ value: 0 }), makeValue({ id: 2, index: 1, value: 12345.6 }), makeValue({ id: 3, index: 2, value: null })]
+        const wrapper = mountAttr(AttributeNumber, { ...readOnlyProps(), values })
+        wrapper.vm.$i18n.locale = 'de-DE'
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.findAll('.number-content').map((value) => value.text())).toEqual([
+            new Intl.NumberFormat('de-DE').format(0),
+            new Intl.NumberFormat('de-DE').format(12345.6),
+            ''
+        ])
+        expect(values.map((value) => value.value)).toEqual([0, 12345.6, null])
+    })
+
     it('shows VTextField in edit mode', () => {
         const wrapper = mountAttr(AttributeNumber, baseProps())
         expect(wrapper.findComponent({ name: 'VTextField' }).exists()).toBe(true)
@@ -405,11 +419,28 @@ describe('AttributeDate', () => {
         expect(mountAttr(AttributeDate, baseProps({ value: '2024-01-15' })).exists()).toBe(true)
     })
 
-    it('shows read-only date value', () => {
-        const wrapper = mountAttr(AttributeDate, readOnlyProps({ value: '2024-01-15' }))
-        // Value is formatted via toLocaleDateString() — locale-specific, just check element exists
-        expect(wrapper.find('.date-value').exists()).toBe(true)
-        expect(wrapper.text().trim()).not.toBe('')
+    it('locale-formats a date without mutating it and uses automatic direction for Arabic output', async () => {
+        const props = readOnlyProps({ value: '2024-01-15' })
+        const wrapper = mountAttr(AttributeDate, props)
+        wrapper.vm.$i18n.locale = 'ar'
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.get('.date-value bdi').attributes('dir')).toBe('auto')
+        expect(wrapper.get('.date-value bdi').text()).toBe(
+            new Intl.DateTimeFormat('ar', { dateStyle: 'medium' }).format(new Date(2024, 0, 15))
+        )
+        expect(props.values[0].value).toBe('2024-01-15')
+    })
+
+    it.each([
+        ['invalid-date', 'invalid-date'],
+        [null, '']
+    ])('preserves the date display fallback for %s', (rawValue, expected) => {
+        const props = readOnlyProps({ value: rawValue })
+        const wrapper = mountAttr(AttributeDate, props)
+
+        expect(wrapper.get('.date-value bdi').text()).toBe(expected)
+        expect(props.values[0].value).toBe(rawValue)
     })
 
     it('shows VTextField in edit mode', () => {
@@ -448,11 +479,29 @@ describe('AttributeDateTime', () => {
         expect(mountAttr(AttributeDateTime, baseProps({ value: '2024-01-15T14:30' })).exists()).toBe(true)
     })
 
-    it('shows read-only datetime value', () => {
-        const wrapper = mountAttr(AttributeDateTime, readOnlyProps({ value: '2024-01-15T14:30' }))
-        // Value is formatted via toLocaleDateString/TimeString — locale-specific, just check element
-        expect(wrapper.find('.datetime-value').exists()).toBe(true)
-        expect(wrapper.text().trim()).not.toBe('')
+    it('locale-formats a datetime instant without mutating it and uses automatic direction for Arabic output', async () => {
+        const rawValue = '2024-01-15T14:30:00Z'
+        const props = readOnlyProps({ value: rawValue })
+        const wrapper = mountAttr(AttributeDateTime, props)
+        wrapper.vm.$i18n.locale = 'ar'
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.get('.datetime-value bdi').attributes('dir')).toBe('auto')
+        expect(wrapper.get('.datetime-value bdi').text()).toBe(
+            new Intl.DateTimeFormat('ar', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(rawValue))
+        )
+        expect(props.values[0].value).toBe(rawValue)
+    })
+
+    it.each([
+        ['invalid-datetime', 'invalid-datetime'],
+        [null, '–']
+    ])('preserves the datetime display fallback for %s', (rawValue, expected) => {
+        const props = readOnlyProps({ value: rawValue })
+        const wrapper = mountAttr(AttributeDateTime, props)
+
+        expect(wrapper.get('.datetime-value bdi').text()).toBe(expected)
+        expect(props.values[0].value).toBe(rawValue)
     })
 
     it('shows VTextField in edit mode', () => {
@@ -613,11 +662,15 @@ describe('AttributeCVSS', () => {
         const wrapper = mountAttr(AttributeCVSS, readOnlyProps({ value: cvssVector }))
         expect(wrapper.find('.numbered-cvss-value').exists()).toBe(true)
         expect(wrapper.text()).toContain(cvssVector)
+        expect(wrapper.get('bdi[dir="ltr"]').text()).toBe(cvssVector)
     })
 
     it('shows VTextField and calculator in edit mode', () => {
         const wrapper = mountAttr(AttributeCVSS, baseProps({ value: cvssVector }))
-        expect(wrapper.findComponent({ name: 'VTextField' }).exists()).toBe(true)
+        const field = wrapper.findComponent({ name: 'VTextField' })
+        expect(field.exists()).toBe(true)
+        expect(field.props('label')).toBe('CVSS vector and score')
+        expect(wrapper.get('input').attributes('dir')).toBe('ltr')
         expect(wrapper.findComponent({ name: 'CalculatorCVSS' }).exists()).toBe(true)
     })
 })
@@ -638,7 +691,9 @@ describe('AttributeRichText', () => {
 
     it('shows Editor component in edit mode', () => {
         const wrapper = mountAttr(AttributeRichText, baseProps({ value: '<p>Hello</p>' }))
-        expect(wrapper.findComponent({ name: 'Editor' }).exists()).toBe(true)
+        const editor = wrapper.findComponent({ name: 'Editor' })
+        expect(editor.exists()).toBe(true)
+        expect(editor.props('placeholder')).toBe('Enter rich text')
     })
 })
 
@@ -670,6 +725,46 @@ describe('AttributeAttachment', () => {
         const wrapper = mountAttr(AttributeAttachment, readOnlyProps(attachmentValue))
         expect(wrapper.find('.attachment-row').exists()).toBe(true)
         expect(wrapper.find('.attachment-dropzone').exists()).toBe(false)
+    })
+
+    it('locale-formats attachment metadata and bidi-isolates dynamic values without mutating payload data', async () => {
+        const rawTimestamp = '2026-08-09T17:30:00.000Z'
+        const value = {
+            ...attachmentValue,
+            value: 'دليل.pdf',
+            binary_description: 'وصف الدليل',
+            binary_mime_type: 'application/pdf',
+            binary_size: 1536,
+            last_updated: rawTimestamp,
+            user: { name: 'المحلل' }
+        }
+        const wrapper = mountAttr(AttributeAttachment, readOnlyProps(value))
+
+        wrapper.vm.$i18n.locale = 'ar'
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.get('.attachment-row__name').attributes('dir')).toBe('auto')
+        expect(wrapper.get('.attachment-row__description').attributes('dir')).toBe('auto')
+        const metadataTokens = wrapper.findAll('.attachment-row__meta > bdi')
+        expect(metadataTokens.map((token) => token.attributes('dir'))).toEqual(['ltr', 'ltr'])
+        expect(metadataTokens.map((token) => token.text())).toEqual([
+            'application/pdf',
+            `${new Intl.NumberFormat('ar', { maximumFractionDigits: 2 }).format(1.5)} KiB`
+        ])
+        const expectedTimestamp = new Intl.DateTimeFormat('ar', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(rawTimestamp))
+        expect(wrapper.vm.formatAttachmentTimestamp(rawTimestamp)).toBe(expectedTimestamp)
+        expect(wrapper.findAll('bdi[dir="auto"]').map((token) => token.text())).toContain(expectedTimestamp)
+        expect(value).toMatchObject({ binary_size: 1536, last_updated: rawTimestamp, user: { name: 'المحلل' } })
+    })
+
+    it('preserves an unparseable legacy timestamp for display', () => {
+        const rawTimestamp = 'وقت قديم'
+        const value = { ...attachmentValue, last_updated: rawTimestamp }
+        const wrapper = mountAttr(AttributeAttachment, readOnlyProps(value))
+
+        expect(wrapper.vm.formatAttachmentTimestamp(rawTimestamp)).toBe(rawTimestamp)
+        expect(wrapper.findAll('bdi[dir="auto"]').map((token) => token.text())).toContain(rawTimestamp)
+        expect(value.last_updated).toBe(rawTimestamp)
     })
 
     it('shows editable layout in edit mode', () => {

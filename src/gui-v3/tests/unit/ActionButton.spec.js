@@ -1,6 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
+import { nextTick } from 'vue'
+import { mount } from '@vue/test-utils'
+import { createI18n } from 'vue-i18n'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import ActionButton from '@/components/common/buttons/ActionButton.vue'
+import en from '@/i18n/en.json'
+import cs from '@/i18n/cs.json'
 
 describe('ActionButton', () => {
     // ── Predefined Actions ────────────────────────
@@ -20,6 +25,53 @@ describe('ActionButton', () => {
 
             // Vuetify 4 renders icon name in the HTML (class or text depending on version)
             expect(wrapper.html()).toContain(expectedIcon)
+        })
+
+        it.each([
+            ['delete', 'Delete'],
+            ['edit', 'Edit'],
+            ['publish', 'Publish'],
+            ['remove', 'Remove'],
+            ['open', 'Open'],
+            ['open_source', 'Open source'],
+            ['lock', 'Lock']
+        ])('action="%s" translates its default title', (action, expectedTitle) => {
+            const wrapper = mountWithPlugins(ActionButton, { props: { action } })
+
+            expect(wrapper.findComponent({ name: 'VBtn' }).attributes('title')).toBe(expectedTitle)
+        })
+
+        it('reacts to locale changes while an explicit title continues to win', async () => {
+            const i18n = createI18n({
+                legacy: false,
+                locale: 'en',
+                fallbackLocale: 'en',
+                messages: { en, cs }
+            })
+            const wrapper = mount(ActionButton, {
+                props: { action: 'delete' },
+                global: {
+                    plugins: [i18n],
+                    stubs: {
+                        VBtn: {
+                            props: ['title'],
+                            template: '<button :title="title"><slot /></button>'
+                        },
+                        VIcon: true
+                    }
+                }
+            })
+
+            expect(wrapper.get('button').attributes('title')).toBe('Delete')
+
+            i18n.global.locale.value = 'cs'
+            await nextTick()
+            expect(wrapper.get('button').attributes('title')).toBe('Smazat')
+
+            await wrapper.setProps({ title: 'Remove this row' })
+            i18n.global.locale.value = 'en'
+            await nextTick()
+            expect(wrapper.get('button').attributes('title')).toBe('Remove this row')
         })
     })
 

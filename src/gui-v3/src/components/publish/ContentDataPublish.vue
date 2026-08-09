@@ -202,9 +202,9 @@
                     }
                     const productType = productTypes.find((x) => x.id == item.product_type_id)
                     if (productType) {
-                        item.product_type_name = String(productType.title || 'Product')
+                        item.product_type_name = String(productType.title || t('workflow.entity_types.product'))
                     } else {
-                        item.product_type_name = 'Product'
+                        item.product_type_name = t('workflow.entity_types.product')
                     }
                 }
             }

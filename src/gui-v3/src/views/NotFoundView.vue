@@ -16,7 +16,11 @@
         <p class="text-body-1 text-medium-emphasis mb-2">
             {{ t('error.not_found.message') }}
         </p>
-        <code class="text-caption text-medium-emphasis mb-6">{{ attemptedPath }}</code>
+        <code
+            dir="ltr"
+            class="text-caption text-medium-emphasis mb-6"
+            ><bdi dir="ltr">{{ attemptedPath }}</bdi></code
+        >
 
         <v-btn
             color="primary"

@@ -164,12 +164,12 @@
         'RED': { bg: '#FF2B2B', text: '#ffffff' }
     }
 
-    const tlpDescriptions: Record<TlpLevel, string> = {
-        'CLEAR': 'Unrestricted - Information may be distributed without restriction',
-        'GREEN': 'Community - Information may be shared within communities',
-        'AMBER': 'Limited Sharing - Information should not be publicly disclosed',
-        'AMBER+STRICT': 'Strictly Limited Sharing - Information should not be shared outside the organization',
-        'RED': 'Not for Sharing - Information may not be shared with anyone'
+    const tlpDescriptionKeys: Record<TlpLevel, string> = {
+        'CLEAR': 'attribute.tlp_description_clear',
+        'GREEN': 'attribute.tlp_description_green',
+        'AMBER': 'attribute.tlp_description_amber',
+        'AMBER+STRICT': 'attribute.tlp_description_amber_strict',
+        'RED': 'attribute.tlp_description_red'
     }
 
     const getTLPStyle = (tlp: string | null | undefined): CSSProperties => {
@@ -192,7 +192,8 @@
     }
 
     const getTLPDescription = (tlp: string | null | undefined): string => {
-        return (tlp && tlpDescriptions[tlp as TlpLevel]) || 'Unknown TLP level'
+        const key = tlp ? tlpDescriptionKeys[tlp as TlpLevel] : undefined
+        return t(key || 'attribute.tlp_description_unknown')
     }
 
     const setTlpValue = (index: number, tlp: TlpLevel): void => {

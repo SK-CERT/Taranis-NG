@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { createI18n } from 'vue-i18n'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import AttributeValueLayout from '@/components/common/attribute/AttributeValueLayout.vue'
 
@@ -8,9 +9,32 @@ const deleteBtn = (wrapper) => wrapper.findComponent({ name: 'VBtn' })
 
 const makeValues = (n) => Array.from({ length: n }, (_, i) => ({ id: i, index: i, value: `v${i}` }))
 
-function mountLayout(props = {}) {
+const VMenuStub = {
+    template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>'
+}
+
+const provenanceMessages = {
+    attribute: {
+        last_updated_at: 'Last updated at {date}',
+        updated_by_user: 'Updated by {user}'
+    }
+}
+
+const createProvenanceI18n = (locale = 'en') =>
+    createI18n({
+        legacy: false,
+        locale,
+        fallbackLocale: 'en',
+        messages: { en: provenanceMessages, [locale]: provenanceMessages }
+    })
+
+function mountLayout(props = {}, locale = 'en') {
     return mountWithPlugins(AttributeValueLayout, {
-        props: { valIndex: 0, values: makeValues(2), ...props }
+        props: { valIndex: 0, values: makeValues(2), ...props },
+        global: {
+            plugins: [createProvenanceI18n(locale)],
+            stubs: { VMenu: VMenuStub }
+        }
     })
 }
 
@@ -59,8 +83,11 @@ describe('AttributeValueLayout', () => {
 
         expect(activator.exists()).toBe(true)
         expect(activator.element.tagName).toBe('BUTTON')
-        expect(activator.attributes('aria-label')).toBe('Last updated: 05.08.2026 - 03:45; Updated by: Arthur Dent')
+        expect(activator.attributes('aria-label')).toBe('Last updated at ⁨05.08.2026 - 03:45⁩ and Updated by ⁨Arthur Dent⁩')
         expect(activator.attributes('tabindex')).not.toBe('-1')
+
+        const details = wrapper.find('.attribute-provenance__details')
+        expect(details.findAll('bdi[dir="auto"]').map((value) => value.text())).toEqual(['05.08.2026 - 03:45', 'Arthur Dent'])
     })
 
     it('renders no provenance control when both timestamp and modifier are absent', () => {
@@ -82,14 +109,33 @@ describe('AttributeValueLayout', () => {
         })
 
         expect(wrapper.find('.attribute-provenance__activator').attributes('aria-label')).toBe(
-            'Last updated: new; Updated by: Second analyst'
+            'Last updated at ⁨new⁩ and Updated by ⁨Second analyst⁩'
         )
+    })
+
+    it('uses the app locale for timestamp and accessible-list formatting without changing the raw value', () => {
+        const rawTimestamp = '2026-08-09T17:30:00.000Z'
+        const values = [{ id: 1, last_updated: rawTimestamp, user: { name: 'المحلل' } }]
+        const wrapper = mountLayout({ values }, 'ar')
+        const formattedTimestamp = new Intl.DateTimeFormat('ar', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(rawTimestamp))
+        const expectedLabel = new Intl.ListFormat('ar', { style: 'long', type: 'conjunction' }).format([
+            `Last updated at ⁨${formattedTimestamp}⁩`,
+            'Updated by ⁨المحلل⁩'
+        ])
+
+        expect(wrapper.find('.attribute-provenance__activator').attributes('aria-label')).toBe(expectedLabel)
+        expect(wrapper.findAll('bdi[dir="auto"]').map((value) => value.text())).toEqual([formattedTimestamp, 'المحلل'])
+        expect(values[0].last_updated).toBe(rawTimestamp)
     })
 
     // ── Embed-delete: expose visibility/handler via the col_middle slot ───────
     it('exposes delVisible via the col_middle scoped slot and omits the col_right button', () => {
         const wrapper = mountWithPlugins(AttributeValueLayout, {
             props: { valIndex: 0, values: makeValues(2), embedDelete: true },
+            global: {
+                plugins: [createProvenanceI18n()],
+                stubs: { VMenu: VMenuStub }
+            },
             slots: {
                 col_middle: `<template #col_middle="{ delVisible }"><span class="dv">{{ delVisible }}</span></template>`
             }

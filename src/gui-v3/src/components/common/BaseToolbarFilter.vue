@@ -84,24 +84,38 @@
         </div>
 
         <footer class="toolbar-filter__summary">
-            <span class="toolbar-filter__metric">
-                {{ t(totalCountTitle) }}
-                <strong>{{ totalCount }}</strong>
-            </span>
-            <span
-                v-if="currentlyShowingCount !== undefined"
+            <i18n-t
+                :keypath="totalCountTitle"
+                :plural="totalCount"
+                tag="span"
                 class="toolbar-filter__metric"
             >
-                {{ t('toolbar_filter.currently_showing') }}
-                <strong>{{ currentlyShowingCount }}</strong>
-            </span>
-            <span
+                <template #count>
+                    <strong>{{ n(totalCount) }}</strong>
+                </template>
+            </i18n-t>
+            <i18n-t
+                v-if="currentlyShowingCount !== undefined"
+                keypath="toolbar_filter.currently_showing"
+                :plural="currentlyShowingCount"
+                tag="span"
+                class="toolbar-filter__metric"
+            >
+                <template #count>
+                    <strong>{{ n(currentlyShowingCount) }}</strong>
+                </template>
+            </i18n-t>
+            <i18n-t
                 v-if="showSelectedCount"
+                keypath="toolbar_filter.selected_count"
+                :plural="selectedCount"
+                tag="span"
                 class="toolbar-filter__metric toolbar-filter__metric--selected"
             >
-                {{ t('toolbar_filter.selected_count') }}
-                <strong>{{ selectedCount }}</strong>
-            </span>
+                <template #count>
+                    <strong>{{ n(selectedCount) }}</strong>
+                </template>
+            </i18n-t>
         </footer>
     </section>
 </template>
@@ -206,7 +220,7 @@
 
     const emit = defineEmits(['update-filter', 'add-new'])
 
-    const { t } = useI18n()
+    const { t, n } = useI18n()
     const slots = useSlots()
 
     // Local filter state

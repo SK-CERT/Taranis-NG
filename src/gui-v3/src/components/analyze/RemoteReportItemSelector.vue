@@ -48,7 +48,12 @@
                     <v-col
                         cols="auto"
                         class="bg-surface pa-0"
-                        style="max-width: 96px; min-height: calc(100vh - 64px); border-right: 1px solid rgba(0, 0, 0, 0.12); overflow-y: auto"
+                        style="
+                            max-width: 96px;
+                            min-height: calc(100vh - 64px);
+                            border-inline-end: 1px solid rgba(0, 0, 0, 0.12);
+                            overflow-y: auto;
+                        "
                     >
                         <v-list
                             v-model:selected="selectedGroupList"
@@ -69,7 +74,7 @@
                                         {{ link.icon }}
                                     </v-icon>
                                     <span class="text-body-small">
-                                        {{ link.title }}
+                                        <bdi dir="auto">{{ link.title }}</bdi>
                                     </span>
                                 </div>
                             </v-list-item>
@@ -106,7 +111,7 @@
         <!-- Selected Items Display -->
         <div
             v-if="!selectorOpen"
-            class="selected-items-container ml-4 pt-2"
+            class="selected-items-container ms-4 pt-2"
         >
             <CardAnalyze
                 v-for="item in value"

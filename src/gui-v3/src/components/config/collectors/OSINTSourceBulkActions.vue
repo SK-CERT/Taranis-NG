@@ -18,7 +18,7 @@
                 {{ t('collectors.sources.tooltip.unselect_all') }}
             </v-btn>
             <span class="text-caption text-medium-emphasis">
-                {{ t('collectors.sources.selected_count', { count: selectedIds.length }) }}
+                {{ t('collectors.sources.selected_count', { count: n(selectedIds.length) }, selectedIds.length) }}
             </span>
         </template>
 
@@ -62,7 +62,7 @@
                     <v-select
                         v-model="selectedNodeId"
                         :items="nodes"
-                        item-title="name"
+                        :item-title="nodeTitle"
                         item-value="id"
                         :label="t('collectors.sources.node')"
                         :loading="loadingNodes"
@@ -139,13 +139,17 @@
         (event: 'clear-selection'): void
     }>()
 
-    const { t } = useI18n()
+    const { t, n } = useI18n()
     const dialog = ref(false)
     const importing = ref(false)
     const exporting = ref(false)
     const selectedNodeId = ref<string | number | null>(null)
     const importFile = ref<File | File[] | null>(null)
     const formRef = ref<{ validate: () => Promise<FormValidationResult>; resetValidation: () => void } | null>(null)
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+    const isolateAuto = (value: unknown): string => `${FIRST_STRONG_ISOLATE}${String(value ?? '')}${POP_DIRECTIONAL_ISOLATE}`
+    const nodeTitle = (node: CollectorNode): string => isolateAuto(node.name)
 
     const notify = (type: 'success' | 'error' | 'info', loc: string, timeout?: number): void => {
         window.dispatchEvent(

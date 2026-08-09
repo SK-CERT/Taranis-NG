@@ -56,7 +56,7 @@
                     v-if="canEdit"
                     action="edit"
                     :title="t('common.edit')"
-                    class="mr-1"
+                    class="me-1"
                     @click="openDialog(item as Row, index)"
                 />
                 <ActionButton

@@ -20,7 +20,11 @@
                         class="number-index text--disabled"
                         >{{ index + 1 }}.</span
                     >
-                    <span class="number-content">{{ value.value }}</span>
+                    <bdi
+                        dir="ltr"
+                        class="number-content"
+                        >{{ displayNumber(value.value) }}</bdi
+                    >
                 </span>
 
                 <!-- Editable -->
@@ -70,11 +74,11 @@
 
 <script setup lang="ts">
     import { onMounted } from 'vue'
-    import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
     import { useAttributes } from './useAttributes'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type AttributeValueItem = {
         index?: string | number
@@ -105,16 +109,16 @@
         }
     )
 
-    const { t } = useI18n()
-
     const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
+    const { formatNumber } = useLocaleFormatters()
+    const displayNumber = (value: number | null): string => (typeof value === 'number' ? formatNumber(value) : '')
 
     onMounted(addInitialValues)
 </script>
 
 <style scoped>
     .number-index {
-        margin-right: 8px;
+        margin-inline-end: 8px;
         user-select: none;
         min-width: 24px;
         display: inline-block;

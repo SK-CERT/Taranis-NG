@@ -66,14 +66,36 @@
                         {{ t('report_item.conflict.title') }}
                     </v-card-title>
                     <v-card-text>
-                        <p class="mb-4">{{ conflictMessage }}</p>
+                        <i18n-t
+                            v-if="conflictTimeDisplay"
+                            keypath="report_item.conflict.message"
+                            tag="p"
+                            class="mb-4"
+                        >
+                            <template #user>
+                                <bdi dir="auto">{{ conflictUser }}</bdi>
+                            </template>
+                            <template #time>
+                                <bdi :dir="conflictTimeDisplay.direction">{{ conflictTimeDisplay.text }}</bdi>
+                            </template>
+                        </i18n-t>
+                        <p
+                            v-else
+                            class="mb-4"
+                        >
+                            {{ t('report_item.conflict.message_unknown_time') }}
+                        </p>
                         <div class="mb-3">
                             <div class="text-caption text-medium-emphasis">{{ t('report_item.conflict.theirs') }}</div>
-                            <div class="conflict-value">{{ conflictText(conflict?.theirs) }}</div>
+                            <div class="conflict-value">
+                                <bdi dir="auto">{{ conflictText(conflict?.theirs) }}</bdi>
+                            </div>
                         </div>
                         <div>
                             <div class="text-caption text-medium-emphasis">{{ t('report_item.conflict.mine') }}</div>
-                            <div class="conflict-value">{{ conflictText(conflict?.mine) }}</div>
+                            <div class="conflict-value">
+                                <bdi dir="auto">{{ conflictText(conflict?.mine) }}</bdi>
+                            </div>
                         </div>
                     </v-card-text>
                     <v-card-actions>
@@ -183,10 +205,11 @@
                             <v-row>
                                 <v-col
                                     cols="4"
-                                    class="pr-3"
+                                    class="pe-3"
                                 >
                                     <v-combobox
                                         v-model="selected_type"
+                                        dir="auto"
                                         :disabled="edit"
                                         :items="report_types"
                                         item-title="title"
@@ -198,10 +221,11 @@
                                 </v-col>
                                 <v-col
                                     cols="4"
-                                    class="pr-3"
+                                    class="pe-3"
                                 >
                                     <v-text-field
                                         v-model="report_item.title_prefix"
+                                        dir="auto"
                                         :label="t('report_item.title_prefix')"
                                         :disabled="field_locks.title_prefix || !canModify"
                                         :class="getLockedStyle('title_prefix')"
@@ -213,10 +237,11 @@
                                 </v-col>
                                 <v-col
                                     cols="4"
-                                    class="pr-3"
+                                    class="pe-3"
                                 >
                                     <v-text-field
                                         v-model="report_item.title"
+                                        dir="auto"
                                         :label="t('report_item.title')"
                                         :disabled="field_locks.title || !canModify"
                                         :class="getLockedStyle('title')"
@@ -286,7 +311,7 @@
                                     >
                                         <v-expansion-panel>
                                             <v-expansion-panel-title class="text-primary text-body-1 text-uppercase pa-3">
-                                                {{ attribute_group.title }}
+                                                <bdi dir="auto">{{ attribute_group.title }}</bdi>
                                             </v-expansion-panel-title>
                                             <v-expansion-panel-text>
                                                 <v-expansion-panels
@@ -303,18 +328,22 @@
                                                     >
                                                         <v-expansion-panel-title class="font-weight-bold text-primary rounded-0">
                                                             <div class="d-flex align-center w-100">
-                                                                <span class="text-truncate">{{
-                                                                    attribute_item.attribute_group_item.title
-                                                                }}</span>
+                                                                <span class="text-truncate"
+                                                                    ><bdi dir="auto">{{
+                                                                        attribute_item.attribute_group_item.title
+                                                                    }}</bdi></span
+                                                                >
                                                                 <v-tooltip
                                                                     v-if="attribute_item.attribute_group_item.description"
-                                                                    :text="attribute_item.attribute_group_item.description"
                                                                     location="top"
                                                                 >
+                                                                    <bdi dir="auto">{{
+                                                                        attribute_item.attribute_group_item.description
+                                                                    }}</bdi>
                                                                     <template #activator="{ props: tooltipProps }">
                                                                         <v-icon
                                                                             v-bind="tooltipProps"
-                                                                            class="ml-1"
+                                                                            class="ms-1"
                                                                             color="primary"
                                                                             size="x-small"
                                                                             @click.stop
@@ -441,6 +470,7 @@
     import NewsItemSelector from '@/components/analyze/NewsItemSelector.vue'
     import RemoteReportItemSelector from '@/components/analyze/RemoteReportItemSelector.vue'
     import StateSelector from '@/components/common/StateSelector.vue'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
 
     type FormRef = {
@@ -486,6 +516,7 @@
     const analyzeStore = useAnalyzeStore()
     const settingsStore = useSettingsStore()
     const userStore = useUserStore()
+    const { formatDateTime } = useLocaleFormatters()
 
     // Refs
     const formRef = ref<FormRef | null>(null)
@@ -1091,7 +1122,7 @@
             setAutoGenerateIcon(attribute_group_item_id, 'error')
         } catch (error) {
             const axiosError = error as AxiosError
-            const fallbackMessage = error instanceof Error ? error.message : 'Unknown error'
+            const fallbackMessage = error instanceof Error ? error.message : t('error.server_error')
             setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(axiosError.response?.data ?? fallbackMessage))
             setAutoGenerateIcon(attribute_group_item_id, 'error')
         }
@@ -1251,13 +1282,14 @@
         return String(value)
     }
 
-    const conflictMessage = computed<string>(() => {
-        const user = conflict.value?.user || t('report_item.conflict.unknown_user')
-        const time = conflict.value?.lastUpdated
-        if (!time) {
-            return t('report_item.conflict.message_unknown_time')
-        }
-        return t('report_item.conflict.message', { user, time })
+    const conflictUser = computed<string>(() => conflict.value?.user || t('report_item.conflict.unknown_user'))
+
+    const conflictTimeDisplay = computed<{ text: string; direction: 'ltr' | 'auto' } | null>(() => {
+        const rawValue = conflict.value?.lastUpdated
+        if (!rawValue) return null
+
+        const formattedValue = formatDateTime(rawValue)
+        return formattedValue ? { text: formattedValue, direction: 'auto' } : { text: rawValue, direction: 'auto' }
     })
 
     const reportItemConflictEvent = (event: Event) => {

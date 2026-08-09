@@ -2,14 +2,14 @@
     <div class="assess-item-actions">
         <!-- Open Link -->
         <v-btn
-            v-if="showOpenLink && hasLink"
+            v-if="showOpenLink && safeItemLink"
             icon
             :disabled="disabled"
             :size="size"
             :variant="variant"
-            :href="itemLink"
+            :href="safeItemLink"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             :title="t('assess.tooltip.open_source')"
             :data-action="Action.OPEN"
             @click.stop
@@ -74,7 +74,7 @@
             class="vote-count"
             :class="{ 'is-empty': Number(item.likes || 0) === 0 }"
         >
-            {{ Number(item.likes || 0) > 0 ? Number(item.likes || 0) : '0' }}
+            {{ formatNumber(Number(item.likes || 0)) }}
         </span>
 
         <!-- Dislike -->
@@ -100,7 +100,7 @@
             class="vote-count"
             :class="{ 'is-empty': Number(item.dislikes || 0) === 0 }"
         >
-            {{ Number(item.dislikes || 0) > 0 ? Number(item.dislikes || 0) : '0' }}
+            {{ formatNumber(Number(item.dislikes || 0)) }}
         </span>
 
         <!-- Important -->
@@ -167,6 +167,7 @@
 <script setup lang="ts">
     import { computed, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { useAuth } from '@/composables/useAuth'
     import { PERMISSIONS } from '@/services/auth/permissions'
     import { ICONS } from '@/config/ui-constants'
@@ -227,6 +228,7 @@
     }>()
 
     const { t } = useI18n()
+    const { formatNumber } = useLocaleFormatters()
     const { checkPermission } = useAuth()
 
     const showDeleteDialog = ref<boolean>(false)
@@ -247,8 +249,12 @@
         return props.item.title || newsItems.value[0]?.news_item_data?.title || ''
     })
 
-    const hasLink = computed(() => {
-        return !!itemLink.value
+    const safeItemLink = computed(() => {
+        try {
+            return ['http:', 'https:'].includes(new URL(itemLink.value).protocol) ? itemLink.value : ''
+        } catch {
+            return ''
+        }
     })
 
     /**
@@ -307,8 +313,8 @@
         font-size: 0.75rem;
         color: rgb(var(--v-theme-on-surface));
         opacity: 0.7;
-        margin-left: -0.5rem;
-        margin-right: -0.2rem;
+        margin-inline-start: -0.5rem;
+        margin-inline-end: -0.2rem;
     }
 
     .vote-count.is-empty {

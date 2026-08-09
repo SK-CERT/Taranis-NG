@@ -6,7 +6,7 @@
             class="mb-4"
         >
             <v-card-title class="d-flex align-center">
-                <v-icon class="mr-2">mdi-cellphone-key</v-icon>
+                <v-icon class="me-2">mdi-cellphone-key</v-icon>
                 {{ t('security.totp_title') }}
                 <v-spacer />
                 <v-chip
@@ -22,7 +22,7 @@
                     v-if="!totpEnabled && !qrDataUrl"
                     class="d-flex align-center"
                 >
-                    <span class="text-body-2 mr-4">{{ t('security.totp_hint') }}</span>
+                    <span class="text-body-2 me-4">{{ t('security.totp_hint') }}</span>
                     <v-spacer />
                     <v-btn
                         color="primary"
@@ -42,7 +42,7 @@
                     <p class="text-body-2 mb-2">{{ t('security.totp_scan') }}</p>
                     <img
                         :src="qrDataUrl"
-                        alt="TOTP QR code"
+                        :alt="t('security.totp_qr_alt')"
                         class="qr-image mb-3"
                     />
                     <v-text-field
@@ -52,6 +52,7 @@
                         density="comfortable"
                         autocomplete="one-time-code"
                         inputmode="numeric"
+                        dir="ltr"
                         max-width="300"
                         class="mx-auto"
                     />
@@ -77,8 +78,9 @@
                         density="compact"
                         autocomplete="one-time-code"
                         inputmode="numeric"
+                        dir="ltr"
                         hide-details
-                        class="mr-4"
+                        class="me-4"
                         style="max-width: 220px"
                     />
                     <v-btn
@@ -97,7 +99,7 @@
                     density="compact"
                     class="mt-3"
                 >
-                    {{ totpError }}
+                    <bdi dir="auto">{{ totpError }}</bdi>
                 </v-alert>
             </v-card-text>
         </v-card>
@@ -105,7 +107,7 @@
         <!-- Passkeys -->
         <v-card variant="outlined">
             <v-card-title class="d-flex align-center">
-                <v-icon class="mr-2">mdi-fingerprint</v-icon>
+                <v-icon class="me-2">mdi-fingerprint</v-icon>
                 {{ t('security.passkeys_title') }}
                 <v-spacer />
                 <AddNewButton
@@ -123,7 +125,7 @@
                             <th>{{ t('security.passkey_name') }}</th>
                             <th>{{ t('security.passkey_created') }}</th>
                             <th>{{ t('security.passkey_last_used') }}</th>
-                            <th class="text-right">{{ t('settings.actions') }}</th>
+                            <th class="text-end">{{ t('settings.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -131,10 +133,28 @@
                             v-for="passkey in passkeys"
                             :key="passkey.id"
                         >
-                            <td>{{ passkey.name }}</td>
-                            <td>{{ passkey.created_at || '-' }}</td>
-                            <td>{{ passkey.last_used_at || '-' }}</td>
-                            <td class="text-right">
+                            <td>
+                                <bdi
+                                    dir="auto"
+                                    class="passkey-name"
+                                    >{{ passkey.name }}</bdi
+                                >
+                            </td>
+                            <td>
+                                <bdi
+                                    dir="auto"
+                                    class="passkey-created"
+                                    >{{ formatPasskeyTimestamp(passkey.created_at) }}</bdi
+                                >
+                            </td>
+                            <td>
+                                <bdi
+                                    dir="auto"
+                                    class="passkey-last-used"
+                                    >{{ formatPasskeyTimestamp(passkey.last_used_at) }}</bdi
+                                >
+                            </td>
+                            <td class="text-end">
                                 <v-btn
                                     icon="mdi-pencil"
                                     size="x-small"
@@ -165,7 +185,7 @@
                     density="compact"
                     class="mt-3"
                 >
-                    {{ passkeyError }}
+                    <bdi dir="auto">{{ passkeyError }}</bdi>
                 </v-alert>
             </v-card-text>
         </v-card>
@@ -184,6 +204,7 @@
                         variant="outlined"
                         density="comfortable"
                         autofocus
+                        dir="auto"
                     />
                 </v-card-text>
                 <v-card-actions>
@@ -213,6 +234,7 @@
     import QRCode from 'qrcode'
     import { startRegistration } from '@simplewebauthn/browser'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import {
         getMyTotp,
         beginMyTotpEnrollment,
@@ -246,6 +268,7 @@
     )
 
     const { t } = useI18n()
+    const { formatDateTime } = useLocaleFormatters()
 
     const totpEnabled = ref(false)
     const totpCode = ref('')
@@ -258,6 +281,11 @@
     const passkeyName = ref('')
     // null while registering a new passkey; set when renaming an existing one
     const renameTarget = ref<Passkey | null>(null)
+
+    const formatPasskeyTimestamp = (value?: string | null): string => {
+        if (!value) return '-'
+        return formatDateTime(value) || value
+    }
 
     const extractError = (error: unknown): string => {
         const data = (error as { response?: { data?: { error?: string } } })?.response?.data
@@ -363,7 +391,7 @@
         try {
             const beginResponse = (await beginPasskeyRegistration()) as { data: { options: never; challenge_id: string } }
             const credential = await startRegistration({ optionsJSON: beginResponse.data.options })
-            await finishPasskeyRegistration(beginResponse.data.challenge_id, credential, name || 'Passkey')
+            await finishPasskeyRegistration(beginResponse.data.challenge_id, credential, name || t('security.default_passkey_name'))
             window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'security.passkey_added' } }))
             await loadData()
         } catch (error) {

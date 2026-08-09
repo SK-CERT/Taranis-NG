@@ -37,7 +37,8 @@ describe('NewOrganization required-field affordance', () => {
         const form = document.body.querySelector('form[aria-describedby="organization-required-fields-hint"]')
 
         expect(document.body.textContent).toContain('Fields marked with * are required.')
-        expect(nameField?.textContent).toContain('Name *')
+        expect(nameField?.textContent).toContain('Name')
+        expect(nameField?.querySelector('.text-error[aria-hidden="true"]')?.textContent).toBe('*')
         expect(input?.hasAttribute('required')).toBe(true)
         expect(input?.getAttribute('aria-required')).toBe('true')
         expect(form).not.toBeNull()

@@ -150,6 +150,8 @@ export function buildScoreItems(scores: CvssScores | null | undefined, version: 
 }
 
 function makeScoreItem(name: string, label: string, score: number | undefined, t: Translate, te: TranslateExists): ScoreItem {
+    // CVSS scores use the specification's canonical ASCII decimal point. Keep this distinct from
+    // locale-formatted ordinary numbers so displayed scores match vectors, calculators and reports.
     const scoreNum = Number(score).toFixed(1)
     const severity = getSeverityRating(Number(scoreNum))
     return {

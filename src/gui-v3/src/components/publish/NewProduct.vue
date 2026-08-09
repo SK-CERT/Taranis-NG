@@ -54,23 +54,31 @@
             @confirm="handlePublish"
         >
             <div class="text-body-1 font-weight-bold mb-2">
-                {{ product.title }}
+                <bdi dir="auto">{{ product.title }}</bdi>
             </div>
             <div class="mb-1">
-                <span class="font-weight-medium">{{ $t('product.report_type') }}:</span>
-                {{ selectedType?.title || $t('product.no_type') }}
+                <i18n-t keypath="product.publish_confirmation_type">
+                    <template #type>
+                        <bdi dir="auto">{{ selectedType?.title || $t('product.no_type') }}</bdi>
+                    </template>
+                </i18n-t>
             </div>
             <div class="mb-1">
-                <span class="font-weight-medium">{{ $t('product.publisher_presets') }}:</span>
-                <span v-if="selectedPublisherPresetNames.length > 0">
-                    {{ selectedPublisherPresetNames.join(', ') }}
-                </span>
-                <span
-                    v-else
-                    class="text-grey"
-                >
-                    {{ $t('product.no_publisher_in_dialog') }}
-                </span>
+                <i18n-t keypath="product.publish_confirmation_publishers">
+                    <template #publishers>
+                        <bdi
+                            v-if="selectedPublisherPresetNames.length > 0"
+                            dir="auto"
+                            >{{ selectedPublisherPresetList }}</bdi
+                        >
+                        <span
+                            v-else
+                            class="text-grey"
+                        >
+                            {{ $t('product.no_publisher_in_dialog') }}
+                        </span>
+                    </template>
+                </i18n-t>
             </div>
             <div class="text-body-2 text-grey mt-3">
                 {{ $t('product.publish_confirmation_message') }}
@@ -157,6 +165,7 @@
                         >
                             <v-combobox
                                 v-model="selectedType"
+                                dir="auto"
                                 :items="productTypes"
                                 :item-title="(item) => item?.title || ''"
                                 :label="$t('product.report_type')"
@@ -172,6 +181,7 @@
                         >
                             <v-text-field
                                 v-model="product.title"
+                                dir="auto"
                                 :spellcheck="spellcheck"
                                 :label="$t('product.title')"
                                 :rules="[requiredRule]"
@@ -182,6 +192,7 @@
                         <v-col cols="12">
                             <v-textarea
                                 v-model="product.description"
+                                dir="auto"
                                 :spellcheck="spellcheck"
                                 :label="$t('product.description')"
                                 :disabled="!canModify"
@@ -227,11 +238,14 @@
                                     v-for="preset in publisherPresets"
                                     :key="preset.id"
                                     v-model="preset.selected"
-                                    :label="preset.name"
                                     :disabled="!canModify"
                                     hide-details
                                     density="compact"
-                                />
+                                >
+                                    <template #label>
+                                        <bdi dir="auto">{{ preset.name }}</bdi>
+                                    </template>
+                                </v-checkbox>
                             </div>
                             <div
                                 v-else
@@ -304,6 +318,7 @@
     import StateSelector from '@/components/common/StateSelector.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type ProductModel = {
         id: number
@@ -357,6 +372,7 @@
     }
 
     const { t } = useI18n()
+    const { formatList } = useLocaleFormatters()
     const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
     const authStore = useAuthStore()
@@ -415,6 +431,12 @@
     // The full names of the selected publisher presets, used in the publish dialog.
     const selectedPublisherPresetNames = computed<string[]>(() =>
         publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.name)
+    )
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+    const isolateAuto = (value: string): string => `${FIRST_STRONG_ISOLATE}${value}${POP_DIRECTIONAL_ISOLATE}`
+    const selectedPublisherPresetList = computed(() =>
+        formatList(selectedPublisherPresetNames.value.map(isolateAuto), { style: 'long', type: 'conjunction' })
     )
 
     // Methods

@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { createI18n } from 'vue-i18n'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NotificationSnackbar from '@/components/common/NotificationSnackbar.vue'
 
@@ -19,6 +21,31 @@ const VSnackbarStub = {
 function mountSnackbar() {
     return mountWithPlugins(NotificationSnackbar, {
         global: { stubs: { VSnackbar: VSnackbarStub } }
+    })
+}
+
+function mountPluralSnackbar() {
+    const i18n = createI18n({
+        legacy: false,
+        locale: 'en',
+        messages: {
+            en: {
+                test: {
+                    selected: 'No items selected | One item selected | {count} items selected'
+                }
+            }
+        }
+    })
+
+    return mount(NotificationSnackbar, {
+        global: {
+            plugins: [i18n],
+            stubs: {
+                VSnackbar: VSnackbarStub,
+                VIcon: true,
+                VBtn: true
+            }
+        }
     })
 }
 
@@ -56,6 +83,32 @@ describe('NotificationSnackbar', () => {
         // Component calls t(loc) internally; real EN translation is "Error saving"
         expect(wrapper.vm.message).toBe('Error saving')
         expect(wrapper.vm.type).toBe('error')
+    })
+
+    it.each([
+        [0, 'No items selected'],
+        [1, 'One item selected'],
+        [2, '2 items selected']
+    ])('uses pluralCount=%i to select the distinct plural branch', async (pluralCount, expected) => {
+        const wrapper = mountPluralSnackbar()
+
+        try {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: {
+                        type: 'success',
+                        loc: 'test.selected',
+                        params: { count: pluralCount },
+                        pluralCount
+                    }
+                })
+            )
+            await wrapper.vm.$nextTick()
+
+            expect(wrapper.vm.message).toBe(expected)
+        } finally {
+            wrapper.unmount()
+        }
     })
 
     it('should show correct icon for each type', async () => {

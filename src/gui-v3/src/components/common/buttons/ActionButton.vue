@@ -32,6 +32,8 @@
      * For special cases (e.g., conditional icons, complex states), use v-btn directly.
      */
     import { BUTTON_CONFIGS, ICONS } from '@/config/ui-constants'
+    import { computed } from 'vue'
+    import { useI18n } from 'vue-i18n'
 
     type ActionType = 'delete' | 'edit' | 'publish' | 'remove' | 'open' | 'open_source' | 'lock'
     type ButtonVariant = 'text' | 'flat' | 'plain' | 'outlined' | 'elevated' | 'tonal'
@@ -39,7 +41,7 @@
         icon?: string
         color?: string
         variant?: ButtonVariant
-        title?: string
+        titleKey?: string
     }
 
     const props = defineProps({
@@ -105,6 +107,7 @@
     })
 
     const emit = defineEmits(['click'])
+    const { t } = useI18n()
 
     // Get configuration based on action type or use custom props
     const config: ActionConfig = props.action
@@ -115,11 +118,11 @@
     const icon = props.icon || config.icon || ICONS.HELP
     const color = props.color || config.color || 'primary'
     const variant = ((props.variant as ButtonVariant | null) || config.variant || 'text') as ButtonVariant
-    // Title: explicit prop wins, otherwise the action config's title (e.g. 'Delete'), so callers
+    // Title: explicit prop wins, otherwise translate the action config's title key, so callers
     // that render <ActionButton action="delete" /> without :title still get a correct tooltip
     // (CardCompact omits it; its button would otherwise have title="", breaking button[title=]
     // selectors and leaving the tooltip empty).
-    const title = props.title || config.title || ''
+    const title = computed(() => props.title || (config.titleKey ? t(config.titleKey) : ''))
     const disabled = props.action === 'lock' ? true : props.disabled
 
     const handleClick = (event: MouseEvent): void => {

@@ -73,6 +73,16 @@ describe('AssessItemActions vote colours', () => {
             wrapper.unmount()
         }
     })
+
+    it('formats vote counts with the active locale', () => {
+        const wrapper = mountActions({ id: 1, likes: 12000, dislikes: 0, me_like: false, me_dislike: false })
+
+        try {
+            expect(wrapper.findAll('.vote-count').map((count) => count.text())).toEqual(['12,000', '0'])
+        } finally {
+            wrapper.unmount()
+        }
+    })
 })
 
 /**
@@ -150,6 +160,44 @@ describe('AssessItemActions item restrictions', () => {
         try {
             expect(wrapper.find(`[data-action="LIKE"]`).exists()).toBe(true)
             expect(wrapper.findComponent({ name: 'ActionButton' }).exists()).toBe(true)
+        } finally {
+            wrapper.unmount()
+        }
+    })
+})
+
+describe('AssessItemActions source-link safety', () => {
+    it('keeps an absolute HTTP(S) source available with opener isolation', () => {
+        const wrapper = mountActions({ link: 'https://example.test/news?id=1' })
+        const openAction = wrapper.get(`[data-action="OPEN"]`)
+
+        try {
+            expect(openAction.attributes('href')).toBe('https://example.test/news?id=1')
+            expect(openAction.attributes('target')).toBe('_blank')
+            expect(openAction.attributes('rel')).toBe('noopener noreferrer')
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('does not render an open action for an unsafe direct source scheme', () => {
+        const wrapper = mountActions({ link: 'javascript:alert(document.domain)' })
+
+        try {
+            expect(wrapper.find(`[data-action="OPEN"]`).exists()).toBe(false)
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('does not render an open action for an unsafe nested source scheme', () => {
+        const wrapper = mountActions({
+            link: 'https://example.test/safe-fallback',
+            news_items: [{ news_item_data: { link: 'data:text/html,<script>alert(1)</script>' } }]
+        })
+
+        try {
+            expect(wrapper.find(`[data-action="OPEN"]`).exists()).toBe(false)
         } finally {
             wrapper.unmount()
         }

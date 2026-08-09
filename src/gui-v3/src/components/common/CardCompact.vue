@@ -58,14 +58,16 @@
                             <!-- Title -->
                             <v-col class="compact-card__primary">
                                 <div class="text-label-small text-grey">
-                                    {{ typeLabel }}
+                                    <bdi dir="auto">{{ typeLabel }}</bdi>
                                 </div>
                                 <div class="text-body-large card-field-value">
-                                    <HighlightedText
-                                        :text="typeValue"
-                                        :words="highlightWords"
-                                        :enabled="highlightWordlist && isReviewCard"
-                                    />
+                                    <bdi dir="auto">
+                                        <HighlightedText
+                                            :text="typeValue"
+                                            :words="highlightWords"
+                                            :enabled="highlightWordlist && isReviewCard"
+                                        />
+                                    </bdi>
                                 </div>
                             </v-col>
 
@@ -75,11 +77,13 @@
                                     {{ t('card_item.description') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    <HighlightedText
-                                        :text="card.subtitle || card.description || ''"
-                                        :words="highlightWords"
-                                        :enabled="highlightWordlist && isReviewCard"
-                                    />
+                                    <bdi dir="auto">
+                                        <HighlightedText
+                                            :text="card.subtitle || card.description || ''"
+                                            :words="highlightWords"
+                                            :enabled="highlightWordlist && isReviewCard"
+                                        />
+                                    </bdi>
                                 </div>
                             </v-col>
 
@@ -89,7 +93,7 @@
                                     {{ t('card_item.url') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    {{ card.api_url }}
+                                    <bdi dir="ltr">{{ card.api_url }}</bdi>
                                 </div>
                             </v-col>
 
@@ -99,7 +103,7 @@
                                     {{ t('card_item.last_seen') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    {{ card.last_seen || '' }}
+                                    <bdi dir="ltr">{{ card.last_seen || '' }}</bdi>
                                 </div>
                             </v-col>
 
@@ -110,7 +114,7 @@
                                     {{ t('card_item.last_attempted') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    {{ card.last_attempted || '' }}
+                                    <bdi dir="ltr">{{ card.last_attempted || '' }}</bdi>
                                 </div>
                             </v-col>
 
@@ -119,7 +123,7 @@
                                     {{ t('card_item.last_collected') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    {{ card.last_collected || '' }}
+                                    <bdi dir="ltr">{{ card.last_collected || '' }}</bdi>
                                 </div>
                             </v-col>
 
@@ -129,7 +133,7 @@
                                     {{ t('card_item.last_error') }}
                                 </div>
                                 <div class="text-body-medium text-error card-field-value">
-                                    {{ card.last_error_message || '' }}
+                                    <bdi dir="auto">{{ card.last_error_message || '' }}</bdi>
                                 </div>
                             </v-col>
 
@@ -143,7 +147,7 @@
                                     :color="card.state.color || 'primary'"
                                     variant="tonal"
                                     size="x-small"
-                                    :title="card.state.description"
+                                    :title="isolateBidi(card.state.description)"
                                 >
                                     <v-icon
                                         v-if="card.state.icon"
@@ -152,7 +156,7 @@
                                     >
                                         {{ card.state.icon }}
                                     </v-icon>
-                                    {{ stateLabel }}
+                                    <bdi dir="auto">{{ stateLabel }}</bdi>
                                 </v-chip>
 
                                 <v-chip
@@ -160,14 +164,21 @@
                                     color="orange"
                                     variant="tonal"
                                     size="x-small"
+                                    data-test="in-progress-status"
                                 >
                                     <v-icon
                                         start
                                         size="13"
                                         >mdi-progress-clock</v-icon
                                     >
-                                    {{ t('card_item.in_analyze') }}
-                                    <span v-if="inProgressReportsCount > 1">&nbsp;{{ inProgressReportsCount }}</span>
+                                    <i18n-t
+                                        keypath="card_item.in_analyze_count"
+                                        :plural="inProgressReportsCount"
+                                    >
+                                        <template #count>
+                                            <strong>{{ n(inProgressReportsCount) }}</strong>
+                                        </template>
+                                    </i18n-t>
                                 </v-chip>
 
                                 <v-chip
@@ -175,23 +186,35 @@
                                     color="green"
                                     variant="tonal"
                                     size="x-small"
+                                    data-test="completed-status"
                                 >
                                     <v-icon
                                         start
                                         size="13"
                                         >mdi-check-circle</v-icon
                                     >
-                                    {{ t('card_item.analyzed') }}
-                                    <span v-if="completedReportsCount > 1">&nbsp;{{ completedReportsCount }}</span>
+                                    <i18n-t
+                                        keypath="card_item.analyzed_count"
+                                        :plural="completedReportsCount"
+                                    >
+                                        <template #count>
+                                            <strong>{{ n(completedReportsCount) }}</strong>
+                                        </template>
+                                    </i18n-t>
                                 </v-chip>
 
                                 <span
                                     v-if="reviewItemCount > 0"
                                     class="compact-review-count"
-                                    :title="reviewCountTitle"
+                                    :title="reviewItemCountMessage"
                                 >
-                                    <v-icon size="14">mdi-newspaper-variant-outline</v-icon>
-                                    {{ reviewItemCount }}
+                                    <span class="d-sr-only">{{ reviewItemCountMessage }}</span>
+                                    <v-icon
+                                        size="14"
+                                        aria-hidden="true"
+                                        >mdi-newspaper-variant-outline</v-icon
+                                    >
+                                    <span aria-hidden="true">{{ n(reviewItemCount) }}</span>
                                 </span>
                             </v-col>
 
@@ -216,7 +239,7 @@
         <!-- Delete confirmation dialog -->
         <ConfirmationDialog
             v-model="deleteDialog"
-            :message="card.title || card.name || ''"
+            :message="isolateBidi(card.title || card.name || '')"
             max-width="400"
             @confirm="handleDelete"
         />
@@ -303,12 +326,13 @@
 
     const emit = defineEmits(['click', 'delete', 'edit', 'show-detail', 'selection-change'])
 
-    const { t, te } = useI18n()
+    const { t, te, n } = useI18n()
     const { checkPermission } = useAuth()
     const settingsStore = useSettingsStore()
 
     const deleteDialog = ref(false)
     const internalSelected = ref<boolean>(props.preselected)
+    const isolateBidi = (value?: string): string => (value ? `\u2068${value}\u2069` : '')
 
     // Watch preselected prop and sync with internalSelected
     watch(
@@ -348,9 +372,10 @@
     const reviewItemCount = computed(() =>
         Number(props.card?.report_items_count ?? props.card?.news_items_count ?? props.card?.news_items?.length ?? 0)
     )
-    const reviewCountTitle = computed(() =>
-        props.card?.product_type_name != null ? t('nav_menu.report_items') : t('card_item.aggregated_items')
-    )
+    const reviewItemCountMessage = computed(() => {
+        const key = props.card?.product_type_name != null ? 'publish.report_items_count' : 'analyze.news_items_count'
+        return t(key, { count: n(reviewItemCount.value) }, reviewItemCount.value)
+    })
     const completedReportsCount = computed(() => Number(props.card?.completed_reports_count ?? 0))
     const inProgressReportsCount = computed(() => Math.max(0, Number(props.card?.in_reports_count ?? 0) - completedReportsCount.value))
     const stateLabel = computed(() => {

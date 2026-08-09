@@ -120,6 +120,7 @@
     const showValidationError = ref(false)
     const showError = ref(false)
     const saving = ref(false)
+    const isolateBidi = (value: string): string => `\u2068${value}\u2069`
 
     const dialogVisible = computed({
         get: () => props.modelValue,
@@ -131,7 +132,7 @@
             return props.editTitle
         }
         if (props.isEdit) {
-            return `${t('common.edit')} ${props.title}`
+            return t('common.edit_named', { title: isolateBidi(props.title) })
         }
         return props.title || t('common.add_new')
     })

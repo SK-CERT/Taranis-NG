@@ -197,7 +197,7 @@
 
 <style scoped>
     .text-number {
-        margin-right: 8px;
+        margin-inline-end: 8px;
         user-select: none;
         min-width: 24px;
         display: inline-block;

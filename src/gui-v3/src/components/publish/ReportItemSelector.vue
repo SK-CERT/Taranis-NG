@@ -100,7 +100,7 @@
                                 </v-icon>
                             </template>
                             <v-list-item-title class="text-body-2">
-                                {{ title }}
+                                <bdi dir="auto">{{ title }}</bdi>
                             </v-list-item-title>
                         </v-list-item>
                     </v-list>
@@ -221,7 +221,7 @@
         return value.value.map((item) => {
             if (item.report_type_name) return item
             const reportType = types.find((x) => x.id == item.report_item_type_id)
-            return { ...item, report_type_name: reportType?.title || 'Report Item' }
+            return { ...item, report_type_name: reportType?.title || t('workflow.entity_types.report_item') }
         })
     })
 

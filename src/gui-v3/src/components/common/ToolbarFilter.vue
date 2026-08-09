@@ -19,27 +19,35 @@
                         style="flex: 0 1 auto; min-width: 250px"
                         @update:model-value="debounceSearch"
                     />
-                    <div
+                    <i18n-t
+                        :keypath="totalCountTitle"
+                        :plural="totalCount"
+                        tag="div"
                         class="text-caption text-grey"
                         style="white-space: nowrap; flex-shrink: 0"
                     >
-                        {{ t(totalCountTitle) }}:
-                        <strong>{{ totalCount }}</strong>
-                    </div>
-                    <div
+                        <template #count>
+                            <strong>{{ n(totalCount) }}</strong>
+                        </template>
+                    </i18n-t>
+                    <i18n-t
                         v-if="showSelectedCount"
+                        :keypath="selectedCountTitle"
+                        :plural="selectedCount"
+                        tag="div"
                         class="text-caption text-grey"
                         style="white-space: nowrap; flex-shrink: 0"
                     >
-                        {{ t(selectedCountTitle) }}:
-                        <strong>{{ selectedCount }}</strong>
-                    </div>
+                        <template #count>
+                            <strong>{{ n(selectedCount) }}</strong>
+                        </template>
+                    </i18n-t>
                 </div>
             </v-col>
             <v-col
                 cols="12"
                 md="3"
-                class="text-right"
+                class="text-end"
             >
                 <slot name="addbutton" />
             </v-col>
@@ -81,7 +89,7 @@
 
     const emit = defineEmits(['update-filter'])
 
-    const { t } = useI18n()
+    const { n } = useI18n()
 
     // Filter state
     const filter = ref<FilterState>({

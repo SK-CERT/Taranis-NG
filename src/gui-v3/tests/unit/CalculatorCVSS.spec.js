@@ -36,6 +36,13 @@ describe('CalculatorCVSS', () => {
             const btn = wrapper.findComponent({ name: 'VBtn' })
             expect(btn.props('disabled')).toBe(true)
         })
+
+        it('uses translated labels for the tooltip toggle and vector input', () => {
+            const wrapper = mountCalculator()
+
+            expect(wrapper.findComponent({ name: 'VSwitch' }).props('label')).toBe('Show metric tooltips')
+            expect(wrapper.findComponent({ name: 'VTextField' }).props('placeholder')).toContain('CVSS:3.1/AV:N')
+        })
     })
 
     // ── Dialog Open ───────────────────────────────
