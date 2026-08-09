@@ -22,9 +22,8 @@
             <v-card
                 v-bind="hoverProps"
                 class="base-card card-item mb-1 flex-grow-1"
-                :class="cardClass"
+                :class="[cardClass, { 'selected-item': internalSelected }]"
                 :elevation="0"
-                :color="cardColor"
                 tabindex="0"
                 :data-id="cardId"
                 @click="handleCardClick"
@@ -79,10 +78,6 @@
         cardClass: {
             type: [String, Object],
             default: ''
-        },
-        cardColor: {
-            type: String,
-            default: undefined
         }
     })
 
@@ -183,6 +178,25 @@
         box-shadow: none !important;
     }
 
+    /* Selected state overrides default background with same specificity */
+    .review-list__row.selected-item {
+        background: var(--review-list-row-selected) !important;
+    }
+
+    .review-list__row::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(var(--v-theme-primary), 0);
+        transition: background 0.18s ease;
+        pointer-events: none;
+    }
+
+    .review-list__row:hover::before,
+    .review-list__row:focus-visible::before {
+        background: rgba(var(--v-theme-primary), 0.05);
+    }
+
     .review-list__row::after {
         position: absolute;
         z-index: 1;
@@ -196,11 +210,6 @@
     .review-list__row:hover::after,
     .review-list__row:focus-visible::after {
         border-color: rgba(var(--v-theme-primary), 0.52);
-    }
-
-    .review-list__row:hover,
-    .review-list__row:focus-visible {
-        background: var(--review-list-row-hover) !important;
     }
 
     .assess-list > :first-child .review-list__row,

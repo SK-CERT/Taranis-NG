@@ -650,10 +650,6 @@ button.ql-publish:hover {
     background-color: #252931;
 }
 
-#app.theme--dark .ql-editor.ql-blank::before {
-    color: rgba(255, 255, 255, 0.6);
-}
-
 .icon-tooltip {
     position: absolute;
     opacity: 0.7;
