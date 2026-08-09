@@ -158,22 +158,96 @@ describe('NewAuthProvider dialog', () => {
         expect(wrapper.vm.confirmVisible).toBe(true)
     })
 
-    it('does not offer insecure PKCE plain and normalizes legacy plain values to S256', () => {
+    it('offers PKCE plain only as a visibly warned legacy compatibility mode', () => {
         const config = { pkce_method: 'plain' }
         const wrapper = mountWithPlugins(OauthSharedFields, { props: { config, saving: false } })
 
-        expect(wrapper.vm.pkceMethodOptions.map((option) => option.value)).toEqual(['none', 'S256'])
-        expect(wrapper.vm.pkceMethod).toBe('S256')
+        expect(wrapper.vm.pkceMethodOptions.map((option) => option.value)).toEqual(['none', 'S256', 'plain'])
+        expect(wrapper.vm.pkceMethod).toBe('plain')
+        expect(wrapper.find('[data-test="pkce-plain-warning"]').text()).toContain('verifier is exposed')
     })
 
-    it('does not send a legacy PKCE plain value back to the API', async () => {
+    it('preserves an explicitly selected PKCE plain value in the provider config', async () => {
         const wrapper = await mountDialog()
         await openEdit(wrapper, {
             ...OIDC_PROVIDER,
             config: { ...OIDC_PROVIDER.config, pkce_method: 'plain' }
         })
 
-        expect(wrapper.vm.buildConfig().pkce_method).toBe('S256')
+        expect(wrapper.vm.buildConfig().pkce_method).toBe('plain')
+    })
+
+    it('requires explicit confirmation before saving PKCE plain', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: { ...OIDC_PROVIDER.config, pkce_method: 'plain' }
+        })
+        wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+
+        expect(await wrapper.vm.persist()).toBe(false)
+        expect(wrapper.vm.plainPkceDialog).toBe(true)
+        expect(updateAuthProvider).not.toHaveBeenCalled()
+
+        const confirmation = wrapper
+            .findAllComponents(ConfirmationDialog)
+            .find((dialog) => dialog.props('titleKey') === 'auth_provider.pkce_plain_confirm_title')
+        expect(confirmation).toBeDefined()
+        confirmation.vm.$emit('confirm')
+        await flushPromises()
+
+        expect(updateAuthProvider).toHaveBeenCalledWith(
+            expect.objectContaining({ config: expect.objectContaining({ pkce_method: 'plain' }) })
+        )
+        expect(wrapper.vm.dialog).toBe(false)
+    })
+
+    it('defaults a new OAuth provider to S256 without an insecure warning', async () => {
+        const wrapper = await mountDialog()
+        wrapper.vm.dialog = true
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.vm.config.pkce_method).toBe('S256')
+        expect(wrapper.find('[data-test="auth-provider-insecure-warning"]').exists()).toBe(false)
+    })
+
+    it('truthfully treats an existing provider without a PKCE setting as insecure none', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: { issuer_url: 'https://idp.example.org', client_id: 'taranis' }
+        })
+
+        expect(wrapper.vm.config.pkce_method).toBe('none')
+        expect(wrapper.vm.insecureConfigurationWarnings).toContain('PKCE is disabled. Use S256 unless the provider does not support PKCE.')
+    })
+
+    it('uses a theme-aware top warning when LDAP TLS is disabled', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: { server_url: 'ldap://ldap.example.org', use_tls: false, user_dn_template: 'uid={username},dc=x' }
+        })
+
+        expect(wrapper.vm.insecureConfigurationWarnings[0]).toContain('LDAP traffic is not protected by TLS')
+        const warning = document.body.querySelector('[data-test="auth-provider-insecure-warning"]')
+        expect(warning).not.toBeNull()
+        expect(warning?.classList).toContain('v-alert--variant-tonal')
+        expect(warning?.textContent).toContain('LDAP traffic is not protected by TLS')
+    })
+
+    it('warns about unencrypted authentication endpoints', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: { issuer_url: 'http://localhost:8080/realms/taranis', client_id: 'taranis', pkce_method: 'S256' }
+        })
+
+        expect(wrapper.vm.insecureConfigurationWarnings).toContain(
+            'At least one authentication endpoint uses unencrypted HTTP. HTTP is intended only for loopback development services.'
+        )
     })
 
     // ── Auto-create gating ────────────────────────

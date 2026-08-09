@@ -95,6 +95,16 @@
                 :items="pkceMethodOptions"
                 :disabled="saving"
             />
+            <v-alert
+                v-if="pkceMethod === 'plain'"
+                type="warning"
+                variant="tonal"
+                density="compact"
+                class="mt-2"
+                data-test="pkce-plain-warning"
+            >
+                {{ t('auth_provider.pkce_plain_warning') }}
+            </v-alert>
         </v-col>
         <v-col
             cols="12"
@@ -158,7 +168,10 @@
     const { t } = useI18n()
 
     const pkceMethod = computed({
-        get: () => (props.config.pkce_method === 'none' ? 'none' : 'S256'),
+        get: () => {
+            const configured = props.config.pkce_method
+            return configured === 'none' || configured === 'plain' || configured === 'S256' ? configured : 'S256'
+        },
         set: (value: string) => {
             props.config.pkce_method = value
         }
@@ -166,7 +179,8 @@
 
     const pkceMethodOptions = computed(() => [
         { title: t('auth_provider.pkce_method_none'), value: 'none' },
-        { title: t('auth_provider.pkce_method_s256'), value: 'S256' }
+        { title: t('auth_provider.pkce_method_s256'), value: 'S256' },
+        { title: t('auth_provider.pkce_method_plain'), value: 'plain' }
     ])
 
     const copyRedirectUri = async (): Promise<void> => {

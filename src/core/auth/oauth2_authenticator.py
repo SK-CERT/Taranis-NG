@@ -11,10 +11,11 @@ Provider ``config`` keys:
 The client secret is the provider's encrypted secret. ID tokens are verified
 against the issuer's JWKS (signature, issuer, audience, expiry, nonce).
 
-When ``pkce_method`` is ``S256``, a random ``code_verifier`` is generated per
-login attempt and retained in the opaque server-side authentication
-transaction until the token exchange. ``plain`` is rejected because it exposes
-the verifier in the browser-visible authorization request.
+When ``pkce_method`` is ``S256`` or the explicit legacy-compatibility value
+``plain``, a random ``code_verifier`` is generated per login attempt and
+retained in the opaque server-side authentication transaction until the token
+exchange. ``plain`` exposes the verifier in the browser-visible authorization
+request and must only be selected for providers that cannot use S256.
 """
 
 from __future__ import annotations
@@ -23,10 +24,9 @@ import secrets
 from typing import TYPE_CHECKING
 
 import jwt as pyjwt
-from authlib.integrations.requests_client import OAuth2Session
-
 from auth.base_authenticator import BaseAuthenticator, ExternalIdentity
 from auth.url_guard import OUTBOUND_TIMEOUT, assert_auth_endpoint_url, fetch_auth_json, read_limited_json
+from authlib.integrations.requests_client import OAuth2Session
 from managers import log_manager
 
 if TYPE_CHECKING:
@@ -36,9 +36,9 @@ ID_TOKEN_ALGORITHMS = ["RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS
 # PKCE code_verifier: 43-128 chars of the unreserved set [A-Z][a-z][0-9]-._~.
 # token_urlsafe(64) yields 86 chars in that alphabet, comfortably in range.
 PKCE_VERIFIER_BYTES = 64
-# ``none`` remains for providers that do not implement PKCE. ``plain`` is not
-# accepted because the browser-visible challenge would disclose the verifier.
-PKCE_METHODS = ("none", "S256")
+# ``none`` remains for providers that do not implement PKCE. ``plain`` is an
+# explicit legacy compatibility mode; it is never selected as a fallback.
+PKCE_METHODS = ("none", "S256", "plain")
 
 # per-provider caches, invalidated when the provider row is updated
 _metadata_cache: dict[int, tuple[str, dict]] = {}
@@ -125,10 +125,10 @@ class OAuth2Authenticator(BaseAuthenticator):
         return self.config.get("scopes") or default
 
     def _pkce_method(self) -> str:
-        """Return the configured PKCE method (``none`` or ``S256``)."""
+        """Return the configured PKCE method (``none``, ``S256`` or ``plain``)."""
         method = (self.config.get("pkce_method") or "none").strip()
         if method not in PKCE_METHODS:
-            msg = f"Unsupported PKCE method '{method}' for provider '{self.provider.name}'; use S256 or none"
+            msg = f"Unsupported PKCE method '{method}' for provider '{self.provider.name}'; use S256, plain or none"
             raise ValueError(msg)
         return method
 
@@ -157,7 +157,8 @@ class OAuth2Authenticator(BaseAuthenticator):
             state (str): Signed state parameter (CSRF protection).
             nonce (str): Nonce to be bound into the ID token (oidc only).
             code_verifier (str): PKCE code_verifier. Required when the
-                provider's ``pkce_method`` is ``S256``; ignored otherwise.
+                provider's ``pkce_method`` is ``S256`` or ``plain``; ignored
+                otherwise.
 
         Returns:
             str: The authorization URL.
@@ -175,13 +176,19 @@ class OAuth2Authenticator(BaseAuthenticator):
         extra: dict[str, str] = {}
         if self.provider.kind == "oidc":
             extra["nonce"] = nonce
-        if pkce_method == "S256":
+        if pkce_method != "none":
             if not code_verifier:
                 msg = f"PKCE method '{pkce_method}' enabled for provider '{self.provider.name}' but no code_verifier was supplied"
                 raise ValueError(msg)
-            # Authlib derives code_challenge = BASE64URL(SHA256(code_verifier))
-            # and adds code_challenge_method=S256 automatically.
-            extra["code_verifier"] = code_verifier
+            if pkce_method == "S256":
+                # Authlib derives code_challenge = BASE64URL(SHA256(code_verifier))
+                # and adds code_challenge_method=S256 automatically.
+                extra["code_verifier"] = code_verifier
+            else:
+                # Legacy RFC 7636 compatibility: this is deliberately explicit
+                # because the verifier is visible in the authorization request.
+                extra["code_challenge"] = code_verifier
+                extra["code_challenge_method"] = "plain"
         url, _ = session.create_authorization_url(endpoints["authorize"], state=state, **extra)
         return url
 
@@ -193,8 +200,8 @@ class OAuth2Authenticator(BaseAuthenticator):
             code (str): The authorization code returned by the IdP.
             nonce (str): The nonce bound into the state (oidc only).
             code_verifier (str): PKCE code_verifier, required when the
-                provider's ``pkce_method`` is ``S256``; must match the verifier
-                sent on the authorize request. Ignored otherwise.
+                provider's ``pkce_method`` is ``S256`` or ``plain``; must match
+                the verifier sent on the authorize request. Ignored otherwise.
 
         Returns:
             ExternalIdentity: The authenticated identity, or None on failure.

@@ -27,6 +27,27 @@
                     ref="formRef"
                     @submit.prevent="saveAndClose"
                 >
+                    <v-alert
+                        v-if="insecureConfigurationWarnings.length"
+                        type="warning"
+                        variant="tonal"
+                        density="comfortable"
+                        class="mb-4"
+                        role="status"
+                        data-test="auth-provider-insecure-warning"
+                    >
+                        <template #title>{{ t('auth_provider.insecure_configuration_title') }}</template>
+                        <div>{{ t('auth_provider.insecure_configuration_intro') }}</div>
+                        <ul class="mt-2 pl-5">
+                            <li
+                                v-for="warning in insecureConfigurationWarnings"
+                                :key="warning"
+                            >
+                                {{ warning }}
+                            </li>
+                        </ul>
+                    </v-alert>
+
                     <v-row>
                         <v-col
                             cols="12"
@@ -311,6 +332,15 @@
         icon="mdi-key-alert"
         @confirm="confirmReplaceKeypair"
     />
+
+    <ConfirmationDialog
+        v-model="plainPkceDialog"
+        :message="t('auth_provider.pkce_plain_confirm_message')"
+        title-key="auth_provider.pkce_plain_confirm_title"
+        confirm-label-key="auth_provider.pkce_plain_confirm_action"
+        icon="mdi-shield-alert"
+        @confirm="confirmPlainPkceSave"
+    />
 </template>
 
 <script setup lang="ts">
@@ -413,7 +443,7 @@
     }
 
     const localItem = ref<AuthProviderItem>({ ...defaultItem })
-    const config = ref<ProviderConfig>({})
+    const config = ref<ProviderConfig>({ pkce_method: 'S256' })
     const organizationId = ref<number | null>(null)
     const selectedRoles = ref<Array<string | number>>([])
     const secretInput = ref('')
@@ -428,6 +458,34 @@
     const providerEnabledHint = computed(() =>
         t(localItem.value.enabled ? 'auth_provider.enabled_for_sign_in_hint' : 'auth_provider.disabled_for_sign_in_hint')
     )
+    const usesUnencryptedHttpEndpoint = computed(() => {
+        const endpointKeys: Partial<Record<string, Array<keyof ProviderConfig>>> = {
+            oidc: ['issuer_url'],
+            oauth2: ['authorize_url', 'token_url', 'userinfo_url'],
+            saml: ['idp_sso_url', 'discovery_url', 'federation_metadata_url']
+        }
+        return (endpointKeys[localItem.value.kind] || []).some((key) => {
+            const value = config.value[key]
+            return typeof value === 'string' && value.trim().toLowerCase().startsWith('http://')
+        })
+    })
+    const insecureConfigurationWarnings = computed(() => {
+        const warnings: string[] = []
+        if (localItem.value.kind === 'ldap' && config.value.use_tls !== true) {
+            warnings.push(t('auth_provider.insecure_ldap_no_tls'))
+        }
+        if (['oidc', 'oauth2'].includes(localItem.value.kind)) {
+            if (config.value.pkce_method === 'none') {
+                warnings.push(t('auth_provider.insecure_pkce_none'))
+            } else if (config.value.pkce_method === 'plain') {
+                warnings.push(t('auth_provider.insecure_pkce_plain'))
+            }
+        }
+        if (usesUnencryptedHttpEndpoint.value) {
+            warnings.push(t('auth_provider.insecure_http_endpoint'))
+        }
+        return warnings
+    })
 
     // Reading the IdP metadata fills in the three fields it contains, so nobody has to
     // copy an entityID, an SSO endpoint and a base64 certificate out of an XML document.
@@ -467,6 +525,8 @@
     // generated server-side; the private key rides along in the write-only `secret` field.
     const generatingKeypair = ref(false)
     const replaceKeypairDialog = ref(false)
+    const plainPkceDialog = ref(false)
+    const allowPlainPkceSave = ref(false)
     const hasExistingKeypair = computed(() => hasSecret.value || !!secretInput.value.trim() || !!config.value.sp_certificate?.trim())
 
     const generateKeypair = async (): Promise<void> => {
@@ -582,6 +642,9 @@
                 if (kind === 'ldap') {
                     config.value.use_tls = true
                 }
+                if (['oidc', 'oauth2'].includes(kind) && !['oidc', 'oauth2'].includes(previousKind)) {
+                    config.value.pkce_method = 'S256'
+                }
             }
         }
     )
@@ -622,6 +685,12 @@
                 const incoming = JSON.parse(JSON.stringify(newVal)) as Partial<AuthProviderItem>
                 localItem.value = { ...defaultItem, ...incoming }
                 config.value = { ...(incoming.config || {}) }
+                if (['oidc', 'oauth2'].includes(localItem.value.kind) && !config.value.pkce_method) {
+                    // Older providers without the field use the Core's historical
+                    // no-PKCE behavior. Represent that truthfully instead of making
+                    // the editor look as if S256 were already active.
+                    config.value.pkce_method = 'none'
+                }
                 samlUseFederation.value = !!incoming.config?.discovery_url
                 organizationId.value = incoming.organization?.id ?? null
                 selectedRoles.value = (incoming.default_roles || []).map((role) => role.id)
@@ -643,7 +712,7 @@
 
     const resetForm = (): void => {
         localItem.value = { ...defaultItem }
-        config.value = {}
+        config.value = { pkce_method: 'S256' }
         metadataInput.value = ''
         metadataMessage.value = ''
         metadataError.value = false
@@ -651,6 +720,8 @@
         federationMessage.value = ''
         federationError.value = false
         replaceKeypairDialog.value = false
+        plainPkceDialog.value = false
+        allowPlainPkceSave.value = false
         slugManuallyEdited.value = false
         organizationId.value = null
         selectedRoles.value = []
@@ -674,7 +745,7 @@
             for (const key of keys) {
                 const value = source[key]
                 if (value !== undefined && value !== null && value !== '') {
-                    result[key] = key === 'pkce_method' && value === 'plain' ? 'S256' : value
+                    result[key] = value
                 }
             }
             return result as ProviderConfig
@@ -772,6 +843,12 @@
             return false
         }
 
+        const usesPlainPkce = ['oidc', 'oauth2'].includes(localItem.value.kind) && config.value.pkce_method === 'plain'
+        if (usesPlainPkce && !allowPlainPkceSave.value) {
+            plainPkceDialog.value = true
+            return false
+        }
+
         saving.value = true
         try {
             const payload = {
@@ -803,7 +880,18 @@
             return false
         } finally {
             saving.value = false
+            allowPlainPkceSave.value = false
         }
+    }
+
+    const confirmPlainPkceSave = (): void => {
+        plainPkceDialog.value = false
+        allowPlainPkceSave.value = true
+        void (async () => {
+            if (await persist()) {
+                closeDialog()
+            }
+        })()
     }
 
     onMounted(async () => {

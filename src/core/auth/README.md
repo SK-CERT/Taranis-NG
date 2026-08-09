@@ -56,10 +56,14 @@ Per-provider *PKCE code challenge method* selector (RFC 7636):
   generated per login attempt, `code_challenge = BASE64URL(SHA256(verifier))`
   is sent on the authorization request, and the verifier is replayed on the
   token exchange. Required by IdPs that mandate PKCE for confidential clients.
-- `plain` is rejected. It reveals the verifier in the browser-visible
-  authorization request and does not provide PKCE interception protection.
+- `plain` -- legacy compatibility only. It sends the verifier itself in the
+  browser-visible authorization request. It can still protect against theft of
+  only the returned authorization code, but not an observer that also sees the
+  initial authorization request. The GUI shows a warning and requires explicit
+  confirmation before saving it.
 
-Use `S256` whenever the provider supports it. The verifier and nonce are stored
+Use `S256` whenever the provider supports it; the Core never silently falls
+back to `plain` or `none`. The verifier and nonce are stored
 behind an opaque Redis transaction handle and the callback atomically consumes
 that handle, so they are neither carried through the browser nor replayable.
 

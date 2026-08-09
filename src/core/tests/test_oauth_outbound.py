@@ -6,7 +6,6 @@ from types import SimpleNamespace
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-
 from auth import oauth2_authenticator
 from auth.oauth2_authenticator import OAuth2Authenticator
 from auth.url_guard import MAX_JSON_BYTES, OUTBOUND_TIMEOUT, assert_auth_endpoint_url, fetch_auth_json, read_limited_json
@@ -59,7 +58,8 @@ def test_private_https_auth_endpoint_remains_compatible() -> None:
 
 
 @pytest.mark.parametrize(
-    "url", ["http://idp.example.test/token", "https://user:pass@idp.example.test/token", "https://idp.example.test/token#fragment"]
+    "url",
+    ["http://idp.example.test/token", "https://user:pass@idp.example.test/token", "https://idp.example.test/token#fragment"],
 )
 def test_insecure_auth_endpoint_is_rejected(url: str) -> None:
     with pytest.raises(ValueError):
@@ -98,10 +98,11 @@ def test_auth_json_rejects_redirect_and_oversized_stream() -> None:
         read_limited_json(FakeResponse(b"x" * (MAX_JSON_BYTES + 1)))
 
 
-def test_pkce_plain_is_rejected_but_none_remains_supported() -> None:
-    with pytest.raises(ValueError, match="Unsupported PKCE method 'plain'"):
-        OAuth2Authenticator(_provider(pkce_method="plain")).pkce_method()
+def test_pkce_plain_and_none_are_explicitly_supported_but_unknown_values_fail() -> None:
+    assert OAuth2Authenticator(_provider(pkce_method="plain")).pkce_method() == "plain"
     assert OAuth2Authenticator(_provider(pkce_method="none")).pkce_method() == "none"
+    with pytest.raises(ValueError, match="Unsupported PKCE method 'legacy'"):
+        OAuth2Authenticator(_provider(pkce_method="legacy")).pkce_method()
 
 
 def test_s256_authorization_url_contains_only_the_challenge() -> None:
@@ -114,6 +115,17 @@ def test_s256_authorization_url_contains_only_the_challenge() -> None:
     assert query["code_challenge_method"] == ["S256"]
     assert query["code_challenge"][0] != verifier
     assert verifier not in url
+
+
+def test_plain_authorization_url_uses_the_verifier_as_an_explicit_legacy_challenge() -> None:
+    authenticator = OAuth2Authenticator(_provider(pkce_method="plain"))
+    verifier = authenticator.generate_code_verifier()
+
+    url = authenticator.get_authorization_url("https://taranis.example.test/callback", "opaque-state", "nonce", verifier)
+    query = parse_qs(urlparse(url).query)
+
+    assert query["code_challenge_method"] == ["plain"]
+    assert query["code_challenge"] == [verifier]
 
 
 def test_oidc_discovery_requires_matching_issuer(monkeypatch) -> None:
@@ -136,7 +148,8 @@ def test_oidc_discovery_requires_matching_issuer(monkeypatch) -> None:
         OAuth2Authenticator(provider)._metadata()
 
 
-def test_token_exchange_disables_redirects_and_uses_bounded_timeout(monkeypatch) -> None:
+@pytest.mark.parametrize("pkce_method", ["S256", "plain"])
+def test_token_exchange_disables_redirects_and_uses_bounded_timeout(monkeypatch, pkce_method: str) -> None:
     calls: dict[str, object] = {}
 
     class FakeSession:
@@ -153,7 +166,7 @@ def test_token_exchange_disables_redirects_and_uses_bounded_timeout(monkeypatch)
 
     monkeypatch.setattr(oauth2_authenticator, "OAuth2Session", FakeSession)
     verifier = OAuth2Authenticator.generate_code_verifier()
-    identity = OAuth2Authenticator(_provider()).handle_callback(
+    identity = OAuth2Authenticator(_provider(pkce_method=pkce_method)).handle_callback(
         "https://taranis.example.test/callback",
         "authorization-code",
         "nonce",
