@@ -1,0 +1,201 @@
+import { describe, expect, it } from 'vitest'
+import { messages, supportedLocales } from '@/i18n'
+
+const auditedAuthRoots = [
+    'access_management.users',
+    'access_management.acls',
+    'access_management.organizations',
+    'access_management.security',
+    'auth_provider',
+    'security',
+    'login'
+]
+
+const collectLeafPaths = (value, path, result = []) => {
+    if (typeof value === 'string') result.push(path)
+    else if (value && typeof value === 'object') {
+        for (const [key, child] of Object.entries(value)) collectLeafPaths(child, `${path}.${key}`, result)
+    }
+    return result
+}
+
+const getMessage = (catalog, path) => path.split('.').reduce((value, segment) => value?.[segment], catalog)
+
+const auditedAuthPaths = auditedAuthRoots.flatMap((root) => collectLeafPaths(getMessage(messages.en, root), root))
+
+// These values are identifiers, protocol/product names, or a deliberately
+// content-free interpolation template in every locale.
+const universalExactCopyAllowlist = new Set([
+    'auth_provider.id',
+    'auth_provider.kinds.oidc',
+    'auth_provider.kinds.oauth2',
+    'auth_provider.kinds.ldap',
+    'auth_provider.kinds.saml',
+    'auth_provider.delete_message'
+])
+
+// Exact spelling can still be the correct translation. Keep these exceptions
+// path-specific and locale-specific so an English sentence cannot hide behind
+// a broad word/value allowlist.
+const localeExactCopyAllowlists = {
+    'cs': new Set([
+        'access_management.users.email',
+        'access_management.security.passkeys_title',
+        'access_management.security.rp_id',
+        'auth_provider.slug',
+        'auth_provider.issuer_url',
+        'auth_provider.client_id',
+        'auth_provider.scopes',
+        'auth_provider.pkce_method_plain',
+        'auth_provider.secret',
+        'auth_provider.token_url',
+        'auth_provider.userinfo_url',
+        'auth_provider.bind_dn',
+        'auth_provider.search_base',
+        'security.passkeys_title',
+        'login.enroll_passkey_name'
+    ]),
+    'de': new Set([
+        'access_management.users.name',
+        'access_management.users.status',
+        'access_management.acls.name',
+        'access_management.acls.total_count',
+        'access_management.organizations.name',
+        'access_management.security.passkeys_title',
+        'auth_provider.name',
+        'auth_provider.scopes',
+        'auth_provider.role_name',
+        'security.passkeys_title',
+        'security.passkey_name',
+        'security.default_passkey_name',
+        'login.enroll_passkey_name'
+    ]),
+    'es': new Set([
+        'access_management.users.roles',
+        'access_management.users.local_password',
+        'access_management.acls.roles',
+        'auth_provider.saml_tab_general',
+        'login.enroll_passkey_name'
+    ]),
+    'fr': new Set([
+        'access_management.users.email',
+        'access_management.users.local_password',
+        'access_management.acls.description',
+        'access_management.organizations.description',
+        'auth_provider.kind',
+        'auth_provider.role_description'
+    ]),
+    'hi': new Set(['auth_provider.idp_sso_url']),
+    'it': new Set([
+        'access_management.users.password',
+        'access_management.users.email',
+        'security.default_passkey_name',
+        'login.password',
+        'login.enroll_passkey_name'
+    ]),
+    'ja': new Set(['auth_provider.idp_sso_url']),
+    'ko': new Set(['auth_provider.idp_sso_url']),
+    'nl': new Set([
+        'access_management.users.email',
+        'access_management.users.status',
+        'access_management.users.identity_provider',
+        'access_management.acls.item',
+        'access_management.security.passkeys_title',
+        'auth_provider.kind',
+        'auth_provider.scopes',
+        'security.passkeys_title',
+        'security.default_passkey_name',
+        'login.enroll_passkey_name'
+    ]),
+    'pl': new Set(['access_management.users.email', 'access_management.users.status']),
+    'pt-BR': new Set([
+        'access_management.users.email',
+        'access_management.users.status',
+        'access_management.users.local_password',
+        'access_management.acls.item',
+        'access_management.acls.total_count'
+    ]),
+    'sk': new Set([
+        'access_management.users.email',
+        'access_management.security.passkeys_title',
+        'access_management.security.rp_id',
+        'auth_provider.slug',
+        'auth_provider.issuer_url',
+        'auth_provider.client_id',
+        'auth_provider.scopes',
+        'auth_provider.pkce_method_plain',
+        'auth_provider.secret',
+        'auth_provider.token_url',
+        'auth_provider.userinfo_url',
+        'auth_provider.bind_dn',
+        'auth_provider.search_base',
+        'auth_provider.search_filter',
+        'security.passkeys_title',
+        'login.enroll_passkey_name'
+    ]),
+    'zh-CN': new Set(['auth_provider.idp_sso_url'])
+}
+
+const exactCopyIsReviewed = (locale, path) => universalExactCopyAllowlist.has(path) || localeExactCopyAllowlists[locale]?.has(path) === true
+
+const reviewedExactCopyPaths = (locale) => new Set([...universalExactCopyAllowlist, ...(localeExactCopyAllowlists[locale] ?? [])])
+
+describe('translated authentication and security content', () => {
+    it('audits every leaf in the complete authentication and security scopes', () => {
+        expect(auditedAuthPaths).toHaveLength(328)
+        expect(new Set(auditedAuthPaths).size).toBe(auditedAuthPaths.length)
+    })
+
+    it('provides a string for every audited path in every catalog', () => {
+        const invalidValues = []
+
+        for (const locale of supportedLocales) {
+            for (const path of auditedAuthPaths) {
+                const value = getMessage(messages[locale], path)
+                if (typeof value !== 'string') invalidValues.push(`${locale}: ${path} (${typeof value})`)
+            }
+        }
+
+        expect(
+            invalidValues,
+            `Missing or non-string authentication messages (${invalidValues.length}):\n${invalidValues.map((entry) => `  - ${entry}`).join('\n')}`
+        ).toEqual([])
+    })
+
+    it('keeps every exact-copy exception necessary and current', () => {
+        const staleExceptions = []
+
+        for (const locale of supportedLocales.filter((candidate) => candidate !== 'en')) {
+            for (const path of reviewedExactCopyPaths(locale)) {
+                if (getMessage(messages[locale], path) !== getMessage(messages.en, path)) {
+                    staleExceptions.push(`${locale}: ${path}`)
+                }
+            }
+        }
+
+        expect(
+            staleExceptions,
+            `Stale exact-copy allowlist entries (${staleExceptions.length}):\n${staleExceptions.map((entry) => `  - ${entry}`).join('\n')}`
+        ).toEqual([])
+    })
+
+    it('does not silently copy English UI text into non-English catalogs', () => {
+        const unexpectedCopies = []
+
+        for (const locale of supportedLocales.filter((candidate) => candidate !== 'en')) {
+            for (const path of auditedAuthPaths) {
+                const localizedValue = getMessage(messages[locale], path)
+                if (typeof localizedValue !== 'string') continue
+
+                if (localizedValue === getMessage(messages.en, path) && !exactCopyIsReviewed(locale, path)) {
+                    unexpectedCopies.push(`${locale}: ${path}`)
+                }
+            }
+        }
+
+        expect(
+            unexpectedCopies,
+            `Unexpected exact English copies (${unexpectedCopies.length}):\n${unexpectedCopies.map((entry) => `  - ${entry}`).join('\n')}`
+        ).toEqual([])
+    })
+})

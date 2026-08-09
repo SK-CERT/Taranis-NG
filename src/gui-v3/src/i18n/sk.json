@@ -14,7 +14,7 @@
             "organizations": "Organizácie",
             "roles": "Role",
             "permissions": "Oprávnenia",
-            "total_count": "Počet používateľov: ",
+            "total_count": "Žiadni používatelia | {count} používateľ | {count} používatelia | {count} používateľov",
             "password": "Heslo",
             "password_check": "Zadajte heslo znova",
             "password_mismatch": "Heslá sa nezhodujú",
@@ -65,7 +65,7 @@
             "removed_error": "Rola sa používa a nie je možné ju odstrániť",
             "title": "Názov",
             "permissions": "Oprávnenia",
-            "total_count": "Počet rolí: "
+            "total_count": "Žiadne roly | {count} rola | {count} roly | {count} rolí"
         },
         "acls": {
             "tab_description": "Tu môžete spravovať zoznamy riadenia prístupu (ACL).",
@@ -87,7 +87,7 @@
             "removed_error": "ACL sa používa a nie je možné ho odstrániť",
             "roles": "Role",
             "users": "Používatelia",
-            "total_count": "Počet ACL: "
+            "total_count": "Žiadne ACL | {count} ACL | {count} ACL | {count} ACL"
         },
         "organizations": {
             "tab_description": "Tu môžete spravovať organizácie.",
@@ -107,7 +107,7 @@
             "successful_edit": "Organizácia bola úspešne upravená",
             "removed": "Organizácia bola úspešne odstránená",
             "removed_error": "Organizácia sa používa a nie je možné ju odstrániť",
-            "total_count": "Počet organizácií: "
+            "total_count": "Žiadne organizácie | {count} organizácia | {count} organizácie | {count} organizácií"
         },
         "security": {
             "tab_description": "Tu môžete nastaviť zabezpečenie celej inštalácie.",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "Nastavenia profilu",
         "logout": "Odhlásiť sa",
-        "security": "Zabezpečenie"
+        "security": "Zabezpečenie",
+        "unknown_user": "Neznámy používateľ",
+        "no_organization": "Žiadna organizácia"
     },
     "main_menu": {
         "enter": "Vložiť",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "Pracovný priestor operatívneho spravodajstva",
         "refresh": "Obnoviť dashboard",
+        "metrics": {
+            "news_items_summary": "Žiadne novinky | Spolu {count} novinka | Spolu {count} novinky | Spolu {count} noviniek",
+            "report_items_summary": "Žiadne analýzy | Spolu {count} analýza | Spolu {count} analýzy | Spolu {count} analýz",
+            "products_summary": "Žiadne publikácie | Spolu {count} publikácia | Spolu {count} publikácie | Spolu {count} publikácií"
+        },
         "assess": {
             "trending": "Aktuálne trendy",
             "tagcloud": "Tagcloud pre najnovšie získané novinky",
-            "total": "noviniek spolu"
+            "total": "noviniek spolu",
+            "ingestion_chart": "Príjem noviniek za obdobie {period}",
+            "ingestion_point": "Dňa {date}: žiadne novinky | Dňa {date}: {count} novinka | Dňa {date}: {count} novinky | Dňa {date}: {count} noviniek"
         },
         "collect": {
             "title": "Kolektory",
@@ -253,8 +262,14 @@
             "title": "O aplikácii",
             "version": "Verzia",
             "commit": "Commit",
-            "total": "záznamov spolu"
+            "total": "záznamov spolu",
+            "built_at": "Zostavené {date}",
+            "committed_at": "Commit z {date}"
         }
+    },
+    "word_cloud": {
+        "label": "Slovný mrak",
+        "word_action_count": "{action} {word}: žiadne výsledky | {action} {word}: {count} výsledok | {action} {word}: {count} výsledky | {action} {word}: {count} výsledkov"
     },
     "nav_menu": {
         "enter": "Vytvoriť novinku",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "Názov",
         "created": "Vytvorené",
-        "updated": "Aktualizované",
-        "collected": "Získané",
-        "published": "Publikované",
-        "source": "Zdroj",
         "node": "Inštancia",
         "description": "Popis",
-        "in_analyze": "Analýza prebieha",
-        "analyzed": "Analyzované",
         "url": "URL",
         "name": "Názov",
         "username": "Meno používateľa",
@@ -332,7 +341,18 @@
         "last_seen": "Naposledy videné",
         "last_attempted": "Posledný pokus",
         "last_collected": "Naposledy stiahnuté",
-        "last_error": "Posledná chyba"
+        "last_error": "Posledná chyba",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "Zdroj: {source}",
+        "author_with_value": "Autor: {author}",
+        "published_at": "Publikované: {date}",
+        "collected_at": "Získané: {date}",
+        "link_with_url": "Odkaz: {url}",
+        "unknown_source": "Neznámy zdroj",
+        "not_available": "Nie je k dispozícii",
+        "aggregated_items_count": "Žiadne zlúčené novinky | {count} zlúčená novinka | {count} zlúčené novinky | {count} zlúčených noviniek",
+        "in_analyze_count": "Žiadne prebiehajúce analýzy | {count} prebiehajúca analýza | {count} prebiehajúce analýzy | {count} prebiehajúcich analýz",
+        "analyzed_count": "Žiadne dokončené analýzy | {count} dokončená analýza | {count} dokončené analýzy | {count} dokončených analýz"
     },
     "attribute": {
         "add_constant": "Pridať konštantu",
@@ -385,10 +405,22 @@
         "ai_provider": "AI model",
         "ai_prompt": "AI prompt",
         "add_attribute": "Pridať atribút",
-        "edit_attribute": "Upraviť atribút"
+        "edit_attribute": "Upraviť atribút",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "Vektor a skóre CVSS",
+        "last_updated_at": "Naposledy aktualizované {date}",
+        "updated_by_user": "Aktualizoval používateľ {user}",
+        "tlp_description_clear": "Zverejnenie nie je obmedzené.",
+        "tlp_description_green": "Obmedzené zverejnenie v rámci komunity.",
+        "tlp_description_amber": "Obmedzené zverejnenie v organizácii príjemcu a jej klientom podľa zásady nevyhnutnej znalosti.",
+        "tlp_description_amber_strict": "Obmedzené zverejnenie iba v organizácii príjemcu.",
+        "tlp_description_red": "Informácia sa nesmie zverejniť mimo jednotlivých príjemcov.",
+        "tlp_description_unknown": "Neznáme označenie TLP."
     },
     "cvss_calculator": {
         "title": "CVSS Calculator",
+        "tooltips": "Zobraziť pomoc k metrikám",
+        "vector_placeholder": "Vektor CVSS, napríklad CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "Base Score",
         "attack_vector": "Attack Vector (AV)",
         "attack_complexity": "Attack Complexity (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "This metric captures the requirement for a user, other than the attacker, to participate in the successful compromise the vulnerable component. This metric determines whether the vulnerability can be exploited solely at the will of the attacker, or whether a separate user (or user-initiated process) must participate in some manner.",
         "UI_N_Label": "The vulnerable system can be exploited without any interaction from any user.",
         "UI_R_Label": "Successful exploitation of this vulnerability requires a user to take some action before the vulnerability can be exploited.",
-        "S_Heading": "Does a successful attack impact a component other than the vulnerable component? If so, the Base Score increases and the Confidentiality, Integrity and Authentication metrics should be scored relative to the impacted component.",
+        "S_Heading": "Má úspešný útok vplyv na inú súčasť než na zraniteľnú súčasť? Ak áno, základné skóre sa zvýši a metriky dôvernosti, integrity a dostupnosti by sa mali hodnotiť vo vzťahu k ovplyvnenej súčasti.",
         "S_U_Label": "An exploited vulnerability can only affect resources managed by the same security authority. In this case, the vulnerable component and the impacted component are either the same, or both are managed by the same security authority.",
         "S_C_Label": "An exploited vulnerability can affect resources beyond the security scope managed by the security authority of the vulnerable component. In this case, the vulnerable component and the impacted component are different and managed by different security authorities.",
         "C_Heading": "This metric measures the impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability. Confidentiality refers to limiting information access and disclosure to only authorized users, as well as preventing access by, or disclosure to, unauthorized ones.",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "The value assigned to the corresponding Base metric is used.",
         "MUI_N_Label": "The vulnerable system can be exploited without any interaction from any user.",
         "MUI_R_Label": "Successful exploitation of this vulnerability requires a user to take some action before the vulnerability can be exploited.",
-        "MS_Heading": "Does a successful attack impact a component other than the vulnerable component? If so, the Base Score increases and the Confidentiality, Integrity and Authentication metrics should be scored relative to the impacted component.",
+        "MS_Heading": "Má úspešný útok vplyv na inú súčasť než na zraniteľnú súčasť? Ak áno, základné skóre sa zvýši a metriky dôvernosti, integrity a dostupnosti by sa mali hodnotiť vo vzťahu k ovplyvnenej súčasti.",
         "MS_X_Label": "The value assigned to the corresponding Base metric is used.",
         "MS_U_Label": "An exploited vulnerability can only affect resources managed by the same security authority. In this case, the vulnerable component and the impacted component are either the same, or both are managed by the same security authority.",
         "MS_C_Label": "An exploited vulnerability can affect resources beyond the security scope managed by the security authority of the vulnerable component. In this case, the vulnerable component and the impacted component are different and managed by different security authorities.",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "There is no impact to availability within the subsequent system."
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "Nová analýza",
         "edit": "Upraviť analýzu",
         "read": "Náhľad analýzy",
@@ -704,6 +736,7 @@
         "attributes": "Atribúty",
         "no_attributes": "Žiadne atribúty",
         "side_by_side": "Zobraziť vedľa seba",
+        "enter_rich_text": "Zadajte formátovaný text",
         "confirm_close": {
             "message": "Máte neuložené zmeny. Naozaj chcete zatvoriť túto analýzu?"
         },
@@ -752,13 +785,15 @@
         "publish": "Zverejniť",
         "publish_confirmation": "Ste si istý, že chcete zverejniť túto publikáciu?",
         "publish_confirmation_message": "Naozaj chcete túto publikáciu zverejniť?",
+        "publish_confirmation_type": "Typ publikácie: {type}",
+        "publish_confirmation_publishers": "Publikačné služby: {publishers}",
         "no_type": "Nie je vybraný typ",
         "no_publisher_in_dialog": "Žiadne",
         "publish_successful": "Publikácia bola úspešne zverejnená",
         "publish_failed": "Nepodarilo sa zverejniť publikáciu",
         "publish_error": "Pri zverejňovaní nastala chyba",
         "no_publisher_selected": "Vyberte aspoň jedného vydavateľa",
-        "total_count": "Počet publikácií: ",
+        "total_count": "Žiadne publikácie | {count} publikácia | {count} publikácie | {count} publikácií",
         "confirm_close": {
             "message": "Máte neuložené zmeny. Naozaj chcete zavrieť túto publikáciu bez uloženia zmien?"
         },
@@ -782,8 +817,12 @@
         "sort": "Zoradiť podľa",
         "from": "Od",
         "to": "Do",
-        "total_count": "Počet analýz: ",
+        "total_count": "Žiadne analýzy | {count} analýza | {count} analýzy | {count} analýz",
         "no_items": "Neboli nájdené žiadne analýzy",
+        "updated_at": "Aktualizované {date}",
+        "updated_at_by": "Aktualizované {date} používateľom {user}",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "Žiadne novinky | {count} novinka | {count} novinky | {count} noviniek",
         "tooltip": {
             "filter_all": "Aktuálne zobrazené: všetko",
             "filter_completed": "Aktuálne zobrazené: hotové",
@@ -812,7 +851,7 @@
             "remove_item": "Odstrániť analýzu",
             "publish_item": "Vytvoriť publikáciu z analýzy"
         },
-        "select_all_success": "{count} položiek vybraných",
+        "select_all_success": "Neboli vybrané žiadne analýzy | Vybraná {count} analýza | Vybrané {count} analýzy | Vybraných {count} analýz",
         "select": {
             "placeholder": "Chcem analyzovať...",
             "option_news_items": "vybrané novinky",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "Zdroj",
-        "link": "Odkaz",
         "comments": "Komentáre",
-        "collected": "Získané",
-        "published": "Publikované",
-        "author": "Autor",
         "add_news_item": "Pridať novinku",
         "attached_news_items": "Priložené novinky",
         "read_news_item": "Kliknutím zobrazíte",
@@ -841,8 +876,8 @@
         "auto_save_blur": "Ukladá sa automaticky pri opustení poľa",
         "auto_save_changes": "Ukladá sa automaticky pri zmene",
         "download": "Stiahnuť",
-        "total_count": "Počet noviniek: ",
-        "selected_count": "Počet vybraných noviniek: ",
+        "total_count": "Žiadne novinky | {count} novinka | {count} novinky | {count} noviniek",
+        "selected_count": "Nie sú vybrané žiadne novinky | Vybraná {count} novinka | Vybrané {count} novinky | Vybraných {count} noviniek",
         "no_items": "Novinky sa nenašli",
         "item_updated": "Novinka bola úspešne aktualizovaná",
         "item_deleted": "Novinka bola úspešne zmazaná",
@@ -916,11 +951,14 @@
             "error_loading": "Načítavanie analýz zlyhalo",
             "error_removing": "Chyba pri odoberaní analýzy z agregátu"
         },
-        "select_all_success": "{count} položiek vybraných",
+        "select_all_success": "Neboli vybrané žiadne novinky | Vybraná {count} novinka | Vybrané {count} novinky | Vybraných {count} noviniek",
         "groups": "SKUPINY",
-        "show_new_items": "Zobraziť nové položky ({count})"
+        "show_new_items": "Nie sú k dispozícii žiadne nové položky | Zobraziť {count} novú položku | Zobraziť {count} nové položky | Zobraziť {count} nových položiek"
     },
     "publish": {
+        "updated_at": "Aktualizované {date}",
+        "updated_at_by": "Aktualizované {date} používateľom {user}",
+        "report_items_count": "Žiadne analýzy | {count} analýza | {count} analýzy | {count} analýz",
         "tooltip": {
             "filter_all": "Aktuálne zobrazené: všetky",
             "filter_published": "Aktuálne zobrazené: publikované",
@@ -946,21 +984,21 @@
             "delete_items": "Odstrániť publikácie",
             "delete_item": "Odstrániť publikáciu"
         },
-        "select_all_success": "Označených {count} publikácií",
+        "select_all_success": "Neboli vybrané žiadne publikácie | Vybraná {count} publikácia | Vybrané {count} publikácie | Vybraných {count} publikácií",
         "no_items": "Neboli nájdené žiadne publikácie"
     },
     "toolbar_filter": {
         "search": "Hľadanie",
         "all": "Všetko",
-        "today": "Dneska",
+        "today": "Dnes",
         "this_week": "Tento týždeň",
         "this_month": "Tento mesiac",
         "last_7_days": "Posledných 7 dní",
         "last_31_days": "Posledných 31 dní",
         "custom_filter": "Vlastné filtrovanie",
-        "total_count": "Celkový počet",
-        "currently_showing": "Zobrazujem",
-        "selected_count": "Vybraný počet",
+        "total_count": "Žiadne položky | Spolu {count} položka | Spolu {count} položky | Spolu {count} položiek",
+        "currently_showing": "Nie sú zobrazené žiadne položky | Aktuálne zobrazená {count} položka | Aktuálne zobrazené {count} položky | Aktuálne zobrazených {count} položiek",
+        "selected_count": "Nie sú vybrané žiadne položky | Vybraná {count} položka | Vybrané {count} položky | Vybraných {count} položiek",
         "tooltip": {
             "sort": {
                 "date": {
@@ -991,7 +1029,7 @@
         "like_item": "Označiť ako To sa mi páči",
         "unlike_item": "Označiť ako To sa mi nepáči",
         "delete_item": "Zmazať",
-        "press_key": "Stlačte klávesu pre ",
+        "press_key_for": "Stlačte nový kláves pre akciu {action}",
         "selection": "Výber",
         "group": "Zoskupiť",
         "ungroup": "Zrušiť zoskupenie",
@@ -1016,7 +1054,9 @@
         "boolean_error": "Hodnota musí byť buď 'True' alebo 'False'!",
         "integer_error": "Hodnota musí byť platné celé číslo!",
         "decimal_error": "Hodnota musí byť platné desatinné číslo!",
-        "default_value": "Pôvodná hodnota",
+        "default_value_with_value": "Predvolená hodnota: {value}",
+        "input_too_long": "Hodnota má {count} znakov; maximum je {max}.",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "Upraviť hodnotu",
         "description": "Popis",
         "value": "Hodnota",
@@ -1086,6 +1126,12 @@
             "state_required": "Stav je povinný",
             "entity_type_required": "Typ entity je povinný"
         },
+        "tags": {
+            "tab_description": "Tu môžete spravovať štítky."
+        },
+        "tag_workflow": {
+            "tab_description": "Tu môžete spravovať priradenie štítkov k entitám."
+        },
         "entity_types": {
             "report_item": "Analýza",
             "product": "Publikácia"
@@ -1094,18 +1140,14 @@
             "normal": "Normálny",
             "initial": "Počiatočný",
             "final": "Koncový"
-        },
-        "tags": {
-            "tab_description": "Tu môžete spravovať štítky."
-        },
-        "tag_workflow": {
-            "tab_description": "Tu môžete spravovať priradenie štítkov k entitám."
         }
     },
     "drop_zone": {
         "default_message": "Presuňte súbory sem alebo kliknite pre výber",
         "file_description": "Popis",
-        "last_updated": "Naposledy aktualizované",
+        "last_updated_by_at": "Naposledy aktualizoval používateľ {user} dňa {date}",
+        "last_updated_at": "Naposledy aktualizované {date}",
+        "attachment_by": "Pripojil používateľ {user}",
         "download": "Stiahnuť",
         "attachment_load": "Načítať prílohu",
         "attachment_detail": "Detail prílohy"
@@ -1141,11 +1183,17 @@
         "attributes": "Atribúty",
         "save": "Uložiť",
         "edit": "Upraviť",
+        "edit_named": "Upraviť {title}",
+        "select": "Vybrať",
         "done": "Hotovo",
         "up": "Presunúť vyššie",
         "down": "Presunúť nižšie",
         "remove": "Odobrať",
         "delete": "Zmazať",
+        "publish": "Publikovať",
+        "lock": "Uzamknúť",
+        "open": "Otvoriť",
+        "open_source": "Otvoriť zdroj",
         "download": "Stiahnuť",
         "yes": "Áno",
         "no": "Nie",
@@ -1165,6 +1213,12 @@
         "no_permission": "Nemáte oprávnenie na vykonanie tejto akcie",
         "loading_more": "Načítavam ďalšie položky...",
         "end_of_list": "Koniec zoznamu",
+        "fetching_items": "Načítavajú sa položky…",
+        "no_items_to_select": "Nie sú k dispozícii žiadne položky na výber.",
+        "select_at_least_two_to_group": "Na vytvorenie skupiny vyberte aspoň dve položky.",
+        "no_grouped_items_selected": "Vyberte aspoň jednu zoskupenú položku, ktorú chcete vyňať zo skupiny.",
+        "processing_items": "Nespracúvajú sa žiadne položky… | Spracúva sa {count} položka… | Spracúvajú sa {count} položky… | Spracúva sa {count} položiek…",
+        "deleting_items": "Neodstraňujú sa žiadne položky… | Odstraňuje sa {count} položka… | Odstraňujú sa {count} položky… | Odstraňuje sa {count} položiek…",
         "messagebox": {
             "delete": "Ste si istý, že chcete zmazať túto položku?",
             "delete_confirm": "Naozaj chcete zmazať „{name}“?",
@@ -1192,7 +1246,7 @@
             "removed_error": "Skupina OSINT zdrojov sa používa a nie je možné ju odstrániť",
             "title": "Názov",
             "osint_sources": "OSINT zdroje",
-            "total_count": "Počet skupín OSINT zdrojov: ",
+            "total_count": "Žiadne skupiny zdrojov OSINT | {count} skupina zdrojov OSINT | {count} skupiny zdrojov OSINT | {count} skupín zdrojov OSINT",
             "default_group": "Nezaradené",
             "default_group_description": "Predvolená skupina pre nezaradené OSINT zdroje",
             "all": "Všetky zdroje"
@@ -1216,7 +1270,7 @@
             "removed_error": "OSINT zdroj sa používa a nie je možné ho odstrániť",
             "filter_wordlist": "Ponechať iba články obsahujúce aspoň jedno slovo z vybraných slovníkov",
             "type": "Typ",
-            "total_count": "Počet OSINT zdrojov: ",
+            "total_count": "Žiadne zdroje OSINT | {count} zdroj OSINT | {count} zdroje OSINT | {count} zdrojov OSINT",
             "osint_source_groups": "Skupiny OSINT zdrojov",
             "tooltip": {
                 "select_all": "Vybrať všetko",
@@ -1239,7 +1293,7 @@
             "node_required": "Vyberte uzol kolektora",
             "export_all_hint": "Exportovať všetky zdroje",
             "export_selected_hint": "Exportovať vybrané zdroje",
-            "selected_count": "Vybrané: {count}"
+            "selected_count": "Nie sú vybrané žiadne zdroje OSINT | Vybraný {count} zdroj OSINT | Vybrané {count} zdroje OSINT | Vybraných {count} zdrojov OSINT"
         },
         "nodes": {
             "tab_description": "Tu môžete spravovať uzly zberačov.",
@@ -1254,7 +1308,7 @@
             "successful_edit": "Inštancia kolektora bola úspešne upravená",
             "removed": "Inštancia kolektora bola úspešne odstránená",
             "removed_error": "Inštancia kolektora sa používa a nie je možné ju odstrániť",
-            "total_count": "Počet inštancií kolektorov: "
+            "total_count": "Žiadne uzly kolektorov | {count} uzol kolektora | {count} uzly kolektorov | {count} uzlov kolektorov"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "Inštancia prezentéra bola úspešne aktualizovaná",
             "removed": "Inštancia prezentéra bola úspešne odstránená",
             "removed_error": "Inštancia prezentéra sa používa a nie je možné ju odstrániť",
-            "total_count": "Počet inštancií prezentérov: "
+            "total_count": "Žiadne uzly prezentérov | {count} uzol prezentéra | {count} uzly prezentérov | {count} uzlov prezentérov"
         },
         "types": {
             "tab_description": "Tu môžete spravovať typy publikácií.",
@@ -1289,7 +1343,7 @@
             "successful_edit": "Typ publikácie bol úspešne aktualizovaný",
             "removed": "Typ publikácie bol úspešne odstránený",
             "removed_error": "Typ publikácie sa používa a nie je možné ho odstrániť",
-            "total_count": "Počet typov publikácií: ",
+            "total_count": "Žiadne typy publikácií | {count} typ publikácie | {count} typy publikácií | {count} typov publikácií",
             "help": "Popis parametrov šablóny",
             "close": "Zavrieť",
             "choose_report_type": "Vyberte typ analýzy pre zobrazenie popisu parametrov",
@@ -1328,7 +1382,7 @@
             "successful_edit": "Inštancia vydavateľa bola úspešne aktualizovaná",
             "removed": "Inštancia vydavateľa bola úspešne odstránená",
             "removed_error": "Inštancia vydavateľa sa používa a nie je možné ju odstrániť",
-            "total_count": "Počet inštancií vydavateľov: "
+            "total_count": "Žiadne uzly publikačných služieb | {count} uzol publikačnej služby | {count} uzly publikačných služieb | {count} uzlov publikačných služieb"
         },
         "presets": {
             "tab_description": "Tu môžete spravovať predvoľby publikátorov.",
@@ -1345,7 +1399,7 @@
             "successful_edit": "Publikačný kanál bol úspešne aktualizovaný",
             "removed": "Publikačný kanál bol úspešne odstránený",
             "removed_error": "Publikačný kanál sa používa a nie je možné ho odstrániť",
-            "total_count": "Počet publikačných kanálov: "
+            "total_count": "Žiadne predvoľby publikovania | {count} predvoľba publikovania | {count} predvoľby publikovania | {count} predvolieb publikovania"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "Inštancia robota bola úspešne aktualizovaná",
             "removed": "Inštancia robota bola úspešne odstránená",
             "removed_error": "Inštancia robota sa používa a nie je možné ju odstrániť",
-            "total_count": "Počet inštancií robotov: "
+            "total_count": "Žiadne uzly botov | {count} uzol bota | {count} uzly botov | {count} uzlov botov"
         },
         "presets": {
             "tab_description": "Tu môžete spravovať predvoľby botov.",
@@ -1380,7 +1434,7 @@
             "successful_edit": "Robot bol úspešne aktualizovaný",
             "removed": "Robota bol úspešne odstránený",
             "removed_error": "Robot sa používa a nie je možné ho odstrániť",
-            "total_count": "Počet robotov: "
+            "total_count": "Žiadne predvoľby botov | {count} predvoľba bota | {count} predvoľby botov | {count} predvolieb botov"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "Vzdialený prístup sa používa a nie je možné ho odstrániť",
             "osint_sources": "OSINT zdroje na zdieľanie",
             "report_item_types": "Typy položiek analýzy na zdieľanie",
-            "total_count": "Počet vzdialených prístupov: "
+            "total_count": "Žiadne vzdialené prístupy | {count} vzdialený prístup | {count} vzdialené prístupy | {count} vzdialených prístupov"
         },
         "nodes": {
             "tab_description": "Tu môžete spravovať vzdialené uzly.",
@@ -1420,7 +1474,7 @@
             "successful_edit": "Vzdialená inštancia bola úspešne aktualizovaná",
             "removed": "Vzdialená inštancia bola úspešne odstránená",
             "removed_error": "Vzdialená inštancia sa používa a nie je možné ju odstrániť",
-            "total_count": "Počet vzdialených inštancií: "
+            "total_count": "Žiadne vzdialené uzly | {count} vzdialený uzol | {count} vzdialené uzly | {count} vzdialených uzlov"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "Nepodarilo sa uložiť zdroj dát",
             "remove": "Zdroj dát bol úspešne odstránený",
             "removed_error": "Zdroj dát sa používa a nie je možné ho odstrániť",
-            "total_count": "Počet zdrojov dát: "
+            "total_count": "Žiadni poskytovatelia údajov | {count} poskytovateľ údajov | {count} poskytovatelia údajov | {count} poskytovateľov údajov"
         },
         "ai": {
             "tab_description": "Tu môžete spravovať poskytovateľov AI.",
@@ -1481,11 +1535,13 @@
         "no_categories": "Zatiaľ žiadne kategórie",
         "add_category_hint": "Pridajte kategóriu a začnite vytvárať tento slovník",
         "link_hint": "Voliteľná URL na stiahnutie slovných položiek",
-        "total_count": "Počet slovníkov: ",
+        "total_count": "Žiadne zoznamy slov | {count} zoznam slov | {count} zoznamy slov | {count} zoznamov slov",
         "file_has_header": "Súbor obsahuje hlavičku",
         "import_from_csv": "Import z CSV",
         "load_csv_file": "Načítať CSV súbor",
         "download_from_link": "Stiahnuť z URL",
+        "download_error": "Zoznam slov sa nepodarilo stiahnuť z URL.",
+        "import_error": "Súbor so zoznamom slov sa nepodarilo importovať.",
         "import": "Import",
         "close": "Zavrieť",
         "delete_existing_words": "Odstrániť existujúce slová",
@@ -1506,7 +1562,7 @@
             "successful_edit": "Typ analýzy bol úspešne aktualizovaný",
             "removed_error": "Typ analýzy sa používa a nie je možné ho odstrániť",
             "removed": "Typ analýzy bol úspešne odstránený",
-            "total_count": "Počet typov analýz: "
+            "total_count": "Žiadne typy analýz | {count} typ analýzy | {count} typy analýz | {count} typov analýz"
         },
         "attributes": {
             "tab_description": "Tu môžete spravovať atribúty.",
@@ -1524,7 +1580,7 @@
             "edit_constant": "Upraviť konštantu",
             "value": "Hodnota",
             "error": "Nepodarilo sa vytvoriť atribút",
-            "total_count": "Počet atribútov: "
+            "total_count": "Žiadne atribúty | {count} atribút | {count} atribúty | {count} atribútov"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "Externých používateľov alebo oprávnenia sa nepodarilo načítať",
         "successful": "Externý používateľ bol úspešne pridaný",
         "successful_edit": "Externý používateľ bol úspešne aktualizovaný",
-        "total_count": "Počet externých používateľov",
+        "total_count": "Žiadni externí používatelia | {count} externý používateľ | {count} externí používatelia | {count} externých používateľov",
         "removed": "Externý používateľ bol odstránený",
         "removed_error": "Externého používateľa sa nepodarilo odstrániť"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "Skupina aktív bola úspešne aktualizovaná",
         "removed": "Skupina aktív bola úspešne odstránená",
         "removed_error": "Skupina aktív sa používa a nie je možné ju odstrániť",
-        "total_count": "Počet skupín aktív: "
+        "total_count": "Žiadne skupiny aktív | {count} skupina aktív | {count} skupiny aktív | {count} skupín aktív"
     },
     "notification_template": {
         "add_new": "Pridať novú šablónu notifikácie",
@@ -1594,7 +1650,7 @@
         "successful_edit": "Šablóna notifikácie bola úspešne aktualizovaná",
         "removed": "Šablóna notifikácie bola úspešne odstránená",
         "removed_error": "Šablóna notifikácie sa používa a nie je možné ju odstrániť",
-        "total_count": "Počet šablón notifikácií: "
+        "total_count": "Žiadne šablóny oznámení | {count} šablóna oznámenia | {count} šablóny oznámení | {count} šablón oznámení"
     },
     "asset": {
         "add": "Pridať aktívum",
@@ -1614,13 +1670,15 @@
         "value": "Hodnota",
         "vulnerable": "Zraniteľné",
         "total": "Celkom",
+        "total_count": "Žiadne aktíva | {count} aktívum | {count} aktíva | {count} aktív",
         "successful": "Nové aktívum bolo úspešne pridané",
         "successful_edit": "Aktívum bolo úspešne aktualizované",
         "removed": "Aktívum bolo úspešne odstránené",
         "removed_error": "Aktívum sa používa a nie je možné ho odstrániť",
-        "total_count": "Počet aktív: ",
         "vulnerabilities": "Zraniteľnosti",
-        "vulnerabilities_count": "Zraniteľnosti: ",
+        "serial_with_value": "Sériové číslo: {value}",
+        "cpe_count": "Žiadne kódy CPE | {count} kód CPE | {count} kódy CPE | {count} kódov CPE",
+        "vulnerabilities_count": "Žiadne zraniteľnosti | {count} zraniteľnosť | {count} zraniteľnosti | {count} zraniteľností",
         "no_vulnerabilities": "Žiadne zraniteľnosti",
         "sort": {
             "alphabetical": "Abecedne",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "Počet spôsobov prihlásenia: ",
+        "total_count": "Žiadne spôsoby prihlásenia | {count} spôsob prihlásenia | {count} spôsoby prihlásenia | {count} spôsobov prihlásenia",
         "add_new": "Pridať spôsob prihlásenia",
         "edit": "Upraviť spôsob prihlásenia",
         "name": "Názov",
@@ -1739,7 +1797,7 @@
         "removed": "Spôsob prihlásenia bol odstránený.",
         "remove_error": "Spôsob prihlásenia sa nepodarilo odstrániť.",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} - {count} prepojených identit stratí tento spôsob prihlásenia",
+        "delete_message_linked": "{name}: žiadna prepojená používateľská identita nepríde o tento spôsob prihlásenia | {name}: {count} prepojená používateľská identita príde o tento spôsob prihlásenia | {name}: {count} prepojené používateľské identity prídu o tento spôsob prihlásenia | {name}: {count} prepojených používateľských identít príde o tento spôsob prihlásenia",
         "tab_description": "Tu môžete spravovať spôsoby prihlásenia (poskytovateľov identít).",
         "idp_sso_url": "SSO URL poskytovateľa",
         "idp_sso_url_hint": "Endpoint poskytovateľa pre HTTP-Redirect binding",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "Všeobecné",
         "saml_tab_service_information": "Informácie o službe",
         "saml_tab_sp_keypair": "Kľúčový pár SP",
-        "saml_metadata_url": "URL metadát SP",
-        "saml_acs_url": "URL Assertion Consumer Service (ACS)",
+        "saml_metadata_url_with_url": "URL metadát SP: {url}",
+        "saml_acs_url_with_url": "URL služby Assertion Consumer Service (ACS): {url}",
+        "saml_disco_url_with_url": "URL odpovede zisťovacej služby: {url}",
         "idp_metadata": "Metadáta poskytovateľa (URL alebo XML)",
         "idp_metadata_hint": "Vložte URL metadát poskytovateľa identít alebo priamo XML a stlačte Načítať - entity ID, SSO URL a podpisový certifikát sa doplnia z nich.",
         "idp_metadata_load": "Načítať",
-        "idp_metadata_loaded": "Načítané z metadát (podpisových certifikátov: {count}). Skontrolujte polia nižšie a uložte.",
+        "idp_metadata_loaded": "Metadáta neobsahujú žiadny podpisový certifikát. Skontrolujte polia nižšie a uložte ich. | Z metadát bol načítaný {count} podpisový certifikát. Skontrolujte polia nižšie a uložte ich. | Z metadát boli načítané {count} podpisové certifikáty. Skontrolujte polia nižšie a uložte ich. | Z metadát bolo načítaných {count} podpisových certifikátov. Skontrolujte polia nižšie a uložte ich.",
         "idp_metadata_error": "Metadáta sa nepodarilo načítať.",
         "sp_keypair": "Kľúčový pár poskytovateľa služby",
         "sp_keypair_stored": "kľúč uložený",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "Podpisový certifikát metadát federácie (PEM)",
         "federation_metadata_cert_hint": "Kotva dôvery: metadáta federácie sú dôveryhodné iba vtedy, keď ich podpis zodpovedá tomuto certifikátu. Získajte ho mimo pásma od prevádzkovateľa federácie a overte jeho odtlačok.",
         "federation_verify": "Overiť federáciu",
-        "federation_verify_result": "Overené. Nájdených {count} použiteľných poskytovateľov identity.",
+        "federation_verify_result": "Overené. Nenašiel sa žiadny použiteľný poskytovateľ identity. | Overené. Našiel sa {count} použiteľný poskytovateľ identity. | Overené. Našli sa {count} použiteľní poskytovatelia identity. | Overené. Našlo sa {count} použiteľných poskytovateľov identity.",
         "federation_verify_error": "Metadáta federácie sa nepodarilo overiť.",
-        "saml_disco_url": "URL odpovede služby na výber IdP",
         "sp_metadata_info": "Informácie o službe (pre registráciu vo federácii)",
         "sp_metadata_info_hint": "Zverejnené v metadátach SP. Federácia typicky vyžaduje na prijatie registrácie organizáciu, kontakt a zobrazovaný názov; tieto údaje tiež používatelia vidia v službe na výber IdP.",
         "sp_display_name": "Zobrazovaný názov služby",
@@ -1824,6 +1882,7 @@
         "totp_hint": "Vyžadovať pri prihlásení jednorazový kód z aplikácie authenticator.",
         "totp_enable": "Zapnúť",
         "totp_scan": "Naskenujte QR kód aplikáciou authenticator a potvrďte kódom.",
+        "totp_qr_alt": "QR kód na registráciu autentifikačnej aplikácie",
         "totp_code": "Overovací kód",
         "totp_activate": "Aktivovať",
         "totp_disable": "Vypnúť",
@@ -1832,6 +1891,7 @@
         "passkeys_title": "Passkeys",
         "passkey_add": "Pridať passkey",
         "passkey_name": "Názov",
+        "default_passkey_name": "Prístupový kľúč",
         "passkey_created": "Vytvorené",
         "passkey_last_used": "Naposledy použité",
         "passkey_added": "Passkey zaregistrovaný.",

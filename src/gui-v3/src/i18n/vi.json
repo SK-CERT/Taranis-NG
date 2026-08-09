@@ -14,42 +14,42 @@
             "organizations": "Tổ chức",
             "roles": "Vai trò",
             "permissions": "Quyền",
-            "total_count": "Số lượng người dùng",
+            "total_count": "{count} người dùng | {count} người dùng",
             "password": "Mật khẩu",
             "password_check": "Nhập lại mật khẩu",
             "password_mismatch": "Mật khẩu không khớp",
-            "email": "E-mail",
-            "status": "Status",
+            "email": "Email",
+            "status": "Trạng thái",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "Chờ phê duyệt",
+                "active": "Đang hoạt động",
+                "disabled": "Đã tắt"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "Phương thức đăng nhập",
+            "local_password": "cục bộ",
+            "mfa_enabled": "Đã bật xác thực hai yếu tố",
+            "approve": "Phê duyệt",
+            "disable": "Tắt",
+            "enable": "Bật",
+            "status_error": "Không thể thay đổi trạng thái người dùng.",
+            "reset_mfa": "Đặt lại MFA",
+            "reset_mfa_message": "Xóa toàn bộ đăng ký xác thực hai yếu tố (TOTP và khóa truy cập) của {username}?",
+            "reset_mfa_choose": "Chọn nội dung cần đặt lại cho {username}:",
+            "reset_mfa_totp_only": "Chỉ TOTP (ứng dụng xác thực)",
+            "reset_mfa_passkeys_only": "Chỉ khóa truy cập",
+            "reset_mfa_both": "TOTP và khóa truy cập",
+            "password_hint": "Không bắt buộc đối với người dùng có danh tính bên ngoài",
+            "clear_password": "Xóa mật khẩu cục bộ (tắt đăng nhập bằng mật khẩu)",
+            "require_mfa": "Yêu cầu xác thực hai yếu tố",
+            "require_mfa_hint": "Chỉ áp dụng cho người dùng này; trang, tổ chức của họ hoặc phương thức đăng nhập vẫn có thể yêu cầu yếu tố thứ hai",
+            "identities": "Danh tính đăng nhập",
+            "add_identity": "Liên kết danh tính",
+            "edit_identity": "Chỉnh sửa danh tính",
+            "no_identities": "Chưa liên kết danh tính bên ngoài nào",
+            "identity_provider": "Nhà cung cấp",
+            "external_username": "Tên người dùng tại nhà cung cấp",
+            "external_username_hint": "Tên của người dùng này tại nhà cung cấp danh tính",
+            "last_login": "Lần đăng nhập cuối"
         },
         "roles": {
             "tab_description": "Tại đây, bạn có thể quản lý vai trò và quyền của vai trò.",
@@ -65,7 +65,7 @@
             "removed_error": "Vai trò đang được sử dụng và không thể xóa",
             "title": "Tiêu đề",
             "permissions": "Quyền",
-            "total_count": "Số lượng vai trò"
+            "total_count": "{count} vai trò | {count} vai trò"
         },
         "acls": {
             "tab_description": "Tại đây, bạn có thể quản lý danh sách kiểm soát truy cập (ACL).",
@@ -87,16 +87,18 @@
             "removed_error": "ACL đang được sử dụng và không thể xóa",
             "roles": "Vai trò",
             "users": "Người dùng",
-            "total_count": "Số lượng ACL"
+            "total_count": "{count} ACL | {count} ACL"
         },
         "organizations": {
-            "required_fields_hint": "Các trường được đánh dấu * là bắt buộc.",
             "tab_description": "Tại đây, bạn có thể quản lý tổ chức.",
             "add_new": "Thêm tổ chức mới",
             "edit": "Chỉnh sửa tổ chức",
             "error": "Không thể tạo tổ chức này.",
             "name": "Tên",
+            "required_fields_hint": "Các trường được đánh dấu * là bắt buộc.",
             "description": "Mô tả",
+            "require_mfa": "Yêu cầu xác thực hai yếu tố",
+            "require_mfa_hint": "Mỗi thành viên của tổ chức này phải có yếu tố thứ hai",
             "street": "Đường",
             "city": "Thành phố",
             "zip": "Mã bưu chính",
@@ -105,37 +107,35 @@
             "successful_edit": "Đã cập nhật tổ chức thành công",
             "removed": "Đã xóa tổ chức thành công",
             "removed_error": "Tổ chức đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng tổ chức",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor"
+            "total_count": "{count} tổ chức | {count} tổ chức"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
-            "require_mfa_enabled_hint": "Mọi người dùng phải đăng ký và dùng TOTP hoặc passkey khi đăng nhập.",
+            "tab_description": "Tại đây, bạn có thể cấu hình các thiết lập bảo mật cho toàn bộ trang.",
+            "mfa_title": "Xác thực hai yếu tố",
+            "mfa_description": "Yếu tố thứ hai được yêu cầu khi bất kỳ cấp nào yêu cầu: trang này, tổ chức của người dùng, phương thức đăng nhập hoặc chính người dùng.",
+            "require_mfa": "Yêu cầu xác thực hai yếu tố đối với tất cả người dùng",
+            "require_mfa_hint": "Người dùng chưa có yếu tố thứ hai sẽ được hướng dẫn đăng ký TOTP vào lần đăng nhập tiếp theo",
+            "require_mfa_enabled_hint": "Mọi người dùng phải đăng ký và dùng TOTP hoặc khóa truy cập khi đăng nhập.",
             "require_mfa_disabled_hint": "Không có yêu cầu MFA cho toàn trang. Chính sách của tổ chức, phương thức đăng nhập hoặc người dùng vẫn có thể yêu cầu yếu tố thứ hai.",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
-            "passkey_enabled_on_hint": "Đăng nhập không mật khẩu bằng passkey được cung cấp và người dùng có thể đăng ký passkey.",
-            "passkey_enabled_off_hint": "Đăng nhập bằng passkey và đăng ký passkey mới không khả dụng.",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
+            "passkeys_title": "Khóa truy cập (WebAuthn)",
+            "passkeys_description": "Khóa truy cập là thông tin xác thực thuộc sở hữu của người dùng; họ đăng ký khóa trong phần cài đặt bảo mật của mình. Các tùy chọn này mô tả trang cho trình xác thực và bật tính năng này.",
+            "passkey_enabled": "Bật đăng nhập bằng khóa truy cập",
+            "passkey_enabled_hint": "Cung cấp đăng nhập không cần mật khẩu trên trang đăng nhập và cho phép người dùng đăng ký khóa truy cập",
+            "passkey_enabled_on_hint": "Đăng nhập không cần mật khẩu bằng khóa truy cập được cung cấp và người dùng có thể đăng ký khóa truy cập.",
+            "passkey_enabled_off_hint": "Đăng nhập bằng khóa truy cập và đăng ký khóa truy cập mới không khả dụng.",
+            "passkey_second_factor": "Chấp nhận khóa truy cập làm yếu tố thứ hai",
+            "passkey_second_factor_hint": "Khi tắt, TOTP là yếu tố thứ hai duy nhất được chấp nhận, kể cả với người dùng đã đăng ký khóa truy cập",
+            "rp_id": "ID bên tin cậy (RP)",
+            "rp_id_hint": "Phải là tên miền của trang này, ví dụ {host}",
             "rp_id_use_suggested": "Dùng ID RP được đề xuất",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings."
+            "rp_name": "Tên bên tin cậy",
+            "rp_name_hint": "Được trình xác thực hiển thị khi đăng nhập",
+            "origins": "Nguồn được phép",
+            "origins_hint": "Các URL tuyệt đối, phân tách bằng dấu phẩy, mà trang đăng nhập được cung cấp từ đó",
+            "origins_invalid": "Mỗi nguồn phải là một URL tuyệt đối (https://host)",
+            "secure_context_hint": "WebAuthn yêu cầu ngữ cảnh bảo mật: HTTPS hoặc HTTP thường chỉ trên localhost.",
+            "last_updated": "Cập nhật lần cuối bởi {user} lúc {at}",
+            "error": "Không thể lưu cài đặt bảo mật."
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "Đăng nhập",
         "submit": "Đăng nhập",
         "error": "Tên người dùng hoặc mật khẩu không đúng",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "Phương thức đăng nhập",
+        "pending_approval": "Tài khoản của bạn đang chờ quản trị viên phê duyệt.",
+        "account_disabled": "Tài khoản của bạn đã bị tắt. Hãy liên hệ với quản trị viên.",
+        "username_collision": "Đã tồn tại tài khoản có tên người dùng này. Hãy yêu cầu quản trị viên liên kết danh tính này với tài khoản đó.",
+        "account_not_linked": "Danh tính này chưa được liên kết với tài khoản nào. Hãy liên hệ với quản trị viên.",
+        "domain_not_allowed": "Tên miền email của bạn không được phép đăng ký. Hãy liên hệ với quản trị viên.",
+        "auth_cancelled": "Đã hủy đăng nhập. Vui lòng thử lại.",
+        "totp_invalid": "Mã xác thực không hợp lệ.",
+        "passkey_sign_in": "Đăng nhập bằng khóa truy cập",
+        "sign_in_with": "Đăng nhập bằng {name}",
+        "external_provider": "Đăng nhập bên ngoài",
+        "methods_error": "Không thể tải các phương thức đăng nhập. Vui lòng thử lại.",
+        "mfa_title": "Xác thực hai yếu tố",
+        "mfa_code": "Mã xác thực",
+        "mfa_verify": "Xác minh",
+        "mfa_use_passkey": "Thay vào đó, dùng khóa truy cập",
+        "enroll_title": "Thiết lập xác thực hai yếu tố",
+        "enroll_hint": "Quét mã QR bằng ứng dụng xác thực rồi nhập mã được tạo.",
+        "enroll_activate": "Kích hoạt",
+        "enroll_use_passkey": "Thay vào đó, đăng ký khóa truy cập",
+        "enroll_passkey_name": "Khóa truy cập",
+        "back": "Quay lại đăng nhập"
     },
     "home": {
         "redirecting": "Đang chuyển hướng...",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "Cài đặt",
         "logout": "Đăng xuất",
-        "security": "Security"
+        "security": "Bảo mật",
+        "unknown_user": "Người dùng không xác định",
+        "no_organization": "Không có tổ chức"
     },
     "main_menu": {
         "enter": "Nhập",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "Không gian làm việc tình báo tác nghiệp",
         "refresh": "Làm mới bảng điều khiển",
+        "metrics": {
+            "news_items_summary": "Không có tin nào | Tổng cộng {count} tin | Tổng cộng {count} tin",
+            "report_items_summary": "Không có mục báo cáo nào | Tổng cộng {count} mục báo cáo | Tổng cộng {count} mục báo cáo",
+            "products_summary": "Không có sản phẩm nào | Tổng cộng {count} sản phẩm | Tổng cộng {count} sản phẩm"
+        },
         "assess": {
             "trending": "Xu hướng tình báo",
             "tagcloud": "Đám mây thẻ cho các tin mới nhất đã thu thập",
-            "total": "tổng số tin"
+            "total": "tổng số tin",
+            "ingestion_chart": "Lượng tin được thu nạp trong {period}",
+            "ingestion_point": "Không có tin nào vào {date} | {count} tin vào {date} | {count} tin vào {date}"
         },
         "collect": {
             "title": "Collectors",
@@ -253,8 +262,14 @@
             "title": "Giới thiệu",
             "version": "Phiên bản",
             "commit": "Commit",
-            "total": "tổng số bản ghi"
+            "total": "tổng số bản ghi",
+            "built_at": "Bản dựng ngày {date}",
+            "committed_at": "Commit ngày {date}"
         }
+    },
+    "word_cloud": {
+        "label": "Đám mây từ",
+        "word_action_count": "{action} {word}: không có kết quả | {action} {word}: {count} kết quả | {action} {word}: {count} kết quả"
     },
     "nav_menu": {
         "enter": "Tạo tin",
@@ -297,8 +312,8 @@
         "reports": "Báo cáo",
         "asset_groups": "Nhóm tài sản",
         "notification_templates": "Mẫu thông báo",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "Phương thức đăng nhập",
+        "security": "Bảo mật"
     },
     "notification": {
         "close": "Đóng"
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "Tiêu đề",
         "created": "Đã tạo",
-        "updated": "Đã cập nhật",
-        "collected": "Đã thu thập",
-        "published": "Đã phát hành",
-        "source": "Nguồn",
         "node": "Nút",
         "description": "Mô tả",
-        "in_analyze": "Đang phân tích",
-        "analyzed": "Đã phân tích",
         "url": "URL",
         "name": "Tên",
         "username": "Tên người dùng",
@@ -332,7 +341,18 @@
         "last_seen": "Lần cuối xuất hiện",
         "last_attempted": "Lần thử gần nhất",
         "last_collected": "Lần thu thập gần nhất",
-        "last_error": "Lỗi gần nhất"
+        "last_error": "Lỗi gần nhất",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "Nguồn: {source}",
+        "author_with_value": "Tác giả: {author}",
+        "published_at": "Xuất bản: {date}",
+        "collected_at": "Thu thập: {date}",
+        "link_with_url": "Liên kết: {url}",
+        "unknown_source": "Nguồn không xác định",
+        "not_available": "Không có sẵn",
+        "aggregated_items_count": "Không có tin tổng hợp nào | {count} tin tổng hợp | {count} tin tổng hợp",
+        "in_analyze_count": "Không có phân tích nào đang chạy | {count} phân tích đang chạy | {count} phân tích đang chạy",
+        "analyzed_count": "Không có phân tích nào hoàn tất | {count} phân tích đã hoàn tất | {count} phân tích đã hoàn tất"
     },
     "attribute": {
         "add_constant": "Thêm hằng số",
@@ -385,10 +405,22 @@
         "ai_provider": "Mô hình AI",
         "ai_prompt": "Lời nhắc AI",
         "add_attribute": "Thêm thuộc tính",
-        "edit_attribute": "Chỉnh sửa thuộc tính"
+        "edit_attribute": "Chỉnh sửa thuộc tính",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "Vector và điểm CVSS",
+        "last_updated_at": "Cập nhật lần cuối lúc {date}",
+        "updated_by_user": "Được cập nhật bởi {user}",
+        "tlp_description_clear": "Không hạn chế tiết lộ.",
+        "tlp_description_green": "Chỉ tiết lộ trong cộng đồng.",
+        "tlp_description_amber": "Chỉ tiết lộ trong tổ chức của người nhận và cho khách hàng cần biết.",
+        "tlp_description_amber_strict": "Chỉ tiết lộ trong tổ chức của người nhận.",
+        "tlp_description_red": "Không tiết lộ ngoài những người nhận cụ thể.",
+        "tlp_description_unknown": "Nhãn TLP không xác định."
     },
     "cvss_calculator": {
         "title": "Máy tính CVSS",
+        "tooltips": "Hiển thị chú giải chỉ số",
+        "vector_placeholder": "Vector CVSS, ví dụ CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "Điểm cơ sở",
         "attack_vector": "Vectơ tấn công (AV)",
         "attack_complexity": "Độ phức tạp tấn công (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "Chỉ số này thể hiện yêu cầu một người dùng khác ngoài kẻ tấn công phải tham gia để xâm phạm thành công thành phần dễ bị tấn công. Chỉ số xác định liệu lỗ hổng có thể được khai thác chỉ theo ý muốn của kẻ tấn công hay một người dùng khác, hoặc quy trình do họ khởi tạo, phải tham gia theo cách nào đó.",
         "UI_N_Label": "Hệ thống dễ bị tấn công có thể bị khai thác mà không cần bất kỳ tương tác nào từ người dùng.",
         "UI_R_Label": "Để khai thác thành công lỗ hổng này, người dùng phải thực hiện một hành động trước khi có thể khai thác.",
-        "S_Heading": "Cuộc tấn công thành công có ảnh hưởng đến thành phần khác với thành phần dễ bị tấn công không? Nếu có, điểm cơ sở tăng và các chỉ số tính bảo mật, tính toàn vẹn và xác thực phải được chấm theo thành phần bị ảnh hưởng.",
+        "S_Heading": "Cuộc tấn công thành công có ảnh hưởng đến thành phần khác với thành phần dễ bị tấn công không? Nếu có, điểm cơ sở tăng và các chỉ số tính bảo mật, tính toàn vẹn và tính sẵn sàng phải được chấm theo thành phần bị ảnh hưởng.",
         "S_U_Label": "Lỗ hổng bị khai thác chỉ có thể ảnh hưởng đến tài nguyên do cùng một cơ quan bảo mật quản lý. Trong trường hợp này, thành phần dễ bị tấn công và thành phần bị ảnh hưởng là một, hoặc cả hai do cùng một cơ quan bảo mật quản lý.",
         "S_C_Label": "Lỗ hổng bị khai thác có thể ảnh hưởng đến tài nguyên ngoài phạm vi bảo mật do cơ quan bảo mật của thành phần dễ bị tấn công quản lý. Trong trường hợp này, hai thành phần khác nhau và do các cơ quan bảo mật khác nhau quản lý.",
         "C_Heading": "Chỉ số này đo lường tác động của việc khai thác thành công lỗ hổng đối với tính bảo mật của tài nguyên thông tin do một thành phần phần mềm quản lý. Tính bảo mật là giới hạn việc truy cập và tiết lộ thông tin chỉ cho người dùng được cấp quyền, đồng thời ngăn chặn truy cập hoặc tiết lộ cho người không được cấp quyền.",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "Sử dụng giá trị được gán cho chỉ số cơ sở tương ứng.",
         "MUI_N_Label": "Hệ thống dễ bị tấn công có thể bị khai thác mà không cần bất kỳ tương tác nào từ người dùng.",
         "MUI_R_Label": "Để khai thác thành công lỗ hổng này, người dùng phải thực hiện một hành động trước khi có thể khai thác.",
-        "MS_Heading": "Cuộc tấn công thành công có ảnh hưởng đến thành phần khác với thành phần dễ bị tấn công không? Nếu có, điểm cơ sở tăng và các chỉ số tính bảo mật, tính toàn vẹn và xác thực phải được chấm theo thành phần bị ảnh hưởng.",
+        "MS_Heading": "Cuộc tấn công thành công có ảnh hưởng đến thành phần khác với thành phần dễ bị tấn công không? Nếu có, điểm cơ sở tăng và các chỉ số tính bảo mật, tính toàn vẹn và tính sẵn sàng phải được chấm theo thành phần bị ảnh hưởng.",
         "MS_X_Label": "Sử dụng giá trị được gán cho chỉ số cơ sở tương ứng.",
         "MS_U_Label": "Lỗ hổng bị khai thác chỉ có thể ảnh hưởng đến tài nguyên do cùng một cơ quan bảo mật quản lý. Trong trường hợp này, thành phần dễ bị tấn công và thành phần bị ảnh hưởng là một, hoặc cả hai do cùng một cơ quan bảo mật quản lý.",
         "MS_C_Label": "Lỗ hổng bị khai thác có thể ảnh hưởng đến tài nguyên ngoài phạm vi bảo mật do cơ quan bảo mật của thành phần dễ bị tấn công quản lý. Trong trường hợp này, hai thành phần khác nhau và do các cơ quan bảo mật khác nhau quản lý.",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "Không có tác động đến tính khả dụng trong hệ thống tiếp theo."
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "Tạo mục báo cáo mới",
         "edit": "Chỉnh sửa mục báo cáo",
         "read": "Xem trước mục báo cáo",
@@ -704,6 +736,7 @@
         "attributes": "Thuộc tính",
         "no_attributes": "Không có thuộc tính nào",
         "side_by_side": "Chế độ xem song song",
+        "enter_rich_text": "Nhập văn bản có định dạng",
         "confirm_close": {
             "message": "Bạn có thay đổi chưa lưu. Bạn có chắc muốn đóng mục báo cáo này không?"
         },
@@ -752,13 +785,15 @@
         "publish": "Phát hành sản phẩm",
         "publish_confirmation": "Bạn có chắc muốn phát hành sản phẩm sau không?",
         "publish_confirmation_message": "Bạn có thực sự muốn phát hành sản phẩm này không?",
+        "publish_confirmation_type": "Loại sản phẩm: {type}",
+        "publish_confirmation_publishers": "Publisher: {publishers}",
         "no_type": "Chưa chọn loại",
         "no_publisher_in_dialog": "Không có",
         "publish_successful": "Đã phát hành sản phẩm thành công",
         "publish_failed": "Không thể phát hành sản phẩm",
         "publish_error": "Đã xảy ra lỗi khi phát hành sản phẩm",
         "no_publisher_selected": "Vui lòng chọn ít nhất một Publisher",
-        "total_count": "Số lượng sản phẩm",
+        "total_count": "{count} sản phẩm | {count} sản phẩm",
         "confirm_close": {
             "message": "Bạn có thay đổi chưa lưu. Bạn có chắc muốn đóng sản phẩm mà không lưu thay đổi không?"
         },
@@ -782,8 +817,12 @@
         "sort": "Sắp xếp theo",
         "from": "Từ",
         "to": "Đến",
-        "total_count": "Số lượng mục báo cáo",
+        "total_count": "{count} mục báo cáo | {count} mục báo cáo",
         "no_items": "Không tìm thấy mục báo cáo",
+        "updated_at": "Cập nhật lúc {date}",
+        "updated_at_by": "Được {user} cập nhật lúc {date}",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "Không có tin nào | {count} tin | {count} tin",
         "tooltip": {
             "filter_all": "Đang hiển thị: tất cả",
             "filter_completed": "Đang hiển thị: đã hoàn tất",
@@ -812,7 +851,7 @@
             "remove_item": "Gỡ mục báo cáo",
             "publish_item": "Tạo sản phẩm từ mục báo cáo"
         },
-        "select_all_success": "Đã chọn {count} mục báo cáo",
+        "select_all_success": "Đã chọn {count} mục báo cáo | Đã chọn {count} mục báo cáo",
         "select": {
             "placeholder": "Tôi muốn phân tích...",
             "option_news_items": "tin đã chọn",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "Nguồn",
-        "link": "Liên kết",
         "comments": "Bình luận",
-        "collected": "Đã thu thập",
-        "published": "Đã phát hành",
-        "author": "Tác giả",
         "add_news_item": "Thêm tin",
         "attached_news_items": "Tin đính kèm",
         "read_news_item": "Nhấp để đọc",
@@ -841,8 +876,8 @@
         "auto_save_blur": "Tự động lưu khi mất tiêu điểm",
         "auto_save_changes": "Tự động lưu khi có thay đổi",
         "download": "Tải xuống",
-        "total_count": "Số lượng tin",
-        "selected_count": "Số lượng tin đã chọn",
+        "total_count": "{count} tin | {count} tin",
+        "selected_count": "Đã chọn {count} tin | Đã chọn {count} tin",
         "no_items": "Không tìm thấy tin",
         "item_updated": "Đã cập nhật tin thành công",
         "item_deleted": "Đã xóa tin thành công",
@@ -916,11 +951,14 @@
             "error_loading": "Lỗi khi tải báo cáo",
             "error_removing": "Lỗi khi gỡ báo cáo khỏi bản tổng hợp"
         },
-        "select_all_success": "Đã chọn {count} tin",
+        "select_all_success": "Đã chọn {count} tin | Đã chọn {count} tin",
         "groups": "NHÓM",
-        "show_new_items": "Hiển thị mục mới ({count})"
+        "show_new_items": "Hiển thị {count} tin mới | Hiển thị {count} tin mới"
     },
     "publish": {
+        "updated_at": "Cập nhật lúc {date}",
+        "updated_at_by": "Được {user} cập nhật lúc {date}",
+        "report_items_count": "Không có mục báo cáo nào | {count} mục báo cáo | {count} mục báo cáo",
         "tooltip": {
             "filter_all": "Đang hiển thị: tất cả",
             "filter_published": "Đang hiển thị: đã phát hành",
@@ -946,7 +984,7 @@
             "delete_items": "Xóa sản phẩm",
             "delete_item": "Xóa sản phẩm"
         },
-        "select_all_success": "Đã chọn {count} sản phẩm",
+        "select_all_success": "Đã chọn {count} sản phẩm | Đã chọn {count} sản phẩm",
         "no_items": "Không tìm thấy sản phẩm"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "7 ngày qua",
         "last_31_days": "31 ngày qua",
         "custom_filter": "Bộ lọc tùy chỉnh",
-        "total_count": "Tổng số",
-        "currently_showing": "Đang hiển thị",
-        "selected_count": "Số lượng đã chọn",
+        "total_count": "Tổng cộng {count} mục | Tổng cộng {count} mục",
+        "currently_showing": "Đang hiển thị {count} mục | Đang hiển thị {count} mục",
+        "selected_count": "Đã chọn {count} mục | Đã chọn {count} mục",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "Cài đặt người dùng",
         "tab_general": "Chung",
+        "tab_security": "Bảo mật",
         "tab_wordlists": "Danh sách từ",
         "tab_hotkeys": "Phím tắt",
         "close_item_1": "Đóng mục (phím tắt 1)",
@@ -990,7 +1029,7 @@
         "like_item": "Thích mục",
         "unlike_item": "Bỏ thích mục",
         "delete_item": "Xóa mục",
-        "press_key": "Nhấn phím mới cho ",
+        "press_key_for": "Nhấn phím mới cho {action}",
         "selection": "Lựa chọn",
         "group": "Nhóm",
         "ungroup": "Bỏ nhóm",
@@ -1015,7 +1054,9 @@
         "boolean_error": "Giá trị phải là «True» hoặc «False»!",
         "integer_error": "Giá trị phải là số nguyên hợp lệ!",
         "decimal_error": "Giá trị phải là số thập phân hợp lệ!",
-        "default_value": "Giá trị mặc định",
+        "default_value_with_value": "Giá trị mặc định: {value}",
+        "input_too_long": "Giá trị dài {count} ký tự; tối đa là {max}.",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "Cập nhật giá trị",
         "description": "Mô tả",
         "value": "Giá trị",
@@ -1023,8 +1064,7 @@
         "updated_at": "Thời gian cập nhật",
         "actions": "Hành động",
         "api_key": "Khóa API",
-        "my_assets_view": "Tài sản của tôi",
-        "tab_security": "Security"
+        "my_assets_view": "Tài sản của tôi"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "Tự động thay đổi trạng thái theo tầng",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "Kéo tệp vào đây hoặc nhấp để chọn",
         "file_description": "Mô tả",
-        "last_updated": "Cập nhật gần nhất",
+        "last_updated_by_at": "Được {user} cập nhật lần cuối lúc {date}",
+        "last_updated_at": "Cập nhật lần cuối lúc {date}",
+        "attachment_by": "Được đính kèm bởi {user}",
         "download": "Tải xuống",
         "attachment_load": "Tải tệp đính kèm",
         "attachment_detail": "Chi tiết tệp đính kèm"
@@ -1137,15 +1179,21 @@
         "add": "Thêm",
         "add_btn": "Thêm mới",
         "add_new": "Thêm mới",
-        "add_items": "Thêm mục",
+        "add_items": "Thêm các mục",
         "attributes": "Thuộc tính",
         "save": "Lưu",
         "edit": "Chỉnh sửa",
+        "edit_named": "Chỉnh sửa {title}",
+        "select": "Chọn",
         "done": "Xong",
         "up": "Di chuyển lên",
         "down": "Di chuyển xuống",
         "remove": "Gỡ",
         "delete": "Xóa",
+        "publish": "Xuất bản",
+        "lock": "Khóa",
+        "open": "Mở",
+        "open_source": "Mở nguồn",
         "download": "Tải xuống",
         "yes": "Có",
         "no": "Không",
@@ -1165,6 +1213,12 @@
         "no_permission": "Bạn không có quyền thực hiện hành động này",
         "loading_more": "Đang tải thêm mục...",
         "end_of_list": "Cuối danh sách",
+        "fetching_items": "Đang tải các mục…",
+        "no_items_to_select": "Không có mục nào để chọn.",
+        "select_at_least_two_to_group": "Chọn ít nhất hai mục để tạo nhóm.",
+        "no_grouped_items_selected": "Chọn ít nhất một mục đã nhóm để bỏ nhóm.",
+        "processing_items": "Đang xử lý {count} mục… | Đang xử lý {count} mục…",
+        "deleting_items": "Đang xóa {count} mục… | Đang xóa {count} mục…",
         "messagebox": {
             "delete": "Bạn có chắc muốn xóa mục sau không?",
             "delete_confirm": "Bạn có chắc muốn xóa «{name}» không?",
@@ -1192,7 +1246,7 @@
             "removed_error": "Nhóm nguồn OSINT đang được sử dụng và không thể xóa",
             "title": "Tiêu đề",
             "osint_sources": "Nguồn OSINT",
-            "total_count": "Số lượng nhóm nguồn OSINT",
+            "total_count": "{count} nhóm nguồn OSINT | {count} nhóm nguồn OSINT",
             "default_group": "Chưa phân loại",
             "default_group_description": "Nhóm mặc định cho nguồn OSINT chưa phân loại",
             "all": "Tất cả nguồn"
@@ -1216,7 +1270,7 @@
             "removed_error": "Nguồn OSINT đang được sử dụng và không thể xóa",
             "filter_wordlist": "Bộ lọc danh sách từ",
             "type": "Loại",
-            "total_count": "Số lượng nguồn OSINT",
+            "total_count": "{count} nguồn OSINT | {count} nguồn OSINT",
             "osint_source_groups": "Nhóm nguồn OSINT",
             "tooltip": {
                 "select_all": "Chọn tất cả",
@@ -1239,7 +1293,7 @@
             "node_required": "Chọn nút Collector",
             "export_all_hint": "Xuất tất cả nguồn",
             "export_selected_hint": "Xuất nguồn đã chọn",
-            "selected_count": "Đã chọn {count}"
+            "selected_count": "Đã chọn {count} nguồn OSINT | Đã chọn {count} nguồn OSINT"
         },
         "nodes": {
             "tab_description": "Tại đây, bạn có thể quản lý nút Collector.",
@@ -1254,7 +1308,7 @@
             "successful_edit": "Đã cập nhật nút Collector thành công",
             "removed": "Đã xóa nút Collector thành công",
             "removed_error": "Nút Collector đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng nút Collector"
+            "total_count": "{count} nút thu thập | {count} nút thu thập"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "Đã cập nhật nút Presenter thành công",
             "removed": "Đã xóa nút Presenter thành công",
             "removed_error": "Nút Presenter đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng nút Presenter"
+            "total_count": "{count} nút Presenter | {count} nút Presenter"
         },
         "types": {
             "tab_description": "Tại đây, bạn có thể quản lý loại sản phẩm.",
@@ -1289,7 +1343,7 @@
             "successful_edit": "Đã cập nhật loại sản phẩm thành công",
             "removed": "Đã xóa loại sản phẩm thành công",
             "removed_error": "Loại sản phẩm đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng loại sản phẩm",
+            "total_count": "{count} loại sản phẩm | {count} loại sản phẩm",
             "help": "Mô tả tham số mẫu",
             "close": "Đóng",
             "choose_report_type": "Chọn loại báo cáo để hiển thị mô tả tham số",
@@ -1328,7 +1382,7 @@
             "successful_edit": "Đã cập nhật nút Publisher thành công",
             "removed": "Đã xóa nút Publisher thành công",
             "removed_error": "Nút Publisher đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng nút Publisher"
+            "total_count": "{count} nút Publisher | {count} nút Publisher"
         },
         "presets": {
             "tab_description": "Tại đây, bạn có thể quản lý cấu hình đặt trước Publisher.",
@@ -1345,7 +1399,7 @@
             "successful_edit": "Đã cập nhật cấu hình đặt trước Publisher thành công",
             "removed": "Đã xóa cấu hình đặt trước Publisher thành công",
             "removed_error": "Cấu hình đặt trước Publisher đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng cấu hình đặt trước Publisher"
+            "total_count": "{count} cấu hình đặt trước Publisher | {count} cấu hình đặt trước Publisher"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "Đã cập nhật nút Bot thành công",
             "removed": "Đã xóa nút Bot thành công",
             "removed_error": "Nút Bot đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng nút Bot"
+            "total_count": "{count} nút bot | {count} nút bot"
         },
         "presets": {
             "tab_description": "Tại đây, bạn có thể quản lý cấu hình đặt trước Bot.",
@@ -1380,7 +1434,7 @@
             "successful_edit": "Đã cập nhật cấu hình đặt trước Bot thành công",
             "removed": "Đã xóa cấu hình đặt trước Bot thành công",
             "removed_error": "Cấu hình đặt trước Bot đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng cấu hình đặt trước Bot"
+            "total_count": "{count} cấu hình đặt trước bot | {count} cấu hình đặt trước bot"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "Truy cập từ xa đang được sử dụng và không thể xóa",
             "osint_sources": "Nguồn OSINT cần chia sẻ",
             "report_item_types": "Loại mục báo cáo cần chia sẻ",
-            "total_count": "Số lượng truy cập từ xa"
+            "total_count": "{count} quyền truy cập từ xa | {count} quyền truy cập từ xa"
         },
         "nodes": {
             "tab_description": "Tại đây, bạn có thể quản lý nút từ xa.",
@@ -1420,7 +1474,7 @@
             "successful_edit": "Đã cập nhật nút từ xa thành công",
             "removed": "Đã xóa nút từ xa thành công",
             "removed_error": "Nút từ xa đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng nút từ xa"
+            "total_count": "{count} nút từ xa | {count} nút từ xa"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "Không thể lưu nhà cung cấp dữ liệu này",
             "remove": "Đã xóa nhà cung cấp dữ liệu thành công",
             "removed_error": "Nhà cung cấp dữ liệu đang được sử dụng và không thể xóa",
-            "total_count": "Số lượng nhà cung cấp dữ liệu"
+            "total_count": "{count} nhà cung cấp dữ liệu | {count} nhà cung cấp dữ liệu"
         },
         "ai": {
             "tab_description": "Tại đây, bạn có thể quản lý nhà cung cấp AI.",
@@ -1481,11 +1535,13 @@
         "no_categories": "Chưa có danh mục nào",
         "add_category_hint": "Thêm danh mục để bắt đầu xây dựng danh sách từ này",
         "link_hint": "URL tùy chọn để tải các mục từ",
-        "total_count": "Số lượng danh sách từ",
+        "total_count": "{count} danh sách từ | {count} danh sách từ",
         "file_has_header": "Tệp có hàng tiêu đề",
         "import_from_csv": "Nhập từ CSV",
         "load_csv_file": "Tải tệp CSV",
         "download_from_link": "Tải xuống từ URL",
+        "download_error": "Không thể tải danh sách từ xuống từ URL.",
+        "import_error": "Không thể nhập tệp danh sách từ.",
         "import": "Nhập",
         "close": "Đóng",
         "delete_existing_words": "Xóa từ hiện có",
@@ -1506,7 +1562,7 @@
             "successful_edit": "Đã cập nhật loại mục báo cáo thành công",
             "removed_error": "Loại mục báo cáo đang được sử dụng và không thể xóa",
             "removed": "Đã xóa loại mục báo cáo thành công",
-            "total_count": "Số lượng loại báo cáo"
+            "total_count": "{count} loại báo cáo | {count} loại báo cáo"
         },
         "attributes": {
             "tab_description": "Tại đây, bạn có thể quản lý thuộc tính.",
@@ -1524,7 +1580,7 @@
             "edit_constant": "Chỉnh sửa hằng số",
             "value": "Giá trị",
             "error": "Không thể tạo thuộc tính này",
-            "total_count": "Số lượng thuộc tính"
+            "total_count": "{count} thuộc tính | {count} thuộc tính"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "Không thể tải người dùng bên ngoài hoặc quyền",
         "successful": "Đã thêm người dùng bên ngoài thành công",
         "successful_edit": "Đã cập nhật người dùng bên ngoài thành công",
-        "total_count": "Số lượng người dùng bên ngoài",
+        "total_count": "{count} người dùng bên ngoài | {count} người dùng bên ngoài",
         "removed": "Đã xóa người dùng bên ngoài",
         "removed_error": "Không thể xóa người dùng bên ngoài"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "Đã cập nhật nhóm tài sản thành công",
         "removed": "Đã xóa nhóm tài sản thành công",
         "removed_error": "Nhóm tài sản đang được sử dụng và không thể xóa",
-        "total_count": "Số lượng nhóm tài sản"
+        "total_count": "{count} nhóm tài sản | {count} nhóm tài sản"
     },
     "notification_template": {
         "add_new": "Thêm mẫu thông báo mới",
@@ -1594,7 +1650,7 @@
         "successful_edit": "Đã cập nhật mẫu thông báo thành công",
         "removed": "Đã xóa mẫu thông báo thành công",
         "removed_error": "Mẫu thông báo đang được sử dụng và không thể xóa",
-        "total_count": "Số lượng mẫu thông báo"
+        "total_count": "{count} mẫu thông báo | {count} mẫu thông báo"
     },
     "asset": {
         "add": "Thêm tài sản",
@@ -1614,13 +1670,15 @@
         "value": "Giá trị",
         "vulnerable": "Dễ bị tấn công",
         "total": "Tổng",
-        "total_count": "Số lượng tài sản",
+        "total_count": "{count} tài sản | {count} tài sản",
         "successful": "Đã thêm tài sản mới thành công",
         "successful_edit": "Đã cập nhật tài sản thành công",
         "removed": "Đã xóa tài sản thành công",
         "removed_error": "Tài sản đang được sử dụng và không thể xóa",
         "vulnerabilities": "Lỗ hổng",
-        "vulnerabilities_count": "Lỗ hổng: ",
+        "serial_with_value": "Số sê-ri: {value}",
+        "cpe_count": "Không có mã CPE nào | {count} mã CPE | {count} mã CPE",
+        "vulnerabilities_count": "Không có lỗ hổng nào | {count} lỗ hổng | {count} lỗ hổng",
         "no_vulnerabilities": "Không có lỗ hổng",
         "sort": {
             "alphabetical": "Theo thứ tự bảng chữ cái",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "Số phương thức đăng nhập: ",
+        "total_count": "{count} phương thức đăng nhập | {count} phương thức đăng nhập",
         "add_new": "Thêm phương thức đăng nhập mới",
         "edit": "Chỉnh sửa phương thức đăng nhập",
         "name": "Tên",
@@ -1658,7 +1716,7 @@
             "ldap": "LDAP / Active Directory",
             "saml": "SAML 2.0"
         },
-        "slug": "Slug URL",
+        "slug": "Định danh URL",
         "slug_hint": "Mã định danh ổn định trong các URL dành cho IdP. Được tự động điền từ tên; chỉ dùng chữ thường, chữ số và dấu gạch nối.",
         "slug_invalid": "Hãy dùng chữ thường, chữ số và dấu gạch nối; phải bắt đầu và kết thúc bằng chữ cái hoặc chữ số.",
         "enabled": "Đã bật",
@@ -1677,15 +1735,15 @@
         "allowed_domains": "Miền e-mail được phép",
         "allowed_domains_hint": "Phân tách bằng dấu phẩy; để trống để cho phép tất cả",
         "require_mfa": "Yêu cầu xác thực hai yếu tố",
-        "require_mfa_hint": "Người dùng phải xác minh bằng TOTP hoặc passkey khi đăng nhập",
-        "require_mfa_enabled_hint": "Mọi người đăng nhập qua phương thức này đều phải dùng TOTP hoặc passkey.",
+        "require_mfa_hint": "Người dùng phải xác minh bằng TOTP hoặc khóa truy cập khi đăng nhập",
+        "require_mfa_enabled_hint": "Mọi người đăng nhập qua phương thức này đều phải dùng TOTP hoặc khóa truy cập.",
         "require_mfa_disabled_hint": "Phương thức đăng nhập này không thêm yêu cầu MFA. Chính sách của trang, tổ chức hoặc người dùng vẫn có thể yêu cầu yếu tố thứ hai.",
         "issuer_url": "URL nhà phát hành",
         "issuer_url_hint": "URL cơ sở để khám phá, ví dụ https://idp.example.org/realms/main",
-        "client_id": "Client ID",
+        "client_id": "ID máy khách",
         "scopes": "Phạm vi",
         "username_claim": "Claim tên người dùng",
-        "email_claim": "Claim e-mail",
+        "email_claim": "Claim địa chỉ email",
         "redirect_uri_override": "Ghi đè URI chuyển hướng",
         "redirect_uri_hint": "Để trống để suy ra từ yêu cầu",
         "callback_uri": "URI callback cần đăng ký với nhà cung cấp",
@@ -1710,7 +1768,7 @@
         "secret_hint": "Được lưu dưới dạng mã hóa",
         "secret_keep_hint": "Đã lưu một bí mật — để trống để giữ nguyên",
         "authorize_url": "URL ủy quyền",
-        "token_url": "Token URL",
+        "token_url": "URL mã thông báo",
         "userinfo_url": "URL thông tin người dùng",
         "server_url": "URL máy chủ",
         "use_tls": "Dùng TLS",
@@ -1739,15 +1797,15 @@
         "removed": "Đã xóa phương thức đăng nhập.",
         "remove_error": "Không thể xóa phương thức đăng nhập này.",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — {count} danh tính người dùng đã liên kết sẽ mất phương thức đăng nhập này",
+        "delete_message_linked": "{name}: {count} danh tính người dùng được liên kết sẽ mất phương thức đăng nhập này | {name}: {count} danh tính người dùng được liên kết sẽ mất phương thức đăng nhập này",
         "tab_description": "Tại đây bạn có thể quản lý các phương thức đăng nhập (nhà cung cấp danh tính).",
-        "idp_sso_url": "IdP SSO URL",
+        "idp_sso_url": "URL SSO của IdP",
         "idp_sso_url_hint": "Điểm cuối liên kết HTTP-Redirect của nhà cung cấp danh tính",
-        "idp_entity_id": "IdP entity ID",
+        "idp_entity_id": "ID thực thể IdP",
         "idp_entity_id_hint": "Nhà phát hành phản hồi SAML",
         "idp_certificate": "Chứng chỉ ký của IdP (PEM)",
         "idp_certificate_hint": "Chứng chỉ mà nhà cung cấp danh tính dùng để ký phản hồi. Khối base64 từ metadata là đủ; nhiều chứng chỉ được giữ lại trong quá trình luân chuyển khóa.",
-        "sp_entity_id": "SP entity ID",
+        "sp_entity_id": "ID thực thể SP",
         "sp_entity_id_hint": "ID thực thể / đối tượng của chúng ta được đăng ký tại IdP. Liên đoàn yêu cầu URL https:// ổn định.",
         "sp_entity_id_use_suggested": "Dùng giá trị đề xuất (URL điểm cuối SAML)",
         "acs_url_override": "Ghi đè URL ACS",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "Chung",
         "saml_tab_service_information": "Thông tin dịch vụ",
         "saml_tab_sp_keypair": "Cặp khóa SP",
-        "saml_metadata_url": "SP metadata URL",
-        "saml_acs_url": "Assertion Consumer Service (ACS) URL",
+        "saml_metadata_url_with_url": "URL siêu dữ liệu SP: {url}",
+        "saml_acs_url_with_url": "URL dịch vụ tiếp nhận xác nhận (ACS): {url}",
+        "saml_disco_url_with_url": "URL phản hồi khám phá: {url}",
         "idp_metadata": "Metadata IdP (URL hoặc XML)",
         "idp_metadata_hint": "Dán URL metadata của nhà cung cấp danh tính hoặc chính XML rồi nhấn Tải — ID thực thể, URL SSO và chứng chỉ ký sẽ được điền từ đó.",
         "idp_metadata_load": "Tải",
-        "idp_metadata_loaded": "Đã tải từ metadata ({count} chứng chỉ ký). Xem lại các trường bên dưới và lưu.",
+        "idp_metadata_loaded": "Đã tải siêu dữ liệu với {count} chứng chỉ ký. Hãy kiểm tra các trường bên dưới rồi lưu. | Đã tải siêu dữ liệu với {count} chứng chỉ ký. Hãy kiểm tra các trường bên dưới rồi lưu.",
         "idp_metadata_error": "Không thể đọc metadata.",
         "sp_keypair": "Cặp khóa nhà cung cấp dịch vụ",
         "sp_keypair_stored": "đã lưu khóa",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "Chứng chỉ ký metadata liên đoàn (PEM)",
         "federation_metadata_cert_hint": "Điểm neo tin cậy: metadata của liên đoàn chỉ được tin cậy khi chữ ký xác minh được bằng chứng chỉ này. Hãy lấy qua kênh độc lập từ đơn vị vận hành liên đoàn và đối chiếu dấu vân tay.",
         "federation_verify": "Xác minh liên đoàn",
-        "federation_verify_result": "Đã xác minh. Tìm thấy {count} nhà cung cấp danh tính có thể dùng.",
+        "federation_verify_result": "Đã xác minh. Tìm thấy {count} nhà cung cấp danh tính có thể sử dụng. | Đã xác minh. Tìm thấy {count} nhà cung cấp danh tính có thể sử dụng.",
         "federation_verify_error": "Không thể xác minh metadata liên đoàn.",
-        "saml_disco_url": "URL phản hồi khám phá",
         "sp_metadata_info": "Thông tin dịch vụ (để đăng ký liên đoàn)",
         "sp_metadata_info_hint": "Được công bố trong metadata SP. Liên đoàn thường yêu cầu tổ chức, liên hệ và tên hiển thị để chấp nhận đăng ký; đây cũng là thông tin người dùng thấy tại dịch vụ khám phá.",
         "sp_display_name": "Tên hiển thị của dịch vụ",
@@ -1816,25 +1874,27 @@
         "sp_contact_surname_hint": "Họ của liên hệ kỹ thuật được công bố trong metadata (liên đoàn thường yêu cầu). Khi để trống, giá trị được suy ra từ từ cuối cùng trong tên liên hệ."
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "Bảo mật",
+        "enabled": "Đã bật",
+        "disabled": "Đã tắt",
+        "error": "Thao tác không thành công.",
+        "totp_title": "Ứng dụng xác thực (TOTP)",
+        "totp_hint": "Yêu cầu mã dùng một lần từ ứng dụng xác thực khi đăng nhập.",
+        "totp_enable": "Bật",
+        "totp_scan": "Quét mã QR bằng ứng dụng xác thực và xác nhận bằng một mã.",
+        "totp_qr_alt": "Mã QR để đăng ký ứng dụng xác thực",
+        "totp_code": "Mã xác thực",
+        "totp_activate": "Kích hoạt",
+        "totp_disable": "Tắt",
+        "totp_enabled": "Đã bật xác thực hai yếu tố.",
+        "totp_disabled": "Đã tắt xác thực hai yếu tố.",
+        "passkeys_title": "Khóa truy cập",
+        "passkey_add": "Thêm khóa truy cập",
+        "passkey_name": "Tên",
+        "default_passkey_name": "Khóa truy cập",
+        "passkey_created": "Đã tạo",
+        "passkey_last_used": "Dùng lần cuối",
+        "passkey_added": "Đã đăng ký khóa truy cập.",
+        "no_passkeys": "Chưa đăng ký khóa truy cập nào."
     }
 }

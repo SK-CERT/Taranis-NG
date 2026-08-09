@@ -14,42 +14,42 @@
             "organizations": "संगठन",
             "roles": "भूमिकाएँ",
             "permissions": "अनुमतियाँ",
-            "total_count": "उपयोगकर्ता की संख्या",
+            "total_count": "{count} उपयोगकर्ता | {count} उपयोगकर्ता",
             "password": "पासवर्ड",
             "password_check": "पासवर्ड दोबारा लिखें",
             "password_mismatch": "पासवर्ड मेल नहीं खाते",
-            "email": "E-mail",
-            "status": "Status",
+            "email": "ई-मेल",
+            "status": "स्थिति",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "अनुमोदन लंबित",
+                "active": "सक्रिय",
+                "disabled": "अक्षम"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "लॉगिन विधियाँ",
+            "local_password": "स्थानीय",
+            "mfa_enabled": "दो-कारक प्रमाणीकरण सक्षम है",
+            "approve": "अनुमोदित करें",
+            "disable": "अक्षम करें",
+            "enable": "सक्षम करें",
+            "status_error": "उपयोगकर्ता की स्थिति बदली नहीं जा सकी।",
+            "reset_mfa": "MFA रीसेट करें",
+            "reset_mfa_message": "{username} के सभी दो-कारक पंजीकरण (TOTP और पासकी) हटाएँ?",
+            "reset_mfa_choose": "{username} के लिए क्या रीसेट करना है, चुनें:",
+            "reset_mfa_totp_only": "केवल TOTP (प्रमाणक ऐप)",
+            "reset_mfa_passkeys_only": "केवल पासकी",
+            "reset_mfa_both": "TOTP और पासकी दोनों",
+            "password_hint": "बाहरी पहचान वाले उपयोगकर्ताओं के लिए वैकल्पिक",
+            "clear_password": "स्थानीय पासवर्ड हटाएँ (पासवर्ड लॉगिन अक्षम करें)",
+            "require_mfa": "दो-कारक प्रमाणीकरण आवश्यक करें",
+            "require_mfa_hint": "केवल इस उपयोगकर्ता पर लागू होता है; साइट, उनका संगठन या लॉगिन विधि फिर भी इसे आवश्यक कर सकती है",
+            "identities": "लॉगिन पहचानें",
+            "add_identity": "पहचान लिंक करें",
+            "edit_identity": "पहचान संपादित करें",
+            "no_identities": "कोई बाहरी पहचान लिंक नहीं है",
+            "identity_provider": "प्रदाता",
+            "external_username": "प्रदाता पर उपयोगकर्ता नाम",
+            "external_username_hint": "पहचान प्रदाता पर इस उपयोगकर्ता का उपयोगकर्ता नाम",
+            "last_login": "अंतिम लॉगिन"
         },
         "roles": {
             "tab_description": "यहाँ आप भूमिकाएँ और उनकी अनुमतियाँ प्रबंधित कर सकते हैं।",
@@ -65,7 +65,7 @@
             "removed_error": "भूमिका उपयोग में है और हटाया नहीं जा सका",
             "title": "शीर्षक",
             "permissions": "अनुमतियाँ",
-            "total_count": "भूमिका की संख्या"
+            "total_count": "{count} भूमिका | {count} भूमिकाएँ"
         },
         "acls": {
             "tab_description": "यहाँ आप पहुँच नियंत्रण सूचियाँ (ACL) प्रबंधित कर सकते हैं।",
@@ -87,7 +87,7 @@
             "removed_error": "ACL उपयोग में है और हटाया नहीं जा सका",
             "roles": "भूमिकाएँ",
             "users": "उपयोगकर्ता",
-            "total_count": "ACLs की संख्या"
+            "total_count": "{count} ACL | {count} ACL"
         },
         "organizations": {
             "tab_description": "यहाँ आप संगठन प्रबंधित कर सकते हैं।",
@@ -95,7 +95,10 @@
             "edit": "संगठन संपादित करें",
             "error": "संगठन सहेजा नहीं जा सका",
             "name": "नाम",
+            "required_fields_hint": "* से चिह्नित फ़ील्ड आवश्यक हैं।",
             "description": "विवरण",
+            "require_mfa": "दो-कारक प्रमाणीकरण आवश्यक करें",
+            "require_mfa_hint": "इस संगठन के प्रत्येक सदस्य के पास दूसरा कारक होना चाहिए",
             "street": "सड़क",
             "city": "शहर",
             "zip": "पिन कोड",
@@ -104,38 +107,35 @@
             "successful_edit": "संगठन सफलतापूर्वक अपडेट किया गया",
             "removed": "संगठन सफलतापूर्वक हटाया गया",
             "removed_error": "संगठन उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "संगठन की संख्या",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor",
-            "required_fields_hint": "* से चिह्नित फ़ील्ड आवश्यक हैं।"
+            "total_count": "{count} संगठन | {count} संगठन"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings.",
+            "tab_description": "यहाँ पूरी साइट की सुरक्षा सेटिंग कॉन्फ़िगर की जा सकती हैं।",
+            "mfa_title": "दो-कारक प्रमाणीकरण",
+            "mfa_description": "जब कोई भी स्तर इसकी माँग करता है, तब दूसरा कारक आवश्यक होता है: यह साइट, उपयोगकर्ता का संगठन, लॉगिन विधि या उपयोगकर्ता।",
+            "require_mfa": "सभी उपयोगकर्ताओं के लिए दो-कारक प्रमाणीकरण आवश्यक करें",
+            "require_mfa_hint": "दूसरा कारक न रखने वाले उपयोगकर्ताओं को अगले लॉगिन पर TOTP पंजीकरण की प्रक्रिया दिखाई जाती है",
             "require_mfa_enabled_hint": "हर उपयोगकर्ता को साइन-इन पर TOTP या passkey पंजीकृत करके इस्तेमाल करनी होगी।",
             "require_mfa_disabled_hint": "पूरी साइट पर MFA आवश्यक नहीं है। संगठन, लॉगिन विधि या उपयोगकर्ता नीति फिर भी दूसरा कारक आवश्यक कर सकती है।",
+            "passkeys_title": "पासकी (WebAuthn)",
+            "passkeys_description": "पासकी उपयोगकर्ताओं के अपने क्रेडेंशियल हैं, जिन्हें वे अपनी सुरक्षा सेटिंग में पंजीकृत करते हैं। ये विकल्प प्रमाणक को इस साइट का विवरण देते हैं और सुविधा को चालू करते हैं।",
+            "passkey_enabled": "पासकी से साइन-इन सक्षम करें",
+            "passkey_enabled_hint": "लॉगिन पेज पर पासवर्ड-रहित साइन-इन देता है और उपयोगकर्ताओं को पासकी पंजीकृत करने देता है",
             "passkey_enabled_on_hint": "पासवर्ड-रहित passkey साइन-इन उपलब्ध है और उपयोगकर्ता passkeys पंजीकृत कर सकते हैं।",
             "passkey_enabled_off_hint": "Passkey साइन-इन और नई passkey का पंजीकरण उपलब्ध नहीं है।",
-            "rp_id_use_suggested": "सुझाया गया RP ID इस्तेमाल करें"
+            "passkey_second_factor": "पासकी को दूसरे कारक के रूप में स्वीकार करें",
+            "passkey_second_factor_hint": "बंद होने पर केवल TOTP को दूसरा कारक माना जाता है, उन उपयोगकर्ताओं के लिए भी जिन्होंने पासकी पंजीकृत की है",
+            "rp_id": "निर्भर पक्ष ID",
+            "rp_id_hint": "इस साइट का डोमेन होना चाहिए, जैसे {host}",
+            "rp_id_use_suggested": "सुझाया गया RP ID इस्तेमाल करें",
+            "rp_name": "निर्भर पक्ष का नाम",
+            "rp_name_hint": "साइन-इन करते समय प्रमाणक में दिखाया जाता है",
+            "origins": "अनुमत ओरिजिन",
+            "origins_hint": "लॉगिन पेज उपलब्ध कराने वाले पूर्ण URL, अल्पविराम से अलग किए हुए",
+            "origins_invalid": "हर ओरिजिन एक पूर्ण URL होना चाहिए (https://host)",
+            "secure_context_hint": "WebAuthn को सुरक्षित संदर्भ चाहिए: HTTPS, या केवल localhost पर सादा HTTP।",
+            "last_updated": "अंतिम अपडेट {user} ने {at} को किया",
+            "error": "सुरक्षा सेटिंग सहेजी नहीं जा सकीं।"
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "लॉग इन",
         "submit": "लॉग इन",
         "error": "उपयोगकर्ता नाम या पासवर्ड गलत है",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "लॉगिन विधि",
+        "pending_approval": "आपका खाता व्यवस्थापक के अनुमोदन की प्रतीक्षा कर रहा है।",
+        "account_disabled": "आपका खाता अक्षम है। अपने व्यवस्थापक से संपर्क करें।",
+        "username_collision": "इस उपयोगकर्ता नाम वाला खाता पहले से मौजूद है। अपने व्यवस्थापक से इस पहचान को उस खाते से लिंक करने के लिए कहें।",
+        "account_not_linked": "यह पहचान किसी खाते से लिंक नहीं है। अपने व्यवस्थापक से संपर्क करें।",
+        "domain_not_allowed": "आपके ई-मेल डोमेन से पंजीकरण की अनुमति नहीं है। अपने व्यवस्थापक से संपर्क करें।",
+        "auth_cancelled": "साइन-इन रद्द कर दिया गया। फिर से प्रयास करें।",
+        "totp_invalid": "प्रमाणीकरण कोड अमान्य है।",
+        "passkey_sign_in": "पासकी से साइन-इन करें",
+        "sign_in_with": "{name} से साइन-इन करें",
+        "external_provider": "बाहरी लॉगिन",
+        "methods_error": "लॉगिन विधियाँ लोड नहीं की जा सकीं। फिर से प्रयास करें।",
+        "mfa_title": "दो-कारक प्रमाणीकरण",
+        "mfa_code": "प्रमाणीकरण कोड",
+        "mfa_verify": "सत्यापित करें",
+        "mfa_use_passkey": "इसके बजाय पासकी इस्तेमाल करें",
+        "enroll_title": "दो-कारक प्रमाणीकरण सेट करें",
+        "enroll_hint": "अपने प्रमाणक ऐप से QR कोड स्कैन करें और बना हुआ कोड दर्ज करें।",
+        "enroll_activate": "सक्रिय करें",
+        "enroll_use_passkey": "इसके बजाय पासकी पंजीकृत करें",
+        "enroll_passkey_name": "पासकी",
+        "back": "लॉगिन पर वापस जाएँ"
     },
     "home": {
         "redirecting": "रीडायरेक्ट किया जा रहा है…",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "सेटिंग्स",
         "logout": "लॉग आउट",
-        "security": "Security"
+        "security": "Security",
+        "unknown_user": "अज्ञात उपयोगकर्ता",
+        "no_organization": "कोई संगठन नहीं"
     },
     "main_menu": {
         "enter": "प्रविष्टि",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "परिचालन खुफिया कार्यक्षेत्र",
         "refresh": "डैशबोर्ड रीफ़्रेश करें",
+        "metrics": {
+            "news_items_summary": "कोई समाचार आइटम नहीं | कुल {count} समाचार आइटम | कुल {count} समाचार आइटम",
+            "report_items_summary": "कोई रिपोर्ट आइटम नहीं | कुल {count} रिपोर्ट आइटम | कुल {count} रिपोर्ट आइटम",
+            "products_summary": "कोई उत्पाद नहीं | कुल {count} उत्पाद | कुल {count} उत्पाद"
+        },
         "assess": {
             "trending": "प्रचलित खुफिया जानकारी",
             "tagcloud": "नवीनतम संग्रहित समाचार आइटम का टैग क्लाउड",
-            "total": "कुल समाचार आइटम"
+            "total": "कुल समाचार आइटम",
+            "ingestion_chart": "{period} के लिए समाचार आइटम प्राप्ति",
+            "ingestion_point": "{date} को कोई समाचार आइटम नहीं | {date} को {count} समाचार आइटम | {date} को {count} समाचार आइटम"
         },
         "collect": {
             "title": "संग्राहक",
@@ -253,8 +262,14 @@
             "title": "परिचय",
             "version": "संस्करण",
             "commit": "कमिट",
-            "total": "कुल रिकॉर्ड"
+            "total": "कुल रिकॉर्ड",
+            "built_at": "{date} को बिल्ड किया गया",
+            "committed_at": "{date} को कमिट किया गया"
         }
+    },
+    "word_cloud": {
+        "label": "शब्द मेघ",
+        "word_action_count": "{action} {word}: कोई परिणाम नहीं | {action} {word}: {count} परिणाम | {action} {word}: {count} परिणाम"
     },
     "nav_menu": {
         "enter": "समाचार आइटम बनाएँ",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "शीर्षक",
         "created": "बनाया गया",
-        "updated": "अपडेट किया गया",
-        "collected": "संग्रहित",
-        "published": "प्रकाशित",
-        "source": "स्रोत",
         "node": "नोड",
         "description": "विवरण",
-        "in_analyze": "विश्लेषण जारी है",
-        "analyzed": "विश्लेषित",
         "url": "URL",
         "name": "नाम",
         "username": "उपयोगकर्ता नाम",
@@ -332,7 +341,18 @@
         "last_seen": "अंतिम बार देखा गया",
         "last_attempted": "अंतिम प्रयास",
         "last_collected": "अंतिम संग्रह",
-        "last_error": "अंतिम त्रुटि"
+        "last_error": "अंतिम त्रुटि",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "स्रोत: {source}",
+        "author_with_value": "लेखक: {author}",
+        "published_at": "प्रकाशित: {date}",
+        "collected_at": "संग्रहित: {date}",
+        "link_with_url": "लिंक: {url}",
+        "unknown_source": "अज्ञात स्रोत",
+        "not_available": "उपलब्ध नहीं",
+        "aggregated_items_count": "कोई एकत्रित समाचार आइटम नहीं | {count} एकत्रित समाचार आइटम | {count} एकत्रित समाचार आइटम",
+        "in_analyze_count": "कोई विश्लेषण प्रगति पर नहीं | {count} विश्लेषण प्रगति पर है | {count} विश्लेषण प्रगति पर हैं",
+        "analyzed_count": "कोई विश्लेषण पूरा नहीं हुआ | {count} विश्लेषण पूरा हुआ | {count} विश्लेषण पूरे हुए"
     },
     "attribute": {
         "add_constant": "स्थिरांक जोड़ें",
@@ -385,10 +405,22 @@
         "ai_provider": "AI मॉडल",
         "ai_prompt": "AI प्रॉम्प्ट",
         "add_attribute": "विशेषता जोड़ें",
-        "edit_attribute": "विशेषता संपादित करें"
+        "edit_attribute": "विशेषता संपादित करें",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "CVSS वेक्टर और स्कोर",
+        "last_updated_at": "अंतिम अपडेट {date} को",
+        "updated_by_user": "{user} द्वारा अपडेट किया गया",
+        "tlp_description_clear": "प्रकटीकरण सीमित नहीं है।",
+        "tlp_description_green": "समुदाय के भीतर सीमित प्रकटीकरण।",
+        "tlp_description_amber": "जानने की आवश्यकता के आधार पर प्राप्तकर्ता के संगठन और उसके ग्राहकों तक सीमित प्रकटीकरण।",
+        "tlp_description_amber_strict": "केवल प्राप्तकर्ता के संगठन तक सीमित प्रकटीकरण।",
+        "tlp_description_red": "व्यक्तिगत प्राप्तकर्ताओं के बाहर प्रकटीकरण निषिद्ध है।",
+        "tlp_description_unknown": "अज्ञात TLP चिह्न।"
     },
     "cvss_calculator": {
         "title": "CVSS कैलकुलेटर",
+        "tooltips": "मेट्रिक टूलटिप दिखाएँ",
+        "vector_placeholder": "CVSS वेक्टर, उदाहरण के लिए CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "आधार स्कोर",
         "attack_vector": "आक्रमण वेक्टर (AV)",
         "attack_complexity": "आक्रमण जटिलता (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "यह मेट्रिक दर्शाता है कि भेद्य घटक से सफलतापूर्वक समझौता करने के लिए आक्रमणकर्ता के अतिरिक्त किसी उपयोगकर्ता की भागीदारी आवश्यक है या नहीं। यह निर्धारित करता है कि भेद्यता केवल आक्रमणकर्ता की इच्छा से दोहित हो सकती है या किसी अलग उपयोगकर्ता अथवा उपयोगकर्ता-आरंभित प्रक्रिया को किसी प्रकार भाग लेना आवश्यक है।",
         "UI_N_Label": "किसी भी उपयोगकर्ता की सहभागिता के बिना भेद्य प्रणाली का दोहन किया जा सकता है।",
         "UI_R_Label": "इस भेद्यता का सफल दोहन करने के लिए उपयोगकर्ता को भेद्यता के दोहन योग्य होने से पहले कोई कार्रवाई करनी आवश्यक है।",
-        "S_Heading": "क्या सफल आक्रमण भेद्य घटक के अतिरिक्त किसी अन्य घटक को प्रभावित करता है? यदि हाँ, तो आधार स्कोर बढ़ता है और गोपनीयता, अखंडता तथा प्रमाणीकरण मेट्रिक्स का स्कोर प्रभावित घटक के संदर्भ में देना चाहिए।",
+        "S_Heading": "क्या सफल आक्रमण भेद्य घटक के अतिरिक्त किसी अन्य घटक को प्रभावित करता है? यदि हाँ, तो आधार स्कोर बढ़ता है और गोपनीयता, अखंडता तथा उपलब्धता मेट्रिक्स का स्कोर प्रभावित घटक के संदर्भ में देना चाहिए।",
         "S_U_Label": "दोहित भेद्यता केवल उसी सुरक्षा प्राधिकरण द्वारा प्रबंधित संसाधनों को प्रभावित कर सकती है। इस स्थिति में भेद्य और प्रभावित घटक या तो समान हैं, या दोनों उसी सुरक्षा प्राधिकरण द्वारा प्रबंधित हैं।",
         "S_C_Label": "दोहित भेद्यता, भेद्य घटक के सुरक्षा प्राधिकरण द्वारा प्रबंधित सुरक्षा दायरे से बाहर के संसाधनों को प्रभावित कर सकती है। इस स्थिति में भेद्य और प्रभावित घटक अलग हैं और अलग-अलग सुरक्षा प्राधिकरणों द्वारा प्रबंधित हैं।",
         "C_Heading": "यह मेट्रिक सफलतापूर्वक दोहित भेद्यता के कारण सॉफ़्टवेयर घटक द्वारा प्रबंधित सूचना संसाधनों की गोपनीयता पर प्रभाव मापता है। गोपनीयता का अर्थ सूचना की पहुँच और प्रकटीकरण को केवल अधिकृत उपयोगकर्ताओं तक सीमित रखना तथा अनधिकृत पहुँच या प्रकटीकरण रोकना है।",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "संबंधित आधार मेट्रिक को दिया गया मान उपयोग किया जाता है।",
         "MUI_N_Label": "किसी भी उपयोगकर्ता की सहभागिता के बिना भेद्य प्रणाली का दोहन किया जा सकता है।",
         "MUI_R_Label": "इस भेद्यता का सफल दोहन करने के लिए उपयोगकर्ता को भेद्यता के दोहन योग्य होने से पहले कोई कार्रवाई करनी आवश्यक है।",
-        "MS_Heading": "क्या सफल आक्रमण भेद्य घटक के अतिरिक्त किसी अन्य घटक को प्रभावित करता है? यदि हाँ, तो आधार स्कोर बढ़ता है और गोपनीयता, अखंडता तथा प्रमाणीकरण मेट्रिक्स का स्कोर प्रभावित घटक के संदर्भ में देना चाहिए।",
+        "MS_Heading": "क्या सफल आक्रमण भेद्य घटक के अतिरिक्त किसी अन्य घटक को प्रभावित करता है? यदि हाँ, तो आधार स्कोर बढ़ता है और गोपनीयता, अखंडता तथा उपलब्धता मेट्रिक्स का स्कोर प्रभावित घटक के संदर्भ में देना चाहिए।",
         "MS_X_Label": "संबंधित आधार मेट्रिक को दिया गया मान उपयोग किया जाता है।",
         "MS_U_Label": "दोहित भेद्यता केवल उसी सुरक्षा प्राधिकरण द्वारा प्रबंधित संसाधनों को प्रभावित कर सकती है। इस स्थिति में भेद्य और प्रभावित घटक या तो समान हैं, या दोनों उसी सुरक्षा प्राधिकरण द्वारा प्रबंधित हैं।",
         "MS_C_Label": "दोहित भेद्यता, भेद्य घटक के सुरक्षा प्राधिकरण द्वारा प्रबंधित सुरक्षा दायरे से बाहर के संसाधनों को प्रभावित कर सकती है। इस स्थिति में भेद्य और प्रभावित घटक अलग हैं और अलग-अलग सुरक्षा प्राधिकरणों द्वारा प्रबंधित हैं।",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "अनुवर्ती प्रणाली में उपलब्धता पर कोई प्रभाव नहीं पड़ता।"
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "नया रिपोर्ट आइटम बनाएँ",
         "edit": "रिपोर्ट आइटम संपादित करें",
         "read": "रिपोर्ट आइटम पूर्वावलोकन",
@@ -704,6 +736,7 @@
         "attributes": "विशेषताएँ",
         "no_attributes": "कोई विशेषताएँ नहीं",
         "side_by_side": "साथ-साथ दृश्य",
+        "enter_rich_text": "रिच टेक्स्ट दर्ज करें",
         "confirm_close": {
             "message": "आपके बदलाव सहेजे नहीं गए हैं। क्या आप यह रिपोर्ट आइटम बंद करना चाहते हैं?"
         },
@@ -752,13 +785,15 @@
         "publish": "उत्पाद प्रकाशित करें",
         "publish_confirmation": "क्या आप वाकई निम्न उत्पाद प्रकाशित करना चाहते हैं?",
         "publish_confirmation_message": "क्या आप वाकई यह उत्पाद प्रकाशित करना चाहते हैं?",
+        "publish_confirmation_type": "उत्पाद प्रकार: {type}",
+        "publish_confirmation_publishers": "प्रकाशक: {publishers}",
         "no_type": "कोई प्रकार नहीं चुना गया",
         "no_publisher_in_dialog": "कोई नहीं",
         "publish_successful": "उत्पाद सफलतापूर्वक प्रकाशित हुआ",
         "publish_failed": "उत्पाद प्रकाशित करने में विफल",
         "publish_error": "उत्पाद प्रकाशित करते समय त्रुटि हुई",
         "no_publisher_selected": "कम से कम एक प्रकाशक चुनें",
-        "total_count": "उत्पाद की संख्या",
+        "total_count": "{count} उत्पाद | {count} उत्पाद",
         "confirm_close": {
             "message": "आपके बदलाव सहेजे नहीं गए हैं। क्या आप सहेजे बिना यह उत्पाद बंद करना चाहते हैं?"
         },
@@ -782,8 +817,12 @@
         "sort": "क्रमबद्ध करें",
         "from": "से",
         "to": "तक",
-        "total_count": "रिपोर्ट आइटम की संख्या",
+        "total_count": "{count} रिपोर्ट आइटम | {count} रिपोर्ट आइटम",
         "no_items": "कोई रिपोर्ट आइटम नहीं",
+        "updated_at": "{date} को अपडेट किया गया",
+        "updated_at_by": "{user} द्वारा {date} को अपडेट किया गया",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "कोई समाचार आइटम नहीं | {count} समाचार आइटम | {count} समाचार आइटम",
         "tooltip": {
             "filter_all": "वर्तमान प्रदर्शन: सभी",
             "filter_completed": "वर्तमान प्रदर्शन: पूर्ण",
@@ -812,7 +851,7 @@
             "remove_item": "रिपोर्ट आइटम निकालें",
             "publish_item": "रिपोर्ट आइटम से उत्पाद बनाएँ"
         },
-        "select_all_success": "{count} रिपोर्ट आइटम चुने गए",
+        "select_all_success": "{count} रिपोर्ट आइटम चुना गया | {count} रिपोर्ट आइटम चुने गए",
         "select": {
             "placeholder": "मैं विश्लेषण करना चाहता हूँ…",
             "option_news_items": "चुने गए समाचार आइटम",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "स्रोत",
-        "link": "लिंक",
         "comments": "टिप्पणियाँ",
-        "collected": "संग्रहित",
-        "published": "प्रकाशित",
-        "author": "लेखक",
         "add_news_item": "समाचार आइटम जोड़ें",
         "attached_news_items": "संलग्न समाचार आइटम",
         "read_news_item": "पढ़ने के लिए क्लिक करें",
@@ -841,8 +876,8 @@
         "auto_save_blur": "फ़ोकस हटने पर स्वतः सहेजता है",
         "auto_save_changes": "बदलाव पर स्वतः सहेजता है",
         "download": "डाउनलोड करें",
-        "total_count": "समाचार आइटम की संख्या",
-        "selected_count": "चुने गए समाचार आइटम की संख्या",
+        "total_count": "{count} समाचार आइटम | {count} समाचार आइटम",
+        "selected_count": "{count} समाचार आइटम चुना गया | {count} समाचार आइटम चुने गए",
         "no_items": "कोई समाचार आइटम नहीं",
         "item_updated": "समाचार आइटम सफलतापूर्वक अपडेट हुआ",
         "item_deleted": "समाचार आइटम सफलतापूर्वक हटाया गया",
@@ -916,11 +951,14 @@
             "error_loading": "रिपोर्ट लोड करने में त्रुटि",
             "error_removing": "समुच्चय से रिपोर्ट निकालने में त्रुटि"
         },
-        "select_all_success": "{count} समाचार आइटम चुने गए",
+        "select_all_success": "{count} समाचार आइटम चुना गया | {count} समाचार आइटम चुने गए",
         "groups": "समूह",
-        "show_new_items": "नए आइटम दिखाएँ ({count})"
+        "show_new_items": "{count} नया समाचार आइटम दिखाएँ | {count} नए समाचार आइटम दिखाएँ"
     },
     "publish": {
+        "updated_at": "{date} को अपडेट किया गया",
+        "updated_at_by": "{user} द्वारा {date} को अपडेट किया गया",
+        "report_items_count": "कोई रिपोर्ट आइटम नहीं | {count} रिपोर्ट आइटम | {count} रिपोर्ट आइटम",
         "tooltip": {
             "filter_all": "वर्तमान प्रदर्शन: सभी",
             "filter_published": "वर्तमान प्रदर्शन: प्रकाशित",
@@ -946,7 +984,7 @@
             "delete_items": "उत्पाद हटाएँ",
             "delete_item": "उत्पाद हटाएँ"
         },
-        "select_all_success": "{count} उत्पाद चुने गए",
+        "select_all_success": "{count} उत्पाद चुना गया | {count} उत्पाद चुने गए",
         "no_items": "कोई उत्पाद नहीं"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "पिछले 7 दिन",
         "last_31_days": "पिछले 31 दिन",
         "custom_filter": "कस्टम फ़िल्टर",
-        "total_count": "कुल की संख्या",
-        "currently_showing": "वर्तमान प्रदर्शन",
-        "selected_count": "चयनित संख्या",
+        "total_count": "कुल {count} आइटम | कुल {count} आइटम",
+        "currently_showing": "अभी {count} आइटम दिखाया जा रहा है | अभी {count} आइटम दिखाए जा रहे हैं",
+        "selected_count": "{count} आइटम चुना गया | {count} आइटम चुने गए",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "उपयोगकर्ता सेटिंग्स",
         "tab_general": "सामान्य",
+        "tab_security": "Security",
         "tab_wordlists": "शब्द सूचियाँ",
         "tab_hotkeys": "हॉटकी",
         "close_item_1": "आइटम बंद करें (हॉटकी 1)",
@@ -990,7 +1029,7 @@
         "like_item": "आइटम पसंद करें",
         "unlike_item": "आइटम से पसंद हटाएँ",
         "delete_item": "आइटम हटाएँ",
-        "press_key": "इसके लिए नई कुंजी दबाएँ: ",
+        "press_key_for": "{action} के लिए नई कुंजी दबाएँ",
         "selection": "चयन",
         "group": "समूह बनाएँ",
         "ungroup": "समूह हटाएँ",
@@ -1015,7 +1054,9 @@
         "boolean_error": "मान “True” या “False” होना चाहिए!",
         "integer_error": "मान एक मान्य पूर्णांक होना चाहिए!",
         "decimal_error": "मान एक मान्य दशमलव संख्या होना चाहिए!",
-        "default_value": "डिफ़ॉल्ट मान",
+        "default_value_with_value": "डिफ़ॉल्ट मान: {value}",
+        "input_too_long": "मान {count} वर्ण लंबा है; अधिकतम {max} है।",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "मान अपडेट करें",
         "description": "विवरण",
         "value": "मान",
@@ -1023,8 +1064,7 @@
         "updated_at": "अपडेट का समय",
         "actions": "कार्रवाइयाँ",
         "api_key": "API कुंजी",
-        "my_assets_view": "मेरी परिसंपत्तियाँ",
-        "tab_security": "Security"
+        "my_assets_view": "मेरी परिसंपत्तियाँ"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "स्वचालित क्रमिक स्थिति बदलाव",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "फ़ाइलें यहाँ खींचें या चुनने के लिए क्लिक करें",
         "file_description": "विवरण",
-        "last_updated": "अंतिम अपडेट",
+        "last_updated_by_at": "{user} द्वारा {date} को अंतिम अपडेट",
+        "last_updated_at": "अंतिम अपडेट {date} को",
+        "attachment_by": "{user} द्वारा संलग्न",
         "download": "डाउनलोड करें",
         "attachment_load": "संलग्नक लोड करें",
         "attachment_detail": "संलग्नक विवरण"
@@ -1141,11 +1183,17 @@
         "attributes": "विशेषताएँ",
         "save": "सहेजें",
         "edit": "संपादित करें",
+        "edit_named": "{title} संपादित करें",
+        "select": "चुनें",
         "done": "पूर्ण",
         "up": "ऊपर ले जाएँ",
         "down": "नीचे ले जाएँ",
         "remove": "निकालें",
         "delete": "हटाएँ",
+        "publish": "प्रकाशित करें",
+        "lock": "लॉक करें",
+        "open": "खोलें",
+        "open_source": "स्रोत खोलें",
         "download": "डाउनलोड करें",
         "yes": "हाँ",
         "no": "नहीं",
@@ -1165,6 +1213,12 @@
         "no_permission": "आपको यह कार्रवाई करने की अनुमति नहीं है",
         "loading_more": "और आइटम लोड हो रहे हैं…",
         "end_of_list": "सूची समाप्त",
+        "fetching_items": "आइटम लाए जा रहे हैं…",
+        "no_items_to_select": "चुनने के लिए कोई आइटम नहीं है।",
+        "select_at_least_two_to_group": "समूह बनाने के लिए कम से कम दो आइटम चुनें।",
+        "no_grouped_items_selected": "समूह से हटाने के लिए कम से कम एक समूहीकृत आइटम चुनें।",
+        "processing_items": "{count} आइटम संसाधित किया जा रहा है… | {count} आइटम संसाधित किए जा रहे हैं…",
+        "deleting_items": "{count} आइटम हटाया जा रहा है… | {count} आइटम हटाए जा रहे हैं…",
         "messagebox": {
             "delete": "क्या आप वाकई निम्न आइटम हटाना चाहते हैं?",
             "delete_confirm": "क्या आप वाकई “{name}” हटाना चाहते हैं?",
@@ -1192,7 +1246,7 @@
             "removed_error": "OSINT स्रोत समूह उपयोग में है और हटाया नहीं जा सका",
             "title": "शीर्षक",
             "osint_sources": "OSINT स्रोत",
-            "total_count": "OSINT स्रोत समूह की संख्या",
+            "total_count": "{count} OSINT स्रोत समूह | {count} OSINT स्रोत समूह",
             "default_group": "अवर्गीकृत",
             "default_group_description": "अवर्गीकृत OSINT स्रोतों का डिफ़ॉल्ट समूह",
             "all": "सभी स्रोत"
@@ -1216,7 +1270,7 @@
             "removed_error": "OSINT स्रोत उपयोग में है और हटाया नहीं जा सका",
             "filter_wordlist": "शब्द सूची फ़िल्टर",
             "type": "प्रकार",
-            "total_count": "OSINT स्रोत की संख्या",
+            "total_count": "{count} OSINT स्रोत | {count} OSINT स्रोत",
             "osint_source_groups": "OSINT स्रोत समूह",
             "tooltip": {
                 "select_all": "सभी चुनें",
@@ -1239,7 +1293,7 @@
             "node_required": "संग्राहक नोड चुनें",
             "export_all_hint": "सभी स्रोत निर्यात करें",
             "export_selected_hint": "चुने गए स्रोत निर्यात करें",
-            "selected_count": "{count} चुने गए"
+            "selected_count": "{count} OSINT स्रोत चुना गया | {count} OSINT स्रोत चुने गए"
         },
         "nodes": {
             "tab_description": "यहाँ आप संग्राहक नोड प्रबंधित कर सकते हैं।",
@@ -1254,7 +1308,7 @@
             "successful_edit": "संग्राहक नोड सफलतापूर्वक अपडेट किया गया",
             "removed": "संग्राहक नोड सफलतापूर्वक हटाया गया",
             "removed_error": "संग्राहक नोड उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "संग्राहक नोड की संख्या"
+            "total_count": "{count} संग्राहक नोड | {count} संग्राहक नोड"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "प्रस्तोता नोड सफलतापूर्वक अपडेट किया गया",
             "removed": "प्रस्तोता नोड सफलतापूर्वक हटाया गया",
             "removed_error": "प्रस्तोता नोड उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "प्रस्तोता नोड की संख्या"
+            "total_count": "{count} प्रस्तोता नोड | {count} प्रस्तोता नोड"
         },
         "types": {
             "tab_description": "यहाँ आप उत्पाद प्रकार प्रबंधित कर सकते हैं।",
@@ -1289,7 +1343,7 @@
             "successful_edit": "उत्पाद प्रकार सफलतापूर्वक अपडेट किया गया",
             "removed": "उत्पाद प्रकार सफलतापूर्वक हटाया गया",
             "removed_error": "उत्पाद प्रकार उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "उत्पाद प्रकार की संख्या",
+            "total_count": "{count} उत्पाद प्रकार | {count} उत्पाद प्रकार",
             "help": "टेम्पलेट पैरामीटर का विवरण",
             "close": "बंद करें",
             "choose_report_type": "पैरामीटर विवरण दिखाने के लिए रिपोर्ट प्रकार चुनें",
@@ -1328,7 +1382,7 @@
             "successful_edit": "प्रकाशक नोड सफलतापूर्वक अपडेट किया गया",
             "removed": "प्रकाशक नोड सफलतापूर्वक हटाया गया",
             "removed_error": "प्रकाशक नोड उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "प्रकाशक नोड की संख्या"
+            "total_count": "{count} प्रकाशक नोड | {count} प्रकाशक नोड"
         },
         "presets": {
             "tab_description": "यहाँ आप प्रकाशक प्रीसेट प्रबंधित कर सकते हैं।",
@@ -1345,7 +1399,7 @@
             "successful_edit": "प्रकाशक प्रीसेट सफलतापूर्वक अपडेट किया गया",
             "removed": "प्रकाशक प्रीसेट सफलतापूर्वक हटाया गया",
             "removed_error": "प्रकाशक प्रीसेट उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "प्रकाशक प्रीसेट की संख्या"
+            "total_count": "{count} प्रकाशक प्रीसेट | {count} प्रकाशक प्रीसेट"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "बॉट नोड सफलतापूर्वक अपडेट किया गया",
             "removed": "बॉट नोड सफलतापूर्वक हटाया गया",
             "removed_error": "बॉट नोड उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "बॉट नोड की संख्या"
+            "total_count": "{count} बॉट नोड | {count} बॉट नोड"
         },
         "presets": {
             "tab_description": "यहाँ आप बॉट प्रीसेट प्रबंधित कर सकते हैं।",
@@ -1380,7 +1434,7 @@
             "successful_edit": "बॉट प्रीसेट सफलतापूर्वक अपडेट किया गया",
             "removed": "बॉट प्रीसेट सफलतापूर्वक हटाया गया",
             "removed_error": "बॉट प्रीसेट उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "बॉट प्रीसेट की संख्या"
+            "total_count": "{count} बॉट प्रीसेट | {count} बॉट प्रीसेट"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "दूरस्थ पहुँच उपयोग में है और हटाया नहीं जा सका",
             "osint_sources": "साझा किए जाने वाले OSINT स्रोत",
             "report_item_types": "साझा किए जाने वाले रिपोर्ट आइटम प्रकार",
-            "total_count": "दूरस्थ पहुँच की संख्या"
+            "total_count": "{count} रिमोट एक्सेस | {count} रिमोट एक्सेस"
         },
         "nodes": {
             "tab_description": "यहाँ आप दूरस्थ नोड प्रबंधित कर सकते हैं।",
@@ -1420,7 +1474,7 @@
             "successful_edit": "दूरस्थ नोड सफलतापूर्वक अपडेट किया गया",
             "removed": "दूरस्थ नोड सफलतापूर्वक हटाया गया",
             "removed_error": "दूरस्थ नोड उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "दूरस्थ नोड की संख्या"
+            "total_count": "{count} रिमोट नोड | {count} रिमोट नोड"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "डेटा प्रदाता सहेजा नहीं जा सका",
             "remove": "डेटा प्रदाता सफलतापूर्वक हटाया गया",
             "removed_error": "डेटा प्रदाता उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "डेटा प्रदाता की संख्या"
+            "total_count": "{count} डेटा प्रदाता | {count} डेटा प्रदाता"
         },
         "ai": {
             "tab_description": "यहाँ आप AI प्रदाता प्रबंधित कर सकते हैं।",
@@ -1481,11 +1535,13 @@
         "no_categories": "कोई श्रेणियाँ नहीं",
         "add_category_hint": "यह शब्द सूची बनाना शुरू करने के लिए श्रेणी जोड़ें",
         "link_hint": "शब्द प्रविष्टियाँ डाउनलोड करने के लिए वैकल्पिक URL",
-        "total_count": "शब्द सूचियाँ की संख्या",
+        "total_count": "{count} शब्द सूची | {count} शब्द सूचियाँ",
         "file_has_header": "फ़ाइल में हेडर है",
         "import_from_csv": "CSV से आयात करें",
         "load_csv_file": "CSV फ़ाइल लोड करें",
         "download_from_link": "URL से डाउनलोड करें",
+        "download_error": "URL से शब्द सूची डाउनलोड नहीं की जा सकी।",
+        "import_error": "शब्द-सूची फ़ाइल आयात नहीं की जा सकी।",
         "import": "आयात करें",
         "close": "बंद करें",
         "delete_existing_words": "मौजूदा शब्द हटाएँ",
@@ -1506,7 +1562,7 @@
             "successful_edit": "रिपोर्ट आइटम प्रकार सफलतापूर्वक अपडेट किया गया",
             "removed_error": "रिपोर्ट आइटम प्रकार उपयोग में है और हटाया नहीं जा सका",
             "removed": "रिपोर्ट आइटम प्रकार सफलतापूर्वक हटाया गया",
-            "total_count": "रिपोर्ट प्रकार की संख्या"
+            "total_count": "{count} रिपोर्ट प्रकार | {count} रिपोर्ट प्रकार"
         },
         "attributes": {
             "tab_description": "यहाँ आप विशेषताएँ प्रबंधित कर सकते हैं।",
@@ -1524,7 +1580,7 @@
             "edit_constant": "स्थिरांक संपादित करें",
             "value": "मान",
             "error": "विशेषता सहेजा नहीं जा सका",
-            "total_count": "विशेषताएँ की संख्या"
+            "total_count": "{count} विशेषता | {count} विशेषताएँ"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "बाहरी उपयोगकर्ता या अनुमतियाँ लोड नहीं की जा सकीं",
         "successful": "बाहरी उपयोगकर्ता सफलतापूर्वक जोड़ा गया",
         "successful_edit": "बाहरी उपयोगकर्ता सफलतापूर्वक अपडेट किया गया",
-        "total_count": "बाहरी उपयोगकर्ता की संख्या",
+        "total_count": "{count} बाहरी उपयोगकर्ता | {count} बाहरी उपयोगकर्ता",
         "removed": "बाहरी उपयोगकर्ता हटाया गया",
         "removed_error": "बाहरी उपयोगकर्ता हटाया नहीं जा सका"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "परिसंपत्ति समूह सफलतापूर्वक अपडेट किया गया",
         "removed": "परिसंपत्ति समूह सफलतापूर्वक हटाया गया",
         "removed_error": "परिसंपत्ति समूह उपयोग में है और हटाया नहीं जा सका",
-        "total_count": "परिसंपत्ति समूह की संख्या"
+        "total_count": "{count} परिसंपत्ति समूह | {count} परिसंपत्ति समूह"
     },
     "notification_template": {
         "add_new": "नया सूचना टेम्पलेट जोड़ें",
@@ -1594,7 +1650,7 @@
         "successful_edit": "सूचना टेम्पलेट सफलतापूर्वक अपडेट किया गया",
         "removed": "सूचना टेम्पलेट सफलतापूर्वक हटाया गया",
         "removed_error": "सूचना टेम्पलेट उपयोग में है और हटाया नहीं जा सका",
-        "total_count": "सूचना टेम्पलेट की संख्या"
+        "total_count": "{count} अधिसूचना टेम्पलेट | {count} अधिसूचना टेम्पलेट"
     },
     "asset": {
         "add": "परिसंपत्ति जोड़ें",
@@ -1614,13 +1670,15 @@
         "value": "मान",
         "vulnerable": "भेद्य",
         "total": "कुल",
-        "total_count": "परिसंपत्ति की संख्या",
+        "total_count": "{count} परिसंपत्ति | {count} परिसंपत्तियाँ",
         "successful": "नया परिसंपत्ति सफलतापूर्वक जोड़ा गया",
         "successful_edit": "परिसंपत्ति सफलतापूर्वक अपडेट किया गया",
         "removed": "परिसंपत्ति सफलतापूर्वक हटाया गया",
         "removed_error": "परिसंपत्ति उपयोग में है और हटाया नहीं जा सका",
         "vulnerabilities": "भेद्यताएँ",
-        "vulnerabilities_count": "भेद्यताएँ: ",
+        "serial_with_value": "सीरियल नंबर: {value}",
+        "cpe_count": "कोई CPE कोड नहीं | {count} CPE कोड | {count} CPE कोड",
+        "vulnerabilities_count": "कोई भेद्यता नहीं | {count} भेद्यता | {count} भेद्यताएँ",
         "no_vulnerabilities": "कोई भेद्यता नहीं",
         "sort": {
             "alphabetical": "वर्णानुक्रम",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "लॉगिन विधियों की संख्या: ",
+        "total_count": "{count} लॉगिन विधि | {count} लॉगिन विधियाँ",
         "add_new": "नई लॉगिन विधि जोड़ें",
         "edit": "लॉगिन विधि संपादित करें",
         "name": "नाम",
@@ -1680,9 +1738,9 @@
         "require_mfa_hint": "लॉगिन पर उपयोगकर्ताओं को TOTP या passkey से सत्यापन करना होगा",
         "require_mfa_enabled_hint": "इस विधि से साइन-इन करने वाले प्रत्येक व्यक्ति को TOTP या passkey इस्तेमाल करनी होगी।",
         "require_mfa_disabled_hint": "यह लॉगिन विधि MFA आवश्यक नहीं करती। साइट, संगठन या उपयोगकर्ता नीति फिर भी दूसरा कारक आवश्यक कर सकती है।",
-        "issuer_url": "Issuer URL",
+        "issuer_url": "जारीकर्ता URL",
         "issuer_url_hint": "Discovery का मूल URL, जैसे https://idp.example.org/realms/main",
-        "client_id": "Client ID",
+        "client_id": "क्लाइंट ID",
         "scopes": "स्कोप",
         "username_claim": "उपयोगकर्ता नाम claim",
         "email_claim": "ई-मेल claim",
@@ -1695,7 +1753,7 @@
         "pkce_method_hint": "S256 इस्तेमाल करें (अनुशंसित)। None केवल तब चुनें जब प्रदाता PKCE का समर्थन न करे।",
         "pkce_method_none": "None — प्रदाता PKCE का समर्थन नहीं करता",
         "pkce_method_s256": "S256 — अनुशंसित",
-        "pkce_method_plain": "Plain code challenge",
+        "pkce_method_plain": "सादा code challenge",
         "pkce_plain_warning": "पुराने सिस्टम की संगतता: verifier authorization request में दिखाई देता है। इसका उपयोग केवल तब करें जब provider S256 का समर्थन न करे।",
         "pkce_plain_confirm_title": "पुराना PKCE plain मोड इस्तेमाल करें?",
         "pkce_plain_confirm_message": "PKCE plain verifier को browser में दिखाई देने वाली authorization request में उजागर करता है और S256 से कमजोर है। केवल तभी पुष्टि करें जब यह provider S256 का समर्थन न करे।",
@@ -1718,13 +1776,13 @@
         "ca_cert_hint": "वैकल्पिक। सिस्टम trust store इस्तेमाल करने के लिए खाली छोड़ें।",
         "user_dn_template": "उपयोगकर्ता DN या मूल DN",
         "user_dn_template_hint": "Direct bind। {username} वाली पूरी टेम्पलेट (uid={username},ou=people,dc=example,dc=org) या केवल मूल DN (ou=people,dc=example,dc=org) — Username attribute फ़ील्ड का RDN attribute अपने-आप आगे जुड़ता है। Search & bind के लिए खाली छोड़ें।",
-        "ldap_bind_mode_direct": "Direct bind",
+        "ldap_bind_mode_direct": "प्रत्यक्ष bind",
         "ldap_bind_mode_search": "Search & bind (सेवा खाता)",
         "ldap_bind_mode_hint": "Direct bind टेम्पलेट से बने DN के साथ bind करके उपयोगकर्ता को प्रमाणित करता है। Search & bind सेवा खाते से उपयोगकर्ता खोजता है और फिर उसी उपयोगकर्ता के रूप में दोबारा bind करता है। बैकएंड भरे गए फ़ील्ड के आधार पर मार्ग चुनता है।",
         "ldap_bind_mode": "LDAP bind मोड",
         "ldap_bind_mode_direct_hint": "User DN टेम्पलेट से उपयोगकर्ता का DN बनाएँ और उसके दिए पासवर्ड से bind करें। सेवा खाता इस्तेमाल नहीं होता।",
         "ldap_bind_mode_search_hint": "सेवा खाते से bind करें, उपयोगकर्ता खोजें, फिर उसके दिए पासवर्ड से उसी उपयोगकर्ता के रूप में bind करें।",
-        "bind_dn": "Bind DN",
+        "bind_dn": "Bind के लिए DN",
         "bind_dn_hint": "Search & bind मोड के लिए सेवा खाता",
         "bind_password": "Bind पासवर्ड",
         "search_base": "खोज आधार",
@@ -1739,15 +1797,15 @@
         "removed": "लॉगिन विधि हटा दी गई।",
         "remove_error": "यह लॉगिन विधि हटाई नहीं जा सकी।",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — {count} लिंक की गई उपयोगकर्ता पहचानें यह लॉगिन विधि खो देंगी",
+        "delete_message_linked": "{name}: {count} लिंक की गई उपयोगकर्ता पहचान इस लॉगिन विधि को खो देगी | {name}: {count} लिंक की गई उपयोगकर्ता पहचानें इस लॉगिन विधि को खो देंगी",
         "tab_description": "यहाँ आप लॉगिन विधियाँ (पहचान प्रदाता) प्रबंधित कर सकते हैं।",
         "idp_sso_url": "IdP SSO URL",
         "idp_sso_url_hint": "पहचान प्रदाता का HTTP-Redirect binding endpoint",
-        "idp_entity_id": "IdP entity ID",
+        "idp_entity_id": "IdP इकाई ID",
         "idp_entity_id_hint": "SAML प्रतिक्रियाओं का issuer",
         "idp_certificate": "IdP हस्ताक्षर प्रमाणपत्र (PEM)",
         "idp_certificate_hint": "वह प्रमाणपत्र जिससे पहचान प्रदाता प्रतिक्रियाओं पर हस्ताक्षर करता है। Metadata का base64 ब्लॉक पर्याप्त है; key rollover के दौरान कई प्रमाणपत्र रखे जाते हैं।",
-        "sp_entity_id": "SP entity ID",
+        "sp_entity_id": "SP इकाई ID",
         "sp_entity_id_hint": "IdP पर पंजीकृत हमारा entity ID / audience। Federation को स्थायी https:// URL चाहिए।",
         "sp_entity_id_use_suggested": "सुझाया गया मान इस्तेमाल करें (SAML endpoint URL)",
         "acs_url_override": "ACS URL ओवरराइड",
@@ -1760,13 +1818,14 @@
         "saml_idp_urls": "ये URL पहचान प्रदाता को दें",
         "saml_tab_general": "सामान्य",
         "saml_tab_service_information": "सेवा जानकारी",
-        "saml_tab_sp_keypair": "SP keypair",
-        "saml_metadata_url": "SP metadata URL",
-        "saml_acs_url": "Assertion Consumer Service (ACS) URL",
+        "saml_tab_sp_keypair": "SP कुंजी-युग्म",
+        "saml_metadata_url_with_url": "SP मेटाडेटा URL: {url}",
+        "saml_acs_url_with_url": "असर्शन कंज़्यूमर सर्विस (ACS) URL: {url}",
+        "saml_disco_url_with_url": "डिस्कवरी प्रतिक्रिया URL: {url}",
         "idp_metadata": "IdP metadata (URL या XML)",
         "idp_metadata_hint": "पहचान प्रदाता का metadata URL या XML यहाँ चिपकाकर Load दबाएँ — entity ID, SSO URL और हस्ताक्षर प्रमाणपत्र उससे भर जाएंगे।",
         "idp_metadata_load": "लोड करें",
-        "idp_metadata_loaded": "Metadata से लोड हुआ ({count} हस्ताक्षर प्रमाणपत्र)। नीचे के फ़ील्ड जाँचकर सहेजें।",
+        "idp_metadata_loaded": "{count} हस्ताक्षर प्रमाणपत्र के साथ मेटाडेटा लोड किया गया। नीचे दिए गए फ़ील्ड की समीक्षा करके सहेजें। | {count} हस्ताक्षर प्रमाणपत्रों के साथ मेटाडेटा लोड किया गया। नीचे दिए गए फ़ील्ड की समीक्षा करके सहेजें।",
         "idp_metadata_error": "Metadata पढ़ा नहीं जा सका।",
         "sp_keypair": "सेवा प्रदाता keypair",
         "sp_keypair_stored": "key संग्रहीत",
@@ -1788,14 +1847,13 @@
         "discovery_url_hint": "जहाँ उपयोगकर्ता पहचान प्रदाता चुनने जाता है, जैसे https://discovery.example.org/wayf",
         "discovery_params": "Discovery सेवा पैरामीटर",
         "discovery_params_hint": "Discovery URL में जस का तस जुड़ने वाला वैकल्पिक query string। कई federation सूचीबद्ध IdP सीमित करने के लिए filter पैरामीटर स्वीकार करते हैं; इसे federation operator से लें। यह URL-ready होना चाहिए, जैसे filter=...",
-        "federation_metadata_url": "Federation metadata URL",
+        "federation_metadata_url": "फ़ेडरेशन मेटाडेटा URL",
         "federation_metadata_url_hint": "Federation का हस्ताक्षरित metadata संग्रह, जैसे https://metadata.example.org",
         "federation_metadata_cert": "Federation metadata हस्ताक्षर प्रमाणपत्र (PEM)",
         "federation_metadata_cert_hint": "Trust anchor: federation metadata पर तभी भरोसा होता है जब उसका हस्ताक्षर इस प्रमाणपत्र से सत्यापित हो। इसे federation operator से अलग माध्यम से लें और fingerprint मिलाएँ।",
         "federation_verify": "Federation सत्यापित करें",
-        "federation_verify_result": "सत्यापित। {count} उपयोग योग्य पहचान प्रदाता मिले।",
+        "federation_verify_result": "सत्यापन सफल। {count} उपयोग योग्य पहचान प्रदाता मिला। | सत्यापन सफल। {count} उपयोग योग्य पहचान प्रदाता मिले।",
         "federation_verify_error": "Federation metadata सत्यापित नहीं किया जा सका।",
-        "saml_disco_url": "Discovery response URL",
         "sp_metadata_info": "सेवा जानकारी (federation पंजीकरण के लिए)",
         "sp_metadata_info_hint": "SP metadata में प्रकाशित। पंजीकरण स्वीकार करने के लिए federation को आमतौर पर संगठन, संपर्क और display name चाहिए; discovery सेवा पर उपयोगकर्ताओं को भी यही दिखते हैं।",
         "sp_display_name": "सेवा का display name",
@@ -1816,25 +1874,27 @@
         "sp_contact_surname_hint": "Metadata में प्रकाशित तकनीकी संपर्क का उपनाम (आमतौर पर federation के लिए आवश्यक)। खाली होने पर संपर्क नाम के अंतिम शब्द से निकाला जाता है।"
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "सुरक्षा",
+        "enabled": "सक्षम",
+        "disabled": "अक्षम",
+        "error": "कार्रवाई विफल रही।",
+        "totp_title": "प्रमाणक ऐप (TOTP)",
+        "totp_hint": "लॉगिन पर प्रमाणक ऐप से एक बार इस्तेमाल होने वाला कोड आवश्यक करें।",
+        "totp_enable": "सक्षम करें",
+        "totp_scan": "अपने प्रमाणक ऐप से QR कोड स्कैन करें और एक कोड से पुष्टि करें।",
+        "totp_qr_alt": "प्रमाणक ऐप पंजीकरण के लिए QR कोड",
+        "totp_code": "प्रमाणीकरण कोड",
+        "totp_activate": "सक्रिय करें",
+        "totp_disable": "अक्षम करें",
+        "totp_enabled": "दो-कारक प्रमाणीकरण सक्षम किया गया।",
+        "totp_disabled": "दो-कारक प्रमाणीकरण अक्षम किया गया।",
+        "passkeys_title": "पासकी",
+        "passkey_add": "पासकी जोड़ें",
+        "passkey_name": "नाम",
+        "default_passkey_name": "पासकी",
+        "passkey_created": "बनाने का समय",
+        "passkey_last_used": "अंतिम इस्तेमाल",
+        "passkey_added": "पासकी पंजीकृत हो गई।",
+        "no_passkeys": "कोई पासकी पंजीकृत नहीं है।"
     }
 }

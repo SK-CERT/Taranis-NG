@@ -14,42 +14,42 @@
             "organizations": "組織",
             "roles": "ロール",
             "permissions": "権限",
-            "total_count": "ユーザー数",
+            "total_count": "ユーザー {count} 人 | ユーザー {count} 人",
             "password": "パスワード",
             "password_check": "パスワードを再入力",
             "password_mismatch": "パスワードが一致しません",
-            "email": "E-mail",
-            "status": "Status",
+            "email": "メールアドレス",
+            "status": "ステータス",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "承認待ち",
+                "active": "有効",
+                "disabled": "無効"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "ログイン方法",
+            "local_password": "ローカル",
+            "mfa_enabled": "二要素認証が有効",
+            "approve": "承認",
+            "disable": "無効にする",
+            "enable": "有効にする",
+            "status_error": "ユーザーのステータスを変更できませんでした。",
+            "reset_mfa": "MFA をリセット",
+            "reset_mfa_message": "{username} の二要素認証登録（TOTP とパスキー）をすべて削除しますか？",
+            "reset_mfa_choose": "{username} についてリセットする項目を選択してください：",
+            "reset_mfa_totp_only": "TOTP のみ（認証アプリ）",
+            "reset_mfa_passkeys_only": "パスキーのみ",
+            "reset_mfa_both": "TOTP とパスキーの両方",
+            "password_hint": "外部 ID があるユーザーは任意です",
+            "clear_password": "ローカルパスワードを削除（パスワードでのログインを無効化）",
+            "require_mfa": "二要素認証を要求する",
+            "require_mfa_hint": "このユーザーのみに適用されますが、サイト、組織、またはログイン方法によって要求される場合もあります",
+            "identities": "ログイン ID",
+            "add_identity": "ID をリンク",
+            "edit_identity": "ID を編集",
+            "no_identities": "リンクされた外部 ID はありません",
+            "identity_provider": "プロバイダー",
+            "external_username": "プロバイダーでのユーザー名",
+            "external_username_hint": "ID プロバイダーでこのユーザーが使用しているユーザー名",
+            "last_login": "最終ログイン"
         },
         "roles": {
             "tab_description": "ここではロールとその権限を管理できます。",
@@ -65,7 +65,7 @@
             "removed_error": "ロールは使用中のため削除できませんでした",
             "title": "タイトル",
             "permissions": "権限",
-            "total_count": "ロール数"
+            "total_count": "ロール {count} 件 | ロール {count} 件"
         },
         "acls": {
             "tab_description": "ここではアクセス制御リスト（ACL）を管理できます。",
@@ -87,7 +87,7 @@
             "removed_error": "ACLは使用中のため削除できませんでした",
             "roles": "ロール",
             "users": "ユーザー",
-            "total_count": "ACL数"
+            "total_count": "ACL {count} 件 | ACL {count} 件"
         },
         "organizations": {
             "tab_description": "ここでは組織を管理できます。",
@@ -95,7 +95,10 @@
             "edit": "組織を編集",
             "error": "この組織を作成できませんでした。",
             "name": "名前",
+            "required_fields_hint": "* 印のフィールドは必須です。",
             "description": "説明",
+            "require_mfa": "二要素認証を要求する",
+            "require_mfa_hint": "この組織のすべてのメンバーに第二要素が必要です",
             "street": "番地・通り",
             "city": "市区町村",
             "zip": "郵便番号",
@@ -104,38 +107,35 @@
             "successful_edit": "組織を更新しました",
             "removed": "組織を削除しました",
             "removed_error": "組織は使用中のため削除できませんでした",
-            "total_count": "組織数",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor",
-            "required_fields_hint": "* 印のフィールドは必須です。"
+            "total_count": "組織 {count} 件 | 組織 {count} 件"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings.",
-            "require_mfa_enabled_hint": "すべてのユーザーが TOTP または passkey を登録し、サインイン時に使用する必要があります。",
+            "tab_description": "ここでは、サイト全体のセキュリティ設定を構成できます。",
+            "mfa_title": "二要素認証",
+            "mfa_description": "このサイト、ユーザーの組織、ログイン方法、またはユーザー本人のいずれかが要求した場合、第二要素が必須になります。",
+            "require_mfa": "すべてのユーザーに二要素認証を要求する",
+            "require_mfa_hint": "第二要素を設定していないユーザーには、次回ログイン時に TOTP の登録手順が表示されます",
+            "require_mfa_enabled_hint": "すべてのユーザーが TOTP またはパスキーを登録し、サインイン時に使用する必要があります。",
             "require_mfa_disabled_hint": "サイト全体の MFA 要件はありません。組織、ログイン方法、またはユーザーポリシーが第2要素を要求する場合があります。",
-            "passkey_enabled_on_hint": "パスワードなしの passkey サインインを利用でき、ユーザーは passkey を登録できます。",
-            "passkey_enabled_off_hint": "Passkey サインインと新しい passkey の登録は利用できません。",
-            "rp_id_use_suggested": "推奨 RP ID を使用"
+            "passkeys_title": "パスキー (WebAuthn)",
+            "passkeys_description": "パスキーはユーザーが所有する認証情報であり、各自のセキュリティ設定で登録します。これらのオプションは認証器にこのサイトの情報を伝え、機能を有効にします。",
+            "passkey_enabled": "パスキーでのサインインを有効にする",
+            "passkey_enabled_hint": "ログインページでパスワードなしのサインインを提供し、ユーザーによるパスキーの登録を許可します",
+            "passkey_enabled_on_hint": "パスワードなしのパスキーサインインを利用でき、ユーザーはパスキーを登録できます。",
+            "passkey_enabled_off_hint": "パスキーサインインと新しいパスキーの登録は利用できません。",
+            "passkey_second_factor": "パスキーを第二要素として受け入れる",
+            "passkey_second_factor_hint": "無効にすると、パスキーを登録済みのユーザーでも、第二要素として使用できるのは TOTP のみです",
+            "rp_id": "リライングパーティー ID",
+            "rp_id_hint": "このサイトのドメインである必要があります（例：{host}）",
+            "rp_id_use_suggested": "推奨 RP ID を使用",
+            "rp_name": "リライングパーティー名",
+            "rp_name_hint": "サインイン時に認証器に表示されます",
+            "origins": "許可するオリジン",
+            "origins_hint": "ログインページを提供する絶対 URL をカンマで区切って入力します",
+            "origins_invalid": "各オリジンは絶対 URL である必要があります (https://host)",
+            "secure_context_hint": "WebAuthn にはセキュアコンテキストが必要です。HTTPS、または localhost でのみ平文 HTTP を使用できます。",
+            "last_updated": "{user} が {at} に最終更新",
+            "error": "セキュリティ設定を保存できませんでした。"
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "ログイン",
         "submit": "ログイン",
         "error": "ユーザー名またはパスワードが正しくありません",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "ログイン方法",
+        "pending_approval": "アカウントは管理者の承認待ちです。",
+        "account_disabled": "アカウントは無効になっています。管理者にお問い合わせください。",
+        "username_collision": "このユーザー名のアカウントは既に存在します。この ID を既存のアカウントにリンクするよう管理者に依頼してください。",
+        "account_not_linked": "この ID はどのアカウントにもリンクされていません。管理者にお問い合わせください。",
+        "domain_not_allowed": "お使いのメールドメインでは登録できません。管理者にお問い合わせください。",
+        "auth_cancelled": "サインインがキャンセルされました。もう一度お試しください。",
+        "totp_invalid": "認証コードが無効です。",
+        "passkey_sign_in": "パスキーでサインイン",
+        "sign_in_with": "{name} でサインイン",
+        "external_provider": "外部ログイン",
+        "methods_error": "ログイン方法を読み込めませんでした。もう一度お試しください。",
+        "mfa_title": "二要素認証",
+        "mfa_code": "認証コード",
+        "mfa_verify": "確認",
+        "mfa_use_passkey": "代わりにパスキーを使用",
+        "enroll_title": "二要素認証を設定",
+        "enroll_hint": "認証アプリで QR コードを読み取り、生成されたコードを入力してください。",
+        "enroll_activate": "有効化",
+        "enroll_use_passkey": "代わりにパスキーを登録",
+        "enroll_passkey_name": "パスキー",
+        "back": "ログインに戻る"
     },
     "home": {
         "redirecting": "リダイレクトしています…",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "設定",
         "logout": "ログアウト",
-        "security": "Security"
+        "security": "Security",
+        "unknown_user": "不明なユーザー",
+        "no_organization": "組織なし"
     },
     "main_menu": {
         "enter": "入力",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "オペレーショナルインテリジェンスのワークスペース",
         "refresh": "ダッシュボードを更新",
+        "metrics": {
+            "news_items_summary": "ニュース項目はありません | ニュース項目は合計 {count} 件です | ニュース項目は合計 {count} 件です",
+            "report_items_summary": "レポート項目はありません | レポート項目は合計 {count} 件です | レポート項目は合計 {count} 件です",
+            "products_summary": "製品はありません | 製品は合計 {count} 件です | 製品は合計 {count} 件です"
+        },
         "assess": {
             "trending": "注目のインテリジェンス",
             "tagcloud": "最新の収集ニュース項目のタグクラウド",
-            "total": "ニュース項目の合計"
+            "total": "ニュース項目の合計",
+            "ingestion_chart": "{period}のニュース項目取り込み数",
+            "ingestion_point": "{date}のニュース項目はありません | {date}のニュース項目は {count} 件です | {date}のニュース項目は {count} 件です"
         },
         "collect": {
             "title": "コレクター",
@@ -253,8 +262,14 @@
             "title": "概要",
             "version": "バージョン",
             "commit": "コミット",
-            "total": "レコードの合計"
+            "total": "レコードの合計",
+            "built_at": "ビルド日時: {date}",
+            "committed_at": "コミット日時: {date}"
         }
+    },
+    "word_cloud": {
+        "label": "ワードクラウド",
+        "word_action_count": "{word} — {action}: 結果なし | {word} — {action}: {count} 件 | {word} — {action}: {count} 件"
     },
     "nav_menu": {
         "enter": "ニュース項目を作成",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "タイトル",
         "created": "作成日時",
-        "updated": "更新日時",
-        "collected": "収集日時",
-        "published": "公開済み",
-        "source": "ソース",
         "node": "ノード",
         "description": "説明",
-        "in_analyze": "分析中",
-        "analyzed": "分析済み",
         "url": "URL",
         "name": "名前",
         "username": "ユーザー名",
@@ -332,7 +341,18 @@
         "last_seen": "最終確認",
         "last_attempted": "最終試行",
         "last_collected": "最終収集",
-        "last_error": "最終エラー"
+        "last_error": "最終エラー",
+        "source_with_type": "{source}（{type}）",
+        "source_with_value": "ソース: {source}",
+        "author_with_value": "作成者: {author}",
+        "published_at": "公開日時: {date}",
+        "collected_at": "収集日時: {date}",
+        "link_with_url": "リンク: {url}",
+        "unknown_source": "不明なソース",
+        "not_available": "利用不可",
+        "aggregated_items_count": "集約されたニュース項目はありません | 集約されたニュース項目: {count} 件 | 集約されたニュース項目: {count} 件",
+        "in_analyze_count": "進行中の分析はありません | 進行中の分析: {count} 件 | 進行中の分析: {count} 件",
+        "analyzed_count": "完了した分析はありません | 完了した分析: {count} 件 | 完了した分析: {count} 件"
     },
     "attribute": {
         "add_constant": "定数を追加",
@@ -385,10 +405,22 @@
         "ai_provider": "AIモデル",
         "ai_prompt": "AIプロンプト",
         "add_attribute": "属性を追加",
-        "edit_attribute": "属性を編集"
+        "edit_attribute": "属性を編集",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "CVSSベクターとスコア",
+        "last_updated_at": "最終更新: {date}",
+        "updated_by_user": "更新者: {user}",
+        "tlp_description_clear": "開示に制限はありません。",
+        "tlp_description_green": "コミュニティ内に限り開示できます。",
+        "tlp_description_amber": "知る必要がある場合に限り、受信者の組織およびその顧客に開示できます。",
+        "tlp_description_amber_strict": "受信者の組織内に限り開示できます。",
+        "tlp_description_red": "指定された受信者以外への開示は禁止されています。",
+        "tlp_description_unknown": "不明なTLPマーキングです。"
     },
     "cvss_calculator": {
         "title": "CVSS計算ツール",
+        "tooltips": "メトリクスのツールチップを表示",
+        "vector_placeholder": "CVSSベクター（例: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H）",
         "base_score": "基本スコア",
         "attack_vector": "攻撃元区分 (AV)",
         "attack_complexity": "攻撃条件の複雑さ (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "この評価基準は、脆弱なコンポーネントへの侵害を成功させるために、攻撃者以外のユーザーが関与する必要性を表します。脆弱性を攻撃者の意思だけで悪用できるか、別のユーザーまたはユーザーが開始したプロセスが何らかの形で関与しなければならないかを判定します。",
         "UI_N_Label": "どのユーザーからも一切の操作を必要とせずに、脆弱なシステムを悪用できます。",
         "UI_R_Label": "この脆弱性の悪用を成功させるには、悪用可能となる前にユーザーが何らかの操作を行う必要があります。",
-        "S_Heading": "攻撃が成功した場合、脆弱なコンポーネント以外のコンポーネントに影響しますか。影響する場合は基本スコアが上昇し、機密性、完全性、認証の各評価基準は影響を受けるコンポーネントを基準に評価します。",
+        "S_Heading": "攻撃が成功した場合、脆弱なコンポーネント以外のコンポーネントに影響しますか。影響する場合は基本スコアが上昇し、機密性、完全性、可用性の各評価基準は影響を受けるコンポーネントを基準に評価します。",
         "S_U_Label": "悪用された脆弱性が影響できるのは、同一のセキュリティ権限によって管理されるリソースに限られます。この場合、脆弱なコンポーネントと影響を受けるコンポーネントは同一であるか、どちらも同じセキュリティ権限によって管理されています。",
         "S_C_Label": "悪用された脆弱性は、脆弱なコンポーネントのセキュリティ権限が管理するセキュリティスコープを越えたリソースに影響できます。この場合、脆弱なコンポーネントと影響を受けるコンポーネントは異なり、それぞれ異なるセキュリティ権限によって管理されています。",
         "C_Heading": "この評価基準は、脆弱性の悪用に成功したことで、ソフトウェアコンポーネントが管理する情報資源の機密性に及ぶ影響を測定します。機密性とは、情報へのアクセスと開示を認可されたユーザーだけに制限し、認可されていないユーザーによるアクセスや開示を防止することです。",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "対応する基本評価基準に指定された値を使用します。",
         "MUI_N_Label": "どのユーザーからも一切の操作を必要とせずに、脆弱なシステムを悪用できます。",
         "MUI_R_Label": "この脆弱性の悪用を成功させるには、悪用可能となる前にユーザーが何らかの操作を行う必要があります。",
-        "MS_Heading": "攻撃が成功した場合、脆弱なコンポーネント以外のコンポーネントに影響しますか。影響する場合は基本スコアが上昇し、機密性、完全性、認証の各評価基準は影響を受けるコンポーネントを基準に評価します。",
+        "MS_Heading": "攻撃が成功した場合、脆弱なコンポーネント以外のコンポーネントに影響しますか。影響する場合は基本スコアが上昇し、機密性、完全性、可用性の各評価基準は影響を受けるコンポーネントを基準に評価します。",
         "MS_X_Label": "対応する基本評価基準に指定された値を使用します。",
         "MS_U_Label": "悪用された脆弱性が影響できるのは、同一のセキュリティ権限によって管理されるリソースに限られます。この場合、脆弱なコンポーネントと影響を受けるコンポーネントは同一であるか、どちらも同じセキュリティ権限によって管理されています。",
         "MS_C_Label": "悪用された脆弱性は、脆弱なコンポーネントのセキュリティ権限が管理するセキュリティスコープを越えたリソースに影響できます。この場合、脆弱なコンポーネントと影響を受けるコンポーネントは異なり、それぞれ異なるセキュリティ権限によって管理されています。",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "後続システム内で可用性への影響はありません。"
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "新規レポート項目を作成",
         "edit": "レポート項目を編集",
         "read": "レポート項目のプレビュー",
@@ -704,6 +736,7 @@
         "attributes": "属性",
         "no_attributes": "属性はありません",
         "side_by_side": "並列表示",
+        "enter_rich_text": "リッチテキストを入力",
         "confirm_close": {
             "message": "未保存の変更があります。このレポート項目を閉じてもよろしいですか？"
         },
@@ -752,13 +785,15 @@
         "publish": "プロダクトを公開",
         "publish_confirmation": "次のプロダクトを公開してもよろしいですか？",
         "publish_confirmation_message": "このプロダクトを公開してもよろしいですか？",
+        "publish_confirmation_type": "製品タイプ: {type}",
+        "publish_confirmation_publishers": "パブリッシャー: {publishers}",
         "no_type": "種類が選択されていません",
         "no_publisher_in_dialog": "なし",
         "publish_successful": "プロダクトを公開しました",
         "publish_failed": "プロダクトの公開に失敗しました",
         "publish_error": "プロダクトの公開中にエラーが発生しました",
         "no_publisher_selected": "パブリッシャーを1つ以上選択してください",
-        "total_count": "プロダクト数",
+        "total_count": "製品 {count} 件 | 製品 {count} 件",
         "confirm_close": {
             "message": "未保存の変更があります。変更を保存せずにこのプロダクトを閉じてもよろしいですか？"
         },
@@ -782,8 +817,12 @@
         "sort": "並べ替え",
         "from": "開始",
         "to": "終了",
-        "total_count": "レポート項目数",
+        "total_count": "レポート項目 {count} 件 | レポート項目 {count} 件",
         "no_items": "レポート項目はありません",
+        "updated_at": "更新日時: {date}",
+        "updated_at_by": "{user}が{date}に更新",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "ニュース項目はありません | ニュース項目 {count} 件 | ニュース項目 {count} 件",
         "tooltip": {
             "filter_all": "現在の表示: すべて",
             "filter_completed": "現在の表示: 完了",
@@ -812,7 +851,7 @@
             "remove_item": "レポート項目を取り除く",
             "publish_item": "レポート項目からプロダクトを作成"
         },
-        "select_all_success": "{count}件のレポート項目を選択しました",
+        "select_all_success": "レポート項目を {count} 件選択しました | レポート項目を {count} 件選択しました",
         "select": {
             "placeholder": "分析対象を選択…",
             "option_news_items": "選択したニュース項目",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "ソース",
-        "link": "リンク",
         "comments": "コメント",
-        "collected": "収集日時",
-        "published": "公開済み",
-        "author": "作成者",
         "add_news_item": "ニュース項目を追加",
         "attached_news_items": "添付されたニュース項目",
         "read_news_item": "クリックして読む",
@@ -841,8 +876,8 @@
         "auto_save_blur": "フォーカスが外れると自動保存",
         "auto_save_changes": "変更時に自動保存",
         "download": "ダウンロード",
-        "total_count": "ニュース項目数",
-        "selected_count": "選択したニュース項目数",
+        "total_count": "ニュース項目 {count} 件 | ニュース項目 {count} 件",
+        "selected_count": "ニュース項目を {count} 件選択 | ニュース項目を {count} 件選択",
         "no_items": "ニュース項目はありません",
         "item_updated": "ニュース項目を更新しました",
         "item_deleted": "ニュース項目を削除しました",
@@ -916,11 +951,14 @@
             "error_loading": "レポートの読み込み中にエラーが発生しました",
             "error_removing": "集約からレポートを削除中にエラーが発生しました"
         },
-        "select_all_success": "{count}件のニュース項目を選択しました",
+        "select_all_success": "ニュース項目を {count} 件選択しました | ニュース項目を {count} 件選択しました",
         "groups": "グループ",
-        "show_new_items": "新しい項目を表示（{count}件）"
+        "show_new_items": "新しいニュース項目を {count} 件表示 | 新しいニュース項目を {count} 件表示"
     },
     "publish": {
+        "updated_at": "更新日時: {date}",
+        "updated_at_by": "{user}が{date}に更新",
+        "report_items_count": "レポート項目はありません | レポート項目 {count} 件 | レポート項目 {count} 件",
         "tooltip": {
             "filter_all": "現在の表示: すべて",
             "filter_published": "現在の表示: 公開済み",
@@ -946,7 +984,7 @@
             "delete_items": "プロダクトを削除",
             "delete_item": "プロダクトを削除"
         },
-        "select_all_success": "{count}件のプロダクトを選択しました",
+        "select_all_success": "製品を {count} 件選択しました | 製品を {count} 件選択しました",
         "no_items": "プロダクトはありません"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "過去7日間",
         "last_31_days": "過去31日間",
         "custom_filter": "カスタムフィルター",
-        "total_count": "合計数",
-        "currently_showing": "現在の表示",
-        "selected_count": "選択数",
+        "total_count": "合計 {count} 件 | 合計 {count} 件",
+        "currently_showing": "{count} 件を表示中 | {count} 件を表示中",
+        "selected_count": "{count} 件を選択 | {count} 件を選択",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "ユーザー設定",
         "tab_general": "一般",
+        "tab_security": "Security",
         "tab_wordlists": "単語リスト",
         "tab_hotkeys": "ホットキー",
         "close_item_1": "項目を閉じる（ホットキー1）",
@@ -990,7 +1029,7 @@
         "like_item": "項目を高評価",
         "unlike_item": "項目の高評価を解除",
         "delete_item": "項目を削除",
-        "press_key": "次の操作に割り当てる新しいキーを押してください: ",
+        "press_key_for": "{action}に割り当てる新しいキーを押してください",
         "selection": "選択",
         "group": "グループ化",
         "ungroup": "グループ解除",
@@ -1015,7 +1054,9 @@
         "boolean_error": "値は「True」または「False」でなければなりません。",
         "integer_error": "有効な整数を入力してください。",
         "decimal_error": "有効な小数を入力してください。",
-        "default_value": "既定値",
+        "default_value_with_value": "デフォルト値: {value}",
+        "input_too_long": "値は {count} 文字です。上限は {max} 文字です。",
+        "language_name_with_code": "{name}（{code}）",
         "update_value": "値を更新",
         "description": "説明",
         "value": "値",
@@ -1023,8 +1064,7 @@
         "updated_at": "更新日時",
         "actions": "操作",
         "api_key": "APIキー",
-        "my_assets_view": "マイアセット",
-        "tab_security": "Security"
+        "my_assets_view": "マイアセット"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "状態変更を自動的に連鎖",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "ここにファイルをドラッグするか、クリックして選択してください",
         "file_description": "説明",
-        "last_updated": "最終更新",
+        "last_updated_by_at": "{user}が{date}に最終更新",
+        "last_updated_at": "最終更新: {date}",
+        "attachment_by": "添付者: {user}",
         "download": "ダウンロード",
         "attachment_load": "添付ファイルを読み込む",
         "attachment_detail": "添付ファイルの詳細"
@@ -1141,11 +1183,17 @@
         "attributes": "属性",
         "save": "保存",
         "edit": "編集",
+        "edit_named": "{title}を編集",
+        "select": "選択",
         "done": "完了",
         "up": "上へ移動",
         "down": "下へ移動",
         "remove": "削除",
         "delete": "削除",
+        "publish": "公開",
+        "lock": "ロック",
+        "open": "開く",
+        "open_source": "ソースを開く",
         "download": "ダウンロード",
         "yes": "はい",
         "no": "いいえ",
@@ -1165,6 +1213,12 @@
         "no_permission": "この操作を実行する権限がありません",
         "loading_more": "さらに読み込んでいます…",
         "end_of_list": "一覧の末尾です",
+        "fetching_items": "項目を取得中…",
+        "no_items_to_select": "選択できる項目がありません。",
+        "select_at_least_two_to_group": "グループを作成するには、2件以上の項目を選択してください。",
+        "no_grouped_items_selected": "グループ解除する項目を1件以上選択してください。",
+        "processing_items": "{count} 件を処理中… | {count} 件を処理中…",
+        "deleting_items": "{count} 件を削除中… | {count} 件を削除中…",
         "messagebox": {
             "delete": "次の項目を削除してもよろしいですか？",
             "delete_confirm": "「{name}」を削除してもよろしいですか？",
@@ -1192,7 +1246,7 @@
             "removed_error": "OSINTソースグループは使用中のため削除できませんでした",
             "title": "タイトル",
             "osint_sources": "OSINTソース",
-            "total_count": "OSINTソースグループ数",
+            "total_count": "OSINTソースグループ {count} 件 | OSINTソースグループ {count} 件",
             "default_group": "未分類",
             "default_group_description": "未分類のOSINTソース用の既定グループ",
             "all": "すべてのソース"
@@ -1216,7 +1270,7 @@
             "removed_error": "OSINTソースは使用中のため削除できませんでした",
             "filter_wordlist": "単語リストフィルター",
             "type": "種類",
-            "total_count": "OSINTソース数",
+            "total_count": "OSINTソース {count} 件 | OSINTソース {count} 件",
             "osint_source_groups": "OSINTソースグループ",
             "tooltip": {
                 "select_all": "すべてを選択",
@@ -1239,7 +1293,7 @@
             "node_required": "コレクターノードを選択",
             "export_all_hint": "すべてのソースをエクスポート",
             "export_selected_hint": "選択したソースをエクスポート",
-            "selected_count": "{count}件を選択"
+            "selected_count": "OSINTソースを {count} 件選択 | OSINTソースを {count} 件選択"
         },
         "nodes": {
             "tab_description": "ここではコレクターノードを管理できます。",
@@ -1254,7 +1308,7 @@
             "successful_edit": "コレクターノードを更新しました",
             "removed": "コレクターノードを削除しました",
             "removed_error": "コレクターノードは使用中のため削除できませんでした",
-            "total_count": "コレクターノード数"
+            "total_count": "コレクターノード {count} 件 | コレクターノード {count} 件"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "プレゼンターノードを更新しました",
             "removed": "プレゼンターノードを削除しました",
             "removed_error": "プレゼンターノードは使用中のため削除できませんでした",
-            "total_count": "プレゼンターノード数"
+            "total_count": "プレゼンターノード {count} 件 | プレゼンターノード {count} 件"
         },
         "types": {
             "tab_description": "ここではプロダクト種別を管理できます。",
@@ -1289,7 +1343,7 @@
             "successful_edit": "プロダクト種別を更新しました",
             "removed": "プロダクト種別を削除しました",
             "removed_error": "プロダクト種別は使用中のため削除できませんでした",
-            "total_count": "プロダクト種別数",
+            "total_count": "製品タイプ {count} 件 | 製品タイプ {count} 件",
             "help": "テンプレートパラメーターの説明",
             "close": "閉じる",
             "choose_report_type": "レポート種別を選択するとパラメーターの説明が表示されます",
@@ -1328,7 +1382,7 @@
             "successful_edit": "パブリッシャーノードを更新しました",
             "removed": "パブリッシャーノードを削除しました",
             "removed_error": "パブリッシャーノードは使用中のため削除できませんでした",
-            "total_count": "パブリッシャーノード数"
+            "total_count": "パブリッシャーノード {count} 件 | パブリッシャーノード {count} 件"
         },
         "presets": {
             "tab_description": "ここではパブリッシャープリセットを管理できます。",
@@ -1345,7 +1399,7 @@
             "successful_edit": "パブリッシャープリセットを更新しました",
             "removed": "パブリッシャープリセットを削除しました",
             "removed_error": "パブリッシャープリセットは使用中のため削除できませんでした",
-            "total_count": "パブリッシャープリセット数"
+            "total_count": "パブリッシャープリセット {count} 件 | パブリッシャープリセット {count} 件"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "ボットノードを更新しました",
             "removed": "ボットノードを削除しました",
             "removed_error": "ボットノードは使用中のため削除できませんでした",
-            "total_count": "ボットノード数"
+            "total_count": "ボットノード {count} 件 | ボットノード {count} 件"
         },
         "presets": {
             "tab_description": "ここではボットプリセットを管理できます。",
@@ -1380,7 +1434,7 @@
             "successful_edit": "ボットプリセットを更新しました",
             "removed": "ボットプリセットを削除しました",
             "removed_error": "ボットプリセットは使用中のため削除できませんでした",
-            "total_count": "ボットプリセット数"
+            "total_count": "ボットプリセット {count} 件 | ボットプリセット {count} 件"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "リモートアクセスは使用中のため削除できませんでした",
             "osint_sources": "共有するOSINTソース",
             "report_item_types": "共有するレポート項目種別",
-            "total_count": "リモートアクセス数"
+            "total_count": "リモートアクセス {count} 件 | リモートアクセス {count} 件"
         },
         "nodes": {
             "tab_description": "ここではリモートノードを管理できます。",
@@ -1420,7 +1474,7 @@
             "successful_edit": "リモートノードを更新しました",
             "removed": "リモートノードを削除しました",
             "removed_error": "リモートノードは使用中のため削除できませんでした",
-            "total_count": "リモートノード数"
+            "total_count": "リモートノード {count} 件 | リモートノード {count} 件"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "データプロバイダーを保存できませんでした",
             "remove": "データプロバイダーを削除しました",
             "removed_error": "データプロバイダーは使用中のため削除できませんでした",
-            "total_count": "データプロバイダー数"
+            "total_count": "データプロバイダー {count} 件 | データプロバイダー {count} 件"
         },
         "ai": {
             "tab_description": "ここではAIプロバイダーを管理できます。",
@@ -1481,11 +1535,13 @@
         "no_categories": "カテゴリーはありません",
         "add_category_hint": "カテゴリーを追加して、この単語リストの作成を開始してください",
         "link_hint": "単語エントリーをダウンロードするための任意のURL",
-        "total_count": "単語リスト数",
+        "total_count": "単語リスト {count} 件 | 単語リスト {count} 件",
         "file_has_header": "ファイルにヘッダーがある",
         "import_from_csv": "CSVからインポート",
         "load_csv_file": "CSVファイルを読み込む",
         "download_from_link": "URLからダウンロード",
+        "download_error": "URLから単語リストをダウンロードできませんでした。",
+        "import_error": "単語リストファイルをインポートできませんでした。",
         "import": "インポート",
         "close": "閉じる",
         "delete_existing_words": "既存の単語を削除",
@@ -1506,7 +1562,7 @@
             "successful_edit": "レポート項目種別を更新しました",
             "removed_error": "レポート項目種別は使用中のため削除できませんでした",
             "removed": "レポート項目種別を削除しました",
-            "total_count": "レポート種別数"
+            "total_count": "レポートタイプ {count} 件 | レポートタイプ {count} 件"
         },
         "attributes": {
             "tab_description": "ここでは属性を管理できます。",
@@ -1524,7 +1580,7 @@
             "edit_constant": "定数を編集",
             "value": "値",
             "error": "属性を保存できませんでした",
-            "total_count": "属性数"
+            "total_count": "属性 {count} 件 | 属性 {count} 件"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "外部ユーザーまたは権限を読み込めませんでした",
         "successful": "外部ユーザーを追加しました",
         "successful_edit": "外部ユーザーを更新しました",
-        "total_count": "外部ユーザー数",
+        "total_count": "外部ユーザー {count} 人 | 外部ユーザー {count} 人",
         "removed": "外部ユーザーを削除しました",
         "removed_error": "外部ユーザーを削除できませんでした"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "アセットグループを更新しました",
         "removed": "アセットグループを削除しました",
         "removed_error": "アセットグループは使用中のため削除できませんでした",
-        "total_count": "アセットグループ数"
+        "total_count": "アセットグループ {count} 件 | アセットグループ {count} 件"
     },
     "notification_template": {
         "add_new": "新規通知テンプレートを追加",
@@ -1594,7 +1650,7 @@
         "successful_edit": "通知テンプレートを更新しました",
         "removed": "通知テンプレートを削除しました",
         "removed_error": "通知テンプレートは使用中のため削除できませんでした",
-        "total_count": "通知テンプレート数"
+        "total_count": "通知テンプレート {count} 件 | 通知テンプレート {count} 件"
     },
     "asset": {
         "add": "アセットを追加",
@@ -1614,13 +1670,15 @@
         "value": "値",
         "vulnerable": "脆弱",
         "total": "合計",
-        "total_count": "アセット数",
+        "total_count": "アセット {count} 件 | アセット {count} 件",
         "successful": "新規アセットを追加しました",
         "successful_edit": "アセットを更新しました",
         "removed": "アセットを削除しました",
         "removed_error": "アセットは使用中のため削除できませんでした",
         "vulnerabilities": "脆弱性",
-        "vulnerabilities_count": "脆弱性: ",
+        "serial_with_value": "シリアル番号: {value}",
+        "cpe_count": "CPEコードはありません | CPEコード {count} 件 | CPEコード {count} 件",
+        "vulnerabilities_count": "脆弱性はありません | 脆弱性 {count} 件 | 脆弱性 {count} 件",
         "no_vulnerabilities": "脆弱性はありません",
         "sort": {
             "alphabetical": "アルファベット順",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "ログイン方法の数: ",
+        "total_count": "ログイン方法 {count} 件 | ログイン方法 {count} 件",
         "add_new": "ログイン方法を追加",
         "edit": "ログイン方法を編集",
         "name": "名前",
@@ -1680,9 +1738,9 @@
         "require_mfa_hint": "ログイン時に TOTP または passkey による確認が必要です",
         "require_mfa_enabled_hint": "この方法でサインインする全員が TOTP または passkey を使用する必要があります。",
         "require_mfa_disabled_hint": "このログイン方法自体は MFA を要求しません。サイト、組織、またはユーザーポリシーによって第2要素が要求される場合があります。",
-        "issuer_url": "Issuer URL",
+        "issuer_url": "発行者 URL",
         "issuer_url_hint": "Discovery のベース URL（例: https://idp.example.org/realms/main）",
-        "client_id": "Client ID",
+        "client_id": "クライアント ID",
         "scopes": "スコープ",
         "username_claim": "ユーザー名 claim",
         "email_claim": "メール claim",
@@ -1695,7 +1753,7 @@
         "pkce_method_hint": "S256 を使用してください（推奨）。プロバイダーが PKCE に対応していない場合に限り None を選択します。",
         "pkce_method_none": "None — プロバイダーは PKCE 非対応",
         "pkce_method_s256": "S256 — 推奨",
-        "pkce_method_plain": "Plain code challenge",
+        "pkce_method_plain": "プレーンコードチャレンジ (plain)",
         "pkce_plain_warning": "レガシー互換性：認可リクエスト内で verifier が公開されます。プロバイダーが S256 に対応していない場合にのみ使用してください。",
         "pkce_plain_confirm_title": "レガシー PKCE plain を使用しますか？",
         "pkce_plain_confirm_message": "PKCE plain はブラウザーから見える認可リクエスト内で verifier を公開するため、S256 より安全性が低くなります。このプロバイダーが S256 に対応していない場合にのみ確認してください。",
@@ -1718,13 +1776,13 @@
         "ca_cert_hint": "任意。空欄の場合はシステムの trust store を使用します。",
         "user_dn_template": "ユーザー DN またはベース DN",
         "user_dn_template_hint": "Direct bind。{username} を含む完全なテンプレート（uid={username},ou=people,dc=example,dc=org）、またはベース DN のみ（ou=people,dc=example,dc=org）を指定します。後者では Username attribute の RDN attribute が自動的に先頭へ追加されます。Search & bind を使用する場合は空欄にします。",
-        "ldap_bind_mode_direct": "Direct bind",
+        "ldap_bind_mode_direct": "直接バインド",
         "ldap_bind_mode_search": "Search & bind（サービスアカウント）",
         "ldap_bind_mode_hint": "Direct bind はテンプレートから作成した DN で bind してユーザーを認証します。Search & bind はサービスアカウントでユーザーを検索し、そのユーザーとして再度 bind します。バックエンドは入力されたフィールドから処理方式を選びます。",
         "ldap_bind_mode": "LDAP bind モード",
         "ldap_bind_mode_direct_hint": "User DN テンプレートからユーザーの DN を作成し、入力されたパスワードで bind します。サービスアカウントは使用しません。",
         "ldap_bind_mode_search_hint": "サービスアカウントで bind してユーザーを検索し、そのユーザーが入力したパスワードで再度 bind します。",
-        "bind_dn": "Bind DN",
+        "bind_dn": "バインド DN",
         "bind_dn_hint": "Search & bind モード用のサービスアカウント",
         "bind_password": "Bind パスワード",
         "search_base": "検索ベース",
@@ -1739,15 +1797,15 @@
         "removed": "ログイン方法を削除しました。",
         "remove_error": "このログイン方法を削除できませんでした。",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — リンク済みのユーザー ID {count} 件がこのログイン方法を使用できなくなります",
+        "delete_message_linked": "{name}: リンクされたユーザーID {count} 件がこのログイン方法を失います | {name}: リンクされたユーザーID {count} 件がこのログイン方法を失います",
         "tab_description": "ログイン方法（ID プロバイダー）を管理します。",
         "idp_sso_url": "IdP SSO URL",
         "idp_sso_url_hint": "ID プロバイダーの HTTP-Redirect binding endpoint",
-        "idp_entity_id": "IdP entity ID",
+        "idp_entity_id": "IdP エンティティ ID",
         "idp_entity_id_hint": "SAML レスポンスの issuer",
         "idp_certificate": "IdP 署名証明書（PEM）",
         "idp_certificate_hint": "ID プロバイダーがレスポンスへの署名に使用する証明書です。Metadata の base64 ブロックだけで十分です。key rollover 中は複数の証明書が保持されます。",
-        "sp_entity_id": "SP entity ID",
+        "sp_entity_id": "SP エンティティ ID",
         "sp_entity_id_hint": "IdP に登録するこのサービスの entity ID / audience です。Federation では固定された https:// URL が必要です。",
         "sp_entity_id_use_suggested": "推奨値を使用（SAML endpoint URL）",
         "acs_url_override": "ACS URL の上書き",
@@ -1760,13 +1818,14 @@
         "saml_idp_urls": "ID プロバイダーに次の URL を通知してください",
         "saml_tab_general": "一般",
         "saml_tab_service_information": "サービス情報",
-        "saml_tab_sp_keypair": "SP keypair",
-        "saml_metadata_url": "SP metadata URL",
-        "saml_acs_url": "Assertion Consumer Service (ACS) URL",
+        "saml_tab_sp_keypair": "SP キーペア",
+        "saml_metadata_url_with_url": "SPメタデータURL: {url}",
+        "saml_acs_url_with_url": "アサーションコンシューマーサービス (ACS) URL：{url}",
+        "saml_disco_url_with_url": "ディスカバリーレスポンスURL: {url}",
         "idp_metadata": "IdP metadata（URL または XML）",
         "idp_metadata_hint": "ID プロバイダーの metadata URL または XML を貼り付けて［読み込む］を押すと、entity ID、SSO URL、署名証明書が自動入力されます。",
         "idp_metadata_load": "読み込む",
-        "idp_metadata_loaded": "Metadata から読み込みました（署名証明書 {count} 件）。下のフィールドを確認して保存してください。",
+        "idp_metadata_loaded": "署名証明書 {count} 件を含むメタデータを読み込みました。以下のフィールドを確認して保存してください。 | 署名証明書 {count} 件を含むメタデータを読み込みました。以下のフィールドを確認して保存してください。",
         "idp_metadata_error": "Metadata を読み取れませんでした。",
         "sp_keypair": "サービスプロバイダーの keypair",
         "sp_keypair_stored": "key 保存済み",
@@ -1788,14 +1847,13 @@
         "discovery_url_hint": "ユーザーが ID プロバイダーを選ぶために移動する URL（例: https://discovery.example.org/wayf）",
         "discovery_params": "Discovery サービスのパラメーター",
         "discovery_params_hint": "Discovery URL にそのまま追加する任意の query string です。多くの federation では表示する IdP を絞る filter パラメーターを利用できます。federation operator から取得してください。filter=... のように URL に使用できる形式が必要です。",
-        "federation_metadata_url": "Federation metadata URL",
+        "federation_metadata_url": "フェデレーションメタデータ URL",
         "federation_metadata_url_hint": "Federation の署名済み metadata 集約（例: https://metadata.example.org）",
         "federation_metadata_cert": "Federation metadata 署名証明書（PEM）",
         "federation_metadata_cert_hint": "Trust anchor です。Federation metadata は、この証明書で署名を検証できた場合にのみ信頼されます。federation operator から別経路で入手し、fingerprint を照合してください。",
         "federation_verify": "Federation を検証",
-        "federation_verify_result": "検証済み。使用可能な ID プロバイダーが {count} 件見つかりました。",
+        "federation_verify_result": "検証に成功しました。利用可能なIDプロバイダーが {count} 件見つかりました。 | 検証に成功しました。利用可能なIDプロバイダーが {count} 件見つかりました。",
         "federation_verify_error": "Federation metadata を検証できませんでした。",
-        "saml_disco_url": "Discovery response URL",
         "sp_metadata_info": "サービス情報（federation 登録用）",
         "sp_metadata_info_hint": "SP metadata に公開されます。通常 federation が登録を受理するには組織、連絡先、表示名が必要です。これらは discovery サービスでユーザーにも表示されます。",
         "sp_display_name": "サービス表示名",
@@ -1816,25 +1874,27 @@
         "sp_contact_surname_hint": "Metadata に公開する技術連絡先の姓（通常 federation では必須）。空欄の場合は連絡先名の最後の単語から導出されます。"
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "セキュリティ",
+        "enabled": "有効",
+        "disabled": "無効",
+        "error": "操作に失敗しました。",
+        "totp_title": "認証アプリ (TOTP)",
+        "totp_hint": "ログイン時に認証アプリのワンタイムコードを要求します。",
+        "totp_enable": "有効にする",
+        "totp_scan": "認証アプリで QR コードを読み取り、コードを入力して確認してください。",
+        "totp_qr_alt": "認証アプリ登録用QRコード",
+        "totp_code": "認証コード",
+        "totp_activate": "有効化",
+        "totp_disable": "無効にする",
+        "totp_enabled": "二要素認証が有効になりました。",
+        "totp_disabled": "二要素認証が無効になりました。",
+        "passkeys_title": "パスキー",
+        "passkey_add": "パスキーを追加",
+        "passkey_name": "名前",
+        "default_passkey_name": "パスキー",
+        "passkey_created": "作成日時",
+        "passkey_last_used": "最終使用日時",
+        "passkey_added": "パスキーを登録しました。",
+        "no_passkeys": "登録済みのパスキーはありません。"
     }
 }

@@ -14,42 +14,42 @@
             "organizations": "Организации",
             "roles": "Роли",
             "permissions": "Разрешения",
-            "total_count": "Количество пользователей",
+            "total_count": "Нет пользователей | {count} пользователь | {count} пользователя | {count} пользователей",
             "password": "Пароль",
             "password_check": "Повторите пароль",
             "password_mismatch": "Пароли не совпадают",
-            "email": "E-mail",
-            "status": "Status",
+            "email": "Электронная почта",
+            "status": "Статус",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "Ожидает подтверждения",
+                "active": "Активен",
+                "disabled": "Отключён"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "Способы входа",
+            "local_password": "локальный",
+            "mfa_enabled": "Двухфакторная аутентификация включена",
+            "approve": "Подтвердить",
+            "disable": "Отключить",
+            "enable": "Включить",
+            "status_error": "Не удалось изменить статус пользователя.",
+            "reset_mfa": "Сбросить MFA",
+            "reset_mfa_message": "Удалить все настройки двухфакторной аутентификации (TOTP и ключи доступа) пользователя {username}?",
+            "reset_mfa_choose": "Выберите, что сбросить для пользователя {username}:",
+            "reset_mfa_totp_only": "Только TOTP (приложение-аутентификатор)",
+            "reset_mfa_passkeys_only": "Только ключи доступа",
+            "reset_mfa_both": "TOTP и ключи доступа",
+            "password_hint": "Необязательно для пользователей с внешними идентичностями",
+            "clear_password": "Удалить локальный пароль (отключить вход по паролю)",
+            "require_mfa": "Требовать двухфакторную аутентификацию",
+            "require_mfa_hint": "Относится только к этому пользователю; сайт, его организация или способ входа всё равно могут требовать второй фактор",
+            "identities": "Идентичности для входа",
+            "add_identity": "Связать идентичность",
+            "edit_identity": "Изменить идентичность",
+            "no_identities": "Нет связанных внешних идентичностей",
+            "identity_provider": "Провайдер",
+            "external_username": "Имя пользователя у провайдера",
+            "external_username_hint": "Имя этого пользователя у провайдера идентификации",
+            "last_login": "Последний вход"
         },
         "roles": {
             "tab_description": "Здесь можно управлять ролями и их разрешениями.",
@@ -65,7 +65,7 @@
             "removed_error": "Роль используется и не может быть удалена",
             "title": "Заголовок",
             "permissions": "Разрешения",
-            "total_count": "Количество ролей"
+            "total_count": "Нет ролей | {count} роль | {count} роли | {count} ролей"
         },
         "acls": {
             "tab_description": "Здесь можно управлять списками контроля доступа (ACL).",
@@ -87,16 +87,18 @@
             "removed_error": "ACL используется и не может быть удален",
             "roles": "Роли",
             "users": "Пользователи",
-            "total_count": "Количество ACL"
+            "total_count": "Нет ACL | {count} ACL | {count} ACL | {count} ACL"
         },
         "organizations": {
-            "required_fields_hint": "Поля, отмеченные *, обязательны.",
             "tab_description": "Здесь можно управлять организациями.",
             "add_new": "Добавить организацию",
             "edit": "Изменить организацию",
             "error": "Не удалось создать организацию.",
             "name": "Имя",
+            "required_fields_hint": "Поля, отмеченные *, обязательны.",
             "description": "Описание",
+            "require_mfa": "Требовать двухфакторную аутентификацию",
+            "require_mfa_hint": "У каждого участника этой организации должен быть настроен второй фактор",
             "street": "Улица",
             "city": "Город",
             "zip": "Почтовый индекс",
@@ -105,37 +107,35 @@
             "successful_edit": "Организация успешно обновлена",
             "removed": "Организация успешно удалена",
             "removed_error": "Организация используется и не может быть удалена",
-            "total_count": "Количество организаций",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor"
+            "total_count": "Нет организаций | {count} организация | {count} организации | {count} организаций"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
+            "tab_description": "Здесь можно настроить параметры безопасности всего сайта.",
+            "mfa_title": "Двухфакторная аутентификация",
+            "mfa_description": "Второй фактор требуется, если его требует любой уровень: этот сайт, организация пользователя, способ входа или сам пользователь.",
+            "require_mfa": "Требовать двухфакторную аутентификацию для всех пользователей",
+            "require_mfa_hint": "Пользователи без второго фактора при следующем входе пройдут регистрацию TOTP",
             "require_mfa_enabled_hint": "Каждый пользователь должен зарегистрировать и использовать TOTP или ключ доступа при входе.",
             "require_mfa_disabled_hint": "Общесайтового требования MFA нет. Политика организации, способа входа или пользователя по-прежнему может требовать второй фактор.",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
+            "passkeys_title": "Ключи доступа (WebAuthn)",
+            "passkeys_description": "Ключи доступа — принадлежащие пользователям учётные данные; пользователи регистрируют их в собственных настройках безопасности. Эти параметры описывают сайт для аутентификатора и включают эту функцию.",
+            "passkey_enabled": "Включить вход по ключу доступа",
+            "passkey_enabled_hint": "Предлагает беспарольный вход на странице входа и позволяет пользователям регистрировать ключи доступа",
             "passkey_enabled_on_hint": "Доступен беспарольный вход по ключу доступа, и пользователи могут регистрировать ключи доступа.",
             "passkey_enabled_off_hint": "Вход по ключу доступа и регистрация новых ключей доступа недоступны.",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
+            "passkey_second_factor": "Принимать ключи доступа в качестве второго фактора",
+            "passkey_second_factor_hint": "Если этот параметр выключен, единственным принимаемым вторым фактором является TOTP, даже для пользователей, зарегистрировавших ключ доступа",
+            "rp_id": "ID проверяющей стороны (RP)",
+            "rp_id_hint": "Должен совпадать с доменом этого сайта, например {host}",
             "rp_id_use_suggested": "Использовать предложенный ID RP",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings."
+            "rp_name": "Название проверяющей стороны (RP)",
+            "rp_name_hint": "Показывается аутентификатором при входе",
+            "origins": "Разрешённые источники",
+            "origins_hint": "Разделённые запятыми абсолютные URL, с которых доступна страница входа",
+            "origins_invalid": "Каждый источник должен быть абсолютным URL (https://host)",
+            "secure_context_hint": "WebAuthn требует безопасного контекста: HTTPS либо обычного HTTP только на localhost.",
+            "last_updated": "Последнее изменение: {user}, {at}",
+            "error": "Не удалось сохранить параметры безопасности."
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "Войти",
         "submit": "Войти",
         "error": "Неверное имя пользователя или пароль",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "Способ входа",
+        "pending_approval": "Ваша учётная запись ожидает подтверждения администратором.",
+        "account_disabled": "Ваша учётная запись отключена. Обратитесь к администратору.",
+        "username_collision": "Учётная запись с таким именем пользователя уже существует. Попросите администратора связать эту идентичность с ней.",
+        "account_not_linked": "Эта идентичность не связана ни с одной учётной записью. Обратитесь к администратору.",
+        "domain_not_allowed": "Регистрация с вашим доменом электронной почты запрещена. Обратитесь к администратору.",
+        "auth_cancelled": "Вход отменён. Повторите попытку.",
+        "totp_invalid": "Неверный код аутентификации.",
+        "passkey_sign_in": "Войти с помощью ключа доступа",
+        "sign_in_with": "Войти с помощью {name}",
+        "external_provider": "Внешний вход",
+        "methods_error": "Не удалось загрузить способы входа. Повторите попытку.",
+        "mfa_title": "Двухфакторная аутентификация",
+        "mfa_code": "Код аутентификации",
+        "mfa_verify": "Проверить",
+        "mfa_use_passkey": "Вместо этого использовать ключ доступа",
+        "enroll_title": "Настройте двухфакторную аутентификацию",
+        "enroll_hint": "Отсканируйте QR-код приложением-аутентификатором и введите сгенерированный код.",
+        "enroll_activate": "Активировать",
+        "enroll_use_passkey": "Вместо этого зарегистрировать ключ доступа",
+        "enroll_passkey_name": "Ключ доступа",
+        "back": "Назад к входу"
     },
     "home": {
         "redirecting": "Перенаправление...",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "Настройки",
         "logout": "Выйти",
-        "security": "Security"
+        "security": "Security",
+        "unknown_user": "Неизвестный пользователь",
+        "no_organization": "Нет организации"
     },
     "main_menu": {
         "enter": "Ввод",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "Рабочее пространство оперативной аналитики",
         "refresh": "Обновить панель мониторинга",
+        "metrics": {
+            "news_items_summary": "Нет новостных материалов | Всего {count} новостной материал | Всего {count} новостных материала | Всего {count} новостных материалов",
+            "report_items_summary": "Нет элементов отчёта | Всего {count} элемент отчёта | Всего {count} элемента отчёта | Всего {count} элементов отчёта",
+            "products_summary": "Нет продуктов | Всего {count} продукт | Всего {count} продукта | Всего {count} продуктов"
+        },
         "assess": {
             "trending": "Актуальные тенденции",
             "tagcloud": "Облако тегов последних собранных новостных материалов",
-            "total": "всего новостных материалов"
+            "total": "всего новостных материалов",
+            "ingestion_chart": "Поступление новостных материалов за {period}",
+            "ingestion_point": "За {date} нет новостных материалов | За {date} поступил {count} новостной материал | За {date} поступило {count} новостных материала | За {date} поступило {count} новостных материалов"
         },
         "collect": {
             "title": "Collectors",
@@ -253,8 +262,14 @@
             "title": "О программе",
             "version": "Версия",
             "commit": "Commit",
-            "total": "всего записей"
+            "total": "всего записей",
+            "built_at": "Собрано {date}",
+            "committed_at": "Коммит от {date}"
         }
+    },
+    "word_cloud": {
+        "label": "Облако слов",
+        "word_action_count": "{action} {word}: нет результатов | {action} {word}: {count} результат | {action} {word}: {count} результата | {action} {word}: {count} результатов"
     },
     "nav_menu": {
         "enter": "Создать новостной материал",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "Заголовок",
         "created": "Создано",
-        "updated": "Обновлено",
-        "collected": "Собрано",
-        "published": "Опубликовано",
-        "source": "Источник",
         "node": "Узел",
         "description": "Описание",
-        "in_analyze": "Выполняется анализ",
-        "analyzed": "Проанализировано",
         "url": "URL",
         "name": "Имя",
         "username": "Имя пользователя",
@@ -332,7 +341,18 @@
         "last_seen": "Последнее обнаружение",
         "last_attempted": "Последняя попытка",
         "last_collected": "Последний сбор",
-        "last_error": "Последняя ошибка"
+        "last_error": "Последняя ошибка",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "Источник: {source}",
+        "author_with_value": "Автор: {author}",
+        "published_at": "Опубликовано: {date}",
+        "collected_at": "Получено: {date}",
+        "link_with_url": "Ссылка: {url}",
+        "unknown_source": "Неизвестный источник",
+        "not_available": "Недоступно",
+        "aggregated_items_count": "Нет объединённых новостных материалов | {count} объединённый новостной материал | {count} объединённых новостных материала | {count} объединённых новостных материалов",
+        "in_analyze_count": "Нет выполняемых анализов | Выполняется {count} анализ | Выполняются {count} анализа | Выполняется {count} анализов",
+        "analyzed_count": "Нет завершённых анализов | Завершён {count} анализ | Завершено {count} анализа | Завершено {count} анализов"
     },
     "attribute": {
         "add_constant": "Добавить константу",
@@ -385,10 +405,22 @@
         "ai_provider": "Модель ИИ",
         "ai_prompt": "Запрос к ИИ",
         "add_attribute": "Добавить атрибут",
-        "edit_attribute": "Изменить атрибут"
+        "edit_attribute": "Изменить атрибут",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "Вектор и оценка CVSS",
+        "last_updated_at": "Последнее обновление: {date}",
+        "updated_by_user": "Обновил пользователь {user}",
+        "tlp_description_clear": "Распространение не ограничено.",
+        "tlp_description_green": "Ограниченное распространение в пределах сообщества.",
+        "tlp_description_amber": "Ограниченное распространение в организации получателя и среди её клиентов по принципу служебной необходимости.",
+        "tlp_description_amber_strict": "Ограниченное распространение только в организации получателя.",
+        "tlp_description_red": "Не распространять за пределами отдельных получателей.",
+        "tlp_description_unknown": "Неизвестная маркировка TLP."
     },
     "cvss_calculator": {
         "title": "Калькулятор CVSS",
+        "tooltips": "Показать подсказки к метрикам",
+        "vector_placeholder": "Вектор CVSS, например CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "Базовая оценка",
         "attack_vector": "Вектор атаки (AV)",
         "attack_complexity": "Сложность атаки (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "Эта метрика учитывает необходимость участия пользователя, отличного от злоумышленника, в успешной компрометации уязвимого компонента. Она определяет, может ли уязвимость эксплуатироваться исключительно по воле злоумышленника или же должен каким-либо образом участвовать другой пользователь либо запущенный им процесс.",
         "UI_N_Label": "Уязвимую систему можно эксплуатировать без какого-либо взаимодействия с пользователем.",
         "UI_R_Label": "Для успешной эксплуатации этой уязвимости пользователь должен предварительно выполнить определенное действие.",
-        "S_Heading": "Влияет ли успешная атака на компонент, отличный от уязвимого? Если да, базовая оценка повышается, а метрики конфиденциальности, целостности и аутентификации следует оценивать относительно затронутого компонента.",
+        "S_Heading": "Влияет ли успешная атака на компонент, отличный от уязвимого? Если да, базовая оценка повышается, а метрики конфиденциальности, целостности и доступности следует оценивать относительно затронутого компонента.",
         "S_U_Label": "Эксплуатируемая уязвимость может влиять только на ресурсы, управляемые одним органом безопасности. В этом случае уязвимый и затронутый компоненты совпадают либо оба управляются одним органом безопасности.",
         "S_C_Label": "Эксплуатируемая уязвимость может влиять на ресурсы за пределами области безопасности, управляемой органом безопасности уязвимого компонента. В этом случае уязвимый и затронутый компоненты различаются и управляются разными органами безопасности.",
         "C_Heading": "Эта метрика измеряет влияние успешно эксплуатируемой уязвимости на конфиденциальность информационных ресурсов, управляемых программным компонентом. Конфиденциальность означает ограничение доступа к информации и ее раскрытия только авторизованным пользователям, а также предотвращение доступа или раскрытия неавторизованным лицам.",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "Используется значение соответствующей базовой метрики.",
         "MUI_N_Label": "Уязвимую систему можно эксплуатировать без какого-либо взаимодействия с пользователем.",
         "MUI_R_Label": "Для успешной эксплуатации этой уязвимости пользователь должен предварительно выполнить определенное действие.",
-        "MS_Heading": "Влияет ли успешная атака на компонент, отличный от уязвимого? Если да, базовая оценка повышается, а метрики конфиденциальности, целостности и аутентификации следует оценивать относительно затронутого компонента.",
+        "MS_Heading": "Влияет ли успешная атака на компонент, отличный от уязвимого? Если да, базовая оценка повышается, а метрики конфиденциальности, целостности и доступности следует оценивать относительно затронутого компонента.",
         "MS_X_Label": "Используется значение соответствующей базовой метрики.",
         "MS_U_Label": "Эксплуатируемая уязвимость может влиять только на ресурсы, управляемые одним органом безопасности. В этом случае уязвимый и затронутый компоненты совпадают либо оба управляются одним органом безопасности.",
         "MS_C_Label": "Эксплуатируемая уязвимость может влиять на ресурсы за пределами области безопасности, управляемой органом безопасности уязвимого компонента. В этом случае уязвимый и затронутый компоненты различаются и управляются разными органами безопасности.",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "Уязвимость не влияет на доступность последующей системы."
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "Создать элемент отчета",
         "edit": "Изменить элемент отчета",
         "read": "Предварительный просмотр элемента отчета",
@@ -704,6 +736,7 @@
         "attributes": "Атрибуты",
         "no_attributes": "Нет доступных атрибутов",
         "side_by_side": "Параллельный просмотр",
+        "enter_rich_text": "Введите форматированный текст",
         "confirm_close": {
             "message": "Имеются несохраненные изменения. Закрыть этот элемент отчета?"
         },
@@ -752,13 +785,15 @@
         "publish": "Опубликовать продукт",
         "publish_confirmation": "Опубликовать следующий продукт?",
         "publish_confirmation_message": "Вы действительно хотите опубликовать этот продукт?",
+        "publish_confirmation_type": "Тип продукта: {type}",
+        "publish_confirmation_publishers": "Службы публикации: {publishers}",
         "no_type": "Тип не выбран",
         "no_publisher_in_dialog": "Нет",
         "publish_successful": "Продукт успешно опубликован",
         "publish_failed": "Не удалось опубликовать продукт",
         "publish_error": "При публикации продукта произошла ошибка",
         "no_publisher_selected": "Выберите хотя бы один Publisher",
-        "total_count": "Количество продуктов",
+        "total_count": "Нет продуктов | {count} продукт | {count} продукта | {count} продуктов",
         "confirm_close": {
             "message": "Имеются несохраненные изменения. Закрыть продукт без их сохранения?"
         },
@@ -782,8 +817,12 @@
         "sort": "Сортировать по",
         "from": "С",
         "to": "По",
-        "total_count": "Количество элементов отчета",
+        "total_count": "Нет элементов отчёта | {count} элемент отчёта | {count} элемента отчёта | {count} элементов отчёта",
         "no_items": "Элементы отчета не найдены",
+        "updated_at": "Обновлено {date}",
+        "updated_at_by": "Обновлено {date} пользователем {user}",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "Нет новостных материалов | {count} новостной материал | {count} новостных материала | {count} новостных материалов",
         "tooltip": {
             "filter_all": "Сейчас отображаются: все",
             "filter_completed": "Сейчас отображаются: завершенные",
@@ -812,7 +851,7 @@
             "remove_item": "Убрать элемент отчета",
             "publish_item": "Создать продукт из элемента отчета"
         },
-        "select_all_success": "Выбрано элементов отчета: {count}",
+        "select_all_success": "Элементы отчёта не выбраны | Выбран {count} элемент отчёта | Выбрано {count} элемента отчёта | Выбрано {count} элементов отчёта",
         "select": {
             "placeholder": "Я хочу проанализировать...",
             "option_news_items": "выбранные новостные материалы",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "Источник",
-        "link": "Ссылка",
         "comments": "Комментарии",
-        "collected": "Собрано",
-        "published": "Опубликовано",
-        "author": "Автор",
         "add_news_item": "Добавить новостные материалы",
         "attached_news_items": "Прикрепленные новостные материалы",
         "read_news_item": "Нажмите, чтобы прочитать",
@@ -841,8 +876,8 @@
         "auto_save_blur": "Автосохранение при потере фокуса",
         "auto_save_changes": "Автосохранение при изменениях",
         "download": "Скачать",
-        "total_count": "Количество новостных материалов",
-        "selected_count": "Количество выбранных новостных материалов",
+        "total_count": "Нет новостных материалов | {count} новостной материал | {count} новостных материала | {count} новостных материалов",
+        "selected_count": "Новостные материалы не выбраны | Выбран {count} новостной материал | Выбрано {count} новостных материала | Выбрано {count} новостных материалов",
         "no_items": "Новостные материалы не найдены",
         "item_updated": "Новостной материал успешно обновлен",
         "item_deleted": "Новостной материал успешно удален",
@@ -916,11 +951,14 @@
             "error_loading": "Ошибка загрузки отчетов",
             "error_removing": "Ошибка удаления отчета из агрегата"
         },
-        "select_all_success": "Выбрано новостных материалов: {count}",
+        "select_all_success": "Новостные материалы не выбраны | Выбран {count} новостной материал | Выбрано {count} новостных материала | Выбрано {count} новостных материалов",
         "groups": "ГРУППЫ",
-        "show_new_items": "Показать новые элементы ({count})"
+        "show_new_items": "Нет новых элементов | Показать {count} новый элемент | Показать {count} новых элемента | Показать {count} новых элементов"
     },
     "publish": {
+        "updated_at": "Обновлено {date}",
+        "updated_at_by": "Обновлено {date} пользователем {user}",
+        "report_items_count": "Нет элементов отчёта | {count} элемент отчёта | {count} элемента отчёта | {count} элементов отчёта",
         "tooltip": {
             "filter_all": "Сейчас отображаются: все",
             "filter_published": "Сейчас отображаются: опубликованные",
@@ -946,7 +984,7 @@
             "delete_items": "Удалить продукты",
             "delete_item": "Удалить продукт"
         },
-        "select_all_success": "Выбрано продуктов: {count}",
+        "select_all_success": "Продукты не выбраны | Выбран {count} продукт | Выбрано {count} продукта | Выбрано {count} продуктов",
         "no_items": "Продукты не найдены"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "Последние 7 дней",
         "last_31_days": "Последние 31 день",
         "custom_filter": "Пользовательский фильтр",
-        "total_count": "Общее количество",
-        "currently_showing": "Сейчас отображается",
-        "selected_count": "Количество выбранных",
+        "total_count": "Нет элементов | Всего {count} элемент | Всего {count} элемента | Всего {count} элементов",
+        "currently_showing": "Элементы не отображаются | Сейчас отображается {count} элемент | Сейчас отображаются {count} элемента | Сейчас отображается {count} элементов",
+        "selected_count": "Элементы не выбраны | Выбран {count} элемент | Выбрано {count} элемента | Выбрано {count} элементов",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "Настройки пользователя",
         "tab_general": "Общие",
+        "tab_security": "Security",
         "tab_wordlists": "Списки слов",
         "tab_hotkeys": "Сочетания клавиш",
         "close_item_1": "Закрыть элемент (сочетание 1)",
@@ -990,7 +1029,7 @@
         "like_item": "Поставить элементу отметку «Нравится»",
         "unlike_item": "Снять с элемента отметку «Нравится»",
         "delete_item": "Удалить элемент",
-        "press_key": "Нажмите новую клавишу для ",
+        "press_key_for": "Нажмите новую клавишу для действия «{action}»",
         "selection": "Выбор",
         "group": "Объединить",
         "ungroup": "Разъединить",
@@ -1015,7 +1054,9 @@
         "boolean_error": "Значение должно быть «True» или «False»!",
         "integer_error": "Значение должно быть допустимым целым числом!",
         "decimal_error": "Значение должно быть допустимым десятичным числом!",
-        "default_value": "Значение по умолчанию",
+        "default_value_with_value": "Значение по умолчанию: {value}",
+        "input_too_long": "Длина значения — {count} символов; максимально допустимо {max}.",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "Обновить значение",
         "description": "Описание",
         "value": "Значение",
@@ -1023,8 +1064,7 @@
         "updated_at": "Обновлено",
         "actions": "Действия",
         "api_key": "Ключ API",
-        "my_assets_view": "Мои активы",
-        "tab_security": "Security"
+        "my_assets_view": "Мои активы"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "Автоматическое каскадное изменение состояний",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "Перетащите файлы сюда или нажмите, чтобы выбрать",
         "file_description": "Описание",
-        "last_updated": "Последнее обновление",
+        "last_updated_by_at": "Последнее обновление: {user}, {date}",
+        "last_updated_at": "Последнее обновление: {date}",
+        "attachment_by": "Прикрепил пользователь {user}",
         "download": "Скачать",
         "attachment_load": "Загрузить вложение",
         "attachment_detail": "Сведения о вложении"
@@ -1141,11 +1183,17 @@
         "attributes": "Атрибуты",
         "save": "Сохранить",
         "edit": "Изменить",
+        "edit_named": "Изменить {title}",
+        "select": "Выбрать",
         "done": "Готово",
         "up": "Переместить вверх",
         "down": "Переместить вниз",
         "remove": "Убрать",
         "delete": "Удалить",
+        "publish": "Опубликовать",
+        "lock": "Заблокировать",
+        "open": "Открыть",
+        "open_source": "Открыть источник",
         "download": "Скачать",
         "yes": "Да",
         "no": "Нет",
@@ -1165,6 +1213,12 @@
         "no_permission": "У вас нет разрешения на это действие",
         "loading_more": "Загрузка дополнительных элементов...",
         "end_of_list": "Конец списка",
+        "fetching_items": "Получение элементов…",
+        "no_items_to_select": "Нет доступных для выбора элементов.",
+        "select_at_least_two_to_group": "Чтобы создать группу, выберите не менее двух элементов.",
+        "no_grouped_items_selected": "Выберите хотя бы один сгруппированный элемент, чтобы исключить его из группы.",
+        "processing_items": "Нет обрабатываемых элементов… | Обрабатывается {count} элемент… | Обрабатываются {count} элемента… | Обрабатывается {count} элементов…",
+        "deleting_items": "Нет удаляемых элементов… | Удаляется {count} элемент… | Удаляются {count} элемента… | Удаляется {count} элементов…",
         "messagebox": {
             "delete": "Удалить следующий элемент?",
             "delete_confirm": "Удалить «{name}»?",
@@ -1192,7 +1246,7 @@
             "removed_error": "Группа источников OSINT используется и не может быть удалена",
             "title": "Заголовок",
             "osint_sources": "Источники OSINT",
-            "total_count": "Количество групп источников OSINT",
+            "total_count": "Нет групп источников OSINT | {count} группа источников OSINT | {count} группы источников OSINT | {count} групп источников OSINT",
             "default_group": "Без категории",
             "default_group_description": "Группа по умолчанию для источников OSINT без категории",
             "all": "Все источники"
@@ -1216,7 +1270,7 @@
             "removed_error": "Источник OSINT используется и не может быть удален",
             "filter_wordlist": "Фильтр списка слов",
             "type": "Тип",
-            "total_count": "Количество источников OSINT",
+            "total_count": "Нет источников OSINT | {count} источник OSINT | {count} источника OSINT | {count} источников OSINT",
             "osint_source_groups": "Группы источников OSINT",
             "tooltip": {
                 "select_all": "Выбрать все",
@@ -1239,7 +1293,7 @@
             "node_required": "Выберите узел Collector",
             "export_all_hint": "Экспортировать все источники",
             "export_selected_hint": "Экспортировать выбранные источники",
-            "selected_count": "Выбрано: {count}"
+            "selected_count": "Источники OSINT не выбраны | Выбран {count} источник OSINT | Выбрано {count} источника OSINT | Выбрано {count} источников OSINT"
         },
         "nodes": {
             "tab_description": "Здесь можно управлять узлами Collector.",
@@ -1254,7 +1308,7 @@
             "successful_edit": "Узел Collector успешно обновлен",
             "removed": "Узел Collector успешно удален",
             "removed_error": "Узел Collector используется и не может быть удален",
-            "total_count": "Количество узлов Collector"
+            "total_count": "Нет узлов коллекторов | {count} узел коллектора | {count} узла коллектора | {count} узлов коллекторов"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "Узел Presenter успешно обновлен",
             "removed": "Узел Presenter успешно удален",
             "removed_error": "Узел Presenter используется и не может быть удален",
-            "total_count": "Количество узлов Presenter"
+            "total_count": "Нет узлов презентации | {count} узел презентации | {count} узла презентации | {count} узлов презентации"
         },
         "types": {
             "tab_description": "Здесь можно управлять типами продуктов.",
@@ -1289,7 +1343,7 @@
             "successful_edit": "Тип продукта успешно обновлен",
             "removed": "Тип продукта успешно удален",
             "removed_error": "Тип продукта используется и не может быть удален",
-            "total_count": "Количество типов продуктов",
+            "total_count": "Нет типов продуктов | {count} тип продукта | {count} типа продукта | {count} типов продуктов",
             "help": "Описание параметров шаблона",
             "close": "Закрыть",
             "choose_report_type": "Выберите тип отчета, чтобы показать описание его параметров",
@@ -1328,7 +1382,7 @@
             "successful_edit": "Узел Publisher успешно обновлен",
             "removed": "Узел Publisher успешно удален",
             "removed_error": "Узел Publisher используется и не может быть удален",
-            "total_count": "Количество узлов Publisher"
+            "total_count": "Нет узлов публикации | {count} узел публикации | {count} узла публикации | {count} узлов публикации"
         },
         "presets": {
             "tab_description": "Здесь можно управлять предустановками Publisher.",
@@ -1345,7 +1399,7 @@
             "successful_edit": "Предустановка Publisher успешно обновлена",
             "removed": "Предустановка Publisher успешно удалена",
             "removed_error": "Предустановка Publisher используется и не может быть удалена",
-            "total_count": "Количество предустановок Publisher"
+            "total_count": "Нет предустановок публикации | {count} предустановка публикации | {count} предустановки публикации | {count} предустановок публикации"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "Узел Bot успешно обновлен",
             "removed": "Узел Bot успешно удален",
             "removed_error": "Узел Bot используется и не может быть удален",
-            "total_count": "Количество узлов Bot"
+            "total_count": "Нет узлов ботов | {count} узел бота | {count} узла бота | {count} узлов ботов"
         },
         "presets": {
             "tab_description": "Здесь можно управлять предустановками Bot.",
@@ -1380,7 +1434,7 @@
             "successful_edit": "Предустановка Bot успешно обновлена",
             "removed": "Предустановка Bot успешно удалена",
             "removed_error": "Предустановка Bot используется и не может быть удалена",
-            "total_count": "Количество предустановок Bot"
+            "total_count": "Нет предустановок ботов | {count} предустановка бота | {count} предустановки бота | {count} предустановок ботов"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "Удаленный доступ используется и не может быть удален",
             "osint_sources": "Источники OSINT для общего доступа",
             "report_item_types": "Типы элементов отчета для общего доступа",
-            "total_count": "Количество записей удаленного доступа"
+            "total_count": "Нет записей удалённого доступа | {count} запись удалённого доступа | {count} записи удалённого доступа | {count} записей удалённого доступа"
         },
         "nodes": {
             "tab_description": "Здесь можно управлять удаленными узлами.",
@@ -1420,7 +1474,7 @@
             "successful_edit": "Удаленный узел успешно обновлен",
             "removed": "Удаленный узел успешно удален",
             "removed_error": "Удаленный узел используется и не может быть удален",
-            "total_count": "Количество удаленных узлов"
+            "total_count": "Нет удалённых узлов | {count} удалённый узел | {count} удалённых узла | {count} удалённых узлов"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "Не удалось сохранить поставщика данных",
             "remove": "Поставщик данных успешно удален",
             "removed_error": "Поставщик данных используется и не может быть удален",
-            "total_count": "Количество поставщиков данных"
+            "total_count": "Нет поставщиков данных | {count} поставщик данных | {count} поставщика данных | {count} поставщиков данных"
         },
         "ai": {
             "tab_description": "Здесь можно управлять поставщиками ИИ.",
@@ -1481,11 +1535,13 @@
         "no_categories": "Категорий пока нет",
         "add_category_hint": "Добавьте категорию, чтобы начать формирование списка слов",
         "link_hint": "Необязательный URL для загрузки слов",
-        "total_count": "Количество списков слов",
+        "total_count": "Нет списков слов | {count} список слов | {count} списка слов | {count} списков слов",
         "file_has_header": "Файл содержит заголовок",
         "import_from_csv": "Импортировать из CSV",
         "load_csv_file": "Загрузить файл CSV",
         "download_from_link": "Скачать по URL",
+        "download_error": "Не удалось скачать список слов по URL.",
+        "import_error": "Не удалось импортировать файл списка слов.",
         "import": "Импортировать",
         "close": "Закрыть",
         "delete_existing_words": "Удалить существующие слова",
@@ -1506,7 +1562,7 @@
             "successful_edit": "Тип элемента отчета успешно обновлен",
             "removed_error": "Тип элемента отчета используется и не может быть удален",
             "removed": "Тип элемента отчета успешно удален",
-            "total_count": "Количество типов отчетов"
+            "total_count": "Нет типов отчётов | {count} тип отчёта | {count} типа отчёта | {count} типов отчётов"
         },
         "attributes": {
             "tab_description": "Здесь можно управлять атрибутами.",
@@ -1524,7 +1580,7 @@
             "edit_constant": "Изменить константу",
             "value": "Значение",
             "error": "Не удалось создать атрибут",
-            "total_count": "Количество атрибутов"
+            "total_count": "Нет атрибутов | {count} атрибут | {count} атрибута | {count} атрибутов"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "Не удалось загрузить внешних пользователей или разрешения",
         "successful": "Внешний пользователь успешно добавлен",
         "successful_edit": "Внешний пользователь успешно обновлен",
-        "total_count": "Количество внешних пользователей",
+        "total_count": "Нет внешних пользователей | {count} внешний пользователь | {count} внешних пользователя | {count} внешних пользователей",
         "removed": "Внешний пользователь удален",
         "removed_error": "Не удалось удалить внешнего пользователя"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "Группа активов успешно обновлена",
         "removed": "Группа активов успешно удалена",
         "removed_error": "Группа активов используется и не может быть удалена",
-        "total_count": "Количество групп активов"
+        "total_count": "Нет групп активов | {count} группа активов | {count} группы активов | {count} групп активов"
     },
     "notification_template": {
         "add_new": "Добавить шаблон уведомления",
@@ -1594,7 +1650,7 @@
         "successful_edit": "Шаблон уведомления успешно обновлен",
         "removed": "Шаблон уведомления успешно удален",
         "removed_error": "Шаблон уведомления используется и не может быть удален",
-        "total_count": "Количество шаблонов уведомлений"
+        "total_count": "Нет шаблонов уведомлений | {count} шаблон уведомления | {count} шаблона уведомлений | {count} шаблонов уведомлений"
     },
     "asset": {
         "add": "Добавить актив",
@@ -1614,13 +1670,15 @@
         "value": "Значение",
         "vulnerable": "Уязвим",
         "total": "Всего",
-        "total_count": "Количество активов",
+        "total_count": "Нет активов | {count} актив | {count} актива | {count} активов",
         "successful": "Актив успешно добавлен",
         "successful_edit": "Актив успешно обновлен",
         "removed": "Актив успешно удален",
         "removed_error": "Актив используется и не может быть удален",
         "vulnerabilities": "Уязвимости",
-        "vulnerabilities_count": "Уязвимости: ",
+        "serial_with_value": "Серийный номер: {value}",
+        "cpe_count": "Нет кодов CPE | {count} код CPE | {count} кода CPE | {count} кодов CPE",
+        "vulnerabilities_count": "Нет уязвимостей | {count} уязвимость | {count} уязвимости | {count} уязвимостей",
         "no_vulnerabilities": "Уязвимостей нет",
         "sort": {
             "alphabetical": "По алфавиту",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "Количество способов входа: ",
+        "total_count": "Нет способов входа | {count} способ входа | {count} способа входа | {count} способов входа",
         "add_new": "Добавить способ входа",
         "edit": "Изменить способ входа",
         "name": "Название",
@@ -1682,7 +1740,7 @@
         "require_mfa_disabled_hint": "Этот способ входа не добавляет требования MFA. Политика сайта, организации или пользователя по-прежнему может требовать второй фактор.",
         "issuer_url": "URL издателя",
         "issuer_url_hint": "Базовый URL обнаружения, например https://idp.example.org/realms/main",
-        "client_id": "Client ID",
+        "client_id": "ID клиента",
         "scopes": "Области доступа",
         "username_claim": "Утверждение с именем пользователя",
         "email_claim": "Утверждение с электронной почтой",
@@ -1710,7 +1768,7 @@
         "secret_hint": "Хранится в зашифрованном виде",
         "secret_keep_hint": "Секрет сохранён — оставьте пустым, чтобы не менять",
         "authorize_url": "URL авторизации",
-        "token_url": "Token URL",
+        "token_url": "URL токена",
         "userinfo_url": "URL информации о пользователе",
         "server_url": "URL сервера",
         "use_tls": "Использовать TLS",
@@ -1739,15 +1797,15 @@
         "removed": "Способ входа удалён.",
         "remove_error": "Не удалось удалить этот способ входа.",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — {count} связанных идентичностей пользователей потеряют этот способ входа",
+        "delete_message_linked": "{name}: ни одна связанная учётная запись не потеряет этот способ входа | {name}: {count} связанная учётная запись потеряет этот способ входа | {name}: {count} связанные учётные записи потеряют этот способ входа | {name}: {count} связанных учётных записей потеряют этот способ входа",
         "tab_description": "Здесь можно управлять способами входа (провайдерами идентификации).",
-        "idp_sso_url": "IdP SSO URL",
+        "idp_sso_url": "URL SSO провайдера идентификации (IdP)",
         "idp_sso_url_hint": "Конечная точка привязки HTTP-Redirect провайдера идентификации",
-        "idp_entity_id": "IdP entity ID",
+        "idp_entity_id": "ID сущности IdP",
         "idp_entity_id_hint": "Издатель ответов SAML",
         "idp_certificate": "Сертификат подписи IdP (PEM)",
         "idp_certificate_hint": "Сертификат, которым провайдер идентификации подписывает ответы. Достаточно блока base64 из метаданных; во время ротации ключей сохраняется несколько сертификатов.",
-        "sp_entity_id": "SP entity ID",
+        "sp_entity_id": "ID сущности SP",
         "sp_entity_id_hint": "Наш ID сущности / аудитория, зарегистрированная в IdP. Федерациям требуется постоянный URL https://.",
         "sp_entity_id_use_suggested": "Использовать предложенный (URL конечной точки SAML)",
         "acs_url_override": "Переопределение URL ACS",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "Общие",
         "saml_tab_service_information": "Информация о сервисе",
         "saml_tab_sp_keypair": "Пара ключей SP",
-        "saml_metadata_url": "SP metadata URL",
-        "saml_acs_url": "Assertion Consumer Service (ACS) URL",
+        "saml_metadata_url_with_url": "URL метаданных SP: {url}",
+        "saml_acs_url_with_url": "URL службы обработки утверждений (ACS): {url}",
+        "saml_disco_url_with_url": "URL ответа службы обнаружения: {url}",
         "idp_metadata": "Метаданные IdP (URL или XML)",
         "idp_metadata_hint": "Вставьте URL метаданных провайдера идентификации или сам XML и нажмите «Загрузить» — из него будут заполнены ID сущности, URL SSO и сертификат подписи.",
         "idp_metadata_load": "Загрузить",
-        "idp_metadata_loaded": "Загружено из метаданных ({count} сертификатов подписи). Проверьте поля ниже и сохраните.",
+        "idp_metadata_loaded": "Метаданные не содержат сертификатов подписи. Проверьте поля ниже и сохраните. | Из метаданных загружен {count} сертификат подписи. Проверьте поля ниже и сохраните. | Из метаданных загружено {count} сертификата подписи. Проверьте поля ниже и сохраните. | Из метаданных загружено {count} сертификатов подписи. Проверьте поля ниже и сохраните.",
         "idp_metadata_error": "Не удалось прочитать метаданные.",
         "sp_keypair": "Пара ключей поставщика услуг",
         "sp_keypair_stored": "ключ сохранён",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "Сертификат подписи метаданных федерации (PEM)",
         "federation_metadata_cert_hint": "Якорь доверия: метаданные федерации считаются надёжными, только если их подпись проверена этим сертификатом. Получите его у оператора федерации по независимому каналу и сверьте отпечаток.",
         "federation_verify": "Проверить федерацию",
-        "federation_verify_result": "Проверено. Найдено доступных провайдеров идентификации: {count}.",
+        "federation_verify_result": "Проверено. Подходящие провайдеры идентификации не найдены. | Проверено. Найден {count} подходящий провайдер идентификации. | Проверено. Найдено {count} подходящих провайдера идентификации. | Проверено. Найдено {count} подходящих провайдеров идентификации.",
         "federation_verify_error": "Не удалось проверить метаданные федерации.",
-        "saml_disco_url": "URL ответа обнаружения",
         "sp_metadata_info": "Информация о сервисе (для регистрации в федерации)",
         "sp_metadata_info_hint": "Публикуется в метаданных SP. Для принятия регистрации федерации обычно требуются организация, контакт и отображаемое название; эти данные также видны пользователям в сервисе обнаружения.",
         "sp_display_name": "Отображаемое название сервиса",
@@ -1816,25 +1874,27 @@
         "sp_contact_surname_hint": "Фамилия технического контакта, опубликованная в метаданных (федерация обычно её требует). Если поле пустое, она определяется по последнему слову имени контакта."
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "Безопасность",
+        "enabled": "Включено",
+        "disabled": "Отключено",
+        "error": "Не удалось выполнить операцию.",
+        "totp_title": "Приложение-аутентификатор (TOTP)",
+        "totp_hint": "Требовать при входе одноразовый код из приложения-аутентификатора.",
+        "totp_enable": "Включить",
+        "totp_scan": "Отсканируйте QR-код приложением-аутентификатором и подтвердите кодом.",
+        "totp_qr_alt": "QR-код для регистрации приложения-аутентификатора",
+        "totp_code": "Код аутентификации",
+        "totp_activate": "Активировать",
+        "totp_disable": "Отключить",
+        "totp_enabled": "Двухфакторная аутентификация включена.",
+        "totp_disabled": "Двухфакторная аутентификация отключена.",
+        "passkeys_title": "Ключи доступа",
+        "passkey_add": "Добавить ключ доступа",
+        "passkey_name": "Название",
+        "default_passkey_name": "Ключ доступа",
+        "passkey_created": "Создан",
+        "passkey_last_used": "Последнее использование",
+        "passkey_added": "Ключ доступа зарегистрирован.",
+        "no_passkeys": "Зарегистрированных ключей доступа нет."
     }
 }

@@ -14,42 +14,42 @@
             "organizations": "组织",
             "roles": "角色",
             "permissions": "权限",
-            "total_count": "用户数量",
+            "total_count": "{count} 位用户 | {count} 位用户",
             "password": "密码",
             "password_check": "重新输入密码",
             "password_mismatch": "两次输入的密码不一致",
-            "email": "E-mail",
-            "status": "Status",
+            "email": "电子邮件",
+            "status": "状态",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "等待批准",
+                "active": "已启用",
+                "disabled": "已禁用"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "登录方式",
+            "local_password": "本地",
+            "mfa_enabled": "已启用双重身份验证",
+            "approve": "批准",
+            "disable": "禁用",
+            "enable": "启用",
+            "status_error": "无法更改用户状态。",
+            "reset_mfa": "重置 MFA",
+            "reset_mfa_message": "是否移除 {username} 的所有双重身份验证注册（TOTP 和通行密钥）？",
+            "reset_mfa_choose": "选择要为 {username} 重置的项目：",
+            "reset_mfa_totp_only": "仅 TOTP（身份验证器应用）",
+            "reset_mfa_passkeys_only": "仅通行密钥",
+            "reset_mfa_both": "TOTP 和通行密钥",
+            "password_hint": "对于拥有外部身份的用户为可选项",
+            "clear_password": "移除本地密码（禁用密码登录）",
+            "require_mfa": "要求双重身份验证",
+            "require_mfa_hint": "仅适用于此用户；站点、其组织或登录方式仍可能要求使用双重身份验证",
+            "identities": "登录身份",
+            "add_identity": "关联身份",
+            "edit_identity": "编辑身份",
+            "no_identities": "未关联外部身份",
+            "identity_provider": "提供商",
+            "external_username": "提供商处的用户名",
+            "external_username_hint": "此用户在身份提供商处使用的用户名",
+            "last_login": "上次登录"
         },
         "roles": {
             "tab_description": "您可以在此管理角色及其权限。",
@@ -65,7 +65,7 @@
             "removed_error": "角色正在使用，无法删除",
             "title": "标题",
             "permissions": "权限",
-            "total_count": "角色数量"
+            "total_count": "{count} 个角色 | {count} 个角色"
         },
         "acls": {
             "tab_description": "您可以在此管理访问控制列表（ACL）。",
@@ -87,7 +87,7 @@
             "removed_error": "ACL正在使用，无法删除",
             "roles": "角色",
             "users": "用户",
-            "total_count": "ACLs数量"
+            "total_count": "{count} 个 ACL | {count} 个 ACL"
         },
         "organizations": {
             "tab_description": "您可以在此管理组织。",
@@ -97,6 +97,8 @@
             "name": "名称",
             "required_fields_hint": "标有 * 的字段为必填项。",
             "description": "描述",
+            "require_mfa": "要求双重身份验证",
+            "require_mfa_hint": "此组织的每位成员都必须拥有第二重验证方式",
             "street": "街道",
             "city": "城市",
             "zip": "邮政编码",
@@ -105,37 +107,35 @@
             "successful_edit": "已成功更新组织",
             "removed": "已成功删除组织",
             "removed_error": "组织正在使用，无法删除",
-            "total_count": "组织数量",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor"
+            "total_count": "{count} 个组织 | {count} 个组织"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
-            "require_mfa_enabled_hint": "每个用户都必须注册并在登录时使用 TOTP 或 passkey。",
+            "tab_description": "您可以在此配置整个站点的安全设置。",
+            "mfa_title": "双重身份验证",
+            "mfa_description": "只要任一层级提出要求，就必须使用第二重验证：本站点、用户所属组织、登录方式或用户本身。",
+            "require_mfa": "要求所有用户使用双重身份验证",
+            "require_mfa_hint": "尚未设置第二重验证的用户将在下次登录时完成 TOTP 注册",
+            "require_mfa_enabled_hint": "每个用户都必须注册并在登录时使用 TOTP 或通行密钥。",
             "require_mfa_disabled_hint": "没有站点范围的 MFA 要求。组织、登录方式或用户策略仍可要求使用第二重验证。",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
-            "passkey_enabled_on_hint": "已提供使用 passkey 的无密码登录，用户也可以注册 passkey。",
-            "passkey_enabled_off_hint": "无法使用 passkey 登录或注册新的 passkey。",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
+            "passkeys_title": "通行密钥 (WebAuthn)",
+            "passkeys_description": "通行密钥是用户拥有的凭据，用户可在自己的“安全”设置中注册。这些选项用于向身份验证器说明本站点并启用此功能。",
+            "passkey_enabled": "启用通行密钥登录",
+            "passkey_enabled_hint": "在登录页面提供无密码登录，并允许用户注册通行密钥",
+            "passkey_enabled_on_hint": "已提供使用通行密钥的无密码登录，用户也可以注册通行密钥。",
+            "passkey_enabled_off_hint": "无法使用通行密钥登录或注册新的通行密钥。",
+            "passkey_second_factor": "接受通行密钥作为第二重验证",
+            "passkey_second_factor_hint": "关闭后，即使用户已经注册通行密钥，也只接受 TOTP 作为第二重验证",
+            "rp_id": "依赖方 ID",
+            "rp_id_hint": "必须是本站点的域名，例如 {host}",
             "rp_id_use_suggested": "使用建议的 RP ID",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings."
+            "rp_name": "依赖方名称",
+            "rp_name_hint": "登录时由身份验证器显示",
+            "origins": "允许的源",
+            "origins_hint": "提供登录页面的绝对 URL，以逗号分隔",
+            "origins_invalid": "每个源都必须是绝对 URL (https://host)",
+            "secure_context_hint": "WebAuthn 需要安全上下文：使用 HTTPS；仅 localhost 可使用明文 HTTP。",
+            "last_updated": "{user} 于 {at} 最后更新",
+            "error": "无法保存安全设置。"
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "登录",
         "submit": "登录",
         "error": "用户名或密码不正确",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "登录方式",
+        "pending_approval": "您的账户正在等待管理员批准。",
+        "account_disabled": "您的账户已被禁用。请联系管理员。",
+        "username_collision": "已存在使用此用户名的账户。请让管理员将此身份与该账户关联。",
+        "account_not_linked": "此身份未与任何账户关联。请联系管理员。",
+        "domain_not_allowed": "您的电子邮件域名不允许注册。请联系管理员。",
+        "auth_cancelled": "登录已取消。请重试。",
+        "totp_invalid": "身份验证代码无效。",
+        "passkey_sign_in": "使用通行密钥登录",
+        "sign_in_with": "使用 {name} 登录",
+        "external_provider": "外部登录",
+        "methods_error": "无法加载登录方式。请重试。",
+        "mfa_title": "双重身份验证",
+        "mfa_code": "身份验证代码",
+        "mfa_verify": "验证",
+        "mfa_use_passkey": "改用通行密钥",
+        "enroll_title": "设置双重身份验证",
+        "enroll_hint": "使用身份验证器应用扫描二维码，然后输入生成的代码。",
+        "enroll_activate": "激活",
+        "enroll_use_passkey": "改为注册通行密钥",
+        "enroll_passkey_name": "通行密钥",
+        "back": "返回登录"
     },
     "home": {
         "redirecting": "正在重定向…",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "设置",
         "logout": "退出登录",
-        "security": "Security"
+        "security": "Security",
+        "unknown_user": "未知用户",
+        "no_organization": "无所属组织"
     },
     "main_menu": {
         "enter": "录入",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "运营情报工作区",
         "refresh": "刷新仪表板",
+        "metrics": {
+            "news_items_summary": "没有新闻条目 | 共 {count} 个新闻条目 | 共 {count} 个新闻条目",
+            "report_items_summary": "没有报告条目 | 共 {count} 个报告条目 | 共 {count} 个报告条目",
+            "products_summary": "没有产品 | 共 {count} 个产品 | 共 {count} 个产品"
+        },
         "assess": {
             "trending": "热门情报趋势",
             "tagcloud": "最新采集新闻条目的标签云",
-            "total": "新闻条目总数"
+            "total": "新闻条目总数",
+            "ingestion_chart": "{period}的新闻条目采集情况",
+            "ingestion_point": "{date}没有新闻条目 | {date}有 {count} 个新闻条目 | {date}有 {count} 个新闻条目"
         },
         "collect": {
             "title": "采集器",
@@ -253,8 +262,14 @@
             "title": "关于",
             "version": "版本",
             "commit": "提交",
-            "total": "记录总数"
+            "total": "记录总数",
+            "built_at": "构建于 {date}",
+            "committed_at": "提交于 {date}"
         }
+    },
+    "word_cloud": {
+        "label": "词云",
+        "word_action_count": "{action} {word}：无结果 | {action} {word}：{count} 个结果 | {action} {word}：{count} 个结果"
     },
     "nav_menu": {
         "enter": "创建新闻条目",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "标题",
         "created": "创建时间",
-        "updated": "更新时间",
-        "collected": "采集时间",
-        "published": "已发布",
-        "source": "来源",
         "node": "节点",
         "description": "描述",
-        "in_analyze": "正在分析",
-        "analyzed": "已分析",
         "url": "URL",
         "name": "名称",
         "username": "用户名",
@@ -332,7 +341,18 @@
         "last_seen": "最后出现时间",
         "last_attempted": "上次尝试",
         "last_collected": "上次采集时间",
-        "last_error": "上次错误"
+        "last_error": "上次错误",
+        "source_with_type": "{source}（{type}）",
+        "source_with_value": "来源：{source}",
+        "author_with_value": "作者：{author}",
+        "published_at": "发布于：{date}",
+        "collected_at": "采集于：{date}",
+        "link_with_url": "链接：{url}",
+        "unknown_source": "未知来源",
+        "not_available": "不可用",
+        "aggregated_items_count": "没有聚合的新闻条目 | {count} 个聚合的新闻条目 | {count} 个聚合的新闻条目",
+        "in_analyze_count": "没有正在进行的分析 | {count} 项正在进行的分析 | {count} 项正在进行的分析",
+        "analyzed_count": "没有已完成的分析 | {count} 项已完成的分析 | {count} 项已完成的分析"
     },
     "attribute": {
         "add_constant": "添加常量",
@@ -385,10 +405,22 @@
         "ai_provider": "AI 模型",
         "ai_prompt": "AI 提示词",
         "add_attribute": "添加属性",
-        "edit_attribute": "编辑属性"
+        "edit_attribute": "编辑属性",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "CVSS 向量和评分",
+        "last_updated_at": "最后更新于 {date}",
+        "updated_by_user": "更新者：{user}",
+        "tlp_description_clear": "披露不受限制。",
+        "tlp_description_green": "仅限社区内披露。",
+        "tlp_description_amber": "仅限在接收方组织及其有必要知悉的客户范围内披露。",
+        "tlp_description_amber_strict": "仅限在接收方组织内披露。",
+        "tlp_description_red": "不得向指定接收者以外的人员披露。",
+        "tlp_description_unknown": "未知 TLP 标记。"
     },
     "cvss_calculator": {
         "title": "CVSS 计算器",
+        "tooltips": "显示指标工具提示",
+        "vector_placeholder": "CVSS 向量，例如 CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "基础评分",
         "attack_vector": "攻击向量 (AV)",
         "attack_complexity": "攻击复杂度 (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "此指标衡量攻击者以外的用户是否必须参与，才能成功攻陷易受攻击组件。它用于确定漏洞能否仅凭攻击者意愿被利用，还是必须由另一用户或用户启动的进程以某种方式参与。",
         "UI_N_Label": "无需任何用户进行任何交互即可利用易受攻击系统。",
         "UI_R_Label": "成功利用此漏洞要求用户在漏洞可被利用前执行某项操作。",
-        "S_Heading": "成功攻击是否会影响易受攻击组件以外的组件？如果会，基础评分将提高，并且应相对于受影响组件评估机密性、完整性和身份验证指标。",
+        "S_Heading": "成功攻击是否会影响易受攻击组件以外的组件？如果会，基础评分将提高，并且应相对于受影响组件评估机密性、完整性和可用性指标。",
         "S_U_Label": "被利用的漏洞只能影响由同一安全授权机构管理的资源。在这种情况下，易受攻击组件与受影响组件相同，或者二者均由同一安全授权机构管理。",
         "S_C_Label": "被利用的漏洞能够影响超出易受攻击组件安全授权机构所管理安全范围的资源。在这种情况下，易受攻击组件与受影响组件不同，并由不同的安全授权机构管理。",
         "C_Heading": "此指标衡量成功利用漏洞后，对软件组件所管理信息资源机密性的影响。机密性是指仅允许获授权用户访问信息和披露信息，同时防止未获授权者访问或获得披露。",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "使用相应基础指标所指定的值。",
         "MUI_N_Label": "无需任何用户进行任何交互即可利用易受攻击系统。",
         "MUI_R_Label": "成功利用此漏洞要求用户在漏洞可被利用前执行某项操作。",
-        "MS_Heading": "成功攻击是否会影响易受攻击组件以外的组件？如果会，基础评分将提高，并且应相对于受影响组件评估机密性、完整性和身份验证指标。",
+        "MS_Heading": "成功攻击是否会影响易受攻击组件以外的组件？如果会，基础评分将提高，并且应相对于受影响组件评估机密性、完整性和可用性指标。",
         "MS_X_Label": "使用相应基础指标所指定的值。",
         "MS_U_Label": "被利用的漏洞只能影响由同一安全授权机构管理的资源。在这种情况下，易受攻击组件与受影响组件相同，或者二者均由同一安全授权机构管理。",
         "MS_C_Label": "被利用的漏洞能够影响超出易受攻击组件安全授权机构所管理安全范围的资源。在这种情况下，易受攻击组件与受影响组件不同，并由不同的安全授权机构管理。",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "后续系统内的可用性不受影响。"
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID：{id}",
         "add_new": "创建新报告条目",
         "edit": "编辑报告条目",
         "read": "报告条目预览",
@@ -704,6 +736,7 @@
         "attributes": "属性",
         "no_attributes": "没有属性",
         "side_by_side": "并排视图",
+        "enter_rich_text": "输入富文本",
         "confirm_close": {
             "message": "您有未保存的更改。确定要关闭此报告条目吗？"
         },
@@ -752,13 +785,15 @@
         "publish": "发布产品",
         "publish_confirmation": "确定要发布以下产品吗？",
         "publish_confirmation_message": "确实要发布此产品吗？",
+        "publish_confirmation_type": "产品类型：{type}",
+        "publish_confirmation_publishers": "发布器：{publishers}",
         "no_type": "未选择类型",
         "no_publisher_in_dialog": "无",
         "publish_successful": "产品发布成功",
         "publish_failed": "产品发布失败",
         "publish_error": "发布产品时发生错误",
         "no_publisher_selected": "请至少选择一个发布器",
-        "total_count": "产品数量",
+        "total_count": "{count} 个产品 | {count} 个产品",
         "confirm_close": {
             "message": "您有未保存的更改。确定要在不保存更改的情况下关闭此产品吗？"
         },
@@ -782,8 +817,12 @@
         "sort": "排序方式",
         "from": "从",
         "to": "到",
-        "total_count": "报告条目数量",
+        "total_count": "{count} 个报告条目 | {count} 个报告条目",
         "no_items": "没有报告条目",
+        "updated_at": "更新于 {date}",
+        "updated_at_by": "由 {user} 于 {date} 更新",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "没有新闻条目 | {count} 个新闻条目 | {count} 个新闻条目",
         "tooltip": {
             "filter_all": "当前显示：全部",
             "filter_completed": "当前显示：已完成",
@@ -812,7 +851,7 @@
             "remove_item": "移除报告条目",
             "publish_item": "根据报告条目创建产品"
         },
-        "select_all_success": "已选择 {count} 个报告条目",
+        "select_all_success": "已选择 {count} 个报告条目 | 已选择 {count} 个报告条目",
         "select": {
             "placeholder": "我要分析…",
             "option_news_items": "选中的新闻条目",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "来源",
-        "link": "链接",
         "comments": "评论",
-        "collected": "采集时间",
-        "published": "已发布",
-        "author": "作者",
         "add_news_item": "添加新闻条目",
         "attached_news_items": "附加的新闻条目",
         "read_news_item": "单击阅读",
@@ -841,8 +876,8 @@
         "auto_save_blur": "失去焦点时自动保存",
         "auto_save_changes": "更改时自动保存",
         "download": "下载",
-        "total_count": "新闻条目数量",
-        "selected_count": "所选新闻条目数量",
+        "total_count": "{count} 个新闻条目 | {count} 个新闻条目",
+        "selected_count": "已选择 {count} 个新闻条目 | 已选择 {count} 个新闻条目",
         "no_items": "没有新闻条目",
         "item_updated": "新闻条目更新成功",
         "item_deleted": "新闻条目删除成功",
@@ -916,11 +951,14 @@
             "error_loading": "加载报告时出错",
             "error_removing": "从聚合中移除报告时出错"
         },
-        "select_all_success": "已选择 {count} 个新闻条目",
+        "select_all_success": "已选择 {count} 个新闻条目 | 已选择 {count} 个新闻条目",
         "groups": "组",
-        "show_new_items": "显示新条目（{count}）"
+        "show_new_items": "显示 {count} 个新条目 | 显示 {count} 个新条目"
     },
     "publish": {
+        "updated_at": "更新于 {date}",
+        "updated_at_by": "由 {user} 于 {date} 更新",
+        "report_items_count": "没有报告条目 | {count} 个报告条目 | {count} 个报告条目",
         "tooltip": {
             "filter_all": "当前显示：全部",
             "filter_published": "当前显示：已发布",
@@ -946,7 +984,7 @@
             "delete_items": "删除产品",
             "delete_item": "删除产品"
         },
-        "select_all_success": "已选择 {count} 个产品",
+        "select_all_success": "已选择 {count} 个产品 | 已选择 {count} 个产品",
         "no_items": "没有产品"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "过去 7 天",
         "last_31_days": "过去 31 天",
         "custom_filter": "自定义筛选器",
-        "total_count": "总计数量",
-        "currently_showing": "当前显示",
-        "selected_count": "所选数量",
+        "total_count": "共 {count} 个条目 | 共 {count} 个条目",
+        "currently_showing": "当前显示 {count} 个条目 | 当前显示 {count} 个条目",
+        "selected_count": "已选择 {count} 个条目 | 已选择 {count} 个条目",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "用户设置",
         "tab_general": "常规",
+        "tab_security": "Security",
         "tab_wordlists": "词表",
         "tab_hotkeys": "快捷键",
         "close_item_1": "关闭条目（快捷键 1）",
@@ -990,7 +1029,7 @@
         "like_item": "赞此条目",
         "unlike_item": "取消点赞",
         "delete_item": "删除条目",
-        "press_key": "按下要用于以下操作的新按键：",
+        "press_key_for": "请为{action}按下新的按键",
         "selection": "选择",
         "group": "分组",
         "ungroup": "取消分组",
@@ -1015,7 +1054,9 @@
         "boolean_error": "值必须为“True”或“False”！",
         "integer_error": "值必须是有效整数！",
         "decimal_error": "值必须是有效小数！",
-        "default_value": "默认值",
+        "default_value_with_value": "默认值：{value}",
+        "input_too_long": "该值包含 {count} 个字符；最多允许 {max} 个字符。",
+        "language_name_with_code": "{name}（{code}）",
         "update_value": "更新值",
         "description": "描述",
         "value": "值",
@@ -1023,8 +1064,7 @@
         "updated_at": "更新时间",
         "actions": "操作",
         "api_key": "API 密钥",
-        "my_assets_view": "我的资产",
-        "tab_security": "Security"
+        "my_assets_view": "我的资产"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "自动级联状态更改",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "将文件拖到此处，或单击选择",
         "file_description": "描述",
-        "last_updated": "最后更新",
+        "last_updated_by_at": "最后由 {user} 更新于 {date}",
+        "last_updated_at": "最后更新于 {date}",
+        "attachment_by": "附件上传者：{user}",
         "download": "下载",
         "attachment_load": "加载附件",
         "attachment_detail": "附件详细信息"
@@ -1141,11 +1183,17 @@
         "attributes": "属性",
         "save": "保存",
         "edit": "编辑",
+        "edit_named": "编辑{title}",
+        "select": "选择",
         "done": "完成",
         "up": "上移",
         "down": "下移",
         "remove": "移除",
         "delete": "删除",
+        "publish": "发布",
+        "lock": "锁定",
+        "open": "打开",
+        "open_source": "打开来源",
         "download": "下载",
         "yes": "是",
         "no": "否",
@@ -1165,6 +1213,12 @@
         "no_permission": "您无权执行此操作",
         "loading_more": "正在加载更多条目…",
         "end_of_list": "列表末尾",
+        "fetching_items": "正在获取条目…",
+        "no_items_to_select": "没有可选择的条目。",
+        "select_at_least_two_to_group": "请至少选择两个条目以创建组。",
+        "no_grouped_items_selected": "请至少选择一个已分组的条目以取消分组。",
+        "processing_items": "正在处理 {count} 个条目… | 正在处理 {count} 个条目…",
+        "deleting_items": "正在删除 {count} 个条目… | 正在删除 {count} 个条目…",
         "messagebox": {
             "delete": "确定要删除以下条目吗？",
             "delete_confirm": "确定要删除“{name}”吗？",
@@ -1192,7 +1246,7 @@
             "removed_error": "OSINT 来源组正在使用，无法删除",
             "title": "标题",
             "osint_sources": "OSINT 来源",
-            "total_count": "OSINT 来源组数量",
+            "total_count": "{count} 个 OSINT 来源组 | {count} 个 OSINT 来源组",
             "default_group": "未分类",
             "default_group_description": "未分类 OSINT 来源的默认组",
             "all": "所有来源"
@@ -1216,7 +1270,7 @@
             "removed_error": "OSINT 来源正在使用，无法删除",
             "filter_wordlist": "词表筛选器",
             "type": "类型",
-            "total_count": "OSINT 来源数量",
+            "total_count": "{count} 个 OSINT 来源 | {count} 个 OSINT 来源",
             "osint_source_groups": "OSINT 来源组",
             "tooltip": {
                 "select_all": "选择全部",
@@ -1239,7 +1293,7 @@
             "node_required": "选择采集器节点",
             "export_all_hint": "导出所有来源",
             "export_selected_hint": "导出所选来源",
-            "selected_count": "已选择 {count} 项"
+            "selected_count": "已选择 {count} 个 OSINT 来源 | 已选择 {count} 个 OSINT 来源"
         },
         "nodes": {
             "tab_description": "您可以在此管理采集器节点。",
@@ -1254,7 +1308,7 @@
             "successful_edit": "已成功更新采集器节点",
             "removed": "已成功删除采集器节点",
             "removed_error": "采集器节点正在使用，无法删除",
-            "total_count": "采集器节点数量"
+            "total_count": "{count} 个采集器节点 | {count} 个采集器节点"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "已成功更新呈现器节点",
             "removed": "已成功删除呈现器节点",
             "removed_error": "呈现器节点正在使用，无法删除",
-            "total_count": "呈现器节点数量"
+            "total_count": "{count} 个呈现器节点 | {count} 个呈现器节点"
         },
         "types": {
             "tab_description": "您可以在此管理产品类型。",
@@ -1289,7 +1343,7 @@
             "successful_edit": "已成功更新产品类型",
             "removed": "已成功删除产品类型",
             "removed_error": "产品类型正在使用，无法删除",
-            "total_count": "产品类型数量",
+            "total_count": "{count} 个产品类型 | {count} 个产品类型",
             "help": "模板参数说明",
             "close": "关闭",
             "choose_report_type": "选择报告类型以显示其参数说明",
@@ -1328,7 +1382,7 @@
             "successful_edit": "已成功更新发布器节点",
             "removed": "已成功删除发布器节点",
             "removed_error": "发布器节点正在使用，无法删除",
-            "total_count": "发布器节点数量"
+            "total_count": "{count} 个发布器节点 | {count} 个发布器节点"
         },
         "presets": {
             "tab_description": "您可以在此管理发布器预设。",
@@ -1345,7 +1399,7 @@
             "successful_edit": "已成功更新发布器预设",
             "removed": "已成功删除发布器预设",
             "removed_error": "发布器预设正在使用，无法删除",
-            "total_count": "发布器预设数量"
+            "total_count": "{count} 个发布器预设 | {count} 个发布器预设"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "已成功更新机器人节点",
             "removed": "已成功删除机器人节点",
             "removed_error": "机器人节点正在使用，无法删除",
-            "total_count": "机器人节点数量"
+            "total_count": "{count} 个机器人节点 | {count} 个机器人节点"
         },
         "presets": {
             "tab_description": "您可以在此管理机器人预设。",
@@ -1380,7 +1434,7 @@
             "successful_edit": "已成功更新机器人预设",
             "removed": "已成功删除机器人预设",
             "removed_error": "机器人预设正在使用，无法删除",
-            "total_count": "机器人预设数量"
+            "total_count": "{count} 个机器人预设 | {count} 个机器人预设"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "远程访问正在使用，无法删除",
             "osint_sources": "要共享的 OSINT 来源",
             "report_item_types": "要共享的报告条目类型",
-            "total_count": "远程访问数量"
+            "total_count": "{count} 项远程访问 | {count} 项远程访问"
         },
         "nodes": {
             "tab_description": "您可以在此管理远程节点。",
@@ -1420,7 +1474,7 @@
             "successful_edit": "已成功更新远程节点",
             "removed": "已成功删除远程节点",
             "removed_error": "远程节点正在使用，无法删除",
-            "total_count": "远程节点数量"
+            "total_count": "{count} 个远程节点 | {count} 个远程节点"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "无法保存数据提供商",
             "remove": "已成功删除数据提供商",
             "removed_error": "数据提供商正在使用，无法删除",
-            "total_count": "数据提供商数量"
+            "total_count": "{count} 个数据提供商 | {count} 个数据提供商"
         },
         "ai": {
             "tab_description": "您可以在此管理AI 提供商。",
@@ -1481,11 +1535,13 @@
         "no_categories": "没有类别",
         "add_category_hint": "添加类别以开始构建此词表",
         "link_hint": "用于下载词条的可选 URL",
-        "total_count": "词表数量",
+        "total_count": "{count} 个词表 | {count} 个词表",
         "file_has_header": "文件包含表头",
         "import_from_csv": "从 CSV 导入",
         "load_csv_file": "加载 CSV 文件",
         "download_from_link": "从 URL 下载",
+        "download_error": "无法从 URL 下载词表。",
+        "import_error": "无法导入词表文件。",
         "import": "导入",
         "close": "关闭",
         "delete_existing_words": "删除现有词语",
@@ -1506,7 +1562,7 @@
             "successful_edit": "已成功更新报告条目类型",
             "removed_error": "报告条目类型正在使用，无法删除",
             "removed": "已成功删除报告条目类型",
-            "total_count": "报告类型数量"
+            "total_count": "{count} 个报告类型 | {count} 个报告类型"
         },
         "attributes": {
             "tab_description": "您可以在此管理属性。",
@@ -1524,7 +1580,7 @@
             "edit_constant": "编辑常量",
             "value": "值",
             "error": "无法保存属性",
-            "total_count": "属性数量"
+            "total_count": "{count} 个属性 | {count} 个属性"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "无法加载外部用户或权限",
         "successful": "外部用户添加成功",
         "successful_edit": "已成功更新外部用户",
-        "total_count": "外部用户数量",
+        "total_count": "{count} 位外部用户 | {count} 位外部用户",
         "removed": "外部用户已删除",
         "removed_error": "无法删除外部用户"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "已成功更新资产组",
         "removed": "已成功删除资产组",
         "removed_error": "资产组正在使用，无法删除",
-        "total_count": "资产组数量"
+        "total_count": "{count} 个资产组 | {count} 个资产组"
     },
     "notification_template": {
         "add_new": "添加新通知模板",
@@ -1594,7 +1650,7 @@
         "successful_edit": "已成功更新通知模板",
         "removed": "已成功删除通知模板",
         "removed_error": "通知模板正在使用，无法删除",
-        "total_count": "通知模板数量"
+        "total_count": "{count} 个通知模板 | {count} 个通知模板"
     },
     "asset": {
         "add": "添加资产",
@@ -1614,13 +1670,15 @@
         "value": "值",
         "vulnerable": "存在漏洞",
         "total": "总计",
-        "total_count": "资产数量",
+        "total_count": "{count} 项资产 | {count} 项资产",
         "successful": "已成功添加新资产",
         "successful_edit": "已成功更新资产",
         "removed": "已成功删除资产",
         "removed_error": "资产正在使用，无法删除",
         "vulnerabilities": "漏洞",
-        "vulnerabilities_count": "漏洞：",
+        "serial_with_value": "序列号：{value}",
+        "cpe_count": "没有 CPE 代码 | {count} 个 CPE 代码 | {count} 个 CPE 代码",
+        "vulnerabilities_count": "没有漏洞 | {count} 个漏洞 | {count} 个漏洞",
         "no_vulnerabilities": "无漏洞",
         "sort": {
             "alphabetical": "按字母顺序",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "登录方式数量：",
+        "total_count": "{count} 种登录方式 | {count} 种登录方式",
         "add_new": "添加新的登录方式",
         "edit": "编辑登录方式",
         "name": "名称",
@@ -1658,7 +1716,7 @@
             "ldap": "LDAP / Active Directory",
             "saml": "SAML 2.0"
         },
-        "slug": "URL slug",
+        "slug": "URL 路径标识",
         "slug_hint": "用于面向 IdP 的 URL 的稳定标识符。根据名称自动填充；只能包含小写字母、数字和连字符。",
         "slug_invalid": "请使用小写字母、数字和连字符；必须以字母或数字开头和结尾。",
         "enabled": "已启用",
@@ -1677,25 +1735,25 @@
         "allowed_domains": "允许的电子邮件域名",
         "allowed_domains_hint": "以逗号分隔；留空则允许所有域名",
         "require_mfa": "要求双重身份验证",
-        "require_mfa_hint": "用户登录时必须使用 TOTP 或 passkey 进行验证",
-        "require_mfa_enabled_hint": "所有通过此方式登录的用户都必须使用 TOTP 或 passkey。",
+        "require_mfa_hint": "用户登录时必须使用 TOTP 或通行密钥进行验证",
+        "require_mfa_enabled_hint": "所有通过此方式登录的用户都必须使用 TOTP 或通行密钥。",
         "require_mfa_disabled_hint": "此登录方式不增加 MFA 要求。站点、组织或用户策略仍可要求使用第二重验证。",
         "issuer_url": "签发者 URL",
-        "issuer_url_hint": "Discovery 基础 URL，例如 https://idp.example.org/realms/main",
-        "client_id": "Client ID",
+        "issuer_url_hint": "发现服务的基础 URL，例如 https://idp.example.org/realms/main",
+        "client_id": "客户端 ID",
         "scopes": "作用域",
         "username_claim": "用户名声明",
         "email_claim": "电子邮件声明",
-        "redirect_uri_override": "自定义 Redirect URI",
+        "redirect_uri_override": "自定义重定向 URI",
         "redirect_uri_hint": "留空以根据请求生成",
-        "callback_uri": "需要向提供商注册的 Callback URI",
-        "copy_callback_uri": "复制 Callback URI",
-        "callback_uri_copied": "已复制 Callback URI",
-        "pkce_method": "PKCE code challenge 方法",
-        "pkce_method_hint": "使用 S256（推荐）。仅当提供商不支持 PKCE 时才选择 None。",
-        "pkce_method_none": "None — 提供商不支持 PKCE",
+        "callback_uri": "需要向提供商注册的回调 URI",
+        "copy_callback_uri": "复制回调 URI",
+        "callback_uri_copied": "已复制回调 URI",
+        "pkce_method": "PKCE 代码质询方法",
+        "pkce_method_hint": "使用 S256（推荐）。仅当提供商不支持 PKCE 时才选择无 (none)。",
+        "pkce_method_none": "无 (none) — 提供商不支持 PKCE",
         "pkce_method_s256": "S256 — 推荐",
-        "pkce_method_plain": "Plain code challenge",
+        "pkce_method_plain": "明文代码质询 (plain)",
         "pkce_plain_warning": "旧版兼容模式：验证器会暴露在授权请求中。仅当提供商不支持 S256 时使用。",
         "pkce_plain_confirm_title": "使用旧版 PKCE plain 模式？",
         "pkce_plain_confirm_message": "PKCE plain 会在浏览器可见的授权请求中暴露验证器，安全性低于 S256。仅当此提供商不支持 S256 时确认。",
@@ -1705,10 +1763,10 @@
         "insecure_ldap_no_tls": "LDAP 流量未受 TLS 保护。用户名、密码和目录数据可能以明文传输。",
         "insecure_pkce_none": "PKCE 已禁用。除非提供商不支持 PKCE，否则请使用 S256。",
         "insecure_pkce_plain": "PKCE plain 会在浏览器可见的授权请求中暴露验证器。请尽可能使用 S256。",
-        "insecure_http_endpoint": "至少有一个身份验证 endpoint 使用未加密的 HTTP。HTTP 仅适用于 loopback 开发服务。",
-        "secret": "Client secret",
+        "insecure_http_endpoint": "至少有一个身份验证端点使用未加密的 HTTP。HTTP 仅适用于回环开发服务。",
+        "secret": "客户端密钥",
         "secret_hint": "加密存储",
-        "secret_keep_hint": "已有 secret 存储；留空可保留原值",
+        "secret_keep_hint": "已有密钥存储；留空可保留原值",
         "authorize_url": "授权 URL",
         "token_url": "令牌 URL",
         "userinfo_url": "UserInfo URL",
@@ -1720,7 +1778,7 @@
         "user_dn_template_hint": "直接绑定。使用包含 {username} 的完整模板 (uid={username},ou=people,dc=example,dc=org)，或使用普通基础 DN (ou=people,dc=example,dc=org)；系统会自动在前面添加“用户名属性”字段中的 RDN 属性。留空以使用搜索并绑定。",
         "ldap_bind_mode_direct": "直接绑定",
         "ldap_bind_mode_search": "搜索并绑定（服务账户）",
-        "ldap_bind_mode_hint": "直接绑定使用由模板构建的 DN 进行绑定来验证用户。搜索并绑定使用服务账户查找用户，然后以该用户身份重新绑定。Backend 会根据已设置的字段选择路径。",
+        "ldap_bind_mode_hint": "直接绑定使用由模板构建的 DN 进行绑定来验证用户。搜索并绑定使用服务账户查找用户，然后以该用户身份重新绑定。后端会根据已设置的字段选择路径。",
         "ldap_bind_mode": "LDAP 绑定模式",
         "ldap_bind_mode_direct_hint": "根据用户 DN 模板构建用户的 DN，并使用其输入的密码进行绑定。不使用服务账户。",
         "ldap_bind_mode_search_hint": "使用服务账户绑定并查找用户，然后使用其输入的密码以该用户身份绑定。",
@@ -1739,35 +1797,36 @@
         "removed": "登录方式已删除。",
         "remove_error": "无法删除此登录方式。",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — {count} 个已关联的用户身份将失去此登录方式",
+        "delete_message_linked": "{name}：{count} 个已关联的用户身份将失去此登录方式 | {name}：{count} 个已关联的用户身份将失去此登录方式",
         "tab_description": "您可以在此管理登录方式（身份提供商）。",
         "idp_sso_url": "IdP SSO URL",
-        "idp_sso_url_hint": "身份提供商的 HTTP-Redirect 绑定 endpoint",
-        "idp_entity_id": "IdP entity ID",
+        "idp_sso_url_hint": "身份提供商的 HTTP-Redirect 绑定端点",
+        "idp_entity_id": "IdP 实体 ID",
         "idp_entity_id_hint": "SAML 响应的签发者",
         "idp_certificate": "IdP 签名证书（PEM）",
-        "idp_certificate_hint": "身份提供商用来签署响应的证书。使用 metadata 中的 base64 块即可；密钥轮换期间会保留多个证书。",
-        "sp_entity_id": "SP entity ID",
-        "sp_entity_id_hint": "我们在 IdP 注册的 entity ID / audience。联合必须使用保持稳定的 https:// URL。",
-        "sp_entity_id_use_suggested": "使用建议值（SAML endpoint URL）",
+        "idp_certificate_hint": "身份提供商用来签署响应的证书。使用元数据中的 Base64 块即可；密钥轮换期间会保留多个证书。",
+        "sp_entity_id": "SP 实体 ID",
+        "sp_entity_id_hint": "我们在 IdP 注册的实体 ID / 受众。联合必须使用保持稳定的 https:// URL。",
+        "sp_entity_id_use_suggested": "使用建议值（SAML 端点 URL）",
         "acs_url_override": "自定义 ACS URL",
         "acs_url_hint": "留空以根据请求生成",
         "saml_username_attr_hint": "断言属性；留空则使用 NameID",
         "email_attr": "电子邮件属性",
         "external_id_attr": "稳定标识符属性",
-        "external_id_attr_hint": "在多次登录之间保持不变的断言属性（例如唯一 ID 或 principal 名称）。仅当 IdP 签发持久 NameID 时才可留空；临时 NameID 会在每次登录时创建新的身份。",
+        "external_id_attr_hint": "在多次登录之间保持不变的断言属性（例如唯一 ID 或主体名称）。仅当 IdP 签发持久 NameID 时才可留空；临时 NameID 会在每次登录时创建新的身份。",
         "saml_attr_hint": "断言属性名称（当 IdP 使用 URI 名称格式时为 OID）",
         "saml_idp_urls": "将这些 URL 提供给身份提供商",
         "saml_tab_general": "常规",
         "saml_tab_service_information": "服务信息",
         "saml_tab_sp_keypair": "SP 密钥对",
-        "saml_metadata_url": "SP metadata URL",
-        "saml_acs_url": "Assertion Consumer Service (ACS) URL",
-        "idp_metadata": "IdP metadata（URL 或 XML）",
-        "idp_metadata_hint": "粘贴身份提供商的 metadata URL 或 XML 本身，然后按“加载”；entity ID、SSO URL 和签名证书将从中自动填充。",
+        "saml_metadata_url_with_url": "SP 元数据 URL：{url}",
+        "saml_acs_url_with_url": "断言消费服务 (ACS) URL：{url}",
+        "saml_disco_url_with_url": "发现响应 URL：{url}",
+        "idp_metadata": "IdP 元数据（URL 或 XML）",
+        "idp_metadata_hint": "粘贴身份提供商的元数据 URL 或 XML 本身，然后按“加载”；实体 ID、SSO URL 和签名证书将从中自动填充。",
         "idp_metadata_load": "加载",
-        "idp_metadata_loaded": "已从 metadata 加载（{count} 个签名证书）。请检查下方字段并保存。",
-        "idp_metadata_error": "无法读取 metadata。",
+        "idp_metadata_loaded": "已从元数据加载 {count} 个签名证书。请检查下方字段并保存。 | 已从元数据加载 {count} 个签名证书。请检查下方字段并保存。",
+        "idp_metadata_error": "无法读取元数据。",
         "sp_keypair": "服务提供商密钥对",
         "sp_keypair_stored": "密钥已存储",
         "sp_keypair_generate": "生成密钥对",
@@ -1779,27 +1838,26 @@
         "sp_private_key_hint": "加密存储且不会再次显示。仅当身份提供商加密断言时才需要。",
         "sp_certificate": "SP 证书（PEM）",
         "sp_certificate_hint": "这是身份提供商注册表单所要求的“加密证书”。请将注册表单中的签名证书留空：我们不会签署身份验证请求。",
-        "saml_use_federation": "连接到联合（Discovery 服务）",
-        "saml_use_federation_hint": "不连接单个身份提供商，而是加入整个联合（例如 eduGAIN、InCommon、DFN-AAI）：用户在联合的 Discovery 服务 (WAYF) 中选择其机构，系统从已签名的联合 metadata 中解析所选 IdP。",
+        "saml_use_federation": "连接到联合（发现服务）",
+        "saml_use_federation_hint": "不连接单个身份提供商，而是加入整个联合（例如 eduGAIN、InCommon、DFN-AAI）：用户在联合的发现服务 (WAYF) 中选择其机构，系统从已签名的联合元数据中解析所选 IdP。",
         "saml_connection_mode": "SAML 连接模式",
         "saml_single_idp": "连接到单个身份提供商",
-        "saml_single_idp_hint": "使用单个身份提供商的 metadata 和 endpoint。每个用户都会被直接发送到该提供商。",
-        "discovery_url": "Discovery 服务 (WAYF) URL",
+        "saml_single_idp_hint": "使用单个身份提供商的元数据和端点。每个用户都会被直接发送到该提供商。",
+        "discovery_url": "发现服务 (WAYF) URL",
         "discovery_url_hint": "用户在此选择身份提供商，例如 https://discovery.example.org/wayf",
-        "discovery_params": "Discovery 服务参数",
-        "discovery_params_hint": "可选的额外查询字符串，将原样追加到 Discovery URL。许多联合接受过滤参数以限制列出的 IdP；请向联合运营方获取。必须可直接用于 URL，例如 filter=...",
-        "federation_metadata_url": "联合 metadata URL",
-        "federation_metadata_url_hint": "联合的已签名 metadata 汇总，例如 https://metadata.example.org",
-        "federation_metadata_cert": "联合 metadata 签名证书（PEM）",
-        "federation_metadata_cert_hint": "信任锚：只有在能使用此证书验证签名时，联合 metadata 才受信任。请通过独立渠道向联合运营方获取，并交叉核对其 fingerprint。",
+        "discovery_params": "发现服务参数",
+        "discovery_params_hint": "可选的额外查询字符串，将原样追加到发现服务 URL。许多联合接受过滤参数以限制列出的 IdP；请向联合运营方获取。必须可直接用于 URL，例如 filter=...",
+        "federation_metadata_url": "联合元数据 URL",
+        "federation_metadata_url_hint": "联合的已签名元数据汇总，例如 https://metadata.example.org",
+        "federation_metadata_cert": "联合元数据签名证书（PEM）",
+        "federation_metadata_cert_hint": "信任锚：只有在能使用此证书验证签名时，联合元数据才受信任。请通过独立渠道向联合运营方获取，并交叉核对其指纹。",
         "federation_verify": "验证联合",
-        "federation_verify_result": "验证成功。找到 {count} 个可用的身份提供商。",
-        "federation_verify_error": "无法验证联合 metadata。",
-        "saml_disco_url": "Discovery 响应 URL",
+        "federation_verify_result": "验证成功。找到 {count} 个可用的身份提供商。 | 验证成功。找到 {count} 个可用的身份提供商。",
+        "federation_verify_error": "无法验证联合元数据。",
         "sp_metadata_info": "服务信息（用于联合注册）",
-        "sp_metadata_info_hint": "发布在 SP metadata 中。联合通常要求提供组织、联系人和显示名称才会接受注册；用户也会在 Discovery 服务中看到这些信息。",
+        "sp_metadata_info_hint": "发布在 SP 元数据中。联合通常要求提供组织、联系人和显示名称才会接受注册；用户也会在发现服务中看到这些信息。",
         "sp_display_name": "服务显示名称",
-        "sp_display_name_hint": "向选择此服务的用户显示；同时也是 metadata 中的 ServiceName。默认使用登录方式名称。",
+        "sp_display_name_hint": "向选择此服务的用户显示；同时也是元数据中的 ServiceName。默认使用登录方式名称。",
         "sp_description": "服务描述",
         "sp_description_hint": "服务的简短描述。",
         "sp_information_url": "服务信息 URL",
@@ -1809,32 +1867,34 @@
         "sp_organization_url": "组织 URL",
         "sp_organization_url_hint": "组织的网站。",
         "sp_contact_email": "技术联系人电子邮件",
-        "sp_contact_email_hint": "发布在 metadata 中的技术联系人（联合要求提供一位）。",
+        "sp_contact_email_hint": "发布在元数据中的技术联系人（联合要求提供一位）。",
         "sp_contact_name": "技术联系人名字",
         "sp_contact_name_hint": "技术联系人的名字（可选）。姓氏将单独发布。",
         "sp_contact_surname": "技术联系人姓氏",
-        "sp_contact_surname_hint": "发布在 metadata 中的技术联系人姓氏（联合通常要求提供）。留空时，将从联系人名称的最后一个词推导。"
+        "sp_contact_surname_hint": "发布在元数据中的技术联系人姓氏（联合通常要求提供）。留空时，将从联系人名称的最后一个词推导。"
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "安全",
+        "enabled": "已启用",
+        "disabled": "已禁用",
+        "error": "操作失败。",
+        "totp_title": "身份验证器应用 (TOTP)",
+        "totp_hint": "登录时要求输入身份验证器应用生成的一次性验证码。",
+        "totp_enable": "启用",
+        "totp_scan": "使用身份验证器应用扫描二维码，然后输入验证码进行确认。",
+        "totp_qr_alt": "用于注册身份验证器应用的二维码",
+        "totp_code": "身份验证码",
+        "totp_activate": "激活",
+        "totp_disable": "禁用",
+        "totp_enabled": "已启用双重身份验证。",
+        "totp_disabled": "已禁用双重身份验证。",
+        "passkeys_title": "通行密钥",
+        "passkey_add": "添加通行密钥",
+        "passkey_name": "名称",
+        "default_passkey_name": "通行密钥",
+        "passkey_created": "创建时间",
+        "passkey_last_used": "上次使用时间",
+        "passkey_added": "通行密钥已注册。",
+        "no_passkeys": "尚未注册通行密钥。"
     }
 }
