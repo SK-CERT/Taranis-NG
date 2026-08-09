@@ -296,8 +296,8 @@
         "roles": "Role",
         "acls": "ACL",
         "access_management": "Správa prístupov",
-        "users": "Užívatelia",
-        "external_users": "Externí užívatelia",
+        "users": "Používatelia",
+        "external_users": "Externí používatelia",
         "external": "Externé",
         "organizations": "Organizácie",
         "word_lists": "Slovníky",
@@ -1009,7 +1009,7 @@
         }
     },
     "settings": {
-        "user_settings": "Nastavenie užívateľa",
+        "user_settings": "Nastavenie používateľa",
         "tab_general": "Všeobecné",
         "tab_security": "Zabezpečenie",
         "tab_wordlists": "Slovníky",
