@@ -107,6 +107,7 @@ function makeReportType() {
                         description: EDITABLE_DESCRIPTION,
                         min_occurrence: 1,
                         max_occurrence: 1,
+                        ai_provider_id: 17,
                         attribute: { type: 'STRING' }
                     },
                     {
@@ -151,7 +152,16 @@ describe('NewReportItem — label-only attributes (max_occurrence 0)', () => {
                 state_id: 1,
                 news_item_aggregates: [],
                 remote_report_items: [],
-                attributes: []
+                attributes: [
+                    {
+                        id: 21,
+                        attribute_group_item_id: 11,
+                        value: 'Original generated value',
+                        value_description: '',
+                        user: { name: 'Analyst' },
+                        locked: false
+                    }
+                ]
             }
         })
         vi.mocked(analyzeApi.getReportItemLocks).mockResolvedValue({ data: {} })
@@ -211,8 +221,40 @@ describe('NewReportItem — label-only attributes (max_occurrence 0)', () => {
         const tooltip = describedPanel.findComponent({ name: 'VTooltip' })
 
         expect(tooltip.exists()).toBe(true)
-        expect(tooltip.props('text')).toBe(EDITABLE_DESCRIPTION)
+        expect(tooltip.get('bdi[dir="auto"]').text()).toBe(EDITABLE_DESCRIPTION)
         expect(undescribedPanel.findComponent({ name: 'VTooltip' }).exists()).toBe(false)
+    })
+
+    it('uses logical field/help spacing and isolates attribute names', async () => {
+        const wrapper = await mountOpenedEditor()
+        const describedPanel = panelFor(wrapper, EDITABLE_TITLE)
+        const tooltip = describedPanel.findComponent({ name: 'VTooltip' })
+        const activator = tooltip.vm.$slots.activator({ props: {} })
+
+        expect(wrapper.findAll('.pe-3')).toHaveLength(3)
+        expect(wrapper.find('.pr-3').exists()).toBe(false)
+        expect(activator.some((node) => node.props?.class === 'ms-1')).toBe(true)
+        expect(describedPanel.findAll('bdi[dir="auto"]').map((node) => node.text())).toContain(EDITABLE_TITLE)
+        const reportTitleFields = wrapper
+            .findAllComponents({ name: 'VTextField' })
+            .filter((field) => ['Prefix', 'Title'].includes(field.props('modelValue')))
+        expect(reportTitleFields).toHaveLength(2)
+        expect(reportTitleFields.every((field) => field.vm.$.vnode.props.dir === 'auto')).toBe(true)
+        expect(wrapper.getComponent({ name: 'VCombobox' }).vm.$.vnode.props.dir).toBe('auto')
+        expect(wrapper.findAll('bdi[dir="auto"]').map((node) => node.text())).toContain('Group')
+    })
+
+    it('uses the translated server-error fallback when AI generation rejects without an Error', async () => {
+        vi.mocked(analyzeApi.aiGenerate).mockRejectedValue({})
+        const wrapper = await mountOpenedEditor()
+        const generateButton = wrapper.findAllComponents({ name: 'VBtn' }).find((button) => button.attributes('title') === 'Auto generate')
+
+        expect(generateButton).toBeDefined()
+        await generateButton.trigger('click')
+        await flushPromises()
+
+        const editor = wrapper.getComponent({ name: 'AttributeContainer' })
+        expect(editor.props('attributeItem').values[0].value).toBe('"Unknown server error..."')
     })
 
     it('restores and immediately persists the side-by-side layout preference', async () => {

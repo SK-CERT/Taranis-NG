@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
+import { createI18n } from 'vue-i18n'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import RemoteReportItem from '@/components/analyze/RemoteReportItem.vue'
 import RemoteAttributeAttachment from '@/components/common/attribute/RemoteAttributeAttachment.vue'
@@ -21,6 +22,17 @@ const VDialogStub = {
     props: ['modelValue'],
     template: '<div><slot /></div>'
 }
+
+const remoteMessages = createI18n({
+    legacy: false,
+    locale: 'en',
+    messages: {
+        en: {
+            report_item: { id_with_value: 'ID: {id}' },
+            card_item: { source_with_value: 'Source: {source}' }
+        }
+    }
+})
 
 describe('RemoteReportItem', () => {
     beforeEach(() => vi.clearAllMocks())
@@ -46,7 +58,10 @@ describe('RemoteReportItem', () => {
             }
         })
         const wrapper = mountWithPlugins(RemoteReportItem, {
-            global: { stubs: { VDialog: VDialogStub, RemoteAttributeContainer: RemoteAttributeContainerStub } }
+            global: {
+                plugins: [remoteMessages],
+                stubs: { VDialog: VDialogStub, RemoteAttributeContainer: RemoteAttributeContainerStub }
+            }
         })
 
         await wrapper.vm.showDetail({ id: 41, remote_user: 'upstream-node' })
@@ -58,6 +73,13 @@ describe('RemoteReportItem', () => {
         expect(groups[0].props('attributeGroup').attributes).toHaveLength(2)
         expect(groups[1].props('attributeGroup')).toMatchObject({ title: 'Evidence', attributeType: 'ATTACHMENT' })
         expect(groups[1].props('reportItemId')).toBe(41)
+        expect(wrapper.get('v-toolbar-title bdi[dir="auto"], .v-toolbar-title bdi[dir="auto"]').text()).toBe('Remote report')
+        expect(wrapper.findAll('.remote-report__identity bdi').map((node) => [node.attributes('dir'), node.text()])).toEqual([
+            ['ltr', 'remote-uuid'],
+            ['auto', 'upstream-node']
+        ])
+        expect(wrapper.get('.remote-report__identity').text()).toContain('ID: remote-uuid')
+        expect(wrapper.get('.remote-report__identity').text()).toContain('Source: upstream-node')
     })
 
     it('refuses to route a local report into the remote viewer', async () => {
@@ -72,6 +94,26 @@ describe('RemoteReportItem', () => {
 
 describe('RemoteAttributeAttachment', () => {
     beforeEach(() => vi.clearAllMocks())
+
+    it('uses IEC file sizes and bidi-isolates remote attachment metadata', () => {
+        const value = {
+            id: 3,
+            value: 'دليل.txt',
+            binary_size: 1536,
+            binary_description: 'وصف الدليل'
+        }
+        const wrapper = mountWithPlugins(RemoteAttributeAttachment, {
+            props: {
+                reportItemId: 41,
+                attributeGroup: { attributes: [value] }
+            }
+        })
+
+        const bidis = wrapper.findAll('bdi')
+        expect(bidis.map((bdi) => bdi.attributes('dir'))).toEqual(['auto', 'ltr', 'auto'])
+        expect(bidis.map((bdi) => bdi.text())).toEqual(['دليل.txt', '1.5 KiB', 'وصف الدليل'])
+        expect(value).toMatchObject({ binary_size: 1536, binary_description: 'وصف الدليل' })
+    })
 
     it('downloads from the report-scoped API and never trusts a payload URL', async () => {
         const wrapper = mountWithPlugins(RemoteAttributeAttachment, {

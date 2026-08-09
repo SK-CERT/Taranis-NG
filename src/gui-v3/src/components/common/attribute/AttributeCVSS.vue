@@ -17,16 +17,16 @@
                 >
                     <span
                         v-if="values.length > 1"
-                        class="mr-2 text-grey"
+                        class="me-2 text-grey"
                         :style="{ userSelect: 'none', minWidth: '24px', display: 'inline-block' }"
                         >{{ index + 1 }}.</span
                     >
                     <v-chip
                         :color="getCVSSColor(value.value)"
                         size="small"
-                        class="mr-2"
+                        class="me-2"
                     >
-                        {{ value.value }}
+                        <bdi dir="ltr">{{ value.value }}</bdi>
                     </v-chip>
                     <span class="text-caption text-grey">{{ getCVSSSeverity(value.value) }}</span>
                 </div>
@@ -48,7 +48,8 @@
                             density="compact"
                             variant="outlined"
                             hide-details="auto"
-                            label="CVSS Vector / Score"
+                            :label="t('attribute.cvss_vector_score')"
+                            dir="ltr"
                             :rules="[vectorRule]"
                             :class="getLockedStyle(index)"
                             :disabled="value.locked || !canModify"

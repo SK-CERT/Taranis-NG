@@ -275,4 +275,57 @@ describe('NewReportItem SSE collaboration', () => {
         const textFields = wrapper.findAllComponents({ name: 'VTextField' })
         expect(textFields[1].props('disabled')).toBe(false)
     })
+
+    it('localizes and isolates valid conflict metadata and both competing values', async () => {
+        const wrapper = await mountOpenedEditor()
+        const timestamp = '2026-08-09T18:30:00Z'
+
+        window.dispatchEvent(
+            new CustomEvent('report-item-conflict', {
+                detail: {
+                    reportItemId: 7,
+                    attributeId: 21,
+                    user: 'Remote analyst',
+                    lastUpdated: timestamp,
+                    theirs: 'Stored value',
+                    mine: 'My value',
+                    keepMine: vi.fn(),
+                    takeTheirs: vi.fn()
+                }
+            })
+        )
+        await flushPromises()
+
+        const expectedTime = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(timestamp))
+        const metadata = wrapper.get('p.mb-4')
+        expect(metadata.get('bdi[dir="auto"]').text()).toBe('Remote analyst')
+        expect(metadata.findAll('bdi[dir="auto"]').map((node) => node.text())).toEqual(['Remote analyst', expectedTime])
+        expect(wrapper.findAll('.conflict-value bdi[dir="auto"]').map((node) => node.text())).toEqual(['Stored value', 'My value'])
+    })
+
+    it('preserves an invalid conflict timestamp safely and keeps the unknown-time fallback', async () => {
+        const wrapper = await mountOpenedEditor()
+        const commonDetail = {
+            reportItemId: 7,
+            attributeId: 21,
+            user: 'Remote analyst',
+            theirs: 'Stored value',
+            mine: 'My value',
+            keepMine: vi.fn(),
+            takeTheirs: vi.fn()
+        }
+
+        window.dispatchEvent(
+            new CustomEvent('report-item-conflict', {
+                detail: { ...commonDetail, lastUpdated: 'وقت قديم' }
+            })
+        )
+        await flushPromises()
+        expect(wrapper.get('p.mb-4 bdi[dir="auto"]:last-child').text()).toBe('وقت قديم')
+
+        window.dispatchEvent(new CustomEvent('report-item-conflict', { detail: { ...commonDetail, lastUpdated: '' } }))
+        await flushPromises()
+        expect(wrapper.get('p.mb-4').text()).toContain('Somebody changed this value')
+        expect(wrapper.find('p.mb-4 bdi').exists()).toBe(false)
+    })
 })

@@ -12,7 +12,7 @@
                     </v-col>
                     <v-col
                         cols="4"
-                        class="text-right"
+                        class="text-end"
                     >
                         <NewRole
                             :edit-item="editItem"
@@ -32,7 +32,9 @@
                 class="elevation-1"
             >
                 <template #item.name="{ item }">
-                    <strong>{{ asRoleItem(item).name }}</strong>
+                    <strong
+                        ><bdi dir="auto">{{ asRoleItem(item).name }}</bdi></strong
+                    >
                 </template>
 
                 <template #item.description="{ item }">
@@ -43,7 +45,7 @@
                     <ActionButton
                         action="edit"
                         :title="t('common.edit')"
-                        class="mr-1"
+                        class="me-1"
                         @click="handleEdit(asRoleItem(item))"
                     />
                     <ActionButton
@@ -58,7 +60,7 @@
 
         <ConfirmationDialog
             v-model="deleteDialog"
-            :message="itemToDelete?.name || ''"
+            :message="isolateAuto(itemToDelete?.name)"
             max-width="600px"
             @confirm="confirmDelete"
         />
@@ -107,6 +109,10 @@
     ]
 
     const asRoleItem = (item: unknown): RoleItem => item as RoleItem
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+    const isolateAuto = (value: unknown): string =>
+        value == null || value === '' ? '' : `${FIRST_STRONG_ISOLATE}${String(value)}${POP_DIRECTIONAL_ISOLATE}`
 
     const loadData = async (): Promise<void> => {
         try {

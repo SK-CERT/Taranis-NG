@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { createI18n } from 'vue-i18n'
 import { describe, expect, it, vi } from 'vitest'
 import WordCloud from '@/components/dashboard/WordCloud.vue'
 
@@ -37,48 +38,63 @@ vi.mock('d3-cloud', () => ({
 
 const data = [
     { word: 'minor', word_quantity: 2 },
-    { word: 'major', word_quantity: 20 },
+    { word: 'مصدر', word_quantity: 12000 },
     { word: 'middle', word_quantity: 8 }
 ]
 
+const mountWordCloud = (props: Record<string, unknown>) =>
+    mount(WordCloud, {
+        props,
+        global: {
+            plugins: [
+                createI18n({
+                    legacy: false,
+                    locale: 'de',
+                    messages: {
+                        de: {
+                            common: { no_data: 'Keine Daten verfügbar' },
+                            toolbar_filter: { search: 'Suchen' },
+                            word_cloud: {
+                                label: 'Wortwolke',
+                                word_action_count:
+                                    '{action} {word}: keine Ergebnisse | {action} {word}: {count} Ergebnis | {action} {word}: {count} Ergebnisse'
+                            }
+                        }
+                    }
+                })
+            ],
+            stubs: {
+                VContainer: { template: '<div><slot /></div>' },
+                VAlert: { template: '<div><slot /></div>' }
+            }
+        }
+    })
+
 describe('WordCloud', () => {
     it('renders every valid word in relevance order without a scrolling region', async () => {
-        const wrapper = mount(WordCloud, {
-            props: { data },
-            global: {
-                stubs: {
-                    VContainer: { template: '<div><slot /></div>' },
-                    VAlert: { template: '<div><slot /></div>' }
-                }
-            }
-        })
+        const wrapper = mountWordCloud({ data })
 
         await vi.waitFor(() => expect(wrapper.findAll('.word-cloud-item')).toHaveLength(3))
 
         expect(wrapper.findAll('.word-cloud-item').map((item) => item.attributes('aria-label'))).toEqual([
-            'Search: major (20)',
-            'Search: middle (8)',
-            'Search: minor (2)'
+            'Suchen \u2068مصدر\u2069: 12.000 Ergebnisse',
+            'Suchen \u2068middle\u2069: 8 Ergebnisse',
+            'Suchen \u2068minor\u2069: 2 Ergebnisse'
         ])
         expect(wrapper.find('.word-cloud').attributes('role')).toBe('group')
+        expect(wrapper.find('.word-cloud').attributes('aria-label')).toBe('Wortwolke')
+        expect(wrapper.findAll('.word-cloud-item').every((item) => item.attributes('dir') === 'auto')).toBe(true)
+        expect(wrapper.find('title').text()).toBe('Suchen \u2068مصدر\u2069: 12.000 Ergebnisse')
         expect(wrapper.find('.word-cloud-container').attributes('style')).toBeUndefined()
         wrapper.unmount()
     })
 
     it('uses stable colors and scales frequent words more prominently', async () => {
-        const wrapper = mount(WordCloud, {
-            props: {
-                data,
-                colorScheme: ['#123456', '#abcdef'],
-                minFontSize: 10,
-                maxFontSize: 40
-            },
-            global: {
-                stubs: {
-                    VContainer: { template: '<div><slot /></div>' },
-                    VAlert: { template: '<div><slot /></div>' }
-                }
-            }
+        const wrapper = mountWordCloud({
+            data,
+            colorScheme: ['#123456', '#abcdef'],
+            minFontSize: 10,
+            maxFontSize: 40
         })
 
         await vi.waitFor(() => expect(wrapper.findAll('.word-cloud-item')).toHaveLength(3))
@@ -95,22 +111,39 @@ describe('WordCloud', () => {
     })
 
     it('shows the supplied empty message when there are no valid words', () => {
-        const wrapper = mount(WordCloud, {
-            props: {
-                data: [{ word: '', word_quantity: 1 }],
-                emptyMessage: 'Nothing collected yet'
-            },
-            global: {
-                stubs: {
-                    VContainer: { template: '<div><slot /></div>' },
-                    VAlert: { template: '<div><slot /></div>' }
-                }
-            }
+        const wrapper = mountWordCloud({
+            data: [{ word: '', word_quantity: 1 }],
+            emptyMessage: 'Nothing collected yet'
         })
 
         expect(wrapper.text()).toContain('Nothing collected yet')
         expect(wrapper.find('.word-cloud').exists()).toBe(false)
         expect(wrapper.find('.word-cloud-empty').exists()).toBe(true)
         wrapper.unmount()
+    })
+
+    it('uses translated defaults and preserves click and keyboard selection payloads', async () => {
+        const wrapper = mountWordCloud({ data: [{ word: 'مصدر', word_quantity: 1 }] })
+        await vi.waitFor(() => expect(wrapper.find('.word-cloud-item').exists()).toBe(true))
+
+        const word = wrapper.get('.word-cloud-item')
+        expect(word.attributes('aria-label')).toBe('Suchen \u2068مصدر\u2069: 1 Ergebnis')
+        await word.trigger('click')
+        await word.trigger('keydown', { key: 'Enter' })
+        await word.trigger('keydown', { key: ' ' })
+
+        expect(wrapper.emitted('select-word')).toEqual([['مصدر'], ['مصدر'], ['مصدر']])
+        await wrapper.setProps({ wordActionLabel: 'Nachschlagen' })
+        expect(word.attributes('aria-label')).toBe('Nachschlagen \u2068مصدر\u2069: 1 Ergebnis')
+        wrapper.unmount()
+
+        const zeroWrapper = mountWordCloud({ data: [{ word: 'leer', word_quantity: 0 }] })
+        await vi.waitFor(() => expect(zeroWrapper.find('.word-cloud-item').exists()).toBe(true))
+        expect(zeroWrapper.get('.word-cloud-item').attributes('aria-label')).toBe('Suchen \u2068leer\u2069: keine Ergebnisse')
+        zeroWrapper.unmount()
+
+        const emptyWrapper = mountWordCloud({ data: [] })
+        expect(emptyWrapper.text()).toContain('Keine Daten verfügbar')
+        emptyWrapper.unmount()
     })
 })

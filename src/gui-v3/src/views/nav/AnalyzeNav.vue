@@ -19,9 +19,12 @@
                     >
                         {{ link.icon }}
                     </v-icon>
-                    <span class="section-navigation__label">
+                    <bdi
+                        dir="auto"
+                        class="section-navigation__label"
+                    >
                         {{ link.translate ? $t(link.title) : link.title }}
-                    </span>
+                    </bdi>
                 </div>
             </template>
         </v-list-item>

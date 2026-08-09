@@ -27,7 +27,7 @@
                 <template #activator="{ props: menuProps }">
                     <v-btn
                         v-bind="menuProps"
-                        class="attribute-provenance__activator ml-1"
+                        class="attribute-provenance__activator ms-1"
                         :icon="ICONS.CLOCK"
                         variant="text"
                         density="compact"
@@ -48,10 +48,14 @@
                                 :icon="ICONS.CLOCK"
                                 size="small"
                             />
-                            <span>
-                                <strong>{{ t('drop_zone.last_updated') }}:</strong>
-                                {{ lastUpdated }}
-                            </span>
+                            <i18n-t
+                                keypath="attribute.last_updated_at"
+                                tag="span"
+                            >
+                                <template #date>
+                                    <bdi dir="auto">{{ lastUpdated }}</bdi>
+                                </template>
+                            </i18n-t>
                         </div>
                         <div
                             v-if="modifiedBy"
@@ -61,10 +65,14 @@
                                 :icon="ICONS.ACCOUNT"
                                 size="small"
                             />
-                            <span>
-                                <strong>{{ t('settings.updated_by') }}:</strong>
-                                {{ modifiedBy }}
-                            </span>
+                            <i18n-t
+                                keypath="attribute.updated_by_user"
+                                tag="span"
+                            >
+                                <template #user>
+                                    <bdi dir="auto">{{ modifiedBy }}</bdi>
+                                </template>
+                            </i18n-t>
                         </div>
                     </v-card-text>
                 </v-card>
@@ -93,6 +101,7 @@
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     const props = withDefaults(
         defineProps<{
@@ -118,12 +127,19 @@
     }>()
 
     const { t } = useI18n()
+    const { formatDateTime, formatList } = useLocaleFormatters()
+
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+    const isolateAuto = (value: string): string => `${FIRST_STRONG_ISOLATE}${value}${POP_DIRECTIONAL_ISOLATE}`
 
     const currentValue = computed(() => props.values[props.valIndex])
 
     const lastUpdated = computed(() => {
         const value = currentValue.value?.last_updated
-        return typeof value === 'string' || typeof value === 'number' ? String(value).trim() : ''
+        if (typeof value !== 'string' && typeof value !== 'number') return ''
+        const rawValue = String(value).trim()
+        return rawValue ? formatDateTime(value) || rawValue : ''
     })
 
     const modifiedBy = computed(() => {
@@ -136,9 +152,9 @@
 
     const provenanceLabel = computed(() => {
         const details: string[] = []
-        if (lastUpdated.value) details.push(`${t('drop_zone.last_updated')}: ${lastUpdated.value}`)
-        if (modifiedBy.value) details.push(`${t('settings.updated_by')}: ${modifiedBy.value}`)
-        return details.join('; ')
+        if (lastUpdated.value) details.push(t('attribute.last_updated_at', { date: isolateAuto(lastUpdated.value) }))
+        if (modifiedBy.value) details.push(t('attribute.updated_by_user', { user: isolateAuto(modifiedBy.value) }))
+        return formatList(details, { style: 'long', type: 'conjunction' })
     })
 
     const delButtonVisible = computed(() => {

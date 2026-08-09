@@ -8,7 +8,7 @@
                 color="primary"
                 variant="tonal"
                 prepend-icon="mdi-upload"
-                class="mr-2"
+                class="me-2"
                 @click="openImportDialog"
             >
                 {{ t('asset.import_csv') }}
@@ -30,6 +30,12 @@
             hide-default-footer
             density="comfortable"
         >
+            <template #item.value="{ value }">
+                <bdi dir="ltr">{{ value }}</bdi>
+            </template>
+            <template #item.description="{ value }">
+                <bdi dir="auto">{{ value }}</bdi>
+            </template>
             <template #item.actions="{ item, index }">
                 <v-btn
                     :title="t('common.edit')"
@@ -74,6 +80,7 @@
                 <v-combobox
                     v-model="editedCpe.value"
                     v-model:search="cpeSearch"
+                    dir="ltr"
                     :spellcheck="false"
                     :items="cpeSuggestions"
                     :label="t('asset.value')"
@@ -87,6 +94,7 @@
                 />
                 <v-text-field
                     v-model="editedCpe.description"
+                    dir="auto"
                     :spellcheck="spellcheck"
                     :label="t('asset.description')"
                     variant="outlined"
@@ -166,7 +174,14 @@
                     :items="csvRows"
                     :items-per-page="5"
                     density="compact"
-                />
+                >
+                    <template #item.value="{ value }">
+                        <bdi dir="ltr">{{ value }}</bdi>
+                    </template>
+                    <template #item.description="{ value }">
+                        <bdi dir="auto">{{ value }}</bdi>
+                    </template>
+                </v-data-table>
             </v-card-text>
         </v-card>
     </v-dialog>

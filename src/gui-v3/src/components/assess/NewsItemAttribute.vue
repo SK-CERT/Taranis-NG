@@ -2,13 +2,15 @@
     <v-container class="ma-0">
         <v-row>
             <v-col>
-                <span style="margin-right: 20px; font-size: 12px">{{ attribute.key }}</span>
+                <span style="margin-inline-end: 20px; font-size: 12px">
+                    <bdi dir="auto">{{ attribute.key }}</bdi>
+                </span>
                 <br />
                 <span
                     v-if="attribute.binary_mime_type === ''"
                     style="font-size: 16px"
                 >
-                    {{ attribute.value }}
+                    <bdi dir="auto">{{ attribute.value }}</bdi>
                 </span>
                 <v-row
                     v-if="attribute.binary_mime_type !== ''"
@@ -18,7 +20,9 @@
                         <v-icon>mdi-file-document</v-icon>
                     </v-col>
                     <v-col>
-                        <div>{{ attribute.value }}</div>
+                        <div>
+                            <bdi dir="auto">{{ attribute.value }}</bdi>
+                        </div>
                     </v-col>
                     <v-col>
                         <v-btn

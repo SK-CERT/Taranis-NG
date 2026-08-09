@@ -25,7 +25,7 @@
                     <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
                 <v-toolbar-title class="truncate">
-                    {{ title }}
+                    <bdi dir="auto">{{ title }}</bdi>
                 </v-toolbar-title>
                 <v-spacer />
 
@@ -91,48 +91,68 @@
                                 md="3"
                                 class="text-center"
                             >
-                                <div class="text-overline font-weight-bold">
-                                    {{ t('assess.collected') }}
-                                </div>
-                                <div class="text-caption">
-                                    {{ firstNewsItemData?.collected || 'N/A' }}
-                                </div>
+                                <i18n-t
+                                    keypath="card_item.collected_at"
+                                    tag="div"
+                                    class="text-overline font-weight-bold"
+                                >
+                                    <template #date>
+                                        <div class="text-caption font-weight-regular text-none">
+                                            <bdi dir="auto">{{ collectedDisplay }}</bdi>
+                                        </div>
+                                    </template>
+                                </i18n-t>
                             </v-col>
                             <v-col
                                 cols="12"
                                 md="3"
                                 class="text-center"
                             >
-                                <div class="text-overline font-weight-bold">
-                                    {{ t('assess.published') }}
-                                </div>
-                                <div class="text-caption">
-                                    {{ firstNewsItemData?.published || 'N/A' }}
-                                </div>
+                                <i18n-t
+                                    keypath="card_item.published_at"
+                                    tag="div"
+                                    class="text-overline font-weight-bold"
+                                >
+                                    <template #date>
+                                        <div class="text-caption font-weight-regular text-none">
+                                            <bdi dir="auto">{{ publishedDisplay }}</bdi>
+                                        </div>
+                                    </template>
+                                </i18n-t>
                             </v-col>
                             <v-col
                                 cols="12"
                                 md="3"
                                 class="text-center"
                             >
-                                <div class="text-overline font-weight-bold">
-                                    {{ t('assess.source') }}
-                                </div>
-                                <div class="text-caption">
-                                    {{ firstNewsItemData?.source || 'N/A' }}
-                                </div>
+                                <i18n-t
+                                    keypath="card_item.source_with_value"
+                                    tag="div"
+                                    class="text-overline font-weight-bold"
+                                >
+                                    <template #source>
+                                        <div class="text-caption font-weight-regular text-none">
+                                            <bdi dir="auto">{{ sourceDisplay }}</bdi>
+                                        </div>
+                                    </template>
+                                </i18n-t>
                             </v-col>
                             <v-col
                                 cols="12"
                                 md="3"
                                 class="text-center"
                             >
-                                <div class="text-overline font-weight-bold">
-                                    {{ t('assess.author') }}
-                                </div>
-                                <div class="text-caption">
-                                    {{ firstNewsItemData?.author || 'N/A' }}
-                                </div>
+                                <i18n-t
+                                    keypath="card_item.author_with_value"
+                                    tag="div"
+                                    class="text-overline font-weight-bold"
+                                >
+                                    <template #author>
+                                        <div class="text-caption font-weight-regular text-none">
+                                            <bdi dir="auto">{{ authorDisplay }}</bdi>
+                                        </div>
+                                    </template>
+                                </i18n-t>
                             </v-col>
                         </v-row>
 
@@ -154,14 +174,23 @@
                     >
                         <v-divider class="mb-3" />
                         <div class="text-caption">
-                            <strong>{{ t('assess.link') }}: </strong>
-                            <a
-                                :href="newsItemLink"
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {{ newsItemLink }}
-                            </a>
+                            <i18n-t keypath="card_item.link_with_url">
+                                <template #url>
+                                    <a
+                                        v-if="isSafeNewsItemLink"
+                                        :href="newsItemLink"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <bdi dir="ltr">{{ newsItemLink }}</bdi>
+                                    </a>
+                                    <bdi
+                                        v-else
+                                        dir="ltr"
+                                        >{{ newsItemLink }}</bdi
+                                    >
+                                </template>
+                            </i18n-t>
                         </div>
                     </div>
                 </div>
@@ -256,6 +285,7 @@
     import NewsItemAttribute from '@/components/assess/NewsItemAttribute.vue'
     import { Action, type ActionKey } from '@/types/actions'
     import { sanitizeNewsItemHtml } from '@/utils/sanitizeNewsItemHtml'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type NewsAttributeItem = {
         id: number | string
@@ -329,6 +359,7 @@
     }>()
 
     const { t } = useI18n()
+    const { formatDateTime } = useLocaleFormatters()
     const { checkPermission } = useAuth()
     const spellcheck = useSpellcheck()
     const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
@@ -389,6 +420,16 @@
         return newsItem.value.news_items?.[0]?.news_item_data || {}
     })
 
+    const formatMetadataDate = (value: unknown): string => {
+        if (value === null || value === undefined || value === '') return t('card_item.not_available')
+        const rawValue = String(value)
+        return formatDateTime(rawValue) || rawValue
+    }
+    const collectedDisplay = computed(() => formatMetadataDate(firstNewsItemData.value.collected))
+    const publishedDisplay = computed(() => formatMetadataDate(firstNewsItemData.value.published))
+    const sourceDisplay = computed(() => firstNewsItemData.value.source || t('card_item.not_available'))
+    const authorDisplay = computed(() => firstNewsItemData.value.author || t('card_item.not_available'))
+
     const sanitizedNewsItemContent = computed(() => {
         return sanitizeNewsItemHtml(firstNewsItemData.value.content)
     })
@@ -399,6 +440,14 @@
 
     const hasLink = computed(() => {
         return !!newsItemLink.value
+    })
+
+    const isSafeNewsItemLink = computed(() => {
+        try {
+            return ['http:', 'https:'].includes(new URL(newsItemLink.value).protocol)
+        } catch {
+            return false
+        }
     })
 
     const newsItemAttributes = computed<NewsAttributeItem[]>(() => {

@@ -14,42 +14,42 @@
             "organizations": "Organizacje",
             "roles": "Role",
             "permissions": "Uprawnienia",
-            "total_count": "Liczba użytkowników",
+            "total_count": "Brak użytkowników | {count} użytkownik | {count} użytkowników | {count} użytkowników",
             "password": "Hasło",
             "password_check": "Wpisz hasło ponownie",
             "password_mismatch": "Hasła nie są zgodne",
             "email": "E-mail",
             "status": "Status",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "Oczekuje na zatwierdzenie",
+                "active": "Aktywny",
+                "disabled": "Wyłączony"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "Metody logowania",
+            "local_password": "lokalne",
+            "mfa_enabled": "Uwierzytelnianie dwuskładnikowe włączone",
+            "approve": "Zatwierdź",
+            "disable": "Wyłącz",
+            "enable": "Włącz",
+            "status_error": "Nie udało się zmienić statusu użytkownika.",
+            "reset_mfa": "Resetuj MFA",
+            "reset_mfa_message": "Usunąć wszystkie skonfigurowane metody uwierzytelniania dwuskładnikowego (TOTP i klucze dostępu) użytkownika {username}?",
+            "reset_mfa_choose": "Wybierz, co zresetować dla użytkownika {username}:",
+            "reset_mfa_totp_only": "Tylko TOTP (aplikacja uwierzytelniająca)",
+            "reset_mfa_passkeys_only": "Tylko klucze dostępu",
+            "reset_mfa_both": "TOTP i klucze dostępu",
+            "password_hint": "Opcjonalne dla użytkowników z zewnętrznymi tożsamościami",
+            "clear_password": "Usuń lokalne hasło (wyłącz logowanie hasłem)",
+            "require_mfa": "Wymagaj uwierzytelniania dwuskładnikowego",
+            "require_mfa_hint": "Dotyczy tylko tego użytkownika; witryna, jego organizacja lub metoda logowania mogą mimo to wymagać drugiego składnika",
+            "identities": "Tożsamości logowania",
+            "add_identity": "Połącz tożsamość",
+            "edit_identity": "Edytuj tożsamość",
+            "no_identities": "Nie połączono żadnych zewnętrznych tożsamości",
+            "identity_provider": "Dostawca",
+            "external_username": "Nazwa użytkownika u dostawcy",
+            "external_username_hint": "Nazwa tego użytkownika u dostawcy tożsamości",
+            "last_login": "Ostatnie logowanie"
         },
         "roles": {
             "tab_description": "Tutaj możesz zarządzać rolami i ich uprawnieniami.",
@@ -65,7 +65,7 @@
             "removed_error": "Rola jest używana i nie może zostać usunięta",
             "title": "Tytuł",
             "permissions": "Uprawnienia",
-            "total_count": "Liczba ról"
+            "total_count": "Brak ról | {count} rola | {count} role | {count} ról"
         },
         "acls": {
             "tab_description": "Tutaj możesz zarządzać listami kontroli dostępu (ACL).",
@@ -87,7 +87,7 @@
             "removed_error": "Lista ACL jest używana i nie może zostać usunięta",
             "roles": "Role",
             "users": "Użytkownicy",
-            "total_count": "Liczba list ACL"
+            "total_count": "Brak list ACL | {count} lista ACL | {count} listy ACL | {count} list ACL"
         },
         "organizations": {
             "tab_description": "Tutaj możesz zarządzać organizacjami.",
@@ -97,6 +97,8 @@
             "name": "Nazwa",
             "required_fields_hint": "Pola oznaczone * są wymagane.",
             "description": "Opis",
+            "require_mfa": "Wymagaj uwierzytelniania dwuskładnikowego",
+            "require_mfa_hint": "Każdy członek tej organizacji musi mieć skonfigurowany drugi składnik",
             "street": "Ulica",
             "city": "Miasto",
             "zip": "Kod pocztowy",
@@ -105,37 +107,35 @@
             "successful_edit": "Zaktualizowano organizację",
             "removed": "Usunięto organizację",
             "removed_error": "Organizacja jest używana i nie może zostać usunięta",
-            "total_count": "Liczba organizacji",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor"
+            "total_count": "Brak organizacji | {count} organizacja | {count} organizacje | {count} organizacji"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
-            "require_mfa_enabled_hint": "Każdy użytkownik musi skonfigurować i używać TOTP lub passkey podczas logowania.",
+            "tab_description": "Tutaj możesz skonfigurować ustawienia zabezpieczeń całej witryny.",
+            "mfa_title": "Uwierzytelnianie dwuskładnikowe",
+            "mfa_description": "Drugi składnik jest wymagany, gdy wymaga go którykolwiek poziom: ta witryna, organizacja użytkownika, metoda logowania lub sam użytkownik.",
+            "require_mfa": "Wymagaj uwierzytelniania dwuskładnikowego od wszystkich użytkowników",
+            "require_mfa_hint": "Użytkownicy bez drugiego składnika zostaną przeprowadzeni przez konfigurację TOTP przy następnym logowaniu",
+            "require_mfa_enabled_hint": "Każdy użytkownik musi skonfigurować TOTP lub klucz dostępu i używać go podczas logowania.",
             "require_mfa_disabled_hint": "Nie ma wymogu MFA obejmującego całą witrynę. Zasady organizacji, metody logowania lub użytkownika mogą nadal wymagać drugiego składnika.",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
-            "passkey_enabled_on_hint": "Dostępne jest logowanie bez hasła za pomocą passkey, a użytkownicy mogą rejestrować passkey.",
-            "passkey_enabled_off_hint": "Logowanie za pomocą passkey i rejestrowanie nowych passkey są niedostępne.",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
+            "passkeys_title": "Klucze dostępu (WebAuthn)",
+            "passkeys_description": "Klucze dostępu to należące do użytkowników poświadczenia, które rejestrują oni we własnych ustawieniach zabezpieczeń. Te opcje przedstawiają witrynę urządzeniu uwierzytelniającemu i włączają tę funkcję.",
+            "passkey_enabled": "Włącz logowanie za pomocą klucza dostępu",
+            "passkey_enabled_hint": "Udostępnia logowanie bez hasła na stronie logowania i pozwala użytkownikom rejestrować klucze dostępu",
+            "passkey_enabled_on_hint": "Dostępne jest logowanie bez hasła za pomocą klucza dostępu, a użytkownicy mogą rejestrować klucze dostępu.",
+            "passkey_enabled_off_hint": "Logowanie za pomocą klucza dostępu i rejestrowanie nowych kluczy dostępu są niedostępne.",
+            "passkey_second_factor": "Akceptuj klucze dostępu jako drugi składnik",
+            "passkey_second_factor_hint": "Po wyłączeniu tej opcji TOTP jest jedynym akceptowanym drugim składnikiem, nawet dla użytkowników, którzy zarejestrowali klucz dostępu",
+            "rp_id": "Identyfikator RP",
+            "rp_id_hint": "Musi być domeną tej witryny, np. {host}",
             "rp_id_use_suggested": "Użyj sugerowanego identyfikatora RP",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings."
+            "rp_name": "Nazwa RP",
+            "rp_name_hint": "Wyświetlana przez aplikację uwierzytelniającą podczas logowania",
+            "origins": "Dozwolone źródła",
+            "origins_hint": "Bezwzględne adresy URL rozdzielone przecinkami, z których udostępniana jest strona logowania",
+            "origins_invalid": "Każde źródło musi być bezwzględnym adresem URL (https://host)",
+            "secure_context_hint": "WebAuthn wymaga bezpiecznego kontekstu: HTTPS albo zwykłego HTTP wyłącznie dla localhost.",
+            "last_updated": "Ostatnia aktualizacja przez użytkownika {user} o {at}",
+            "error": "Nie udało się zapisać ustawień zabezpieczeń."
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "Zaloguj",
         "submit": "Zaloguj",
         "error": "Nazwa użytkownika lub hasło są nieprawidłowe",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "Metoda logowania",
+        "pending_approval": "Twoje konto oczekuje na zatwierdzenie przez administratora.",
+        "account_disabled": "Twoje konto jest wyłączone. Skontaktuj się z administratorem.",
+        "username_collision": "Konto o tej nazwie użytkownika już istnieje. Poproś administratora o połączenie z nim tej tożsamości.",
+        "account_not_linked": "Ta tożsamość nie jest połączona z żadnym kontem. Skontaktuj się z administratorem.",
+        "domain_not_allowed": "Rejestracja z Twojej domeny e-mail jest niedozwolona. Skontaktuj się z administratorem.",
+        "auth_cancelled": "Logowanie anulowano. Spróbuj ponownie.",
+        "totp_invalid": "Nieprawidłowy kod uwierzytelniający.",
+        "passkey_sign_in": "Zaloguj się za pomocą klucza dostępu",
+        "sign_in_with": "Zaloguj się za pomocą {name}",
+        "external_provider": "Logowanie zewnętrzne",
+        "methods_error": "Nie udało się załadować metod logowania. Spróbuj ponownie.",
+        "mfa_title": "Uwierzytelnianie dwuskładnikowe",
+        "mfa_code": "Kod uwierzytelniający",
+        "mfa_verify": "Zweryfikuj",
+        "mfa_use_passkey": "Zamiast tego użyj klucza dostępu",
+        "enroll_title": "Skonfiguruj uwierzytelnianie dwuskładnikowe",
+        "enroll_hint": "Zeskanuj kod QR za pomocą aplikacji uwierzytelniającej i wprowadź wygenerowany kod.",
+        "enroll_activate": "Aktywuj",
+        "enroll_use_passkey": "Zamiast tego zarejestruj klucz dostępu",
+        "enroll_passkey_name": "Klucz dostępu",
+        "back": "Wróć do logowania"
     },
     "home": {
         "redirecting": "Przekierowywanie...",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "Ustawienia",
         "logout": "Wyloguj",
-        "security": "Security"
+        "security": "Security",
+        "unknown_user": "Nieznany użytkownik",
+        "no_organization": "Brak organizacji"
     },
     "main_menu": {
         "enter": "Wprowadź",
@@ -222,15 +224,22 @@
         "publish": "Publikuj",
         "config": "Konfiguracja",
         "dashboard": "Pulpit",
-        "my_assets": "Moje zasoby"
+        "my_assets": "Moje aktywa"
     },
     "dashboard": {
         "subtitle": "Obszar roboczy analizy operacyjnej",
         "refresh": "Odśwież pulpit",
+        "metrics": {
+            "news_items_summary": "Brak elementów wiadomości | Łącznie {count} element wiadomości | Łącznie {count} elementy wiadomości | Łącznie {count} elementów wiadomości",
+            "report_items_summary": "Brak elementów raportu | Łącznie {count} element raportu | Łącznie {count} elementy raportu | Łącznie {count} elementów raportu",
+            "products_summary": "Brak produktów | Łącznie {count} produkt | Łącznie {count} produkty | Łącznie {count} produktów"
+        },
         "assess": {
             "trending": "Najnowsze trendy wywiadowcze",
             "tagcloud": "Chmura tagów najnowszych zebranych wiadomości",
-            "total": "elementów wiadomości łącznie"
+            "total": "elementów wiadomości łącznie",
+            "ingestion_chart": "Pozyskiwanie elementów wiadomości w okresie {period}",
+            "ingestion_point": "Brak elementów wiadomości w dniu {date} | {count} element wiadomości w dniu {date} | {count} elementy wiadomości w dniu {date} | {count} elementów wiadomości w dniu {date}"
         },
         "collect": {
             "title": "Kolektory",
@@ -253,8 +262,14 @@
             "title": "Informacje",
             "version": "Wersja",
             "commit": "Wersja kodu",
-            "total": "rekordów łącznie"
+            "total": "rekordów łącznie",
+            "built_at": "Kompilacja z dnia {date}",
+            "committed_at": "Commit z dnia {date}"
         }
+    },
+    "word_cloud": {
+        "label": "Chmura słów",
+        "word_action_count": "{action} {word}: brak wyników | {action} {word}: {count} wynik | {action} {word}: {count} wyniki | {action} {word}: {count} wyników"
     },
     "nav_menu": {
         "enter": "Utwórz element wiadomości",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "Tytuł",
         "created": "Utworzono",
-        "updated": "Zaktualizowano",
-        "collected": "Zebrano",
-        "published": "Opublikowano",
-        "source": "Źródło",
         "node": "Węzeł",
         "description": "Opis",
-        "in_analyze": "Analiza w toku",
-        "analyzed": "Przeanalizowano",
         "url": "URL",
         "name": "Nazwa",
         "username": "Nazwa użytkownika",
@@ -332,7 +341,18 @@
         "last_seen": "Ostatnio widziano",
         "last_attempted": "Ostatnia próba",
         "last_collected": "Ostatnio zebrano",
-        "last_error": "Ostatni błąd"
+        "last_error": "Ostatni błąd",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "Źródło: {source}",
+        "author_with_value": "Autor: {author}",
+        "published_at": "Opublikowano: {date}",
+        "collected_at": "Zebrano: {date}",
+        "link_with_url": "Łącze: {url}",
+        "unknown_source": "Nieznane źródło",
+        "not_available": "Niedostępne",
+        "aggregated_items_count": "Brak zagregowanych elementów wiadomości | {count} zagregowany element wiadomości | {count} zagregowane elementy wiadomości | {count} zagregowanych elementów wiadomości",
+        "in_analyze_count": "Brak trwających analiz | {count} trwająca analiza | {count} trwające analizy | {count} trwających analiz",
+        "analyzed_count": "Brak zakończonych analiz | {count} zakończona analiza | {count} zakończone analizy | {count} zakończonych analiz"
     },
     "attribute": {
         "add_constant": "Dodaj stałą",
@@ -385,10 +405,22 @@
         "ai_provider": "Model AI",
         "ai_prompt": "Monit AI",
         "add_attribute": "Dodaj atrybut",
-        "edit_attribute": "Edytuj atrybut"
+        "edit_attribute": "Edytuj atrybut",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "Wektor i ocena CVSS",
+        "last_updated_at": "Ostatnia aktualizacja: {date}",
+        "updated_by_user": "Zaktualizował użytkownik {user}",
+        "tlp_description_clear": "Udostępnianie nie jest ograniczone.",
+        "tlp_description_green": "Ograniczone udostępnianie w obrębie społeczności.",
+        "tlp_description_amber": "Ograniczone udostępnianie w organizacji odbiorcy i jej klientom zgodnie z zasadą wiedzy koniecznej.",
+        "tlp_description_amber_strict": "Udostępnianie ograniczone wyłącznie do organizacji odbiorcy.",
+        "tlp_description_red": "Nie udostępniać poza indywidualnymi odbiorcami.",
+        "tlp_description_unknown": "Nieznane oznaczenie TLP."
     },
     "cvss_calculator": {
         "title": "Kalkulator CVSS",
+        "tooltips": "Pokaż podpowiedzi dotyczące metryk",
+        "vector_placeholder": "Wektor CVSS, na przykład CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "Wynik bazowy",
         "attack_vector": "Wektor ataku (AV)",
         "attack_complexity": "Złożoność ataku (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "Ta metryka określa, czy w skutecznym naruszeniu podatnego komponentu musi uczestniczyć użytkownik inny niż atakujący. Wskazuje, czy podatność może zostać wykorzystana wyłącznie z inicjatywy atakującego, czy też musi w tym uczestniczyć inny użytkownik lub uruchomiony przez niego proces.",
         "UI_N_Label": "Podatny system można wykorzystać bez jakiejkolwiek interakcji użytkownika.",
         "UI_R_Label": "Skuteczne wykorzystanie tej podatności wymaga wcześniejszego działania użytkownika.",
-        "S_Heading": "Czy skuteczny atak wpływa na komponent inny niż komponent podatny? Jeśli tak, wynik bazowy rośnie, a metryki Poufności, Integralności i Uwierzytelnienia należy oceniać względem komponentu dotkniętego skutkami.",
+        "S_Heading": "Czy skuteczny atak wpływa na komponent inny niż komponent podatny? Jeśli tak, wynik bazowy rośnie, a metryki Poufności, Integralności i Dostępności należy oceniać względem komponentu dotkniętego skutkami.",
         "S_U_Label": "Wykorzystana podatność może wpływać wyłącznie na zasoby zarządzane przez ten sam organ bezpieczeństwa. Komponent podatny i komponent dotknięty skutkami są wówczas tym samym komponentem albo oba podlegają temu samemu organowi bezpieczeństwa.",
         "S_C_Label": "Wykorzystana podatność może wpływać na zasoby poza zakresem bezpieczeństwa zarządzanym przez organ odpowiedzialny za podatny komponent. Komponent podatny i komponent dotknięty skutkami są wówczas różne i podlegają różnym organom bezpieczeństwa.",
         "C_Heading": "Ta metryka mierzy wpływ skutecznego wykorzystania podatności na poufność zasobów informacyjnych zarządzanych przez komponent oprogramowania. Poufność oznacza ograniczenie dostępu do informacji i ich ujawniania wyłącznie do upoważnionych użytkowników oraz zapobieganie dostępowi lub ujawnianiu osobom nieupoważnionym.",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "Używana jest wartość przypisana do odpowiedniej metryki bazowej.",
         "MUI_N_Label": "Podatny system można wykorzystać bez jakiejkolwiek interakcji użytkownika.",
         "MUI_R_Label": "Skuteczne wykorzystanie tej podatności wymaga wcześniejszego działania użytkownika.",
-        "MS_Heading": "Czy skuteczny atak wpływa na komponent inny niż komponent podatny? Jeśli tak, wynik bazowy rośnie, a metryki Poufności, Integralności i Uwierzytelnienia należy oceniać względem komponentu dotkniętego skutkami.",
+        "MS_Heading": "Czy skuteczny atak wpływa na komponent inny niż komponent podatny? Jeśli tak, wynik bazowy rośnie, a metryki Poufności, Integralności i Dostępności należy oceniać względem komponentu dotkniętego skutkami.",
         "MS_X_Label": "Używana jest wartość przypisana do odpowiedniej metryki bazowej.",
         "MS_U_Label": "Wykorzystana podatność może wpływać wyłącznie na zasoby zarządzane przez ten sam organ bezpieczeństwa. Komponent podatny i komponent dotknięty skutkami są wówczas tym samym komponentem albo oba podlegają temu samemu organowi bezpieczeństwa.",
         "MS_C_Label": "Wykorzystana podatność może wpływać na zasoby poza zakresem bezpieczeństwa zarządzanym przez organ odpowiedzialny za podatny komponent. Komponent podatny i komponent dotknięty skutkami są wówczas różne i podlegają różnym organom bezpieczeństwa.",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "Dostępność w systemie następczym nie ulega zmianie."
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "Dodaj element raportu",
         "edit": "Edytuj element raportu",
         "read": "Podgląd elementu raportu",
@@ -704,6 +736,7 @@
         "attributes": "Atrybuty",
         "no_attributes": "Brak dostępnych atrybutów",
         "side_by_side": "Widok obok siebie",
+        "enter_rich_text": "Wprowadź tekst sformatowany",
         "confirm_close": {
             "message": "Istnieją niezapisane zmiany. Czy na pewno zamknąć ten element raportu?"
         },
@@ -752,13 +785,15 @@
         "publish": "Opublikuj produkt",
         "publish_confirmation": "Czy na pewno opublikować poniższy produkt?",
         "publish_confirmation_message": "Czy na pewno opublikować ten produkt?",
+        "publish_confirmation_type": "Typ produktu: {type}",
+        "publish_confirmation_publishers": "Publikatory: {publishers}",
         "no_type": "Nie wybrano typu",
         "no_publisher_in_dialog": "Brak",
         "publish_successful": "Opublikowano produkt",
         "publish_failed": "Nie udało się opublikować produktu",
         "publish_error": "Wystąpił błąd podczas publikowania produktu",
         "no_publisher_selected": "Wybierz co najmniej jeden publikator",
-        "total_count": "Liczba produktów",
+        "total_count": "Brak produktów | {count} produkt | {count} produkty | {count} produktów",
         "confirm_close": {
             "message": "Istnieją niezapisane zmiany. Czy na pewno zamknąć produkt bez zapisywania?"
         },
@@ -782,8 +817,12 @@
         "sort": "Sortuj według",
         "from": "Od",
         "to": "Do",
-        "total_count": "Liczba elementów raportów",
+        "total_count": "Brak elementów raportu | {count} element raportu | {count} elementy raportu | {count} elementów raportu",
         "no_items": "Nie znaleziono elementów raportów",
+        "updated_at": "Zaktualizowano {date}",
+        "updated_at_by": "Zaktualizowano {date} przez użytkownika {user}",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "Brak elementów wiadomości | {count} element wiadomości | {count} elementy wiadomości | {count} elementów wiadomości",
         "tooltip": {
             "filter_all": "Obecnie wyświetlane: wszystkie",
             "filter_completed": "Obecnie wyświetlane: ukończone",
@@ -812,7 +851,7 @@
             "remove_item": "Odłącz element raportu",
             "publish_item": "Utwórz produkt z elementu raportu"
         },
-        "select_all_success": "Zaznaczono elementy raportów: {count}",
+        "select_all_success": "Nie wybrano elementów raportu | Wybrano {count} element raportu | Wybrano {count} elementy raportu | Wybrano {count} elementów raportu",
         "select": {
             "placeholder": "Chcę przeanalizować...",
             "option_news_items": "wybrane elementy wiadomości",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "Źródło",
-        "link": "Łącze",
         "comments": "Komentarze",
-        "collected": "Zebrano",
-        "published": "Opublikowano",
-        "author": "Autor",
         "add_news_item": "Dodaj elementy wiadomości",
         "attached_news_items": "Dołączone elementy wiadomości",
         "read_news_item": "Kliknij, aby przeczytać",
@@ -841,8 +876,8 @@
         "auto_save_blur": "Automatyczny zapis po utracie fokusu",
         "auto_save_changes": "Automatyczny zapis zmian",
         "download": "Pobierz",
-        "total_count": "Liczba elementów wiadomości",
-        "selected_count": "Liczba zaznaczonych elementów wiadomości",
+        "total_count": "Brak elementów wiadomości | {count} element wiadomości | {count} elementy wiadomości | {count} elementów wiadomości",
+        "selected_count": "Nie wybrano elementów wiadomości | Wybrano {count} element wiadomości | Wybrano {count} elementy wiadomości | Wybrano {count} elementów wiadomości",
         "no_items": "Nie znaleziono elementów wiadomości",
         "item_updated": "Zaktualizowano element wiadomości",
         "item_deleted": "Usunięto element wiadomości",
@@ -916,11 +951,14 @@
             "error_loading": "Błąd wczytywania raportów",
             "error_removing": "Błąd usuwania raportu z agregatu"
         },
-        "select_all_success": "Zaznaczono elementy wiadomości: {count}",
+        "select_all_success": "Nie wybrano elementów wiadomości | Wybrano {count} element wiadomości | Wybrano {count} elementy wiadomości | Wybrano {count} elementów wiadomości",
         "groups": "GRUPY",
-        "show_new_items": "Pokaż nowe elementy ({count})"
+        "show_new_items": "Brak nowych elementów | Pokaż {count} nowy element | Pokaż {count} nowe elementy | Pokaż {count} nowych elementów"
     },
     "publish": {
+        "updated_at": "Zaktualizowano {date}",
+        "updated_at_by": "Zaktualizowano {date} przez użytkownika {user}",
+        "report_items_count": "Brak elementów raportu | {count} element raportu | {count} elementy raportu | {count} elementów raportu",
         "tooltip": {
             "filter_all": "Obecnie wyświetlane: wszystkie",
             "filter_published": "Obecnie wyświetlane: opublikowane",
@@ -946,7 +984,7 @@
             "delete_items": "Usuń produkty",
             "delete_item": "Usuń produkt"
         },
-        "select_all_success": "Zaznaczono produkty: {count}",
+        "select_all_success": "Nie wybrano produktów | Wybrano {count} produkt | Wybrano {count} produkty | Wybrano {count} produktów",
         "no_items": "Nie znaleziono produktów"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "Ostatnie 7 dni",
         "last_31_days": "Ostatnie 31 dni",
         "custom_filter": "Filtr niestandardowy",
-        "total_count": "Łączna liczba",
-        "currently_showing": "Obecnie wyświetlane",
-        "selected_count": "Liczba zaznaczonych",
+        "total_count": "Brak elementów | Łącznie {count} element | Łącznie {count} elementy | Łącznie {count} elementów",
+        "currently_showing": "Obecnie nie jest wyświetlany żaden element | Obecnie wyświetlany jest {count} element | Obecnie wyświetlane są {count} elementy | Obecnie wyświetlanych jest {count} elementów",
+        "selected_count": "Nie wybrano elementów | Wybrano {count} element | Wybrano {count} elementy | Wybrano {count} elementów",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "Ustawienia użytkownika",
         "tab_general": "Ogólne",
+        "tab_security": "Security",
         "tab_wordlists": "Listy słów",
         "tab_hotkeys": "Skróty klawiszowe",
         "close_item_1": "Zamknij element (skrót 1)",
@@ -990,7 +1029,7 @@
         "like_item": "Polub element",
         "unlike_item": "Cofnij polubienie elementu",
         "delete_item": "Usuń element",
-        "press_key": "Naciśnij nowy klawisz dla: ",
+        "press_key_for": "Naciśnij nowy klawisz dla działania {action}",
         "selection": "Zaznaczenie",
         "group": "Grupuj",
         "ungroup": "Rozgrupuj",
@@ -1015,7 +1054,9 @@
         "boolean_error": "Wartość musi mieć postać 'True' albo 'False'!",
         "integer_error": "Wartość musi być prawidłową liczbą całkowitą!",
         "decimal_error": "Wartość musi być prawidłową liczbą dziesiętną!",
-        "default_value": "Wartość domyślna",
+        "default_value_with_value": "Wartość domyślna: {value}",
+        "input_too_long": "Wartość ma {count} znaków; maksymalna liczba to {max}.",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "Aktualizuj wartość",
         "description": "Opis",
         "value": "Wartość",
@@ -1023,8 +1064,7 @@
         "updated_at": "Zaktualizowano",
         "actions": "Działania",
         "api_key": "Klucz API",
-        "my_assets_view": "Moje zasoby",
-        "tab_security": "Security"
+        "my_assets_view": "Moje aktywa"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "Automatyczne kaskadowe zmiany stanu",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "Przeciągnij pliki tutaj lub kliknij, aby je wybrać",
         "file_description": "Opis",
-        "last_updated": "Ostatnia aktualizacja",
+        "last_updated_by_at": "Ostatnia aktualizacja przez użytkownika {user}: {date}",
+        "last_updated_at": "Ostatnia aktualizacja: {date}",
+        "attachment_by": "Załączył użytkownik {user}",
         "download": "Pobierz",
         "attachment_load": "Wczytaj załącznik",
         "attachment_detail": "Szczegóły załącznika"
@@ -1141,11 +1183,17 @@
         "attributes": "Atrybuty",
         "save": "Zapisz",
         "edit": "Edytuj",
+        "edit_named": "Edytuj: {title}",
+        "select": "Wybierz",
         "done": "Gotowe",
         "up": "Przenieś wyżej",
         "down": "Przenieś niżej",
         "remove": "Usuń",
         "delete": "Usuń",
+        "publish": "Opublikuj",
+        "lock": "Zablokuj",
+        "open": "Otwórz",
+        "open_source": "Otwórz źródło",
         "download": "Pobierz",
         "yes": "Tak",
         "no": "Nie",
@@ -1165,6 +1213,12 @@
         "no_permission": "Brak uprawnień do wykonania tego działania",
         "loading_more": "Wczytywanie kolejnych elementów...",
         "end_of_list": "Koniec listy",
+        "fetching_items": "Pobieranie elementów…",
+        "no_items_to_select": "Brak elementów do wybrania.",
+        "select_at_least_two_to_group": "Wybierz co najmniej dwa elementy, aby utworzyć grupę.",
+        "no_grouped_items_selected": "Wybierz co najmniej jeden zgrupowany element, aby go rozgrupować.",
+        "processing_items": "Brak elementów do przetworzenia | Przetwarzanie {count} elementu… | Przetwarzanie {count} elementów… | Przetwarzanie {count} elementów…",
+        "deleting_items": "Brak elementów do usunięcia | Usuwanie {count} elementu… | Usuwanie {count} elementów… | Usuwanie {count} elementów…",
         "messagebox": {
             "delete": "Czy na pewno usunąć poniższy element?",
             "delete_confirm": "Czy na pewno usunąć „{name}”?",
@@ -1192,7 +1246,7 @@
             "removed_error": "Grupa źródeł OSINT jest używana i nie może zostać usunięta",
             "title": "Tytuł",
             "osint_sources": "Źródła OSINT",
-            "total_count": "Liczba grup źródeł OSINT",
+            "total_count": "Brak grup źródeł OSINT | {count} grupa źródeł OSINT | {count} grupy źródeł OSINT | {count} grup źródeł OSINT",
             "default_group": "Bez kategorii",
             "default_group_description": "Domyślna grupa nieskategoryzowanych źródeł OSINT",
             "all": "Wszystkie źródła"
@@ -1216,7 +1270,7 @@
             "removed_error": "Źródło OSINT jest używane i nie może zostać usunięte",
             "filter_wordlist": "Filtr listy słów",
             "type": "Typ",
-            "total_count": "Liczba źródeł OSINT",
+            "total_count": "Brak źródeł OSINT | {count} źródło OSINT | {count} źródła OSINT | {count} źródeł OSINT",
             "osint_source_groups": "Grupy źródeł OSINT",
             "tooltip": {
                 "select_all": "Zaznacz wszystkie",
@@ -1239,7 +1293,7 @@
             "node_required": "Wybierz węzeł kolektora",
             "export_all_hint": "Eksportuj wszystkie źródła",
             "export_selected_hint": "Eksportuj wybrane źródła",
-            "selected_count": "Zaznaczono: {count}"
+            "selected_count": "Nie wybrano źródeł OSINT | Wybrano {count} źródło OSINT | Wybrano {count} źródła OSINT | Wybrano {count} źródeł OSINT"
         },
         "nodes": {
             "tab_description": "Tutaj możesz zarządzać węzłami kolektorów.",
@@ -1254,7 +1308,7 @@
             "successful_edit": "Zaktualizowano węzeł kolektora",
             "removed": "Usunięto węzeł kolektora",
             "removed_error": "Węzeł kolektora jest używany i nie może zostać usunięty",
-            "total_count": "Liczba węzłów kolektorów"
+            "total_count": "Brak węzłów kolektorów | {count} węzeł kolektora | {count} węzły kolektorów | {count} węzłów kolektorów"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "Zaktualizowano węzeł prezentera",
             "removed": "Usunięto węzeł prezentera",
             "removed_error": "Węzeł prezentera jest używany i nie może zostać usunięty",
-            "total_count": "Liczba węzłów prezenterów"
+            "total_count": "Brak węzłów prezenterów | {count} węzeł prezentera | {count} węzły prezenterów | {count} węzłów prezenterów"
         },
         "types": {
             "tab_description": "Tutaj możesz zarządzać typami produktów.",
@@ -1289,7 +1343,7 @@
             "successful_edit": "Zaktualizowano typ produktu",
             "removed": "Usunięto typ produktu",
             "removed_error": "Typ produktu jest używany i nie może zostać usunięty",
-            "total_count": "Liczba typów produktów",
+            "total_count": "Brak typów produktów | {count} typ produktu | {count} typy produktów | {count} typów produktów",
             "help": "Opis parametrów szablonu",
             "close": "Zamknij",
             "choose_report_type": "Wybierz typ raportu, aby wyświetlić opis jego parametrów",
@@ -1328,7 +1382,7 @@
             "successful_edit": "Zaktualizowano węzeł publikatora",
             "removed": "Usunięto węzeł publikatora",
             "removed_error": "Węzeł publikatora jest używany i nie może zostać usunięty",
-            "total_count": "Liczba węzłów publikatorów"
+            "total_count": "Brak węzłów publikatorów | {count} węzeł publikatora | {count} węzły publikatorów | {count} węzłów publikatorów"
         },
         "presets": {
             "tab_description": "Tutaj możesz zarządzać ustawieniami publikatorów.",
@@ -1345,7 +1399,7 @@
             "successful_edit": "Zaktualizowano ustawienie publikatora",
             "removed": "Usunięto ustawienie publikatora",
             "removed_error": "Ustawienie publikatora jest używane i nie może zostać usunięte",
-            "total_count": "Liczba ustawień publikatorów"
+            "total_count": "Brak ustawień publikatorów | {count} ustawienie publikatora | {count} ustawienia publikatorów | {count} ustawień publikatorów"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "Zaktualizowano węzeł bota",
             "removed": "Usunięto węzeł bota",
             "removed_error": "Węzeł bota jest używany i nie może zostać usunięty",
-            "total_count": "Liczba węzłów botów"
+            "total_count": "Brak węzłów botów | {count} węzeł bota | {count} węzły botów | {count} węzłów botów"
         },
         "presets": {
             "tab_description": "Tutaj możesz zarządzać ustawieniami botów.",
@@ -1380,7 +1434,7 @@
             "successful_edit": "Zaktualizowano ustawienie bota",
             "removed": "Usunięto ustawienie bota",
             "removed_error": "Ustawienie bota jest używane i nie może zostać usunięte",
-            "total_count": "Liczba ustawień botów"
+            "total_count": "Brak ustawień botów | {count} ustawienie bota | {count} ustawienia botów | {count} ustawień botów"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "Dostęp zdalny jest używany i nie może zostać usunięty",
             "osint_sources": "Źródła OSINT do udostępnienia",
             "report_item_types": "Typy elementów raportów do udostępnienia",
-            "total_count": "Liczba dostępów zdalnych"
+            "total_count": "Brak dostępów zdalnych | {count} dostęp zdalny | {count} dostępy zdalne | {count} dostępów zdalnych"
         },
         "nodes": {
             "tab_description": "Tutaj możesz zarządzać węzłami zdalnymi.",
@@ -1420,7 +1474,7 @@
             "successful_edit": "Zaktualizowano węzeł zdalny",
             "removed": "Usunięto węzeł zdalny",
             "removed_error": "Węzeł zdalny jest używany i nie może zostać usunięty",
-            "total_count": "Liczba węzłów zdalnych"
+            "total_count": "Brak węzłów zdalnych | {count} węzeł zdalny | {count} węzły zdalne | {count} węzłów zdalnych"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "Nie udało się zapisać: dostawcę danych",
             "remove": "Usunięto dostawcę danych",
             "removed_error": "Dostawca danych jest używany i nie może zostać usunięty",
-            "total_count": "Liczba dostawców danych"
+            "total_count": "Brak dostawców danych | {count} dostawca danych | {count} dostawcy danych | {count} dostawców danych"
         },
         "ai": {
             "tab_description": "Tutaj możesz zarządzać dostawcami AI.",
@@ -1481,11 +1535,13 @@
         "no_categories": "Brak kategorii",
         "add_category_hint": "Dodaj kategorię, aby rozpocząć tworzenie listy słów",
         "link_hint": "Opcjonalny adres URL do pobierania wpisów listy",
-        "total_count": "Liczba list słów",
+        "total_count": "Brak list słów | {count} lista słów | {count} listy słów | {count} list słów",
         "file_has_header": "Plik zawiera nagłówek",
         "import_from_csv": "Importuj z CSV",
         "load_csv_file": "Wczytaj plik CSV",
         "download_from_link": "Pobierz z adresu URL",
+        "download_error": "Nie udało się pobrać listy słów z adresu URL.",
+        "import_error": "Nie udało się zaimportować pliku listy słów.",
         "import": "Importuj",
         "close": "Zamknij",
         "delete_existing_words": "Usuń istniejące słowa",
@@ -1506,7 +1562,7 @@
             "successful_edit": "Zaktualizowano typ elementu raportu",
             "removed_error": "Typ elementu raportu jest używany i nie może zostać usunięty",
             "removed": "Usunięto typ elementu raportu",
-            "total_count": "Liczba typów elementów raportów"
+            "total_count": "Brak typów raportów | {count} typ raportu | {count} typy raportów | {count} typów raportów"
         },
         "attributes": {
             "tab_description": "Tutaj możesz zarządzać atrybutami.",
@@ -1524,7 +1580,7 @@
             "edit_constant": "Edytuj stałą",
             "value": "Wartość",
             "error": "Nie udało się utworzyć tego atrybutu",
-            "total_count": "Liczba atrybutów"
+            "total_count": "Brak atrybutów | {count} atrybut | {count} atrybuty | {count} atrybutów"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "Nie udało się wczytać użytkowników zewnętrznych ani uprawnień",
         "successful": "Dodano użytkownika zewnętrznego",
         "successful_edit": "Zaktualizowano użytkownika zewnętrznego",
-        "total_count": "Liczba użytkowników zewnętrznych",
+        "total_count": "Brak użytkowników zewnętrznych | {count} użytkownik zewnętrzny | {count} użytkownicy zewnętrzni | {count} użytkowników zewnętrznych",
         "removed": "Usunięto użytkownika zewnętrznego",
         "removed_error": "Użytkownik zewnętrzny jest używany i nie może zostać usunięty"
     },
@@ -1561,19 +1617,19 @@
         }
     },
     "asset_group": {
-        "add_new": "Dodaj grupę zasobów",
-        "edit": "Edytuj grupę zasobów",
-        "error": "Nie udało się zapisać: grupę zasobów",
-        "load_error": "Nie udało się wczytać grup zasobów ani ich powiązań",
+        "add_new": "Dodaj grupę aktywów",
+        "edit": "Edytuj grupę aktywów",
+        "error": "Nie udało się zapisać grupy aktywów",
+        "load_error": "Nie udało się wczytać grup aktywów ani ich powiązań",
         "name": "Nazwa",
         "description": "Opis",
         "notification_templates": "Szablony powiadomień",
         "allowed_users": "Dozwoleni użytkownicy (jeśli nikogo nie wybrano, dozwoleni są wszyscy)",
-        "successful": "Dodano grupę zasobów",
-        "successful_edit": "Zaktualizowano grupę zasobów",
-        "removed": "Usunięto grupę zasobów",
-        "removed_error": "Grupa zasobów jest używana i nie może zostać usunięta",
-        "total_count": "Liczba grup zasobów"
+        "successful": "Dodano grupę aktywów",
+        "successful_edit": "Zaktualizowano grupę aktywów",
+        "removed": "Usunięto grupę aktywów",
+        "removed_error": "Grupa aktywów jest używana i nie może zostać usunięta",
+        "total_count": "Brak grup aktywów | {count} grupa aktywów | {count} grupy aktywów | {count} grup aktywów"
     },
     "notification_template": {
         "add_new": "Dodaj szablon powiadomienia",
@@ -1594,16 +1650,16 @@
         "successful_edit": "Zaktualizowano szablon powiadomienia",
         "removed": "Usunięto szablon powiadomienia",
         "removed_error": "Szablon powiadomienia jest używany i nie może zostać usunięty",
-        "total_count": "Liczba szablonów powiadomień"
+        "total_count": "Brak szablonów powiadomień | {count} szablon powiadomienia | {count} szablony powiadomień | {count} szablonów powiadomień"
     },
     "asset": {
-        "add": "Dodaj zasób",
-        "add_new": "Dodaj zasób",
-        "add_group_info": "Dodaj grupę zasobów",
-        "no_groups_message": "Przed dodaniem zasobów utwórz grupę zasobów",
-        "no_data": "Nie znaleziono zasobów",
-        "edit": "Edytuj zasób",
-        "error": "Nie udało się zapisać: zasób",
+        "add": "Dodaj aktywo",
+        "add_new": "Dodaj aktywo",
+        "add_group_info": "Dodaj grupę aktywów",
+        "no_groups_message": "Przed dodaniem aktywów utwórz grupę aktywów",
+        "no_data": "Nie znaleziono aktywów",
+        "edit": "Edytuj aktywo",
+        "error": "Nie udało się zapisać aktywa",
         "name": "Nazwa",
         "serial": "Numer seryjny",
         "description": "Opis",
@@ -1612,15 +1668,17 @@
         "edit_cpe": "Edytuj kod CPE",
         "cpes": "Kody CPE",
         "value": "Wartość",
-        "vulnerable": "Podatny",
+        "vulnerable": "Podatne",
         "total": "Łącznie",
-        "total_count": "Liczba zasobów",
-        "successful": "Dodano zasób",
-        "successful_edit": "Zaktualizowano zasób",
-        "removed": "Usunięto zasób",
-        "removed_error": "Zasób jest używany i nie może zostać usunięty",
+        "total_count": "Brak aktywów | {count} aktywo | {count} aktywa | {count} aktywów",
+        "successful": "Dodano aktywo",
+        "successful_edit": "Zaktualizowano aktywo",
+        "removed": "Usunięto aktywo",
+        "removed_error": "Aktywo jest używane i nie może zostać usunięte",
         "vulnerabilities": "Podatności",
-        "vulnerabilities_count": "Podatności: ",
+        "serial_with_value": "Numer seryjny: {value}",
+        "cpe_count": "Brak kodów CPE | {count} kod CPE | {count} kody CPE | {count} kodów CPE",
+        "vulnerabilities_count": "Brak podatności | {count} podatność | {count} podatności | {count} podatności",
         "no_vulnerabilities": "Brak podatności",
         "sort": {
             "alphabetical": "Alfabetycznie",
@@ -1638,13 +1696,13 @@
         "solved": "Rozwiązana",
         "vulnerability_updated": "Zaktualizowano stan podatności",
         "vulnerability_update_error": "Nie udało się zaktualizować stanu podatności",
-        "load_error": "Nie udało się wczytać zasobów",
-        "groups": "Grupy zasobów",
-        "detail": "Szczegóły zasobu"
+        "load_error": "Nie udało się wczytać aktywów",
+        "groups": "Grupy aktywów",
+        "detail": "Szczegóły aktywa"
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "Liczba metod logowania: ",
+        "total_count": "Brak metod logowania | {count} metoda logowania | {count} metody logowania | {count} metod logowania",
         "add_new": "Dodaj nową metodę logowania",
         "edit": "Edytuj metodę logowania",
         "name": "Nazwa",
@@ -1677,8 +1735,8 @@
         "allowed_domains": "Dozwolone domeny e-mail",
         "allowed_domains_hint": "Rozdzielone przecinkami; puste pole zezwala na wszystkie domeny",
         "require_mfa": "Wymagaj uwierzytelniania dwuskładnikowego",
-        "require_mfa_hint": "Użytkownicy muszą potwierdzić logowanie za pomocą TOTP lub passkey",
-        "require_mfa_enabled_hint": "Każda osoba logująca się tą metodą musi użyć TOTP lub passkey.",
+        "require_mfa_hint": "Użytkownicy muszą potwierdzić logowanie za pomocą TOTP lub klucza dostępu",
+        "require_mfa_enabled_hint": "Każda osoba logująca się tą metodą musi użyć TOTP lub klucza dostępu.",
         "require_mfa_disabled_hint": "Ta metoda logowania nie nakłada wymogu MFA. Zasady witryny, organizacji lub użytkownika mogą nadal wymagać drugiego składnika.",
         "issuer_url": "URL wystawcy",
         "issuer_url_hint": "Bazowy URL używany do discovery, na przykład https://idp.example.org/realms/main",
@@ -1739,7 +1797,7 @@
         "removed": "Usunięto metodę logowania.",
         "remove_error": "Nie udało się usunąć metody logowania.",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — {count} powiązanych tożsamości użytkowników utraci tę metodę logowania",
+        "delete_message_linked": "{name}: brak powiązanych tożsamości użytkowników | {name}: {count} powiązana tożsamość użytkownika utraci tę metodę logowania | {name}: {count} powiązane tożsamości użytkowników utracą tę metodę logowania | {name}: {count} powiązanych tożsamości użytkowników utraci tę metodę logowania",
         "tab_description": "Tutaj można zarządzać metodami logowania (dostawcami tożsamości).",
         "idp_sso_url": "URL SSO dostawcy IdP",
         "idp_sso_url_hint": "Punkt końcowy powiązania HTTP-Redirect dostawcy tożsamości",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "Ogólne",
         "saml_tab_service_information": "Informacje o usłudze",
         "saml_tab_sp_keypair": "Para kluczy SP",
-        "saml_metadata_url": "URL metadanych SP",
-        "saml_acs_url": "URL Assertion Consumer Service (ACS)",
+        "saml_metadata_url_with_url": "URL metadanych SP: {url}",
+        "saml_acs_url_with_url": "URL usługi Assertion Consumer Service (ACS): {url}",
+        "saml_disco_url_with_url": "URL odpowiedzi usługi wykrywania: {url}",
         "idp_metadata": "Metadane IdP (URL lub XML)",
         "idp_metadata_hint": "Wklej URL metadanych dostawcy tożsamości lub sam XML, a następnie kliknij Wczytaj; identyfikator jednostki, URL SSO i certyfikat podpisujący zostaną wypełnione.",
         "idp_metadata_load": "Wczytaj",
-        "idp_metadata_loaded": "Wczytano z metadanych ({count} certyfikatów podpisujących). Sprawdź poniższe pola i zapisz.",
+        "idp_metadata_loaded": "Wczytano metadane bez certyfikatów podpisujących. Sprawdź poniższe pola i zapisz. | Wczytano metadane z {count} certyfikatem podpisującym. Sprawdź poniższe pola i zapisz. | Wczytano metadane z {count} certyfikatami podpisującymi. Sprawdź poniższe pola i zapisz. | Wczytano metadane z {count} certyfikatów podpisujących. Sprawdź poniższe pola i zapisz.",
         "idp_metadata_error": "Nie udało się odczytać metadanych.",
         "sp_keypair": "Para kluczy dostawcy usługi",
         "sp_keypair_stored": "klucz zapisany",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "Certyfikat podpisujący metadane federacji (PEM)",
         "federation_metadata_cert_hint": "Kotwica zaufania: metadane federacji są uznawane za zaufane tylko wtedy, gdy ich podpis można zweryfikować tym certyfikatem. Uzyskaj go od operatora federacji niezależnym kanałem i porównaj odcisk palca.",
         "federation_verify": "Zweryfikuj federację",
-        "federation_verify_result": "Zweryfikowano. Znaleziono użytecznych dostawców tożsamości: {count}.",
+        "federation_verify_result": "Zweryfikowano. Nie znaleziono użytecznych dostawców tożsamości. | Zweryfikowano. Znaleziono {count} użytecznego dostawcę tożsamości. | Zweryfikowano. Znaleziono {count} użytecznych dostawców tożsamości. | Zweryfikowano. Znaleziono {count} użytecznych dostawców tożsamości.",
         "federation_verify_error": "Nie udało się zweryfikować metadanych federacji.",
-        "saml_disco_url": "URL odpowiedzi discovery",
         "sp_metadata_info": "Informacje o usłudze (do rejestracji w federacji)",
         "sp_metadata_info_hint": "Publikowane w metadanych SP. Federacja zazwyczaj wymaga organizacji, osoby kontaktowej i nazwy wyświetlanej, aby zaakceptować rejestrację; użytkownicy widzą te dane również w usłudze discovery.",
         "sp_display_name": "Wyświetlana nazwa usługi",
@@ -1816,25 +1874,27 @@
         "sp_contact_surname_hint": "Nazwisko kontaktu technicznego publikowane w metadanych (zazwyczaj wymagane przez federację). Jeśli pole jest puste, zostanie wyprowadzone z ostatniego słowa nazwy kontaktu."
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "Zabezpieczenia",
+        "enabled": "Włączone",
+        "disabled": "Wyłączone",
+        "error": "Operacja nie powiodła się.",
+        "totp_title": "Aplikacja uwierzytelniająca (TOTP)",
+        "totp_hint": "Wymagaj podczas logowania jednorazowego kodu z aplikacji uwierzytelniającej.",
+        "totp_enable": "Włącz",
+        "totp_scan": "Zeskanuj kod QR za pomocą aplikacji uwierzytelniającej i potwierdź kodem.",
+        "totp_qr_alt": "Kod QR do rejestracji w aplikacji uwierzytelniającej",
+        "totp_code": "Kod uwierzytelniający",
+        "totp_activate": "Aktywuj",
+        "totp_disable": "Wyłącz",
+        "totp_enabled": "Uwierzytelnianie dwuskładnikowe zostało włączone.",
+        "totp_disabled": "Uwierzytelnianie dwuskładnikowe zostało wyłączone.",
+        "passkeys_title": "Klucze dostępu",
+        "passkey_add": "Dodaj klucz dostępu",
+        "passkey_name": "Nazwa",
+        "default_passkey_name": "Klucz dostępu",
+        "passkey_created": "Utworzono",
+        "passkey_last_used": "Ostatnio użyto",
+        "passkey_added": "Klucz dostępu został zarejestrowany.",
+        "no_passkeys": "Nie zarejestrowano żadnych kluczy dostępu."
     }
 }

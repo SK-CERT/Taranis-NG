@@ -13,7 +13,7 @@ import 'primeicons/primeicons.css'
 import App from './App.vue'
 import router from './router'
 import ApiService from './services/api_service'
-import { messages, resolveLocale } from './i18n'
+import { messages, pluralRules, resolveLocale, synchronizeLocalePresentation, vuetifyMessages, vuetifyRtlLocales } from './i18n'
 import { bootstrapTestingToken } from './services/testing_auth'
 
 // Wait for stylesheets to be applied before mounting.
@@ -71,10 +71,19 @@ ApiService.init(baseURL)
 const configuredLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE as string | undefined
 const defaultLocale = resolveLocale(configuredLocale || navigator.language)
 
+// Apply language metadata before mounting so an RTL catalog never flashes in LTR.
+synchronizeLocalePresentation(defaultLocale)
+
 // Create Vuetify instance.
 const vuetify = createVuetify({
     components,
     directives,
+    locale: {
+        locale: defaultLocale,
+        fallback: 'en',
+        messages: vuetifyMessages,
+        rtl: vuetifyRtlLocales
+    },
     theme: {
         defaultTheme: 'light',
         themes: {
@@ -134,7 +143,8 @@ const i18n = createI18n({
     legacy: false,
     locale: defaultLocale,
     fallbackLocale: 'en',
-    messages
+    messages,
+    pluralRules
 })
 
 // Create Pinia store.

@@ -19,13 +19,13 @@
              and attribute mapping, and the URLs to hand to the identity provider. -->
         <v-window-item value="general">
             <!-- Both mutually exclusive connection modes remain visible. -->
-            <div class="text-subtitle-2 ml-4">{{ t('auth_provider.saml_connection_mode') }}</div>
+            <div class="text-subtitle-2 ms-4">{{ t('auth_provider.saml_connection_mode') }}</div>
             <v-radio-group
                 v-model="federationModel"
                 inline
                 hide-details
                 :disabled="saving"
-                class="mb-1 ml-4"
+                class="mb-1 ms-4"
                 data-test="saml-connection-mode"
             >
                 <v-radio
@@ -42,7 +42,7 @@
                 />
             </v-radio-group>
             <div
-                class="text-caption text-medium-emphasis mb-3 ml-4"
+                class="text-caption text-medium-emphasis mb-3 ms-4"
                 data-test="saml-connection-mode-help"
             >
                 {{ t(federationModel ? 'auth_provider.saml_use_federation_hint' : 'auth_provider.saml_single_idp_hint') }}
@@ -55,6 +55,7 @@
                     <v-col cols="12">
                         <v-textarea
                             v-model="metadataModel"
+                            dir="ltr"
                             :label="t('auth_provider.idp_metadata')"
                             variant="outlined"
                             density="comfortable"
@@ -99,6 +100,7 @@
                     >
                         <v-text-field
                             v-model="config.idp_sso_url"
+                            dir="ltr"
                             :label="t('auth_provider.idp_sso_url')"
                             variant="outlined"
                             density="comfortable"
@@ -115,6 +117,7 @@
                     >
                         <v-text-field
                             v-model="config.idp_entity_id"
+                            dir="ltr"
                             :label="t('auth_provider.idp_entity_id')"
                             variant="outlined"
                             density="comfortable"
@@ -128,6 +131,7 @@
                     <v-col cols="12">
                         <v-textarea
                             v-model="config.idp_certificate"
+                            dir="ltr"
                             :label="t('auth_provider.idp_certificate')"
                             variant="outlined"
                             density="comfortable"
@@ -152,6 +156,7 @@
                     >
                         <v-text-field
                             v-model="config.discovery_url"
+                            dir="ltr"
                             :label="t('auth_provider.discovery_url')"
                             variant="outlined"
                             density="comfortable"
@@ -168,6 +173,7 @@
                     >
                         <v-text-field
                             v-model="config.federation_metadata_url"
+                            dir="ltr"
                             :label="t('auth_provider.federation_metadata_url')"
                             variant="outlined"
                             density="comfortable"
@@ -181,6 +187,7 @@
                     <v-col cols="12">
                         <v-textarea
                             v-model="config.federation_metadata_cert"
+                            dir="ltr"
                             :label="t('auth_provider.federation_metadata_cert')"
                             variant="outlined"
                             density="comfortable"
@@ -194,6 +201,7 @@
                     <v-col cols="12">
                         <v-text-field
                             v-model="config.discovery_params"
+                            dir="ltr"
                             :label="t('auth_provider.discovery_params')"
                             variant="outlined"
                             density="comfortable"
@@ -243,6 +251,7 @@
                 >
                     <SuggestField
                         v-model="config.sp_entity_id"
+                        dir="ltr"
                         :suggested="suggestedEntityId"
                         :label="t('auth_provider.sp_entity_id')"
                         :hint="t('auth_provider.sp_entity_id_hint')"
@@ -257,6 +266,7 @@
                 >
                     <v-text-field
                         v-model="config.acs_url_override"
+                        dir="ltr"
                         :label="t('auth_provider.acs_url_override')"
                         variant="outlined"
                         density="comfortable"
@@ -268,6 +278,7 @@
                 <v-col cols="12">
                     <v-text-field
                         v-model="config.external_id_attr"
+                        dir="ltr"
                         :label="t('auth_provider.external_id_attr')"
                         variant="outlined"
                         density="comfortable"
@@ -282,6 +293,7 @@
                 >
                     <v-text-field
                         v-model="config.username_attr"
+                        dir="ltr"
                         :label="t('auth_provider.username_attr')"
                         variant="outlined"
                         density="comfortable"
@@ -296,6 +308,7 @@
                 >
                     <v-text-field
                         v-model="config.name_attr"
+                        dir="ltr"
                         :label="t('auth_provider.name_attr')"
                         variant="outlined"
                         density="comfortable"
@@ -310,6 +323,7 @@
                 >
                     <v-text-field
                         v-model="config.email_attr"
+                        dir="ltr"
                         :label="t('auth_provider.email_attr')"
                         variant="outlined"
                         density="comfortable"
@@ -330,21 +344,40 @@
                 class="mt-2"
             >
                 <div class="text-subtitle-2 mb-1">{{ t('auth_provider.saml_idp_urls') }}</div>
-                <div class="text-body-2">
-                    <strong>{{ t('auth_provider.saml_metadata_url') }}:</strong>
-                    <code class="ml-1">{{ samlMetadataUrl }}</code>
-                </div>
-                <div class="text-body-2">
-                    <strong>{{ t('auth_provider.saml_acs_url') }}:</strong>
-                    <code class="ml-1">{{ samlAcsUrl }}</code>
-                </div>
-                <div
-                    v-if="federationModel"
+                <i18n-t
+                    keypath="auth_provider.saml_metadata_url_with_url"
+                    tag="div"
                     class="text-body-2"
                 >
-                    <strong>{{ t('auth_provider.saml_disco_url') }}:</strong>
-                    <code class="ml-1">{{ samlDiscoUrl }}</code>
-                </div>
+                    <template #url>
+                        <bdi dir="ltr"
+                            ><code>{{ samlMetadataUrl }}</code></bdi
+                        >
+                    </template>
+                </i18n-t>
+                <i18n-t
+                    keypath="auth_provider.saml_acs_url_with_url"
+                    tag="div"
+                    class="text-body-2"
+                >
+                    <template #url>
+                        <bdi dir="ltr"
+                            ><code>{{ samlAcsUrl }}</code></bdi
+                        >
+                    </template>
+                </i18n-t>
+                <i18n-t
+                    v-if="federationModel"
+                    keypath="auth_provider.saml_disco_url_with_url"
+                    tag="div"
+                    class="text-body-2"
+                >
+                    <template #url>
+                        <bdi dir="ltr"
+                            ><code>{{ samlDiscoUrl }}</code></bdi
+                        >
+                    </template>
+                </i18n-t>
             </v-alert>
         </v-window-item>
 
@@ -374,6 +407,7 @@
                 >
                     <v-text-field
                         v-model="config.sp_information_url"
+                        dir="ltr"
                         :label="t('auth_provider.sp_information_url')"
                         variant="outlined"
                         density="comfortable"
@@ -414,6 +448,7 @@
                 >
                     <v-text-field
                         v-model="config.sp_organization_url"
+                        dir="ltr"
                         :label="t('auth_provider.sp_organization_url')"
                         variant="outlined"
                         density="comfortable"
@@ -479,7 +514,7 @@
                     size="x-small"
                     color="success"
                     variant="tonal"
-                    class="ml-2"
+                    class="ms-2"
                 >
                     {{ t('auth_provider.sp_keypair_stored') }}
                 </v-chip>
@@ -502,6 +537,7 @@
                 <v-col cols="12">
                     <v-textarea
                         v-model="secretModel"
+                        dir="ltr"
                         :label="t('auth_provider.sp_private_key')"
                         variant="outlined"
                         density="comfortable"
@@ -514,6 +550,7 @@
                 <v-col cols="12">
                     <v-textarea
                         v-model="config.sp_certificate"
+                        dir="ltr"
                         :label="t('auth_provider.sp_certificate')"
                         variant="outlined"
                         density="comfortable"

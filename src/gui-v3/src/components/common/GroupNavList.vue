@@ -19,9 +19,12 @@
                 >
                     {{ group.icon }}
                 </v-icon>
-                <span class="group-navigation__label">
+                <bdi
+                    dir="auto"
+                    class="group-navigation__label"
+                >
                     {{ group.translate ? $t(group.title) : group.title }}
-                </span>
+                </bdi>
             </div>
         </v-list-item>
     </v-list>

@@ -15,7 +15,7 @@
                     v-if="readOnly || value.remote"
                     class="date-value"
                 >
-                    {{ formatDate(value.value) }}
+                    <bdi dir="auto">{{ displayDate(value.value) }}</bdi>
                 </span>
 
                 <!-- Editable -->
@@ -58,11 +58,11 @@
 
 <script setup lang="ts">
     import { onMounted } from 'vue'
-    import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
     import { useAttributes } from './useAttributes'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type AttributeValueItem = {
         index?: string | number
@@ -93,19 +93,14 @@
         }
     )
 
-    const { t } = useI18n()
-
     const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+    const { formatDate } = useLocaleFormatters()
 
     onMounted(addInitialValues)
 
-    const formatDate = (dateStr: string | null | undefined): string => {
+    const displayDate = (dateStr: string | null | undefined): string => {
         if (!dateStr) return ''
-        try {
-            return new Date(dateStr).toLocaleDateString()
-        } catch {
-            return dateStr
-        }
+        return formatDate(dateStr) || dateStr
     }
 </script>
 

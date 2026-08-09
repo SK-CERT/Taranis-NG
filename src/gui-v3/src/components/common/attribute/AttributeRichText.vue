@@ -32,7 +32,7 @@
                             v-model="value.value"
                             :pt="editorPassThrough"
                             :read-only="false"
-                            placeholder="Enter rich text..."
+                            :placeholder="t('report_item.enter_rich_text')"
                             editor-style="height: 250px; font-size: 16px;"
                             @blur="onBlur(index)"
                         />
@@ -51,6 +51,7 @@
     import { useAttributes } from './useAttributes'
     import { sanitizeRichTextHtml } from '@/utils/sanitizeRichTextHtml'
     import { useSpellcheck } from '@/composables/useSpellcheck'
+    import { useI18n } from 'vue-i18n'
 
     type AttributeValueItem = {
         index?: string | number
@@ -82,6 +83,7 @@
     )
 
     const { canModify, addInitialValues, addButtonVisible, add, del, onBlur } = useAttributes(props)
+    const { t } = useI18n()
     const spellcheck = useSpellcheck()
     const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
 

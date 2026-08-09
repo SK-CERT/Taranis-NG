@@ -12,7 +12,7 @@
                     </v-col>
                     <v-col
                         cols="4"
-                        class="text-right"
+                        class="text-end"
                     >
                         <NewDataProvider
                             :edit-item="editItem"
@@ -32,7 +32,9 @@
                 class="elevation-1"
             >
                 <template #item.name="{ item }">
-                    <strong>{{ asDataProviderItem(item).name }}</strong>
+                    <strong
+                        ><bdi dir="auto">{{ asDataProviderItem(item).name }}</bdi></strong
+                    >
                 </template>
 
                 <template #item.api_key="{ item }">
@@ -40,14 +42,14 @@
                 </template>
 
                 <template #item.updated_at="{ item }">
-                    {{ asDataProviderItem(item).updated_at ? new Date(String(asDataProviderItem(item).updated_at)).toLocaleString() : '' }}
+                    <bdi dir="auto">{{ formatUpdatedAt(asDataProviderItem(item).updated_at) }}</bdi>
                 </template>
 
                 <template #item.actions="{ item }">
                     <ActionButton
                         action="edit"
                         :title="t('common.edit')"
-                        class="mr-1"
+                        class="me-1"
                         @click="handleEdit(asDataProviderItem(item))"
                     />
                     <ActionButton
@@ -79,6 +81,7 @@
     import SearchField from '@/components/common/SearchField.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { useAuth } from '@/composables/useAuth'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type HeaderEntry = {
         title: string
@@ -100,6 +103,7 @@
     }
 
     const { t } = useI18n()
+    const { formatDateTime } = useLocaleFormatters()
     const configStore = useConfigStore()
     const { checkPermission } = useAuth()
     const canDelete = computed(() => checkPermission('CONFIG_DATA_PROVIDER_DELETE'))
@@ -122,6 +126,12 @@
     ]
 
     const asDataProviderItem = (item: unknown): DataProviderItem => item as DataProviderItem
+
+    const formatUpdatedAt = (value: unknown): string => {
+        if (typeof value !== 'string' && typeof value !== 'number') return ''
+        const rawValue = String(value).trim()
+        return rawValue ? formatDateTime(value) || rawValue : ''
+    }
 
     const loadData = async (): Promise<void> => {
         try {

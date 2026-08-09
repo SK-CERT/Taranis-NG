@@ -38,7 +38,7 @@
                     >
                         <template #title>{{ t('auth_provider.insecure_configuration_title') }}</template>
                         <div>{{ t('auth_provider.insecure_configuration_intro') }}</div>
-                        <ul class="mt-2 pl-5">
+                        <ul class="mt-2 ps-5">
                             <li
                                 v-for="warning in insecureConfigurationWarnings"
                                 :key="warning"
@@ -61,6 +61,7 @@
                                 ref="nameInputRef"
                                 :model-value="isLocalProvider ? t('auth_provider.local_name') : localItem.name"
                                 :label="t('auth_provider.name')"
+                                dir="auto"
                                 variant="outlined"
                                 density="comfortable"
                                 :rules="isLocalProvider ? [] : [(v) => !!v || t('error.required')]"
@@ -68,6 +69,7 @@
                                 :autofocus="!isLocalProvider"
                                 :hint="isLocalProvider ? t('auth_provider.local_name_hint') : undefined"
                                 :persistent-hint="isLocalProvider"
+                                data-test="auth-provider-name"
                                 @update:model-value="(v) => (localItem.name = v)"
                             />
                         </v-col>
@@ -172,7 +174,7 @@
                                 <v-select
                                     v-model="organizationId"
                                     :items="organizations"
-                                    item-title="name"
+                                    :item-title="entityTitle"
                                     item-value="id"
                                     :label="t('auth_provider.organization')"
                                     variant="outlined"
@@ -419,7 +421,7 @@
         (e: 'saved'): void
     }>()
 
-    const { t } = useI18n()
+    const { t, n } = useI18n()
     const { checkPermission } = useAuth()
 
     const dialog = ref(false)
@@ -431,6 +433,10 @@
 
     const organizations = ref<SelectableEntity[]>([])
     const roles = ref<SelectableEntity[]>([])
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+    const isolateAuto = (value: unknown): string => `${FIRST_STRONG_ISOLATE}${String(value ?? '')}${POP_DIRECTIONAL_ISOLATE}`
+    const entityTitle = (item: SelectableEntity): string => isolateAuto(item.name)
 
     const defaultItem: AuthProviderItem = {
         id: null,
@@ -511,7 +517,8 @@
             config.value.idp_entity_id = response.data.idp_entity_id
             config.value.idp_sso_url = response.data.idp_sso_url
             config.value.idp_certificate = response.data.idp_certificate
-            metadataMessage.value = t('auth_provider.idp_metadata_loaded', { count: response.data.certificate_count })
+            const count = response.data.certificate_count
+            metadataMessage.value = t('auth_provider.idp_metadata_loaded', { count: n(count) }, count)
         } catch (error) {
             const data = (error as { response?: { data?: { error?: string } } })?.response?.data
             metadataMessage.value = data?.error || t('auth_provider.idp_metadata_error')
@@ -583,7 +590,8 @@
                 federation_metadata_url: config.value.federation_metadata_url || '',
                 federation_metadata_cert: config.value.federation_metadata_cert || ''
             })) as { data: { entity_count: number; valid_until: string | null } }
-            federationMessage.value = t('auth_provider.federation_verify_result', { count: response.data.entity_count })
+            const count = response.data.entity_count
+            federationMessage.value = t('auth_provider.federation_verify_result', { count: n(count) }, count)
         } catch (error) {
             const data = (error as { response?: { data?: { error?: string } } })?.response?.data
             federationMessage.value = data?.error || t('auth_provider.federation_verify_error')

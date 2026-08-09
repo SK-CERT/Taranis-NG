@@ -226,7 +226,7 @@
         // CardAnalyze gates click by access/modify flags; set safe defaults for dialog usage.
         return {
             ...report,
-            report_type_name: report.report_type_name ?? (reportType?.title || 'Report Item'),
+            report_type_name: report.report_type_name ?? (reportType?.title || t('workflow.entity_types.report_item')),
             access: report.access ?? true,
             modify: report.modify ?? true
         }

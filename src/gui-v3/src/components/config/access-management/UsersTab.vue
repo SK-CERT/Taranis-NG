@@ -23,7 +23,7 @@
                     </v-col>
                     <v-col
                         cols="4"
-                        class="text-right"
+                        class="text-end"
                     >
                         <NewUser
                             :edit-item="editItem"
@@ -65,7 +65,7 @@
                         v-for="org in asUserItem(item).organizations || []"
                         :key="org.id"
                         size="small"
-                        class="mr-1"
+                        class="me-1"
                     >
                         {{ org.name }}
                     </v-chip>
@@ -75,7 +75,7 @@
                     <v-chip
                         v-if="asUserItem(item).has_password"
                         size="small"
-                        class="mr-1"
+                        class="me-1"
                         color="primary"
                         variant="tonal"
                     >
@@ -85,7 +85,7 @@
                         v-for="identity in asUserItem(item).identities || []"
                         :key="identity.id"
                         size="small"
-                        class="mr-1"
+                        class="me-1"
                         variant="tonal"
                     >
                         {{ identity.provider_name }}
@@ -106,7 +106,7 @@
                         size="small"
                         variant="flat"
                         prepend-icon="mdi-account-check"
-                        class="mr-1"
+                        class="me-1"
                         @click="setStatus(asUserItem(item), 'active')"
                     >
                         {{ t('access_management.users.approve') }}
@@ -116,7 +116,7 @@
                         icon="mdi-account-off"
                         color="warning"
                         :title="t('access_management.users.disable')"
-                        class="mr-1"
+                        class="me-1"
                         @click="setStatus(asUserItem(item), 'disabled')"
                     />
                     <ActionButton
@@ -124,13 +124,13 @@
                         icon="mdi-account-reactivate"
                         color="success"
                         :title="t('access_management.users.enable')"
-                        class="mr-1"
+                        class="me-1"
                         @click="setStatus(asUserItem(item), 'active')"
                     />
                     <ActionButton
                         action="edit"
                         :title="t('common.edit')"
-                        class="mr-1"
+                        class="me-1"
                         @click="handleEdit(asUserItem(item))"
                     />
                     <ActionButton

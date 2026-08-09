@@ -21,21 +21,47 @@
 
                     <div class="report-card__content">
                         <div class="report-card__meta-row">
-                            <span class="report-card__type">{{ card.report_type_name }}</span>
+                            <span class="report-card__type"
+                                ><bdi dir="auto">{{ card.report_type_name }}</bdi></span
+                            >
                             <span class="report-card__updated">
-                                <v-icon size="14">mdi-clock-outline</v-icon>
-                                {{ t('card_item.updated') }} {{ card.last_updated }}
-                                <span v-if="card.updated_by">· {{ card.updated_by }}</span>
+                                <v-icon
+                                    size="14"
+                                    aria-hidden="true"
+                                    >mdi-clock-outline</v-icon
+                                >
+                                <i18n-t :keypath="card.updated_by ? 'analyze.updated_at_by' : 'analyze.updated_at'">
+                                    <template #date>
+                                        <bdi :dir="updatedAtDisplay.direction">{{ updatedAtDisplay.text }}</bdi>
+                                    </template>
+                                    <template #user>
+                                        <bdi dir="auto">{{ card.updated_by }}</bdi>
+                                    </template>
+                                </i18n-t>
                             </span>
                         </div>
 
                         <h2 class="report-card__title">
-                            <span
+                            <i18n-t
                                 v-if="card.title_prefix"
-                                class="report-card__prefix"
-                                >{{ card.title_prefix }} —</span
+                                keypath="analyze.title_with_prefix"
                             >
-                            {{ card.title }}
+                                <template #prefix>
+                                    <bdi
+                                        dir="auto"
+                                        class="report-card__prefix"
+                                        >{{ card.title_prefix }}</bdi
+                                    >
+                                </template>
+                                <template #title>
+                                    <bdi dir="auto">{{ card.title }}</bdi>
+                                </template>
+                            </i18n-t>
+                            <bdi
+                                v-else
+                                dir="auto"
+                                >{{ card.title }}</bdi
+                            >
                         </h2>
 
                         <div class="report-card__details">
@@ -44,7 +70,7 @@
                                 :color="card.state.color"
                                 variant="tonal"
                                 size="small"
-                                :title="card.state.description"
+                                :title="isolateBidi(card.state.description)"
                                 class="report-card__state"
                             >
                                 <v-icon
@@ -52,19 +78,27 @@
                                     size="16"
                                     >{{ card.state.icon }}</v-icon
                                 >
-                                {{
-                                    $te('workflow.states.' + card.state.display_name)
-                                        ? $t('workflow.states.' + card.state.display_name)
-                                        : card.state.display_name
-                                }}
+                                <bdi dir="auto">
+                                    {{
+                                        $te('workflow.states.' + card.state.display_name)
+                                            ? $t('workflow.states.' + card.state.display_name)
+                                            : card.state.display_name
+                                    }}
+                                </bdi>
                             </v-chip>
 
                             <span
                                 v-if="card.news_items_count"
                                 class="report-card__source-count"
+                                :title="newsItemsCountMessage"
                             >
-                                <v-icon size="15">mdi-newspaper-variant-outline</v-icon>
-                                {{ card.news_items_count }}
+                                <span class="d-sr-only">{{ newsItemsCountMessage }}</span>
+                                <v-icon
+                                    size="15"
+                                    aria-hidden="true"
+                                    >mdi-newspaper-variant-outline</v-icon
+                                >
+                                <span aria-hidden="true">{{ formatNumber(newsItemsCount) }}</span>
                             </span>
                         </div>
                     </div>
@@ -102,20 +136,22 @@
         <!-- Delete Confirmation Dialog -->
         <ConfirmationDialog
             v-model="showDeleteDialog"
-            :message="card.title || ''"
             max-width="500px"
             @confirm="handleDelete"
-        />
+        >
+            <bdi dir="auto">{{ card.title || '' }}</bdi>
+        </ConfirmationDialog>
 
         <!-- Remove Confirmation Dialog -->
         <ConfirmationDialog
             v-model="showRemoveDialog"
-            :message="card.title || ''"
             title-key="common.messagebox.remove"
             confirm-label-key="common.remove"
             max-width="500px"
             @confirm="handleRemove"
-        />
+        >
+            <bdi dir="auto">{{ card.title || '' }}</bdi>
+        </ConfirmationDialog>
     </div>
 </template>
 
@@ -133,6 +169,7 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type AnalyzeCard = {
         id: number | string
@@ -177,15 +214,28 @@
     }>()
 
     const { t } = useI18n()
+    const { formatDateTime, formatNumber } = useLocaleFormatters()
     const route = useRoute()
     const router = useRouter()
     const analyzeStore = useAnalyzeStore()
     const publishStore = usePublishStore()
     const { checkPermission } = useAuth()
+    const isolateBidi = (value?: string): string => (value ? `\u2068${value}\u2069` : '')
 
     const showDeleteDialog = ref<boolean>(false)
     const showRemoveDialog = ref<boolean>(false)
     const isRemote = computed(() => props.card.remote_user !== null && props.card.remote_user !== undefined)
+    const newsItemsCount = computed(() => Number(props.card.news_items_count ?? 0))
+    const newsItemsCountMessage = computed(() =>
+        t('analyze.news_items_count', { count: formatNumber(newsItemsCount.value) }, newsItemsCount.value)
+    )
+    const updatedAtDisplay = computed<{ text: string; direction: 'ltr' | 'auto' }>(() => {
+        const rawValue = props.card.last_updated == null ? '' : String(props.card.last_updated)
+        if (!rawValue) return { text: '', direction: 'auto' }
+
+        const formattedValue = formatDateTime(rawValue)
+        return formattedValue ? { text: formattedValue, direction: 'auto' } : { text: rawValue, direction: 'auto' }
+    })
 
     const canModify = computed(() => {
         return !isRemote.value && checkPermission(PERMISSIONS.ANALYZE_UPDATE) && props.card.modify === true

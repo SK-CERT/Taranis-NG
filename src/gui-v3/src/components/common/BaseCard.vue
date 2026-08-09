@@ -1,7 +1,7 @@
 <template>
     <div
         class="card-container d-flex align-center"
-        :class="{ 'ga-3': multiSelectActive && showSelectionCheckbox }"
+        :class="[rtlClasses, { 'ga-3': multiSelectActive && showSelectionCheckbox }]"
     >
         <!-- Checkbox outside card to prevent triggering card click -->
         <div
@@ -11,6 +11,7 @@
         >
             <v-checkbox
                 v-model="internalSelected"
+                :aria-label="resolvedCheckboxLabel"
                 density="compact"
                 hide-details
                 @update:model-value="emitSelectionChange"
@@ -50,7 +51,9 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, watch, useSlots } from 'vue'
+    import { computed, ref, watch, useSlots } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useRtl } from 'vuetify'
 
     const slots = useSlots()
 
@@ -69,7 +72,7 @@
         },
         checkboxLabel: {
             type: String,
-            default: 'Select'
+            default: undefined
         },
         preselected: {
             type: Boolean,
@@ -86,6 +89,9 @@
         (e: 'selection-change', selected: boolean): void
     }>()
 
+    const { t } = useI18n()
+    const { rtlClasses } = useRtl()
+    const resolvedCheckboxLabel = computed(() => props.checkboxLabel ?? t('common.select'))
     const internalSelected = ref<boolean>(props.preselected)
 
     // Watch preselected prop and sync with internalSelected
@@ -160,6 +166,10 @@
     .card-list-leave-to {
         opacity: 0;
         transform: translateX(-30px);
+    }
+
+    .v-locale--is-rtl.card-list-leave-to {
+        transform: translateX(30px);
     }
 
     .card-list-leave-active {

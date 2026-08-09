@@ -75,7 +75,7 @@ describe('SecuritySettings', () => {
         await wrapper.vm.$nextTick()
 
         expect(wrapper.vm.qrDataUrl).toBe('data:image/png;base64,QR')
-        expect(wrapper.find('img[alt="TOTP QR code"]').exists()).toBe(true)
+        expect(wrapper.find('img[alt="QR code for authenticator-app enrollment"]').exists()).toBe(true)
     })
 
     it('activates TOTP with a confirmation code', async () => {
@@ -134,6 +134,49 @@ describe('SecuritySettings', () => {
         expect(beginPasskeyRegistration).toHaveBeenCalled()
         expect(finishPasskeyRegistration).toHaveBeenCalledWith('chal-1', { id: 'new-credential' }, 'Laptop')
         expect(wrapper.vm.passkeys).toHaveLength(1)
+    })
+
+    it('uses the translated default name when registering an unnamed passkey', async () => {
+        const wrapper = await mountSecurity()
+        beginPasskeyRegistration.mockResolvedValue({ data: { options: { challenge: 'abc' }, challenge_id: 'chal-1' } })
+        finishPasskeyRegistration.mockResolvedValue({ data: { id: 2 } })
+
+        wrapper.vm.passkeyName = ''
+        await wrapper.vm.confirmName()
+
+        expect(finishPasskeyRegistration).toHaveBeenCalledWith('chal-1', { id: 'new-credential' }, 'Passkey')
+    })
+
+    it('locale-formats and bidi-isolates passkey display values without mutating backend data', async () => {
+        const createdAt = '2026-08-09T17:30:00.000Z'
+        const lastUsedAt = '2026-08-10T08:15:00.000Z'
+        const passkey = { id: 7, name: 'مفتاح العمل', created_at: createdAt, last_used_at: lastUsedAt }
+        const wrapper = await mountSecurity({ passkeys: [passkey] })
+
+        wrapper.vm.$i18n.locale = 'ar'
+        await wrapper.vm.$nextTick()
+
+        const expectedCreated = new Intl.DateTimeFormat('ar', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(createdAt))
+        const expectedLastUsed = new Intl.DateTimeFormat('ar', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastUsedAt))
+        expect(wrapper.get('.passkey-name').attributes('dir')).toBe('auto')
+        expect(wrapper.get('.passkey-name').text()).toBe('مفتاح العمل')
+        expect(wrapper.get('.passkey-created').attributes('dir')).toBe('auto')
+        expect(wrapper.get('.passkey-created').text()).toBe(expectedCreated)
+        expect(wrapper.get('.passkey-last-used').attributes('dir')).toBe('auto')
+        expect(wrapper.get('.passkey-last-used').text()).toBe(expectedLastUsed)
+        expect(expectedCreated).toMatch(/[\u0600-\u06ff]/u)
+        expect(passkey).toMatchObject({ name: 'مفتاح العمل', created_at: createdAt, last_used_at: lastUsedAt })
+    })
+
+    it('preserves unparseable legacy passkey timestamps and isolates the empty-value token', async () => {
+        const wrapper = await mountSecurity({
+            passkeys: [{ id: 8, name: 'Legacy key', created_at: '01.08.2026 - 10:00', last_used_at: null }]
+        })
+
+        expect(wrapper.get('.passkey-created').text()).toBe('01.08.2026 - 10:00')
+        expect(wrapper.get('.passkey-last-used').text()).toBe('-')
+        expect(wrapper.get('.passkey-created').attributes('dir')).toBe('auto')
+        expect(wrapper.get('.passkey-last-used').attributes('dir')).toBe('auto')
     })
 
     it('surfaces a failed registration (e.g. passkey provider not configured)', async () => {

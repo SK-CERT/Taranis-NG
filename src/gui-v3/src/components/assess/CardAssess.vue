@@ -15,54 +15,78 @@
                     <v-row align="center">
                         <v-col cols="auto">
                             <span v-if="firstNewsItem">
-                                {{ firstNewsItem?.news_item_data?.osint_source_name || firstNewsItem?.news_item_data?.source || 'Unknown' }}
-                                <span v-if="firstNewsItem?.news_item_data?.osint_source_type">
-                                    ({{ firstNewsItem.news_item_data.osint_source_type.split(' ')[0] }})
-                                </span>
+                                <i18n-t
+                                    v-if="sourceType"
+                                    keypath="card_item.source_with_type"
+                                >
+                                    <template #source
+                                        ><bdi dir="auto">{{ sourceName }}</bdi></template
+                                    >
+                                    <template #type
+                                        ><bdi dir="auto">{{ sourceType }}</bdi></template
+                                    >
+                                </i18n-t>
+                                <bdi
+                                    v-else
+                                    dir="auto"
+                                    >{{ sourceName }}</bdi
+                                >
                             </span>
                         </v-col>
                         <v-spacer />
                         <v-col cols="auto">
-                            <span v-if="firstNewsItem">
-                                {{ t('card_item.published') }}:
-                                {{ firstNewsItem?.news_item_data?.published || 'N/A' }}
-                            </span>
+                            <i18n-t
+                                v-if="firstNewsItem"
+                                keypath="card_item.published_at"
+                                tag="span"
+                            >
+                                <template #date
+                                    ><bdi dir="auto">{{ publishedValue }}</bdi></template
+                                >
+                            </i18n-t>
                         </v-col>
                         <v-spacer />
                         <v-col cols="auto">
-                            {{ t('card_item.collected') }}:
-                            {{ card.created }}
+                            <i18n-t keypath="card_item.collected_at">
+                                <template #date
+                                    ><bdi dir="auto">{{ collectedValue }}</bdi></template
+                                >
+                            </i18n-t>
                         </v-col>
                     </v-row>
                 </div>
 
                 <span class="text-title-large mb-2">
-                    <HighlightedText
-                        :text="card.title"
-                        :words="highlightWords"
-                        :enabled="highlightWordlist"
-                    />
+                    <bdi dir="auto">
+                        <HighlightedText
+                            :text="card.title"
+                            :words="highlightWords"
+                            :enabled="highlightWordlist"
+                        />
+                    </bdi>
                 </span>
 
                 <p
                     v-if="!hideReviews"
                     class="text-body-medium text-grey mb-3"
                 >
-                    <HighlightedText
-                        :text="card.description"
-                        :words="highlightWords"
-                        :enabled="highlightWordlist"
-                    />
+                    <bdi dir="auto">
+                        <HighlightedText
+                            :text="card.description"
+                            :words="highlightWords"
+                            :enabled="highlightWordlist"
+                        />
+                    </bdi>
                 </p>
 
                 <v-row align="center">
                     <v-col class="d-flex align-center flex-wrap">
                         <span
                             v-if="!isAggregate && !hideSourceLinks && firstNewsItem?.news_item_data?.link"
-                            class="text-label-small text-primary pr-2"
+                            class="text-label-small text-primary pe-2"
                             style="display: inline-block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
                         >
-                            {{ firstNewsItem?.news_item_data?.link }}
+                            <bdi dir="ltr">{{ firstNewsItem?.news_item_data?.link }}</bdi>
                         </span>
 
                         <v-btn
@@ -70,14 +94,21 @@
                             size="small"
                             color="primary"
                             variant="outlined"
-                            class="mr-2"
+                            class="me-2"
                             :data-action="Action.AGGREGATE_OPEN"
+                            data-test="aggregate-count"
                             @click.stop="toggleOpen"
                         >
                             <v-icon start>
-                                {{ opened ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
+                                {{
+                                    opened
+                                        ? ICONS.ARROW_DOWN_DROP_CIRCLE
+                                        : isRtl
+                                          ? ICONS.ARROW_LEFT_DROP_CIRCLE
+                                          : ICONS.ARROW_RIGHT_DROP_CIRCLE
+                                }}
                             </v-icon>
-                            {{ t('card_item.aggregated_items') }}: {{ newsItemsCount }}
+                            {{ aggregateCountMessage }}
                         </v-btn>
 
                         <v-chip
@@ -85,10 +116,11 @@
                             size="small"
                             color="primary"
                             variant="outlined"
-                            class="mr-2"
+                            class="me-2"
+                            data-test="aggregate-count"
                         >
                             <v-icon start> mdi-file-multiple </v-icon>
-                            {{ t('card_item.aggregated_items') }}: {{ newsItemsCount }}
+                            {{ aggregateCountMessage }}
                         </v-chip>
 
                         <v-chip
@@ -96,14 +128,14 @@
                             size="small"
                             color="orange"
                             variant="outlined"
-                            class="mr-2"
+                            class="me-2"
+                            data-test="in-progress-count"
                             :disabled="analyzeSelector"
                             :style="analyzeSelector ? '' : 'cursor: pointer'"
                             @click.stop="!analyzeSelector && showInReports('in_progress')"
                         >
                             <v-icon start> mdi-file-document </v-icon>
-                            {{ t('card_item.in_analyze') }}
-                            <span v-if="inProgressReportsCount > 1">&nbsp;({{ inProgressReportsCount }})</span>
+                            {{ inProgressCountMessage }}
                         </v-chip>
 
                         <v-chip
@@ -111,14 +143,14 @@
                             size="small"
                             color="green"
                             variant="outlined"
-                            class="mr-2"
+                            class="me-2"
+                            data-test="completed-count"
                             :disabled="analyzeSelector"
                             :style="analyzeSelector ? '' : 'cursor: pointer'"
                             @click.stop="!analyzeSelector && showInReports('completed')"
                         >
                             <v-icon start>{{ ICONS.CHECK_CIRCLE }}</v-icon>
-                            {{ t('card_item.analyzed') }}
-                            <span v-if="completedReportsCount > 1">&nbsp;({{ completedReportsCount }})</span>
+                            {{ completedCountMessage }}
                         </v-chip>
 
                         <v-icon
@@ -193,6 +225,8 @@
     import HighlightedText from '@/components/common/HighlightedText.vue'
     import { Action, type ActionKey } from '@/types/actions'
     import { collectHighlightWords } from '@/utils/word-list-highlighting'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { useRtl } from 'vuetify'
 
     type NewsItemData = {
         osint_source_name?: string
@@ -261,16 +295,33 @@
     }>()
 
     const { t } = useI18n()
+    const { isRtl } = useRtl()
+    const { formatDateTime, formatNumber } = useLocaleFormatters()
     const assessStore = useAssessStore()
     const settingsStore = useSettingsStore()
     const { checkPermission } = useAuth()
     const opened = ref(false)
 
     const firstNewsItem = computed(() => props.card.news_items?.[0])
+    const sourceName = computed(
+        () =>
+            firstNewsItem.value?.news_item_data?.osint_source_name ||
+            firstNewsItem.value?.news_item_data?.source ||
+            t('card_item.unknown_source')
+    )
+    const sourceType = computed(() => firstNewsItem.value?.news_item_data?.osint_source_type?.split(' ')[0] || '')
+    const publishedDate = computed(() => firstNewsItem.value?.news_item_data?.published || '')
+    const formatDisplayDate = (value: string): string => (value ? formatDateTime(value) || value : t('card_item.not_available'))
+    const publishedValue = computed(() => formatDisplayDate(publishedDate.value))
+    const collectedValue = computed(() => formatDisplayDate(props.card.created || ''))
     const newsItemsCount = computed(() => props.card.news_items?.length ?? 0)
     const inReportsCount = computed(() => props.card.in_reports_count ?? 0)
     const completedReportsCount = computed(() => props.card.completed_reports_count ?? 0)
     const inProgressReportsCount = computed(() => Math.max(0, inReportsCount.value - completedReportsCount.value))
+    const countMessage = (key: string, count: number): string => t(key, { count: formatNumber(count) }, count)
+    const aggregateCountMessage = computed(() => countMessage('card_item.aggregated_items_count', newsItemsCount.value))
+    const inProgressCountMessage = computed(() => countMessage('card_item.in_analyze_count', inProgressReportsCount.value))
+    const completedCountMessage = computed(() => countMessage('card_item.analyzed_count', completedReportsCount.value))
     const isAggregate = computed(() => newsItemsCount.value > 1)
     const childNewsItems = computed(() => props.card.news_items ?? [])
     const highlightWords = computed(() => collectHighlightWords(settingsStore.getProfileWordLists))

@@ -88,16 +88,25 @@ describe('AuthProvidersTab', () => {
 
     it('warns about linked identities in the delete confirmation', async () => {
         const { wrapper } = await mountTab()
+        const linkedProvider = { ...PROVIDERS[1], name: 'Corp العربية', linked_identity_count: 1234 }
 
-        wrapper.vm.askDelete(PROVIDERS[1]) // 3 linked identities
+        wrapper.vm.askDelete(linkedProvider)
         await wrapper.vm.$nextTick()
         expect(wrapper.vm.deleteDialog).toBe(true)
-        expect(wrapper.vm.deleteMessage).toContain('Corp SSO')
-        expect(wrapper.vm.deleteMessage).toContain('3')
+        expect(wrapper.vm.deleteMessage).toContain('\u2068Corp العربية\u2069')
+        expect(wrapper.vm.deleteMessage).toContain(new Intl.NumberFormat('en').format(1234))
 
         wrapper.vm.askDelete(PROVIDERS[0]) // no linked identities
         await wrapper.vm.$nextTick()
-        expect(wrapper.vm.deleteMessage).toBe('Local accounts')
+        expect(wrapper.vm.deleteMessage).toBe('\u2068Local accounts\u2069')
+    })
+
+    it('renders provider and organization names with automatic bidi isolation', async () => {
+        const { wrapper } = await mountTab()
+        const values = wrapper.findAll('bdi[dir="auto"]').map((value) => value.text())
+
+        expect(values).toContain('Corp SSO')
+        expect(values).toContain('CERT')
     })
 
     it('deletes the confirmed provider and reloads', async () => {

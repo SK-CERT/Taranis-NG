@@ -1,19 +1,23 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
+import { defineComponent } from 'vue'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewAuthProvider from '@/components/config/auth-providers/NewAuthProvider.vue'
+import OidcFields from '@/components/config/auth-providers/fields/OidcFields.vue'
+import Oauth2Fields from '@/components/config/auth-providers/fields/Oauth2Fields.vue'
 import OauthSharedFields from '@/components/config/auth-providers/fields/OauthSharedFields.vue'
 import LdapFields from '@/components/config/auth-providers/fields/LdapFields.vue'
 import SamlFields from '@/components/config/auth-providers/fields/SamlFields.vue'
 import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
 import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
-import { createNewAuthProvider, updateAuthProvider, importSamlMetadata, generateSamlKeypair } from '@/api/config'
+import { createNewAuthProvider, updateAuthProvider, importSamlMetadata, generateSamlKeypair, verifySamlFederation } from '@/api/config'
 
 vi.mock('@/api/config', () => ({
     createNewAuthProvider: vi.fn().mockResolvedValue({ data: {} }),
     updateAuthProvider: vi.fn().mockResolvedValue({ data: {} }),
     importSamlMetadata: vi.fn(),
     generateSamlKeypair: vi.fn(),
+    verifySamlFederation: vi.fn(),
     getAllOrganizations: vi.fn().mockResolvedValue({ data: { items: [{ id: 1, name: 'CERT' }] } }),
     getAllRoles: vi.fn().mockResolvedValue({ data: { items: [{ id: 5, name: 'User', description: 'Basic role' }] } })
 }))
@@ -355,16 +359,13 @@ describe('NewAuthProvider dialog', () => {
         expect(config).not.toHaveProperty('server_url')
     })
 
-    it('shows the metadata and ACS URLs to hand to the identity provider once saved', async () => {
+    it('derives the metadata and ACS URLs to hand to the identity provider once saved', async () => {
         const wrapper = await mountDialog()
         await openEdit(wrapper, SAML_PROVIDER)
 
         // both carry the provider slug (stable across recreation), so they only exist in edit mode
         expect(wrapper.vm.samlMetadataUrl).toBe(`${window.location.origin}/api/v1/auth/saml/corp-saml/metadata`)
         expect(wrapper.vm.samlAcsUrl).toBe(`${window.location.origin}/api/v1/auth/saml/corp-saml/acs`)
-        // v-dialog teleports its content to the body, so assert on the rendered overlay
-        expect(document.body.textContent).toContain('/api/v1/auth/saml/corp-saml/metadata')
-        expect(document.body.textContent).toContain('/api/v1/auth/saml/corp-saml/acs')
     })
 
     it('prefers a configured ACS override over the derived URL', async () => {
@@ -489,7 +490,7 @@ describe('NewAuthProvider dialog', () => {
                 idp_entity_id: 'https://idp.example.org/idp/shibboleth',
                 idp_sso_url: 'https://idp.example.org/sso/redirect',
                 idp_certificate: '-----BEGIN CERTIFICATE-----\nAAA\n-----END CERTIFICATE-----\n',
-                certificate_count: 2
+                certificate_count: 1234
             }
         })
 
@@ -502,7 +503,7 @@ describe('NewAuthProvider dialog', () => {
         expect(wrapper.vm.config.idp_sso_url).toBe('https://idp.example.org/sso/redirect')
         expect(wrapper.vm.config.idp_certificate).toContain('BEGIN CERTIFICATE')
         expect(wrapper.vm.metadataError).toBe(false)
-        expect(wrapper.vm.metadataMessage).toContain('2')
+        expect(wrapper.vm.metadataMessage).toContain(new Intl.NumberFormat('en').format(1234))
     })
 
     it('sends a metadata URL for the backend to fetch', async () => {
@@ -516,6 +517,72 @@ describe('NewAuthProvider dialog', () => {
         await wrapper.vm.loadMetadata()
 
         expect(importSamlMetadata).toHaveBeenCalledWith({ url: 'https://idp.example.org/idp/shibboleth/metadata' })
+    })
+
+    it('plural-selects and locale-formats the verified federation provider count', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, SAML_PROVIDER)
+        verifySamlFederation.mockResolvedValue({ data: { entity_count: 1234, valid_until: null } })
+        wrapper.vm.config.federation_metadata_url = 'https://federation.example.test/metadata'
+        wrapper.vm.config.federation_metadata_cert = 'certificate'
+
+        await wrapper.vm.verifyFederation()
+
+        expect(verifySamlFederation).toHaveBeenCalledWith({
+            federation_metadata_url: 'https://federation.example.test/metadata',
+            federation_metadata_cert: 'certificate'
+        })
+        expect(wrapper.vm.federationMessage).toContain(new Intl.NumberFormat('en').format(1234))
+        expect(wrapper.vm.federationError).toBe(false)
+    })
+
+    it('uses bidi-safe provider and server-supplied organization names', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, OIDC_PROVIDER)
+
+        expect(document.body.querySelector('[data-test="auth-provider-name"] input')?.getAttribute('dir')).toBe('auto')
+        expect(wrapper.vm.entityTitle({ id: 1, name: 'CERT العربية' })).toBe('\u2068CERT العربية\u2069')
+    })
+
+    it('applies URL direction to native OAuth, OIDC and LDAP inputs without changing config values', () => {
+        const oidcConfig = { issuer_url: 'https://idp.example.test' }
+        const oidc = mountWithPlugins(OidcFields, { props: { config: oidcConfig, saving: false } })
+        expect(oidc.get('input').attributes('dir')).toBe('ltr')
+        expect(oidc.get('input').element.value).toBe(oidcConfig.issuer_url)
+
+        const oauthConfig = {
+            authorize_url: 'https://idp.example.test/authorize',
+            token_url: 'https://idp.example.test/token',
+            userinfo_url: 'https://idp.example.test/userinfo'
+        }
+        const oauth = mountWithPlugins(Oauth2Fields, { props: { config: oauthConfig, saving: false } })
+        expect(oauth.findAll('input').map((input) => [input.attributes('dir'), input.element.value])).toEqual([
+            ['ltr', oauthConfig.authorize_url],
+            ['ltr', oauthConfig.token_url],
+            ['ltr', oauthConfig.userinfo_url]
+        ])
+
+        const sharedConfig = { redirect_uri_override: 'https://app.example.test/oauth/callback' }
+        const shared = mountWithPlugins(OauthSharedFields, {
+            props: { config: sharedConfig, saving: false, redirectUri: 'https://app.example.test/api/v1/auth/oauth/callback' }
+        })
+        const redirectInput = shared.findAll('input').find((input) => input.element.value === sharedConfig.redirect_uri_override)
+        expect(redirectInput?.attributes('dir')).toBe('ltr')
+        expect(shared.get('[data-test="oauth-callback-uri-value"]').attributes('dir')).toBe('ltr')
+
+        const ldapConfig = { server_url: 'ldaps://ldap.example.test', user_dn_template: 'uid={username},dc=example,dc=test' }
+        const ldap = mountWithPlugins(LdapFields, { props: { config: ldapConfig, saving: false } })
+        const serverInput = ldap.findAll('input').find((input) => input.element.value === ldapConfig.server_url)
+        expect(serverInput?.attributes('dir')).toBe('ltr')
+
+        expect(oidcConfig).toEqual({ issuer_url: 'https://idp.example.test' })
+        expect(oauthConfig).toEqual({
+            authorize_url: 'https://idp.example.test/authorize',
+            token_url: 'https://idp.example.test/token',
+            userinfo_url: 'https://idp.example.test/userinfo'
+        })
+        expect(sharedConfig).toEqual({ redirect_uri_override: 'https://app.example.test/oauth/callback' })
+        expect(ldapConfig.server_url).toBe('ldaps://ldap.example.test')
     })
 
     it('shows the backend message when the metadata cannot be read', async () => {
@@ -724,6 +791,115 @@ describe('LDAP provider fields', () => {
 })
 
 describe('SAML provider fields', () => {
+    it('keeps editable SAML machine tokens LTR without forcing human metadata fields', async () => {
+        const config = {
+            idp_sso_url: 'https://idp.example.test/sso',
+            idp_entity_id: 'urn:example:idp',
+            idp_certificate: 'IDP-CERTIFICATE',
+            discovery_url: 'https://discovery.example.test/',
+            federation_metadata_url: 'https://federation.example.test/metadata',
+            federation_metadata_cert: 'FEDERATION-CERTIFICATE',
+            discovery_params: 'entityID={entity_id}',
+            sp_entity_id: 'urn:example:sp',
+            acs_url_override: 'https://sp.example.test/acs',
+            external_id_attr: 'eduPersonUniqueId',
+            username_attr: 'uid',
+            name_attr: 'displayName',
+            email_attr: 'mail',
+            sp_display_name: 'مزود الخدمة',
+            sp_information_url: 'https://sp.example.test/info',
+            sp_description: 'وصف مزود الخدمة',
+            sp_organization_name: 'المنظمة',
+            sp_organization_url: 'https://organization.example.test/',
+            sp_contact_email: 'cert@example.test',
+            sp_contact_name: 'الاسم',
+            sp_contact_surname: 'اللقب',
+            sp_certificate: 'SP-CERTIFICATE'
+        }
+        const wrapper = mountWithPlugins(SamlFields, {
+            props: { config, saving: false, metadata: '<EntityDescriptor />', secret: 'SP-PRIVATE-KEY' }
+        })
+        const nativeField = (value) => {
+            const field = wrapper.findAll('input, textarea').find((candidate) => candidate.element.value === value)
+            if (!field) throw new Error(`Native field was not rendered for ${value}`)
+            return field
+        }
+
+        for (const value of [
+            '<EntityDescriptor />',
+            'https://idp.example.test/sso',
+            'urn:example:idp',
+            'IDP-CERTIFICATE',
+            'urn:example:sp',
+            'https://sp.example.test/acs',
+            'eduPersonUniqueId',
+            'uid',
+            'displayName',
+            'mail'
+        ]) {
+            expect(nativeField(value).attributes('dir')).toBe('ltr')
+        }
+
+        await nativeField('https://idp.example.test/sso').setValue('https://idp.example.test/updated-sso')
+        expect(config.idp_sso_url).toBe('https://idp.example.test/updated-sso')
+
+        wrapper.vm.federationModel = true
+        await wrapper.vm.$nextTick()
+        for (const value of [
+            'https://discovery.example.test/',
+            'https://federation.example.test/metadata',
+            'FEDERATION-CERTIFICATE',
+            'entityID={entity_id}'
+        ]) {
+            expect(nativeField(value).attributes('dir')).toBe('ltr')
+        }
+
+        wrapper.vm.activeTab = 'service'
+        await wrapper.vm.$nextTick()
+        for (const value of ['https://sp.example.test/info', 'https://organization.example.test/']) {
+            expect(nativeField(value).attributes('dir')).toBe('ltr')
+        }
+        for (const value of ['مزود الخدمة', 'وصف مزود الخدمة', 'المنظمة', 'الاسم', 'اللقب']) {
+            expect(nativeField(value).attributes('dir')).not.toBe('ltr')
+        }
+
+        wrapper.vm.activeTab = 'keypair'
+        await wrapper.vm.$nextTick()
+        expect(nativeField('SP-PRIVATE-KEY').attributes('dir')).toBe('ltr')
+        expect(nativeField('SP-CERTIFICATE').attributes('dir')).toBe('ltr')
+    })
+
+    it('renders complete provider URL messages with isolated LTR URL slots', async () => {
+        const I18nTStub = defineComponent({
+            name: 'I18nT',
+            props: { keypath: { type: String, required: true } },
+            template: '<div :data-keypath="keypath"><slot name="url" /></div>'
+        })
+        const wrapper = mountWithPlugins(SamlFields, {
+            props: {
+                config: {},
+                saving: false,
+                isEdit: true,
+                samlMetadataUrl: 'https://taranis.example.test/metadata',
+                samlAcsUrl: 'https://taranis.example.test/acs',
+                samlDiscoUrl: 'https://taranis.example.test/discovery'
+            },
+            global: { stubs: { I18nT: I18nTStub } }
+        })
+
+        let urls = wrapper.findAll('bdi[dir="ltr"]')
+        expect(urls.map((url) => url.text())).toEqual(['https://taranis.example.test/metadata', 'https://taranis.example.test/acs'])
+        expect(urls.every((url) => url.find('code').exists())).toBe(true)
+        expect(wrapper.find('[data-keypath="auth_provider.saml_metadata_url_with_url"]').exists()).toBe(true)
+        expect(wrapper.find('[data-keypath="auth_provider.saml_acs_url_with_url"]').exists()).toBe(true)
+
+        wrapper.vm.federationModel = true
+        await wrapper.vm.$nextTick()
+        urls = wrapper.findAll('bdi[dir="ltr"]')
+        expect(urls.map((url) => url.text())).toContain('https://taranis.example.test/discovery')
+        expect(wrapper.find('[data-keypath="auth_provider.saml_disco_url_with_url"]').exists()).toBe(true)
+    })
+
     it('shows single-IdP and federation as mutually exclusive radio choices', async () => {
         const wrapper = mountWithPlugins(SamlFields, { props: { config: {}, saving: false } })
 

@@ -14,42 +14,42 @@
             "organizations": "องค์กร",
             "roles": "บทบาท",
             "permissions": "สิทธิ์",
-            "total_count": "จำนวนผู้ใช้",
+            "total_count": "ไม่มีผู้ใช้ | ผู้ใช้ {count} คน | ผู้ใช้ {count} คน",
             "password": "รหัสผ่าน",
             "password_check": "ป้อนรหัสผ่านอีกครั้ง",
             "password_mismatch": "รหัสผ่านไม่ตรงกัน",
-            "email": "E-mail",
-            "status": "Status",
+            "email": "อีเมล",
+            "status": "สถานะ",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "รอการอนุมัติ",
+                "active": "ใช้งานอยู่",
+                "disabled": "ปิดใช้งาน"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "วิธีเข้าสู่ระบบ",
+            "local_password": "ภายใน",
+            "mfa_enabled": "เปิดใช้การยืนยันตัวตนแบบสองปัจจัยแล้ว",
+            "approve": "อนุมัติ",
+            "disable": "ปิดใช้งาน",
+            "enable": "เปิดใช้งาน",
+            "status_error": "ไม่สามารถเปลี่ยนสถานะผู้ใช้ได้",
+            "reset_mfa": "รีเซ็ต MFA",
+            "reset_mfa_message": "นำการลงทะเบียนปัจจัยที่สองทั้งหมด (TOTP และพาสคีย์) ของ {username} ออกหรือไม่?",
+            "reset_mfa_choose": "เลือกสิ่งที่ต้องการรีเซ็ตสำหรับ {username}:",
+            "reset_mfa_totp_only": "เฉพาะ TOTP (แอปยืนยันตัวตน)",
+            "reset_mfa_passkeys_only": "เฉพาะพาสคีย์",
+            "reset_mfa_both": "ทั้ง TOTP และพาสคีย์",
+            "password_hint": "ไม่บังคับสำหรับผู้ใช้ที่มีข้อมูลประจำตัวภายนอก",
+            "clear_password": "นำรหัสผ่านภายในออก (ปิดการเข้าสู่ระบบด้วยรหัสผ่าน)",
+            "require_mfa": "กำหนดให้ยืนยันตัวตนแบบสองปัจจัย",
+            "require_mfa_hint": "ใช้กับผู้ใช้นี้เท่านั้น แต่ไซต์ องค์กร หรือวิธีเข้าสู่ระบบอาจยังคงกำหนดให้ใช้ได้",
+            "identities": "ข้อมูลประจำตัวสำหรับเข้าสู่ระบบ",
+            "add_identity": "เชื่อมโยงข้อมูลประจำตัว",
+            "edit_identity": "แก้ไขข้อมูลประจำตัว",
+            "no_identities": "ไม่มีข้อมูลประจำตัวภายนอกที่เชื่อมโยง",
+            "identity_provider": "ผู้ให้บริการ",
+            "external_username": "ชื่อผู้ใช้ที่ผู้ให้บริการ",
+            "external_username_hint": "ชื่อผู้ใช้ของผู้ใช้นี้ที่ผู้ให้บริการข้อมูลประจำตัว",
+            "last_login": "เข้าสู่ระบบล่าสุด"
         },
         "roles": {
             "tab_description": "คุณสามารถจัดการบทบาทและสิทธิ์ได้ที่นี่",
@@ -65,7 +65,7 @@
             "removed_error": "บทบาทกำลังถูกใช้งานและไม่สามารถลบได้",
             "title": "ชื่อเรื่อง",
             "permissions": "สิทธิ์",
-            "total_count": "จำนวนบทบาท"
+            "total_count": "ไม่มีบทบาท | บทบาท {count} รายการ | บทบาท {count} รายการ"
         },
         "acls": {
             "tab_description": "คุณสามารถจัดการรายการควบคุมการเข้าถึง (ACL) ได้ที่นี่",
@@ -87,7 +87,7 @@
             "removed_error": "ACLกำลังถูกใช้งานและไม่สามารถลบได้",
             "roles": "บทบาท",
             "users": "ผู้ใช้",
-            "total_count": "จำนวนACLs"
+            "total_count": "ไม่มี ACL | ACL {count} รายการ | ACL {count} รายการ"
         },
         "organizations": {
             "tab_description": "คุณสามารถจัดการองค์กรได้ที่นี่",
@@ -97,6 +97,8 @@
             "name": "ชื่อ",
             "required_fields_hint": "ช่องที่มีเครื่องหมาย * จำเป็นต้องกรอก",
             "description": "คำอธิบาย",
+            "require_mfa": "กำหนดให้ยืนยันตัวตนแบบสองปัจจัย",
+            "require_mfa_hint": "สมาชิกทุกคนในองค์กรนี้ต้องมีปัจจัยที่สอง",
             "street": "ถนน",
             "city": "เมือง",
             "zip": "รหัสไปรษณีย์",
@@ -105,37 +107,35 @@
             "successful_edit": "อัปเดตองค์กรสำเร็จ",
             "removed": "ลบองค์กรสำเร็จ",
             "removed_error": "องค์กรกำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนองค์กร",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor"
+            "total_count": "ไม่มีองค์กร | องค์กร {count} แห่ง | องค์กร {count} แห่ง"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
+            "tab_description": "คุณสามารถกำหนดค่าความปลอดภัยสำหรับทั้งไซต์ได้ที่นี่",
+            "mfa_title": "การยืนยันตัวตนแบบสองปัจจัย",
+            "mfa_description": "ระบบจะกำหนดให้ใช้ปัจจัยที่สองเมื่อมีข้อกำหนดจากระดับใดก็ตาม ได้แก่ ไซต์นี้ องค์กรของผู้ใช้ วิธีเข้าสู่ระบบ หรือตัวผู้ใช้",
+            "require_mfa": "กำหนดให้ผู้ใช้ทุกคนยืนยันตัวตนแบบสองปัจจัย",
+            "require_mfa_hint": "ผู้ใช้ที่ยังไม่มีปัจจัยที่สองจะได้รับคำแนะนำให้ลงทะเบียน TOTP เมื่อเข้าสู่ระบบครั้งถัดไป",
             "require_mfa_enabled_hint": "ผู้ใช้ทุกคนต้องลงทะเบียนและใช้ TOTP หรือ passkey เมื่อเข้าสู่ระบบ",
             "require_mfa_disabled_hint": "ไม่มีข้อกำหนด MFA ทั่วทั้งไซต์ แต่นโยบายขององค์กร วิธีเข้าสู่ระบบ หรือผู้ใช้อาจยังกำหนดให้ใช้ปัจจัยที่สองได้",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
+            "passkeys_title": "พาสคีย์ (WebAuthn)",
+            "passkeys_description": "พาสคีย์เป็นข้อมูลรับรองของผู้ใช้ ซึ่งผู้ใช้ลงทะเบียนได้ในการตั้งค่าความปลอดภัยของตนเอง ตัวเลือกเหล่านี้ใช้อธิบายไซต์นี้ให้อุปกรณ์ยืนยันตัวตนทราบและเปิดใช้คุณสมบัตินี้",
+            "passkey_enabled": "เปิดใช้การเข้าสู่ระบบด้วยพาสคีย์",
+            "passkey_enabled_hint": "แสดงตัวเลือกเข้าสู่ระบบโดยไม่ใช้รหัสผ่านบนหน้าเข้าสู่ระบบ และให้ผู้ใช้ลงทะเบียนพาสคีย์ได้",
             "passkey_enabled_on_hint": "มีการเข้าสู่ระบบแบบไม่ใช้รหัสผ่านด้วย passkey และผู้ใช้สามารถลงทะเบียน passkey ได้",
             "passkey_enabled_off_hint": "ไม่สามารถเข้าสู่ระบบด้วย passkey หรือลงทะเบียน passkey ใหม่ได้",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
+            "passkey_second_factor": "ยอมรับพาสคีย์เป็นปัจจัยที่สอง",
+            "passkey_second_factor_hint": "เมื่อปิดตัวเลือกนี้ ระบบจะยอมรับเฉพาะ TOTP เป็นปัจจัยที่สอง แม้ผู้ใช้จะลงทะเบียนพาสคีย์ไว้แล้วก็ตาม",
+            "rp_id": "ID ของ relying party",
+            "rp_id_hint": "ต้องเป็นโดเมนของไซต์นี้ เช่น {host}",
             "rp_id_use_suggested": "ใช้ RP ID ที่แนะนำ",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings."
+            "rp_name": "ชื่อ relying party",
+            "rp_name_hint": "แสดงโดยอุปกรณ์ยืนยันตัวตนขณะเข้าสู่ระบบ",
+            "origins": "Origin ที่อนุญาต",
+            "origins_hint": "URL แบบเต็มที่ใช้ให้บริการหน้าเข้าสู่ระบบ โดยคั่นแต่ละรายการด้วยจุลภาค",
+            "origins_invalid": "แต่ละ origin ต้องเป็น URL แบบเต็ม (https://host)",
+            "secure_context_hint": "WebAuthn ต้องใช้บริบทที่ปลอดภัย ได้แก่ HTTPS หรือ HTTP ธรรมดาเฉพาะบน localhost เท่านั้น",
+            "last_updated": "อัปเดตล่าสุดโดย {user} เมื่อ {at}",
+            "error": "ไม่สามารถบันทึกการตั้งค่าความปลอดภัยได้"
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "เข้าสู่ระบบ",
         "submit": "เข้าสู่ระบบ",
         "error": "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "วิธีเข้าสู่ระบบ",
+        "pending_approval": "บัญชีของคุณกำลังรอการอนุมัติจากผู้ดูแลระบบ",
+        "account_disabled": "บัญชีของคุณถูกปิดใช้งาน โปรดติดต่อผู้ดูแลระบบ",
+        "username_collision": "มีบัญชีที่ใช้ชื่อผู้ใช้นี้อยู่แล้ว โปรดขอให้ผู้ดูแลระบบเชื่อมโยงข้อมูลประจำตัวนี้กับบัญชีนั้น",
+        "account_not_linked": "ข้อมูลประจำตัวนี้ไม่ได้เชื่อมโยงกับบัญชีใด โปรดติดต่อผู้ดูแลระบบ",
+        "domain_not_allowed": "โดเมนอีเมลของคุณไม่ได้รับอนุญาตให้สมัคร โปรดติดต่อผู้ดูแลระบบ",
+        "auth_cancelled": "ยกเลิกการเข้าสู่ระบบแล้ว โปรดลองอีกครั้ง",
+        "totp_invalid": "รหัสยืนยันตัวตนไม่ถูกต้อง",
+        "passkey_sign_in": "เข้าสู่ระบบด้วยพาสคีย์",
+        "sign_in_with": "เข้าสู่ระบบด้วย {name}",
+        "external_provider": "การเข้าสู่ระบบภายนอก",
+        "methods_error": "ไม่สามารถโหลดวิธีเข้าสู่ระบบได้ โปรดลองอีกครั้ง",
+        "mfa_title": "การยืนยันตัวตนแบบสองปัจจัย",
+        "mfa_code": "รหัสยืนยันตัวตน",
+        "mfa_verify": "ยืนยัน",
+        "mfa_use_passkey": "ใช้พาสคีย์แทน",
+        "enroll_title": "ตั้งค่าการยืนยันตัวตนแบบสองปัจจัย",
+        "enroll_hint": "สแกนคิวอาร์โค้ดด้วยแอปยืนยันตัวตน แล้วป้อนรหัสที่สร้างขึ้น",
+        "enroll_activate": "เปิดใช้งาน",
+        "enroll_use_passkey": "ลงทะเบียนพาสคีย์แทน",
+        "enroll_passkey_name": "พาสคีย์",
+        "back": "กลับไปหน้าเข้าสู่ระบบ"
     },
     "home": {
         "redirecting": "กำลังเปลี่ยนเส้นทาง…",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "การตั้งค่า",
         "logout": "ออกจากระบบ",
-        "security": "Security"
+        "security": "Security",
+        "unknown_user": "ผู้ใช้ที่ไม่รู้จัก",
+        "no_organization": "ไม่มีองค์กร"
     },
     "main_menu": {
         "enter": "ป้อนข้อมูล",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "พื้นที่ทำงานข่าวกรองเชิงปฏิบัติการ",
         "refresh": "รีเฟรชแดชบอร์ด",
+        "metrics": {
+            "news_items_summary": "ไม่มีรายการข่าว | รายการข่าวทั้งหมด {count} รายการ | รายการข่าวทั้งหมด {count} รายการ",
+            "report_items_summary": "ไม่มีรายการรายงาน | รายการรายงานทั้งหมด {count} รายการ | รายการรายงานทั้งหมด {count} รายการ",
+            "products_summary": "ไม่มีผลิตภัณฑ์ | ผลิตภัณฑ์ทั้งหมด {count} รายการ | ผลิตภัณฑ์ทั้งหมด {count} รายการ"
+        },
         "assess": {
             "trending": "แนวโน้มข่าวกรอง",
             "tagcloud": "แท็กคลาวด์สำหรับรายการข่าวที่รวบรวมล่าสุด",
-            "total": "รายการข่าวทั้งหมด"
+            "total": "รายการข่าวทั้งหมด",
+            "ingestion_chart": "การรับรายการข่าวสำหรับ {period}",
+            "ingestion_point": "ไม่มีรายการข่าวในวันที่ {date} | รายการข่าว {count} รายการในวันที่ {date} | รายการข่าว {count} รายการในวันที่ {date}"
         },
         "collect": {
             "title": "ตัวรวบรวม",
@@ -253,8 +262,14 @@
             "title": "เกี่ยวกับ",
             "version": "เวอร์ชัน",
             "commit": "คอมมิต",
-            "total": "ระเบียนทั้งหมด"
+            "total": "ระเบียนทั้งหมด",
+            "built_at": "สร้างเมื่อ {date}",
+            "committed_at": "คอมมิตเมื่อ {date}"
         }
+    },
+    "word_cloud": {
+        "label": "กลุ่มคำ",
+        "word_action_count": "{action} {word}: ไม่มีผลลัพธ์ | {action} {word}: {count} ผลลัพธ์ | {action} {word}: {count} ผลลัพธ์"
     },
     "nav_menu": {
         "enter": "สร้างรายการข่าว",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "ชื่อเรื่อง",
         "created": "สร้างเมื่อ",
-        "updated": "อัปเดตเมื่อ",
-        "collected": "รวบรวมเมื่อ",
-        "published": "เผยแพร่แล้ว",
-        "source": "แหล่งที่มา",
         "node": "โหนด",
         "description": "คำอธิบาย",
-        "in_analyze": "กำลังวิเคราะห์",
-        "analyzed": "วิเคราะห์แล้ว",
         "url": "URL",
         "name": "ชื่อ",
         "username": "ชื่อผู้ใช้",
@@ -332,7 +341,18 @@
         "last_seen": "พบล่าสุด",
         "last_attempted": "พยายามล่าสุด",
         "last_collected": "รวบรวมล่าสุด",
-        "last_error": "ข้อผิดพลาดล่าสุด"
+        "last_error": "ข้อผิดพลาดล่าสุด",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "แหล่งที่มา: {source}",
+        "author_with_value": "ผู้เขียน: {author}",
+        "published_at": "เผยแพร่เมื่อ: {date}",
+        "collected_at": "รวบรวมเมื่อ: {date}",
+        "link_with_url": "ลิงก์: {url}",
+        "unknown_source": "แหล่งที่มาที่ไม่รู้จัก",
+        "not_available": "ไม่มีข้อมูล",
+        "aggregated_items_count": "ไม่มีรายการข่าวที่รวมแล้ว | รายการข่าวที่รวมแล้ว {count} รายการ | รายการข่าวที่รวมแล้ว {count} รายการ",
+        "in_analyze_count": "ไม่มีการวิเคราะห์ที่กำลังดำเนินการ | การวิเคราะห์ที่กำลังดำเนินการ {count} รายการ | การวิเคราะห์ที่กำลังดำเนินการ {count} รายการ",
+        "analyzed_count": "ไม่มีการวิเคราะห์ที่เสร็จสิ้น | การวิเคราะห์ที่เสร็จสิ้น {count} รายการ | การวิเคราะห์ที่เสร็จสิ้น {count} รายการ"
     },
     "attribute": {
         "add_constant": "เพิ่มค่าคงที่",
@@ -385,10 +405,22 @@
         "ai_provider": "โมเดล AI",
         "ai_prompt": "พรอมต์ AI",
         "add_attribute": "เพิ่มแอตทริบิวต์",
-        "edit_attribute": "แก้ไขแอตทริบิวต์"
+        "edit_attribute": "แก้ไขแอตทริบิวต์",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "เวกเตอร์และคะแนน CVSS",
+        "last_updated_at": "อัปเดตล่าสุดเมื่อ {date}",
+        "updated_by_user": "อัปเดตโดย {user}",
+        "tlp_description_clear": "ไม่จำกัดการเปิดเผยข้อมูล",
+        "tlp_description_green": "จำกัดการเปิดเผยข้อมูลภายในชุมชน",
+        "tlp_description_amber": "จำกัดการเปิดเผยข้อมูลภายในองค์กรของผู้รับและแก่ลูกค้าตามความจำเป็นที่ต้องทราบ",
+        "tlp_description_amber_strict": "จำกัดการเปิดเผยข้อมูลเฉพาะภายในองค์กรของผู้รับ",
+        "tlp_description_red": "ห้ามเปิดเผยนอกเหนือจากผู้รับแต่ละราย",
+        "tlp_description_unknown": "เครื่องหมาย TLP ที่ไม่รู้จัก"
     },
     "cvss_calculator": {
         "title": "เครื่องคำนวณ CVSS",
+        "tooltips": "แสดงคำแนะนำเมตริก",
+        "vector_placeholder": "เวกเตอร์ CVSS เช่น CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "คะแนนพื้นฐาน",
         "attack_vector": "เวกเตอร์การโจมตี (AV)",
         "attack_complexity": "ความซับซ้อนของการโจมตี (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "เมตริกนี้ระบุว่าผู้ใช้อื่นนอกเหนือจากผู้โจมตีต้องมีส่วนร่วมเพื่อให้โจมตีส่วนประกอบสำเร็จหรือไม่ และแยกว่าช่องโหว่ใช้ประโยชน์ได้ตามเจตนาของผู้โจมตีเพียงอย่างเดียวหรือจำเป็นต้องมีผู้ใช้หรือกระบวนการที่ผู้ใช้เริ่มทำงานเข้าร่วม",
         "UI_N_Label": "สามารถใช้ประโยชน์จากระบบที่มีช่องโหว่ได้โดยไม่ต้องมีการโต้ตอบจากผู้ใช้",
         "UI_R_Label": "การใช้ประโยชน์สำเร็จต้องให้ผู้ใช้ดำเนินการบางอย่างก่อนที่จะใช้ประโยชน์จากช่องโหว่ได้",
-        "S_Heading": "การโจมตีสำเร็จส่งผลต่อส่วนประกอบอื่นนอกเหนือจากส่วนประกอบที่มีช่องโหว่หรือไม่ หากใช่ คะแนนพื้นฐานจะเพิ่มขึ้น และควรประเมินเมตริกการรักษาความลับ ความถูกต้องครบถ้วน และการพิสูจน์ตัวตนโดยอ้างอิงส่วนประกอบที่ได้รับผลกระทบ",
+        "S_Heading": "การโจมตีสำเร็จส่งผลต่อส่วนประกอบอื่นนอกเหนือจากส่วนประกอบที่มีช่องโหว่หรือไม่ หากใช่ คะแนนพื้นฐานจะเพิ่มขึ้น และควรประเมินเมตริกการรักษาความลับ ความถูกต้องครบถ้วน และความพร้อมใช้งานโดยอ้างอิงส่วนประกอบที่ได้รับผลกระทบ",
         "S_U_Label": "ช่องโหว่ที่ถูกใช้ประโยชน์ส่งผลได้เฉพาะทรัพยากรที่จัดการโดยหน่วยงานความปลอดภัยเดียวกัน ในกรณีนี้ส่วนประกอบที่มีช่องโหว่และส่วนประกอบที่ได้รับผลกระทบเป็นส่วนเดียวกัน หรือทั้งคู่จัดการโดยหน่วยงานเดียวกัน",
         "S_C_Label": "ช่องโหว่ที่ถูกใช้ประโยชน์ส่งผลต่อทรัพยากรนอกขอบเขตความปลอดภัยของหน่วยงานที่จัดการส่วนประกอบที่มีช่องโหว่ได้ ในกรณีนี้ส่วนประกอบทั้งสองต่างกันและจัดการโดยคนละหน่วยงานความปลอดภัย",
         "C_Heading": "เมตริกนี้วัดผลกระทบต่อการรักษาความลับของทรัพยากรข้อมูลที่ส่วนประกอบซอฟต์แวร์จัดการเมื่อใช้ประโยชน์จากช่องโหว่สำเร็จ การรักษาความลับคือการจำกัดการเข้าถึงและเปิดเผยข้อมูลให้เฉพาะผู้ใช้ที่ได้รับอนุญาต และป้องกันผู้ที่ไม่ได้รับอนุญาต",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "ใช้ค่าที่กำหนดให้กับเมตริกพื้นฐานที่เกี่ยวข้อง",
         "MUI_N_Label": "สามารถใช้ประโยชน์จากระบบที่มีช่องโหว่ได้โดยไม่ต้องมีการโต้ตอบจากผู้ใช้",
         "MUI_R_Label": "การใช้ประโยชน์สำเร็จต้องให้ผู้ใช้ดำเนินการบางอย่างก่อนที่จะใช้ประโยชน์จากช่องโหว่ได้",
-        "MS_Heading": "การโจมตีสำเร็จส่งผลต่อส่วนประกอบอื่นนอกเหนือจากส่วนประกอบที่มีช่องโหว่หรือไม่ หากใช่ คะแนนพื้นฐานจะเพิ่มขึ้น และควรประเมินเมตริกการรักษาความลับ ความถูกต้องครบถ้วน และการพิสูจน์ตัวตนโดยอ้างอิงส่วนประกอบที่ได้รับผลกระทบ",
+        "MS_Heading": "การโจมตีสำเร็จส่งผลต่อส่วนประกอบอื่นนอกเหนือจากส่วนประกอบที่มีช่องโหว่หรือไม่ หากใช่ คะแนนพื้นฐานจะเพิ่มขึ้น และควรประเมินเมตริกการรักษาความลับ ความถูกต้องครบถ้วน และความพร้อมใช้งานโดยอ้างอิงส่วนประกอบที่ได้รับผลกระทบ",
         "MS_X_Label": "ใช้ค่าที่กำหนดให้กับเมตริกพื้นฐานที่เกี่ยวข้อง",
         "MS_U_Label": "ช่องโหว่ที่ถูกใช้ประโยชน์ส่งผลได้เฉพาะทรัพยากรที่จัดการโดยหน่วยงานความปลอดภัยเดียวกัน ในกรณีนี้ส่วนประกอบที่มีช่องโหว่และส่วนประกอบที่ได้รับผลกระทบเป็นส่วนเดียวกัน หรือทั้งคู่จัดการโดยหน่วยงานเดียวกัน",
         "MS_C_Label": "ช่องโหว่ที่ถูกใช้ประโยชน์ส่งผลต่อทรัพยากรนอกขอบเขตความปลอดภัยของหน่วยงานที่จัดการส่วนประกอบที่มีช่องโหว่ได้ ในกรณีนี้ส่วนประกอบทั้งสองต่างกันและจัดการโดยคนละหน่วยงานความปลอดภัย",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "ไม่มีผลกระทบต่อความพร้อมใช้งานภายในระบบถัดไป"
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "สร้างรายการรายงานใหม่",
         "edit": "แก้ไขรายการรายงาน",
         "read": "ตัวอย่างรายการรายงาน",
@@ -704,6 +736,7 @@
         "attributes": "แอตทริบิวต์",
         "no_attributes": "ไม่มีแอตทริบิวต์",
         "side_by_side": "มุมมองแบบเคียงข้าง",
+        "enter_rich_text": "ป้อนข้อความที่จัดรูปแบบ",
         "confirm_close": {
             "message": "คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก แน่ใจหรือไม่ว่าต้องการปิดรายการรายงานนี้"
         },
@@ -752,13 +785,15 @@
         "publish": "เผยแพร่ผลิตภัณฑ์",
         "publish_confirmation": "แน่ใจหรือไม่ว่าต้องการเผยแพร่ผลิตภัณฑ์ต่อไปนี้",
         "publish_confirmation_message": "ต้องการเผยแพร่ผลิตภัณฑ์นี้จริงหรือไม่",
+        "publish_confirmation_type": "ประเภทผลิตภัณฑ์: {type}",
+        "publish_confirmation_publishers": "บริการเผยแพร่: {publishers}",
         "no_type": "ไม่ได้เลือกประเภท",
         "no_publisher_in_dialog": "ไม่มี",
         "publish_successful": "เผยแพร่ผลิตภัณฑ์สำเร็จ",
         "publish_failed": "เผยแพร่ผลิตภัณฑ์ไม่สำเร็จ",
         "publish_error": "เกิดข้อผิดพลาดขณะเผยแพร่ผลิตภัณฑ์",
         "no_publisher_selected": "โปรดเลือกตัวเผยแพร่อย่างน้อยหนึ่งรายการ",
-        "total_count": "จำนวนผลิตภัณฑ์",
+        "total_count": "ไม่มีผลิตภัณฑ์ | ผลิตภัณฑ์ {count} รายการ | ผลิตภัณฑ์ {count} รายการ",
         "confirm_close": {
             "message": "คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก แน่ใจหรือไม่ว่าต้องการปิดผลิตภัณฑ์โดยไม่บันทึก"
         },
@@ -782,8 +817,12 @@
         "sort": "เรียงตาม",
         "from": "จาก",
         "to": "ถึง",
-        "total_count": "จำนวนรายการรายงาน",
+        "total_count": "ไม่มีรายการรายงาน | รายการรายงาน {count} รายการ | รายการรายงาน {count} รายการ",
         "no_items": "ไม่มีรายการรายงาน",
+        "updated_at": "อัปเดตเมื่อ {date}",
+        "updated_at_by": "อัปเดตเมื่อ {date} โดย {user}",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "ไม่มีรายการข่าว | รายการข่าว {count} รายการ | รายการข่าว {count} รายการ",
         "tooltip": {
             "filter_all": "กำลังแสดง: ทั้งหมด",
             "filter_completed": "กำลังแสดง: เสร็จสมบูรณ์",
@@ -812,7 +851,7 @@
             "remove_item": "นำรายการรายงานออก",
             "publish_item": "สร้างผลิตภัณฑ์จากรายการรายงาน"
         },
-        "select_all_success": "เลือกรายการรายงาน {count} รายการ",
+        "select_all_success": "ไม่ได้เลือกรายการรายงาน | เลือกรายการรายงาน {count} รายการแล้ว | เลือกรายการรายงาน {count} รายการแล้ว",
         "select": {
             "placeholder": "ฉันต้องการวิเคราะห์…",
             "option_news_items": "รายการข่าวที่เลือก",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "แหล่งที่มา",
-        "link": "ลิงก์",
         "comments": "ความคิดเห็น",
-        "collected": "รวบรวมเมื่อ",
-        "published": "เผยแพร่แล้ว",
-        "author": "ผู้เขียน",
         "add_news_item": "เพิ่มรายการข่าว",
         "attached_news_items": "รายการข่าวที่แนบ",
         "read_news_item": "คลิกเพื่ออ่าน",
@@ -841,8 +876,8 @@
         "auto_save_blur": "บันทึกอัตโนมัติเมื่อเสียโฟกัส",
         "auto_save_changes": "บันทึกอัตโนมัติเมื่อมีการเปลี่ยนแปลง",
         "download": "ดาวน์โหลด",
-        "total_count": "จำนวนรายการข่าว",
-        "selected_count": "จำนวนรายการข่าวที่เลือก",
+        "total_count": "ไม่มีรายการข่าว | รายการข่าว {count} รายการ | รายการข่าว {count} รายการ",
+        "selected_count": "ไม่ได้เลือกรายการข่าว | เลือกรายการข่าว {count} รายการ | เลือกรายการข่าว {count} รายการ",
         "no_items": "ไม่มีรายการข่าว",
         "item_updated": "อัปเดตรายการข่าวสำเร็จ",
         "item_deleted": "ลบรายการข่าวสำเร็จ",
@@ -916,11 +951,14 @@
             "error_loading": "เกิดข้อผิดพลาดขณะโหลดรายงาน",
             "error_removing": "เกิดข้อผิดพลาดขณะนำรายงานออกจากชุดรวม"
         },
-        "select_all_success": "เลือกรายการข่าว {count} รายการ",
+        "select_all_success": "ไม่ได้เลือกรายการข่าว | เลือกรายการข่าว {count} รายการแล้ว | เลือกรายการข่าว {count} รายการแล้ว",
         "groups": "กลุ่ม",
-        "show_new_items": "แสดงรายการใหม่ ({count})"
+        "show_new_items": "ไม่มีรายการใหม่ | แสดงรายการใหม่ {count} รายการ | แสดงรายการใหม่ {count} รายการ"
     },
     "publish": {
+        "updated_at": "อัปเดตเมื่อ {date}",
+        "updated_at_by": "อัปเดตเมื่อ {date} โดย {user}",
+        "report_items_count": "ไม่มีรายการรายงาน | รายการรายงาน {count} รายการ | รายการรายงาน {count} รายการ",
         "tooltip": {
             "filter_all": "กำลังแสดง: ทั้งหมด",
             "filter_published": "กำลังแสดง: เผยแพร่แล้ว",
@@ -946,7 +984,7 @@
             "delete_items": "ลบผลิตภัณฑ์",
             "delete_item": "ลบผลิตภัณฑ์"
         },
-        "select_all_success": "เลือกผลิตภัณฑ์ {count} รายการ",
+        "select_all_success": "ไม่ได้เลือกผลิตภัณฑ์ | เลือกผลิตภัณฑ์ {count} รายการแล้ว | เลือกผลิตภัณฑ์ {count} รายการแล้ว",
         "no_items": "ไม่มีผลิตภัณฑ์"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "7 วันที่ผ่านมา",
         "last_31_days": "31 วันที่ผ่านมา",
         "custom_filter": "ตัวกรองแบบกำหนดเอง",
-        "total_count": "จำนวนทั้งหมด",
-        "currently_showing": "กำลังแสดง",
-        "selected_count": "จำนวนที่เลือก",
+        "total_count": "ไม่มีรายการ | ทั้งหมด {count} รายการ | ทั้งหมด {count} รายการ",
+        "currently_showing": "ไม่มีรายการที่แสดง | กำลังแสดง {count} รายการ | กำลังแสดง {count} รายการ",
+        "selected_count": "ไม่ได้เลือกรายการ | เลือก {count} รายการ | เลือก {count} รายการ",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "การตั้งค่าผู้ใช้",
         "tab_general": "ทั่วไป",
+        "tab_security": "Security",
         "tab_wordlists": "รายการคำ",
         "tab_hotkeys": "ปุ่มลัด",
         "close_item_1": "ปิดรายการ (ปุ่มลัด 1)",
@@ -990,7 +1029,7 @@
         "like_item": "ชอบรายการ",
         "unlike_item": "ยกเลิกชอบรายการ",
         "delete_item": "ลบรายการ",
-        "press_key": "กดปุ่มใหม่สำหรับ ",
+        "press_key_for": "กดปุ่มใหม่สำหรับ {action}",
         "selection": "การเลือก",
         "group": "จัดกลุ่ม",
         "ungroup": "ยกเลิกการจัดกลุ่ม",
@@ -1015,7 +1054,9 @@
         "boolean_error": "ค่าต้องเป็น “True” หรือ “False” เท่านั้น",
         "integer_error": "ค่าต้องเป็นจำนวนเต็มที่ถูกต้อง",
         "decimal_error": "ค่าต้องเป็นเลขทศนิยมที่ถูกต้อง",
-        "default_value": "ค่าเริ่มต้น",
+        "default_value_with_value": "ค่าเริ่มต้น: {value}",
+        "input_too_long": "ค่ามีความยาว {count} อักขระ; กำหนดได้สูงสุด {max} อักขระ",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "อัปเดตค่า",
         "description": "คำอธิบาย",
         "value": "ค่า",
@@ -1023,8 +1064,7 @@
         "updated_at": "อัปเดตเมื่อ",
         "actions": "การดำเนินการ",
         "api_key": "คีย์ API",
-        "my_assets_view": "สินทรัพย์ของฉัน",
-        "tab_security": "Security"
+        "my_assets_view": "สินทรัพย์ของฉัน"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "เปลี่ยนสถานะแบบต่อเนื่องอัตโนมัติ",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "ลากไฟล์มาที่นี่หรือคลิกเพื่อเลือก",
         "file_description": "คำอธิบาย",
-        "last_updated": "อัปเดตล่าสุด",
+        "last_updated_by_at": "อัปเดตล่าสุดโดย {user} เมื่อ {date}",
+        "last_updated_at": "อัปเดตล่าสุดเมื่อ {date}",
+        "attachment_by": "แนบโดย {user}",
         "download": "ดาวน์โหลด",
         "attachment_load": "โหลดไฟล์แนบ",
         "attachment_detail": "รายละเอียดไฟล์แนบ"
@@ -1141,11 +1183,17 @@
         "attributes": "แอตทริบิวต์",
         "save": "บันทึก",
         "edit": "แก้ไข",
+        "edit_named": "แก้ไข {title}",
+        "select": "เลือก",
         "done": "เสร็จสิ้น",
         "up": "เลื่อนขึ้น",
         "down": "เลื่อนลง",
         "remove": "นำออก",
         "delete": "ลบ",
+        "publish": "เผยแพร่",
+        "lock": "ล็อก",
+        "open": "เปิด",
+        "open_source": "เปิดแหล่งที่มา",
         "download": "ดาวน์โหลด",
         "yes": "ใช่",
         "no": "ไม่",
@@ -1165,6 +1213,12 @@
         "no_permission": "คุณไม่มีสิทธิ์ดำเนินการนี้",
         "loading_more": "กำลังโหลดรายการเพิ่มเติม…",
         "end_of_list": "สิ้นสุดรายการ",
+        "fetching_items": "กำลังดึงรายการ…",
+        "no_items_to_select": "ไม่มีรายการให้เลือก",
+        "select_at_least_two_to_group": "เลือกอย่างน้อยสองรายการเพื่อสร้างกลุ่ม",
+        "no_grouped_items_selected": "เลือกอย่างน้อยหนึ่งรายการในกลุ่มเพื่อนำออกจากกลุ่ม",
+        "processing_items": "ไม่มีรายการที่กำลังประมวลผล… | กำลังประมวลผล {count} รายการ… | กำลังประมวลผล {count} รายการ…",
+        "deleting_items": "ไม่มีรายการที่กำลังลบ… | กำลังลบ {count} รายการ… | กำลังลบ {count} รายการ…",
         "messagebox": {
             "delete": "แน่ใจหรือไม่ว่าต้องการลบรายการต่อไปนี้",
             "delete_confirm": "แน่ใจหรือไม่ว่าต้องการลบ “{name}”",
@@ -1192,7 +1246,7 @@
             "removed_error": "กลุ่มแหล่ง OSINTกำลังถูกใช้งานและไม่สามารถลบได้",
             "title": "ชื่อเรื่อง",
             "osint_sources": "แหล่ง OSINT",
-            "total_count": "จำนวนกลุ่มแหล่ง OSINT",
+            "total_count": "ไม่มีกลุ่มแหล่ง OSINT | กลุ่มแหล่ง OSINT {count} กลุ่ม | กลุ่มแหล่ง OSINT {count} กลุ่ม",
             "default_group": "ไม่มีหมวดหมู่",
             "default_group_description": "กลุ่มเริ่มต้นสำหรับแหล่ง OSINT ที่ไม่มีหมวดหมู่",
             "all": "แหล่งที่มาทั้งหมด"
@@ -1216,7 +1270,7 @@
             "removed_error": "แหล่ง OSINTกำลังถูกใช้งานและไม่สามารถลบได้",
             "filter_wordlist": "ตัวกรองรายการคำ",
             "type": "ประเภท",
-            "total_count": "จำนวนแหล่ง OSINT",
+            "total_count": "ไม่มีแหล่ง OSINT | แหล่ง OSINT {count} แหล่ง | แหล่ง OSINT {count} แหล่ง",
             "osint_source_groups": "กลุ่มแหล่ง OSINT",
             "tooltip": {
                 "select_all": "เลือกทั้งหมด",
@@ -1239,7 +1293,7 @@
             "node_required": "เลือกโหนดตัวรวบรวม",
             "export_all_hint": "ส่งออกแหล่งที่มาทั้งหมด",
             "export_selected_hint": "ส่งออกแหล่งที่เลือก",
-            "selected_count": "เลือก {count} รายการ"
+            "selected_count": "ไม่ได้เลือกแหล่ง OSINT | เลือกแหล่ง OSINT {count} แหล่ง | เลือกแหล่ง OSINT {count} แหล่ง"
         },
         "nodes": {
             "tab_description": "คุณสามารถจัดการโหนดตัวรวบรวมได้ที่นี่",
@@ -1254,7 +1308,7 @@
             "successful_edit": "อัปเดตโหนดตัวรวบรวมสำเร็จ",
             "removed": "ลบโหนดตัวรวบรวมสำเร็จ",
             "removed_error": "โหนดตัวรวบรวมกำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนโหนดตัวรวบรวม"
+            "total_count": "ไม่มีโหนดตัวรวบรวม | โหนดตัวรวบรวม {count} โหนด | โหนดตัวรวบรวม {count} โหนด"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "อัปเดตโหนดตัวนำเสนอสำเร็จ",
             "removed": "ลบโหนดตัวนำเสนอสำเร็จ",
             "removed_error": "โหนดตัวนำเสนอกำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนโหนดตัวนำเสนอ"
+            "total_count": "ไม่มีโหนดตัวนำเสนอ | โหนดตัวนำเสนอ {count} โหนด | โหนดตัวนำเสนอ {count} โหนด"
         },
         "types": {
             "tab_description": "คุณสามารถจัดการประเภทผลิตภัณฑ์ได้ที่นี่",
@@ -1289,7 +1343,7 @@
             "successful_edit": "อัปเดตประเภทผลิตภัณฑ์สำเร็จ",
             "removed": "ลบประเภทผลิตภัณฑ์สำเร็จ",
             "removed_error": "ประเภทผลิตภัณฑ์กำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนประเภทผลิตภัณฑ์",
+            "total_count": "ไม่มีประเภทผลิตภัณฑ์ | ประเภทผลิตภัณฑ์ {count} ประเภท | ประเภทผลิตภัณฑ์ {count} ประเภท",
             "help": "คำอธิบายพารามิเตอร์เทมเพลต",
             "close": "ปิด",
             "choose_report_type": "เลือกประเภทรายงานเพื่อแสดงคำอธิบายพารามิเตอร์",
@@ -1328,7 +1382,7 @@
             "successful_edit": "อัปเดตโหนดตัวเผยแพร่สำเร็จ",
             "removed": "ลบโหนดตัวเผยแพร่สำเร็จ",
             "removed_error": "โหนดตัวเผยแพร่กำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนโหนดตัวเผยแพร่"
+            "total_count": "ไม่มีโหนดผู้เผยแพร่ | โหนดผู้เผยแพร่ {count} โหนด | โหนดผู้เผยแพร่ {count} โหนด"
         },
         "presets": {
             "tab_description": "คุณสามารถจัดการค่าที่ตั้งไว้ของตัวเผยแพร่ได้ที่นี่",
@@ -1345,7 +1399,7 @@
             "successful_edit": "อัปเดตค่าที่ตั้งไว้ของตัวเผยแพร่สำเร็จ",
             "removed": "ลบค่าที่ตั้งไว้ของตัวเผยแพร่สำเร็จ",
             "removed_error": "ค่าที่ตั้งไว้ของตัวเผยแพร่กำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนค่าที่ตั้งไว้ของตัวเผยแพร่"
+            "total_count": "ไม่มีค่าที่ตั้งไว้ของผู้เผยแพร่ | ค่าที่ตั้งไว้ของผู้เผยแพร่ {count} รายการ | ค่าที่ตั้งไว้ของผู้เผยแพร่ {count} รายการ"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "อัปเดตโหนดบอตสำเร็จ",
             "removed": "ลบโหนดบอตสำเร็จ",
             "removed_error": "โหนดบอตกำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนโหนดบอต"
+            "total_count": "ไม่มีโหนดบอต | โหนดบอต {count} โหนด | โหนดบอต {count} โหนด"
         },
         "presets": {
             "tab_description": "คุณสามารถจัดการค่าที่ตั้งไว้ของบอตได้ที่นี่",
@@ -1380,7 +1434,7 @@
             "successful_edit": "อัปเดตค่าที่ตั้งไว้ของบอตสำเร็จ",
             "removed": "ลบค่าที่ตั้งไว้ของบอตสำเร็จ",
             "removed_error": "ค่าที่ตั้งไว้ของบอตกำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนค่าที่ตั้งไว้ของบอต"
+            "total_count": "ไม่มีค่าที่ตั้งไว้ของบอต | ค่าที่ตั้งไว้ของบอต {count} รายการ | ค่าที่ตั้งไว้ของบอต {count} รายการ"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "การเข้าถึงระยะไกลกำลังถูกใช้งานและไม่สามารถลบได้",
             "osint_sources": "แหล่ง OSINT ที่จะแชร์",
             "report_item_types": "ประเภทรายการรายงานที่จะแชร์",
-            "total_count": "จำนวนการเข้าถึงระยะไกล"
+            "total_count": "ไม่มีการเข้าถึงระยะไกล | การเข้าถึงระยะไกล {count} รายการ | การเข้าถึงระยะไกล {count} รายการ"
         },
         "nodes": {
             "tab_description": "คุณสามารถจัดการโหนดระยะไกลได้ที่นี่",
@@ -1420,7 +1474,7 @@
             "successful_edit": "อัปเดตโหนดระยะไกลสำเร็จ",
             "removed": "ลบโหนดระยะไกลสำเร็จ",
             "removed_error": "โหนดระยะไกลกำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนโหนดระยะไกล"
+            "total_count": "ไม่มีโหนดระยะไกล | โหนดระยะไกล {count} โหนด | โหนดระยะไกล {count} โหนด"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "ไม่สามารถบันทึกผู้ให้บริการข้อมูล",
             "remove": "ลบผู้ให้บริการข้อมูลสำเร็จ",
             "removed_error": "ผู้ให้บริการข้อมูลกำลังถูกใช้งานและไม่สามารถลบได้",
-            "total_count": "จำนวนผู้ให้บริการข้อมูล"
+            "total_count": "ไม่มีผู้ให้บริการข้อมูล | ผู้ให้บริการข้อมูล {count} ราย | ผู้ให้บริการข้อมูล {count} ราย"
         },
         "ai": {
             "tab_description": "คุณสามารถจัดการผู้ให้บริการ AIได้ที่นี่",
@@ -1481,11 +1535,13 @@
         "no_categories": "ไม่มีหมวดหมู่",
         "add_category_hint": "เพิ่มหมวดหมู่เพื่อเริ่มสร้างรายการคำนี้",
         "link_hint": "URL เสริมสำหรับดาวน์โหลดรายการคำ",
-        "total_count": "จำนวนรายการคำ",
+        "total_count": "ไม่มีรายการคำ | รายการคำ {count} รายการ | รายการคำ {count} รายการ",
         "file_has_header": "ไฟล์มีส่วนหัว",
         "import_from_csv": "นำเข้าจาก CSV",
         "load_csv_file": "โหลดไฟล์ CSV",
         "download_from_link": "ดาวน์โหลดจาก URL",
+        "download_error": "ไม่สามารถดาวน์โหลดรายการคำจาก URL",
+        "import_error": "ไม่สามารถนำเข้าไฟล์รายการคำ",
         "import": "นำเข้า",
         "close": "ปิด",
         "delete_existing_words": "ลบคำที่มีอยู่",
@@ -1506,7 +1562,7 @@
             "successful_edit": "อัปเดตประเภทรายการรายงานสำเร็จ",
             "removed_error": "ประเภทรายการรายงานกำลังถูกใช้งานและไม่สามารถลบได้",
             "removed": "ลบประเภทรายการรายงานสำเร็จ",
-            "total_count": "จำนวนประเภทรายงาน"
+            "total_count": "ไม่มีประเภทรายงาน | ประเภทรายงาน {count} ประเภท | ประเภทรายงาน {count} ประเภท"
         },
         "attributes": {
             "tab_description": "คุณสามารถจัดการแอตทริบิวต์ได้ที่นี่",
@@ -1524,7 +1580,7 @@
             "edit_constant": "แก้ไขค่าคงที่",
             "value": "ค่า",
             "error": "ไม่สามารถบันทึกแอตทริบิวต์",
-            "total_count": "จำนวนแอตทริบิวต์"
+            "total_count": "ไม่มีแอตทริบิวต์ | แอตทริบิวต์ {count} รายการ | แอตทริบิวต์ {count} รายการ"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "ไม่สามารถโหลดผู้ใช้ภายนอกหรือสิทธิ์",
         "successful": "เพิ่มผู้ใช้ภายนอกสำเร็จ",
         "successful_edit": "อัปเดตผู้ใช้ภายนอกสำเร็จ",
-        "total_count": "จำนวนผู้ใช้ภายนอก",
+        "total_count": "ไม่มีผู้ใช้ภายนอก | ผู้ใช้ภายนอก {count} คน | ผู้ใช้ภายนอก {count} คน",
         "removed": "ลบผู้ใช้ภายนอกแล้ว",
         "removed_error": "ไม่สามารถลบผู้ใช้ภายนอก"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "อัปเดตกลุ่มสินทรัพย์สำเร็จ",
         "removed": "ลบกลุ่มสินทรัพย์สำเร็จ",
         "removed_error": "กลุ่มสินทรัพย์กำลังถูกใช้งานและไม่สามารถลบได้",
-        "total_count": "จำนวนกลุ่มสินทรัพย์"
+        "total_count": "ไม่มีกลุ่มสินทรัพย์ | กลุ่มสินทรัพย์ {count} กลุ่ม | กลุ่มสินทรัพย์ {count} กลุ่ม"
     },
     "notification_template": {
         "add_new": "เพิ่มเทมเพลตการแจ้งเตือนใหม่",
@@ -1594,7 +1650,7 @@
         "successful_edit": "อัปเดตเทมเพลตการแจ้งเตือนสำเร็จ",
         "removed": "ลบเทมเพลตการแจ้งเตือนสำเร็จ",
         "removed_error": "เทมเพลตการแจ้งเตือนกำลังถูกใช้งานและไม่สามารถลบได้",
-        "total_count": "จำนวนเทมเพลตการแจ้งเตือน"
+        "total_count": "ไม่มีแม่แบบการแจ้งเตือน | แม่แบบการแจ้งเตือน {count} รายการ | แม่แบบการแจ้งเตือน {count} รายการ"
     },
     "asset": {
         "add": "เพิ่มสินทรัพย์",
@@ -1614,13 +1670,15 @@
         "value": "ค่า",
         "vulnerable": "มีช่องโหว่",
         "total": "ทั้งหมด",
-        "total_count": "จำนวนสินทรัพย์",
+        "total_count": "ไม่มีสินทรัพย์ | สินทรัพย์ {count} รายการ | สินทรัพย์ {count} รายการ",
         "successful": "เพิ่มสินทรัพย์ใหม่สำเร็จ",
         "successful_edit": "อัปเดตสินทรัพย์สำเร็จ",
         "removed": "ลบสินทรัพย์สำเร็จ",
         "removed_error": "สินทรัพย์กำลังถูกใช้งานและไม่สามารถลบได้",
         "vulnerabilities": "ช่องโหว่",
-        "vulnerabilities_count": "ช่องโหว่: ",
+        "serial_with_value": "หมายเลขซีเรียล: {value}",
+        "cpe_count": "ไม่มีรหัส CPE | รหัส CPE {count} รายการ | รหัส CPE {count} รายการ",
+        "vulnerabilities_count": "ไม่มีช่องโหว่ | ช่องโหว่ {count} รายการ | ช่องโหว่ {count} รายการ",
         "no_vulnerabilities": "ไม่มีช่องโหว่",
         "sort": {
             "alphabetical": "ตามตัวอักษร",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "จำนวนวิธีเข้าสู่ระบบ: ",
+        "total_count": "ไม่มีวิธีเข้าสู่ระบบ | วิธีเข้าสู่ระบบ {count} วิธี | วิธีเข้าสู่ระบบ {count} วิธี",
         "add_new": "เพิ่มวิธีเข้าสู่ระบบใหม่",
         "edit": "แก้ไขวิธีเข้าสู่ระบบ",
         "name": "ชื่อ",
@@ -1682,7 +1740,7 @@
         "require_mfa_disabled_hint": "วิธีเข้าสู่ระบบนี้ไม่ได้เพิ่มข้อกำหนด MFA แต่นโยบายของไซต์ องค์กร หรือผู้ใช้อาจยังกำหนดให้ใช้ปัจจัยที่สองได้",
         "issuer_url": "URL ของผู้ออก",
         "issuer_url_hint": "URL ฐานสำหรับ Discovery เช่น https://idp.example.org/realms/main",
-        "client_id": "Client ID",
+        "client_id": "ID ไคลเอนต์",
         "scopes": "ขอบเขต",
         "username_claim": "Claim ชื่อผู้ใช้",
         "email_claim": "Claim อีเมล",
@@ -1695,7 +1753,7 @@
         "pkce_method_hint": "ใช้ S256 (แนะนำ) เลือก None เฉพาะเมื่อผู้ให้บริการไม่รองรับ PKCE",
         "pkce_method_none": "None — ผู้ให้บริการไม่รองรับ PKCE",
         "pkce_method_s256": "S256 — แนะนำ",
-        "pkce_method_plain": "Plain code challenge",
+        "pkce_method_plain": "Code challenge แบบ plain",
         "pkce_plain_warning": "ความเข้ากันได้กับระบบเดิม: verifier จะถูกเปิดเผยในคำขออนุญาต ใช้เฉพาะเมื่อผู้ให้บริการไม่รองรับ S256 เท่านั้น",
         "pkce_plain_confirm_title": "ใช้โหมด PKCE plain แบบเดิมหรือไม่?",
         "pkce_plain_confirm_message": "PKCE plain เปิดเผย verifier ในคำขออนุญาตที่เบราว์เซอร์มองเห็นและมีความปลอดภัยน้อยกว่า S256 ยืนยันเฉพาะเมื่อผู้ให้บริการนี้ไม่รองรับ S256 เท่านั้น",
@@ -1706,7 +1764,7 @@
         "insecure_pkce_none": "PKCE ถูกปิดใช้งาน โปรดใช้ S256 เว้นแต่ผู้ให้บริการจะไม่รองรับ PKCE",
         "insecure_pkce_plain": "PKCE plain เปิดเผย verifier ในคำขออนุญาตที่เบราว์เซอร์มองเห็น โปรดใช้ S256 เมื่อทำได้",
         "insecure_http_endpoint": "มี endpoint การยืนยันตัวตนอย่างน้อยหนึ่งรายการที่ใช้ HTTP โดยไม่เข้ารหัส HTTP มีไว้สำหรับบริการพัฒนาบน loopback เท่านั้น",
-        "secret": "Client secret",
+        "secret": "ข้อมูลลับไคลเอนต์",
         "secret_hint": "จัดเก็บแบบเข้ารหัส",
         "secret_keep_hint": "มี secret จัดเก็บอยู่แล้ว ให้เว้นว่างไว้เพื่อคงค่าเดิม",
         "authorize_url": "URL การอนุญาต",
@@ -1718,13 +1776,13 @@
         "ca_cert_hint": "ไม่บังคับ เว้นว่างเพื่อใช้คลังความเชื่อถือของระบบ",
         "user_dn_template": "DN ผู้ใช้หรือ DN ฐาน",
         "user_dn_template_hint": "Direct bind ใช้เทมเพลตแบบเต็มที่มี {username} (uid={username},ou=people,dc=example,dc=org) หรือ DN ฐานแบบธรรมดา (ou=people,dc=example,dc=org) โดยจะเติมแอตทริบิวต์ RDN จากช่องแอตทริบิวต์ชื่อผู้ใช้ไว้ด้านหน้าโดยอัตโนมัติ เว้นว่างเพื่อใช้ search & bind",
-        "ldap_bind_mode_direct": "Direct bind",
+        "ldap_bind_mode_direct": "Bind โดยตรง",
         "ldap_bind_mode_search": "Search & bind (บัญชีบริการ)",
         "ldap_bind_mode_hint": "Direct bind ยืนยันตัวตนผู้ใช้ด้วยการ bind โดยใช้ DN ที่สร้างจากเทมเพลต ส่วน Search & bind ใช้บัญชีบริการค้นหาผู้ใช้แล้ว bind ใหม่ในฐานะผู้ใช้นั้น Backend จะเลือกวิธีตามช่องที่ตั้งค่าไว้",
         "ldap_bind_mode": "โหมด LDAP bind",
         "ldap_bind_mode_direct_hint": "สร้าง DN ของผู้ใช้จากเทมเพลต DN ผู้ใช้ แล้ว bind ด้วยรหัสผ่านที่ผู้ใช้ป้อน โดยไม่ใช้บัญชีบริการ",
         "ldap_bind_mode_search_hint": "Bind ด้วยบัญชีบริการ ค้นหาผู้ใช้ แล้ว bind ในฐานะผู้ใช้นั้นด้วยรหัสผ่านที่ผู้ใช้ป้อน",
-        "bind_dn": "Bind DN",
+        "bind_dn": "DN สำหรับ bind",
         "bind_dn_hint": "บัญชีบริการสำหรับโหมด search & bind",
         "bind_password": "รหัสผ่านสำหรับ bind",
         "search_base": "ฐานการค้นหา",
@@ -1739,7 +1797,7 @@
         "removed": "ลบวิธีเข้าสู่ระบบแล้ว",
         "remove_error": "ไม่สามารถลบวิธีเข้าสู่ระบบนี้ได้",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — ข้อมูลประจำตัวผู้ใช้ที่เชื่อมโยง {count} รายการจะสูญเสียวิธีเข้าสู่ระบบนี้",
+        "delete_message_linked": "{name}: ไม่มีข้อมูลประจำตัวผู้ใช้ที่เชื่อมโยงจะสูญเสียวิธีเข้าสู่ระบบนี้ | {name}: ข้อมูลประจำตัวผู้ใช้ที่เชื่อมโยง {count} รายการจะสูญเสียวิธีเข้าสู่ระบบนี้ | {name}: ข้อมูลประจำตัวผู้ใช้ที่เชื่อมโยง {count} รายการจะสูญเสียวิธีเข้าสู่ระบบนี้",
         "tab_description": "คุณสามารถจัดการวิธีเข้าสู่ระบบ (ผู้ให้บริการข้อมูลประจำตัว) ได้ที่นี่",
         "idp_sso_url": "URL SSO ของ IdP",
         "idp_sso_url_hint": "Endpoint สำหรับ HTTP-Redirect binding ของผู้ให้บริการข้อมูลประจำตัว",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "ทั่วไป",
         "saml_tab_service_information": "ข้อมูลบริการ",
         "saml_tab_sp_keypair": "คู่คีย์ SP",
-        "saml_metadata_url": "URL metadata ของ SP",
-        "saml_acs_url": "URL Assertion Consumer Service (ACS)",
+        "saml_metadata_url_with_url": "URL ข้อมูลเมตาของ SP: {url}",
+        "saml_acs_url_with_url": "URL ของ Assertion Consumer Service (ACS): {url}",
+        "saml_disco_url_with_url": "URL ตอบกลับการค้นหา: {url}",
         "idp_metadata": "Metadata ของ IdP (URL หรือ XML)",
         "idp_metadata_hint": "วาง URL metadata ของผู้ให้บริการข้อมูลประจำตัวหรือตัว XML แล้วกด โหลด ระบบจะกรอก Entity ID, URL SSO และใบรับรองการลงนามจากข้อมูลนั้น",
         "idp_metadata_load": "โหลด",
-        "idp_metadata_loaded": "โหลดจาก metadata แล้ว (ใบรับรองการลงนาม {count} ใบ) โปรดตรวจสอบช่องด้านล่างแล้วบันทึก",
+        "idp_metadata_loaded": "ข้อมูลเมตาไม่มีใบรับรองการลงนาม ตรวจสอบช่องด้านล่างแล้วบันทึก | โหลดใบรับรองการลงนาม {count} รายการจากข้อมูลเมตา ตรวจสอบช่องด้านล่างแล้วบันทึก | โหลดใบรับรองการลงนาม {count} รายการจากข้อมูลเมตา ตรวจสอบช่องด้านล่างแล้วบันทึก",
         "idp_metadata_error": "ไม่สามารถอ่าน metadata ได้",
         "sp_keypair": "คู่คีย์ของผู้ให้บริการ",
         "sp_keypair_stored": "จัดเก็บคีย์แล้ว",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "ใบรับรองการลงนาม metadata ของสหพันธ์ (PEM)",
         "federation_metadata_cert_hint": "Trust anchor: จะเชื่อถือ metadata ของสหพันธ์ก็ต่อเมื่อตรวจสอบลายเซ็นกับใบรับรองนี้ได้ โปรดรับใบรับรองผ่านช่องทางอื่นจากผู้ดำเนินการสหพันธ์และตรวจสอบ fingerprint เทียบกัน",
         "federation_verify": "ตรวจสอบสหพันธ์",
-        "federation_verify_result": "ตรวจสอบแล้ว พบผู้ให้บริการข้อมูลประจำตัวที่ใช้งานได้ {count} รายการ",
+        "federation_verify_result": "ตรวจสอบแล้ว ไม่พบผู้ให้บริการข้อมูลประจำตัวที่ใช้งานได้ | ตรวจสอบแล้ว พบผู้ให้บริการข้อมูลประจำตัวที่ใช้งานได้ {count} ราย | ตรวจสอบแล้ว พบผู้ให้บริการข้อมูลประจำตัวที่ใช้งานได้ {count} ราย",
         "federation_verify_error": "ไม่สามารถตรวจสอบ metadata ของสหพันธ์ได้",
-        "saml_disco_url": "URL การตอบกลับ Discovery",
         "sp_metadata_info": "ข้อมูลบริการ (สำหรับการลงทะเบียนสหพันธ์)",
         "sp_metadata_info_hint": "เผยแพร่ใน metadata ของ SP โดยทั่วไปสหพันธ์ต้องการข้อมูลองค์กร ผู้ติดต่อ และชื่อที่แสดงเพื่อยอมรับการลงทะเบียน และผู้ใช้จะเห็นข้อมูลนี้ที่บริการ Discovery ด้วย",
         "sp_display_name": "ชื่อที่แสดงของบริการ",
@@ -1816,25 +1874,27 @@
         "sp_contact_surname_hint": "นามสกุลผู้ติดต่อด้านเทคนิคที่เผยแพร่ใน metadata (โดยทั่วไปสหพันธ์กำหนดให้มี) หากเว้นว่าง ระบบจะใช้คำสุดท้ายของชื่อผู้ติดต่อ"
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "ความปลอดภัย",
+        "enabled": "เปิดใช้งาน",
+        "disabled": "ปิดใช้งาน",
+        "error": "การดำเนินการล้มเหลว",
+        "totp_title": "แอปยืนยันตัวตน (TOTP)",
+        "totp_hint": "กำหนดให้ใช้รหัสแบบใช้ครั้งเดียวจากแอปยืนยันตัวตนเมื่อเข้าสู่ระบบ",
+        "totp_enable": "เปิดใช้งาน",
+        "totp_scan": "สแกนคิวอาร์โค้ดด้วยแอปยืนยันตัวตนของคุณ แล้วยืนยันด้วยรหัส",
+        "totp_qr_alt": "คิวอาร์โค้ดสำหรับลงทะเบียนแอปยืนยันตัวตน",
+        "totp_code": "รหัสยืนยันตัวตน",
+        "totp_activate": "เปิดใช้งาน",
+        "totp_disable": "ปิดใช้งาน",
+        "totp_enabled": "เปิดใช้การยืนยันตัวตนแบบสองปัจจัยแล้ว",
+        "totp_disabled": "ปิดใช้การยืนยันตัวตนแบบสองปัจจัยแล้ว",
+        "passkeys_title": "พาสคีย์",
+        "passkey_add": "เพิ่มพาสคีย์",
+        "passkey_name": "ชื่อ",
+        "default_passkey_name": "พาสคีย์",
+        "passkey_created": "สร้างเมื่อ",
+        "passkey_last_used": "ใช้ล่าสุด",
+        "passkey_added": "ลงทะเบียนพาสคีย์แล้ว",
+        "no_passkeys": "ยังไม่ได้ลงทะเบียนพาสคีย์"
     }
 }

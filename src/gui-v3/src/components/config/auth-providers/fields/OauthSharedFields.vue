@@ -13,7 +13,11 @@
                 <div class="d-flex flex-wrap align-center ga-2">
                     <div class="flex-grow-1">
                         <div class="text-subtitle-2">{{ t('auth_provider.callback_uri') }}</div>
-                        <code data-test="oauth-callback-uri-value">{{ redirectUri }}</code>
+                        <code
+                            dir="ltr"
+                            data-test="oauth-callback-uri-value"
+                            >{{ redirectUri }}</code
+                        >
                     </div>
                     <v-btn
                         variant="text"
@@ -73,6 +77,7 @@
         >
             <v-text-field
                 v-model="config.redirect_uri_override"
+                dir="ltr"
                 :label="t('auth_provider.redirect_uri_override')"
                 variant="outlined"
                 density="comfortable"

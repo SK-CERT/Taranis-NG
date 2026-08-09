@@ -14,7 +14,7 @@
             "organizations": "Organizace",
             "roles": "Role",
             "permissions": "Práva",
-            "total_count": "Počet uživatelů: ",
+            "total_count": "Žádní uživatelé | {count} uživatel | {count} uživatelé | {count} uživatelů",
             "password": "Heslo",
             "password_check": "Zadejte heslo znovu",
             "password_mismatch": "Hesla se neshodují",
@@ -65,7 +65,7 @@
             "removed_error": "Role je používána a nelze ji smazat",
             "title": "Název",
             "permissions": "Práva",
-            "total_count": "Počet rolí: "
+            "total_count": "Žádné role | {count} role | {count} role | {count} rolí"
         },
         "acls": {
             "tab_description": "Zde můžete spravovat seznamy řízení přístupu (ACL).",
@@ -87,7 +87,7 @@
             "removed_error": "ACL je používáno a nelze jej smazat",
             "roles": "Role",
             "users": "Uživatelé",
-            "total_count": "Počet ACL: "
+            "total_count": "Žádné ACL | {count} ACL | {count} ACL | {count} ACL"
         },
         "organizations": {
             "tab_description": "Zde můžete spravovat organizace.",
@@ -107,7 +107,7 @@
             "successful_edit": "Organizace byla upravena",
             "removed": "Organizace byla smazána",
             "removed_error": "Organizace je používána a nelze ji smazat",
-            "total_count": "Počet organizací: "
+            "total_count": "Žádné organizace | {count} organizace | {count} organizace | {count} organizací"
         },
         "security": {
             "tab_description": "Zde můžete nastavit zabezpečení celé instalace.",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "Nastavení uživatele",
         "logout": "Odhlásit",
-        "security": "Zabezpečení"
+        "security": "Zabezpečení",
+        "unknown_user": "Neznámý uživatel",
+        "no_organization": "Žádná organizace"
     },
     "main_menu": {
         "enter": "Vložit",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "Pracovní prostor pro operativní zpravodajství",
         "refresh": "Obnovit dashboard",
+        "metrics": {
+            "news_items_summary": "Žádné novinky | Celkem {count} novinka | Celkem {count} novinky | Celkem {count} novinek",
+            "report_items_summary": "Žádné analýzy | Celkem {count} analýza | Celkem {count} analýzy | Celkem {count} analýz",
+            "products_summary": "Žádné publikace | Celkem {count} publikace | Celkem {count} publikace | Celkem {count} publikací"
+        },
         "assess": {
             "trending": "Aktuální trendy",
             "tagcloud": "Mrak štítků pro shromážděné novinky",
-            "total": "novinek celkem"
+            "total": "novinek celkem",
+            "ingestion_chart": "Příjem novinek za období {period}",
+            "ingestion_point": "Dne {date}: žádné novinky | Dne {date}: {count} novinka | Dne {date}: {count} novinky | Dne {date}: {count} novinek"
         },
         "collect": {
             "title": "Kolektory",
@@ -253,8 +262,14 @@
             "title": "O aplikaci",
             "version": "Verze",
             "commit": "Commit",
-            "total": "záznamů celkem"
+            "total": "záznamů celkem",
+            "built_at": "Sestaveno {date}",
+            "committed_at": "Commit z {date}"
         }
+    },
+    "word_cloud": {
+        "label": "Slovní mrak",
+        "word_action_count": "{action} {word}: žádné výsledky | {action} {word}: {count} výsledek | {action} {word}: {count} výsledky | {action} {word}: {count} výsledků"
     },
     "nav_menu": {
         "enter": "Vytvořit novinku",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "Název",
         "created": "Vytvořeno",
-        "updated": "Aktualizováno",
-        "collected": "Indexováno",
-        "published": "Publikováno",
-        "source": "Zdroj",
         "node": "Instance",
         "description": "Popis",
-        "in_analyze": "Probíhá analýza",
-        "analyzed": "Analyzováno",
         "url": "URL",
         "name": "Jméno",
         "username": "Uživatelské jméno",
@@ -332,7 +341,18 @@
         "last_seen": "Naposledy viděno",
         "last_attempted": "Poslední pokus",
         "last_collected": "Naposledy staženo",
-        "last_error": "Poslední chyba"
+        "last_error": "Poslední chyba",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "Zdroj: {source}",
+        "author_with_value": "Autor: {author}",
+        "published_at": "Publikováno: {date}",
+        "collected_at": "Indexováno: {date}",
+        "link_with_url": "Odkaz: {url}",
+        "unknown_source": "Neznámý zdroj",
+        "not_available": "Není k dispozici",
+        "aggregated_items_count": "Žádné sloučené novinky | {count} sloučená novinka | {count} sloučené novinky | {count} sloučených novinek",
+        "in_analyze_count": "Žádné probíhající analýzy | {count} probíhající analýza | {count} probíhající analýzy | {count} probíhajících analýz",
+        "analyzed_count": "Žádné dokončené analýzy | {count} dokončená analýza | {count} dokončené analýzy | {count} dokončených analýz"
     },
     "attribute": {
         "add_constant": "Přidat konstantu",
@@ -385,10 +405,22 @@
         "ai_provider": "AI model",
         "ai_prompt": "AI Prompt",
         "add_attribute": "Přidat atribut",
-        "edit_attribute": "Upravit atribut"
+        "edit_attribute": "Upravit atribut",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "Vektor a skóre CVSS",
+        "last_updated_at": "Naposledy aktualizováno {date}",
+        "updated_by_user": "Aktualizoval uživatel {user}",
+        "tlp_description_clear": "Zveřejnění není omezeno.",
+        "tlp_description_green": "Omezené zveřejnění v rámci komunity.",
+        "tlp_description_amber": "Omezené zveřejnění v organizaci příjemce a jejím klientům podle zásady nezbytné znalosti.",
+        "tlp_description_amber_strict": "Omezené zveřejnění pouze v organizaci příjemce.",
+        "tlp_description_red": "Informace nesmí být zveřejněna mimo jednotlivé příjemce.",
+        "tlp_description_unknown": "Neznámé označení TLP."
     },
     "cvss_calculator": {
         "title": "CVSS Calculator",
+        "tooltips": "Zobrazit nápovědu k metrikám",
+        "vector_placeholder": "Vektor CVSS, například CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "Base Score",
         "attack_vector": "Attack Vector (AV)",
         "attack_complexity": "Attack Complexity (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "This metric captures the requirement for a user, other than the attacker, to participate in the successful compromise the vulnerable component. This metric determines whether the vulnerability can be exploited solely at the will of the attacker, or whether a separate user (or user-initiated process) must participate in some manner.",
         "UI_N_Label": "The vulnerable system can be exploited without any interaction from any user.",
         "UI_R_Label": "Successful exploitation of this vulnerability requires a user to take some action before the vulnerability can be exploited.",
-        "S_Heading": "Does a successful attack impact a component other than the vulnerable component? If so, the Base Score increases and the Confidentiality, Integrity and Authentication metrics should be scored relative to the impacted component.",
+        "S_Heading": "Má úspěšný útok dopad na jinou komponentu než na zranitelnou komponentu? Pokud ano, základní skóre se zvýší a metriky důvěrnosti, integrity a dostupnosti by měly být hodnoceny ve vztahu k zasažené komponentě.",
         "S_U_Label": "An exploited vulnerability can only affect resources managed by the same security authority. In this case, the vulnerable component and the impacted component are either the same, or both are managed by the same security authority.",
         "S_C_Label": "An exploited vulnerability can affect resources beyond the security scope managed by the security authority of the vulnerable component. In this case, the vulnerable component and the impacted component are different and managed by different security authorities.",
         "C_Heading": "This metric measures the impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability. Confidentiality refers to limiting information access and disclosure to only authorized users, as well as preventing access by, or disclosure to, unauthorized ones.",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "The value assigned to the corresponding Base metric is used.",
         "MUI_N_Label": "The vulnerable system can be exploited without any interaction from any user.",
         "MUI_R_Label": "Successful exploitation of this vulnerability requires a user to take some action before the vulnerability can be exploited.",
-        "MS_Heading": "Does a successful attack impact a component other than the vulnerable component? If so, the Base Score increases and the Confidentiality, Integrity and Authentication metrics should be scored relative to the impacted component.",
+        "MS_Heading": "Má úspěšný útok dopad na jinou komponentu než na zranitelnou komponentu? Pokud ano, základní skóre se zvýší a metriky důvěrnosti, integrity a dostupnosti by měly být hodnoceny ve vztahu k zasažené komponentě.",
         "MS_X_Label": "The value assigned to the corresponding Base metric is used.",
         "MS_U_Label": "An exploited vulnerability can only affect resources managed by the same security authority. In this case, the vulnerable component and the impacted component are either the same, or both are managed by the same security authority.",
         "MS_C_Label": "An exploited vulnerability can affect resources beyond the security scope managed by the security authority of the vulnerable component. In this case, the vulnerable component and the impacted component are different and managed by different security authorities.",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "There is no impact to availability within the subsequent system."
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "Nová analýza",
         "edit": "Upravit analýzu",
         "read": "Náhled analýzy",
@@ -704,6 +736,7 @@
         "attributes": "Atributy",
         "no_attributes": "Žádné atributy",
         "side_by_side": "Zobrazení na 2 sloupce",
+        "enter_rich_text": "Zadejte formátovaný text",
         "confirm_close": {
             "message": "Máte neuložené změny. Opravdu chcete zavřít tuto analýzu?"
         },
@@ -752,13 +785,15 @@
         "publish": "Zveřejnit publikaci",
         "publish_confirmation": "Opravdu chcete zveřejnit tuto publikaci?",
         "publish_confirmation_message": "Opravdu chcete tuto publikaci zveřejnit?",
+        "publish_confirmation_type": "Typ publikace: {type}",
+        "publish_confirmation_publishers": "Publikující služby: {publishers}",
         "no_type": "Není vybrán typ",
         "no_publisher_in_dialog": "Žádné",
         "publish_successful": "Publikace byla úspěšně zveřejněna",
         "publish_failed": "Nepodařilo se zveřejnit publikaci",
         "publish_error": "Při zveřejňování publikace došlo k chybě",
         "no_publisher_selected": "Vyberte alespoň jednoho vydavatele",
-        "total_count": "Počet typů publikací: ",
+        "total_count": "Žádné publikace | {count} publikace | {count} publikace | {count} publikací",
         "confirm_close": {
             "message": "Máte neuložené změny. Opravdu chcete zavřít tuto publikaci?"
         },
@@ -782,8 +817,12 @@
         "sort": "Seřadit podle",
         "from": "Od",
         "to": "Do",
-        "total_count": "Počet analýz: ",
+        "total_count": "Žádné analýzy | {count} analýza | {count} analýzy | {count} analýz",
         "no_items": "Nebyly nalezeny žádné analýzy",
+        "updated_at": "Aktualizováno {date}",
+        "updated_at_by": "Aktualizováno {date} uživatelem {user}",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "Žádné novinky | {count} novinka | {count} novinky | {count} novinek",
         "tooltip": {
             "filter_all": "Aktuálně zobrazeno: vše",
             "filter_completed": "Aktuálně zobrazeno: hotové",
@@ -812,7 +851,7 @@
             "remove_item": "Odstranit analýzu",
             "publish_item": "Vytvořit report z analýzy"
         },
-        "select_all_success": "Vybráno {count} analýz(í)",
+        "select_all_success": "Nebyly vybrány žádné analýzy | Vybrána {count} analýza | Vybrány {count} analýzy | Vybráno {count} analýz",
         "select": {
             "placeholder": "Chci analyzovat...",
             "option_news_items": "vybraných novinek",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "Zdroj",
-        "link": "Odkaz",
         "comments": "Komentáře",
-        "collected": "Indexováno",
-        "published": "Publikováno",
-        "author": "Autor",
         "add_news_item": "Přidat novinku",
         "attached_news_items": "Přiložené novinky",
         "read_news_item": "Kliknutím zobrazíte",
@@ -841,8 +876,8 @@
         "auto_save_blur": "Ukládá se automaticky při opuštění pole",
         "auto_save_changes": "Ukládá se automaticky při změně",
         "download": "Stáhnout",
-        "total_count": "Počet novinek: ",
-        "selected_count": "Počet vybraných novinek: ",
+        "total_count": "Žádné novinky | {count} novinka | {count} novinky | {count} novinek",
+        "selected_count": "Nejsou vybrány žádné novinky | Vybrána {count} novinka | Vybrány {count} novinky | Vybráno {count} novinek",
         "no_items": "Nebyly nalezeny žádné novinky",
         "item_updated": "Novinka byla úspěšně aktualizována",
         "item_deleted": "Novinka byla úspěšně smazána",
@@ -916,11 +951,14 @@
             "error_loading": "Chyba při načítání reportů",
             "error_removing": "Chyba při odebírání reportu z agregátu"
         },
-        "select_all_success": "Vybráno {count} novinek",
+        "select_all_success": "Nebyly vybrány žádné novinky | Vybrána {count} novinka | Vybrány {count} novinky | Vybráno {count} novinek",
         "groups": "SKUPINY",
-        "show_new_items": "Zobrazit nové položky ({count})"
+        "show_new_items": "Nejsou k dispozici žádné nové položky | Zobrazit {count} novou položku | Zobrazit {count} nové položky | Zobrazit {count} nových položek"
     },
     "publish": {
+        "updated_at": "Aktualizováno {date}",
+        "updated_at_by": "Aktualizováno {date} uživatelem {user}",
+        "report_items_count": "Žádné analýzy | {count} analýza | {count} analýzy | {count} analýz",
         "tooltip": {
             "filter_all": "Aktuálně zobrazeno: vše",
             "filter_published": "Aktuálně zobrazeno: publikované",
@@ -946,7 +984,7 @@
             "delete_items": "Smazat produkty",
             "delete_item": "Smazat report"
         },
-        "select_all_success": "Vybráno {count} produktů",
+        "select_all_success": "Nebyly vybrány žádné publikace | Vybrána {count} publikace | Vybrány {count} publikace | Vybráno {count} publikací",
         "no_items": "Nebyly nalezeny žádné produkty"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "Posledních 7 dní",
         "last_31_days": "Posledních 31 dní",
         "custom_filter": "Vlastní filtrování",
-        "total_count": "Celkový počet",
-        "currently_showing": "Zobrazuji",
-        "selected_count": "Vybraný počet",
+        "total_count": "Žádné položky | Celkem {count} položka | Celkem {count} položky | Celkem {count} položek",
+        "currently_showing": "Nejsou zobrazeny žádné položky | Aktuálně zobrazena {count} položka | Aktuálně zobrazeny {count} položky | Aktuálně zobrazeno {count} položek",
+        "selected_count": "Nejsou vybrány žádné položky | Vybrána {count} položka | Vybrány {count} položky | Vybráno {count} položek",
         "tooltip": {
             "sort": {
                 "date": {
@@ -991,7 +1029,7 @@
         "like_item": "Označit jako To se mi líbí",
         "unlike_item": "Označit jako To se mi nelíbí",
         "delete_item": "Smazat",
-        "press_key": "Stiskněte klávesu pro ",
+        "press_key_for": "Stiskněte novou klávesu pro akci {action}",
         "selection": "Výběr",
         "group": "Seskupit",
         "ungroup": "Zrušit seskupení",
@@ -1016,7 +1054,9 @@
         "boolean_error": "Hodnota musí být buď 'True' nebo 'False'!",
         "integer_error": "Hodnota musí být platné celé číslo!",
         "decimal_error": "Hodnota musí být platné desetinné číslo!",
-        "default_value": "Původní hodnota",
+        "default_value_with_value": "Výchozí hodnota: {value}",
+        "input_too_long": "Hodnota má {count} znaků; maximum je {max}.",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "Upravit hodnotu",
         "description": "Popis",
         "value": "Hodnota",
@@ -1086,6 +1126,12 @@
             "state_required": "Stav je povinný",
             "entity_type_required": "Typ entity je povinný"
         },
+        "tags": {
+            "tab_description": "Zde můžete spravovat štítky."
+        },
+        "tag_workflow": {
+            "tab_description": "Zde můžete spravovat přiřazení štítků k entitám."
+        },
         "entity_types": {
             "report_item": "Analýza",
             "product": "Publikace"
@@ -1094,18 +1140,14 @@
             "normal": "Normální",
             "initial": "Počáteční",
             "final": "Konečný"
-        },
-        "tags": {
-            "tab_description": "Zde můžete spravovat štítky."
-        },
-        "tag_workflow": {
-            "tab_description": "Zde můžete spravovat přiřazení štítků k entitám."
         }
     },
     "drop_zone": {
         "default_message": "Přetáhněte soubory sem nebo kliknutím vyberte",
         "file_description": "Popis",
-        "last_updated": "Naposledy upraveno",
+        "last_updated_by_at": "Naposledy aktualizoval uživatel {user} v {date}",
+        "last_updated_at": "Naposledy aktualizováno {date}",
+        "attachment_by": "Připojil uživatel {user}",
         "download": "Stáhnout",
         "attachment_load": "Načíst přílohu",
         "attachment_detail": "Detaily přílohy"
@@ -1141,11 +1183,17 @@
         "attributes": "Atributy",
         "save": "Uložit",
         "edit": "Upravit",
+        "edit_named": "Upravit {title}",
+        "select": "Vybrat",
         "done": "Hotovo",
         "up": "Přesunout výše",
         "down": "Přesunout níže",
         "remove": "Odstranit",
         "delete": "Smazat",
+        "publish": "Publikovat",
+        "lock": "Uzamknout",
+        "open": "Otevřít",
+        "open_source": "Otevřít zdroj",
         "download": "Stáhnout",
         "yes": "Ano",
         "no": "Ne",
@@ -1165,6 +1213,12 @@
         "no_permission": "Nemáte oprávnění k provedení této akce",
         "loading_more": "Načítám další položky...",
         "end_of_list": "Konec seznamu",
+        "fetching_items": "Načítání položek…",
+        "no_items_to_select": "Nejsou k dispozici žádné položky k výběru.",
+        "select_at_least_two_to_group": "Pro vytvoření skupiny vyberte alespoň dvě položky.",
+        "no_grouped_items_selected": "Vyberte alespoň jednu seskupenou položku, kterou chcete vyjmout ze skupiny.",
+        "processing_items": "Nezpracovávají se žádné položky… | Zpracovává se {count} položka… | Zpracovávají se {count} položky… | Zpracovává se {count} položek…",
+        "deleting_items": "Neodstraňují se žádné položky… | Odstraňuje se {count} položka… | Odstraňují se {count} položky… | Odstraňuje se {count} položek…",
         "messagebox": {
             "delete": "Jste si jisti, že chcete smazat tuto položku?",
             "delete_confirm": "Opravdu chcete smazat „{name}“?",
@@ -1192,7 +1246,7 @@
             "removed_error": "Skupina zdrojů OSINT je používána a nelze ji odstranit",
             "title": "Název",
             "osint_sources": "Zdroje OSINT",
-            "total_count": "Počet skupin zdrojů OSINT: ",
+            "total_count": "Žádné skupiny zdrojů OSINT | {count} skupina zdrojů OSINT | {count} skupiny zdrojů OSINT | {count} skupin zdrojů OSINT",
             "default_group": "Nezařazeno",
             "default_group_description": "Skupina pro nezařazené zdroje OSINT",
             "all": "Všechny zdroje"
@@ -1216,7 +1270,7 @@
             "removed_error": "Zdroj OSINT je používán a nelze jej smazat",
             "filter_wordlist": "Zachovat pouze články, které odpovídají alespoň jednomu slovu z vybraných seznamů slov",
             "type": "Typ",
-            "total_count": "Počet zdrojů OSINT: ",
+            "total_count": "Žádné zdroje OSINT | {count} zdroj OSINT | {count} zdroje OSINT | {count} zdrojů OSINT",
             "osint_source_groups": "Skupiny zdrojů OSINT",
             "tooltip": {
                 "select_all": "Vybrat vše",
@@ -1239,7 +1293,7 @@
             "node_required": "Vyberte uzel kolektoru",
             "export_all_hint": "Exportovat všechny zdroje",
             "export_selected_hint": "Exportovat vybrané zdroje",
-            "selected_count": "Vybráno: {count}"
+            "selected_count": "Nejsou vybrány žádné zdroje OSINT | Vybrán {count} zdroj OSINT | Vybrány {count} zdroje OSINT | Vybráno {count} zdrojů OSINT"
         },
         "nodes": {
             "tab_description": "Zde můžete spravovat uzly sběračů.",
@@ -1254,7 +1308,7 @@
             "successful_edit": "Instance kolektoru byl upraven",
             "removed": "Instance kolektoru byla smazána",
             "removed_error": "Instance kolektoru je používám a nelze jej smazat",
-            "total_count": "Počet uzlů kolektorů: "
+            "total_count": "Žádné uzly kolektorů | {count} uzel kolektoru | {count} uzly kolektorů | {count} uzlů kolektorů"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "Instance prezenterů byla upravena",
             "removed": "Instance prezenterů byla smazána",
             "removed_error": "Instance prezenterů je používána a nelze ji smazat",
-            "total_count": "Počet instancí prezenterů: "
+            "total_count": "Žádné uzly prezentérů | {count} uzel prezentéru | {count} uzly prezentérů | {count} uzlů prezentérů"
         },
         "types": {
             "tab_description": "Zde můžete spravovat typy publikací.",
@@ -1289,7 +1343,7 @@
             "successful_edit": "Typ publikace byl upraven",
             "removed": "Typ publikace byl smazán",
             "removed_error": "Typ publikace se používá a nelze jej smazat",
-            "total_count": "Počet typů publikací: ",
+            "total_count": "Žádné typy publikací | {count} typ publikace | {count} typy publikací | {count} typů publikací",
             "help": "Popis parametrů šablony",
             "close": "Zavřít",
             "choose_report_type": "Vyberte typ analýzy pro zobrazení popisu parametrů",
@@ -1328,7 +1382,7 @@
             "successful_edit": "Instance vydavatelů byla upravena",
             "removed": "Instance vydavatelů byla smazána",
             "removed_error": "Instance vydavatelů je používána a nelze ji smazat",
-            "total_count": "Počet instancí vydavatelů: "
+            "total_count": "Žádné uzly publikačních služeb | {count} uzel publikační služby | {count} uzly publikačních služeb | {count} uzlů publikačních služeb"
         },
         "presets": {
             "tab_description": "Zde můžete spravovat předvolby publikátorů.",
@@ -1345,7 +1399,7 @@
             "successful_edit": "Přednastavení bylo upraveno",
             "removed": "Přednastavení bylo smazáno",
             "removed_error": "Přednastavení vydavatele se používá a nelze jej smazat",
-            "total_count": "Počet přednastavení vydavatelů: "
+            "total_count": "Žádné předvolby publikování | {count} předvolba publikování | {count} předvolby publikování | {count} předvoleb publikování"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "Instance robotů byla upravena",
             "removed": "Instance robotů byla smazána",
             "removed_error": "Instance robotů se používá a nelze ji smazat",
-            "total_count": "Počet instancí robotů: "
+            "total_count": "Žádné uzly botů | {count} uzel bota | {count} uzly botů | {count} uzlů botů"
         },
         "presets": {
             "tab_description": "Zde můžete spravovat předvolby botů.",
@@ -1380,7 +1434,7 @@
             "successful_edit": "Přednastavení robota bylo upraveno",
             "removed": "Přednastavení robota bylo smazáno",
             "removed_error": "Přednastavení robota je používáno a nelze jej odstranit",
-            "total_count": "Počet přednastavení robotů: "
+            "total_count": "Žádné předvolby botů | {count} předvolba bota | {count} předvolby botů | {count} předvoleb botů"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "Vzdálený přístup se používá a nelze jej smazat",
             "osint_sources": "Sdílené zdroje OSINT",
             "report_item_types": "Sdílené analýzy",
-            "total_count": "Počet vzdálených přístupů: "
+            "total_count": "Žádné vzdálené přístupy | {count} vzdálený přístup | {count} vzdálené přístupy | {count} vzdálených přístupů"
         },
         "nodes": {
             "tab_description": "Zde můžete spravovat vzdálené uzly.",
@@ -1420,7 +1474,7 @@
             "successful_edit": "Vzdálená instance byla upravena",
             "removed": "Vzdálená instance byla smazána",
             "removed_error": "Vzdálená instance se používá a nelze ji odstranit",
-            "total_count": "Počet vzdálených instancí: "
+            "total_count": "Žádné vzdálené uzly | {count} vzdálený uzel | {count} vzdálené uzly | {count} vzdálených uzlů"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "Nepodařilo se uložit tohoto poskytovatele dat",
             "remove": "Poskytovatel dat byl úspěšně smazán",
             "removed_error": "Poskytovatel dat se používá a nelze jej smazat",
-            "total_count": "Počet poskytovatelů dat: "
+            "total_count": "Žádní poskytovatelé dat | {count} poskytovatel dat | {count} poskytovatelé dat | {count} poskytovatelů dat"
         },
         "ai": {
             "tab_description": "Zde můžete spravovat poskytovatele AI.",
@@ -1481,11 +1535,13 @@
         "no_categories": "Zatím žádné kategorie",
         "add_category_hint": "Přidejte kategorii a začněte vytvářet tento seznam slov",
         "link_hint": "Volitelná URL pro stažení slovních položek",
-        "total_count": "Počet seznamů slov: ",
+        "total_count": "Žádné seznamy slov | {count} seznam slov | {count} seznamy slov | {count} seznamů slov",
         "file_has_header": "Soubor má hlavičku",
         "import_from_csv": "Importovat z CSV",
         "load_csv_file": "Načíst CSV soubor",
         "download_from_link": "Stáhnout z URL",
+        "download_error": "Seznam slov se nepodařilo stáhnout z URL.",
+        "import_error": "Soubor se seznamem slov se nepodařilo importovat.",
         "import": "Importovat",
         "close": "Zavřít",
         "delete_existing_words": "Smazat všechna existující slova",
@@ -1506,7 +1562,7 @@
             "successful_edit": "Typ analýzy byl upraven",
             "removed_error": "Typ analýzy je používán a nemohl být smazán",
             "removed": "Typ analýzy byl smazán",
-            "total_count": "Počet typů analýz: "
+            "total_count": "Žádné typy analýz | {count} typ analýzy | {count} typy analýz | {count} typů analýz"
         },
         "attributes": {
             "tab_description": "Zde můžete spravovat atributy.",
@@ -1524,7 +1580,7 @@
             "edit_constant": "Upravit konstantu",
             "value": "Hodnota",
             "error": "Nepodařilo se vytvořit tento atribut",
-            "total_count": "Počet atributů: "
+            "total_count": "Žádné atributy | {count} atribut | {count} atributy | {count} atributů"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "Externí uživatele nebo oprávnění se nepodařilo načíst",
         "successful": "Externí uživatel byl úspěšně přidán",
         "successful_edit": "Externí uživatel byl úspěšně upraven",
-        "total_count": "Počet externích uživatelů",
+        "total_count": "Žádní externí uživatelé | {count} externí uživatel | {count} externí uživatelé | {count} externích uživatelů",
         "removed": "Externí uživatel byl odstraněn",
         "removed_error": "Externího uživatele se nepodařilo odstranit"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "Skupina aktiv byla upravena",
         "removed": "Skupina aktiv byla smazána",
         "removed_error": "Skupina aktiv je používána a nelze ji smazat",
-        "total_count": "Počet skupin aktiv: "
+        "total_count": "Žádné skupiny aktiv | {count} skupina aktiv | {count} skupiny aktiv | {count} skupin aktiv"
     },
     "notification_template": {
         "add_new": "Přidat novou šablonu upozornění",
@@ -1594,7 +1650,7 @@
         "successful_edit": "Šablona upozornění byla upravena",
         "removed": "Šablona upozornění byla smazána",
         "removed_error": "Šablona upozornění se používá a nelze ji smazat",
-        "total_count": "Počet šablon upozornění: "
+        "total_count": "Žádné šablony oznámení | {count} šablona oznámení | {count} šablony oznámení | {count} šablon oznámení"
     },
     "asset": {
         "add": "Přidat aktivum",
@@ -1614,13 +1670,15 @@
         "value": "Hodnota",
         "vulnerable": "Zranitelné",
         "total": "Celkem",
-        "total_count": "Počet aktiv: ",
+        "total_count": "Žádná aktiva | {count} aktivum | {count} aktiva | {count} aktiv",
         "successful": "Nové aktivum bylo přidáno",
         "successful_edit": "Aktivum bylo upraveno",
         "removed": "Aktivum bylo smazáno",
         "removed_error": "Aktivum se používá a nelze jej smazat",
         "vulnerabilities": "Zranitelnosti",
-        "vulnerabilities_count": "Počet zranitelností: ",
+        "serial_with_value": "Sériové číslo: {value}",
+        "cpe_count": "Žádné kódy CPE | {count} kód CPE | {count} kódy CPE | {count} kódů CPE",
+        "vulnerabilities_count": "Žádné zranitelnosti | {count} zranitelnost | {count} zranitelnosti | {count} zranitelností",
         "no_vulnerabilities": "Bez zranitelností",
         "sort": {
             "alphabetical": "Abecedně",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "Počet způsobů přihlášení: ",
+        "total_count": "Žádné způsoby přihlášení | {count} způsob přihlášení | {count} způsoby přihlášení | {count} způsobů přihlášení",
         "add_new": "Přidat způsob přihlášení",
         "edit": "Upravit způsob přihlášení",
         "name": "Název",
@@ -1739,7 +1797,7 @@
         "removed": "Způsob přihlášení byl odstraněn.",
         "remove_error": "Způsob přihlášení se nepodařilo odstranit.",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} - {count} propojených identit ztratí tento způsob přihlášení",
+        "delete_message_linked": "{name}: žádná propojená uživatelská identita nepřijde o tento způsob přihlášení | {name}: {count} propojená uživatelská identita přijde o tento způsob přihlášení | {name}: {count} propojené uživatelské identity přijdou o tento způsob přihlášení | {name}: {count} propojených uživatelských identit přijde o tento způsob přihlášení",
         "tab_description": "Zde můžete spravovat způsoby přihlášení (poskytovatele identit).",
         "idp_sso_url": "SSO URL poskytovatele",
         "idp_sso_url_hint": "Endpoint poskytovatele pro HTTP-Redirect binding",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "Obecné",
         "saml_tab_service_information": "Informace o službě",
         "saml_tab_sp_keypair": "Klíčový pár SP",
-        "saml_metadata_url": "URL metadat SP",
-        "saml_acs_url": "URL Assertion Consumer Service (ACS)",
+        "saml_metadata_url_with_url": "URL metadat SP: {url}",
+        "saml_acs_url_with_url": "URL služby Assertion Consumer Service (ACS): {url}",
+        "saml_disco_url_with_url": "URL odpovědi zjišťovací služby: {url}",
         "idp_metadata": "Metadata poskytovatele (URL nebo XML)",
         "idp_metadata_hint": "Vložte URL metadat poskytovatele identit nebo přímo XML a stiskněte Načíst - entity ID, SSO URL a podpisový certifikát se doplní z nich.",
         "idp_metadata_load": "Načíst",
-        "idp_metadata_loaded": "Načteno z metadat (podpisových certifikátů: {count}). Zkontrolujte pole níže a uložte.",
+        "idp_metadata_loaded": "Metadata neobsahují žádný podpisový certifikát. Zkontrolujte pole níže a uložte je. | Z metadat byl načten {count} podpisový certifikát. Zkontrolujte pole níže a uložte je. | Z metadat byly načteny {count} podpisové certifikáty. Zkontrolujte pole níže a uložte je. | Z metadat bylo načteno {count} podpisových certifikátů. Zkontrolujte pole níže a uložte je.",
         "idp_metadata_error": "Metadata se nepodařilo načíst.",
         "sp_keypair": "Klíčový pár poskytovatele služby",
         "sp_keypair_stored": "klíč uložen",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "Podpisový certifikát metadat federace (PEM)",
         "federation_metadata_cert_hint": "Kotva důvěry: metadata federace jsou důvěryhodná pouze tehdy, když jejich podpis odpovídá tomuto certifikátu. Získejte jej mimo pásmo od provozovatele federace a ověřte jeho otisk.",
         "federation_verify": "Ověřit federaci",
-        "federation_verify_result": "Ověřeno. Nalezeno {count} použitelných poskytovatelů identity.",
+        "federation_verify_result": "Ověřeno. Nebyl nalezen žádný použitelný poskytovatel identity. | Ověřeno. Nalezen {count} použitelný poskytovatel identity. | Ověřeno. Nalezeni {count} použitelní poskytovatelé identity. | Ověřeno. Nalezeno {count} použitelných poskytovatelů identity.",
         "federation_verify_error": "Metadata federace se nepodařilo ověřit.",
-        "saml_disco_url": "URL odpovědi služby pro výběr IdP",
         "sp_metadata_info": "Informace o službě (pro registraci ve federaci)",
         "sp_metadata_info_hint": "Zveřejněno v metadatech SP. Federace typicky vyžaduje pro přijetí registrace organizaci, kontakt a zobrazovaný název; tyto údaje také uživatelé vidí ve službě pro výběr IdP.",
         "sp_display_name": "Zobrazovaný název služby",
@@ -1824,6 +1882,7 @@
         "totp_hint": "Vyžadovat při přihlášení jednorázový kód z aplikace authenticator.",
         "totp_enable": "Zapnout",
         "totp_scan": "Naskenujte QR kód aplikací authenticator a potvrďte kódem.",
+        "totp_qr_alt": "QR kód pro registraci autentizační aplikace",
         "totp_code": "Ověřovací kód",
         "totp_activate": "Aktivovat",
         "totp_disable": "Vypnout",
@@ -1832,6 +1891,7 @@
         "passkeys_title": "Passkeys",
         "passkey_add": "Přidat passkey",
         "passkey_name": "Název",
+        "default_passkey_name": "Přístupový klíč",
         "passkey_created": "Vytvořeno",
         "passkey_last_used": "Naposledy použito",
         "passkey_added": "Passkey zaregistrován.",

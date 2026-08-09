@@ -14,10 +14,10 @@
                         v-if="values.length > 1"
                         active-class="success"
                         color=""
-                        class="pr-4"
+                        class="pe-4"
                     >
                         <v-chip
-                            class="mr-1"
+                            class="me-1"
                             :title="t('report_item.tooltip.sort_time')"
                             @click="sort(false)"
                         >
@@ -26,7 +26,7 @@
                             </v-icon>
                         </v-chip>
                         <v-chip
-                            class="mr-1"
+                            class="me-1"
                             :title="t('report_item.tooltip.sort_user')"
                             @click="sort(true, currentUserName)"
                         >
@@ -38,13 +38,13 @@
                 </v-row>
             </slot>
         </v-row>
-        <v-row class="ml-0 mr-4 w-100">
+        <v-row class="ms-0 me-4 w-100">
             <slot name="content" />
         </v-row>
-        <v-row class="ml-3 mr-5 w-100">
+        <v-row class="ms-3 me-5 w-100">
             <slot
                 name="footer"
-                class="pr-0"
+                class="pe-0"
             >
                 <v-btn
                     v-if="addButton"
@@ -133,7 +133,7 @@
 
 <style scoped>
     .attribute-item-layout {
-        padding-left: 8px;
+        padding-inline-start: 8px;
     }
 
     .attribute-item-layout :deep(.v-chip-group) {

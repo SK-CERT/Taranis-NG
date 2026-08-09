@@ -94,7 +94,7 @@ describe('WordListCsvImport', () => {
         await downloadButton.trigger('click')
         await flushPromises()
 
-        expect(wrapper.text()).toContain('Download from URL: An error occurred')
+        expect(wrapper.text()).toContain('Could not download the word list from the URL.')
         expect(wrapper.emitted('update:modelValue')).toBeUndefined()
         expect(original).toEqual([{ value: 'keep', description: 'existing' }])
     })
@@ -143,7 +143,28 @@ describe('WordListCsvImport', () => {
         await downloadButton.trigger('click')
         await flushPromises()
 
-        expect(wrapper.text()).toContain('Download from URL: An error occurred')
+        expect(wrapper.text()).toContain('Could not download the word list from the URL.')
         expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    })
+
+    it('uses a complete CSV-import error message for local file failures', async () => {
+        const failingFileInput = {
+            name: 'VFileInput',
+            emits: ['update:modelValue'],
+            template: '<button class="choose-file" @click="$emit(\'update:modelValue\', file)">file</button>',
+            data: () => ({ file: { text: () => Promise.reject(new Error('read failed')) } })
+        }
+        const wrapper = mountWithPlugins(WordListCsvImport, {
+            global: { stubs: { VDialog: VDialogStub, VFileInput: failingFileInput } }
+        })
+
+        const openButton = wrapper.findAllComponents({ name: 'VBtn' }).find((button) => button.text() === 'Import from CSV')
+        if (!openButton) throw new Error('CSV import button was not rendered')
+        await openButton.trigger('click')
+        await wrapper.find('.choose-file').trigger('click')
+        await flushPromises()
+
+        expect(wrapper.text()).toContain('Could not import the word-list file.')
+        expect(wrapper.text()).not.toContain('Could not download the word list from the URL.')
     })
 })

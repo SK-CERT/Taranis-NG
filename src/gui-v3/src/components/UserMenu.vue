@@ -20,8 +20,12 @@
                             <v-icon color="white">mdi-shield-account</v-icon>
                         </v-avatar>
                     </template>
-                    <v-list-item-title>{{ username }}</v-list-item-title>
-                    <v-list-item-subtitle>{{ organizationName }}</v-list-item-subtitle>
+                    <v-list-item-title
+                        ><bdi dir="auto">{{ username }}</bdi></v-list-item-title
+                    >
+                    <v-list-item-subtitle
+                        ><bdi dir="auto">{{ organizationName }}</bdi></v-list-item-subtitle
+                    >
                 </v-list-item>
 
                 <v-divider />
@@ -40,7 +44,7 @@
                     @click="handleLogout"
                 >
                     <template #prepend>
-                        <v-icon>mdi-logout</v-icon>
+                        <v-icon :style="isRtl ? { transform: 'scaleX(-1)' } : undefined">mdi-logout</v-icon>
                     </template>
                     <v-list-item-title>{{ t('user_menu.logout') }}</v-list-item-title>
                 </v-list-item>
@@ -59,16 +63,18 @@
     import { useAuthStore } from '@/stores/auth'
     import { useUserStore } from '@/stores/user'
     import UserSettings from './UserSettings.vue'
+    import { useRtl } from 'vuetify'
 
     const { t } = useI18n()
     const router = useRouter()
     const authStore = useAuthStore()
     const userStore = useUserStore()
+    const { isRtl } = useRtl()
 
     const settingsVisible = ref<boolean>(false)
 
-    const username = computed(() => userStore.userName || 'User')
-    const organizationName = computed(() => userStore.organizationName || 'No Organization')
+    const username = computed(() => userStore.userName || t('user_menu.unknown_user'))
+    const organizationName = computed(() => userStore.organizationName || t('user_menu.no_organization'))
 
     const showSettings = (): void => {
         settingsVisible.value = true

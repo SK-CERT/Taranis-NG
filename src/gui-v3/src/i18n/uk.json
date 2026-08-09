@@ -14,42 +14,42 @@
             "organizations": "Організації",
             "roles": "Ролі",
             "permissions": "Дозволи",
-            "total_count": "Кількість користувачів",
+            "total_count": "Немає користувачів | {count} користувач | {count} користувачі | {count} користувачів",
             "password": "Пароль",
             "password_check": "Повторіть пароль",
             "password_mismatch": "Паролі не збігаються",
-            "email": "E-mail",
-            "status": "Status",
+            "email": "Електронна пошта",
+            "status": "Статус",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "Очікує схвалення",
+                "active": "Активний",
+                "disabled": "Вимкнений"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "Способи входу",
+            "local_password": "локальний",
+            "mfa_enabled": "Двофакторну автентифікацію ввімкнено",
+            "approve": "Схвалити",
+            "disable": "Вимкнути",
+            "enable": "Увімкнути",
+            "status_error": "Не вдалося змінити статус користувача.",
+            "reset_mfa": "Скинути MFA",
+            "reset_mfa_message": "Видалити всі реєстрації другого фактора (TOTP і ключі доступу) користувача {username}?",
+            "reset_mfa_choose": "Виберіть, що скинути для користувача {username}:",
+            "reset_mfa_totp_only": "Лише TOTP (застосунок-автентифікатор)",
+            "reset_mfa_passkeys_only": "Лише ключі доступу",
+            "reset_mfa_both": "TOTP і ключі доступу",
+            "password_hint": "Необов’язково для користувачів із зовнішніми ідентичностями",
+            "clear_password": "Видалити локальний пароль (вимкнути вхід за паролем)",
+            "require_mfa": "Вимагати двофакторну автентифікацію",
+            "require_mfa_hint": "Застосовується лише до цього користувача; сайт, організація або спосіб входу все одно можуть її вимагати",
+            "identities": "Ідентичності входу",
+            "add_identity": "Пов’язати ідентичність",
+            "edit_identity": "Редагувати ідентичність",
+            "no_identities": "Немає пов’язаних зовнішніх ідентичностей",
+            "identity_provider": "Постачальник",
+            "external_username": "Ім’я користувача в постачальника",
+            "external_username_hint": "Ім’я цього користувача в постачальника ідентичності",
+            "last_login": "Останній вхід"
         },
         "roles": {
             "tab_description": "Тут можна керувати ролями та їхніми дозволами.",
@@ -65,7 +65,7 @@
             "removed_error": "Роль використовується, тому її неможливо видалити",
             "title": "Заголовок",
             "permissions": "Дозволи",
-            "total_count": "Кількість ролей"
+            "total_count": "Немає ролей | {count} роль | {count} ролі | {count} ролей"
         },
         "acls": {
             "tab_description": "Тут можна керувати списками контролю доступу (ACL).",
@@ -87,16 +87,18 @@
             "removed_error": "ACL використовується, тому його неможливо видалити",
             "roles": "Ролі",
             "users": "Користувачі",
-            "total_count": "Кількість ACL"
+            "total_count": "Немає ACL | {count} ACL | {count} ACL | {count} ACL"
         },
         "organizations": {
-            "required_fields_hint": "Поля, позначені *, обов’язкові.",
             "tab_description": "Тут можна керувати організаціями.",
             "add_new": "Додати організацію",
             "edit": "Редагувати організацію",
             "error": "Не вдалося створити організацію.",
             "name": "Ім’я",
+            "required_fields_hint": "Поля, позначені *, обов’язкові.",
             "description": "Опис",
+            "require_mfa": "Вимагати двофакторну автентифікацію",
+            "require_mfa_hint": "Кожен учасник цієї організації повинен мати другий фактор",
             "street": "Вулиця",
             "city": "Місто",
             "zip": "Поштовий індекс",
@@ -105,37 +107,35 @@
             "successful_edit": "Організацію успішно оновлено",
             "removed": "Організацію успішно видалено",
             "removed_error": "Організація використовується, тому її неможливо видалити",
-            "total_count": "Кількість організацій",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor"
+            "total_count": "Немає організацій | {count} організація | {count} організації | {count} організацій"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
+            "tab_description": "Тут можна налаштувати параметри безпеки для всього сайту.",
+            "mfa_title": "Двофакторна автентифікація",
+            "mfa_description": "Другий фактор запитується, якщо його вимагає будь-який рівень: цей сайт, організація користувача, спосіб входу або сам користувач.",
+            "require_mfa": "Вимагати двофакторну автентифікацію для всіх користувачів",
+            "require_mfa_hint": "Користувачі без другого фактора пройдуть реєстрацію TOTP під час наступного входу",
             "require_mfa_enabled_hint": "Кожен користувач має зареєструвати й використовувати TOTP або ключ доступу під час входу.",
             "require_mfa_disabled_hint": "Загальносайтової вимоги MFA немає. Політика організації, способу входу або користувача все одно може вимагати другий фактор.",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
+            "passkeys_title": "Ключі доступу (WebAuthn)",
+            "passkeys_description": "Ключі доступу — це облікові дані, що належать користувачам; вони реєструють їх у власних налаштуваннях безпеки. Ці параметри описують цей сайт автентифікатору та вмикають цю функцію.",
+            "passkey_enabled": "Увімкнути вхід за ключем доступу",
+            "passkey_enabled_hint": "Пропонує безпарольний вхід на сторінці входу та дає користувачам змогу реєструвати ключі доступу",
             "passkey_enabled_on_hint": "Доступний безпарольний вхід за ключем доступу, і користувачі можуть реєструвати ключі доступу.",
             "passkey_enabled_off_hint": "Вхід за ключем доступу та реєстрація нових ключів доступу недоступні.",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
+            "passkey_second_factor": "Приймати ключі доступу як другий фактор",
+            "passkey_second_factor_hint": "Якщо вимкнено, TOTP є єдиним прийнятним другим фактором навіть для користувачів, які зареєстрували ключ доступу",
+            "rp_id": "ID довіреної сторони",
+            "rp_id_hint": "Має бути доменом цього сайту, наприклад {host}",
             "rp_id_use_suggested": "Використати запропонований ID RP",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings."
+            "rp_name": "Назва довіреної сторони",
+            "rp_name_hint": "Відображається автентифікатором під час входу",
+            "origins": "Дозволені джерела",
+            "origins_hint": "Абсолютні URL-адреси, з яких обслуговується сторінка входу, розділені комами",
+            "origins_invalid": "Кожне джерело має бути абсолютною URL-адресою (https://host)",
+            "secure_context_hint": "WebAuthn потребує безпечного контексту: HTTPS або звичайного HTTP лише на localhost.",
+            "last_updated": "Востаннє оновлено користувачем {user} о {at}",
+            "error": "Не вдалося зберегти параметри безпеки."
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "Увійти",
         "submit": "Увійти",
         "error": "Неправильне ім’я користувача або пароль",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "Спосіб входу",
+        "pending_approval": "Ваш обліковий запис очікує схвалення адміністратора.",
+        "account_disabled": "Ваш обліковий запис вимкнено. Зверніться до адміністратора.",
+        "username_collision": "Обліковий запис із таким іменем користувача вже існує. Попросіть адміністратора пов’язати цю ідентичність із ним.",
+        "account_not_linked": "Цю ідентичність не пов’язано з жодним обліковим записом. Зверніться до адміністратора.",
+        "domain_not_allowed": "Реєстрацію з вашого домену електронної пошти заборонено. Зверніться до адміністратора.",
+        "auth_cancelled": "Вхід скасовано. Спробуйте ще раз.",
+        "totp_invalid": "Недійсний код автентифікації.",
+        "passkey_sign_in": "Увійти за ключем доступу",
+        "sign_in_with": "Увійти через {name}",
+        "external_provider": "Зовнішній вхід",
+        "methods_error": "Не вдалося завантажити способи входу. Спробуйте ще раз.",
+        "mfa_title": "Двофакторна автентифікація",
+        "mfa_code": "Код автентифікації",
+        "mfa_verify": "Підтвердити",
+        "mfa_use_passkey": "Натомість використати ключ доступу",
+        "enroll_title": "Налаштування двофакторної автентифікації",
+        "enroll_hint": "Відскануйте QR-код у застосунку-автентифікаторі та введіть згенерований код.",
+        "enroll_activate": "Активувати",
+        "enroll_use_passkey": "Натомість зареєструвати ключ доступу",
+        "enroll_passkey_name": "Ключ доступу",
+        "back": "Назад до входу"
     },
     "home": {
         "redirecting": "Переспрямування...",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "Налаштування",
         "logout": "Вийти",
-        "security": "Security"
+        "security": "Security",
+        "unknown_user": "Невідомий користувач",
+        "no_organization": "Немає організації"
     },
     "main_menu": {
         "enter": "Введення",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "Робочий простір оперативної аналітики",
         "refresh": "Оновити панель моніторингу",
+        "metrics": {
+            "news_items_summary": "Немає новинних матеріалів | Усього {count} новинний матеріал | Усього {count} новинні матеріали | Усього {count} новинних матеріалів",
+            "report_items_summary": "Немає елементів звіту | Усього {count} елемент звіту | Усього {count} елементи звіту | Усього {count} елементів звіту",
+            "products_summary": "Немає продуктів | Усього {count} продукт | Усього {count} продукти | Усього {count} продуктів"
+        },
         "assess": {
             "trending": "Актуальні тенденції",
             "tagcloud": "Хмара тегів останніх зібраних новинних матеріалів",
-            "total": "усього новинних матеріалів"
+            "total": "усього новинних матеріалів",
+            "ingestion_chart": "Надходження новинних матеріалів за {period}",
+            "ingestion_point": "За {date} немає новинних матеріалів | За {date} надійшов {count} новинний матеріал | За {date} надійшло {count} новинні матеріали | За {date} надійшло {count} новинних матеріалів"
         },
         "collect": {
             "title": "Collectors",
@@ -253,8 +262,14 @@
             "title": "Про програму",
             "version": "Версія",
             "commit": "Commit",
-            "total": "усього записів"
+            "total": "усього записів",
+            "built_at": "Зібрано {date}",
+            "committed_at": "Коміт від {date}"
         }
+    },
+    "word_cloud": {
+        "label": "Хмара слів",
+        "word_action_count": "{action} {word}: немає результатів | {action} {word}: {count} результат | {action} {word}: {count} результати | {action} {word}: {count} результатів"
     },
     "nav_menu": {
         "enter": "Створити новинний матеріал",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "Заголовок",
         "created": "Створено",
-        "updated": "Оновлено",
-        "collected": "Зібрано",
-        "published": "Опубліковано",
-        "source": "Джерело",
         "node": "Вузол",
         "description": "Опис",
-        "in_analyze": "Триває аналіз",
-        "analyzed": "Проаналізовано",
         "url": "URL",
         "name": "Ім’я",
         "username": "Ім’я користувача",
@@ -332,7 +341,18 @@
         "last_seen": "Останнє виявлення",
         "last_attempted": "Остання спроба",
         "last_collected": "Останнє збирання",
-        "last_error": "Остання помилка"
+        "last_error": "Остання помилка",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "Джерело: {source}",
+        "author_with_value": "Автор: {author}",
+        "published_at": "Опубліковано: {date}",
+        "collected_at": "Отримано: {date}",
+        "link_with_url": "Посилання: {url}",
+        "unknown_source": "Невідоме джерело",
+        "not_available": "Недоступно",
+        "aggregated_items_count": "Немає об’єднаних новинних матеріалів | {count} об’єднаний новинний матеріал | {count} об’єднані новинні матеріали | {count} об’єднаних новинних матеріалів",
+        "in_analyze_count": "Немає аналізів, що виконуються | Виконується {count} аналіз | Виконуються {count} аналізи | Виконується {count} аналізів",
+        "analyzed_count": "Немає завершених аналізів | Завершено {count} аналіз | Завершено {count} аналізи | Завершено {count} аналізів"
     },
     "attribute": {
         "add_constant": "Додати константу",
@@ -385,10 +405,22 @@
         "ai_provider": "Модель ШІ",
         "ai_prompt": "Запит до ШІ",
         "add_attribute": "Додати атрибут",
-        "edit_attribute": "Редагувати атрибут"
+        "edit_attribute": "Редагувати атрибут",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "Вектор і оцінка CVSS",
+        "last_updated_at": "Останнє оновлення: {date}",
+        "updated_by_user": "Оновив користувач {user}",
+        "tlp_description_clear": "Поширення не обмежене.",
+        "tlp_description_green": "Обмежене поширення в межах спільноти.",
+        "tlp_description_amber": "Обмежене поширення в організації одержувача та серед її клієнтів за принципом службової необхідності.",
+        "tlp_description_amber_strict": "Обмежене поширення лише в організації одержувача.",
+        "tlp_description_red": "Не поширювати за межі окремих одержувачів.",
+        "tlp_description_unknown": "Невідоме маркування TLP."
     },
     "cvss_calculator": {
         "title": "Калькулятор CVSS",
+        "tooltips": "Показати підказки до метрик",
+        "vector_placeholder": "Вектор CVSS, наприклад CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "Базова оцінка",
         "attack_vector": "Вектор атаки (AV)",
         "attack_complexity": "Складність атаки (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "Ця метрика враховує потребу участі користувача, відмінного від зловмисника, в успішній компрометації вразливого компонента. Вона визначає, чи можна експлуатувати вразливість виключно за волею зловмисника, чи інший користувач або запущений ним процес має певним чином долучитися.",
         "UI_N_Label": "Вразливу систему можна експлуатувати без будь-якої взаємодії з користувачем.",
         "UI_R_Label": "Для успішної експлуатації цієї вразливості користувач має попередньо виконати певну дію.",
-        "S_Heading": "Чи впливає успішна атака на компонент, відмінний від вразливого? Якщо так, базова оцінка зростає, а метрики конфіденційності, цілісності й автентифікації слід оцінювати відносно ураженого компонента.",
+        "S_Heading": "Чи впливає успішна атака на компонент, відмінний від вразливого? Якщо так, базова оцінка зростає, а метрики конфіденційності, цілісності й доступності слід оцінювати відносно ураженого компонента.",
         "S_U_Label": "Експлуатована вразливість може впливати лише на ресурси, якими керує один орган безпеки. У цьому випадку вразливий і уражений компоненти збігаються або обома керує один орган безпеки.",
         "S_C_Label": "Експлуатована вразливість може впливати на ресурси за межами області безпеки, якою керує орган безпеки вразливого компонента. У цьому випадку вразливий і уражений компоненти різні та керуються різними органами безпеки.",
         "C_Heading": "Ця метрика вимірює вплив успішно експлуатованої вразливості на конфіденційність інформаційних ресурсів, якими керує програмний компонент. Конфіденційність означає обмеження доступу до інформації та її розкриття лише авторизованим користувачам, а також запобігання доступу чи розкриттю неавторизованим особам.",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "Використовується значення відповідної базової метрики.",
         "MUI_N_Label": "Вразливу систему можна експлуатувати без будь-якої взаємодії з користувачем.",
         "MUI_R_Label": "Для успішної експлуатації цієї вразливості користувач має попередньо виконати певну дію.",
-        "MS_Heading": "Чи впливає успішна атака на компонент, відмінний від вразливого? Якщо так, базова оцінка зростає, а метрики конфіденційності, цілісності й автентифікації слід оцінювати відносно ураженого компонента.",
+        "MS_Heading": "Чи впливає успішна атака на компонент, відмінний від вразливого? Якщо так, базова оцінка зростає, а метрики конфіденційності, цілісності й доступності слід оцінювати відносно ураженого компонента.",
         "MS_X_Label": "Використовується значення відповідної базової метрики.",
         "MS_U_Label": "Експлуатована вразливість може впливати лише на ресурси, якими керує один орган безпеки. У цьому випадку вразливий і уражений компоненти збігаються або обома керує один орган безпеки.",
         "MS_C_Label": "Експлуатована вразливість може впливати на ресурси за межами області безпеки, якою керує орган безпеки вразливого компонента. У цьому випадку вразливий і уражений компоненти різні та керуються різними органами безпеки.",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "Вразливість не впливає на доступність наступної системи."
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "Створити елемент звіту",
         "edit": "Редагувати елемент звіту",
         "read": "Попередній перегляд елемента звіту",
@@ -704,6 +736,7 @@
         "attributes": "Атрибути",
         "no_attributes": "Немає доступних атрибутів",
         "side_by_side": "Паралельний перегляд",
+        "enter_rich_text": "Введіть форматований текст",
         "confirm_close": {
             "message": "Є незбережені зміни. Закрити цей елемент звіту?"
         },
@@ -752,13 +785,15 @@
         "publish": "Опублікувати продукт",
         "publish_confirmation": "Опублікувати наступний продукт?",
         "publish_confirmation_message": "Ви справді хочете опублікувати цей продукт?",
+        "publish_confirmation_type": "Тип продукту: {type}",
+        "publish_confirmation_publishers": "Служби публікації: {publishers}",
         "no_type": "Тип не вибрано",
         "no_publisher_in_dialog": "Немає",
         "publish_successful": "Продукт успішно опубліковано",
         "publish_failed": "Не вдалося опублікувати продукт",
         "publish_error": "Під час публікації продукту сталася помилка",
         "no_publisher_selected": "Виберіть принаймні один Publisher",
-        "total_count": "Кількість продуктів",
+        "total_count": "Немає продуктів | {count} продукт | {count} продукти | {count} продуктів",
         "confirm_close": {
             "message": "Є незбережені зміни. Закрити продукт без їх збереження?"
         },
@@ -782,8 +817,12 @@
         "sort": "Сортувати за",
         "from": "Від",
         "to": "До",
-        "total_count": "Кількість елементів звіту",
+        "total_count": "Немає елементів звіту | {count} елемент звіту | {count} елементи звіту | {count} елементів звіту",
         "no_items": "Елементів звіту не знайдено",
+        "updated_at": "Оновлено {date}",
+        "updated_at_by": "Оновлено {date} користувачем {user}",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "Немає новинних матеріалів | {count} новинний матеріал | {count} новинні матеріали | {count} новинних матеріалів",
         "tooltip": {
             "filter_all": "Зараз відображаються: усі",
             "filter_completed": "Зараз відображаються: завершені",
@@ -812,7 +851,7 @@
             "remove_item": "Прибрати елемент звіту",
             "publish_item": "Створити продукт з елемента звіту"
         },
-        "select_all_success": "Вибрано елементів звіту: {count}",
+        "select_all_success": "Елементи звіту не вибрано | Вибрано {count} елемент звіту | Вибрано {count} елементи звіту | Вибрано {count} елементів звіту",
         "select": {
             "placeholder": "Я хочу проаналізувати...",
             "option_news_items": "вибрані новинні матеріали",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "Джерело",
-        "link": "Посилання",
         "comments": "Коментарі",
-        "collected": "Зібрано",
-        "published": "Опубліковано",
-        "author": "Автор",
         "add_news_item": "Додати новинні матеріали",
         "attached_news_items": "Прикріплені новинні матеріали",
         "read_news_item": "Натисніть, щоб прочитати",
@@ -841,8 +876,8 @@
         "auto_save_blur": "Автозбереження після втрати фокуса",
         "auto_save_changes": "Автозбереження після змін",
         "download": "Завантажити",
-        "total_count": "Кількість новинних матеріалів",
-        "selected_count": "Кількість вибраних новинних матеріалів",
+        "total_count": "Немає новинних матеріалів | {count} новинний матеріал | {count} новинні матеріали | {count} новинних матеріалів",
+        "selected_count": "Новинні матеріали не вибрано | Вибрано {count} новинний матеріал | Вибрано {count} новинні матеріали | Вибрано {count} новинних матеріалів",
         "no_items": "Новинних матеріалів не знайдено",
         "item_updated": "Новинний матеріал успішно оновлено",
         "item_deleted": "Новинний матеріал успішно видалено",
@@ -916,11 +951,14 @@
             "error_loading": "Помилка завантаження звітів",
             "error_removing": "Помилка вилучення звіту з агрегату"
         },
-        "select_all_success": "Вибрано новинних матеріалів: {count}",
+        "select_all_success": "Новинні матеріали не вибрано | Вибрано {count} новинний матеріал | Вибрано {count} новинні матеріали | Вибрано {count} новинних матеріалів",
         "groups": "ГРУПИ",
-        "show_new_items": "Показати нові елементи ({count})"
+        "show_new_items": "Немає нових елементів | Показати {count} новий елемент | Показати {count} нові елементи | Показати {count} нових елементів"
     },
     "publish": {
+        "updated_at": "Оновлено {date}",
+        "updated_at_by": "Оновлено {date} користувачем {user}",
+        "report_items_count": "Немає елементів звіту | {count} елемент звіту | {count} елементи звіту | {count} елементів звіту",
         "tooltip": {
             "filter_all": "Зараз відображаються: усі",
             "filter_published": "Зараз відображаються: опубліковані",
@@ -946,7 +984,7 @@
             "delete_items": "Видалити продукти",
             "delete_item": "Видалити продукт"
         },
-        "select_all_success": "Вибрано продуктів: {count}",
+        "select_all_success": "Продукти не вибрано | Вибрано {count} продукт | Вибрано {count} продукти | Вибрано {count} продуктів",
         "no_items": "Продуктів не знайдено"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "Останні 7 днів",
         "last_31_days": "Останній 31 день",
         "custom_filter": "Власний фільтр",
-        "total_count": "Загальна кількість",
-        "currently_showing": "Зараз відображається",
-        "selected_count": "Кількість вибраних",
+        "total_count": "Немає елементів | Усього {count} елемент | Усього {count} елементи | Усього {count} елементів",
+        "currently_showing": "Елементи не відображаються | Зараз відображається {count} елемент | Зараз відображаються {count} елементи | Зараз відображається {count} елементів",
+        "selected_count": "Елементи не вибрано | Вибрано {count} елемент | Вибрано {count} елементи | Вибрано {count} елементів",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "Налаштування користувача",
         "tab_general": "Загальні",
+        "tab_security": "Security",
         "tab_wordlists": "Списки слів",
         "tab_hotkeys": "Сполучення клавіш",
         "close_item_1": "Закрити елемент (сполучення 1)",
@@ -990,7 +1029,7 @@
         "like_item": "Поставити елементу позначку «Подобається»",
         "unlike_item": "Зняти з елемента позначку «Подобається»",
         "delete_item": "Видалити елемент",
-        "press_key": "Натисніть нову клавішу для ",
+        "press_key_for": "Натисніть нову клавішу для дії «{action}»",
         "selection": "Вибір",
         "group": "Об’єднати",
         "ungroup": "Роз’єднати",
@@ -1015,7 +1054,9 @@
         "boolean_error": "Значення має бути «True» або «False»!",
         "integer_error": "Значення має бути припустимим цілим числом!",
         "decimal_error": "Значення має бути припустимим десятковим числом!",
-        "default_value": "Типове значення",
+        "default_value_with_value": "Типове значення: {value}",
+        "input_too_long": "Довжина значення — {count} символів; максимально допустимо {max}.",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "Оновити значення",
         "description": "Опис",
         "value": "Значення",
@@ -1023,8 +1064,7 @@
         "updated_at": "Оновлено",
         "actions": "Дії",
         "api_key": "Ключ API",
-        "my_assets_view": "Мої активи",
-        "tab_security": "Security"
+        "my_assets_view": "Мої активи"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "Автоматичне каскадне змінення станів",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "Перетягніть файли сюди або натисніть, щоб вибрати",
         "file_description": "Опис",
-        "last_updated": "Останнє оновлення",
+        "last_updated_by_at": "Останнє оновлення: {user}, {date}",
+        "last_updated_at": "Останнє оновлення: {date}",
+        "attachment_by": "Прикріпив користувач {user}",
         "download": "Завантажити",
         "attachment_load": "Завантажити вкладення",
         "attachment_detail": "Відомості про вкладення"
@@ -1141,11 +1183,17 @@
         "attributes": "Атрибути",
         "save": "Зберегти",
         "edit": "Редагувати",
+        "edit_named": "Змінити {title}",
+        "select": "Вибрати",
         "done": "Готово",
         "up": "Перемістити вгору",
         "down": "Перемістити вниз",
         "remove": "Прибрати",
         "delete": "Видалити",
+        "publish": "Опублікувати",
+        "lock": "Заблокувати",
+        "open": "Відкрити",
+        "open_source": "Відкрити джерело",
         "download": "Завантажити",
         "yes": "Так",
         "no": "Ні",
@@ -1165,6 +1213,12 @@
         "no_permission": "У вас немає дозволу на цю дію",
         "loading_more": "Завантаження додаткових елементів...",
         "end_of_list": "Кінець списку",
+        "fetching_items": "Отримання елементів…",
+        "no_items_to_select": "Немає доступних для вибору елементів.",
+        "select_at_least_two_to_group": "Щоб створити групу, виберіть щонайменше два елементи.",
+        "no_grouped_items_selected": "Виберіть принаймні один згрупований елемент, щоб вилучити його з групи.",
+        "processing_items": "Немає елементів, що обробляються… | Обробляється {count} елемент… | Обробляються {count} елементи… | Обробляється {count} елементів…",
+        "deleting_items": "Немає елементів, що видаляються… | Видаляється {count} елемент… | Видаляються {count} елементи… | Видаляється {count} елементів…",
         "messagebox": {
             "delete": "Видалити наступний елемент?",
             "delete_confirm": "Видалити «{name}»?",
@@ -1192,7 +1246,7 @@
             "removed_error": "Група джерел OSINT використовується, тому її неможливо видалити",
             "title": "Заголовок",
             "osint_sources": "Джерела OSINT",
-            "total_count": "Кількість груп джерел OSINT",
+            "total_count": "Немає груп джерел OSINT | {count} група джерел OSINT | {count} групи джерел OSINT | {count} груп джерел OSINT",
             "default_group": "Без категорії",
             "default_group_description": "Типова група для джерел OSINT без категорії",
             "all": "Усі джерела"
@@ -1216,7 +1270,7 @@
             "removed_error": "Джерело OSINT використовується, тому його неможливо видалити",
             "filter_wordlist": "Фільтр списку слів",
             "type": "Тип",
-            "total_count": "Кількість джерел OSINT",
+            "total_count": "Немає джерел OSINT | {count} джерело OSINT | {count} джерела OSINT | {count} джерел OSINT",
             "osint_source_groups": "Групи джерел OSINT",
             "tooltip": {
                 "select_all": "Вибрати все",
@@ -1239,7 +1293,7 @@
             "node_required": "Виберіть вузол Collector",
             "export_all_hint": "Експортувати всі джерела",
             "export_selected_hint": "Експортувати вибрані джерела",
-            "selected_count": "Вибрано: {count}"
+            "selected_count": "Джерела OSINT не вибрано | Вибрано {count} джерело OSINT | Вибрано {count} джерела OSINT | Вибрано {count} джерел OSINT"
         },
         "nodes": {
             "tab_description": "Тут можна керувати вузлами Collector.",
@@ -1254,7 +1308,7 @@
             "successful_edit": "Вузол Collector успішно оновлено",
             "removed": "Вузол Collector успішно видалено",
             "removed_error": "Вузол Collector використовується, тому його неможливо видалити",
-            "total_count": "Кількість вузлів Collector"
+            "total_count": "Немає вузлів колекторів | {count} вузол колектора | {count} вузли колектора | {count} вузлів колекторів"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "Вузол Presenter успішно оновлено",
             "removed": "Вузол Presenter успішно видалено",
             "removed_error": "Вузол Presenter використовується, тому його неможливо видалити",
-            "total_count": "Кількість вузлів Presenter"
+            "total_count": "Немає вузлів представлення | {count} вузол представлення | {count} вузли представлення | {count} вузлів представлення"
         },
         "types": {
             "tab_description": "Тут можна керувати типами продуктів.",
@@ -1289,7 +1343,7 @@
             "successful_edit": "Тип продукту успішно оновлено",
             "removed": "Тип продукту успішно видалено",
             "removed_error": "Тип продукту використовується, тому його неможливо видалити",
-            "total_count": "Кількість типів продуктів",
+            "total_count": "Немає типів продуктів | {count} тип продукту | {count} типи продукту | {count} типів продуктів",
             "help": "Опис параметрів шаблону",
             "close": "Закрити",
             "choose_report_type": "Виберіть тип звіту, щоб показати опис його параметрів",
@@ -1328,7 +1382,7 @@
             "successful_edit": "Вузол Publisher успішно оновлено",
             "removed": "Вузол Publisher успішно видалено",
             "removed_error": "Вузол Publisher використовується, тому його неможливо видалити",
-            "total_count": "Кількість вузлів Publisher"
+            "total_count": "Немає вузлів публікації | {count} вузол публікації | {count} вузли публікації | {count} вузлів публікації"
         },
         "presets": {
             "tab_description": "Тут можна керувати попередніми налаштуваннями Publisher.",
@@ -1345,7 +1399,7 @@
             "successful_edit": "Попереднє налаштування Publisher успішно оновлено",
             "removed": "Попереднє налаштування Publisher успішно видалено",
             "removed_error": "Попереднє налаштування Publisher використовується, тому його неможливо видалити",
-            "total_count": "Кількість попередніх налаштувань Publisher"
+            "total_count": "Немає попередніх налаштувань публікації | {count} попереднє налаштування публікації | {count} попередні налаштування публікації | {count} попередніх налаштувань публікації"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "Вузол Bot успішно оновлено",
             "removed": "Вузол Bot успішно видалено",
             "removed_error": "Вузол Bot використовується, тому його неможливо видалити",
-            "total_count": "Кількість вузлів Bot"
+            "total_count": "Немає вузлів ботів | {count} вузол бота | {count} вузли бота | {count} вузлів ботів"
         },
         "presets": {
             "tab_description": "Тут можна керувати попередніми налаштуваннями Bot.",
@@ -1380,7 +1434,7 @@
             "successful_edit": "Попереднє налаштування Bot успішно оновлено",
             "removed": "Попереднє налаштування Bot успішно видалено",
             "removed_error": "Попереднє налаштування Bot використовується, тому його неможливо видалити",
-            "total_count": "Кількість попередніх налаштувань Bot"
+            "total_count": "Немає попередніх налаштувань ботів | {count} попереднє налаштування бота | {count} попередні налаштування бота | {count} попередніх налаштувань ботів"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "Віддалений доступ використовується, тому його неможливо видалити",
             "osint_sources": "Джерела OSINT для спільного доступу",
             "report_item_types": "Типи елементів звіту для спільного доступу",
-            "total_count": "Кількість записів віддаленого доступу"
+            "total_count": "Немає записів віддаленого доступу | {count} запис віддаленого доступу | {count} записи віддаленого доступу | {count} записів віддаленого доступу"
         },
         "nodes": {
             "tab_description": "Тут можна керувати віддаленими вузлами.",
@@ -1420,7 +1474,7 @@
             "successful_edit": "Віддалений вузол успішно оновлено",
             "removed": "Віддалений вузол успішно видалено",
             "removed_error": "Віддалений вузол використовується, тому його неможливо видалити",
-            "total_count": "Кількість віддалених вузлів"
+            "total_count": "Немає віддалених вузлів | {count} віддалений вузол | {count} віддалені вузли | {count} віддалених вузлів"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "Не вдалося зберегти постачальника даних",
             "remove": "Постачальника даних успішно видалено",
             "removed_error": "Постачальник даних використовується, тому його неможливо видалити",
-            "total_count": "Кількість постачальників даних"
+            "total_count": "Немає постачальників даних | {count} постачальник даних | {count} постачальники даних | {count} постачальників даних"
         },
         "ai": {
             "tab_description": "Тут можна керувати постачальниками ШІ.",
@@ -1481,11 +1535,13 @@
         "no_categories": "Категорій поки немає",
         "add_category_hint": "Додайте категорію, щоб почати формувати цей список слів",
         "link_hint": "Необов’язковий URL для завантаження слів",
-        "total_count": "Кількість списків слів",
+        "total_count": "Немає списків слів | {count} список слів | {count} списки слів | {count} списків слів",
         "file_has_header": "Файл містить заголовок",
         "import_from_csv": "Імпортувати з CSV",
         "load_csv_file": "Завантажити файл CSV",
         "download_from_link": "Завантажити з URL",
+        "download_error": "Не вдалося завантажити список слів за URL.",
+        "import_error": "Не вдалося імпортувати файл списку слів.",
         "import": "Імпортувати",
         "close": "Закрити",
         "delete_existing_words": "Видалити наявні слова",
@@ -1506,7 +1562,7 @@
             "successful_edit": "Тип елемента звіту успішно оновлено",
             "removed_error": "Тип елемента звіту використовується, тому його неможливо видалити",
             "removed": "Тип елемента звіту успішно видалено",
-            "total_count": "Кількість типів звітів"
+            "total_count": "Немає типів звітів | {count} тип звіту | {count} типи звіту | {count} типів звітів"
         },
         "attributes": {
             "tab_description": "Тут можна керувати атрибутами.",
@@ -1524,7 +1580,7 @@
             "edit_constant": "Редагувати константу",
             "value": "Значення",
             "error": "Не вдалося створити атрибут",
-            "total_count": "Кількість атрибутів"
+            "total_count": "Немає атрибутів | {count} атрибут | {count} атрибути | {count} атрибутів"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "Не вдалося завантажити зовнішніх користувачів або дозволи",
         "successful": "Зовнішнього користувача успішно додано",
         "successful_edit": "Зовнішнього користувача успішно оновлено",
-        "total_count": "Кількість зовнішніх користувачів",
+        "total_count": "Немає зовнішніх користувачів | {count} зовнішній користувач | {count} зовнішні користувачі | {count} зовнішніх користувачів",
         "removed": "Зовнішнього користувача видалено",
         "removed_error": "Не вдалося видалити зовнішнього користувача"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "Групу активів успішно оновлено",
         "removed": "Групу активів успішно видалено",
         "removed_error": "Група активів використовується, тому її неможливо видалити",
-        "total_count": "Кількість груп активів"
+        "total_count": "Немає груп активів | {count} група активів | {count} групи активів | {count} груп активів"
     },
     "notification_template": {
         "add_new": "Додати шаблон сповіщення",
@@ -1594,7 +1650,7 @@
         "successful_edit": "Шаблон сповіщення успішно оновлено",
         "removed": "Шаблон сповіщення успішно видалено",
         "removed_error": "Шаблон сповіщення використовується, тому його неможливо видалити",
-        "total_count": "Кількість шаблонів сповіщень"
+        "total_count": "Немає шаблонів сповіщень | {count} шаблон сповіщення | {count} шаблони сповіщень | {count} шаблонів сповіщень"
     },
     "asset": {
         "add": "Додати актив",
@@ -1614,13 +1670,15 @@
         "value": "Значення",
         "vulnerable": "Вразливий",
         "total": "Усього",
-        "total_count": "Кількість активів",
+        "total_count": "Немає активів | {count} актив | {count} активи | {count} активів",
         "successful": "Актив успішно додано",
         "successful_edit": "Актив успішно оновлено",
         "removed": "Актив успішно видалено",
         "removed_error": "Актив використовується, тому його неможливо видалити",
         "vulnerabilities": "Вразливості",
-        "vulnerabilities_count": "Вразливості: ",
+        "serial_with_value": "Серійний номер: {value}",
+        "cpe_count": "Немає кодів CPE | {count} код CPE | {count} коди CPE | {count} кодів CPE",
+        "vulnerabilities_count": "Немає вразливостей | {count} вразливість | {count} вразливості | {count} вразливостей",
         "no_vulnerabilities": "Вразливостей немає",
         "sort": {
             "alphabetical": "За абеткою",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "Кількість способів входу: ",
+        "total_count": "Немає способів входу | {count} спосіб входу | {count} способи входу | {count} способів входу",
         "add_new": "Додати новий спосіб входу",
         "edit": "Редагувати спосіб входу",
         "name": "Назва",
@@ -1682,7 +1740,7 @@
         "require_mfa_disabled_hint": "Цей спосіб входу не додає вимоги MFA. Політика сайту, організації або користувача все одно може вимагати другий фактор.",
         "issuer_url": "URL видавця",
         "issuer_url_hint": "Базовий URL для виявлення, наприклад https://idp.example.org/realms/main",
-        "client_id": "Client ID",
+        "client_id": "ID клієнта",
         "scopes": "Області доступу",
         "username_claim": "Твердження з іменем користувача",
         "email_claim": "Твердження з електронною поштою",
@@ -1710,7 +1768,7 @@
         "secret_hint": "Зберігається зашифрованим",
         "secret_keep_hint": "Секрет збережено — залиште порожнім, щоб не змінювати",
         "authorize_url": "URL авторизації",
-        "token_url": "Token URL",
+        "token_url": "URL токена",
         "userinfo_url": "URL інформації про користувача",
         "server_url": "URL сервера",
         "use_tls": "Використовувати TLS",
@@ -1739,15 +1797,15 @@
         "removed": "Спосіб входу видалено.",
         "remove_error": "Не вдалося видалити цей спосіб входу.",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — {count} пов’язаних ідентичностей користувачів втратять цей спосіб входу",
+        "delete_message_linked": "{name}: жоден пов’язаний обліковий запис не втратить цей спосіб входу | {name}: {count} пов’язаний обліковий запис втратить цей спосіб входу | {name}: {count} пов’язані облікові записи втратять цей спосіб входу | {name}: {count} пов’язаних облікових записів втратять цей спосіб входу",
         "tab_description": "Тут можна керувати способами входу (провайдерами ідентичності).",
-        "idp_sso_url": "IdP SSO URL",
+        "idp_sso_url": "URL SSO IdP",
         "idp_sso_url_hint": "Кінцева точка прив’язки HTTP-Redirect провайдера ідентичності",
-        "idp_entity_id": "IdP entity ID",
+        "idp_entity_id": "ID сутності IdP",
         "idp_entity_id_hint": "Видавець відповідей SAML",
         "idp_certificate": "Сертифікат підпису IdP (PEM)",
         "idp_certificate_hint": "Сертифікат, яким провайдер ідентичності підписує відповіді. Достатньо блоку base64 із метаданих; під час ротації ключів зберігається кілька сертифікатів.",
-        "sp_entity_id": "SP entity ID",
+        "sp_entity_id": "ID сутності SP",
         "sp_entity_id_hint": "Наш ID сутності / аудиторія, зареєстрована в IdP. Федерації вимагають стабільний URL https://.",
         "sp_entity_id_use_suggested": "Використати запропоноване (URL кінцевої точки SAML)",
         "acs_url_override": "Перевизначення URL ACS",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "Загальне",
         "saml_tab_service_information": "Інформація про сервіс",
         "saml_tab_sp_keypair": "Пара ключів SP",
-        "saml_metadata_url": "SP metadata URL",
-        "saml_acs_url": "Assertion Consumer Service (ACS) URL",
+        "saml_metadata_url_with_url": "URL метаданих SP: {url}",
+        "saml_acs_url_with_url": "URL служби обробки тверджень (ACS): {url}",
+        "saml_disco_url_with_url": "URL відповіді служби виявлення: {url}",
         "idp_metadata": "Метадані IdP (URL або XML)",
         "idp_metadata_hint": "Вставте URL метаданих провайдера ідентичності або сам XML і натисніть «Завантажити» — з нього буде заповнено ID сутності, URL SSO та сертифікат підпису.",
         "idp_metadata_load": "Завантажити",
-        "idp_metadata_loaded": "Завантажено з метаданих ({count} сертифікатів підпису). Перевірте поля нижче та збережіть.",
+        "idp_metadata_loaded": "Метадані не містять сертифікатів підпису. Перевірте поля нижче та збережіть. | З метаданих завантажено {count} сертифікат підпису. Перевірте поля нижче та збережіть. | З метаданих завантажено {count} сертифікати підпису. Перевірте поля нижче та збережіть. | З метаданих завантажено {count} сертифікатів підпису. Перевірте поля нижче та збережіть.",
         "idp_metadata_error": "Не вдалося прочитати метадані.",
         "sp_keypair": "Пара ключів провайдера сервісу",
         "sp_keypair_stored": "ключ збережено",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "Сертифікат підпису метаданих федерації (PEM)",
         "federation_metadata_cert_hint": "Якір довіри: метадані федерації вважаються надійними лише тоді, коли їхній підпис перевірено цим сертифікатом. Отримайте його від оператора федерації окремим каналом і звірте відбиток.",
         "federation_verify": "Перевірити федерацію",
-        "federation_verify_result": "Перевірено. Знайдено придатних провайдерів ідентичності: {count}.",
+        "federation_verify_result": "Перевірено. Придатних провайдерів ідентичності не знайдено. | Перевірено. Знайдено {count} придатний провайдер ідентичності. | Перевірено. Знайдено {count} придатні провайдери ідентичності. | Перевірено. Знайдено {count} придатних провайдерів ідентичності.",
         "federation_verify_error": "Не вдалося перевірити метадані федерації.",
-        "saml_disco_url": "URL відповіді виявлення",
         "sp_metadata_info": "Інформація про сервіс (для реєстрації у федерації)",
         "sp_metadata_info_hint": "Публікується в метаданих SP. Для прийняття реєстрації федерація зазвичай вимагає організацію, контакт і відображувану назву; ці дані також бачать користувачі в сервісі виявлення.",
         "sp_display_name": "Відображувана назва сервісу",
@@ -1816,25 +1874,27 @@
         "sp_contact_surname_hint": "Прізвище технічного контакту, опубліковане в метаданих (федерація зазвичай його вимагає). Якщо порожнє, визначається з останнього слова в імені контакту."
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "Безпека",
+        "enabled": "Увімкнено",
+        "disabled": "Вимкнено",
+        "error": "Не вдалося виконати операцію.",
+        "totp_title": "Застосунок-автентифікатор (TOTP)",
+        "totp_hint": "Вимагати під час входу одноразовий код із застосунку-автентифікатора.",
+        "totp_enable": "Увімкнути",
+        "totp_scan": "Відскануйте QR-код за допомогою застосунку-автентифікатора та підтвердьте кодом.",
+        "totp_qr_alt": "QR-код для реєстрації застосунку-автентифікатора",
+        "totp_code": "Код автентифікації",
+        "totp_activate": "Активувати",
+        "totp_disable": "Вимкнути",
+        "totp_enabled": "Двофакторну автентифікацію ввімкнено.",
+        "totp_disabled": "Двофакторну автентифікацію вимкнено.",
+        "passkeys_title": "Ключі доступу",
+        "passkey_add": "Додати ключ доступу",
+        "passkey_name": "Ім’я",
+        "default_passkey_name": "Ключ доступу",
+        "passkey_created": "Створено",
+        "passkey_last_used": "Останнє використання",
+        "passkey_added": "Ключ доступу зареєстровано.",
+        "no_passkeys": "Немає зареєстрованих ключів доступу."
     }
 }

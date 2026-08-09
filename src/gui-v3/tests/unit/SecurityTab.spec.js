@@ -54,6 +54,38 @@ describe('SecurityTab (passkey relying-party settings)', () => {
         expect(wrapper.vm.settings.origins).toBe('https://taranis.example.org')
     })
 
+    it('locale-formats the audit timestamp without changing API data and isolates both values', async () => {
+        const rawTimestamp = '2026-07-12T21:00:00Z'
+        const wrapper = await mountTab({ ...SAVED, updated_by: 'المشرف', updated_at: rawTimestamp })
+        wrapper.vm.$i18n.locale = 'ar'
+        await wrapper.vm.$nextTick()
+        const expectedTimestamp = new Intl.DateTimeFormat('ar', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(rawTimestamp))
+        const values = wrapper.findAll('bdi')
+
+        expect(wrapper.vm.settings.updated_at).toBe(rawTimestamp)
+        expect(wrapper.vm.updatedAtDisplay).toBe(expectedTimestamp)
+        expect(values.filter((value) => value.attributes('dir') === 'auto').map((value) => value.text())).toEqual([
+            'المشرف',
+            expectedTimestamp
+        ])
+    })
+
+    it('preserves an invalid audit timestamp as auto-direction display text', async () => {
+        const rawTimestamp = 'وقت قديم'
+        const wrapper = await mountTab({ ...SAVED, updated_at: rawTimestamp })
+
+        expect(wrapper.vm.updatedAtDisplay).toBe(rawTimestamp)
+        expect(wrapper.findAll('bdi[dir="auto"]').map((value) => value.text())).toContain(rawTimestamp)
+        expect(wrapper.vm.settings.updated_at).toBe(rawTimestamp)
+    })
+
+    it('uses logical inline-end spacing for both heading icons', async () => {
+        const wrapper = await mountTab()
+
+        expect(wrapper.findAll('.me-2')).toHaveLength(2)
+        expect(wrapper.find('.mr-2').exists()).toBe(false)
+    })
+
     it('normalizes nullable relying-party fields from a freshly migrated database', async () => {
         const wrapper = await mountTab({
             require_mfa: false,

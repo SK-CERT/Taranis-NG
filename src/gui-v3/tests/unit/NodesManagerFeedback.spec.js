@@ -31,13 +31,19 @@ vi.mock('@/api/config', () => ({
 
 const mountedWrappers = []
 
+const ToolbarFilterStub = {
+    name: 'ToolbarFilter',
+    props: ['totalCount', 'totalCountTitle'],
+    template: '<div><slot name="addbutton" /></div>'
+}
+
 const mountManager = () => {
     const wrapper = mount(NodesManager, {
         props: { type: 'collectors' },
         global: {
             stubs: {
                 VContainer: { template: '<div><slot /></div>' },
-                ToolbarFilter: { template: '<div><slot name="addbutton" /></div>' },
+                ToolbarFilter: ToolbarFilterStub,
                 ContentData: true,
                 NodeDialog: true
             }
@@ -75,6 +81,15 @@ describe('NodesManager feedback', () => {
 
         expect(notificationDetails(dispatchEvent)).toContainEqual({ type: 'error', loc: 'common.error' })
         expect(console.error).toHaveBeenCalledWith('Error loading collectors nodes:', error)
+    })
+
+    it('passes the node-specific complete count message and numeric choice to the toolbar', async () => {
+        const wrapper = mountManager()
+        await flushPromises()
+
+        const toolbar = wrapper.findComponent(ToolbarFilterStub)
+        expect(toolbar.props('totalCountTitle')).toBe('collectors.nodes.total_count')
+        expect(toolbar.props('totalCount')).toBe(0)
     })
 
     it('shows success feedback after deleting a node', async () => {

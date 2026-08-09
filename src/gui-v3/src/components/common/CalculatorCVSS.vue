@@ -38,7 +38,7 @@
                         mandatory
                         density="compact"
                         variant="outlined"
-                        class="mr-4"
+                        class="me-4"
                     >
                         <v-btn
                             v-for="ver in versionOptions"
@@ -52,10 +52,10 @@
 
                     <v-switch
                         v-model="showTooltips"
-                        label="Tooltip"
+                        :label="$t('cvss_calculator.tooltips')"
                         density="compact"
                         hide-details
-                        class="mr-4"
+                        class="me-4"
                     />
                 </v-toolbar>
 
@@ -70,7 +70,8 @@
                         variant="outlined"
                         hide-details="auto"
                         class="vector-input mx-auto mb-2"
-                        placeholder="Enter CVSS vector string..."
+                        :placeholder="$t('cvss_calculator.vector_placeholder')"
+                        dir="ltr"
                         @update:model-value="onVectorInput"
                     />
                     <v-row class="ga-1">
@@ -109,14 +110,14 @@
                     :key="groupIndex"
                     variant="outlined"
                     class="mb-4"
-                    :style="{ borderLeft: `4px solid ${group.color}` }"
+                    :style="{ borderInlineStart: `4px solid ${group.color}` }"
                 >
                     <v-card-title class="text-uppercase text-body-1 font-weight-bold pa-3">
                         {{ group.label }}
                         <v-icon
                             v-if="showTooltips && group.tooltipKey"
                             size="x-small"
-                            class="ml-1"
+                            class="ms-1"
                             :title="$t(group.tooltipKey)"
                         >
                             {{ ICONS.INFORMATION_OUTLINE }}
@@ -134,7 +135,7 @@
                                 <v-icon
                                     v-if="showTooltips && metric.tooltipKey"
                                     size="x-small"
-                                    class="ml-1"
+                                    class="ms-1"
                                     :title="$t(metric.tooltipKey)"
                                 >
                                     {{ ICONS.INFORMATION_OUTLINE }}
@@ -157,7 +158,7 @@
                                     <v-icon
                                         size="small"
                                         color="primary"
-                                        class="ml-1"
+                                        class="ms-1"
                                     >
                                         {{ 'mdi-alpha-' + val.shortName.toLowerCase() + '-box' }}
                                     </v-icon>

@@ -45,6 +45,7 @@
                     <!-- Title Field -->
                     <v-text-field
                         v-model="newsItem.title"
+                        dir="auto"
                         :spellcheck="spellcheck"
                         :label="t('enter.title')"
                         :rules="[rules.required]"
@@ -56,6 +57,7 @@
                     <!-- Review Field -->
                     <v-textarea
                         v-model="newsItem.review"
+                        dir="auto"
                         :spellcheck="spellcheck"
                         :label="t('enter.review')"
                         variant="outlined"
@@ -67,6 +69,7 @@
                     <!-- Source Field -->
                     <v-text-field
                         v-model="newsItem.source"
+                        dir="auto"
                         :spellcheck="spellcheck"
                         :label="t('enter.source')"
                         variant="outlined"
@@ -77,6 +80,7 @@
                     <!-- Link Field -->
                     <v-text-field
                         v-model="newsItem.link"
+                        dir="ltr"
                         :spellcheck="false"
                         :label="t('enter.link')"
                         variant="outlined"

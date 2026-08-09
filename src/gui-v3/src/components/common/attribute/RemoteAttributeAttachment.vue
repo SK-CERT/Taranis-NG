@@ -7,10 +7,16 @@
         >
             <v-icon>{{ ICONS.FILE_DOCUMENT }}</v-icon>
             <div class="remote-attachment__details">
-                <strong>{{ value.value }}</strong>
-                <span class="text-medium-emphasis">
-                    {{ formatFileSize(value.binary_size) }}
-                    <template v-if="value.binary_description"> · {{ value.binary_description }}</template>
+                <strong
+                    ><bdi dir="auto">{{ value.value }}</bdi></strong
+                >
+                <span class="remote-attachment__meta text-medium-emphasis">
+                    <bdi dir="ltr">{{ formatFileSize(value.binary_size) }}</bdi>
+                    <bdi
+                        v-if="value.binary_description"
+                        dir="auto"
+                        >{{ value.binary_description }}</bdi
+                    >
                 </span>
             </div>
             <v-btn
@@ -28,8 +34,10 @@
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import { downloadReportItemAttachment } from '@/api/analyze'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     const { t } = useI18n()
+    const { formatFileSize } = useLocaleFormatters()
 
     type RemoteAttachmentValue = {
         id: number | string
@@ -42,13 +50,6 @@
         attributeGroup: { attributes: RemoteAttachmentValue[] }
         reportItemId: number
     }>()
-
-    const formatFileSize = (bytes: number | null | undefined): string => {
-        if (!bytes || bytes < 1) return '0 B'
-        const units = ['B', 'KB', 'MB', 'GB']
-        const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-        return `${Number((bytes / 1024 ** index).toFixed(2))} ${units[index]}`
-    }
 
     const download = async (attachment: RemoteAttachmentValue): Promise<void> => {
         try {
@@ -85,5 +86,12 @@
         display: grid;
         min-width: 0;
         overflow-wrap: anywhere;
+    }
+
+    .remote-attachment__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.15rem 0.6rem;
+        align-items: baseline;
     }
 </style>

@@ -14,42 +14,42 @@
             "organizations": "Kuruluşlar",
             "roles": "Roller",
             "permissions": "İzinler",
-            "total_count": "Kullanıcı sayısı",
+            "total_count": "Kullanıcı yok | {count} kullanıcı | {count} kullanıcı",
             "password": "Parola",
             "password_check": "Parolayı yeniden girin",
             "password_mismatch": "Parolalar eşleşmiyor",
-            "email": "E-mail",
-            "status": "Status",
+            "email": "E-posta",
+            "status": "Durum",
             "statuses": {
-                "pending": "Pending approval",
-                "active": "Active",
-                "disabled": "Disabled"
+                "pending": "Onay bekliyor",
+                "active": "Etkin",
+                "disabled": "Devre dışı"
             },
-            "login_methods": "Login methods",
-            "local_password": "local",
-            "mfa_enabled": "Two-factor authentication enabled",
-            "approve": "Approve",
-            "disable": "Disable",
-            "enable": "Enable",
-            "status_error": "Could not change user status.",
-            "reset_mfa": "Reset MFA",
-            "reset_mfa_message": "Remove all two-factor enrollments (TOTP and passkeys) of {username}?",
-            "reset_mfa_choose": "Choose what to reset for {username}:",
-            "reset_mfa_totp_only": "TOTP only (authenticator app)",
-            "reset_mfa_passkeys_only": "Passkeys only",
-            "reset_mfa_both": "Both TOTP and passkeys",
-            "password_hint": "Optional for users with external identities",
-            "clear_password": "Remove local password (disable password login)",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Applies to this user only; the site, their organization or the login method may require it anyway",
-            "identities": "Login identities",
-            "add_identity": "Link identity",
-            "edit_identity": "Edit identity",
-            "no_identities": "No external identities linked",
-            "identity_provider": "Provider",
-            "external_username": "Username at provider",
-            "external_username_hint": "The username this user has at the identity provider",
-            "last_login": "Last login"
+            "login_methods": "Giriş yöntemleri",
+            "local_password": "yerel",
+            "mfa_enabled": "İki faktörlü kimlik doğrulama etkin",
+            "approve": "Onayla",
+            "disable": "Devre dışı bırak",
+            "enable": "Etkinleştir",
+            "status_error": "Kullanıcı durumu değiştirilemedi.",
+            "reset_mfa": "MFA’yı sıfırla",
+            "reset_mfa_message": "{username} kullanıcısının tüm iki faktör kayıtları (TOTP ve geçiş anahtarları) kaldırılsın mı?",
+            "reset_mfa_choose": "{username} için sıfırlanacakları seçin:",
+            "reset_mfa_totp_only": "Yalnızca TOTP (kimlik doğrulayıcı uygulaması)",
+            "reset_mfa_passkeys_only": "Yalnızca geçiş anahtarları",
+            "reset_mfa_both": "TOTP ve geçiş anahtarları",
+            "password_hint": "Harici kimlikleri olan kullanıcılar için isteğe bağlı",
+            "clear_password": "Yerel parolayı kaldır (parola ile girişi devre dışı bırak)",
+            "require_mfa": "İki faktörlü kimlik doğrulamayı zorunlu kıl",
+            "require_mfa_hint": "Yalnızca bu kullanıcıya uygulanır; site, kullanıcının kuruluşu veya giriş yöntemi yine de ikinci faktörü zorunlu kılabilir",
+            "identities": "Giriş kimlikleri",
+            "add_identity": "Kimliği bağla",
+            "edit_identity": "Kimliği düzenle",
+            "no_identities": "Bağlı harici kimlik yok",
+            "identity_provider": "Sağlayıcı",
+            "external_username": "Sağlayıcıdaki kullanıcı adı",
+            "external_username_hint": "Bu kullanıcının kimlik sağlayıcıdaki kullanıcı adı",
+            "last_login": "Son giriş"
         },
         "roles": {
             "tab_description": "Rolleri ve izinlerini buradan yönetebilirsiniz.",
@@ -65,7 +65,7 @@
             "removed_error": "Rol kullanımda olduğundan silinemedi",
             "title": "Başlık",
             "permissions": "İzinler",
-            "total_count": "Rol sayısı"
+            "total_count": "Rol yok | {count} rol | {count} rol"
         },
         "acls": {
             "tab_description": "Erişim denetim listelerini (ACL) buradan yönetebilirsiniz.",
@@ -87,16 +87,18 @@
             "removed_error": "ACL kullanımda olduğundan silinemedi",
             "roles": "Roller",
             "users": "Kullanıcılar",
-            "total_count": "ACL sayısı"
+            "total_count": "ACL yok | {count} ACL | {count} ACL"
         },
         "organizations": {
-            "required_fields_hint": "* ile işaretli alanlar zorunludur.",
             "tab_description": "Kuruluşları buradan yönetebilirsiniz.",
             "add_new": "Yeni kuruluş ekle",
             "edit": "Kuruluşu düzenle",
             "error": "Bu kuruluş oluşturulamadı.",
             "name": "Ad",
+            "required_fields_hint": "* ile işaretli alanlar zorunludur.",
             "description": "Açıklama",
+            "require_mfa": "İki faktörlü kimlik doğrulamayı zorunlu kıl",
+            "require_mfa_hint": "Bu kuruluşun her üyesinin ikinci bir faktörü olmalıdır",
             "street": "Sokak",
             "city": "Şehir",
             "zip": "Posta kodu",
@@ -105,37 +107,35 @@
             "successful_edit": "Kuruluş başarıyla güncellendi",
             "removed": "Kuruluş başarıyla silindi",
             "removed_error": "Kuruluş kullanımda olduğundan silinemedi",
-            "total_count": "Kuruluş sayısı",
-            "require_mfa": "Require two-factor authentication",
-            "require_mfa_hint": "Every member of this organization must have a second factor"
+            "total_count": "Kuruluş yok | {count} kuruluş | {count} kuruluş"
         },
         "security": {
-            "tab_description": "Here you can configure site-wide security settings.",
-            "mfa_title": "Two-factor authentication",
-            "mfa_description": "A second factor is demanded when any level requires it: this site, the user's organization, the login method, or the user.",
-            "require_mfa": "Require two-factor authentication for all users",
-            "require_mfa_hint": "Users without a second factor are walked through TOTP enrollment at their next login",
+            "tab_description": "Site genelindeki güvenlik ayarlarını buradan yapılandırabilirsiniz.",
+            "mfa_title": "İki faktörlü kimlik doğrulama",
+            "mfa_description": "Herhangi bir düzey gerektirdiğinde ikinci faktör zorunlu olur: bu site, kullanıcının kuruluşu, giriş yöntemi veya kullanıcı.",
+            "require_mfa": "Tüm kullanıcılar için iki faktörlü kimlik doğrulamayı zorunlu kıl",
+            "require_mfa_hint": "İkinci faktörü olmayan kullanıcılar bir sonraki girişlerinde TOTP kaydı adımlarından geçirilir",
             "require_mfa_enabled_hint": "Her kullanıcı girişte TOTP veya geçiş anahtarı kaydetmeli ve kullanmalıdır.",
             "require_mfa_disabled_hint": "Site genelinde MFA zorunluluğu yoktur. Kuruluş, giriş yöntemi veya kullanıcı ilkesi yine de ikinci faktör isteyebilir.",
-            "passkeys_title": "Passkeys (WebAuthn)",
-            "passkeys_description": "Passkeys are credentials owned by users - they register them in their own Security settings. These options describe this site to the authenticator and switch the feature on.",
-            "passkey_enabled": "Enable passkey sign-in",
-            "passkey_enabled_hint": "Offers passwordless sign-in on the login page and lets users register passkeys",
+            "passkeys_title": "Geçiş anahtarları (WebAuthn)",
+            "passkeys_description": "Geçiş anahtarları kullanıcılara ait kimlik bilgileridir; kullanıcılar bunları kendi güvenlik ayarlarında kaydeder. Bu seçenekler siteyi kimlik doğrulayıcıya tanıtır ve özelliği etkinleştirir.",
+            "passkey_enabled": "Geçiş anahtarıyla girişi etkinleştir",
+            "passkey_enabled_hint": "Giriş sayfasında parolasız giriş sunar ve kullanıcıların geçiş anahtarı kaydetmesine olanak tanır",
             "passkey_enabled_on_hint": "Parolasız geçiş anahtarıyla giriş sunulur ve kullanıcılar geçiş anahtarı kaydedebilir.",
             "passkey_enabled_off_hint": "Geçiş anahtarıyla giriş ve yeni geçiş anahtarı kaydı kullanılamaz.",
-            "passkey_second_factor": "Accept passkeys as a second factor",
-            "passkey_second_factor_hint": "When off, TOTP is the only accepted second factor, even for users who have registered a passkey",
-            "rp_id": "Relying party ID",
-            "rp_id_hint": "Must be this site's domain, e.g. {host}",
+            "passkey_second_factor": "Geçiş anahtarlarını ikinci faktör olarak kabul et",
+            "passkey_second_factor_hint": "Bu seçenek kapalıyken, geçiş anahtarı kaydetmiş kullanıcılar için bile kabul edilen tek ikinci faktör TOTP’dir",
+            "rp_id": "Güvenen taraf kimliği (RP ID)",
+            "rp_id_hint": "Bu sitenin alan adı olmalıdır; örneğin {host}",
             "rp_id_use_suggested": "Önerilen RP kimliğini kullan",
-            "rp_name": "Relying party name",
-            "rp_name_hint": "Shown by the authenticator when signing in",
-            "origins": "Allowed origins",
-            "origins_hint": "Comma-separated absolute URLs the login page is served from",
-            "origins_invalid": "Each origin must be an absolute URL (https://host)",
-            "secure_context_hint": "WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.",
-            "last_updated": "Last updated by {user} at {at}",
-            "error": "Could not save the security settings."
+            "rp_name": "Güvenen taraf adı",
+            "rp_name_hint": "Giriş sırasında kimlik doğrulayıcı tarafından gösterilir",
+            "origins": "İzin verilen kaynaklar",
+            "origins_hint": "Giriş sayfasının sunulduğu, virgülle ayrılmış mutlak URL’ler",
+            "origins_invalid": "Her kaynak mutlak bir URL olmalıdır (https://host)",
+            "secure_context_hint": "WebAuthn güvenli bir bağlam gerektirir: HTTPS veya yalnızca localhost üzerinde düz HTTP.",
+            "last_updated": "Son güncelleme: {user}, {at}",
+            "error": "Güvenlik ayarları kaydedilemedi."
         }
     },
     "validations": {
@@ -183,28 +183,28 @@
         "login": "Oturum aç",
         "submit": "Oturum aç",
         "error": "Kullanıcı adı veya parola yanlış",
-        "provider": "Login method",
-        "pending_approval": "Your account is awaiting administrator approval.",
-        "account_disabled": "Your account is disabled. Contact your administrator.",
-        "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
-        "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
-        "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
-        "auth_cancelled": "Sign-in was cancelled. Please try again.",
-        "totp_invalid": "Invalid authentication code.",
-        "passkey_sign_in": "Sign in with a passkey",
-        "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
-        "methods_error": "Login methods could not be loaded. Please try again.",
-        "mfa_title": "Two-factor authentication",
-        "mfa_code": "Authentication code",
-        "mfa_verify": "Verify",
-        "mfa_use_passkey": "Use a passkey instead",
-        "enroll_title": "Set up two-factor authentication",
-        "enroll_hint": "Scan the QR code with your authenticator app and enter the generated code.",
-        "enroll_activate": "Activate",
-        "enroll_use_passkey": "Register a passkey instead",
-        "enroll_passkey_name": "Passkey",
-        "back": "Back to login"
+        "provider": "Giriş yöntemi",
+        "pending_approval": "Hesabınız yönetici onayı bekliyor.",
+        "account_disabled": "Hesabınız devre dışı. Yöneticinize başvurun.",
+        "username_collision": "Bu kullanıcı adına sahip bir hesap zaten var. Yöneticinizden bu kimliği hesaba bağlamasını isteyin.",
+        "account_not_linked": "Bu kimlik hiçbir hesaba bağlı değil. Yöneticinize başvurun.",
+        "domain_not_allowed": "E-posta alan adınızla kaydolmaya izin verilmiyor. Yöneticinize başvurun.",
+        "auth_cancelled": "Giriş iptal edildi. Lütfen yeniden deneyin.",
+        "totp_invalid": "Kimlik doğrulama kodu geçersiz.",
+        "passkey_sign_in": "Geçiş anahtarıyla giriş yap",
+        "sign_in_with": "{name} ile giriş yap",
+        "external_provider": "Harici giriş",
+        "methods_error": "Giriş yöntemleri yüklenemedi. Lütfen yeniden deneyin.",
+        "mfa_title": "İki faktörlü kimlik doğrulama",
+        "mfa_code": "Kimlik doğrulama kodu",
+        "mfa_verify": "Doğrula",
+        "mfa_use_passkey": "Bunun yerine geçiş anahtarı kullan",
+        "enroll_title": "İki faktörlü kimlik doğrulamayı ayarla",
+        "enroll_hint": "QR kodunu kimlik doğrulayıcı uygulamanızla tarayın ve oluşturulan kodu girin.",
+        "enroll_activate": "Etkinleştir",
+        "enroll_use_passkey": "Bunun yerine geçiş anahtarı kaydet",
+        "enroll_passkey_name": "Geçiş anahtarı",
+        "back": "Giriş sayfasına dön"
     },
     "home": {
         "redirecting": "Yönlendiriliyor...",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "Ayarlar",
         "logout": "Oturumu kapat",
-        "security": "Security"
+        "security": "Güvenlik",
+        "unknown_user": "Bilinmeyen kullanıcı",
+        "no_organization": "Kuruluş yok"
     },
     "main_menu": {
         "enter": "Giriş",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "Operasyonel istihbarat çalışma alanı",
         "refresh": "Gösterge panelini yenile",
+        "metrics": {
+            "news_items_summary": "Haber öğesi yok | Toplam {count} haber öğesi | Toplam {count} haber öğesi",
+            "report_items_summary": "Rapor öğesi yok | Toplam {count} rapor öğesi | Toplam {count} rapor öğesi",
+            "products_summary": "Ürün yok | Toplam {count} ürün | Toplam {count} ürün"
+        },
         "assess": {
             "trending": "Gündemdeki istihbarat",
             "tagcloud": "Son toplanan haber öğelerinin etiket bulutu",
-            "total": "toplam haber öğesi"
+            "total": "toplam haber öğesi",
+            "ingestion_chart": "{period} için haber öğesi alımı",
+            "ingestion_point": "{date} tarihinde haber öğesi yok | {date} tarihinde {count} haber öğesi | {date} tarihinde {count} haber öğesi"
         },
         "collect": {
             "title": "Toplayıcılar",
@@ -253,8 +262,14 @@
             "title": "Hakkında",
             "version": "Sürüm",
             "commit": "Kod sürümü",
-            "total": "toplam kayıt"
+            "total": "toplam kayıt",
+            "built_at": "Derleme: {date}",
+            "committed_at": "Commit tarihi: {date}"
         }
+    },
+    "word_cloud": {
+        "label": "Kelime bulutu",
+        "word_action_count": "{action} {word}: sonuç yok | {action} {word}: {count} sonuç | {action} {word}: {count} sonuç"
     },
     "nav_menu": {
         "enter": "Haber öğesi oluştur",
@@ -297,8 +312,8 @@
         "reports": "Raporlar",
         "asset_groups": "Varlık grupları",
         "notification_templates": "Bildirim şablonları",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "Giriş Yöntemleri",
+        "security": "Güvenlik"
     },
     "notification": {
         "close": "Kapat"
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "Başlık",
         "created": "Oluşturuldu",
-        "updated": "Güncellendi",
-        "collected": "Toplandı",
-        "published": "Yayımlandı",
-        "source": "Kaynak",
         "node": "Düğüm",
         "description": "Açıklama",
-        "in_analyze": "Analiz sürüyor",
-        "analyzed": "Analiz edildi",
         "url": "URL",
         "name": "Ad",
         "username": "Kullanıcı adı",
@@ -332,7 +341,18 @@
         "last_seen": "Son görülme",
         "last_attempted": "Son deneme",
         "last_collected": "Son toplama",
-        "last_error": "Son hata"
+        "last_error": "Son hata",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "Kaynak: {source}",
+        "author_with_value": "Yazar: {author}",
+        "published_at": "Yayımlanma: {date}",
+        "collected_at": "Toplanma: {date}",
+        "link_with_url": "Bağlantı: {url}",
+        "unknown_source": "Bilinmeyen kaynak",
+        "not_available": "Kullanılamıyor",
+        "aggregated_items_count": "Birleştirilmiş haber öğesi yok | {count} birleştirilmiş haber öğesi | {count} birleştirilmiş haber öğesi",
+        "in_analyze_count": "Devam eden analiz yok | Devam eden {count} analiz | Devam eden {count} analiz",
+        "analyzed_count": "Tamamlanmış analiz yok | {count} tamamlanmış analiz | {count} tamamlanmış analiz"
     },
     "attribute": {
         "add_constant": "Sabit ekle",
@@ -385,10 +405,22 @@
         "ai_provider": "Yapay zekâ modeli",
         "ai_prompt": "Yapay zekâ istemi",
         "add_attribute": "Öznitelik ekle",
-        "edit_attribute": "Özniteliği düzenle"
+        "edit_attribute": "Özniteliği düzenle",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "CVSS vektörü ve puanı",
+        "last_updated_at": "Son güncelleme: {date}",
+        "updated_by_user": "Güncelleyen: {user}",
+        "tlp_description_clear": "Paylaşım kısıtlı değildir.",
+        "tlp_description_green": "Topluluk içinde sınırlı paylaşım.",
+        "tlp_description_amber": "Alıcının kuruluşu ve müşterileri içinde bilmesi gerekenler ilkesiyle sınırlı paylaşım.",
+        "tlp_description_amber_strict": "Yalnızca alıcının kuruluşu içinde sınırlı paylaşım.",
+        "tlp_description_red": "Bireysel alıcıların ötesinde paylaşılamaz.",
+        "tlp_description_unknown": "Bilinmeyen TLP işareti."
     },
     "cvss_calculator": {
         "title": "CVSS hesaplayıcı",
+        "tooltips": "Metrik ipuçlarını göster",
+        "vector_placeholder": "CVSS vektörü, örneğin CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "Temel puan",
         "attack_vector": "Saldırı vektörü (AV)",
         "attack_complexity": "Saldırı karmaşıklığı (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "Bu metrik, savunmasız bileşenin başarıyla ele geçirilmesi için saldırgan dışında bir kullanıcının katılması gerekip gerekmediğini belirler. Açığın yalnızca saldırganın iradesiyle mi kullanılabildiğini, yoksa ayrı bir kullanıcının veya başlattığı sürecin katılması mı gerektiğini gösterir.",
         "UI_N_Label": "Savunmasız sistemden herhangi bir kullanıcının etkileşimi olmadan yararlanılabilir.",
         "UI_R_Label": "Bu güvenlik açığından başarıyla yararlanılması, önce bir kullanıcının eylemde bulunmasını gerektirir.",
-        "S_Heading": "Başarılı saldırı, savunmasız bileşen dışındaki bir bileşeni etkiliyor mu? Öyleyse Temel Puan artar ve Gizlilik, Bütünlük ve Kimlik Doğrulama metrikleri etkilenen bileşene göre puanlanmalıdır.",
+        "S_Heading": "Başarılı saldırı, savunmasız bileşen dışındaki bir bileşeni etkiliyor mu? Öyleyse Temel Puan artar ve Gizlilik, Bütünlük ve Erişilebilirlik metrikleri etkilenen bileşene göre puanlanmalıdır.",
         "S_U_Label": "Yararlanılan açık yalnızca aynı güvenlik yetkilisinin yönettiği kaynakları etkileyebilir. Savunmasız ve etkilenen bileşen ya aynıdır ya da ikisi de aynı güvenlik yetkilisince yönetilir.",
         "S_C_Label": "Yararlanılan açık, savunmasız bileşenin güvenlik yetkilisinin yönettiği kapsamın dışındaki kaynakları etkileyebilir. Savunmasız ve etkilenen bileşenler farklıdır ve farklı güvenlik yetkililerince yönetilir.",
         "C_Heading": "Bu metrik, başarıyla yararlanılan bir açığın yazılım bileşenince yönetilen bilgi kaynaklarının gizliliğine etkisini ölçer. Gizlilik, bilgiye erişimi ve açıklamayı yetkili kullanıcılarla sınırlamayı ve yetkisiz erişimi ya da açıklamayı önlemeyi ifade eder.",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "Karşılık gelen Temel metriğe atanmış değer kullanılır.",
         "MUI_N_Label": "Savunmasız sistemden herhangi bir kullanıcının etkileşimi olmadan yararlanılabilir.",
         "MUI_R_Label": "Bu güvenlik açığından başarıyla yararlanılması, önce bir kullanıcının eylemde bulunmasını gerektirir.",
-        "MS_Heading": "Başarılı saldırı, savunmasız bileşen dışındaki bir bileşeni etkiliyor mu? Öyleyse Temel Puan artar ve Gizlilik, Bütünlük ve Kimlik Doğrulama metrikleri etkilenen bileşene göre puanlanmalıdır.",
+        "MS_Heading": "Başarılı saldırı, savunmasız bileşen dışındaki bir bileşeni etkiliyor mu? Öyleyse Temel Puan artar ve Gizlilik, Bütünlük ve Erişilebilirlik metrikleri etkilenen bileşene göre puanlanmalıdır.",
         "MS_X_Label": "Karşılık gelen Temel metriğe atanmış değer kullanılır.",
         "MS_U_Label": "Yararlanılan açık yalnızca aynı güvenlik yetkilisinin yönettiği kaynakları etkileyebilir. Savunmasız ve etkilenen bileşen ya aynıdır ya da ikisi de aynı güvenlik yetkilisince yönetilir.",
         "MS_C_Label": "Yararlanılan açık, savunmasız bileşenin güvenlik yetkilisinin yönettiği kapsamın dışındaki kaynakları etkileyebilir. Savunmasız ve etkilenen bileşenler farklıdır ve farklı güvenlik yetkililerince yönetilir.",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "Sonraki sistemde kullanılabilirlik etkisi yoktur."
     },
     "report_item": {
-        "id": "Kimlik",
+        "id_with_value": "ID: {id}",
         "add_new": "Yeni rapor öğesi oluştur",
         "edit": "Rapor öğesini düzenle",
         "read": "Rapor öğesi önizlemesi",
@@ -704,6 +736,7 @@
         "attributes": "Öznitelikler",
         "no_attributes": "Kullanılabilir öznitelik yok",
         "side_by_side": "Yan yana görünüm",
+        "enter_rich_text": "Biçimlendirilmiş metin girin",
         "confirm_close": {
             "message": "Kaydedilmemiş değişiklikler var. Bu rapor öğesini kapatmak istediğinizden emin misiniz?"
         },
@@ -752,13 +785,15 @@
         "publish": "Ürünü yayımla",
         "publish_confirmation": "Aşağıdaki ürünü yayımlamak istediğinizden emin misiniz?",
         "publish_confirmation_message": "Bu ürünü gerçekten yayımlamak istiyor musunuz?",
+        "publish_confirmation_type": "Ürün türü: {type}",
+        "publish_confirmation_publishers": "Yayımlama hizmetleri: {publishers}",
         "no_type": "Tür seçilmedi",
         "no_publisher_in_dialog": "Yok",
         "publish_successful": "Ürün başarıyla yayımlandı",
         "publish_failed": "Ürün yayımlanamadı",
         "publish_error": "Ürün yayımlanırken hata oluştu",
         "no_publisher_selected": "En az bir yayımlayıcı seçin",
-        "total_count": "Ürün sayısı",
+        "total_count": "Ürün yok | {count} ürün | {count} ürün",
         "confirm_close": {
             "message": "Kaydedilmemiş değişiklikler var. Ürünü kaydetmeden kapatmak istediğinizden emin misiniz?"
         },
@@ -782,8 +817,12 @@
         "sort": "Sıralama ölçütü",
         "from": "Başlangıç",
         "to": "Bitiş",
-        "total_count": "Rapor öğesi sayısı",
+        "total_count": "Rapor öğesi yok | {count} rapor öğesi | {count} rapor öğesi",
         "no_items": "Rapor öğesi bulunamadı",
+        "updated_at": "Güncelleme: {date}",
+        "updated_at_by": "{date} tarihinde {user} tarafından güncellendi",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "Haber öğesi yok | {count} haber öğesi | {count} haber öğesi",
         "tooltip": {
             "filter_all": "Şu anda gösterilen: tümü",
             "filter_completed": "Şu anda gösterilen: tamamlananlar",
@@ -812,7 +851,7 @@
             "remove_item": "Rapor öğesini kaldır",
             "publish_item": "Rapor öğesinden ürün oluştur"
         },
-        "select_all_success": "{count} rapor öğesi seçildi",
+        "select_all_success": "Rapor öğesi seçilmedi | {count} rapor öğesi seçildi | {count} rapor öğesi seçildi",
         "select": {
             "placeholder": "Analiz etmek istediğim...",
             "option_news_items": "seçilen haber öğeleri",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "Kaynak",
-        "link": "Bağlantı",
         "comments": "Yorumlar",
-        "collected": "Toplandı",
-        "published": "Yayımlandı",
-        "author": "Yazar",
         "add_news_item": "Haber öğeleri ekle",
         "attached_news_items": "Ekli haber öğeleri",
         "read_news_item": "Okumak için tıklayın",
@@ -841,8 +876,8 @@
         "auto_save_blur": "Odak kaybolduğunda otomatik kaydeder",
         "auto_save_changes": "Değişikliklerde otomatik kaydeder",
         "download": "İndir",
-        "total_count": "Haber öğesi sayısı",
-        "selected_count": "Seçili haber öğesi sayısı",
+        "total_count": "Haber öğesi yok | {count} haber öğesi | {count} haber öğesi",
+        "selected_count": "Haber öğesi seçilmedi | {count} haber öğesi seçildi | {count} haber öğesi seçildi",
         "no_items": "Haber öğesi bulunamadı",
         "item_updated": "Haber öğesi başarıyla güncellendi",
         "item_deleted": "Haber öğesi başarıyla silindi",
@@ -916,11 +951,14 @@
             "error_loading": "Raporlar yüklenirken hata oluştu",
             "error_removing": "Rapor birleşimden kaldırılırken hata oluştu"
         },
-        "select_all_success": "{count} haber öğesi seçildi",
+        "select_all_success": "Haber öğesi seçilmedi | {count} haber öğesi seçildi | {count} haber öğesi seçildi",
         "groups": "GRUPLAR",
-        "show_new_items": "Yeni öğeleri göster ({count})"
+        "show_new_items": "Yeni öğe yok | {count} yeni öğeyi göster | {count} yeni öğeyi göster"
     },
     "publish": {
+        "updated_at": "Güncelleme: {date}",
+        "updated_at_by": "{date} tarihinde {user} tarafından güncellendi",
+        "report_items_count": "Rapor öğesi yok | {count} rapor öğesi | {count} rapor öğesi",
         "tooltip": {
             "filter_all": "Şu anda gösterilen: tümü",
             "filter_published": "Şu anda gösterilen: yayımlananlar",
@@ -946,7 +984,7 @@
             "delete_items": "Ürünleri sil",
             "delete_item": "Ürünü sil"
         },
-        "select_all_success": "{count} ürün seçildi",
+        "select_all_success": "Ürün seçilmedi | {count} ürün seçildi | {count} ürün seçildi",
         "no_items": "Ürün bulunamadı"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "Son 7 gün",
         "last_31_days": "Son 31 gün",
         "custom_filter": "Özel filtre",
-        "total_count": "Toplam sayı",
-        "currently_showing": "Şu anda gösterilen",
-        "selected_count": "Seçili sayısı",
+        "total_count": "Öğe yok | Toplam {count} öğe | Toplam {count} öğe",
+        "currently_showing": "Gösterilen öğe yok | Şu anda {count} öğe gösteriliyor | Şu anda {count} öğe gösteriliyor",
+        "selected_count": "Öğe seçilmedi | {count} öğe seçildi | {count} öğe seçildi",
         "tooltip": {
             "sort": {
                 "date": {
@@ -973,6 +1011,7 @@
     "settings": {
         "user_settings": "Kullanıcı ayarları",
         "tab_general": "Genel",
+        "tab_security": "Güvenlik",
         "tab_wordlists": "Sözcük listeleri",
         "tab_hotkeys": "Kısayol tuşları",
         "close_item_1": "Öğeyi kapat (kısayol 1)",
@@ -990,7 +1029,7 @@
         "like_item": "Öğeyi beğen",
         "unlike_item": "Öğe beğenisini kaldır",
         "delete_item": "Öğeyi sil",
-        "press_key": "Şunun için yeni tuşa basın: ",
+        "press_key_for": "{action} için yeni bir tuşa basın",
         "selection": "Seçim",
         "group": "Grupla",
         "ungroup": "Grubu çöz",
@@ -1015,7 +1054,9 @@
         "boolean_error": "Değer 'True' veya 'False' olmalıdır!",
         "integer_error": "Değer geçerli bir tam sayı olmalıdır!",
         "decimal_error": "Değer geçerli bir ondalık sayı olmalıdır!",
-        "default_value": "Varsayılan değer",
+        "default_value_with_value": "Varsayılan değer: {value}",
+        "input_too_long": "Değer {count} karakter uzunluğunda; en fazla {max} karakter olabilir.",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "Değeri güncelle",
         "description": "Açıklama",
         "value": "Değer",
@@ -1023,8 +1064,7 @@
         "updated_at": "Güncelleme zamanı",
         "actions": "İşlemler",
         "api_key": "API anahtarı",
-        "my_assets_view": "Varlıklarım",
-        "tab_security": "Security"
+        "my_assets_view": "Varlıklarım"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "Otomatik art arda durum değişiklikleri",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "Dosyaları buraya sürükleyin veya seçmek için tıklayın",
         "file_description": "Açıklama",
-        "last_updated": "Son güncelleme",
+        "last_updated_by_at": "Son güncelleme: {date}, {user}",
+        "last_updated_at": "Son güncelleme: {date}",
+        "attachment_by": "Ekleyen: {user}",
         "download": "İndir",
         "attachment_load": "Eki yükle",
         "attachment_detail": "Ek ayrıntısı"
@@ -1141,11 +1183,17 @@
         "attributes": "Öznitelikler",
         "save": "Kaydet",
         "edit": "Düzenle",
+        "edit_named": "{title} düzenle",
+        "select": "Seç",
         "done": "Tamam",
         "up": "Yukarı taşı",
         "down": "Aşağı taşı",
         "remove": "Kaldır",
         "delete": "Sil",
+        "publish": "Yayımla",
+        "lock": "Kilitle",
+        "open": "Aç",
+        "open_source": "Kaynağı aç",
         "download": "İndir",
         "yes": "Evet",
         "no": "Hayır",
@@ -1165,6 +1213,12 @@
         "no_permission": "Bu işlemi gerçekleştirme izniniz yok",
         "loading_more": "Daha fazla öğe yükleniyor...",
         "end_of_list": "Listenin sonu",
+        "fetching_items": "Öğeler alınıyor…",
+        "no_items_to_select": "Seçilebilecek öğe yok.",
+        "select_at_least_two_to_group": "Grup oluşturmak için en az iki öğe seçin.",
+        "no_grouped_items_selected": "Gruptan çıkarmak için en az bir gruplanmış öğe seçin.",
+        "processing_items": "İşlenen öğe yok… | {count} öğe işleniyor… | {count} öğe işleniyor…",
+        "deleting_items": "Silinen öğe yok… | {count} öğe siliniyor… | {count} öğe siliniyor…",
         "messagebox": {
             "delete": "Aşağıdaki öğeyi silmek istediğinizden emin misiniz?",
             "delete_confirm": "“{name}” öğesini silmek istediğinizden emin misiniz?",
@@ -1192,7 +1246,7 @@
             "removed_error": "Osint kaynak grubu kullanımda olduğundan silinemedi",
             "title": "Başlık",
             "osint_sources": "OSINT kaynakları",
-            "total_count": "Osint kaynak grubu sayısı",
+            "total_count": "OSINT kaynak grubu yok | {count} OSINT kaynak grubu | {count} OSINT kaynak grubu",
             "default_group": "Kategorisiz",
             "default_group_description": "Kategorisiz OSINT kaynakları için varsayılan grup",
             "all": "Tüm kaynaklar"
@@ -1216,7 +1270,7 @@
             "removed_error": "Osint kaynağı kullanımda olduğundan silinemedi",
             "filter_wordlist": "Sözcük listesi filtresi",
             "type": "Tür",
-            "total_count": "Osint kaynağı sayısı",
+            "total_count": "OSINT kaynağı yok | {count} OSINT kaynağı | {count} OSINT kaynağı",
             "osint_source_groups": "OSINT kaynak grupları",
             "tooltip": {
                 "select_all": "Tümünü seç",
@@ -1239,7 +1293,7 @@
             "node_required": "Bir toplayıcı düğümü seçin",
             "export_all_hint": "Tüm kaynakları dışa aktar",
             "export_selected_hint": "Seçili kaynakları dışa aktar",
-            "selected_count": "{count} seçildi"
+            "selected_count": "OSINT kaynağı seçilmedi | {count} OSINT kaynağı seçildi | {count} OSINT kaynağı seçildi"
         },
         "nodes": {
             "tab_description": "Toplayıcı düğümleri buradan yönetilebilir.",
@@ -1254,7 +1308,7 @@
             "successful_edit": "Toplayıcı düğümü başarıyla güncellendi",
             "removed": "Toplayıcı düğümü başarıyla silindi",
             "removed_error": "Toplayıcı düğümü kullanımda olduğundan silinemedi",
-            "total_count": "Toplayıcı düğümü sayısı"
+            "total_count": "Toplayıcı düğümü yok | {count} toplayıcı düğümü | {count} toplayıcı düğümü"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "Sunucu düğümü başarıyla güncellendi",
             "removed": "Sunucu düğümü başarıyla silindi",
             "removed_error": "Sunucu düğümü kullanımda olduğundan silinemedi",
-            "total_count": "Sunucu düğümü sayısı"
+            "total_count": "Sunucu düğümü yok | {count} sunucu düğümü | {count} sunucu düğümü"
         },
         "types": {
             "tab_description": "Ürün türleri buradan yönetilebilir.",
@@ -1289,7 +1343,7 @@
             "successful_edit": "Ürün türü başarıyla güncellendi",
             "removed": "Ürün türü başarıyla silindi",
             "removed_error": "Ürün türü kullanımda olduğundan silinemedi",
-            "total_count": "Ürün türü sayısı",
+            "total_count": "Ürün türü yok | {count} ürün türü | {count} ürün türü",
             "help": "Şablon parametrelerinin açıklaması",
             "close": "Kapat",
             "choose_report_type": "Parametre açıklamasını görmek için rapor türünü seçin",
@@ -1328,7 +1382,7 @@
             "successful_edit": "Yayımlayıcı düğümü başarıyla güncellendi",
             "removed": "Yayımlayıcı düğümü başarıyla silindi",
             "removed_error": "Yayımlayıcı düğümü kullanımda olduğundan silinemedi",
-            "total_count": "Yayımlayıcı düğümü sayısı"
+            "total_count": "Yayımcı düğümü yok | {count} yayımcı düğümü | {count} yayımcı düğümü"
         },
         "presets": {
             "tab_description": "Yayımlayıcı ön ayarları buradan yönetilebilir.",
@@ -1345,7 +1399,7 @@
             "successful_edit": "Yayımlayıcı ön ayarı başarıyla güncellendi",
             "removed": "Yayımlayıcı ön ayarı başarıyla silindi",
             "removed_error": "Yayımlayıcı ön ayarı kullanımda olduğundan silinemedi",
-            "total_count": "Yayımlayıcı ön ayarı sayısı"
+            "total_count": "Yayımcı ön ayarı yok | {count} yayımcı ön ayarı | {count} yayımcı ön ayarı"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "Bot düğümü başarıyla güncellendi",
             "removed": "Bot düğümü başarıyla silindi",
             "removed_error": "Bot düğümü kullanımda olduğundan silinemedi",
-            "total_count": "Bot düğümü sayısı"
+            "total_count": "Bot düğümü yok | {count} bot düğümü | {count} bot düğümü"
         },
         "presets": {
             "tab_description": "Bot ön ayarları buradan yönetilebilir.",
@@ -1380,7 +1434,7 @@
             "successful_edit": "Bot ön ayarı başarıyla güncellendi",
             "removed": "Bot ön ayarı başarıyla silindi",
             "removed_error": "Bot ön ayarı kullanımda olduğundan silinemedi",
-            "total_count": "Bot ön ayarı sayısı"
+            "total_count": "Bot ön ayarı yok | {count} bot ön ayarı | {count} bot ön ayarı"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "Uzaktan erişim kullanımda olduğundan silinemedi",
             "osint_sources": "Paylaşılacak OSINT kaynakları",
             "report_item_types": "Paylaşılacak rapor öğesi türleri",
-            "total_count": "Uzaktan erişim sayısı"
+            "total_count": "Uzak erişim kaydı yok | {count} uzak erişim kaydı | {count} uzak erişim kaydı"
         },
         "nodes": {
             "tab_description": "Uzak düğümler buradan yönetilebilir.",
@@ -1420,7 +1474,7 @@
             "successful_edit": "Uzak düğüm başarıyla güncellendi",
             "removed": "Uzak düğüm başarıyla silindi",
             "removed_error": "Uzak düğüm kullanımda olduğundan silinemedi",
-            "total_count": "Uzak düğüm sayısı"
+            "total_count": "Uzak düğüm yok | {count} uzak düğüm | {count} uzak düğüm"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "Bu veri sağlayıcısı kaydedilemedi",
             "remove": "Veri sağlayıcısı başarıyla silindi",
             "removed_error": "Veri sağlayıcısı kullanımda olduğundan silinemedi",
-            "total_count": "Veri sağlayıcısı sayısı"
+            "total_count": "Veri sağlayıcı yok | {count} veri sağlayıcı | {count} veri sağlayıcı"
         },
         "ai": {
             "tab_description": "Yapay zekâ modelleri buradan yönetilebilir.",
@@ -1481,11 +1535,13 @@
         "no_categories": "Henüz kategori yok",
         "add_category_hint": "Bu sözcük listesini oluşturmaya başlamak için kategori ekleyin",
         "link_hint": "Sözcük girdilerini indirmek için isteğe bağlı URL",
-        "total_count": "Sözcük listesi sayısı",
+        "total_count": "Kelime listesi yok | {count} kelime listesi | {count} kelime listesi",
         "file_has_header": "Dosyada başlık satırı var",
         "import_from_csv": "CSV’den içe aktar",
         "load_csv_file": "CSV dosyası yükle",
         "download_from_link": "URL’den indir",
+        "download_error": "Kelime listesi URL’den indirilemedi.",
+        "import_error": "Kelime listesi dosyası içe aktarılamadı.",
         "import": "İçe aktar",
         "close": "Kapat",
         "delete_existing_words": "Mevcut sözcükleri sil",
@@ -1506,7 +1562,7 @@
             "successful_edit": "Rapor öğesi türü başarıyla güncellendi",
             "removed_error": "Rapor öğesi türü kullanımda olduğundan silinemedi",
             "removed": "Rapor öğesi türü başarıyla silindi",
-            "total_count": "Rapor öğesi türü sayısı"
+            "total_count": "Rapor türü yok | {count} rapor türü | {count} rapor türü"
         },
         "attributes": {
             "tab_description": "Öznitelikler buradan yönetilebilir.",
@@ -1524,7 +1580,7 @@
             "edit_constant": "Sabiti düzenle",
             "value": "Değer",
             "error": "Bu öznitelik oluşturulamadı",
-            "total_count": "Öznitelik sayısı"
+            "total_count": "Öznitelik yok | {count} öznitelik | {count} öznitelik"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "Harici kullanıcılar veya izinler yüklenemedi",
         "successful": "Yeni harici kullanıcı başarıyla eklendi",
         "successful_edit": "Harici kullanıcı başarıyla güncellendi",
-        "total_count": "Harici kullanıcı sayısı",
+        "total_count": "Harici kullanıcı yok | {count} harici kullanıcı | {count} harici kullanıcı",
         "removed": "Harici kullanıcı başarıyla silindi",
         "removed_error": "Harici kullanıcı kullanımda olduğundan silinemedi"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "Varlık grubu başarıyla güncellendi",
         "removed": "Varlık grubu başarıyla silindi",
         "removed_error": "Varlık grubu kullanımda olduğundan silinemedi",
-        "total_count": "Varlık grubu sayısı"
+        "total_count": "Varlık grubu yok | {count} varlık grubu | {count} varlık grubu"
     },
     "notification_template": {
         "add_new": "Yeni bildirim şablonu ekle",
@@ -1594,7 +1650,7 @@
         "successful_edit": "Bildirim şablonu başarıyla güncellendi",
         "removed": "Bildirim şablonu başarıyla silindi",
         "removed_error": "Bildirim şablonu kullanımda olduğundan silinemedi",
-        "total_count": "Bildirim şablonu sayısı"
+        "total_count": "Bildirim şablonu yok | {count} bildirim şablonu | {count} bildirim şablonu"
     },
     "asset": {
         "add": "Varlık ekle",
@@ -1614,13 +1670,15 @@
         "value": "Değer",
         "vulnerable": "Güvenlik açığı var",
         "total": "Toplam",
-        "total_count": "Varlık sayısı",
+        "total_count": "Varlık yok | {count} varlık | {count} varlık",
         "successful": "Yeni varlık başarıyla eklendi",
         "successful_edit": "Varlık başarıyla güncellendi",
         "removed": "Varlık başarıyla silindi",
         "removed_error": "Varlık kullanımda olduğundan silinemedi",
         "vulnerabilities": "Güvenlik açıkları",
-        "vulnerabilities_count": "Güvenlik açıkları: ",
+        "serial_with_value": "Seri numarası: {value}",
+        "cpe_count": "CPE kodu yok | {count} CPE kodu | {count} CPE kodu",
+        "vulnerabilities_count": "Güvenlik açığı yok | {count} güvenlik açığı | {count} güvenlik açığı",
         "no_vulnerabilities": "Güvenlik açığı yok",
         "sort": {
             "alphabetical": "Alfabetik",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "Giriş yöntemi sayısı: ",
+        "total_count": "Giriş yöntemi yok | {count} giriş yöntemi | {count} giriş yöntemi",
         "add_new": "Yeni giriş yöntemi ekle",
         "edit": "Giriş yöntemini düzenle",
         "name": "Ad",
@@ -1682,7 +1740,7 @@
         "require_mfa_disabled_hint": "Bu giriş yöntemi ek MFA zorunluluğu getirmez. Site, kuruluş veya kullanıcı ilkesi yine de ikinci faktör isteyebilir.",
         "issuer_url": "Yayıncı URL'si",
         "issuer_url_hint": "Keşif temel URL'si, örn. https://idp.example.org/realms/main",
-        "client_id": "Client ID",
+        "client_id": "İstemci kimliği",
         "scopes": "Kapsamlar",
         "username_claim": "Kullanıcı adı claim'i",
         "email_claim": "E-posta claim'i",
@@ -1710,7 +1768,7 @@
         "secret_hint": "Şifrelenmiş olarak saklanır",
         "secret_keep_hint": "Bir parola saklanıyor — korumak için boş bırakın",
         "authorize_url": "Yetkilendirme URL'si",
-        "token_url": "Token URL",
+        "token_url": "Belirteç URL’si",
         "userinfo_url": "Kullanıcı bilgisi URL'si",
         "server_url": "Sunucu URL'si",
         "use_tls": "TLS kullan",
@@ -1739,15 +1797,15 @@
         "removed": "Giriş yöntemi kaldırıldı.",
         "remove_error": "Bu giriş yöntemi kaldırılamadı.",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} — bağlantılı {count} kullanıcı kimliği bu giriş yöntemini kaybedecek",
+        "delete_message_linked": "{name}: hiçbir bağlı kullanıcı kimliği bu giriş yöntemini kaybetmeyecek | {name}: {count} bağlı kullanıcı kimliği bu giriş yöntemini kaybedecek | {name}: {count} bağlı kullanıcı kimliği bu giriş yöntemini kaybedecek",
         "tab_description": "Giriş yöntemlerini (kimlik sağlayıcılarını) burada yönetebilirsiniz.",
-        "idp_sso_url": "IdP SSO URL",
+        "idp_sso_url": "IdP SSO URL’si",
         "idp_sso_url_hint": "Kimlik sağlayıcısının HTTP-Redirect bağlama uç noktası",
-        "idp_entity_id": "IdP entity ID",
+        "idp_entity_id": "IdP varlık kimliği",
         "idp_entity_id_hint": "SAML yanıtlarının yayıncısı",
         "idp_certificate": "IdP imzalama sertifikası (PEM)",
         "idp_certificate_hint": "Kimlik sağlayıcısının yanıtları imzaladığı sertifika. Metadata'daki base64 bloğu yeterlidir; anahtar yenileme sırasında birden fazla sertifika tutulur.",
-        "sp_entity_id": "SP entity ID",
+        "sp_entity_id": "SP varlık kimliği",
         "sp_entity_id_hint": "IdP'de kayıtlı varlık kimliğimiz / hedef kitlemiz. Federasyonlar sabit kalan bir https:// URL'si ister.",
         "sp_entity_id_use_suggested": "Önerileni kullan (SAML uç noktası URL'si)",
         "acs_url_override": "ACS URL'sini geçersiz kıl",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "Genel",
         "saml_tab_service_information": "Hizmet bilgileri",
         "saml_tab_sp_keypair": "SP anahtar çifti",
-        "saml_metadata_url": "SP metadata URL",
-        "saml_acs_url": "Assertion Consumer Service (ACS) URL",
+        "saml_metadata_url_with_url": "SP meta verisi URL’si: {url}",
+        "saml_acs_url_with_url": "Assertion Consumer Service (ACS) URL’si: {url}",
+        "saml_disco_url_with_url": "Keşif yanıtı URL’si: {url}",
         "idp_metadata": "IdP metadata'sı (URL veya XML)",
         "idp_metadata_hint": "Kimlik sağlayıcısının metadata URL'sini veya XML'in kendisini yapıştırıp Yükle'ye basın — varlık kimliği, SSO URL'si ve imzalama sertifikası buradan doldurulur.",
         "idp_metadata_load": "Yükle",
-        "idp_metadata_loaded": "Metadata'dan yüklendi ({count} imzalama sertifikası). Aşağıdaki alanları gözden geçirip kaydedin.",
+        "idp_metadata_loaded": "Meta verilerde imzalama sertifikası yok. Aşağıdaki alanları inceleyip kaydedin. | Meta verilerden {count} imzalama sertifikası yüklendi. Aşağıdaki alanları inceleyip kaydedin. | Meta verilerden {count} imzalama sertifikası yüklendi. Aşağıdaki alanları inceleyip kaydedin.",
         "idp_metadata_error": "Metadata okunamadı.",
         "sp_keypair": "Hizmet sağlayıcı anahtar çifti",
         "sp_keypair_stored": "anahtar saklandı",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "Federasyon metadata imzalama sertifikası (PEM)",
         "federation_metadata_cert_hint": "Güven çıpası: federasyon metadata'sına yalnızca imzası bu sertifikayla doğrulandığında güvenilir. Sertifikayı federasyon işletmecisinden ayrı bir kanalla alın ve parmak izini karşılaştırın.",
         "federation_verify": "Federasyonu doğrula",
-        "federation_verify_result": "Doğrulandı. Kullanılabilir {count} kimlik sağlayıcısı bulundu.",
+        "federation_verify_result": "Doğrulandı. Kullanılabilir kimlik sağlayıcı bulunamadı. | Doğrulandı. {count} kullanılabilir kimlik sağlayıcı bulundu. | Doğrulandı. {count} kullanılabilir kimlik sağlayıcı bulundu.",
         "federation_verify_error": "Federasyon metadata'sı doğrulanamadı.",
-        "saml_disco_url": "Keşif yanıtı URL'si",
         "sp_metadata_info": "Hizmet bilgileri (federasyon kaydı için)",
         "sp_metadata_info_hint": "SP metadata'sında yayımlanır. Bir federasyon kaydı kabul etmek için genellikle kuruluş, iletişim ve görünen adı ister; kullanıcılar da keşif hizmetinde bunları görür.",
         "sp_display_name": "Hizmetin görünen adı",
@@ -1816,25 +1874,27 @@
         "sp_contact_surname_hint": "Metadata'da yayımlanan teknik iletişim soyadı (federasyon genellikle ister). Boşsa iletişim adının son kelimesinden türetilir."
     },
     "security": {
-        "title": "Security",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "error": "Operation failed.",
-        "totp_title": "Authenticator app (TOTP)",
-        "totp_hint": "Require a one-time code from an authenticator app at login.",
-        "totp_enable": "Enable",
-        "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
-        "totp_code": "Authentication code",
-        "totp_activate": "Activate",
-        "totp_disable": "Disable",
-        "totp_enabled": "Two-factor authentication enabled.",
-        "totp_disabled": "Two-factor authentication disabled.",
-        "passkeys_title": "Passkeys",
-        "passkey_add": "Add passkey",
-        "passkey_name": "Name",
-        "passkey_created": "Created",
-        "passkey_last_used": "Last used",
-        "passkey_added": "Passkey registered.",
-        "no_passkeys": "No passkeys registered."
+        "title": "Güvenlik",
+        "enabled": "Etkin",
+        "disabled": "Devre dışı",
+        "error": "İşlem başarısız oldu.",
+        "totp_title": "Kimlik doğrulayıcı uygulaması (TOTP)",
+        "totp_hint": "Girişte kimlik doğrulayıcı uygulamasından alınan tek kullanımlık kodu zorunlu kıl.",
+        "totp_enable": "Etkinleştir",
+        "totp_scan": "QR kodunu kimlik doğrulayıcı uygulamanızla tarayın ve bir kodla onaylayın.",
+        "totp_qr_alt": "Kimlik doğrulama uygulaması kaydı için QR kodu",
+        "totp_code": "Kimlik doğrulama kodu",
+        "totp_activate": "Etkinleştir",
+        "totp_disable": "Devre dışı bırak",
+        "totp_enabled": "İki faktörlü kimlik doğrulama etkinleştirildi.",
+        "totp_disabled": "İki faktörlü kimlik doğrulama devre dışı bırakıldı.",
+        "passkeys_title": "Geçiş anahtarları",
+        "passkey_add": "Geçiş anahtarı ekle",
+        "passkey_name": "Ad",
+        "default_passkey_name": "Geçiş anahtarı",
+        "passkey_created": "Oluşturuldu",
+        "passkey_last_used": "Son kullanım",
+        "passkey_added": "Geçiş anahtarı kaydedildi.",
+        "no_passkeys": "Kayıtlı geçiş anahtarı yok."
     }
 }

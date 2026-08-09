@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createI18n } from 'vue-i18n'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
 
@@ -10,6 +11,21 @@ const stubs = {
         props: ['label']
     }
 }
+
+const createCountMessages = () =>
+    createI18n({
+        legacy: false,
+        locale: 'en',
+        messages: {
+            en: {
+                test: { total: 'No records | {count} record | {count} records' },
+                toolbar_filter: {
+                    currently_showing: 'Showing no records | Showing {count} record | Showing {count} records',
+                    selected_count: 'No records selected | {count} record selected | {count} records selected'
+                }
+            }
+        }
+    })
 
 describe('BaseToolbarFilter', () => {
     const defaultProps = {
@@ -28,13 +44,22 @@ describe('BaseToolbarFilter', () => {
             expect(wrapper.text()).toContain('Search')
         })
 
-        it('should display total count', () => {
+        it('should display a complete plural total with a locale-formatted count', () => {
             const wrapper = mountWithPlugins(BaseToolbarFilter, {
-                props: defaultProps,
-                global: { stubs }
+                props: { ...defaultProps, totalCountTitle: 'test.total', totalCount: 12000 },
+                global: { stubs, plugins: [createCountMessages()] }
             })
 
-            expect(wrapper.text()).toContain('42')
+            expect(wrapper.text()).toContain('12,000 records')
+        })
+
+        it('should display currently showing as a complete plural message', () => {
+            const wrapper = mountWithPlugins(BaseToolbarFilter, {
+                props: { ...defaultProps, currentlyShowingCount: 1 },
+                global: { stubs, plugins: [createCountMessages()] }
+            })
+
+            expect(wrapper.text()).toContain('Showing 1 record')
         })
 
         it('should show day range chips when showDayRanges is true', () => {
@@ -175,10 +200,10 @@ describe('BaseToolbarFilter', () => {
         it('should show selected count when showSelectedCount is true', () => {
             const wrapper = mountWithPlugins(BaseToolbarFilter, {
                 props: { ...defaultProps, showSelectedCount: true, selectedCount: 5 },
-                global: { stubs }
+                global: { stubs, plugins: [createCountMessages()] }
             })
 
-            expect(wrapper.text()).toContain('5')
+            expect(wrapper.text()).toContain('5 records selected')
         })
 
         it('should not show selected count when showSelectedCount is false', () => {

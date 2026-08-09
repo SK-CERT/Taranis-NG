@@ -108,27 +108,28 @@
                                         <v-row align="center">
                                             <v-col cols="auto">
                                                 <span v-if="getNewsItemCount(item) > 0">
-                                                    {{
-                                                        getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
-                                                        getFirstNewsItem(item)?.news_item_data?.source ||
-                                                        'Unknown'
-                                                    }}
+                                                    <bdi dir="auto">{{ getNewsItemSource(item) }}</bdi>
                                                 </span>
                                             </v-col>
                                             <v-spacer />
                                             <v-col cols="auto">
-                                                <span v-if="getNewsItemCount(item) > 0">
-                                                    {{ t('card_item.published') }}:
-                                                    {{ getFirstNewsItem(item)?.news_item_data?.published || 'N/A' }}
-                                                </span>
+                                                <i18n-t
+                                                    v-if="getNewsItemCount(item) > 0"
+                                                    keypath="card_item.published_at"
+                                                    tag="span"
+                                                >
+                                                    <template #date>
+                                                        <bdi dir="auto">{{ getPublishedValue(item) }}</bdi>
+                                                    </template>
+                                                </i18n-t>
                                             </v-col>
                                         </v-row>
                                     </div>
                                     <div class="text-h6 font-weight-medium mb-2">
-                                        {{ item.title }}
+                                        <bdi dir="auto">{{ item.title }}</bdi>
                                     </div>
                                     <div class="text-body-2 mb-3">
-                                        {{ item.description }}
+                                        <bdi dir="auto">{{ item.description }}</bdi>
                                     </div>
 
                                     <!-- Aggregate: expand to reveal the child news items (like Assess) -->
@@ -140,9 +141,15 @@
                                         @click.stop="toggleExpand(item.id)"
                                     >
                                         <v-icon start>
-                                            {{ isExpanded(item.id) ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
+                                            {{
+                                                isExpanded(item.id)
+                                                    ? ICONS.ARROW_DOWN_DROP_CIRCLE
+                                                    : isRtl
+                                                      ? ICONS.ARROW_LEFT_DROP_CIRCLE
+                                                      : ICONS.ARROW_RIGHT_DROP_CIRCLE
+                                            }}
                                         </v-icon>
-                                        {{ t('card_item.aggregated_items') }}: {{ getNewsItemCount(item) }}
+                                        {{ aggregateCountMessage(item) }}
                                     </v-btn>
                                 </div>
 
@@ -184,9 +191,10 @@
             v-model="showRemoveConfirm"
             title-key="common.messagebox.remove"
             confirm-label-key="common.remove"
-            :message="itemToDelete?.title ?? ''"
             @confirm="confirmRemoveItem"
-        />
+        >
+            <bdi dir="auto">{{ itemToDelete?.title ?? '' }}</bdi>
+        </ConfirmationDialog>
 
         <!-- News item reader. Contained to the right column in side-by-side mode;
              a normal centered modal otherwise. Read-only (actions hidden). -->
@@ -202,6 +210,7 @@
 <script setup lang="ts">
     import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useRtl } from 'vuetify'
     import { useAssessStore } from '@/stores/assess'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
@@ -215,6 +224,7 @@
     import BaseCard from '@/components/common/BaseCard.vue'
     import GroupNavList from '@/components/common/GroupNavList.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { type GroupNavItem } from '@/types/routing'
 
     type SelectorItem = {
@@ -268,6 +278,8 @@
     }>()
 
     const { t } = useI18n()
+    const { isRtl } = useRtl()
+    const { formatDateTime, formatNumber } = useLocaleFormatters()
     const assessStore = useAssessStore()
     const configStore = useConfigStore()
     const { checkPermission, getUserId } = useAuth()
@@ -308,6 +320,28 @@
 
     const getNewsItemCount = (item: SelectorItem): number => {
         return item.news_items?.length ?? 0
+    }
+
+    const getNewsItemSource = (item: SelectorItem): string => {
+        return (
+            getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
+            getFirstNewsItem(item)?.news_item_data?.source ||
+            t('card_item.unknown_source')
+        )
+    }
+
+    const getPublishedDate = (item: SelectorItem): string => {
+        return getFirstNewsItem(item)?.news_item_data?.published || ''
+    }
+
+    const getPublishedValue = (item: SelectorItem): string => {
+        const value = getPublishedDate(item)
+        return value ? formatDateTime(value) || value : t('card_item.not_available')
+    }
+
+    const aggregateCountMessage = (item: SelectorItem): string => {
+        const count = getNewsItemCount(item)
+        return t('card_item.aggregated_items_count', { count: formatNumber(count) }, count)
     }
 
     // Open the news item for reading. In side-by-side mode the dialog is contained to the

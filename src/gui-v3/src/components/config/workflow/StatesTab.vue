@@ -12,7 +12,7 @@
                     </v-col>
                     <v-col
                         cols="4"
-                        class="text-right"
+                        class="text-end"
                     >
                         <AddNewButton
                             :show="canCreate"
@@ -55,7 +55,7 @@
                         <ActionButton
                             action="edit"
                             :title="t('common.edit')"
-                            class="mr-1"
+                            class="me-1"
                             @click="editItem(item)"
                         />
                         <ActionButton

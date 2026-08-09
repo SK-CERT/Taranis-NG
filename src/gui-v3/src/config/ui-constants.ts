@@ -21,6 +21,7 @@ export const ICONS = Object.freeze({
     ARROW_DOWN: 'mdi-arrow-down',
     ARROW_DOWN_BOLD_CIRCLE_OUTLINE: 'mdi-arrow-down-bold-circle-outline',
     ARROW_DOWN_DROP_CIRCLE: 'mdi-arrow-down-drop-circle',
+    ARROW_LEFT_DROP_CIRCLE: 'mdi-arrow-left-drop-circle',
     ARROW_RIGHT_DROP_CIRCLE: 'mdi-arrow-right-drop-circle',
     ARROW_UP: 'mdi-arrow-up',
     ARROW_UP_CIRCLE_OUTLINE: 'mdi-arrow-up-circle-outline',
@@ -131,49 +132,49 @@ export const BUTTON_CONFIGS = Object.freeze({
         color: 'error',
         variant: 'text',
         size: 'small',
-        title: 'Delete'
+        titleKey: 'common.delete'
     },
     EDIT: {
         icon: ICONS.EDIT,
         color: 'primary',
         variant: 'text',
         size: 'small',
-        title: 'Edit'
+        titleKey: 'common.edit'
     },
     PUBLISH: {
         icon: ICONS.PUBLISH,
         color: 'info',
         variant: 'text',
         size: 'small',
-        title: 'Publish'
+        titleKey: 'common.publish'
     },
     REMOVE: {
         icon: ICONS.REMOVE,
         color: 'error',
         variant: 'text',
         size: 'small',
-        title: 'Remove'
+        titleKey: 'common.remove'
     },
     LOCK: {
         icon: ICONS.LOCK,
         color: 'warning',
         variant: 'text',
         size: 'small',
-        title: 'Lock'
+        titleKey: 'common.lock'
     },
     OPEN: {
         icon: ICONS.OPEN,
         color: 'primary',
         variant: 'text',
         size: 'small',
-        title: 'Open'
+        titleKey: 'common.open'
     },
     OPEN_SOURCE: {
         icon: ICONS.OPEN,
         color: 'primary',
         variant: 'text',
         size: 'small',
-        title: 'Open source'
+        titleKey: 'common.open_source'
     }
 })
 

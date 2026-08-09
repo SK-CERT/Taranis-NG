@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
+import { defineComponent, nextTick } from 'vue'
+import { useLocale } from 'vuetify'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import App from '@/App.vue'
 
@@ -70,6 +72,15 @@ vi.mock('@/stores/user', () => ({
 vi.mock('@/stores/settings', () => ({
     useSettingsStore: () => mockSettingsStore
 }))
+
+const LocaleProbe = defineComponent({
+    name: 'LocaleProbe',
+    setup() {
+        const { current, isRtl } = useLocale()
+        return { current, isRtl }
+    },
+    template: '<div class="locale-probe">{{ current }}:{{ isRtl }}</div>'
+})
 
 describe('App SSE boot flow', () => {
     let wrapper
@@ -255,5 +266,33 @@ describe('App SSE boot flow', () => {
             expect(mockConnect).toHaveBeenCalledTimes(1)
             expect(mockSubscribe).toHaveBeenCalledTimes(5)
         })
+    })
+
+    it('synchronizes runtime locale changes with document metadata and Vuetify direction', async () => {
+        wrapper = mountWithPlugins(App, {
+            global: {
+                stubs: {
+                    MainMenu: LocaleProbe,
+                    NotificationSnackbar: true
+                }
+            }
+        })
+        await flushPromises()
+
+        wrapper.vm.$i18n.locale = 'ar'
+        await nextTick()
+
+        expect(document.documentElement.lang).toBe('ar')
+        expect(document.documentElement.dir).toBe('rtl')
+        expect(wrapper.get('.locale-probe').text()).toBe('ar:true')
+
+        wrapper.vm.$i18n.locale = 'unsupported-locale'
+        await nextTick()
+        await nextTick()
+
+        expect(wrapper.vm.$i18n.locale).toBe('en')
+        expect(document.documentElement.lang).toBe('en')
+        expect(document.documentElement.dir).toBe('ltr')
+        expect(wrapper.get('.locale-probe').text()).toBe('en:false')
     })
 })

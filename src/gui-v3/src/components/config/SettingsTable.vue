@@ -87,7 +87,7 @@
                         <span
                             class="setting-label__text"
                             style="cursor: help"
-                            :title="`${t('settings.default_value')}: ${item.default_val}`"
+                            :title="formatDefaultValue(item.default_val)"
                         >
                             {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
                         </span>
@@ -204,7 +204,20 @@
     const editItem = ref<SettingsRecord | null>(null)
     const canEditSettings = computed(() => !props.globalSetting || checkPermission('CONFIG_SETTINGS_UPDATE'))
 
-    const maxCharsRule = (value: string | null | undefined): true | string => !value || value.length <= 150 || 'Input too long!'
+    const MAX_SETTING_VALUE_LENGTH = 150
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const LEFT_TO_RIGHT_ISOLATE = '\u2066'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+
+    const isolateAuto = (value: unknown): string => `${FIRST_STRONG_ISOLATE}${String(value ?? '')}${POP_DIRECTIONAL_ISOLATE}`
+    const isolateLtr = (value: unknown): string => `${LEFT_TO_RIGHT_ISOLATE}${String(value ?? '')}${POP_DIRECTIONAL_ISOLATE}`
+
+    const formatDefaultValue = (value?: string): string => t('settings.default_value_with_value', { value: isolateAuto(value) })
+
+    const maxCharsRule = (value: string | null | undefined): true | string =>
+        !value ||
+        value.length <= MAX_SETTING_VALUE_LENGTH ||
+        t('settings.input_too_long', { count: value.length, max: MAX_SETTING_VALUE_LENGTH })
 
     const headers = computed<HeaderEntry[]>(() => {
         const baseHeaders: HeaderEntry[] = [
@@ -261,7 +274,10 @@
         if (item.key === Settings.UI_LANGUAGE) {
             return supportedLocales.map((code) => ({
                 id: code,
-                txt: `${getLanguageName(code, undefined, true)} (${code})`
+                txt: t('settings.language_name_with_code', {
+                    name: isolateAuto(getLanguageName(code, undefined, true)),
+                    code: isolateLtr(code)
+                })
             }))
         }
 

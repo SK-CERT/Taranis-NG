@@ -33,7 +33,7 @@
 <script setup lang="ts">
     import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
-    import { useTheme } from 'vuetify'
+    import { useLocale, useTheme } from 'vuetify'
     import { useRouter } from 'vue-router'
     import { useAuthStore } from '@/stores/auth'
     import { useUserStore } from '@/stores/user'
@@ -43,8 +43,10 @@
     import { useSSE } from '@/composables/useSSE'
     import MainMenu from '@/components/MainMenu.vue'
     import NotificationSnackbar from '@/components/common/NotificationSnackbar.vue'
+    import { resolveLocale, synchronizeLocalePresentation } from '@/i18n'
 
     const { locale } = useI18n()
+    const vuetifyLocale = useLocale()
     const theme = useTheme()
     const router = useRouter()
     const route = computed(() => router.currentRoute?.value ?? { name: undefined, path: '' })
@@ -57,6 +59,18 @@
     const isAuth = computed(() => authStore.isAuthenticated)
     const showNavigation = computed(() => isAuth.value && route.value.name !== 'publish' && route.value.name !== 'dashboard')
     const isConfigurationRoute = computed(() => route.value.path === '/config' || route.value.path.startsWith('/config/'))
+
+    // vue-i18n and Vuetify keep separate locale state. Keep both, as well as the
+    // browser's language metadata and writing direction, aligned at runtime.
+    watch(
+        locale,
+        (candidate) => {
+            const activeLocale = resolveLocale(candidate)
+            synchronizeLocalePresentation(activeLocale, vuetifyLocale)
+            if (candidate !== activeLocale) locale.value = activeLocale
+        },
+        { immediate: true }
+    )
 
     // Watch theme changes and apply dark-mode/light-mode classes to HTML element.
     // These override the prefers-color-scheme CSS fallback once the user's preference is known.
@@ -337,9 +351,13 @@
     }
 
     .app-navigation {
-        border-right: 1px solid rgba(var(--v-theme-outline), 0.5) !important;
+        border-inline-end: 1px solid rgba(var(--v-theme-outline), 0.5) !important;
         background: var(--color-drawer-bg) !important;
         box-shadow: 2px 0 7px rgba(20, 42, 68, 0.08);
+
+        &:dir(rtl) {
+            box-shadow: -2px 0 7px rgba(20, 42, 68, 0.08);
+        }
     }
 
     .app-navigation .v-navigation-drawer__content {

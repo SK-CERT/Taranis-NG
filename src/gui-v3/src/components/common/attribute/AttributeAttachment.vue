@@ -60,18 +60,63 @@
                         :disabled="value.uploading"
                         @click="openDetails(value)"
                     >
-                        <span class="attachment-row__name">{{ attachmentName(value) }}</span>
-                        <span
+                        <bdi
+                            dir="auto"
+                            class="attachment-row__name"
+                            >{{ attachmentName(value) }}</bdi
+                        >
+                        <bdi
                             v-if="value.binary_description"
+                            dir="auto"
                             class="attachment-row__description"
                         >
                             {{ value.binary_description }}
-                        </span>
+                        </bdi>
                         <span class="attachment-row__meta">
-                            {{ value.binary_mime_type || value.file?.type || 'application/octet-stream' }}
-                            <template v-if="attachmentSize(value) > 0"> · {{ formatFileSize(attachmentSize(value)) }}</template>
-                            <template v-if="value.last_updated"> · {{ t('drop_zone.last_updated') }} {{ value.last_updated }}</template>
-                            <template v-if="value.user?.name"> · {{ value.user.name }}</template>
+                            <bdi
+                                dir="ltr"
+                                class="attachment-row__meta-item"
+                                >{{ value.binary_mime_type || value.file?.type || 'application/octet-stream' }}</bdi
+                            >
+                            <bdi
+                                v-if="attachmentSize(value) > 0"
+                                dir="ltr"
+                                class="attachment-row__meta-item"
+                                >{{ formatFileSize(attachmentSize(value)) }}</bdi
+                            >
+                            <i18n-t
+                                v-if="value.last_updated && value.user?.name"
+                                keypath="drop_zone.last_updated_by_at"
+                                tag="span"
+                                class="attachment-row__meta-item"
+                            >
+                                <template #user>
+                                    <bdi dir="auto">{{ value.user.name }}</bdi>
+                                </template>
+                                <template #date>
+                                    <bdi dir="auto">{{ formatAttachmentTimestamp(value.last_updated) }}</bdi>
+                                </template>
+                            </i18n-t>
+                            <i18n-t
+                                v-else-if="value.last_updated"
+                                keypath="drop_zone.last_updated_at"
+                                tag="span"
+                                class="attachment-row__meta-item"
+                            >
+                                <template #date>
+                                    <bdi dir="auto">{{ formatAttachmentTimestamp(value.last_updated) }}</bdi>
+                                </template>
+                            </i18n-t>
+                            <i18n-t
+                                v-else-if="value.user?.name"
+                                keypath="drop_zone.attachment_by"
+                                tag="span"
+                                class="attachment-row__meta-item"
+                            >
+                                <template #user>
+                                    <bdi dir="auto">{{ value.user.name }}</bdi>
+                                </template>
+                            </i18n-t>
                         </span>
                     </button>
 
@@ -134,7 +179,7 @@
             <v-card-title class="d-flex align-center">
                 <v-icon
                     color="primary"
-                    class="mr-2"
+                    class="me-2"
                 >
                     {{ ICONS.FILE_DOCUMENT }}
                 </v-icon>
@@ -142,7 +187,7 @@
             </v-card-title>
             <v-card-text>
                 <div class="text-body-2 font-weight-medium mb-3">
-                    {{ descriptionMode === 'new' ? currentPendingFile?.name : attachmentName(selectedValue) }}
+                    <bdi dir="auto">{{ descriptionMode === 'new' ? currentPendingFile?.name : attachmentName(selectedValue) }}</bdi>
                 </div>
                 <v-textarea
                     v-model="descriptionDraft"
@@ -187,7 +232,7 @@
         v-model="deleteDialog"
         @confirm="deleteSelectedAttachment"
     >
-        {{ attachmentName(selectedValue) }}
+        <bdi dir="auto">{{ attachmentName(selectedValue) }}</bdi>
     </ConfirmationDialog>
 </template>
 
@@ -195,6 +240,7 @@
     import { computed, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useSpellcheck } from '@/composables/useSpellcheck'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { ICONS } from '@/config/ui-constants'
     import AuthService from '@/services/auth_service'
     import Permissions from '@/services/auth/permissions'
@@ -250,6 +296,7 @@
     )
 
     const { t } = useI18n()
+    const { formatDateTime, formatFileSize } = useLocaleFormatters()
     const spellcheck = useSpellcheck()
     // Besides the field-editing helpers, this composable keeps the values synchronized when
     // another analyst uploads, updates, or deletes an attachment over SSE.
@@ -281,12 +328,7 @@
     const attachmentName = (value: AttachmentValue | null): string => value?.value || value?.file?.name || t('attribute.select_attachment')
     const attachmentSize = (value: AttachmentValue): number => Number(value.binary_size ?? value.file?.size ?? 0)
 
-    const formatFileSize = (bytes: number): string => {
-        if (!bytes) return '0 B'
-        const units = ['B', 'KB', 'MB', 'GB', 'TB']
-        const unit = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-        return `${parseFloat((bytes / Math.pow(1024, unit)).toFixed(2))} ${units[unit]}`
-    }
+    const formatAttachmentTimestamp = (value: string): string => formatDateTime(value) || value
 
     const openFilePicker = (): void => fileInput.value?.click()
 
@@ -491,7 +533,8 @@
         align-items: center;
         gap: 4px;
         min-height: 58px;
-        padding: 7px 8px 7px 12px;
+        padding-block: 7px;
+        padding-inline: 12px 8px;
         background: rgb(var(--v-theme-surface));
         border-top: 1px solid rgba(var(--v-border-color), 0.35);
     }
@@ -502,7 +545,7 @@
 
     .attachment-row__icon {
         flex: 0 0 auto;
-        margin-right: 6px;
+        margin-inline-end: 6px;
     }
 
     .attachment-row__details {
@@ -512,7 +555,7 @@
         min-width: 0;
         padding: 3px 6px;
         color: inherit;
-        text-align: left;
+        text-align: start;
         background: transparent;
         border: 0;
         cursor: pointer;
@@ -524,8 +567,7 @@
     }
 
     .attachment-row__name,
-    .attachment-row__description,
-    .attachment-row__meta {
+    .attachment-row__description {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -540,5 +582,16 @@
     .attachment-row__meta {
         color: rgba(var(--v-theme-on-surface), 0.66);
         font-size: 0.75rem;
+    }
+
+    .attachment-row__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.15rem 0.6rem;
+        align-items: baseline;
+    }
+
+    .attachment-row__meta-item {
+        min-width: 0;
     }
 </style>

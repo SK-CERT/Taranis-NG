@@ -28,7 +28,7 @@
             <template v-if="item">
                 <v-icon
                     :color="asStateItem(item).color"
-                    class="mr-2"
+                    class="me-2"
                 >
                     {{ asStateItem(item).icon }}
                 </v-icon>

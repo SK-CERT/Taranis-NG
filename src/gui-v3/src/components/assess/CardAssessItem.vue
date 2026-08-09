@@ -9,38 +9,63 @@
             <div class="text-label-small text-grey mb-2">
                 <v-row align="center">
                     <v-col cols="auto">
-                        {{ sourceLabel }}
+                        <i18n-t
+                            v-if="sourceType"
+                            keypath="card_item.source_with_type"
+                        >
+                            <template #source>
+                                <bdi dir="auto">{{ sourceName }}</bdi>
+                            </template>
+                            <template #type>
+                                <bdi dir="auto">{{ sourceType }}</bdi>
+                            </template>
+                        </i18n-t>
+                        <bdi
+                            v-else
+                            dir="auto"
+                            >{{ sourceName }}</bdi
+                        >
                     </v-col>
                     <v-spacer />
                     <v-col cols="auto">
-                        <strong>{{ t('card_item.published') }}:</strong>
-                        {{ publishedLabel }}
+                        <i18n-t keypath="card_item.published_at">
+                            <template #date>
+                                <bdi dir="auto">{{ publishedLabel }}</bdi>
+                            </template>
+                        </i18n-t>
                     </v-col>
                     <v-spacer />
                     <v-col cols="auto">
-                        <strong>{{ t('card_item.collected') }}:</strong>
-                        {{ collectedLabel }}
+                        <i18n-t keypath="card_item.collected_at">
+                            <template #date>
+                                <bdi dir="auto">{{ collectedLabel }}</bdi>
+                            </template>
+                        </i18n-t>
                     </v-col>
                 </v-row>
             </div>
 
             <h4 class="mb-2 child-title">
-                <HighlightedText
-                    :text="itemTitle"
-                    :words="highlightWords"
-                    :enabled="highlightWordlist"
-                />
+                <bdi dir="auto">
+                    <HighlightedText
+                        :text="itemTitle"
+                        :words="highlightWords"
+                        :enabled="highlightWordlist"
+                    />
+                </bdi>
             </h4>
 
             <p
                 v-if="!hideReviews && itemReview"
                 class="text-grey mb-3"
             >
-                <HighlightedText
-                    :text="itemReview"
-                    :words="highlightWords"
-                    :enabled="highlightWordlist"
-                />
+                <bdi dir="auto">
+                    <HighlightedText
+                        :text="itemReview"
+                        :words="highlightWords"
+                        :enabled="highlightWordlist"
+                    />
+                </bdi>
             </p>
 
             <v-row align="center">
@@ -52,7 +77,7 @@
                         v-if="!hideSourceLinks && itemLink"
                         class="text-label-small text-primary source-link"
                     >
-                        {{ itemLink }}
+                        <bdi dir="ltr">{{ itemLink }}</bdi>
                     </span>
                 </v-col>
 
@@ -82,6 +107,7 @@
     import BaseCard from '@/components/common/BaseCard.vue'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
     import HighlightedText from '@/components/common/HighlightedText.vue'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { Action, type ActionKey } from '@/types/actions'
 
     type NewsItemData = {
@@ -156,17 +182,16 @@
     }>()
 
     const { t } = useI18n()
-
+    const { formatDateTime } = useLocaleFormatters()
     const itemData = computed(() => props.newsItem.news_item_data || {})
 
-    const sourceLabel = computed(() => {
-        const source = itemData.value.osint_source_name || itemData.value.source || 'Unknown'
-        const sourceType = itemData.value.osint_source_type?.split(' ')[0]
-        return sourceType ? `${source} (${sourceType})` : source
-    })
-
-    const publishedLabel = computed(() => itemData.value.published || 'N/A')
-    const collectedLabel = computed(() => itemData.value.collected || props.newsItem.created || 'N/A')
+    const sourceName = computed(() => itemData.value.osint_source_name || itemData.value.source || t('card_item.unknown_source'))
+    const sourceType = computed(() => itemData.value.osint_source_type?.split(' ')[0] || '')
+    const publishedDate = computed(() => itemData.value.published || '')
+    const formatDisplayDate = (value: string): string => (value ? formatDateTime(value) || value : t('card_item.not_available'))
+    const publishedLabel = computed(() => formatDisplayDate(publishedDate.value))
+    const collectedDate = computed(() => itemData.value.collected || props.newsItem.created || '')
+    const collectedLabel = computed(() => formatDisplayDate(collectedDate.value))
     const itemTitle = computed(() => itemData.value.title || props.newsItem.title || '')
     const itemReview = computed(() => itemData.value.review || props.newsItem.description || '')
     const itemLink = computed(() => itemData.value.link || '')
@@ -177,7 +202,7 @@
         title: itemTitle.value,
         description: itemReview.value,
         comments: props.newsItem.comments || '',
-        created: collectedLabel.value,
+        created: collectedDate.value || 'N/A',
         read: Boolean(props.newsItem.read),
         important: Boolean(props.newsItem.important),
         likes: Number(props.newsItem.likes || 0),

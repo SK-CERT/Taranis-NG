@@ -21,15 +21,29 @@
 
                     <div class="product-card__content">
                         <div class="product-card__meta-row">
-                            <span class="product-card__type">{{ card.product_type_name }}</span>
+                            <span class="product-card__type"
+                                ><bdi dir="auto">{{ card.product_type_name }}</bdi></span
+                            >
                             <span class="product-card__updated">
-                                <v-icon size="14">mdi-clock-outline</v-icon>
-                                {{ t('card_item.updated') }} {{ card.updated_at }}
-                                <span v-if="card.updated_by">· {{ card.updated_by }}</span>
+                                <v-icon
+                                    size="14"
+                                    aria-hidden="true"
+                                    >mdi-clock-outline</v-icon
+                                >
+                                <i18n-t :keypath="card.updated_by ? 'publish.updated_at_by' : 'publish.updated_at'">
+                                    <template #date>
+                                        <bdi :dir="updatedAtDisplay.direction">{{ updatedAtDisplay.text }}</bdi>
+                                    </template>
+                                    <template #user>
+                                        <bdi dir="auto">{{ card.updated_by }}</bdi>
+                                    </template>
+                                </i18n-t>
                             </span>
                         </div>
 
-                        <h2 class="product-card__title">{{ card.title }}</h2>
+                        <h2 class="product-card__title">
+                            <bdi dir="auto">{{ card.title }}</bdi>
+                        </h2>
 
                         <div class="product-card__details">
                             <v-chip
@@ -37,7 +51,7 @@
                                 :color="card.state.color"
                                 variant="tonal"
                                 size="small"
-                                :title="card.state.description"
+                                :title="isolateBidi(card.state.description)"
                                 class="product-card__state"
                             >
                                 <v-icon
@@ -47,27 +61,34 @@
                                 >
                                     {{ card.state.icon }}
                                 </v-icon>
-                                {{
-                                    $te('workflow.states.' + card.state.display_name)
-                                        ? $t('workflow.states.' + card.state.display_name)
-                                        : card.state.display_name
-                                }}
+                                <bdi dir="auto">
+                                    {{
+                                        $te('workflow.states.' + card.state.display_name)
+                                            ? $t('workflow.states.' + card.state.display_name)
+                                            : card.state.display_name
+                                    }}
+                                </bdi>
                             </v-chip>
 
                             <span
                                 v-if="card.report_items_count"
                                 class="product-card__report-count"
-                                :title="t('nav_menu.report_items')"
+                                :title="reportItemsCountMessage"
                             >
-                                <v-icon size="15">mdi-file-document-multiple-outline</v-icon>
-                                {{ card.report_items_count }}
+                                <span class="d-sr-only">{{ reportItemsCountMessage }}</span>
+                                <v-icon
+                                    size="15"
+                                    aria-hidden="true"
+                                    >mdi-file-document-multiple-outline</v-icon
+                                >
+                                <span aria-hidden="true">{{ formatNumber(reportItemsCount) }}</span>
                             </span>
 
                             <span
                                 v-if="card.subtitle"
                                 class="product-card__subtitle"
                             >
-                                {{ card.subtitle }}
+                                <bdi dir="auto">{{ card.subtitle }}</bdi>
                             </span>
                         </div>
                     </div>
@@ -90,10 +111,11 @@
         <!-- Delete Confirmation Dialog -->
         <ConfirmationDialog
             v-model="showDeleteDialog"
-            :message="card.title || ''"
             max-width="500px"
             @confirm="handleDelete"
-        />
+        >
+            <bdi dir="auto">{{ card.title || '' }}</bdi>
+        </ConfirmationDialog>
     </div>
 </template>
 
@@ -107,6 +129,7 @@
     import BaseCard from '@/components/common/BaseCard.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type ProductCard = {
         id: number | string
@@ -142,10 +165,23 @@
     )
 
     const { t } = useI18n()
+    const { formatDateTime, formatNumber } = useLocaleFormatters()
     const publishStore = usePublishStore()
     const { checkPermission } = useAuth()
+    const isolateBidi = (value?: string): string => (value ? `\u2068${value}\u2069` : '')
 
     const showDeleteDialog = ref<boolean>(false)
+    const reportItemsCount = computed(() => Number(props.card.report_items_count ?? 0))
+    const reportItemsCountMessage = computed(() =>
+        t('publish.report_items_count', { count: formatNumber(reportItemsCount.value) }, reportItemsCount.value)
+    )
+    const updatedAtDisplay = computed<{ text: string; direction: 'ltr' | 'auto' }>(() => {
+        const rawValue = props.card.updated_at == null ? '' : String(props.card.updated_at)
+        if (!rawValue) return { text: '', direction: 'auto' }
+
+        const formattedValue = formatDateTime(rawValue)
+        return formattedValue ? { text: formattedValue, direction: 'auto' } : { text: rawValue, direction: 'auto' }
+    })
 
     const multiSelectActive = computed(() => publishStore.getMultiSelect)
 

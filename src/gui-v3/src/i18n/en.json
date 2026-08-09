@@ -14,7 +14,7 @@
             "organizations": "Organizations",
             "roles": "Roles",
             "permissions": "Permissions",
-            "total_count": "User count",
+            "total_count": "{count} user | {count} users",
             "password": "Password",
             "password_check": "Retype Password",
             "password_mismatch": "Passwords do not match",
@@ -65,7 +65,7 @@
             "removed_error": "Role is in use and could not be deleted",
             "title": "Title",
             "permissions": "Permissions",
-            "total_count": "Role count"
+            "total_count": "{count} role | {count} roles"
         },
         "acls": {
             "tab_description": "Here you can manage access control lists (ACLs).",
@@ -87,7 +87,7 @@
             "removed_error": "ACL is in use and could not be deleted",
             "roles": "Roles",
             "users": "Users",
-            "total_count": "ACLs count"
+            "total_count": "{count} ACL | {count} ACLs"
         },
         "organizations": {
             "tab_description": "Here you can manage organizations.",
@@ -107,7 +107,7 @@
             "successful_edit": "Organization was successfully updated",
             "removed": "Organization was successfully deleted",
             "removed_error": "Organization is in use and could not be deleted",
-            "total_count": "Organization count"
+            "total_count": "{count} organization | {count} organizations"
         },
         "security": {
             "tab_description": "Here you can configure site-wide security settings.",
@@ -213,7 +213,9 @@
     "user_menu": {
         "settings": "Settings",
         "logout": "Logout",
-        "security": "Security"
+        "security": "Security",
+        "unknown_user": "Unknown user",
+        "no_organization": "No organization"
     },
     "main_menu": {
         "enter": "Enter",
@@ -227,10 +229,17 @@
     "dashboard": {
         "subtitle": "Your operational intelligence workspace",
         "refresh": "Refresh dashboard",
+        "metrics": {
+            "news_items_summary": "No news items | {count} news item in total | {count} news items in total",
+            "report_items_summary": "No report items | {count} report item in total | {count} report items in total",
+            "products_summary": "No products | {count} product in total | {count} products in total"
+        },
         "assess": {
             "trending": "Trending intelligence",
             "tagcloud": "Tagcloud for latest collected news items",
-            "total": "news items in total"
+            "total": "news items in total",
+            "ingestion_chart": "News-item ingestion for {period}",
+            "ingestion_point": "No news items on {date} | {count} news item on {date} | {count} news items on {date}"
         },
         "collect": {
             "title": "Collectors",
@@ -253,8 +262,14 @@
             "title": "About",
             "version": "Version",
             "commit": "Commit",
-            "total": "records in total"
+            "total": "records in total",
+            "built_at": "Built {date}",
+            "committed_at": "Committed {date}"
         }
+    },
+    "word_cloud": {
+        "label": "Word cloud",
+        "word_action_count": "{action} {word}: no results | {action} {word}: {count} result | {action} {word}: {count} results"
     },
     "nav_menu": {
         "enter": "Create news item",
@@ -317,14 +332,8 @@
     "card_item": {
         "title": "Title",
         "created": "Created",
-        "updated": "Updated",
-        "collected": "Collected",
-        "published": "Published",
-        "source": "Source",
         "node": "Node",
         "description": "Description",
-        "in_analyze": "Analysis in progress",
-        "analyzed": "Analyzed",
         "url": "URL",
         "name": "Name",
         "username": "Username",
@@ -332,7 +341,18 @@
         "last_seen": "Last Seen",
         "last_attempted": "Last Attempt",
         "last_collected": "Last Collected",
-        "last_error": "Last Error"
+        "last_error": "Last Error",
+        "source_with_type": "{source} ({type})",
+        "source_with_value": "Source: {source}",
+        "author_with_value": "Author: {author}",
+        "published_at": "Published: {date}",
+        "collected_at": "Collected: {date}",
+        "link_with_url": "Link: {url}",
+        "unknown_source": "Unknown source",
+        "not_available": "Not available",
+        "aggregated_items_count": "No aggregated news items | {count} aggregated news item | {count} aggregated news items",
+        "in_analyze_count": "No analyses in progress | {count} analysis in progress | {count} analyses in progress",
+        "analyzed_count": "No completed analyses | {count} completed analysis | {count} completed analyses"
     },
     "attribute": {
         "add_constant": "Add constant",
@@ -385,10 +405,22 @@
         "ai_provider": "AI model",
         "ai_prompt": "AI Prompt",
         "add_attribute": "Add Attribute",
-        "edit_attribute": "Edit Attribute"
+        "edit_attribute": "Edit Attribute",
+        "binary_description_with_details": "{description} — {details}",
+        "cvss_vector_score": "CVSS vector and score",
+        "last_updated_at": "Last updated at {date}",
+        "updated_by_user": "Updated by {user}",
+        "tlp_description_clear": "Disclosure is not limited.",
+        "tlp_description_green": "Limited disclosure within the community.",
+        "tlp_description_amber": "Limited disclosure within the recipient's organization and its clients on a need-to-know basis.",
+        "tlp_description_amber_strict": "Limited disclosure to the recipient's organization only.",
+        "tlp_description_red": "Not for disclosure beyond the individual recipients.",
+        "tlp_description_unknown": "Unknown TLP marking."
     },
     "cvss_calculator": {
         "title": "CVSS Calculator",
+        "tooltips": "Show metric tooltips",
+        "vector_placeholder": "CVSS vector, for example CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
         "base_score": "Base Score",
         "attack_vector": "Attack Vector (AV)",
         "attack_complexity": "Attack Complexity (AC)",
@@ -503,7 +535,7 @@
         "UI_Heading": "This metric captures the requirement for a user, other than the attacker, to participate in the successful compromise the vulnerable component. This metric determines whether the vulnerability can be exploited solely at the will of the attacker, or whether a separate user (or user-initiated process) must participate in some manner.",
         "UI_N_Label": "The vulnerable system can be exploited without any interaction from any user.",
         "UI_R_Label": "Successful exploitation of this vulnerability requires a user to take some action before the vulnerability can be exploited.",
-        "S_Heading": "Does a successful attack impact a component other than the vulnerable component? If so, the Base Score increases and the Confidentiality, Integrity and Authentication metrics should be scored relative to the impacted component.",
+        "S_Heading": "Does a successful attack impact a component other than the vulnerable component? If so, the Base Score increases and the Confidentiality, Integrity and Availability metrics should be scored relative to the impacted component.",
         "S_U_Label": "An exploited vulnerability can only affect resources managed by the same security authority. In this case, the vulnerable component and the impacted component are either the same, or both are managed by the same security authority.",
         "S_C_Label": "An exploited vulnerability can affect resources beyond the security scope managed by the security authority of the vulnerable component. In this case, the vulnerable component and the impacted component are different and managed by different security authorities.",
         "C_Heading": "This metric measures the impact to the confidentiality of the information resources managed by a software component due to a successfully exploited vulnerability. Confidentiality refers to limiting information access and disclosure to only authorized users, as well as preventing access by, or disclosure to, unauthorized ones.",
@@ -571,7 +603,7 @@
         "MUI_X_Label": "The value assigned to the corresponding Base metric is used.",
         "MUI_N_Label": "The vulnerable system can be exploited without any interaction from any user.",
         "MUI_R_Label": "Successful exploitation of this vulnerability requires a user to take some action before the vulnerability can be exploited.",
-        "MS_Heading": "Does a successful attack impact a component other than the vulnerable component? If so, the Base Score increases and the Confidentiality, Integrity and Authentication metrics should be scored relative to the impacted component.",
+        "MS_Heading": "Does a successful attack impact a component other than the vulnerable component? If so, the Base Score increases and the Confidentiality, Integrity and Availability metrics should be scored relative to the impacted component.",
         "MS_X_Label": "The value assigned to the corresponding Base metric is used.",
         "MS_U_Label": "An exploited vulnerability can only affect resources managed by the same security authority. In this case, the vulnerable component and the impacted component are either the same, or both are managed by the same security authority.",
         "MS_C_Label": "An exploited vulnerability can affect resources beyond the security scope managed by the security authority of the vulnerable component. In this case, the vulnerable component and the impacted component are different and managed by different security authorities.",
@@ -682,7 +714,7 @@
         "MSA_N_Label": "There is no impact to availability within the subsequent system."
     },
     "report_item": {
-        "id": "ID",
+        "id_with_value": "ID: {id}",
         "add_new": "Create new report item",
         "edit": "Edit report item",
         "read": "Report item preview",
@@ -704,6 +736,7 @@
         "attributes": "Attributes",
         "no_attributes": "No attributes available",
         "side_by_side": "Side-by-side view",
+        "enter_rich_text": "Enter rich text",
         "confirm_close": {
             "message": "You have unsaved changes. Are you sure you want to close this report item?"
         },
@@ -752,13 +785,15 @@
         "publish": "Publish product",
         "publish_confirmation": "Are you sure you want to publish following product?",
         "publish_confirmation_message": "Do you really want to publish this product?",
+        "publish_confirmation_type": "Product type: {type}",
+        "publish_confirmation_publishers": "Publishers: {publishers}",
         "no_type": "No type selected",
         "no_publisher_in_dialog": "None",
         "publish_successful": "Product was successfully published",
         "publish_failed": "Failed to publish product",
         "publish_error": "An error occurred while publishing the product",
         "no_publisher_selected": "Please select at least one publisher",
-        "total_count": "Products count",
+        "total_count": "{count} product | {count} products",
         "confirm_close": {
             "message": "You have unsaved changes. Are you sure you want to close this product without saving your changes?"
         },
@@ -782,8 +817,12 @@
         "sort": "Sort by",
         "from": "From",
         "to": "To",
-        "total_count": "Report item count",
+        "total_count": "{count} report item | {count} report items",
         "no_items": "No report items found",
+        "updated_at": "Updated {date}",
+        "updated_at_by": "Updated {date} by {user}",
+        "title_with_prefix": "{prefix} — {title}",
+        "news_items_count": "No news items | {count} news item | {count} news items",
         "tooltip": {
             "filter_all": "Currently showing: all",
             "filter_completed": "Currently showing: completed",
@@ -812,7 +851,7 @@
             "remove_item": "Remove report item",
             "publish_item": "Create product from report item"
         },
-        "select_all_success": "Selected {count} report item(s)",
+        "select_all_success": "Selected {count} report item | Selected {count} report items",
         "select": {
             "placeholder": "I want to analyze...",
             "option_news_items": "selected news items",
@@ -823,11 +862,7 @@
     },
     "assess": {
         "source": "Source",
-        "link": "Link",
         "comments": "Comments",
-        "collected": "Collected",
-        "published": "Published",
-        "author": "Author",
         "add_news_item": "Add News Items",
         "attached_news_items": "Attached News Items",
         "read_news_item": "Click to read",
@@ -841,8 +876,8 @@
         "auto_save_blur": "Auto-saves on blur",
         "auto_save_changes": "Auto-saves on changes",
         "download": "Download",
-        "total_count": "News item count",
-        "selected_count": "Selected news item count",
+        "total_count": "{count} news item | {count} news items",
+        "selected_count": "{count} news item selected | {count} news items selected",
         "no_items": "No news items found",
         "item_updated": "News item updated successfully",
         "item_deleted": "News item deleted successfully",
@@ -916,11 +951,14 @@
             "error_loading": "Error loading reports",
             "error_removing": "Error removing report from aggregate"
         },
-        "select_all_success": "Selected {count} news item(s)",
+        "select_all_success": "Selected {count} news item | Selected {count} news items",
         "groups": "GROUPS",
-        "show_new_items": "Show new items ({count})"
+        "show_new_items": "Show {count} new item | Show {count} new items"
     },
     "publish": {
+        "updated_at": "Updated {date}",
+        "updated_at_by": "Updated {date} by {user}",
+        "report_items_count": "No report items | {count} report item | {count} report items",
         "tooltip": {
             "filter_all": "Currently showing: all",
             "filter_published": "Currently showing: published",
@@ -946,7 +984,7 @@
             "delete_items": "Delete products",
             "delete_item": "Delete product"
         },
-        "select_all_success": "Selected {count} product(s)",
+        "select_all_success": "Selected {count} product | Selected {count} products",
         "no_items": "No products found"
     },
     "toolbar_filter": {
@@ -958,9 +996,9 @@
         "last_7_days": "Last 7 Days",
         "last_31_days": "Last 31 Days",
         "custom_filter": "Custom Filter",
-        "total_count": "Total count",
-        "currently_showing": "Currently showing",
-        "selected_count": "Selected count",
+        "total_count": "{count} item in total | {count} items in total",
+        "currently_showing": "Currently showing {count} item | Currently showing {count} items",
+        "selected_count": "{count} item selected | {count} items selected",
         "tooltip": {
             "sort": {
                 "date": {
@@ -991,7 +1029,7 @@
         "like_item": "Like Item",
         "unlike_item": "Unlike Item",
         "delete_item": "Delete Item",
-        "press_key": "Press new key for ",
+        "press_key_for": "Press a new key for {action}",
         "selection": "Selection",
         "group": "Group",
         "ungroup": "Ungroup",
@@ -1016,7 +1054,9 @@
         "boolean_error": "Value must be either 'True' or 'False'!",
         "integer_error": "Value must be a valid integer!",
         "decimal_error": "Value must be a valid decimal number!",
-        "default_value": "Default value",
+        "default_value_with_value": "Default value: {value}",
+        "input_too_long": "The value is {count} characters long; the maximum is {max}.",
+        "language_name_with_code": "{name} ({code})",
         "update_value": "Update value",
         "description": "Description",
         "value": "Value",
@@ -1105,7 +1145,9 @@
     "drop_zone": {
         "default_message": "Drag files here or click to select",
         "file_description": "Description",
-        "last_updated": "Last updated",
+        "last_updated_by_at": "Last updated by {user} at {date}",
+        "last_updated_at": "Last updated at {date}",
+        "attachment_by": "Attached by {user}",
         "download": "Download",
         "attachment_load": "Load Attachment",
         "attachment_detail": "Attachment Detail"
@@ -1137,15 +1179,21 @@
         "add": "Add",
         "add_btn": "Add New",
         "add_new": "Add New",
-        "add_items": "Add item(s)",
+        "add_items": "Add items",
         "attributes": "Attributes",
         "save": "Save",
         "edit": "Edit",
+        "edit_named": "Edit {title}",
+        "select": "Select",
         "done": "Done",
         "up": "Move Up",
         "down": "Move Down",
         "remove": "Remove",
         "delete": "Delete",
+        "publish": "Publish",
+        "lock": "Lock",
+        "open": "Open",
+        "open_source": "Open source",
         "download": "Download",
         "yes": "Yes",
         "no": "No",
@@ -1165,6 +1213,12 @@
         "no_permission": "You do not have permission to perform this action",
         "loading_more": "Loading more items...",
         "end_of_list": "End of list",
+        "fetching_items": "Fetching items…",
+        "no_items_to_select": "There are no items to select.",
+        "select_at_least_two_to_group": "Select at least two items to create a group.",
+        "no_grouped_items_selected": "Select at least one grouped item to ungroup.",
+        "processing_items": "Processing {count} item… | Processing {count} items…",
+        "deleting_items": "Deleting {count} item… | Deleting {count} items…",
         "messagebox": {
             "delete": "Are you sure you want to delete following item?",
             "delete_confirm": "Are you sure you want to delete \"{name}\"?",
@@ -1192,7 +1246,7 @@
             "removed_error": "OSINT source group is in use and could not be deleted",
             "title": "Title",
             "osint_sources": "OSINT Sources",
-            "total_count": "OSINT Source Group count",
+            "total_count": "{count} OSINT source group | {count} OSINT source groups",
             "default_group": "Uncategorized",
             "default_group_description": "Default group for uncategorized OSINT sources",
             "all": "All Sources"
@@ -1216,7 +1270,7 @@
             "removed_error": "OSINT source is in use and could not be deleted",
             "filter_wordlist": "Wordlist filter",
             "type": "Type",
-            "total_count": "OSINT Sources count",
+            "total_count": "{count} OSINT source | {count} OSINT sources",
             "osint_source_groups": "OSINT Source Groups",
             "tooltip": {
                 "select_all": "Select All",
@@ -1239,7 +1293,7 @@
             "node_required": "Select a collectors node",
             "export_all_hint": "Export all sources",
             "export_selected_hint": "Export selected sources",
-            "selected_count": "{count} selected"
+            "selected_count": "{count} OSINT source selected | {count} OSINT sources selected"
         },
         "nodes": {
             "tab_description": "Here you can manage collector nodes.",
@@ -1254,7 +1308,7 @@
             "successful_edit": "Collectors node was successfully updated",
             "removed": "Collectors node was successfully deleted",
             "removed_error": "Collectors node is in use and could not be deleted",
-            "total_count": "Collectors node count"
+            "total_count": "{count} collector node | {count} collector nodes"
         }
     },
     "presenters": {
@@ -1273,7 +1327,7 @@
             "successful_edit": "Presenters node was successfully updated",
             "removed": "Presenters node was successfully deleted",
             "removed_error": "Presenters node is in use and could not be deleted",
-            "total_count": "Presenters node count"
+            "total_count": "{count} presenter node | {count} presenter nodes"
         },
         "types": {
             "tab_description": "Here you can manage product types.",
@@ -1289,7 +1343,7 @@
             "successful_edit": "Product type was successfully updated",
             "removed": "Product type was successfully deleted",
             "removed_error": "Product type is in use and could not be deleted",
-            "total_count": "Product types count",
+            "total_count": "{count} product type | {count} product types",
             "help": "Template parameters description",
             "close": "Close",
             "choose_report_type": "Choose report type to show its parameters description",
@@ -1328,7 +1382,7 @@
             "successful_edit": "Publishers node was successfully updated",
             "removed": "Publishers node was successfully deleted",
             "removed_error": "Publishers node is in use and could not be deleted",
-            "total_count": "Publishers node count"
+            "total_count": "{count} publisher node | {count} publisher nodes"
         },
         "presets": {
             "tab_description": "Here you can manage publisher presets.",
@@ -1345,7 +1399,7 @@
             "successful_edit": "Publisher preset was successfully updated",
             "removed": "Publisher preset was successfully deleted",
             "removed_error": "Publisher preset is in use and could not be deleted",
-            "total_count": "Publisher preset count"
+            "total_count": "{count} publisher preset | {count} publisher presets"
         }
     },
     "bots": {
@@ -1364,7 +1418,7 @@
             "successful_edit": "Bot node was successfully updated",
             "removed": "Bots node was successfully deleted",
             "removed_error": "Bot node is in use and could not be deleted",
-            "total_count": "Bots node count"
+            "total_count": "{count} bot node | {count} bot nodes"
         },
         "presets": {
             "tab_description": "Here you can manage bot presets.",
@@ -1380,7 +1434,7 @@
             "successful_edit": "Bot preset was successfully updated",
             "removed": "Bot preset was successfully deleted",
             "removed_error": "Bot preset is in use and could not be deleted",
-            "total_count": "Bot preset count"
+            "total_count": "{count} bot preset | {count} bot presets"
         }
     },
     "remote": {
@@ -1398,7 +1452,7 @@
             "removed_error": "Remote access is in use and could not be deleted",
             "osint_sources": "OSINT Sources to share",
             "report_item_types": "Report Item Types to share",
-            "total_count": "Remote accesses count"
+            "total_count": "{count} remote access | {count} remote accesses"
         },
         "nodes": {
             "tab_description": "Here you can manage remote nodes.",
@@ -1420,7 +1474,7 @@
             "successful_edit": "Remote node was successfully updated",
             "removed": "Remote node was successfully deleted",
             "removed_error": "Remote node is in use and could not be deleted",
-            "total_count": "Remote node count"
+            "total_count": "{count} remote node | {count} remote nodes"
         }
     },
     "data_providers": {
@@ -1438,7 +1492,7 @@
             "error": "Could not save this data provider",
             "remove": "Data provider was successfully deleted",
             "removed_error": "Data provider is in use and could not be deleted",
-            "total_count": "Data providers count"
+            "total_count": "{count} data provider | {count} data providers"
         },
         "ai": {
             "tab_description": "Here you can manage AI providers.",
@@ -1481,11 +1535,13 @@
         "no_categories": "No categories yet",
         "add_category_hint": "Add a category to start building this word list",
         "link_hint": "Optional URL for downloading word entries",
-        "total_count": "Word lists count",
+        "total_count": "{count} word list | {count} word lists",
         "file_has_header": "File has header",
         "import_from_csv": "Import from CSV",
         "load_csv_file": "Load CSV file",
         "download_from_link": "Download from URL",
+        "download_error": "Could not download the word list from the URL.",
+        "import_error": "Could not import the word-list file.",
         "import": "Import",
         "close": "Close",
         "delete_existing_words": "Delete existing words",
@@ -1506,7 +1562,7 @@
             "successful_edit": "Report item type was successfully updated",
             "removed_error": "Report item type is in use and could not be deleted",
             "removed": "Report item type was successfully deleted",
-            "total_count": "Report type count"
+            "total_count": "{count} report type | {count} report types"
         },
         "attributes": {
             "tab_description": "Here you can manage attributes.",
@@ -1524,7 +1580,7 @@
             "edit_constant": "Edit Constant",
             "value": "Value",
             "error": "Could not create this attribute",
-            "total_count": "Attributes count"
+            "total_count": "{count} attribute | {count} attributes"
         }
     },
     "external_user": {
@@ -1543,7 +1599,7 @@
         "load_error": "Could not load external users or permissions",
         "successful": "External user was successfully added",
         "successful_edit": "External user was successfully updated",
-        "total_count": "External user count",
+        "total_count": "{count} external user | {count} external users",
         "removed": "External user was deleted",
         "removed_error": "Could not delete the external user"
     },
@@ -1573,7 +1629,7 @@
         "successful_edit": "Asset group was successfully updated",
         "removed": "Asset group was successfully deleted",
         "removed_error": "Asset group is in use and could not be deleted",
-        "total_count": "Asset group count"
+        "total_count": "{count} asset group | {count} asset groups"
     },
     "notification_template": {
         "add_new": "Add new notification template",
@@ -1594,7 +1650,7 @@
         "successful_edit": "Notification template was successfully updated",
         "removed": "Notification template was successfully deleted",
         "removed_error": "Notification template is in use and could not be deleted",
-        "total_count": "Notification template count"
+        "total_count": "{count} notification template | {count} notification templates"
     },
     "asset": {
         "add": "Add Asset",
@@ -1614,13 +1670,15 @@
         "value": "Value",
         "vulnerable": "Vulnerable",
         "total": "Total",
-        "total_count": "Asset count",
+        "total_count": "{count} asset | {count} assets",
         "successful": "New asset was successfully added",
         "successful_edit": "Asset was successfully updated",
         "removed": "Asset was successfully deleted",
         "removed_error": "Asset is in use and could not be deleted",
         "vulnerabilities": "Vulnerabilities",
-        "vulnerabilities_count": "Vulnerabilities: ",
+        "serial_with_value": "Serial number: {value}",
+        "cpe_count": "No CPE codes | {count} CPE code | {count} CPE codes",
+        "vulnerabilities_count": "No vulnerabilities | {count} vulnerability | {count} vulnerabilities",
         "no_vulnerabilities": "No vulnerabilities",
         "sort": {
             "alphabetical": "Alphabetical",
@@ -1644,7 +1702,7 @@
     },
     "auth_provider": {
         "id": "ID",
-        "total_count": "Login methods count: ",
+        "total_count": "{count} login method | {count} login methods",
         "add_new": "Add new login method",
         "edit": "Edit login method",
         "name": "Name",
@@ -1739,7 +1797,7 @@
         "removed": "Login method was removed.",
         "remove_error": "Could not remove this login method.",
         "delete_message": "{name}",
-        "delete_message_linked": "{name} - {count} linked user identities will lose this login method",
+        "delete_message_linked": "{name}: {count} linked user identity will lose this login method | {name}: {count} linked user identities will lose this login method",
         "tab_description": "Here you can manage the login methods (identity providers).",
         "idp_sso_url": "IdP SSO URL",
         "idp_sso_url_hint": "HTTP-Redirect binding endpoint of the identity provider",
@@ -1761,12 +1819,13 @@
         "saml_tab_general": "General",
         "saml_tab_service_information": "Service information",
         "saml_tab_sp_keypair": "SP keypair",
-        "saml_metadata_url": "SP metadata URL",
-        "saml_acs_url": "Assertion Consumer Service (ACS) URL",
+        "saml_metadata_url_with_url": "SP metadata URL: {url}",
+        "saml_acs_url_with_url": "Assertion Consumer Service (ACS) URL: {url}",
+        "saml_disco_url_with_url": "Discovery response URL: {url}",
         "idp_metadata": "IdP metadata (URL or XML)",
         "idp_metadata_hint": "Paste the identity provider's metadata URL or the XML itself and press Load - the entity ID, SSO URL and signing certificate are filled in from it.",
         "idp_metadata_load": "Load",
-        "idp_metadata_loaded": "Loaded from the metadata ({count} signing certificate(s)). Review the fields below and save.",
+        "idp_metadata_loaded": "Loaded from the metadata with {count} signing certificate. Review the fields below and save. | Loaded from the metadata with {count} signing certificates. Review the fields below and save.",
         "idp_metadata_error": "The metadata could not be read.",
         "sp_keypair": "Service provider keypair",
         "sp_keypair_stored": "key stored",
@@ -1793,9 +1852,8 @@
         "federation_metadata_cert": "Federation metadata signing certificate (PEM)",
         "federation_metadata_cert_hint": "The trust anchor: the federation's metadata is only trusted when its signature verifies against this certificate. Obtain it out of band from the federation operator and cross-check its fingerprint.",
         "federation_verify": "Verify federation",
-        "federation_verify_result": "Verified. {count} usable identity provider(s) found.",
+        "federation_verify_result": "Verified. {count} usable identity provider found. | Verified. {count} usable identity providers found.",
         "federation_verify_error": "The federation metadata could not be verified.",
-        "saml_disco_url": "Discovery response URL",
         "sp_metadata_info": "Service information (for federation registration)",
         "sp_metadata_info_hint": "Published in the SP metadata. A federation typically requires the organization, contact and display name to accept the registration; they are also what users see at the discovery service.",
         "sp_display_name": "Service display name",
@@ -1824,6 +1882,7 @@
         "totp_hint": "Require a one-time code from an authenticator app at login.",
         "totp_enable": "Enable",
         "totp_scan": "Scan the QR code with your authenticator app and confirm with a code.",
+        "totp_qr_alt": "QR code for authenticator-app enrollment",
         "totp_code": "Authentication code",
         "totp_activate": "Activate",
         "totp_disable": "Disable",
@@ -1832,6 +1891,7 @@
         "passkeys_title": "Passkeys",
         "passkey_add": "Add passkey",
         "passkey_name": "Name",
+        "default_passkey_name": "Passkey",
         "passkey_created": "Created",
         "passkey_last_used": "Last used",
         "passkey_added": "Passkey registered.",

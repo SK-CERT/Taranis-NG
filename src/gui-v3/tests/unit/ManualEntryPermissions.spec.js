@@ -160,6 +160,40 @@ describe('manual news entry permissions', () => {
         expect(wrapper.emitted('update:modelValue')).toContainEqual([false])
     })
 
+    it('keeps manual-entry timestamps in the fixed backend transport format', async () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2026, 7, 9, 20, 31))
+        const assessApi = await import('@/api/assess')
+        const wrapper = mountManualEntryDialog()
+
+        try {
+            wrapper.findComponent({ name: 'DialogToolbar' }).vm.$emit('save')
+            await flushPromises()
+
+            expect(assessApi.addNewsItem).toHaveBeenCalledOnce()
+            expect(assessApi.addNewsItem.mock.calls[0][0]).toMatchObject({
+                collected: '09.08.2026 - 20:31',
+                published: '09.08.2026 - 20:31'
+            })
+            expect(wrapper.emitted('news-item-added')).toEqual([[]])
+        } finally {
+            wrapper.unmount()
+            vi.clearAllTimers()
+            vi.useRealTimers()
+        }
+    })
+
+    it('gives human text and URL fields explicit writing directions', () => {
+        const wrapper = mountManualEntryDialog()
+
+        try {
+            expect(wrapper.findAll('input').map((field) => field.attributes('dir'))).toEqual(['auto', 'auto', 'ltr'])
+            expect(wrapper.findAll('textarea').map((field) => field.attributes('dir'))).toEqual(['auto'])
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
     it('keeps the manual-entry dialog available without rendering Assess data for create-only users', async () => {
         authState.permissions = new Set(['ASSESS_CREATE'])
         const wrapper = await mountAssessView()

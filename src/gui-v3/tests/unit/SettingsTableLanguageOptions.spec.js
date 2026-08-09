@@ -15,7 +15,7 @@ const { settingsStore } = vi.hoisted(() => ({
 }))
 
 vi.mock('@/i18n', () => ({
-    supportedLocales: ['en', 'de', 'pt-BR']
+    supportedLocales: ['ar', 'de', 'en', 'pt-BR']
 }))
 
 vi.mock('@/stores/settings', () => ({
@@ -24,7 +24,12 @@ vi.mock('@/stores/settings', () => ({
 
 vi.mock('vue-i18n', () => ({
     useI18n: () => ({
-        t: (key) => key,
+        t: (key, params = {}) => {
+            if (key === 'settings.default_value_with_value') return `default=${params.value}`
+            if (key === 'settings.language_name_with_code') return `${params.name} [${params.code}]`
+            if (key === 'settings.input_too_long') return `length=${params.count}; max=${params.max}`
+            return key
+        },
         te: () => false,
         locale: { value: 'en' }
     })
@@ -43,6 +48,7 @@ const DataTableStub = defineComponent({
         <div>
             <div v-for="item in items" :key="item.key">
                 <slot name="item.value" :item="item" />
+                <slot name="item.description" :item="item" />
             </div>
         </div>
     `
@@ -78,6 +84,7 @@ function mountTable() {
                 VCol: passthroughStub('VCol'),
                 VDataTable: DataTableStub,
                 VSelect: SelectStub,
+                VIcon: true,
                 SearchField: true,
                 VDialog: true
             }
@@ -93,6 +100,8 @@ describe('SettingsTable language options', () => {
                 key: 'UI_LANGUAGE',
                 value: 'en',
                 type: 'S',
+                description: 'User interface language',
+                default_val: 'de',
                 options: null,
                 is_global: false
             },
@@ -115,7 +124,30 @@ describe('SettingsTable language options', () => {
 
         const selects = wrapper.findAllComponents(SelectStub)
         expect(selects).toHaveLength(2)
-        expect(selects[0].props('items').map(({ id }) => id)).toEqual(['en', 'de', 'pt-BR'])
+        expect(selects[0].props('items').map(({ id }) => id)).toEqual(['ar', 'de', 'en', 'pt-BR'])
         expect(selects[1].props('items').map(({ id }) => id)).toEqual(['en', 'ar'])
+
+        for (const option of selects[0].props('items')) {
+            expect(option.txt).toMatch(/^\u2068.+\u2069 \[\u2066.+\u2069\]$/u)
+        }
+        expect(selects[0].props('items').find(({ id }) => id === 'ar')).toEqual({
+            id: 'ar',
+            txt: '\u2068العربية\u2069 [\u2066ar\u2069]'
+        })
+    })
+
+    it('isolates a default value inside its complete tooltip message', async () => {
+        const wrapper = mountTable()
+        await flushPromises()
+
+        expect(wrapper.find('[title]').attributes('title')).toBe('default=\u2068de\u2069')
+    })
+
+    it('returns a translated count-aware maximum-length validation message', async () => {
+        const wrapper = mountTable()
+        await flushPromises()
+
+        expect(wrapper.vm.maxCharsRule('a'.repeat(150))).toBe(true)
+        expect(wrapper.vm.maxCharsRule('a'.repeat(151))).toBe('length=151; max=150')
     })
 })

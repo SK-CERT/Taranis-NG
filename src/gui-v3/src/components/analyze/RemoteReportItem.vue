@@ -14,7 +14,9 @@
                 >
                     <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
-                <v-toolbar-title>{{ reportItem.title }}</v-toolbar-title>
+                <v-toolbar-title
+                    ><bdi dir="auto">{{ reportItem.title }}</bdi></v-toolbar-title
+                >
             </v-toolbar>
 
             <v-card-text class="remote-report__body">
@@ -24,12 +26,19 @@
                     class="mb-4"
                 >
                     <div class="remote-report__identity">
-                        <span
-                            ><strong>{{ t('report_item.id') }}:</strong> {{ reportItem.uuid }}</span
+                        <i18n-t keypath="report_item.id_with_value">
+                            <template #id>
+                                <bdi dir="ltr">{{ reportItem.uuid }}</bdi>
+                            </template>
+                        </i18n-t>
+                        <i18n-t
+                            v-if="reportItem.remote_user"
+                            keypath="card_item.source_with_value"
                         >
-                        <span v-if="reportItem.remote_user">
-                            <strong>{{ t('card_item.source') }}:</strong> {{ reportItem.remote_user }}
-                        </span>
+                            <template #source>
+                                <bdi dir="auto">{{ reportItem.remote_user }}</bdi>
+                            </template>
+                        </i18n-t>
                     </div>
                 </v-alert>
 

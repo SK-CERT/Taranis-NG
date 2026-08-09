@@ -7,6 +7,7 @@
         >
             <v-text-field
                 v-model="config.server_url"
+                dir="ltr"
                 :label="t('auth_provider.server_url')"
                 variant="outlined"
                 density="comfortable"
@@ -75,7 +76,7 @@
                                     icon
                                     variant="text"
                                     size="x-small"
-                                    class="ml-1"
+                                    class="ms-1"
                                     :aria-label="t('auth_provider.ldap_bind_mode_direct_hint')"
                                     data-test="ldap-direct-bind-help"
                                     @click.stop

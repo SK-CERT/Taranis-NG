@@ -12,7 +12,7 @@
                     </v-col>
                     <v-col
                         cols="4"
-                        class="text-right"
+                        class="text-end"
                     >
                         <NewAuthProvider
                             :edit-item="editItem"
@@ -36,7 +36,9 @@
                     <code class="text-body-2 font-weight-medium">{{ item.id }}</code>
                 </template>
                 <template #item.name="{ item }">
-                    <strong>{{ providerName(item) }}</strong>
+                    <strong
+                        ><bdi dir="auto">{{ providerName(item) }}</bdi></strong
+                    >
                 </template>
                 <template #item.kind="{ item }">
                     <v-chip
@@ -48,7 +50,12 @@
                     </v-chip>
                 </template>
                 <template #item.organization="{ item }">
-                    {{ item.organization?.name || '-' }}
+                    <bdi
+                        v-if="item.organization?.name"
+                        dir="auto"
+                        >{{ item.organization.name }}</bdi
+                    >
+                    <span v-else>-</span>
                 </template>
                 <template #item.provisioning_mode="{ item }">
                     <span v-if="['oidc', 'oauth2', 'saml', 'ldap'].includes(item.kind)">
@@ -65,14 +72,14 @@
                     </v-icon>
                 </template>
                 <template #item.linked_identity_count="{ item }">
-                    {{ item.linked_identity_count ?? 0 }}
+                    {{ n(item.linked_identity_count ?? 0) }}
                 </template>
                 <template #item.actions="{ item }">
                     <ActionButton
                         v-if="canUpdate"
                         action="edit"
                         :title="t('common.edit')"
-                        class="mr-1"
+                        class="me-1"
                         @click="handleEdit(item)"
                     />
                     <ActionButton
@@ -105,7 +112,7 @@
     import SearchField from '@/components/common/SearchField.vue'
     import NewAuthProvider from '@/components/config/auth-providers/NewAuthProvider.vue'
 
-    const { t } = useI18n()
+    const { t, n } = useI18n()
     const { checkPermission } = useAuth()
     const { isLocal, providerName } = useProviderDisplay()
     const configStore = useConfigStore()
@@ -126,6 +133,9 @@
     const editItem = ref<AuthProviderItem | null>(null)
     const deleteDialog = ref(false)
     const deleteTarget = ref<AuthProviderItem | null>(null)
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+    const isolateAuto = (value: unknown): string => `${FIRST_STRONG_ISOLATE}${String(value ?? '')}${POP_DIRECTIONAL_ISOLATE}`
 
     const canUpdate = computed(() => checkPermission('CONFIG_AUTH_PROVIDER_UPDATE'))
     const canDelete = computed(() => checkPermission('CONFIG_AUTH_PROVIDER_DELETE'))
@@ -146,8 +156,10 @@
             return ''
         }
         const count = deleteTarget.value.linked_identity_count ?? 0
-        const name = providerName(deleteTarget.value)
-        return count > 0 ? t('auth_provider.delete_message_linked', { name, count }) : t('auth_provider.delete_message', { name })
+        const name = isolateAuto(providerName(deleteTarget.value))
+        return count > 0
+            ? t('auth_provider.delete_message_linked', { name, count: n(count) }, count)
+            : t('auth_provider.delete_message', { name })
     })
 
     const kindColor = (kind: string): string => {

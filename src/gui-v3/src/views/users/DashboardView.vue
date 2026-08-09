@@ -15,7 +15,9 @@
                 <div class="dashboard-hero__freshness">
                     <span class="activity-dot" />
                     <span>{{ t('dashboard.collect.last_attempt') }}</span>
-                    <strong>{{ latestCollection }}</strong>
+                    <strong>
+                        <bdi :dir="latestCollectionDisplay.direction">{{ latestCollectionDisplay.text }}</bdi>
+                    </strong>
                 </div>
                 <v-btn
                     icon="mdi-refresh"
@@ -38,11 +40,16 @@
                     <div class="metric-card__icon metric-card__icon--blue">
                         <v-icon size="25">mdi-newspaper-variant-multiple-outline</v-icon>
                     </div>
-                    <div class="metric-card__body">
-                        <span>{{ t('nav_menu.newsitems') }}</span>
-                        <strong>{{ (dashboardData.total_news_items || 0).toLocaleString() }}</strong>
-                        <small>{{ t('dashboard.assess.total') }}</small>
-                    </div>
+                    <i18n-t
+                        keypath="dashboard.metrics.news_items_summary"
+                        tag="div"
+                        class="metric-card__body"
+                        :plural="dashboardData.total_news_items || 0"
+                    >
+                        <template #count>
+                            <strong>{{ formatNumber(dashboardData.total_news_items || 0) }}</strong>
+                        </template>
+                    </i18n-t>
                 </div>
                 <div class="news-ingestion">
                     <header class="news-ingestion__header">
@@ -54,15 +61,17 @@
                     <div
                         class="news-ingestion__chart"
                         role="img"
-                        :aria-label="`${t('nav_menu.newsitems')}: ${t('toolbar_filter.last_7_days')}`"
+                        :aria-label="t('dashboard.assess.ingestion_chart', { period: t('toolbar_filter.last_7_days') })"
                     >
                         <div
                             v-for="point in ingestionData"
                             :key="point.date"
                             class="news-ingestion__column"
-                            :title="`${point.fullDate}: ${point.value}`"
+                            :title="
+                                t('dashboard.assess.ingestion_point', { date: point.fullDate, count: formatNumber(point.value) }, point.value)
+                            "
                         >
-                            <strong>{{ point.value }}</strong>
+                            <strong>{{ formatNumber(point.value) }}</strong>
                             <span class="news-ingestion__track">
                                 <i :style="{ height: `${point.height}%` }" />
                             </span>
@@ -80,7 +89,7 @@
 
             <v-card
                 v-for="metric in dashboardMetrics"
-                :key="metric.label"
+                :key="metric.messageKey"
                 class="metric-card"
                 :class="{ 'metric-card--linked': metric.to }"
                 :to="metric.to"
@@ -92,11 +101,16 @@
                 >
                     <v-icon size="25">{{ metric.icon }}</v-icon>
                 </div>
-                <div class="metric-card__body">
-                    <span>{{ metric.label }}</span>
-                    <strong>{{ metric.value.toLocaleString() }}</strong>
-                    <small>{{ metric.detail }}</small>
-                </div>
+                <i18n-t
+                    :keypath="metric.messageKey"
+                    tag="div"
+                    class="metric-card__body"
+                    :plural="metric.value"
+                >
+                    <template #count>
+                        <strong>{{ formatNumber(metric.value) }}</strong>
+                    </template>
+                </i18n-t>
                 <v-icon
                     v-if="metric.to"
                     class="metric-card__arrow"
@@ -143,7 +157,7 @@
 
                         <v-btn
                             to="/assess"
-                            icon="mdi-arrow-right"
+                            :icon="forwardIcon"
                             size="small"
                             variant="tonal"
                             color="primary"
@@ -226,7 +240,9 @@
                     </div>
                     <div class="collection-card__time">
                         <v-icon size="17">mdi-clock-check-outline</v-icon>
-                        <span>{{ latestCollection }}</span>
+                        <span>
+                            <bdi :dir="latestCollectionDisplay.direction">{{ latestCollectionDisplay.text }}</bdi>
+                        </span>
                     </div>
                 </section>
 
@@ -244,7 +260,7 @@
                             </div>
                             <v-btn
                                 to="/analyze/local"
-                                icon="mdi-arrow-right"
+                                :icon="forwardIcon"
                                 size="x-small"
                                 variant="text"
                                 :title="t('main_menu.analyze')"
@@ -283,7 +299,7 @@
                             </div>
                             <v-btn
                                 to="/publish"
-                                icon="mdi-arrow-right"
+                                :icon="forwardIcon"
                                 size="x-small"
                                 variant="text"
                                 :title="t('main_menu.publish')"
@@ -318,12 +334,33 @@
             <div class="dashboard-system__item">
                 <span>{{ t('dashboard.about.version') }}</span>
                 <strong>{{ appVersion }}</strong>
-                <small>{{ built }}</small>
+                <small>
+                    <i18n-t
+                        v-if="built"
+                        keypath="dashboard.about.built_at"
+                    >
+                        <template #date>
+                            <bdi dir="auto">{{ built }}</bdi>
+                        </template>
+                    </i18n-t>
+                </small>
             </div>
             <div class="dashboard-system__item">
                 <span>{{ t('dashboard.about.commit') }}</span>
                 <strong>{{ commit }}</strong>
-                <small>{{ commited }} {{ branchDisplay }}</small>
+                <small>
+                    <i18n-t
+                        v-if="commited"
+                        keypath="dashboard.about.committed_at"
+                    >
+                        <template #date>
+                            <bdi dir="auto">{{ commited }}</bdi>
+                        </template>
+                    </i18n-t>
+                    <template v-if="branchDisplay">
+                        {{ ' ' }}<bdi dir="ltr">{{ branchDisplay }}</bdi>
+                    </template>
+                </small>
             </div>
         </footer>
     </main>
@@ -340,10 +377,15 @@
     import gitMeta from '../../../git-info.json'
     import packageJson from '../../../package.json'
     import { useSseResync } from '@/composables/useSseResync'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { useRtl } from 'vuetify'
 
     const dashboardStore = useDashboardStore()
     const { t, te, locale } = useI18n()
+    const { formatDateTime, formatNumber } = useLocaleFormatters()
+    const { isRtl } = useRtl()
     const router = useRouter()
+    const forwardIcon = computed(() => (isRtl.value ? 'mdi-arrow-left' : 'mdi-arrow-right'))
 
     type DashboardStateInfo = {
         count: number
@@ -365,9 +407,8 @@
     }
 
     type DashboardMetric = {
-        label: string
+        messageKey: string
         value: number
-        detail: string
         icon: string
         tone: 'blue' | 'cyan' | 'amber' | 'slate'
         to?: string
@@ -464,17 +505,15 @@
 
     const dashboardMetrics = computed<DashboardMetric[]>(() => [
         {
-            label: t('nav_menu.report_items'),
+            messageKey: 'dashboard.metrics.report_items_summary',
             value: dashboardData.value.total_report_items || 0,
-            detail: t('dashboard.analyze.total'),
             icon: 'mdi-file-document-multiple-outline',
             tone: 'cyan',
             to: '/analyze/local'
         },
         {
-            label: t('nav_menu.products'),
+            messageKey: 'dashboard.metrics.products_summary',
             value: dashboardData.value.total_products || 0,
-            detail: t('dashboard.publish.total'),
             icon: 'mdi-package-variant-closed',
             tone: 'amber',
             to: '/publish'
@@ -489,26 +528,23 @@
     const reportStates = computed(() => toDisplayStates(dashboardData.value.report_item_states))
     const productStates = computed(() => toDisplayStates(dashboardData.value.product_states))
 
-    const formatToLocal = (dateString: string): string => {
-        const date = new Date(dateString)
-        return Number.isNaN(date.getTime()) ? dateString : format(date, 'yyyy-MM-dd HH:mm')
-    }
+    const formatToLocal = (dateString: string): string => formatDateTime(dateString) || dateString
 
-    const latestCollection = computed(() =>
-        dashboardData.value.latest_collected ? formatToLocal(dashboardData.value.latest_collected) : '—'
-    )
+    const latestCollectionDisplay = computed<{ text: string; direction: 'ltr' | 'auto' }>(() => {
+        const rawValue = dashboardData.value.latest_collected
+        if (!rawValue) return { text: '—', direction: 'auto' }
 
-    const built = computed(() => {
-        return buildDate.value ? `(${formatToLocal(buildDate.value)})` : ''
+        const formattedValue = formatDateTime(rawValue)
+        return formattedValue ? { text: formattedValue, direction: 'auto' } : { text: rawValue, direction: 'auto' }
     })
+
+    const built = computed(() => (buildDate.value ? formatToLocal(buildDate.value) : ''))
 
     const commit = computed(() => {
         return commitHash.value ? commitHash.value : ''
     })
 
-    const commited = computed(() => {
-        return commitDate.value ? `(${formatToLocal(commitDate.value)})` : ''
-    })
+    const commited = computed(() => (commitDate.value ? formatToLocal(commitDate.value) : ''))
 
     const branchDisplay = computed(() => {
         return branchName.value ? `[${branchName.value}]` : ''
@@ -644,7 +680,7 @@
         justify-content: space-between;
         min-height: 86px;
         padding: 0.85rem 1rem;
-        border-left: 5px solid rgb(var(--v-theme-primary));
+        border-inline-start: 5px solid rgb(var(--v-theme-primary));
         border-radius: 5px;
     }
 
@@ -955,8 +991,8 @@
 
     .news-ingestion {
         min-width: 0;
-        padding-left: 0.8rem;
-        border-left: 1px solid var(--review-list-border);
+        padding-inline-start: 0.8rem;
+        border-inline-start: 1px solid var(--review-list-border);
     }
 
     .news-ingestion__header,
@@ -1130,10 +1166,10 @@
 
     .state-row strong {
         min-width: 1.4rem;
-        padding-left: 0.4rem;
-        border-left: 1px solid rgba(var(--v-theme-outline), 0.16);
+        padding-inline-start: 0.4rem;
+        border-inline-start: 1px solid rgba(var(--v-theme-outline), 0.16);
         color: rgb(var(--v-theme-on-surface));
-        text-align: right;
+        text-align: end;
     }
 
     .workflow-divider {
@@ -1160,17 +1196,17 @@
         min-height: 30px;
         padding-inline: 0.7rem;
         gap: 0.35rem;
-        border-right: 1px solid var(--review-list-border);
+        border-inline-end: 1px solid var(--review-list-border);
         font-size: 0.7rem;
     }
 
     .dashboard-system__title {
-        padding-left: 0;
+        padding-inline-start: 0;
         color: rgb(var(--v-theme-primary));
     }
 
     .dashboard-system__item:last-child {
-        border-right: 0;
+        border-inline-end: 0;
     }
 
     .dashboard-system__item span,
@@ -1274,7 +1310,7 @@
 
         .dashboard-system__title,
         .dashboard-system__item {
-            border-right: 0;
+            border-inline-end: 0;
             border-bottom: 1px solid var(--review-list-border);
         }
 
@@ -1295,9 +1331,9 @@
 
         .news-ingestion {
             padding-top: 0.55rem;
-            padding-left: 0;
+            padding-inline-start: 0;
             border-top: 1px solid var(--review-list-border);
-            border-left: 0;
+            border-inline-start: 0;
         }
     }
 </style>

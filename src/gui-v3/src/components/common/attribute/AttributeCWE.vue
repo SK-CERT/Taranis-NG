@@ -25,14 +25,16 @@
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        {{ value.value }}
+                        <bdi dir="ltr">{{ value.value }}</bdi>
                         <v-icon size="x-small">{{ ICONS.OPEN }}</v-icon>
                     </a>
                     <span
                         v-if="value.value_description"
                         class="cwe-description text--disabled"
-                        >&nbsp;&ndash; {{ value.value_description }}</span
                     >
+                        <span aria-hidden="true">&ndash;</span>
+                        <bdi dir="auto">{{ value.value_description }}</bdi>
+                    </span>
                 </span>
 
                 <!-- Editable -->
@@ -167,7 +169,7 @@
 
 <style scoped>
     .cwe-number {
-        margin-right: 8px;
+        margin-inline-end: 8px;
         user-select: none;
         min-width: 24px;
         display: inline-block;
@@ -181,6 +183,8 @@
     }
 
     .cwe-description {
+        display: inline-flex;
+        gap: 0.25rem;
         min-width: 0;
     }
 
