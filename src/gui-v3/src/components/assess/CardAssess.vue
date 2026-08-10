@@ -189,10 +189,7 @@
             @after-enter="emitCardItemsReindex"
             @after-leave="emitCardItemsReindex"
         >
-            <div
-                v-if="opened && isAggregate"
-                class="aggregate-items-list"
-            >
+            <div v-if="opened && isAggregate">
                 <CardAssessItem
                     v-for="newsItem in childNewsItems"
                     :key="newsItem.id"
@@ -434,10 +431,6 @@
 <style scoped>
     .aggregate-card-wrapper {
         width: 100%;
-    }
-
-    .aggregate-items-list {
-        margin-top: -4px;
     }
 
     .read-item {

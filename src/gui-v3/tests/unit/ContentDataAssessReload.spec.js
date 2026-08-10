@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createI18n } from 'vue-i18n'
 import { mountWithPlugins } from '../helpers/mount-helpers'
@@ -77,7 +77,10 @@ const commonStubs = {
 const mountAssess = (i18n) =>
     mountWithPlugins(ContentDataAssess, {
         props: { analyze_selector: false },
-        global: { stubs: commonStubs, plugins: i18n ? [i18n] : [] }
+        global: {
+            i18n,
+            stubs: commonStubs
+        }
     })
 
 const createPluralTestI18n = () =>
@@ -88,6 +91,7 @@ const createPluralTestI18n = () =>
         messages: {
             'de-DE': {
                 assess: {
+                    no_items: 'Keine Elemente',
                     show_new_items: 'Keine neuen Elemente | {count} neues Element | {count} neue Elemente'
                 },
                 common: {
@@ -144,6 +148,10 @@ describe('ContentDataAssess list reloads', () => {
                 }
             })
         )
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
     })
 
     it('leaves the rendered cards in the same order across a refresh', async () => {

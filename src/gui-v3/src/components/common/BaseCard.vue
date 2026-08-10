@@ -22,7 +22,7 @@
         <v-hover v-slot="{ isHovering, props: hoverProps }">
             <v-card
                 v-bind="hoverProps"
-                class="base-card card-item mb-1 flex-grow-1"
+                class="base-card card-item flex-grow-1"
                 :class="[cardClass, { 'selected-item': internalSelected }]"
                 :elevation="0"
                 tabindex="0"
