@@ -45,9 +45,9 @@ export function createTestI18n() {
 export function mountWithPlugins(component, options = {}) {
     const pinia = createPinia()
     setActivePinia(pinia)
-    const i18n = createTestI18n()
 
     const globalOptions = options.global || {}
+    const i18n = globalOptions.i18n ?? createTestI18n()
     const existingPlugins = globalOptions.plugins || []
 
     return mount(component, {
