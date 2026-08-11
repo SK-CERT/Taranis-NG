@@ -22,7 +22,7 @@ dependencies = [
     "ldap3==2.10.2rc4",
     "lxml==6.1.1",
     "minisaml==26.1",
-    "marshmallow==4.3.0",
+    "marshmallow==4.3.1",
     "psycopg[binary]==3.3.4",
     "pycryptodomex==3.23.0",
     "PyJWT==2.13.0",
