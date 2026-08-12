@@ -100,6 +100,7 @@ services:
       - postgres_password
       - jwt_secret_key
       - api_key
+      - secrets_encryption_key
 
   bots:
     depends_on:
@@ -252,6 +253,7 @@ services:
       - postgres_password
       - jwt_secret_key
       - api_key
+      - secrets_encryption_key
 
   gui:
     depends_on:
@@ -383,6 +385,10 @@ secrets:
     file: ./secrets/jwt_secret_key.txt
   api_key:
     file: ./secrets/api_key.txt
+  # Encrypts auth provider secrets and TOTP seeds stored in the database.
+  # Falls back to jwt_secret_key when missing (a dedicated key is recommended).
+  secrets_encryption_key:
+    file: ./secrets/secrets_encryption_key.txt
 
 volumes:
   redis_conf:

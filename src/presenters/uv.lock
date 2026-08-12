@@ -594,11 +594,11 @@ wheels = [
 
 [[package]]
 name = "marshmallow"
-version = "4.3.0"
+version = "4.3.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/25/7e/1dbd4096eb7c148cd2841841916f78820bb85a4d80a0c25c02d30815a7fb/marshmallow-4.3.0.tar.gz", hash = "sha256:fb43c53b3fe240b8f6af37223d6ef1636f927ad9bea8ab323afad95dff090880", size = 224485, upload-time = "2026-04-03T21:46:32.72Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4e/d7/611e68d57e6a903c29cb33b5afec0f93b4baecacc6c6c62e33cde9eb9dcb/marshmallow-4.3.1.tar.gz", hash = "sha256:fb6b8048af08d4ab061610d5b7d3696a7e4c95337dbda880edb9f95812cabc20", size = 218308, upload-time = "2026-08-08T14:27:29.517Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/e0/ff24e25218bb59eb6290a530cea40651b14068b6e3659b20f9c175179632/marshmallow-4.3.0-py3-none-any.whl", hash = "sha256:46c4fe6984707e3cbd485dfebbf0a59874f58d695aad05c1668d15e8c6e13b46", size = 49148, upload-time = "2026-04-03T21:46:31.241Z" },
+    { url = "https://files.pythonhosted.org/packages/43/57/4526ca0e214a3d158690e3393f6d547a2f8070f88d6388ab21d5b0aac8a1/marshmallow-4.3.1-py3-none-any.whl", hash = "sha256:e65accfbe277546df92ed7996a678c90e063e9a7c2a2f5e03f7d0b90e3768c42", size = 49219, upload-time = "2026-08-08T14:27:28.078Z" },
 ]
 
 [[package]]
@@ -787,7 +787,7 @@ requires-dist = [
     { name = "gevent", specifier = "==26.7.0" },
     { name = "gunicorn", specifier = "==26.0.0" },
     { name = "jinja2", specifier = "==3.1.6" },
-    { name = "marshmallow", specifier = "==4.3.0" },
+    { name = "marshmallow", specifier = "==4.3.1" },
     { name = "python-dotenv", specifier = "==1.2.2" },
     { name = "taranis-ng-shared", directory = "../shared" },
     { name = "weasyprint", specifier = "==69.0" },
@@ -802,7 +802,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "marshmallow", specifier = "==4.3.0" }]
+requires-dist = [{ name = "marshmallow", specifier = "==4.3.1" }]
 
 [[package]]
 name = "tinycss2"
