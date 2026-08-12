@@ -26,12 +26,14 @@ cp docker/.env.example docker/.env
 cp docker/secrets/postgres_password.txt.example docker/secrets/postgres_password.txt
 cp docker/secrets/jwt_secret_key.txt.example docker/secrets/jwt_secret_key.txt
 cp docker/secrets/api_key.txt.example docker/secrets/api_key.txt
+cp docker/secrets/secrets_encryption_key.txt.example docker/secrets/secrets_encryption_key.txt
 ```
 
 Replace every example secret with an independently generated value. These
-files configure PostgreSQL, JWT signing, and the shared key used between Core
-and the satellite services. They do not set the passwords of Taranis NG user
-accounts.
+files configure PostgreSQL, JWT signing, the shared key used between Core
+and the satellite services, and the encryption key for auth provider secrets
+and TOTP seeds stored in the database. They do not set the passwords of
+Taranis NG user accounts.
 
 Edit `docker/.env` if you want to change the hostname, ports, timezone, or image
 tag. Keep local changes in this gitignored file or in

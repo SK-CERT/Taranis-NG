@@ -22,4 +22,9 @@ function run(cmd, args) {
 
 run("npx", ["lint-staged"]);
 
+// git-info.json is imported by DashboardView.vue and its tests; it is
+// normally produced by the prebuild/pretypecheck hooks, so regenerate it
+// here to keep a bare `npm run test:coverage` (and this hook) working.
+run("node", ["scripts/update-version.cjs"]);
+
 run("npm", ["run", "test:coverage"]);
