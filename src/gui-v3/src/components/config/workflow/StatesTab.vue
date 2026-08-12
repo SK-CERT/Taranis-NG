@@ -130,26 +130,30 @@
                             class="mb-3"
                         />
 
-                        <v-text-field
-                            v-model="editedItem.color"
-                            :spellcheck="false"
-                            :label="t('workflow.states.color')"
-                            :disabled="!canSave"
-                            variant="outlined"
-                            type="color"
-                            density="comfortable"
-                            class="mb-3"
-                        />
-
-                        <v-text-field
-                            v-model="editedItem.icon"
-                            :spellcheck="false"
-                            :label="t('workflow.states.icon')"
-                            :disabled="!canSave"
-                            variant="outlined"
-                            density="comfortable"
-                            placeholder="mdi-circle"
-                        />
+                        <v-row>
+                            <v-col cols="6">
+                                <div class="text-caption text-medium-emphasis mb-1 px-3">
+                                    {{ t('workflow.states.color') }}
+                                </div>
+                                <v-text-field
+                                    v-model="editedItem.color"
+                                    :spellcheck="false"
+                                    :aria-label="t('workflow.states.color')"
+                                    :disabled="!canSave"
+                                    variant="outlined"
+                                    type="color"
+                                    density="comfortable"
+                                    hide-details
+                                />
+                            </v-col>
+                            <v-col cols="6">
+                                <MdiIconPicker
+                                    v-model="editedItem.icon"
+                                    :label="t('workflow.states.icon')"
+                                    :disabled="!canSave"
+                                />
+                            </v-col>
+                        </v-row>
                     </v-form>
                 </v-card-text>
             </v-card>
@@ -174,6 +178,7 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import SearchField from '@/components/common/SearchField.vue'
+    import MdiIconPicker from '@/components/common/MdiIconPicker.vue'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
