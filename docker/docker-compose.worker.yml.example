@@ -1,0 +1,97 @@
+# docker-compose.worker.yml.example
+#
+# Standalone worker-only compose for deploying a single Taranis-NG worker
+# (collectors / bots / presenters / publishers) on a remote host WITHOUT
+# Ansible. Copy to docker-compose.worker.yml (gitignored) and edit the values.
+#
+#     cp docker-compose.worker.yml.example docker-compose.worker.yml
+#     cp .env.worker.example .env.worker
+#     # edit .env.worker, and put the worker's key in ./secrets/api_key.txt
+#     docker compose --env-file .env.worker -f docker-compose.worker.yml up -d
+#
+# `--env-file .env.worker` is required, not optional. Compose auto-loads `.env`
+# and nothing else, so without it every variable below resolves to an empty
+# string. Worse, on the Core host `.env` sets COMPOSE_PROJECT_NAME=taranis-ng —
+# and since this file also defines a `traefik` service, Compose would recreate
+# the running Core stack's Traefik from this definition and treat the rest of
+# Core as orphans. .env.worker sets its own COMPOSE_PROJECT_NAME to keep the
+# two stacks apart.
+#
+# If you are using Ansible (ansible/playbooks/distribute-worker.yml), you do
+# NOT need this file — the role renders an equivalent compose from
+# ansible/roles/taranis-ng-worker/templates/docker-compose.worker.yml.j2
+# directly onto the remote host at /etc/taranis-ng/docker-compose.worker.yml.
+#
+# This static file is offered as an operator-driven alternative.
+
+services:
+  traefik:
+    image: docker.io/traefik:3.6.9
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.http.tls=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # Put your certificate and a dynamic config naming it in ./tls/ — e.g.
+      # ./tls/certs.yml with tls.stores.default.defaultCertificate pointing at
+      # /etc/traefik/dynamic/worker.crt and worker.key. Without it Traefik
+      # answers on 443 with its own untrusted default certificate, which Core
+      # will refuse to verify.
+      - "./tls:/etc/traefik/dynamic:ro"
+
+  # Rename this service block to your worker_type (collectors / bots /
+  # presenters / publishers) and adjust the environment block accordingly.
+  # Only one worker container per host is supported by this file.
+  workers:
+    image: "skcert/taranis-ng-${WORKER_TYPE}:${TARANIS_NG_TAG:-latest}"
+    restart: unless-stopped
+    environment:
+      TARANIS_NG_CORE_URL: "${CORE_URL}"
+      # Bots only — uncomment if WORKER_TYPE=bots:
+      # TARANIS_NG_CORE_SSE: "${CORE_URL}/sse"
+      TZ: "${TZ:-Europe/Bratislava}"
+      TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL:-INFO}"
+      MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL:-INFO}"
+      # Presenters only — uncomment if WORKER_TYPE=presenters:
+      # JINJA_TEMPLATES_ROOT: "/app/templates/user_templates"
+      # Collectors only — uncomment if WORKER_TYPE=collectors:
+      # COLLECTOR_CONFIG_FILE: "/app/storage/id.txt"
+    volumes:
+      # Collectors only — keep only this volume:
+      - "collector_storage:/app/storage"
+      # Presenters only — replace the above with:
+      # - "presenters_templates:/app/templates/user_templates"
+    secrets:
+      - api_key
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.worker.rule=Host(`${WORKER_HOST}`)"
+      - "traefik.http.routers.worker.entrypoints=websecure"
+      - "traefik.http.routers.worker.tls=true"
+      - "traefik.http.services.worker.loadbalancer.server.port=80"
+
+secrets:
+  api_key:
+    # The WORKER's own key, the one Core stores in its *Node row — not the Core
+    # stack's key. Run this file from its own directory on the worker host; in
+    # docker/ on the Core host this path is Core's api_key.txt.
+    file: ./secrets/api_key.txt
+
+volumes:
+  collector_storage:
+  # presenters_templates:
+
+networks:
+  default:
+    driver: bridge

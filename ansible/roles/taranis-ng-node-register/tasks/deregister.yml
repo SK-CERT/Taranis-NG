@@ -1,0 +1,18 @@
+---
+# Delete this host's *Node rows from Core.
+#
+# Entry point for playbooks/worker-remove.yml, which runs it BEFORE tearing the
+# host down so Core stops dispatching work to a worker that is about to vanish.
+# Safe to run on its own: it only removes rows whose api_url matches this
+# host's per-type FQDNs, and it is a no-op when they are already gone.
+#
+# Nothing here touches the worker host itself.
+
+- name: "Authenticate to Core"
+  ansible.builtin.import_tasks: login.yml
+
+- name: "Deregister each worker_type"
+  ansible.builtin.include_tasks: deregister_per_type.yml
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type

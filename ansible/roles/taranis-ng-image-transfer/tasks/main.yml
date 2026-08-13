@@ -1,0 +1,124 @@
+---
+# taranis-ng-image-transfer role: ship worker Docker images from the control
+# host to a remote worker host as tarballs (air-gapped friendly).
+#
+# Loops over worker_types so a host running collectors + bots gets both images
+# shipped + loaded.
+#
+# The local tarball path includes inventory_hostname: with forks > 1, two worker
+# hosts that both run "collectors" would otherwise share one /tmp path and
+# delete it out from under each other mid-copy.
+
+# ---------------------------------------------------------------------------
+# Step 1 — optionally build the images for every worker_type on the control host.
+# ---------------------------------------------------------------------------
+- name: "Build the worker image on the control host (if requested)"
+  community.docker.docker_image:
+    name: "{{ worker_image_prefix }}{{ worker_type }}"
+    tag: "{{ taranis_ng_tag }}"
+    build:
+      path: "{{ worker_image_build_context }}"
+      dockerfile: "docker/Dockerfile.{{ worker_type }}"
+      pull: false
+    source: build
+  delegate_to: localhost
+  become: false
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+    label: "{{ worker_type }}"
+  when: worker_image_build | bool
+
+# Reference the registered variable, not a bare `images`. ansible-core 2.19+
+# no longer injects module return values as top-level names, so the classic
+# `failed_when: rc != 0` shape raises "'rc' is undefined". Inside a loop the
+# registered variable holds the CURRENT iteration's result, which is what this
+# check wants.
+- name: "Ensure each image exists on the control host"
+  community.docker.docker_image_info:
+    name: "{{ worker_image_prefix }}{{ worker_type }}:{{ taranis_ng_tag }}"
+  delegate_to: localhost
+  become: false
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+    label: "{{ worker_type }}"
+  register: core_image_infos
+  failed_when: core_image_infos.images | length == 0
+
+# ---------------------------------------------------------------------------
+# Step 2 — save each image to a tarball on the control host.
+# ---------------------------------------------------------------------------
+- name: "Remove any stale local tarball"
+  ansible.builtin.file:
+    path: "{{ worker_tarball_dir }}/taranis-ng-{{ worker_type }}-{{ taranis_ng_tag }}-{{ inventory_hostname }}.tar"
+    state: absent
+  delegate_to: localhost
+  become: false
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+    label: "{{ worker_type }}"
+
+- name: "Save the image to a tarball on the control host"
+  ansible.builtin.command:
+    cmd: >-
+      docker save
+      -o {{ worker_tarball_dir }}/taranis-ng-{{ worker_type }}-{{ taranis_ng_tag }}-{{ inventory_hostname }}.tar
+      {{ worker_image_prefix }}{{ worker_type }}:{{ taranis_ng_tag }}
+  delegate_to: localhost
+  become: false
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+    label: "{{ worker_type }}"
+  changed_when: true
+
+# ---------------------------------------------------------------------------
+# Step 3 — copy each tarball to the remote worker host.
+# ---------------------------------------------------------------------------
+- name: "Copy the tarball to the remote worker host"
+  ansible.builtin.copy:
+    src: "{{ worker_tarball_dir }}/taranis-ng-{{ worker_type }}-{{ taranis_ng_tag }}-{{ inventory_hostname }}.tar"
+    dest: "{{ worker_tarball_dir }}/taranis-ng-{{ worker_type }}-{{ taranis_ng_tag }}.tar"
+    mode: "0600"
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+    label: "{{ worker_type }}"
+
+# ---------------------------------------------------------------------------
+# Step 4 — load each image on the remote host.
+# ---------------------------------------------------------------------------
+- name: "Load the image on the remote worker host"
+  ansible.builtin.command:
+    cmd: "docker load -i {{ worker_tarball_dir }}/taranis-ng-{{ worker_type }}-{{ taranis_ng_tag }}.tar"
+  register: docker_load_result
+  changed_when: "'Loaded image' in docker_load_result.stdout"
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+    label: "{{ worker_type }}"
+
+# ---------------------------------------------------------------------------
+# Step 5 — clean up the tarballs on both ends.
+# ---------------------------------------------------------------------------
+- name: "Remove the local tarball on the control host"
+  ansible.builtin.file:
+    path: "{{ worker_tarball_dir }}/taranis-ng-{{ worker_type }}-{{ taranis_ng_tag }}-{{ inventory_hostname }}.tar"
+    state: absent
+  delegate_to: localhost
+  become: false
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+    label: "{{ worker_type }}"
+
+- name: "Remove the tarball on the worker host"
+  ansible.builtin.file:
+    path: "{{ worker_tarball_dir }}/taranis-ng-{{ worker_type }}-{{ taranis_ng_tag }}.tar"
+    state: absent
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+    label: "{{ worker_type }}"

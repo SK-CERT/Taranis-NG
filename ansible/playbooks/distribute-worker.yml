@@ -1,0 +1,93 @@
+---
+# distribute-worker.yml — deploy Taranis-NG worker container(s) to remote
+# host(s) over SSH and register each one as a node in Core.
+#
+# Each remote host can run ONE OR MORE worker types — set `worker_types` in
+# that host's `host_vars/<host>.yml`. The play brings up ONE Traefik
+# per host fronting ALL the worker_types on that host, with per-type
+# subdomain routing (e.g. collectors.hostA.example.com, bots.hostA.example.com).
+#
+# Run the playbook against the worker_hosts group defined in your
+# distributed.local.yml inventory:
+#
+#   cd ansible
+#   ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/distribute-worker.yml --limit worker_hosts
+#
+# Or target a single host directly:
+#
+#   cd ansible
+#   ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/distribute-worker.yml --limit collector-01
+#
+# Pre-conditions:
+#   - The Core host is already running the all-in-one stack (site.yml).
+#   - group_vars/all.yml defines core_url, taranis_admin_user, taranis_admin_password,
+#     plus the shared ACME/TLS settings (worker_tls_mode, worker_acme_*).
+#   - host_vars/<host>.yml for each remote host defines `worker_types`
+#     (the list of worker types to deploy on that host) and any per-host
+#     overrides (worker_base_hostname, ACME EAB creds, etc.).
+#   - SSH access from the ansible control node to each remote host is set up.
+#
+# What this playbook does, per remote host:
+#   1. Install Docker Engine (taranis-ng-docker).
+#   2. For each worker_type: build/save the image on the control host, scp +
+#      load it on the remote (taranis-ng-image-transfer).
+#   3. Generate a per-worker-type API key + render the Traefik/compose config
+#      (self-signed cert with SANs covering every worker_type — or use ACME,
+#      where Traefik requests per-subdomain certs on demand). Start everything
+#      (taranis-ng-worker).
+#   4. For each worker_type: register the new node in Core via the admin REST
+#      API. Core probes each worker_type endpoint during registration,
+#      verifying the Core→worker direction (taranis-ng-node-register).
+
+- name: "Deploy worker container(s) to remote hosts"
+  # Match every remote worker host regardless of which worker_types it runs.
+  # `worker_types` in host_vars/<host>.yml is the source of truth.
+  hosts: "worker_hosts"
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: "Ensure worker_types is set for the target host"
+      ansible.builtin.assert:
+        that:
+          - worker_types is defined
+          - worker_types | length > 0
+        fail_msg: >-
+          worker_types must be set (non-empty list) for every host targeted by
+          distribute-worker.yml. Define it in host_vars/<host>.yml, e.g.:
+              worker_types: ["collectors"]
+              worker_types: ["collectors", "bots"]
+              worker_types: ["collectors", "bots", "presenters", "publishers"]
+
+    # A group_vars/host_vars file whose name does not exactly match the group or
+    # host is never loaded, and the failure is otherwise silent — every value
+    # falls back to a role default and the first symptom is a confusing assert.
+    - name: "Warn when operator vars look unloaded"
+      ansible.builtin.debug:
+        msg: >-
+          No operator variables resolved for {{ inventory_hostname }}. Check that
+          your files are named group_vars/all.yml and
+          host_vars/{{ inventory_hostname }}.yml — Ansible matches those by group
+          and host name, so a *.local.yml suffix is silently ignored.
+      when: core_url | default('') | length == 0 and worker_types | default([]) | length == 0
+
+    - name: "Ensure core_url is defined (group_vars/all.yml)"
+      ansible.builtin.assert:
+        that: core_url is defined and core_url | length > 0 and not core_url.startswith('https://CHANGEME')
+        fail_msg: "core_url must be set in group_vars/all.yml (copy from all.example.yml)."
+
+    - name: "Ensure Core admin credentials are defined"
+      ansible.builtin.assert:
+        that:
+          - taranis_admin_user is defined and taranis_admin_user | length > 0
+          - taranis_admin_password is defined and taranis_admin_password | length > 0
+          - not taranis_admin_user.startswith('CHANGEME')
+        fail_msg: "Set taranis_admin_user and taranis_admin_password in group_vars/all.yml."
+
+  roles:
+    - role: taranis-ng-docker
+    - role: taranis-ng-image-transfer
+    - role: taranis-ng-worker
+    - role: taranis-ng-node-register

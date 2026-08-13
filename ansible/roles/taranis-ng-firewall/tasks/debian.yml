@@ -1,0 +1,65 @@
+---
+# ufw. Rule order is load-bearing: every allow rule is in place before the
+# deny-by-default policy is set and ufw is switched on, so the SSH session this
+# is running over survives.
+
+- name: "Check whether ufw is already installed"
+  ansible.builtin.stat:
+    path: /usr/sbin/ufw
+  register: firewall_ufw_binary
+
+- name: "Ensure ufw is installed"
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: true
+
+# Under --check the install above is only simulated, so on a host without ufw
+# the module has no binary to drive and every rule task would fail. Skip them
+# and say so, rather than reporting a failure that would not happen for real.
+- name: "Explain why the rules cannot be previewed"
+  ansible.builtin.debug:
+    msg: >-
+      ufw is not installed on {{ inventory_hostname }} yet. In --check the
+      install is simulated, so the rules below cannot be previewed. Re-run
+      without --check, or install ufw first, to see them.
+  when:
+    - ansible_check_mode
+    - not firewall_ufw_binary.stat.exists
+
+- name: "Apply the ufw policy"
+  when: firewall_ufw_binary.stat.exists or not ansible_check_mode
+  block:
+    - name: "Allow inbound TCP ports"
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: "{{ firewall_allowed_tcp_ports }}"
+
+    - name: "Allow inbound UDP ports"
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: udp
+      loop: "{{ firewall_allowed_udp_ports }}"
+
+    - name: "Deny everything else inbound"
+      community.general.ufw:
+        default: deny
+        direction: incoming
+
+    - name: "Leave outbound unrestricted"
+      community.general.ufw:
+        default: allow
+        direction: outgoing
+
+    - name: "Enable ufw"
+      community.general.ufw:
+        state: enabled
+      when: firewall_enable | bool
+
+    - name: "Report that the policy was staged but not enabled"
+      ansible.builtin.debug:
+        msg: "Rules written, ufw left disabled (firewall_enable=false). Run `ufw enable` on the host when ready."
+      when: not firewall_enable | bool

@@ -1,0 +1,38 @@
+---
+# worker-power.yml — stop, start or restart remote worker containers.
+#
+# Non-destructive: volumes, secrets, TLS material and the Core node rows are
+# all left in place, so this is fully reversible. A stopped worker stays
+# registered and shows up in the Core GUI as unreachable; use worker-remove.yml
+# to take it out of Core as well.
+#
+#   cd ansible
+#
+#   # stop every worker host in the inventory
+#   uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/worker-power.yml -e worker_power=stopped --limit worker_hosts
+#
+#   # start one host again
+#   uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/worker-power.yml -e worker_power=started \
+#     --limit collectors.example.org
+#
+#   # restart in place (picks up a hand-edited compose file, for instance)
+#   uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/worker-power.yml -e worker_power=restarted --limit worker_hosts
+#
+# worker_power defaults to "started", so a bare run just makes sure the workers
+# are up.
+
+- name: "Stop / start the Taranis-NG worker containers"
+  hosts: worker_hosts
+  become: true
+  # Only compose state changes here; no facts are needed and skipping them
+  # keeps the play quick enough to use casually.
+  gather_facts: false
+
+  tasks:
+    - name: "Set the worker power state"
+      ansible.builtin.include_role:
+        name: taranis-ng-worker
+        tasks_from: power.yml

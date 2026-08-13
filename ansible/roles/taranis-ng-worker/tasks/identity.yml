@@ -1,0 +1,35 @@
+---
+# Validate the variables that identify this host's workers.
+#
+# Imported by every entry point into this role — deploy (main.yml), power.yml
+# and remove.yml — plus the lifecycle playbooks, so stopping or removing a
+# worker resolves exactly the same worker_types and addressing the deploy used.
+
+- name: "Validate worker_types is a non-empty list of known worker types"
+  ansible.builtin.assert:
+    that:
+      - worker_types is defined
+      - worker_types | length > 0
+    fail_msg: >-
+      worker_types must be set to a non-empty list of worker types
+      (collectors, bots, presenters, publishers) — define it in
+      host_vars/<host>.yml.
+
+- name: "Validate each worker_type entry"
+  ansible.builtin.assert:
+    that: item in ['collectors', 'bots', 'presenters', 'publishers']
+    fail_msg: "worker_types contains an unknown type: {{ item }}"
+  loop: "{{ worker_types }}"
+
+# Left at its default on a host whose inventory key is already a worker FQDN,
+# this yields collectors.collectors.example.com — unresolvable, uncertifiable,
+# and registered in Core as a node nothing can reach.
+- name: "Validate worker_base_hostname is not already prefixed with a worker type"
+  ansible.builtin.assert:
+    that: worker_base_hostname.split('.')[0] not in ['collectors', 'bots', 'presenters', 'publishers']
+    fail_msg: >-
+      worker_base_hostname is '{{ worker_base_hostname }}', whose first label is
+      already a worker type. The per-type FQDN would become
+      '{{ worker_types[0] }}.{{ worker_base_hostname }}'. Set worker_base_hostname to the
+      PARENT domain in host_vars/{{ inventory_hostname }}.yml — e.g.
+      worker_base_hostname: "{{ worker_base_hostname.split('.')[1:] | join('.') }}"

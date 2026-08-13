@@ -1,0 +1,30 @@
+---
+# taranis-ng-node-register role: register every freshly-deployed worker_type
+# on this host as a node in the Taranis-NG Core database via the admin REST
+# API. Loops over worker_types so a host running collectors + bots gets BOTH
+# node rows registered.
+#
+# This role runs on the control host (delegate_to: localhost). It:
+#   1. Logs in as an admin user → obtains a JWT access token (once per host).
+#   2. For each worker_type: read the staged key, fetch existing nodes, then
+#      POST a new node or PUT the existing one, and probe Core→worker
+#      reachability.
+#
+# Core's add_*_node / update_*_node managers call the worker's own
+# /api/v1/<type> endpoint with the supplied key before persisting, so a
+# successful POST/PUT also proves the Core→worker direction and the key.
+
+# ---------------------------------------------------------------------------
+# Step 1 — validate the inputs and obtain a JWT from Core (once per host).
+# ---------------------------------------------------------------------------
+- name: "Authenticate to Core"
+  ansible.builtin.import_tasks: login.yml
+
+# ---------------------------------------------------------------------------
+# Step 2 — register + probe each worker_type.
+# ---------------------------------------------------------------------------
+- name: "Register + probe each worker_type"
+  ansible.builtin.include_tasks: per_type.yml
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type

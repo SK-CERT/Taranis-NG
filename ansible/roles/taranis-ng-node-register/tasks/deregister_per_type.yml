@@ -1,0 +1,53 @@
+---
+# Per-worker-type deregistration — invoked via include_tasks with `worker_type`
+# set as the loop variable.
+
+- name: "Set the *Node collection endpoint for {{ worker_type }}"
+  ansible.builtin.set_fact:
+    node_collection_url: "{{ core_url }}/api/v1/config/{{ worker_type }}-nodes"
+    current_worker_api_url: "https://{{ worker_type }}.{{ worker_base_hostname }}"
+
+- name: "Fetch existing nodes from Core for {{ worker_type }}"
+  ansible.builtin.uri:
+    url: "{{ node_collection_url }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ core_access_token }}"
+    status_code: 200
+    validate_certs: "{{ register_validate_certs }}"
+  register: existing_nodes_result
+  delegate_to: localhost
+  become: false
+  check_mode: false
+
+# Matched on api_url, not name: the name is cosmetic and an operator may have
+# renamed the node in the GUI, but the URL is what Core dispatches to and what
+# this host actually answers on.
+- name: "Find the node registered for this host's {{ worker_type }}"
+  ansible.builtin.set_fact:
+    doomed_worker_node: >-
+      {{
+        (existing_nodes_result.json['items'] | default([]))
+        | selectattr('api_url', 'defined')
+        | selectattr('api_url', 'equalto', current_worker_api_url)
+        | list | first | default({})
+      }}
+
+- name: "Delete the node from Core for {{ worker_type }}"
+  ansible.builtin.uri:
+    url: "{{ node_collection_url }}/{{ doomed_worker_node.id }}"
+    method: DELETE
+    headers:
+      Authorization: "Bearer {{ core_access_token }}"
+    status_code: [200, 202, 204]
+    validate_certs: "{{ register_validate_certs }}"
+  register: node_delete_result
+  delegate_to: localhost
+  become: false
+  when: "'id' in doomed_worker_node"
+
+- name: "Report the deregistration of {{ worker_type }}"
+  ansible.builtin.debug:
+    msg: >-
+      {{ current_worker_api_url }}
+      {{ 'deregistered from Core' if 'id' in doomed_worker_node else 'was not registered with Core — nothing to delete' }}.

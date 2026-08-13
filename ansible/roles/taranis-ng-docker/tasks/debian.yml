@@ -1,0 +1,75 @@
+---
+# Docker Engine installation for Debian/Ubuntu (apt).
+- name: "Ensure required apt packages are present"
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      # deb822_repository reads and writes .sources files with python-debian.
+      # The module can apt-install it itself, but only into the system Python —
+      # installing it up front works regardless of which interpreter Ansible
+      # picked on the target.
+      - python3-debian
+    state: present
+    update_cache: true
+
+- name: "Create Docker apt keyring directory"
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: "Download Docker's GPG key"
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+# Hosts provisioned before the deb822 switch carry a one-line
+# /etc/apt/sources.list.d/docker.list written by apt_repository. deb822_repository
+# writes docker.sources instead, so without this both would exist and apt would
+# report the Docker repo as configured twice on every update.
+- name: "Remove the legacy one-line Docker apt source"
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.list
+    state: absent
+
+# deb822_repository replaces apt_repository, which is deprecated and goes away
+# in ansible-core 2.25. It writes /etc/apt/sources.list.d/docker.sources.
+- name: "Add Docker apt repository"
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: [deb]
+    uris: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components: [stable]
+    architectures: "{{ docker_apt_arch }}"
+    signed_by: /etc/apt/keyrings/docker.asc
+    state: present
+    enabled: true
+  vars:
+    # download.docker.com publishes amd64/arm64/armhf, none of which are the
+    # kernel names Ansible reports.
+    docker_apt_arch: >-
+      {{ {'x86_64': 'amd64', 'aarch64': 'arm64', 'armv7l': 'armhf'}[ansible_facts['architecture']]
+         | default('amd64') }}
+  register: docker_apt_repo
+
+# deb822_repository has no update_cache of its own, and the install below would
+# otherwise run against a cache that has never seen download.docker.com.
+- name: "Refresh the apt cache after changing the Docker repository"
+  ansible.builtin.apt:
+    update_cache: true
+  when: docker_apt_repo.changed
+
+- name: "Install Docker Engine (apt)"
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true

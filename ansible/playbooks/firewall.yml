@@ -1,0 +1,42 @@
+---
+# firewall.yml — deny all inbound traffic on a host except SSH, HTTP and HTTPS.
+#
+# Opens tcp/22, tcp/80, tcp/443 and udp/443; denies everything else inbound;
+# leaves outbound unrestricted. ufw on Debian/Ubuntu, firewalld on the RedHat
+# family. Allow rules are always applied before the deny policy, so the SSH
+# session Ansible is running over is never cut.
+#
+#   cd ansible
+#
+#   # preview
+#   uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/firewall.yml --limit collectors.example.org --check --diff
+#
+#   # apply to every worker host
+#   uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/firewall.yml --limit worker_hosts
+#
+# Other hosts — the Core host, say — via firewall_hosts:
+#
+#   uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/firewall.yml -e firewall_hosts=core
+#
+# Adjusting the policy:
+#
+#   -e '{"firewall_allowed_tcp_ports": [22, 80, 443, 9090]}'   extra port
+#   -e firewall_enable=false                                    stage without enabling
+#
+# NOTE: Docker publishes container ports past both ufw and firewalld. The
+# worker stack publishes only 80 and 443, which this policy opens anyway, so
+# nothing is currently exposed beyond it — but a container published on another
+# port later would be reachable regardless of these rules. The play prints the
+# published ports at the end so that stays visible.
+
+- name: "Enable a deny-by-default host firewall"
+  hosts: "{{ firewall_hosts | default('worker_hosts') }}"
+  become: true
+  # os_family decides ufw vs firewalld.
+  gather_facts: true
+
+  roles:
+    - role: taranis-ng-firewall

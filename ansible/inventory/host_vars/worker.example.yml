@@ -1,0 +1,130 @@
+---
+# host_vars/worker.example.yml
+#
+# Template for per-host configuration. Copy to host_vars/<inventory_hostname>.yml
+# — the filename must match the host key in your distributed.local.yml inventory
+# EXACTLY, because that is how Ansible finds it. A host keyed
+# `collectors.example.org` needs
+# host_vars/collectors.example.org.yml; any other name is silently never
+# loaded. Those files are gitignored; this .example is tracked and, matching no
+# host, is ignored by Ansible.
+#
+#     cp host_vars/worker.example.yml host_vars/collector-01.yml
+#
+# Per-host vars OVERFLOW into group_vars/all.yml (which holds the
+# shared shape: core_url, admin creds, ACME/EAB), so this file only sets the
+# things that genuinely vary per-host: which worker_types run here, the
+# host's public DNS base, and (if you don't want fail-closed behaviour) the
+# per-worker_type API keys.
+
+# ---------------------------------------------------------------------------
+# REQUIRED: which Taranis-NG worker containers run on this host.
+# ---------------------------------------------------------------------------
+# A list. Each entry must be one of: collectors, bots, presenters, publishers.
+# The play brings up ONE Traefik on this host fronting ALL the worker_types
+# listed here, with per-type subdomain routing
+# (<type>.<worker_base_hostname>) — so Core reaches each worker_type at its
+# own FQDN and (in ACME mode) each gets its own cert via the router's Host().
+#
+# Examples:
+#   worker_types: ["collectors"]                                  # 1 collectors node
+#   worker_types: ["collectors", "bots"]                          # collectors + bots on one host
+#   worker_types: ["collectors",
+#                  "bots",
+#                  "presenters",
+#                  "publishers"]                                  # full worker stack on one host
+worker_types: ["collectors"]
+
+# ---------------------------------------------------------------------------
+# RECOMMENDED: the base hostname this host's worker subdomains live under.
+# ---------------------------------------------------------------------------
+# Each worker_type on this host gets a public FQDN of the form
+#       <type>.<worker_base_hostname>
+# e.g. worker_base_hostname: "taranis1.example.org"
+#      → collectors.taranis1.example.org, bots.taranis1.example.org, ...
+#
+# This is DECOUPLED from where Ansible SSH's into (`ansible_host` in your
+# distributed.local.yml inventory). Two common patterns:
+#
+# ----------
+# Pattern A — VM hostname == public API hostname
+#   The VM IS the public FQDN; no extra prefix.
+#
+#   # distributed.local.yml
+#   worker_hosts:
+#     hosts:
+#       collectors.example.org:
+#         ansible_host: collectors.example.org   # SSH target == public FQDN
+#         ansible_user: ops
+#
+#   # host_vars/collectors.example.org.yml
+#   worker_types: ["collectors"]
+#   worker_base_hostname: "example.org"
+#   # → collectors API at https://collectors.example.org   ✓ exact match
+#
+# ----------
+# Pattern B — VM hostname ≠ public API hostname
+#   The VM is named "taranis1", but the API is exposed under a subdomain.
+#
+#   # distributed.local.yml
+#   worker_hosts:
+#     hosts:
+#       taranis1:                                       # inventory key — any string
+#         ansible_host: taranis1.example.org             # SSH target (the VM)
+#         ansible_user: ops
+#
+#   # host_vars/taranis1.yml   (filename matches inventory key "taranis1")
+#   worker_types: ["collectors", "bots"]
+#   worker_base_hostname: "taranis1.example.org"
+#   # → collectors API at https://collectors.taranis1.example.org   ✓
+#   # → bots API at       https://bots.taranis1.example.org         ✓
+#   # (Cert SANs match these — Traefik requests them via the Host() labels.)
+# ----------
+#
+# ⚠ SET THIS. The role's default is `{{ inventory_hostname }}`, and the FQDN is
+# built as <type>.<worker_base_hostname>. So if your inventory key is already a
+# worker's public FQDN — the Pattern A case above, `collectors.example.org`
+# — leaving the default in place produces
+# `collectors.collectors.example.org`: DNS won't resolve it, the
+# certificate won't match it, and Core registers a node it can never reach.
+# The role asserts on this, but set the parent domain here and be done with it.
+#
+# Pattern A (inventory key is the worker FQDN)  → the PARENT domain:
+worker_base_hostname: "example.org"
+# Pattern B (inventory key is a short VM name)  → the VM's own domain:
+# worker_base_hostname: "taranis1.example.org"
+
+# ---------------------------------------------------------------------------
+# OPTIONAL: pre-generated per-type API keys (otherwise role auto-generates).
+# ---------------------------------------------------------------------------
+# If you want to match existing Core node rows, supply one key per worker_type.
+# When absent for a type, the role generates + persists a random key on the
+# worker host (idempotent on re-runs).
+# Example (covers a host running collectors + bots):
+#   worker_api_keys:
+#     collectors: "precomputed-hex-key-for-collectors"
+#     bots:       "precomputed-hex-key-for-bots"
+worker_api_keys: {}
+
+# ---------------------------------------------------------------------------
+# OPTIONAL: per-host ACME/EAB override (otherwise inherited from group_vars/all.yml).
+# ---------------------------------------------------------------------------
+# Use this when each worker host should use a different ACME account
+# (different EAB creds at the same CA) or even a different CA entirely.
+#
+# worker_acme_eab_kid: "PER_HOST_EAB_KID"
+# worker_acme_eab_hmac: "PER_HOST_EAB_HMAC"
+# worker_acme_caserver: "https://acme.zerossl.com/v2/DV90"
+
+# ---------------------------------------------------------------------------
+# OPTIONAL: TLS mode override (otherwise inherited from group_vars/all.yml).
+# ---------------------------------------------------------------------------
+# Use this to mix TLS modes per host (e.g. self-signed on internal hosts,
+# ACME on public ones).
+#
+# worker_tls_mode: "selfsigned"   # or "provided" or "acme"
+# For worker_tls_mode == "provided", supply cert + key paths on the host.
+# The supplied cert MUST cover every per-type subdomain
+# (<type>.<worker_base_hostname> for each worker_type in worker_types).
+# worker_tls_cert: "/etc/ssl/certs/worker.crt"
+# worker_tls_key: "/etc/ssl/private/worker.key"

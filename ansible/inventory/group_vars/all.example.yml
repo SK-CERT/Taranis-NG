@@ -1,0 +1,99 @@
+---
+# group_vars/all.example.yml
+#
+# Copy to group_vars/all.yml and fill in your values. The name must be exactly
+# the group name — Ansible matches group_vars files by group, so anything else
+# (all.local.yml, my-all.yml) is silently never loaded. all.yml is gitignored;
+# this .example file is tracked, and its name matches no group, so Ansible
+# ignores it.
+#
+#     cp group_vars/all.example.yml group_vars/all.yml
+
+# ---------------------------------------------------------------------------
+# Image tag — must match the tag used when building/pulling images on the Core host.
+# Mirrors docker/.env TARANIS_NG_TAG.
+# ---------------------------------------------------------------------------
+taranis_ng_tag: "latest"
+
+# ---------------------------------------------------------------------------
+# Core connection details — used by remote workers to reach Core over HTTPS.
+# ---------------------------------------------------------------------------
+
+# Core's HTTPS Traefik URL, as reachable from the worker hosts. Required.
+core_url: "https://CHANGEME_CORE_FQDN"
+
+# (bots only) Core SSE URL. Defaults to <core_url>/sse. Override only if your
+# Traefik routes /sse differently.
+core_sse_url: "{{ core_url }}/sse"
+
+# ---------------------------------------------------------------------------
+# Default worker TLS settings — can be overridden per-group or per-host.
+# ---------------------------------------------------------------------------
+
+# TLS certificate mode for remote workers:
+#   "selfsigned" — Ansible generates a self-signed cert on the worker host.
+#                 Core then needs the worker cert installed in its CA bundle
+#                 for HTTPS verification to pass — see distributed-deployment.md.
+#   "provided"   — operator supplies cert + key paths via worker_tls_cert / worker_tls_key
+#                  (per-host via host_vars/<host>.yml).
+#   "acme"       — Let's Encrypt / ZeroSSL / custom ACME CA. Requires a
+#                 publicly-reachable worker (HTTP-01 / TLS-ALPN-01) or DNS API
+#                 access (DNS-01). See the ACME variables block below.
+worker_tls_mode: "selfsigned"
+
+# ---------------------------------------------------------------------------
+# ACME (used when worker_tls_mode == "acme")
+# ---------------------------------------------------------------------------
+# These are the SHARED DEFAULTS for every worker host — every var set here is
+# inherited by every host unless overridden in that host's
+# host_vars/<host>.yml (which wins via Ansible's precedence).
+#
+# Recommended pattern (DRY):
+#   - Put the ACME shape that's identical for every worker here (email,
+#     keytype, challenge type, caserver if using the same CA everywhere).
+#   - Per-host vars live in host_vars/<host>.yml and only override what
+#     actually differs (typically the EAB creds if each host uses a separate
+#     ACME account, or the caserver if a host uses a different CA).
+#
+# Alternative pattern (explicit per host):
+#   - Comment out every ACME var here and declare them all in every host's
+#     host_vars/<host>.yml. More verbose but each host is fully
+#   self-describing.
+#
+# All values below are secrets/operator-specific — put real values only in
+# gitignored `group_vars/<group>.yml` or `host_vars/<host>.yml`, NEVER in
+# this tracked .example file. When `worker_tls_mode != "acme"` these are all
+# ignored.
+
+worker_acme_email: ""                      # required when ACME; e.g. ops@example.com
+worker_acme_caserver: "https://acme-v02.api.letsencrypt.org/directory"
+# Alternate CAs (most non-Let's-Encrypt CAs require EAB below):
+#   "https://acme-staging-v02.api.letsencrypt.org/directory"  # Let's Encrypt staging
+#   "https://acme.zerossl.com/v2/DV90"                        # ZeroSSL (EAB required)
+worker_acme_keytype: "EC384"               # EC256 | EC384 | RSA2048 | RSA4096 | RSA8192
+worker_acme_challenge: "http"              # "http" | "tlsalpn" | "dns"
+
+# EAB (External Account Binding) — required for ZeroSSL and most private CAs.
+# For Let's Encrypt production these stay empty.
+# Per-host override lives in host_vars/<host>.yml when each host uses a
+# separate ACME account (different kid/hmac).
+worker_acme_eab_kid: ""
+worker_acme_eab_hmac: ""
+
+# DNS-01 only — set the Traefik DNS provider name + its credential env vars.
+# Only consulted when worker_acme_challenge == "dns".
+worker_acme_dns_provider: ""              # e.g. "cloudflare", "route53", "digitalocean"
+worker_acme_dns_env: {}                   # e.g. { CF_DNS_API_TOKEN: "your-token" }
+
+# ---------------------------------------------------------------------------
+# Core admin credentials — used by distribute-worker.yml to register the new
+# worker node in Core's database via the admin REST API.
+# ---------------------------------------------------------------------------
+
+# An admin user able to create *Node resources. Required for distribute-worker.yml.
+taranis_admin_user: "CHANGEME_ADMIN_USER"
+taranis_admin_password: "CHANGEME_ADMIN_PASSWORD"
+
+# Override the image-build toggle globally. Defaults to false (assume image
+# already built/pulled on the Core host). Set true to build from source.
+worker_image_build: false
