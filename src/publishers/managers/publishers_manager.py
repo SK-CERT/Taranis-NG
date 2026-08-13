@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 
+from shared.schema.publisher import PublisherInputSchema
+
 from publishers.email_publisher import EMAILPublisher
 from publishers.ftp_publisher import FTPPublisher
 from publishers.mastodon_publisher import MASTODONPublisher
@@ -9,7 +11,6 @@ from publishers.misp_publisher import MISPPublisher
 from publishers.sftp_publisher import SFTPPublisher
 from publishers.twitter_publisher import TWITTERPublisher
 from publishers.wordpress_publisher import WORDPRESSPublisher
-from shared.schema.publisher import PublisherInputSchema
 
 publishers = {}
 
@@ -31,7 +32,7 @@ def register_publisher(publisher) -> None:  # noqa: ANN001
     Arguments:
         publisher: The publisher object to register.
     """
-    publishers[publisher.type] = publisher
+    publishers[publisher.publisher_type] = publisher
 
 
 def get_registered_publishers_info() -> list[dict]:

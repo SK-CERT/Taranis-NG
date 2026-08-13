@@ -7,7 +7,6 @@ from http import HTTPStatus
 from pathlib import Path
 
 from envelope import Envelope
-
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
@@ -19,7 +18,7 @@ class EMAILPublisher(BasePublisher):
     """This class represents a publisher that sends emails using SMTP server.
 
     Attributes:
-        type (str): The type of the publisher.
+        publisher_type (str): The type of the publisher.
         name (str): The name of the publisher.
         description (str): The description of the publisher.
         parameters (list): The list of parameters required for email publishing.
@@ -28,8 +27,8 @@ class EMAILPublisher(BasePublisher):
         publish(publisher_input): Publishes an email using the provided publisher input.
     """
 
-    type = "EMAIL_PUBLISHER"
-    config = ConfigPublisher().get_config_by_type(type)
+    publisher_type = "EMAIL_PUBLISHER"
+    config = ConfigPublisher().get_config_by_type(publisher_type)
     name = config.name
     description = config.description
     parameters = config.parameters
@@ -95,6 +94,9 @@ class EMAILPublisher(BasePublisher):
             envelope.message(" ")
         else:
             envelope.message(message)
+
+        body_mime = publisher_input.message_body_mime_type or "text/plain"
+        envelope.mime("html" if body_mime == "text/html" else "plain")
         if not subject:
             envelope.subject(" ")
         else:

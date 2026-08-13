@@ -30,6 +30,7 @@ class PublisherInput:
         message_body: str,
         recipients: list,
         att_file_name: str,
+        message_body_mime_type: str | None = None,
     ) -> None:
         """Initialize the PublisherInput object.
 
@@ -37,12 +38,14 @@ class PublisherInput:
             name (str): The name of the publisher.
             type (str): The type of the publisher.
             parameter_values (list): The list of parameter values.
-            mime_type (str): The MIME type of the data.
+            mime_type (str): The MIME type of the data (the attachment, when there is one).
             data (str): The data to be published.
             message_title (str): The title of the message.
             message_body (str): The body of the message.
             recipients (list): The list of recipients.
             att_file_name (str): The attachment file name.
+            message_body_mime_type (str | None): MIME type of the message body, as declared by the
+                presenter. None when no presenter was involved; publishers should then assume plain text.
         """
         self.name = name
         self.type = type
@@ -53,6 +56,7 @@ class PublisherInput:
         self.message_body = message_body
         self.recipients = recipients
         self.att_file_name = att_file_name
+        self.message_body_mime_type = message_body_mime_type
 
         self.param_key_values = {}
         for pv in parameter_values:
@@ -71,6 +75,7 @@ class PublisherInputSchema(Schema):
     message_body = fields.Str(allow_none=True)
     recipients = fields.List(fields.String, allow_none=True)
     att_file_name = fields.Str(allow_none=True)
+    message_body_mime_type = fields.Str(allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> PublisherInput:  # noqa: ANN003, ARG002
