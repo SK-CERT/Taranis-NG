@@ -13,7 +13,6 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import paramiko
-
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
@@ -31,8 +30,8 @@ class FTPPublisher(BasePublisher):
         Exception: _description_
     """
 
-    type = "FTP_PUBLISHER"
-    config = ConfigPublisher().get_config_by_type(type)
+    publisher_type = "FTP_PUBLISHER"
+    config = ConfigPublisher().get_config_by_type(publisher_type)
     name = config.name
     description = config.description
     parameters = config.parameters
@@ -69,7 +68,7 @@ class FTPPublisher(BasePublisher):
             remote_path = ftp_data.path + filename
 
             if ftp_data.scheme == "sftp":
-                ssh_port = ftp_data.port if ftp_data.port else 22
+                ssh_port = ftp_data.port or 22
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # noqa: S507  # unsafe connect
                 self.logger.debug(f"Connecting SFTP: {ftp_hostname}, port {ssh_port}, user {ftp_username}")
@@ -80,7 +79,7 @@ class FTPPublisher(BasePublisher):
                 return {}, HTTPStatus.OK
 
             if ftp_data.scheme == "ftp":
-                ftp_port = ftp_data.port if ftp_data.port else 21
+                ftp_port = ftp_data.port or 21
                 ftp = ftplib.FTP()  # noqa: S321  # FTP is considered insecure
                 self.logger.debug(f"Connecting FTP: {ftp_hostname}, port {ftp_port}")
                 ftp.connect(host=ftp_hostname, port=ftp_port)
@@ -91,7 +90,7 @@ class FTPPublisher(BasePublisher):
                 return {}, HTTPStatus.OK
 
             msg = f"Schema '{ftp_data.scheme}' not supported, choose 'ftp' or 'sftp'"
-            self.logger.exception(msg)
+            self.logger.error(msg)
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
         except Exception as error:
