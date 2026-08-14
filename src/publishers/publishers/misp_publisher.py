@@ -6,7 +6,6 @@ from http import HTTPStatus
 
 import urllib3
 from pymisp import MISPEvent, PyMISP
-
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
 
@@ -17,15 +16,15 @@ class MISPPublisher(BasePublisher):
     """MISP Publisher class.
 
     Attributes:
-        type (str): Type of publisher.
+        publisher_type (str): Type of publisher.
         config (ConfigPublisher): Configuration for publisher.
         name (str): Name of publisher.
         description (str): Description of publisher.
         parameters (List[Parameter]): Parameters for publisher.
     """
 
-    type = "MISP_PUBLISHER"
-    config = ConfigPublisher().get_config_by_type(type)
+    publisher_type = "MISP_PUBLISHER"
+    config = ConfigPublisher().get_config_by_type(publisher_type)
     name = config.name
     description = config.description
     parameters = config.parameters

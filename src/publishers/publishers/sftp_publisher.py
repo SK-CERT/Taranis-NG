@@ -16,7 +16,6 @@ from io import BytesIO
 from pathlib import Path
 
 import paramiko
-
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
@@ -27,8 +26,8 @@ from .base_publisher import BasePublisher
 class SFTPPublisher(BasePublisher):
     """SFTP Publisher class."""
 
-    type = "SFTP_PUBLISHER"
-    config = ConfigPublisher().get_config_by_type(type)
+    publisher_type = "SFTP_PUBLISHER"
+    config = ConfigPublisher().get_config_by_type(publisher_type)
     name = config.name
     description = config.description
     parameters = config.parameters
@@ -91,7 +90,7 @@ class SFTPPublisher(BasePublisher):
             file_object = BytesIO(bytes_data)
 
             # decide SFTP port
-            port = port if port else 22
+            port = port or 22
 
             # determine SSH key type
             ssh_key = _get_key(ssh_key, ssh_key_password) if ssh_key else None
