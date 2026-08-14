@@ -1,0 +1,21 @@
+---
+# Default variables for the taranis-ng-node-register role.
+#
+# Everything describing the worker itself (worker_types, worker_base_hostname,
+# the per-type node name/description, the staging directory) is defined once in
+# taranis-ng-worker/defaults and reused from there.
+
+# Core admin credentials — used to obtain a JWT for the node-registration
+# REST calls. Required; no safe defaults.
+core_url: ""
+taranis_admin_user: ""
+taranis_admin_password: ""
+
+# Verify TLS on the registration + probe calls made from the control host.
+# Leave false for worker_tls_mode: "selfsigned"; set true once the workers use
+# "acme" or "provided" certificates.
+#
+# This covers only the calls THIS role makes. Core's own probe runs inside the
+# core container against the requests trust store, so a self-signed worker
+# still needs its cert on the Core host — see docs/distributed-deployment.md.
+register_validate_certs: false

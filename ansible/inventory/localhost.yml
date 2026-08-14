@@ -1,6 +1,14 @@
+---
+# Default inventory: the control machine itself, in the `core` group.
+#
+# The group matters — site.yml targets `hosts: core` so that running it against
+# the distributed inventory cannot accidentally deploy the all-in-one stack onto
+# every remote worker host.
 all:
-  hosts:
-    localhost:
-      become: yes
-      ansible_connection: local
-      ansible_python_interpreter: python3
+  children:
+    core:
+      hosts:
+        localhost:
+          ansible_connection: local
+          ansible_python_interpreter: "{{ ansible_playbook_python }}"
+          ansible_become: true

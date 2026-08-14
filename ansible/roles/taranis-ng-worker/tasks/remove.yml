@@ -1,0 +1,67 @@
+---
+# Tear this host's worker deployment down.
+#
+# Entry point for playbooks/worker-remove.yml. This is the destructive half of
+# the lifecycle: it removes containers and, depending on the flags below, the
+# data volumes, the images, /etc/taranis-ng and the control-host copy of the
+# API key. It deliberately does NOT touch Core — deregistration is a separate
+# step in worker-remove.yml, which runs first so Core stops routing work here
+# before the containers go away.
+#
+# Every step is skippable, and each is idempotent: a second run on an
+# already-clean host reports no changes rather than failing.
+
+- name: "Validate the worker identity"
+  ansible.builtin.import_tasks: identity.yml
+
+- name: "Check whether a compose project is deployed here"
+  ansible.builtin.stat:
+    path: "{{ worker_compose_dir }}/docker-compose.worker.yml"
+  register: worker_compose_file
+
+# `docker compose down`. remove_images is a string choice, and "all" is the
+# meaningful one here: "local" only deletes images with no custom tag, and the
+# worker images are tagged skcert/taranis-ng-<type>:<tag>.
+- name: "Remove the worker containers, network{{ ' and volumes' if worker_remove_volumes | bool else '' }}"
+  community.docker.docker_compose_v2:
+    project_src: "{{ worker_compose_dir }}"
+    project_name: "{{ worker_compose_project }}"
+    files:
+      - docker-compose.worker.yml
+    state: absent
+    remove_volumes: "{{ worker_remove_volumes | bool }}"
+    remove_images: "{{ 'all' if worker_remove_images | bool else omit }}"
+    remove_orphans: true
+  register: worker_remove_result
+  when: worker_compose_file.stat.exists
+
+- name: "Note when there was no compose project to remove"
+  ansible.builtin.debug:
+    msg: "No compose project at {{ worker_compose_dir }} on {{ inventory_hostname }} — nothing to bring down."
+  when: not worker_compose_file.stat.exists
+
+# /etc/taranis-ng holds the compose file, the per-type API keys and the TLS
+# material (including the ACME account key when worker_tls_mode: acme).
+- name: "Remove the worker configuration directory"
+  ansible.builtin.file:
+    path: "{{ worker_config_dir }}"
+    state: absent
+  when: worker_remove_config | bool
+
+- name: "Remove the staged API keys from the control host"
+  ansible.builtin.file:
+    path: "{{ worker_api_key_staging_dir }}/api_key.worker.{{ inventory_hostname }}.{{ item }}.txt"
+    state: absent
+  loop: "{{ worker_types }}"
+  delegate_to: localhost
+  become: false
+  when: worker_remove_staged_key | bool
+
+- name: "Report what was removed"
+  ansible.builtin.debug:
+    msg: >-
+      Removed {{ worker_types | join(', ') }} from {{ inventory_hostname }}:
+      containers{{ ' + volumes' if worker_remove_volumes | bool else '' }}{{ ' + images' if worker_remove_images | bool else '' }}{{
+      ' + ' ~ worker_config_dir if worker_remove_config | bool else '' }}{{
+      ' + staged keys on the control host' if worker_remove_staged_key | bool else '' }}.
+      Docker Engine itself is left installed.

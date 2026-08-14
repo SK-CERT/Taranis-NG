@@ -1,0 +1,365 @@
+---
+# taranis-ng-worker role: deploy one or more Taranis-NG worker containers on
+# the remote host behind a single Traefik TLS entrypoint.
+#
+# Pre-conditions: Docker Engine is installed and reachable (run the
+# taranis-ng-docker role first). The worker images are loaded locally on
+# the remote host (run the taranis-ng-image-transfer role first — it loops
+# over worker_types).
+#
+# After the containers are up, Core must still be told about each new node —
+# that is the responsibility of distribute-worker.yml (which calls the
+# taranis-ng-node-register role, also looping over worker_types).
+
+# ---------------------------------------------------------------------------
+# Step 0 — validate the worker identity (shared with power.yml / remove.yml).
+# ---------------------------------------------------------------------------
+- name: "Validate the worker identity"
+  ansible.builtin.import_tasks: identity.yml
+
+# ---------------------------------------------------------------------------
+# Step 1 — directory structure on the worker host.
+# ---------------------------------------------------------------------------
+- name: "Ensure Taranis-NG config directories exist"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+  loop:
+    - "{{ worker_config_dir }}"
+    - "{{ worker_secrets_dir }}"
+    - "{{ worker_tls_dir }}"
+    - "{{ worker_compose_dir }}"
+
+# Traefik's file provider reads this directory and nothing else. The ACME
+# static traefik.yml stays one level up in worker_tls_dir, out of its sight.
+- name: "Ensure the Traefik dynamic-config directory exists"
+  ansible.builtin.file:
+    path: "{{ worker_tls_dynamic_dir }}"
+    state: directory
+    mode: "0755"
+
+# ---------------------------------------------------------------------------
+# Step 2 — generate or reuse the per-worker-type API key.
+# Loop over worker_types so a host running collectors + bots gets two keys,
+# two /etc/taranis-ng/secrets/api_key.<type>.txt files, and two staged copies
+# on the control host.
+# ---------------------------------------------------------------------------
+- name: "Check if per-type worker API key files already exist"
+  ansible.builtin.stat:
+    path: "{{ worker_secrets_dir }}/api_key.{{ item }}.txt"
+  loop: "{{ worker_types }}"
+  register: api_key_file_stats
+
+- name: "Generate an API key for each worker_type that doesn't yet have one and isn't pre-supplied"
+  ansible.builtin.command: "openssl rand -hex 32"
+  register: generated_api_keys_raw
+  changed_when: false
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type
+  when: >
+    not (api_key_file_stats.results
+         | selectattr('item', 'equalto', worker_type)
+         | map(attribute='stat.exists')
+         | first)
+    and (worker_api_keys[worker_type] | default('')) | length == 0
+
+- name: "Write each generated API key to the worker host"
+  ansible.builtin.copy:
+    content: "{{ item.stdout }}\n"
+    dest: "{{ worker_secrets_dir }}/api_key.{{ item.worker_type }}.txt"
+    mode: "0600"
+  loop: "{{ generated_api_keys_raw.results | selectattr('stdout', 'defined') | list }}"
+  no_log: true
+
+- name: "Write each explicitly-supplied API key to the worker host"
+  ansible.builtin.copy:
+    content: "{{ worker_api_keys[item] }}\n"
+    dest: "{{ worker_secrets_dir }}/api_key.{{ item }}.txt"
+    mode: "0600"
+  loop: "{{ worker_types }}"
+  when: (worker_api_keys[item] | default('')) | length > 0
+  no_log: true
+
+# worker_type_item, not item: setting loop_var renames the loop variable, so
+# `item` is undefined here. The downstream tasks read item.worker_type_item off
+# the registered results, which is why this loop is named at all.
+- name: "Read the active per-type API keys (for staging + node registration)"
+  ansible.builtin.slurp:
+    path: "{{ worker_secrets_dir }}/api_key.{{ worker_type_item }}.txt"
+  loop: "{{ worker_types }}"
+  loop_control:
+    loop_var: worker_type_item
+    label: "{{ worker_type_item }}"
+  register: worker_api_keys_slurp
+  no_log: true
+
+# copy does not create missing parent directories.
+- name: "Ensure the control-host staging directory exists"
+  ansible.builtin.file:
+    path: "{{ worker_api_key_staging_dir }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: "Stage each per-type API key on the Core/control host (gitignored location)"
+  ansible.builtin.copy:
+    content: "{{ item.content | b64decode }}"
+    dest: "{{ worker_api_key_staging_dir }}/api_key.worker.{{ inventory_hostname }}.{{ item.worker_type_item }}.txt"
+    mode: "0600"
+  loop: "{{ worker_api_keys_slurp.results }}"
+  delegate_to: localhost
+  become: false
+  no_log: true
+
+# Tell the operator where the per-type API key lives without printing the key
+# value itself. The operator doesn't need to memorize the key — Core's node
+# row is the source of truth after registration — but they DO need to know
+# where to find it (e.g. to rotate, or to debug Core↔worker auth failures).
+- name: "Show where each per-type API key is stored (path only — value is never printed)"
+  ansible.builtin.debug:
+    msg: >-
+      {{ item.worker_type_item }} API key on {{ inventory_hostname }}:
+      worker host → {{ worker_secrets_dir }}/api_key.{{ item.worker_type_item }}.txt (mode 0600, root:root);
+      control host staging → {{ worker_api_key_staging_dir }}/api_key.worker.{{ inventory_hostname }}.{{ item.worker_type_item }}.txt (gitignored, mode 0600).
+      Core's {{ item.worker_type_item }}_node row will store the same key after taranis-ng-node-register runs.
+  loop: "{{ worker_api_keys_slurp.results }}"
+
+# ---------------------------------------------------------------------------
+# Step 3 — TLS cert for the host's Traefik.
+#
+# selfsigned    — generates ONE self-signed cert + key covering all per-type
+#                 subdomains (worker_tls_cns list) as SANs.
+# provided      — operator-supplied cert + key, must cover all per-type
+#                 subdomains itself.
+# acme          — Traefik requests certs on-demand based on each worker_type
+#                 container's `Host(<type>.<base>)` label; the role only
+#                 renders the static config + mounts the ACME volume.
+# ---------------------------------------------------------------------------
+- name: "Ensure the TLS certificate directory exists"
+  ansible.builtin.file:
+    path: "{{ worker_tls_certs_dir }}"
+    state: directory
+    mode: "0755"
+  when: worker_tls_mode != "acme"
+
+- name: "Generate self-signed TLS cert + key for the worker Traefik"
+  when: worker_tls_mode == "selfsigned"
+  block:
+    - name: "Generate private key for worker TLS"
+      community.crypto.openssl_privatekey:
+        path: "{{ worker_tls_certs_dir }}/worker.key"
+        type: RSA
+        size: 2048
+        mode: "0600"
+
+    - name: "Generate CSR for worker TLS covering all per-type subdomains"
+      community.crypto.openssl_csr:
+        path: "{{ worker_tls_certs_dir }}/worker.csr"
+        privatekey_path: "{{ worker_tls_certs_dir }}/worker.key"
+        common_name: "{{ worker_tls_cns[0] | default(worker_types[0] ~ '.' ~ worker_base_hostname) }}"
+        subject_alt_name: "{{ worker_tls_cns | map('regex_replace', '^', 'DNS:') | list }}"
+        mode: "0644"
+
+    - name: "Generate self-signed certificate for worker TLS"
+      community.crypto.x509_certificate:
+        path: "{{ worker_tls_certs_dir }}/worker.crt"
+        privatekey_path: "{{ worker_tls_certs_dir }}/worker.key"
+        csr_path: "{{ worker_tls_certs_dir }}/worker.csr"
+        provider: selfsigned
+        selfsigned_not_after: "+3650d"
+        mode: "0644"
+      notify: "Restart worker compose"
+
+- name: "Verify operator-provided TLS cert + key are present"
+  ansible.builtin.assert:
+    that:
+      - worker_tls_cert | length > 0
+      - worker_tls_key | length > 0
+      - "lookup('ansible.builtin.stat', worker_tls_cert).stat.exists"
+      - "lookup('ansible.builtin.stat', worker_tls_key).stat.exists"
+    fail_msg: >-
+      worker_tls_mode == 'provided' requires worker_tls_cert and worker_tls_key
+      to be set to existing absolute paths on the worker host. The supplied
+      cert must cover every per-type subdomain ({{ worker_tls_cns | join(', ') }}).
+  when: worker_tls_mode == "provided"
+
+# Copied, not symlinked: the cert directory is bind-mounted into the Traefik
+# container, where a symlink to a path outside the mount just dangles.
+- name: "Copy operator-provided cert + key into the worker TLS dir"
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: true
+    mode: "{{ item.mode }}"
+  loop:
+    - {src: "{{ worker_tls_cert }}", dest: "{{ worker_tls_certs_dir }}/worker.crt", mode: "0644"}
+    - {src: "{{ worker_tls_key }}", dest: "{{ worker_tls_certs_dir }}/worker.key", mode: "0600"}
+  loop_control:
+    label: "{{ item.dest }}"
+  when: worker_tls_mode == "provided"
+  notify: "Restart worker compose"
+
+# The certificate generated above only reaches Traefik through this file.
+# Without it Traefik serves its built-in TRAEFIK DEFAULT CERT instead.
+- name: "Render the Traefik dynamic TLS configuration (non-ACME modes)"
+  ansible.builtin.template:
+    src: certs.yml.j2
+    dest: "{{ worker_tls_dynamic_dir }}/certs.yml"
+    mode: "0644"
+  when: worker_tls_mode != "acme"
+  notify: "Restart worker compose"
+
+# Applies in every TLS mode: without it Traefik uses Go's defaults, which still
+# negotiate TLS 1.2 CBC suites.
+- name: "Render the Traefik TLS policy"
+  ansible.builtin.template:
+    src: tls-options.yml.j2
+    dest: "{{ worker_tls_dynamic_dir }}/tls-options.yml"
+    mode: "0644"
+  notify: "Restart worker compose"
+
+# ACME issues certificates into its own storage volume, so a stale certs.yml
+# left over from a previous selfsigned run would keep overriding them.
+- name: "Remove the non-ACME dynamic TLS configuration when using ACME"
+  ansible.builtin.file:
+    path: "{{ worker_tls_dynamic_dir }}/certs.yml"
+    state: absent
+  when: worker_tls_mode == "acme"
+  notify: "Restart worker compose"
+
+# ---------------------------------------------------------------------------
+# Step 3b — ACME / Let's Encrypt / ZeroSSL with optional EAB.
+# ---------------------------------------------------------------------------
+- name: "ACME: validate required variables"
+  ansible.builtin.assert:
+    that:
+      - worker_acme_email | length > 0
+      - worker_acme_challenge in ['http', 'tlsalpn', 'dns']
+      - worker_acme_caserver | length > 0
+      - worker_acme_keytype in ['EC256', 'EC384', 'RSA2048', 'RSA4096', 'RSA8192']
+      - "worker_acme_challenge != 'dns' or worker_acme_dns_provider | length > 0"
+    fail_msg: >-
+      worker_tls_mode == 'acme' requires:
+        - worker_acme_email (non-empty)
+        - worker_acme_challenge in ['http', 'tlsalpn', 'dns']
+        - worker_acme_caserver (non-empty)
+        - worker_acme_keytype in ['EC256','EC384','RSA2048','RSA4096','RSA8192']
+        - worker_acme_dns_provider (non-empty, when challenge == 'dns')
+  when: worker_tls_mode == "acme"
+
+- name: "ACME: warn if ZeroSSL or custom CA and EAB is missing"
+  ansible.builtin.assert:
+    that:
+      - worker_acme_eab_kid | length > 0
+      - worker_acme_eab_hmac | length > 0
+    fail_msg: >-
+      The configured caServer ({{ worker_acme_caserver }}) is not Let's
+      Encrypt production — most other CAs (ZeroSSL, custom/private ACME
+      servers) require External Account Binding. Set worker_acme_eab_kid
+      and worker_acme_eab_hmac in your gitignored host_vars/group_vars.
+  when:
+    - worker_tls_mode == "acme"
+    - worker_acme_caserver != "https://acme-v02.api.letsencrypt.org/directory"
+
+- name: "ACME: render Traefik static configuration"
+  ansible.builtin.template:
+    src: traefik.yml.j2
+    dest: "{{ worker_tls_dir }}/traefik.yml"
+    mode: "0644"
+  when: worker_tls_mode == "acme"
+  notify: "Restart worker compose"
+
+# ---------------------------------------------------------------------------
+# Step 3c — local firewall. Traefik needs 80/443; on the RedHat family
+# firewalld is enabled by default and silently blackholes both, which looks
+# exactly like a DNS or routing problem from Core's side.
+# ---------------------------------------------------------------------------
+- name: "Open the worker HTTP/HTTPS ports"
+  when: worker_open_firewall | bool
+  block:
+    - name: "Collect service state"
+      ansible.builtin.service_facts:
+
+    - name: "Open ports 80/443 in firewalld"
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      loop:
+        - http
+        - https
+      when: >-
+        ansible_facts.services['firewalld.service'].state | default('') == 'running'
+
+    - name: "Check whether ufw is running"
+      ansible.builtin.command: "ufw status"
+      register: worker_ufw_state
+      changed_when: false
+      failed_when: false
+
+    - name: "Open ports 80/443 in ufw"
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - "80"
+        - "443"
+      # The defaults cover ufw not being installed at all.
+      when:
+        - worker_ufw_state.rc | default(1) == 0
+        - "'Status: active' in (worker_ufw_state.stdout | default(''))"
+
+# ---------------------------------------------------------------------------
+# Step 4 — render + start the worker compose (covers all worker_types).
+# ---------------------------------------------------------------------------
+- name: "Render worker docker-compose file"
+  ansible.builtin.template:
+    src: docker-compose.worker.yml.j2
+    dest: "{{ worker_compose_dir }}/docker-compose.worker.yml"
+    mode: "0644"
+
+# remove_orphans: dropping a type from worker_types should also drop its
+# container. pull stays at the default so Traefik's image can be fetched while
+# the side-loaded worker images are used as-is.
+- name: "Ensure the worker compose project is up"
+  community.docker.docker_compose_v2:
+    project_src: "{{ worker_compose_dir }}"
+    project_name: "{{ worker_compose_project }}"
+    files:
+      - docker-compose.worker.yml
+    state: present
+    remove_orphans: true
+  register: worker_compose_up_result
+
+- name: "Show what compose changed"
+  ansible.builtin.debug:
+    var: worker_compose_up_result.actions
+  when: worker_compose_up_result.actions | default([]) | length > 0
+
+# ---------------------------------------------------------------------------
+# Step 5 — wait for each worker_type's Traefik router to be reachable.
+# Probe every per-type subdomain — each gets its own cert via the ACME
+# resolver, and the first probe (TLS-ALPN-01 especially) may take a few
+# seconds while Traefik negotiates with the CA.
+#
+# isalive is the one endpoint every worker type answers with a GET and no auth
+# (/api/v1/collectors is POST-only, so a GET there returns 405).
+# ---------------------------------------------------------------------------
+- name: "Wait for each worker_type's HTTPS router"
+  ansible.builtin.uri:
+    url: "https://{{ item }}.{{ worker_base_hostname }}/api/v1/isalive"
+    method: GET
+    validate_certs: "{{ worker_tls_mode != 'selfsigned' }}"
+    status_code: [200]
+    return_content: false
+  loop: "{{ worker_types }}"
+  register: worker_health_checks
+  until: worker_health_checks.status == 200
+  retries: 15
+  delay: 3

@@ -1,0 +1,51 @@
+---
+# Stop / start / restart this host's worker containers.
+#
+# Entry point for playbooks/worker-power.yml. Nothing here touches data: the
+# compose file, secrets, TLS material and volumes are all left alone, so a
+# stopped worker is started again by re-running with worker_power=started.
+#
+# Core keeps the *Node rows either way, so a stopped worker shows up in the GUI
+# as an unreachable node rather than disappearing. Use worker-remove.yml if you
+# want it gone.
+
+- name: "Validate the worker identity"
+  ansible.builtin.import_tasks: identity.yml
+
+- name: "Validate worker_power"
+  ansible.builtin.assert:
+    that: worker_power in ['started', 'stopped', 'restarted']
+    fail_msg: >-
+      worker_power must be one of started, stopped, restarted — got
+      '{{ worker_power }}'. Pass it on the command line, e.g.
+      -e worker_power=stopped
+
+- name: "Confirm the compose project exists on this host"
+  ansible.builtin.stat:
+    path: "{{ worker_compose_dir }}/docker-compose.worker.yml"
+  register: worker_compose_file
+
+- name: "Fail when the worker was never deployed here"
+  ansible.builtin.fail:
+    msg: >-
+      No worker compose file at {{ worker_compose_dir }}/docker-compose.worker.yml
+      on {{ inventory_hostname }}. Deploy it first with distribute-worker.yml.
+  when: not worker_compose_file.stat.exists
+
+# docker_compose_v2 spells "started" as `present` (docker compose up); the other
+# two map one-to-one onto `docker compose stop` / `restart`.
+- name: "Set the worker containers to {{ worker_power }}"
+  community.docker.docker_compose_v2:
+    project_src: "{{ worker_compose_dir }}"
+    project_name: "{{ worker_compose_project }}"
+    files:
+      - docker-compose.worker.yml
+    state: "{{ 'present' if worker_power == 'started' else worker_power }}"
+  register: worker_power_result
+
+- name: "Report the result"
+  ansible.builtin.debug:
+    msg: >-
+      {{ worker_types | join(', ') }} on {{ inventory_hostname }} → {{ worker_power }}
+      (project {{ worker_compose_project }});
+      {{ worker_power_result.actions | default([]) | length }} action(s) taken.

@@ -1,0 +1,62 @@
+---
+# taranis-ng-firewall role: deny all inbound traffic except an explicit port
+# list; leave outbound unrestricted.
+#
+# ufw on Debian/Ubuntu, firewalld on the RedHat family. In both cases the allow
+# rules are written BEFORE the deny policy takes effect, so the SSH session
+# Ansible is running over is never cut.
+#
+# ── Docker publishes past the firewall ──────────────────────────────────────
+# Docker inserts its own iptables rules ahead of ufw's, and container ports
+# published with `-p` are therefore reachable whatever ufw says. The same is
+# broadly true of firewalld. The worker stack publishes only 80, 443/tcp and
+# 443/udp — exactly the ports this role opens anyway — so today nothing is
+# exposed beyond the policy. But publishing another container port later WILL
+# make it reachable from the internet regardless of these rules. The final task
+# prints what is currently published so the gap is visible rather than assumed.
+
+- name: "Refuse to lock ourselves out of SSH"
+  ansible.builtin.assert:
+    that: firewall_ssh_port | int in (firewall_allowed_tcp_ports | map('int') | list)
+    fail_msg: >-
+      firewall_allowed_tcp_ports ({{ firewall_allowed_tcp_ports | join(', ') }})
+      does not include the SSH port {{ firewall_ssh_port }}. Enabling a
+      deny-by-default policy without it would end this session and leave the
+      host unreachable. Add the port, or set firewall_guard_ssh=false if you
+      have console access and mean to close SSH.
+  when: firewall_guard_ssh | bool
+
+- name: "Abort on unsupported OS family"
+  ansible.builtin.fail:
+    msg: >-
+      Unsupported OS family '{{ ansible_facts['os_family'] }}'.
+      taranis-ng-firewall supports Debian/Ubuntu (ufw) and RedHat (firewalld).
+  when: ansible_facts['os_family'] not in ['Debian', 'RedHat']
+
+- name: "Configure ufw (Debian/Ubuntu)"
+  ansible.builtin.include_tasks: debian.yml
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: "Configure firewalld (RedHat family)"
+  ansible.builtin.include_tasks: redhat.yml
+  when: ansible_facts['os_family'] == 'RedHat'
+
+# Honesty about the Docker bypass described above: show what is reachable
+# irrespective of the policy just applied.
+- name: "Check which container ports are published"
+  ansible.builtin.command: "docker ps --format {% raw %}'{{ .Names }} {{ .Ports }}'{% endraw %}"
+  register: firewall_published_ports
+  changed_when: false
+  failed_when: false
+  # Read-only, and the whole point is to be accurate during a --check preview:
+  # skipped, it would report "none" while ports are in fact published.
+  check_mode: false
+
+- name: "Report the policy and the container ports that bypass it"
+  ansible.builtin.debug:
+    msg: >-
+      {{ inventory_hostname }}: inbound denied except
+      tcp/{{ firewall_allowed_tcp_ports | join(',') }} and
+      udp/{{ firewall_allowed_udp_ports | join(',') }}; outbound unrestricted.
+      Container ports published past the firewall:
+      {{ firewall_published_ports.stdout_lines | default([]) | join(' | ') | default('none', true) }}

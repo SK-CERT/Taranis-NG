@@ -51,3 +51,34 @@ python3 scripts/check_tool_versions.py --fix
 The script uses only the Python standard library. Its pre-commit hook runs on
 every commit, and CI consumes the root development dependency group when it
 executes these tools.
+
+## Ansible playbook syntax check
+
+`check_ansible_syntax.py` validates every playbook under `ansible/playbooks/`
+with `ansible-playbook --syntax-check`. It also installs the required Ansible
+collections (from `ansible/requirements.yml`) into a project-local cache at
+`.cache/ansible-collections` (gitignored) so module references like
+`community.docker.docker_image` resolve correctly.
+
+```bash
+# Check all playbooks
+python3 scripts/check_ansible_syntax.py
+
+# Stream ansible-playbook output (useful when debugging)
+python3 scripts/check_ansible_syntax.py --verbose
+
+# Force a clean collection re-install (after bumping requirements.yml)
+rm -rf .cache/ansible-collections
+python3 scripts/check_ansible_syntax.py
+```
+
+The script needs `ansible-core` on PATH:
+
+```bash
+pip install ansible-core
+```
+
+The `ansible-syntax-check` pre-commit hook runs only when files under
+`ansible/` change (so unrelated commits stay fast). The Linting CI workflow
+runs the same check on every PR (with a path-based skip so PRs that don't
+touch `ansible/` don't spend CI minutes installing `ansible-core`).

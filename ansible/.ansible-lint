@@ -1,0 +1,26 @@
+# ansible-lint configuration for the Taranis-NG deployment playbooks.
+#
+# Run it from THIS directory (ansible/), which is also where ansible.cfg lives:
+#
+#     cd ansible && ansible-lint --offline playbooks/ roles/
+#
+# CI runs exactly that; see the `ansible-checks` job in
+# .github/workflows/linting.yaml.
+
+profile: basic
+
+exclude_paths:
+  # Operator-supplied files. Gitignored, absent in CI, and full of
+  # deliberately-placeholder values.
+  - inventory/distributed.local.yml
+  - inventory/group_vars
+  - inventory/host_vars
+  # Project-local collection cache populated by scripts/check_ansible_syntax.py.
+  - ../.cache
+
+skip_list:
+  # The roles are named taranis-ng-<thing>, which the rule wants as
+  # taranis_ng_<thing>. Renaming them would touch every playbook, every doc and
+  # every operator's muscle memory for no functional gain, and these roles are
+  # not published to Galaxy where the convention matters.
+  - role-name

@@ -1,0 +1,34 @@
+---
+# Default variables for the taranis-ng-firewall role.
+#
+# The policy is deny-all inbound, allow-all outbound, with an explicit list of
+# open ports. Outbound is left open because workers must reach Core, the ACME
+# CA and whatever OSINT sources they collect from.
+
+# Inbound TCP ports left open:
+#   22   SSH — Ansible's own transport. Dropping it from this list makes the
+#        role refuse to run; see firewall_guard_ssh below.
+#   80   HTTP — ACME HTTP-01 validation and Traefik's http→https redirect.
+#   443  HTTPS — the worker API Core calls.
+firewall_allowed_tcp_ports: [22, 80, 443]
+
+# Inbound UDP ports left open:
+#   443  HTTP/3. The worker's Traefik advertises h3 and publishes 443/udp.
+firewall_allowed_udp_ports: [443]
+
+# The SSH port to protect against lock-out. Follows ansible_port when the
+# inventory sets a non-standard one, so the guard in tasks/main.yml checks the
+# port Ansible is actually connected on.
+firewall_ssh_port: "{{ ansible_port | default(22) }}"
+
+# Refuse to run when the SSH port is not in firewall_allowed_tcp_ports.
+# Set false only when you have out-of-band console access and genuinely intend
+# to close SSH.
+firewall_guard_ssh: true
+
+# Switch the firewall on at the end. Set false to install the rules and leave
+# the firewall inactive — useful for staging a policy before committing to it.
+firewall_enable: true
+
+# firewalld zone (RedHat family only). Ignored on Debian/Ubuntu, which uses ufw.
+firewall_zone: public

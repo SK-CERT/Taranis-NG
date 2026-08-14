@@ -1,0 +1,26 @@
+---
+# Ansible collections required by the Taranis-NG deployment playbooks.
+#
+# Install with:
+#   ansible-galaxy collection install -r ansible/requirements.yml
+#
+# Installs into ~/.ansible/collections. Add `-p ansible/collections` for a
+# project-local install instead; that directory is gitignored.
+
+collections:
+  # docker_compose_v2 on the targets (drives the docker compose CLI; needs
+  # compose plugin >= 2.18, no Python SDK) and docker_image / docker_image_info
+  # on the control host, which DO need the Docker SDK there (pip install docker).
+  # >=3.7.0 for docker_compose_v2's `files` option.
+  - name: community.docker
+    version: ">=3.7.0"
+  # openssl_privatekey / openssl_csr / x509_certificate for worker_tls_mode:
+  # selfsigned.
+  - name: community.crypto
+    version: ">=2.0.0"
+  # ufw, for opening 80/443 on Debian-family worker hosts.
+  - name: community.general
+    version: ">=7.0.0"
+  # firewalld, for the same on the RedHat family.
+  - name: ansible.posix
+    version: ">=1.5.0"

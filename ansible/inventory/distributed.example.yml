@@ -1,0 +1,43 @@
+---
+# Distributed inventory template.
+#
+# Copy to distributed.local.yml (gitignored) and edit that:
+#
+#     cp distributed.example.yml distributed.local.yml
+#
+# Then run with `-i inventory/distributed.local.yml`.
+#
+# Each remote host in the [worker_hosts] group can run ONE OR MORE worker
+# types — set `worker_types` in that host's host_vars/<host>.yml.
+# Example host_vars entries:
+#   worker_types: ["collectors"]                              # just collectors
+#   worker_types: ["collectors", "bots"]                      # collectors + bots on one host
+#   worker_types: ["collectors", "bots", "presenters", "publishers"]
+#
+# The [core] group is the machine running the all-in-one docker-compose stack.
+
+all:
+  children:
+    core:
+      hosts:
+        # The machine running the Core + default workers + GUI + DB + Traefik.
+        # ansible_host must be reachable over SSH from wherever you run ansible.
+        taranis-core:
+          ansible_host: CHANGEME_CORE_HOST
+          ansible_user: CHANGEME_SSH_USER
+          # ansible_become_password: CHANGEME_SUDO_PASSWORD  # or use --ask-become-pass
+
+    # Remote worker hosts — every host that should run one or more Taranis-NG
+    # worker containers (collectors / bots / presenters / publishers).
+    # `worker_types` for each host is declared in its host_vars/<host>.yml.
+    worker_hosts:
+      hosts:
+        collector-01:
+          ansible_host: CHANGEME_COLLECTOR_HOST
+          ansible_user: CHANGEME_SSH_USER
+        # A single host running collectors + bots — set worker_types:
+        #   ["collectors", "bots"] in host_vars/<this-host>.yml
+        worker-multi-01:
+          ansible_host: CHANGEME_MULTI_HOST
+          ansible_user: CHANGEME_SSH_USER
+
