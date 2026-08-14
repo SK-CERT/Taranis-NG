@@ -3,9 +3,19 @@ import { login } from '../helpers/test-helpers'
 
 const SETTINGS_ENDPOINT = '/api/v1/config/settings?search='
 
+// The core authenticates with a Bearer token that the app keeps in localStorage
+// (see services/api_service.ts). `page.request` shares the browser's cookies but NOT
+// axios' default headers, so every direct API call here has to attach the token itself
+// — without it the config endpoints answer 401.
+const authHeaders = async (page) => {
+    const token = await page.evaluate(() => localStorage.getItem('ACCESS_TOKEN'))
+    expect(token, 'no ACCESS_TOKEN in localStorage — is the session still logged in?').toBeTruthy()
+    return { Authorization: `Bearer ${token}` }
+}
+
 const loadUiLanguageSetting = async (page) => {
-    const response = await page.request.get(SETTINGS_ENDPOINT)
-    expect(response.ok()).toBe(true)
+    const response = await page.request.get(SETTINGS_ENDPOINT, { headers: await authHeaders(page) })
+    expect(response.ok(), `GET ${SETTINGS_ENDPOINT} failed: ${response.status()}`).toBe(true)
     const settings = await response.json()
     const uiLanguage = settings.find((setting) => setting.key === 'UI_LANGUAGE')
     expect(uiLanguage).toBeTruthy()
@@ -18,9 +28,10 @@ const saveUiLanguage = async (page, value) => {
     // insert during cleanup instead of updating the record just created by the test.
     const currentSetting = await loadUiLanguageSetting(page)
     const response = await page.request.put(`/api/v1/config/user-settings/${currentSetting.id}`, {
+        headers: await authHeaders(page),
         data: { ...currentSetting, value }
     })
-    expect(response.ok()).toBe(true)
+    expect(response.ok(), `PUT user-settings failed: ${response.status()}`).toBe(true)
 }
 
 test.describe('Arabic production locale', () => {

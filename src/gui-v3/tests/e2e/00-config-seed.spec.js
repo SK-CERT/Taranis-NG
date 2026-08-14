@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { login, generateTestName } from '../helpers/test-helpers'
+import { login, generateTestName, fillRequiredParameters } from '../helpers/test-helpers'
 import { createApiContext, purgeSeedEntitiesBestEffort } from '../helpers/api-seed'
 
 /**
@@ -27,6 +27,15 @@ const COLLECTORS_URL = 'http://collectors'
 const API_KEY = readFileSync(resolve(__dirname, '../../../../docker/secrets/api_key.txt'), 'utf-8').trim()
 
 test.describe('Configure environment: nodes + product type + publisher preset', () => {
+    // SERIAL: these tests form one dependency chain — the OSINT source needs the collectors
+    // node, the product type needs the presenters node, the preset needs the publishers node.
+    // Serial mode also protects the beforeAll purge below: Playwright discards the worker
+    // after a failed test and re-runs beforeAll in the fresh one, which in the default
+    // (parallel) mode would purge the nodes the earlier tests just created and turn one real
+    // failure into four misleading ones. In serial mode the remaining tests are skipped
+    // instead (or, with retries, the whole group re-runs from a clean purge).
+    test.describe.configure({ mode: 'serial' })
+
     // Nodes, product types, and publisher presets are created via the GUI and
     // intentionally left in the E2E environment for downstream specs. They are
     // not cleaned up per-run — the environment is ephemeral (rebuilt by test-setup.sh).
@@ -56,7 +65,7 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
     test('should add a presenters node via the GUI', async ({ page }) => {
         await login(page)
         await page.goto('/v2/config/presenters?tab=nodes')
-        await page.getByRole('tab', { name: 'Presenters Nodes' }).waitFor({ state: 'visible', timeout: 10000 })
+        await page.getByRole('tab', { name: 'Presenter Nodes' }).waitFor({ state: 'visible', timeout: 10000 })
 
         await page.getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
@@ -77,7 +86,7 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
     test('should add a publishers node via the GUI', async ({ page }) => {
         await login(page)
         await page.goto('/v2/config/publishers?tab=nodes')
-        await page.getByRole('tab', { name: 'Publishers Nodes' }).waitFor({ state: 'visible', timeout: 10000 })
+        await page.getByRole('tab', { name: 'Publisher Nodes' }).waitFor({ state: 'visible', timeout: 10000 })
 
         await page.getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
@@ -96,7 +105,7 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
     test('should add a collectors node via the GUI', async ({ page }) => {
         await login(page)
         await page.goto('/v2/config/collectors?tab=nodes')
-        await page.getByRole('tab', { name: 'Collectors Nodes' }).waitFor({ state: 'visible', timeout: 10000 })
+        await page.getByRole('tab', { name: 'Collector Nodes' }).waitFor({ state: 'visible', timeout: 10000 })
 
         await page.getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
@@ -144,6 +153,10 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         await dialog.getByLabel('Name', { exact: true }).fill(sourceName)
         await dialog.getByLabel('Description', { exact: true }).fill('Manual OSINT source for E2E testing')
 
+        // Every collector parameter is required (PROXY_SERVER ships without a default),
+        // so Save stays blocked until the empty ones carry a value.
+        await fillRequiredParameters(dialog)
+
         // Save.
         await dialog.getByRole('button', { name: 'Save' }).click()
         await expect(dialog).toHaveCount(0, { timeout: 10000 })
@@ -173,6 +186,7 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         await expect(nameField).toBeVisible({ timeout: 15000 })
         await nameField.fill(productTypeName)
         await dialog.getByLabel('Description', { exact: true }).fill('Test product type for E2E publish confirmation')
+        await fillRequiredParameters(dialog)
 
         // Save.
         await dialog.getByRole('button', { name: 'Save' }).click()
@@ -201,6 +215,9 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         const nameField = dialog.getByLabel('Name', { exact: true })
         await expect(nameField).toBeVisible({ timeout: 15000 })
         await nameField.fill(presetName)
+        // The auto-selected publisher (EMAIL_PUBLISHER) declares a dozen parameters with
+        // no defaults; all of them are required, so fill whatever is still empty.
+        await fillRequiredParameters(dialog)
 
         // Save.
         await dialog.getByRole('button', { name: 'Save' }).click()

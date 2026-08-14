@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, navigateToConfig } from '../helpers/test-helpers'
+import { login, navigateToConfig, activePanel } from '../helpers/test-helpers'
 
 /**
  * Security settings (WebAuthn relying party) E2E tests.
@@ -38,7 +38,6 @@ import { login, navigateToConfig } from '../helpers/test-helpers'
 const CORE_API = process.env.E2E_CORE_API || `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1`
 
 /** Scope queries to the active tab: Vuetify keeps the previous tab's DOM around. */
-const activePanel = (page) => page.locator('.v-window-item--active')
 
 /**
  * PUT the baseline security settings via the API so every test starts from a

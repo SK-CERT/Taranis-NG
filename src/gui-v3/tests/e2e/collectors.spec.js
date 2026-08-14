@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, generateTestName } from '../helpers/test-helpers'
+import { login, generateTestName, fillRequiredParameters } from '../helpers/test-helpers'
 
 /**
  * Collectors E2E Tests
@@ -24,7 +24,7 @@ test.describe('Collectors', () => {
         await expect(page).toHaveURL(/\/config\/collectors/)
         await expect(page.getByRole('tab', { name: 'OSINT Sources' })).toBeVisible()
         await expect(page.getByRole('tab', { name: 'OSINT Source Groups' })).toBeVisible()
-        await expect(page.getByRole('tab', { name: 'Collectors Nodes' })).toBeVisible()
+        await expect(page.getByRole('tab', { name: 'Collector Nodes' })).toBeVisible()
     })
 
     test('should switch to the OSINT Source Groups tab', async ({ page }) => {
@@ -127,6 +127,8 @@ test.describe('Collectors', () => {
         // (rendered before the Name text-field) and the value is dropped → validation blocks save.
         await dialog.getByLabel('Name', { exact: true }).fill(sourceName)
         await dialog.getByLabel('Description', { exact: true }).fill('Throwaway source for the edit regression test')
+        // PROXY_SERVER (and any other default-less parameter) is required — see helper.
+        await fillRequiredParameters(dialog)
         await dialog.getByRole('button', { name: 'Save' }).click()
         await expect(dialog).toHaveCount(0, { timeout: 10000 })
         await expect(page.getByText(sourceName).first()).toBeVisible({ timeout: 5000 })
@@ -231,6 +233,11 @@ test.describe('Collectors', () => {
         // Use a substring match — the full label is exactly "Feed URL".
         const feedUrlInput = dialog.getByLabel(/Feed URL/i).first()
         await feedUrlInput.fill(RSS_FEED_URL)
+
+        // The RSS collector's remaining default-less parameters (Proxy server, User agent,
+        // Limit for article links) are required too; fill them after the Feed URL so the
+        // assertion above still targets the real value.
+        await fillRequiredParameters(dialog)
 
         // Save — the core stores the source; no collection runs synchronously here.
         await dialog.getByRole('button', { name: 'Save' }).click()

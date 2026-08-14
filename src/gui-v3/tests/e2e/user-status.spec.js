@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, navigateToConfig, generateTestName } from '../helpers/test-helpers'
+import { login, navigateToConfig, generateTestName, activePanel } from '../helpers/test-helpers'
 
 /**
  * User status / approval E2E Tests
@@ -15,8 +15,6 @@ import { login, navigateToConfig, generateTestName } from '../helpers/test-helpe
 // so direct page.request.get(...)/`request.post(${CORE_API}/...)` calls failed
 // with ECONNREFUSED while the Vite-proxied GUI flow worked.
 const CORE_API = process.env.E2E_CORE_API || `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1`
-
-const activePanel = (page) => page.locator('.v-window-item--active')
 
 async function adminHeaders(request) {
     const response = await request.post(`${CORE_API}/auth/login`, { data: { username: 'admin', password: 'admin' } })
@@ -186,7 +184,7 @@ test.describe('Security self-service', () => {
 
         await dialog.getByRole('button', { name: 'Enable' }).click()
 
-        await expect(dialog.locator('img[alt="TOTP QR code"]')).toBeVisible()
+        await expect(dialog.locator('img.qr-image')).toBeVisible()
         await expect(dialog.getByRole('button', { name: 'Activate' })).toBeVisible()
     })
 })

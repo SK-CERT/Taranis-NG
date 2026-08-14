@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, navigateToConfig, openDialog, saveDialog, generateTestName } from '../helpers/test-helpers'
+import { login, navigateToConfig, openDialog, saveDialog, generateTestName, activePanel } from '../helpers/test-helpers'
 
 /**
  * Organization Management CRUD E2E Tests
@@ -40,13 +40,12 @@ test.describe('Organization Management', () => {
         // The list is paginated, so the new row may land on a later page. Filter by the
         // (unique) name to surface it regardless of which page it's on.
         //
-        // Scope the search field to the *active* Access Management window item. The view
-        // (Users/Roles/ACL/Organizations tabs) renders a SearchField per tab; Vuetify's
-        // v-window-item transition leaves the previous tab's search input cloned in the
-        // DOM (hidden) on tab switch, so a page-wide `getByRole('textbox', { name: 'Search' })`
-        // is ambiguous (strict-mode violation: resolved to 2 elements).
-        const activePanel = page.locator('.v-window-item--active')
-        await activePanel.getByRole('textbox', { name: 'Search' }).fill(orgName)
+        // Scope the search field to the rendered Access Management panel. The view
+        // (Users/Roles/ACL/Organizations tabs) renders a SearchField per tab, and a dialog's
+        // EntitySelectTable adds another one, so a page-wide
+        // `getByRole('textbox', { name: 'Search' })` is ambiguous (strict-mode violation:
+        // resolved to 2 elements). See the activePanel helper.
+        await activePanel(page).getByRole('textbox', { name: 'Search' }).fill(orgName)
         await expect(page.locator('tbody tr').filter({ hasText: orgName })).toBeVisible()
     })
 

@@ -26,6 +26,10 @@ const ASSESS_URL = '/v2/assess'
 const NEWS_ITEM_TITLE = 'E2E Badge Test Item'
 
 test.describe('Assess report badges', () => {
+    // SERIAL: the badge tests below assert on the news item (and its two report items)
+    // created by the first test, so they cannot run — or be retried — independently.
+    test.describe.configure({ mode: 'serial' })
+
     let apiCtx
     let aggregateId
     let inProgressReportId
@@ -62,7 +66,9 @@ test.describe('Assess report badges', () => {
         await expect(page.getByText('News Items', { exact: true })).toBeVisible({ timeout: 10000 })
 
         // The "Add New" button only appears when manual OSINT sources are configured.
-        const addBtn = page.getByRole('button', { name: 'Add New' })
+        // Scope to the toolbar: the empty-state placeholder renders a second "Add New"
+        // button, so an unscoped role locator is a strict-mode violation.
+        const addBtn = page.locator('.toolbar-filter').getByRole('button', { name: 'Add New' })
         await expect(addBtn).toBeVisible({ timeout: 5000 })
 
         // Open the Add News Item dialog.
@@ -122,8 +128,10 @@ test.describe('Assess report badges', () => {
         const card = page.locator('.aggregate-card-wrapper').filter({ hasText: NEWS_ITEM_TITLE })
         await expect(card).toBeVisible({ timeout: 10000 })
 
-        // The orange in-progress chip should be present.
-        const inProgressChip = card.locator('.v-chip').filter({ hasText: /Analysis in progress/i })
+        // The orange in-progress chip should be present. Target the chip's data-test hook:
+        // its label is a pluralized, locale-formatted count ("1 analysis in progress"), so
+        // matching on text would break on every wording or locale change.
+        const inProgressChip = card.locator('[data-test="in-progress-count"]')
         await expect(inProgressChip.first()).toBeVisible()
     })
 
@@ -134,8 +142,9 @@ test.describe('Assess report badges', () => {
         const card = page.locator('.aggregate-card-wrapper').filter({ hasText: NEWS_ITEM_TITLE })
         await expect(card).toBeVisible({ timeout: 10000 })
 
-        // The green analyzed chip should be present.
-        const analyzedChip = card.locator('.v-chip').filter({ hasText: /Analyzed/i })
+        // The green completed chip should be present — see the in-progress test for why
+        // this targets data-test rather than the chip label.
+        const analyzedChip = card.locator('[data-test="completed-count"]')
         await expect(analyzedChip.first()).toBeVisible()
     })
 
@@ -146,10 +155,7 @@ test.describe('Assess report badges', () => {
         const card = page.locator('.aggregate-card-wrapper').filter({ hasText: NEWS_ITEM_TITLE })
         await expect(card).toBeVisible({ timeout: 10000 })
 
-        const inProgressChip = card
-            .locator('.v-chip')
-            .filter({ hasText: /Analysis in progress/i })
-            .first()
+        const inProgressChip = card.locator('[data-test="in-progress-count"]').first()
         await expect(inProgressChip).toBeVisible()
         await inProgressChip.click()
 
@@ -166,10 +172,7 @@ test.describe('Assess report badges', () => {
         const card = page.locator('.aggregate-card-wrapper').filter({ hasText: NEWS_ITEM_TITLE })
         await expect(card).toBeVisible({ timeout: 10000 })
 
-        const analyzedChip = card
-            .locator('.v-chip')
-            .filter({ hasText: /Analyzed/i })
-            .first()
+        const analyzedChip = card.locator('[data-test="completed-count"]').first()
         await expect(analyzedChip).toBeVisible()
         await analyzedChip.click()
 

@@ -30,7 +30,7 @@ test.describe('Navigation', () => {
         // router navigation (clicking the menu), which is the real user path and
         // avoids the WebKit "internal error" that page.goto('/v2/config') triggers.
         await page.goto('/v2/dashboard')
-        await page.getByRole('link', { name: 'Configuration' }).click()
+        await page.locator('.primary-navigation').getByRole('link', { name: 'Configuration' }).click()
 
         await expect(page).toHaveURL(/\/config\/access-management/)
     })
@@ -90,7 +90,9 @@ test.describe('Navigation', () => {
         // /assess redirects to /assess/group/all; page.goto() onto a redirect during
         // initial navigation trips a WebKit "internal error", so navigate in-app.
         await page.goto('/v2/dashboard')
-        await page.getByRole('link', { name: 'Assess' }).click()
+        // Scope to the top primary navigation: the dashboard body renders its own icon
+        // links to the same routes, so an unscoped role locator matches two elements.
+        await page.locator('.primary-navigation').getByRole('link', { name: 'Assess' }).click()
         await expect(page).toHaveURL(/\/assess/)
 
         // Should show assess content
@@ -106,7 +108,8 @@ test.describe('Navigation', () => {
         // /analyze redirects to /analyze/local; page.goto() onto a redirect during
         // initial navigation trips a WebKit "internal error", so navigate in-app.
         await page.goto('/v2/dashboard')
-        await page.getByRole('link', { name: 'Analyze' }).click()
+        // Scoped for the same reason as the Assess navigation above.
+        await page.locator('.primary-navigation').getByRole('link', { name: 'Analyze' }).click()
         await expect(page).toHaveURL(/\/analyze/)
     })
 

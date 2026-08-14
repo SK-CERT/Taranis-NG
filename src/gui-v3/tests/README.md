@@ -98,6 +98,31 @@ Assess, access management, roles, organizations, collectors, presenters,
 workflow states, selected Publish behavior, and My Assets permission and CRUD
 paths.
 
+### Continuous integration
+
+`.github/workflows/gui-v3-tests.yml` runs the suite on Chromium and Firefox as
+two parallel jobs, after lint and the unit tests pass. Its path filter also
+covers `src/core`, `src/collectors`, `src/presenters`, `src/publishers`,
+`src/shared`, and `docker`, because the suite drives the real backend.
+
+Three differences from a local run:
+
+- `docker/secrets/*.txt` is gitignored, so the job first copies each committed
+  `.txt.example` into place. They are throwaway values; the same file feeds both
+  the containers and the seed specification, so the two always agree.
+- Every job installs Chromium in addition to its own browser. The setup project
+  is pinned to `devices['Desktop Chrome']` and each browser project depends on
+  it, so the seed always runs in Chromium. The same applies locally: running
+  `npx playwright test --project=firefox` needs Chromium installed too.
+- The job runs `scripts/test-setup.sh` as its own step before Playwright starts.
+  The `webServer` entry that normally runs that script allows 120 seconds, which
+  does not cover a cold `docker compose up --build`. Since that entry sets
+  `reuseExistingServer` with an `isalive` probe, Playwright finds the stack
+  already running and does not start it a second time.
+
+A failing job prints the backend container logs and uploads the Playwright HTML
+report; `test-results/` with its screenshots, videos, and traces is uploaded too.
+
 ### Test support modules
 
 The reusable support code is grouped by responsibility:

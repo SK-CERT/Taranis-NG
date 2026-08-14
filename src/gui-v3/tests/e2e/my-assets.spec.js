@@ -70,7 +70,9 @@ test.describe('My Assets smoke', () => {
         test.setTimeout(60000)
         await login(page)
 
-        await page.getByRole('link', { name: 'My Assets' }).click()
+        // Scope to the primary navigation — the dashboard renders its own icon link
+        // to the same route, which would make an unscoped locator ambiguous.
+        await page.locator('.primary-navigation').getByRole('link', { name: 'My Assets' }).click()
         const groupLink = page.getByText(groupName, { exact: true })
         await expect(groupLink).toBeVisible({ timeout: 10000 })
         await groupLink.click()
@@ -110,7 +112,9 @@ test.describe('My Assets smoke', () => {
         expect(createdAsset.asset_cpes).toContainEqual({ value: cpe.replaceAll('*', '%') })
 
         await page.reload()
-        const search = page.getByLabel('Search', { exact: true })
+        // BaseToolbarFilter renders its SearchField with an empty label (`:label="''"`),
+        // so the input has no accessible name — target it by the toolbar's own class.
+        const search = page.locator('.toolbar-filter__search input')
         await expect(search).toBeVisible({ timeout: 10000 })
         await search.fill(serial)
 
