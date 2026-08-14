@@ -1,0 +1,32 @@
+---
+# Default variables for the taranis-ng-image-transfer role.
+#
+# This role runs the image build/save steps on the Ansible CONTROL host
+# (delegate_to: localhost) and ships each worker image to the remote host as a
+# tarball via scp + docker load. Air-gapped friendly — no registry needed.
+#
+# NOTE: "control host" and "Core host" are the same machine only by convention
+# (the docs assume you run Ansible from the Core host). The images shipped are
+# whatever exists on the machine running ansible-playbook.
+
+# Repository root on the control host. playbook_dir is <repo>/ansible/playbooks,
+# so getting back to the repo takes TWO dirname hops.
+taranis_repo_root: "{{ playbook_dir | dirname | dirname }}"
+
+# Tag used by the Taranis-NG images (mirrors docker/.env TARANIS_NG_TAG).
+taranis_ng_tag: "latest"
+
+# Image name prefix; the worker type is appended at use.
+worker_image_prefix: "skcert/taranis-ng-"
+
+# If true, build the image from the Taranis-NG source tree before saving. If
+# false, assume the image already exists locally (pulled from a registry or
+# built separately).
+worker_image_build: false
+
+# Build context — the repository root, which is what docker/Dockerfile.* expect
+# (they reference `context: ..` relative to docker/ in docker-compose.yml).
+worker_image_build_context: "{{ taranis_repo_root }}"
+
+# Directory for the intermediate tarballs on both ends.
+worker_tarball_dir: "/tmp"

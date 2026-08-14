@@ -1,0 +1,260 @@
+---
+# Default variables for the taranis-ng-worker role.
+#
+# These defaults are safe (no secrets). Operators override via group_vars or
+# host_vars — see the .example files under ansible/inventory/group_vars/ and
+# ansible/inventory/host_vars/.
+
+# ---------------------------------------------------------------------------
+# Worker identity
+# ---------------------------------------------------------------------------
+
+# Worker service types to deploy on this host. A LIST so a single host can run
+# multiple worker containers (e.g. collectors + bots) behind ONE shared
+# Traefik. Each type gets its own subdomain, node row, API key, and (for
+# collectors/presenters) storage volume.
+#
+# Examples:
+#   worker_types: ["collectors"]                      # one collectors node
+#   worker_types: ["collectors", "bots"]              # collectors + bots on one host
+#   worker_types: ["collectors", "bots", "presenters", "publishers"]  # full worker stack
+#
+# Each value must be one of: collectors, bots, presenters, publishers.
+worker_types: ["collectors"]
+
+# Image tag — mirrors docker/.env TARANIS_NG_TAG.
+taranis_ng_tag: "latest"
+
+# Image name PREFIX; the worker type is appended at use, giving e.g.
+# skcert/taranis-ng-collectors. A prefix rather than a full name because the
+# compose template renders the type from a Jinja-local loop variable, which an
+# Ansible-level template could not see.
+worker_image_prefix: "skcert/taranis-ng-"
+
+# Traefik image tag for the worker's TLS terminator. Kept in step with the
+# version the all-in-one stack pins in docker/docker-compose.yml.
+worker_traefik_version: "3.6.9"
+
+# Per-type node name/description shown in the Taranis-NG GUI node list, used by
+# the taranis-ng-node-register role.
+worker_node_name: "{{ worker_type | capitalize }} on {{ inventory_hostname }}"
+worker_node_description: "Remote {{ worker_type }} node deployed via Ansible."
+
+# ---------------------------------------------------------------------------
+# Core connection (worker → Core)
+# ---------------------------------------------------------------------------
+
+# Core's HTTPS Traefik URL as reachable from the worker host.
+# e.g. https://taranis-core.example.com
+# Operator MUST override — no safe default.
+core_url: ""
+
+# (bots only) Core SSE URL. Defaults to <core_url>/sse.
+core_sse_url: "{{ core_url }}/sse"
+
+# ---------------------------------------------------------------------------
+# Worker API addressing
+# ---------------------------------------------------------------------------
+# Each worker type on this host gets its own subdomain under worker_base_hostname.
+#   e.g. worker_base_hostname: "worker-01.example.com"
+#        → collectors.worker-01.example.com, bots.worker-01.example.com, ...
+# This is the value Core uses to reach each worker_type's Traefik router.
+#
+# Override per-host in host_vars/<host>.yml.
+#
+# CAREFUL: the API URL is built as <type>.<worker_base_hostname>. If your
+# inventory key is already the full public FQDN of a worker — e.g.
+# `collectors.example.org` — leaving this at the default produces
+# `collectors.collectors.example.org`. Set it to the parent domain
+# (`example.org`) in that host's host_vars.
+worker_base_hostname: "{{ inventory_hostname }}"
+
+# TLS certificate mode:
+#   "selfsigned" — generate a self-signed cert via community.crypto (default).
+#   "provided"   — operator supplies cert + key paths via worker_tls_cert / worker_tls_key.
+#   "acme"       — Let's Encrypt / ZeroSSL / custom ACME CA with optional EAB.
+#                 Requires the worker's port 80/443 (HTTP-01 / TLS-ALPN-01) or
+#                 DNS API access (DNS-01) to be reachable from the CA. See the
+#                 ACME vars block below.
+worker_tls_mode: "selfsigned"
+
+# For worker_tls_mode == "provided": absolute paths on the worker host.
+worker_tls_cert: ""
+worker_tls_key: ""
+
+# ---------------------------------------------------------------------------
+# ACME (worker_tls_mode == "acme")
+# ---------------------------------------------------------------------------
+# Operators going distributed with a publicly-reachable worker should prefer
+# ACME over self-signed certs — Core's registration probe and runtime
+# Core→worker HTTPS calls then verify TLS without manual trust-store install.
+# All values below are secrets/operator-specific — put them in gitignored
+# `group_vars/<group>.yml` or `host_vars/<host>.yml`, never in the tracked
+# `.example` files.
+
+# Email for ACME account notifications (expiry, etc.). Required when acme.
+worker_acme_email: ""
+
+# ACME directory URL. Defaults to Let's Encrypt production.
+#   - Let's Encrypt prod:  https://acme-v02.api.letsencrypt.org/directory
+#   - Let's Encrypt staging: https://acme-staging-v02.api.letsencrypt.org/directory
+#   - ZeroSSL:            https://acme.zerossl.com/v2/DV90  (requires EAB)
+#   - Custom CA:          https://your-ca/acme/directory      (requires EAB)
+worker_acme_caserver: "https://acme-v02.api.letsencrypt.org/directory"
+
+# Private key type for issued certs.
+#   EC256 | EC384 | RSA2048 | RSA4096 | RSA8192
+worker_acme_keytype: "EC384"
+
+# External Account Binding (EAB). Required for ZeroSSL and most private CAs;
+# optional for Let's Encrypt production (it doesn't use EAB).
+#   For ZeroSSL: log in, create an EAB credential → kid + hmacEncoded.
+worker_acme_eab_kid: ""
+worker_acme_eab_hmac: ""
+
+# Challenge type. One of: "http" (HTTP-01), "tlsalpn" (TLS-ALPN-01), "dns" (DNS-01).
+#   - http:    worker host's port 80 must be reachable from the CA.
+#   - tlsalpn: worker host's port 443 must be reachable from the CA.
+#   - dns:     worker host doesn't need to be publicly reachable; the ACME
+#              client updates a TXT record via the configured DNS provider.
+#              Requires worker_acme_dns_provider + provider creds below.
+worker_acme_challenge: "http"
+
+# DNS-01 provider (only when worker_acme_challenge == "dns").
+# One of the Traefik-supported resolvers, e.g. "cloudflare", "route53",
+# "digitalocean", "gand", "namecheap", "acmedns", … see Traefik docs for the
+# full list. Each provider needs its own env vars — set them in
+# `worker_acme_dns_env` (a dict of var→value; the role templates them into
+# Traefik's environment).
+worker_acme_dns_provider: ""
+
+# Dict of env vars passed to the Traefik container so the DNS-01 challenge
+# resolver can authenticate to the DNS provider.
+# Example:
+#   worker_acme_dns_env:
+#     CF_DNS_API_TOKEN: "your-cloudflare-api-token"
+worker_acme_dns_env: {}
+
+# Directory on the worker host where deployment config lives.
+worker_config_dir: "/etc/taranis-ng"
+worker_secrets_dir: "{{ worker_config_dir }}/secrets"
+worker_tls_dir: "{{ worker_config_dir }}/tls"
+worker_compose_dir: "{{ worker_config_dir }}"
+
+# Traefik reads its dynamic configuration from this directory ONLY — never from
+# worker_tls_dir itself, which also holds the ACME static config file.
+worker_tls_dynamic_dir: "{{ worker_tls_dir }}/dynamic"
+
+# Where the selfsigned/provided certificate + key live. Bind-mounted read-only
+# into Traefik at /etc/traefik/certs.
+worker_tls_certs_dir: "{{ worker_tls_dir }}/certs"
+
+# Appended to Traefik's bind mounts. SELinux hosts (RHEL family, enforcing)
+# deny container access to host paths that carry no container file context;
+# ":z" relabels them as shared. Empty elsewhere.
+worker_selinux_mount_suffix: "{{ ',z' if ansible_facts['selinux'].status | default('disabled') == 'enabled' else '' }}"
+
+# ---------------------------------------------------------------------------
+# TLS policy (rendered to {{ worker_tls_dynamic_dir }}/tls-options.yml)
+# ---------------------------------------------------------------------------
+# Without this Traefik falls back to Go's defaults, which accept TLS 1.2 with
+# CBC suites such as ECDHE-ECDSA-AES128-SHA. Mirrors the Core stack's
+# docker/traefik/dynamic/tls.yml.example so both ends match.
+
+# VersionTLS13 | VersionTLS12. TLS 1.3 defines no CBC suites, so the default
+# removes them by construction. Core reaches workers with python-requests on
+# OpenSSL 3.x, which speaks 1.3 — drop to VersionTLS12 only for some other
+# client that cannot.
+worker_tls_min_version: "VersionTLS13"
+
+# Consulted only when worker_tls_min_version is VersionTLS12. AEAD only — no
+# CBC, no SHA-1. (The TLS 1.3 suites are fixed in Go and not configurable.)
+worker_tls_cipher_suites:
+  - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+  - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+
+worker_tls_curve_preferences:
+  - X25519MLKEM768
+  - X25519
+  - CurveP384
+  - CurveP256
+
+# List of Subject Alternative Names the ACME cert should cover. Defaults to
+# all per-type subdomains derived from worker_types + worker_base_hostname, so
+# Traefik requests one cert covering all worker types on this host:
+#   [collectors.worker-01.example.com, bots.worker-01.example.com, ...]
+# Override in host_vars if you want a different list (e.g. add the bare hostname).
+worker_tls_cns: "{{ worker_types | map('regex_replace', '^(.*)$', '\\1.' ~ worker_base_hostname) | list }}"
+
+# ---------------------------------------------------------------------------
+# Secrets
+# ---------------------------------------------------------------------------
+
+# Repository root on the Ansible control host (playbook_dir is
+# <repo>/ansible/playbooks, hence two hops).
+taranis_repo_root: "{{ playbook_dir | dirname | dirname }}"
+
+# Directory on the control host where per-worker api_key copies are staged for
+# the taranis-ng-node-register role. Gitignored via `docker/secrets/*.txt`.
+worker_api_key_staging_dir: "{{ taranis_repo_root }}/docker/secrets"
+
+# Optional: pre-supply per-type API keys (dict keyed by worker_type) instead of
+# auto-generating them. Useful to mirror an existing Core node row.
+# Example:
+#   worker_api_keys:
+#     collectors: "precomputed-hex-key-for-collectors"
+#     bots:       "precomputed-hex-key-for-bots"
+# When a key is present in this dict for the current worker_type, it overrides
+# the generated value; when absent, the role generates one (and persists it
+# so re-runs are idempotent).
+worker_api_keys: {}
+
+# ---------------------------------------------------------------------------
+# Compose
+# ---------------------------------------------------------------------------
+
+# Compose project name for this host — ONE project per host, covering Traefik
+# and every worker_type. Sanitized because Compose only accepts lowercase
+# alphanumerics, "-" and "_", and an FQDN inventory key contains dots.
+worker_compose_project: "{{ ('taranis-ng-worker-' ~ inventory_hostname) | lower | regex_replace('[^a-z0-9_-]', '-') }}"
+
+# Open ports 80/443 on the worker host's local firewall (firewalld on the
+# RedHat family, ufw on Debian/Ubuntu). Skipped automatically when neither is
+# active. Set false if you manage the firewall out of band.
+worker_open_firewall: true
+
+# ---------------------------------------------------------------------------
+# Lifecycle — playbooks/worker-power.yml and playbooks/worker-remove.yml
+# ---------------------------------------------------------------------------
+
+# worker-power.yml target state: started | stopped | restarted. Pass it on the
+# command line (-e worker_power=stopped); the default makes a bare run a
+# harmless "make sure it is up".
+worker_power: started
+
+# worker-remove.yml — what to take along with the containers. Each is
+# independent, so `-e worker_remove_volumes=false` keeps collected data while
+# still removing the deployment.
+worker_remove_volumes: true       # per-type storage volumes + the ACME cert store
+worker_remove_images: false       # also delete skcert/taranis-ng-<type> from the host
+worker_remove_config: true        # {{ worker_config_dir }}: compose file, API keys, TLS
+worker_remove_staged_key: true    # the control-host copies under docker/secrets/
+
+# Delete the *Node rows from Core before tearing the host down. Set false when
+# Core is unreachable or already gone and you only want the host cleaned; the
+# rows then survive as unreachable nodes in the GUI.
+worker_deregister_node: true
+
+# Timezone for the container. Mirrors docker/.env TZ.
+worker_tz: "Europe/Bratislava"
+
+# Log levels.
+taranis_log_level: "INFO"
+modules_log_level: "INFO"
+
+# Jinja templates root for presenters.
+jinja_templates_root: "/app/templates/user_templates"

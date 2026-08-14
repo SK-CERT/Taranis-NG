@@ -1,0 +1,83 @@
+---
+# firewalld. Same ordering rule as ufw: open the ports first, strip the
+# pre-allowed services second, set the deny-by-default target last.
+
+- name: "Check whether firewalld is already installed"
+  ansible.builtin.stat:
+    path: /usr/bin/firewall-cmd
+  register: firewall_firewalld_binary
+
+- name: "Ensure firewalld is installed"
+  ansible.builtin.package:
+    name: firewalld
+    state: present
+
+# See the equivalent note in debian.yml: --check only simulates the install, so
+# there is no firewall-cmd to drive on a host that does not have it yet.
+- name: "Explain why the rules cannot be previewed"
+  ansible.builtin.debug:
+    msg: >-
+      firewalld is not installed on {{ inventory_hostname }} yet. In --check the
+      install is simulated, so the rules below cannot be previewed. Re-run
+      without --check, or install firewalld first, to see them.
+  when:
+    - ansible_check_mode
+    - not firewall_firewalld_binary.stat.exists
+
+- name: "Apply the firewalld policy"
+  when: firewall_firewalld_binary.stat.exists or not ansible_check_mode
+  block:
+    - name: "Ensure firewalld is enabled and running"
+      ansible.builtin.service:
+        name: firewalld
+        state: "{{ 'started' if firewall_enable | bool else 'stopped' }}"
+        enabled: "{{ firewall_enable | bool }}"
+
+    - name: "Allow inbound TCP ports"
+      ansible.posix.firewalld:
+        zone: "{{ firewall_zone }}"
+        port: "{{ item }}/tcp"
+        permanent: true
+        immediate: "{{ firewall_enable | bool }}"
+        state: enabled
+      loop: "{{ firewall_allowed_tcp_ports }}"
+
+    - name: "Allow inbound UDP ports"
+      ansible.posix.firewalld:
+        zone: "{{ firewall_zone }}"
+        port: "{{ item }}/udp"
+        permanent: true
+        immediate: "{{ firewall_enable | bool }}"
+        state: enabled
+      loop: "{{ firewall_allowed_udp_ports }}"
+
+    # A stock public zone permits services such as ssh, cockpit and
+    # dhcpv6-client. The policy is "only the listed ports", and those ports are
+    # opened above by number, so the service entries are removed rather than
+    # left as extra openings. Running after the port rules means SSH never lapses.
+    - name: "List services currently permitted in the zone"
+      ansible.builtin.command: "firewall-cmd --permanent --zone={{ firewall_zone }} --list-services"
+      register: firewall_zone_services
+      changed_when: false
+
+    - name: "Remove pre-allowed services so only the listed ports remain"
+      ansible.posix.firewalld:
+        zone: "{{ firewall_zone }}"
+        service: "{{ item }}"
+        permanent: true
+        immediate: "{{ firewall_enable | bool }}"
+        state: disabled
+      loop: "{{ firewall_zone_services.stdout.split() }}"
+
+    - name: "Deny everything else inbound"
+      ansible.posix.firewalld:
+        zone: "{{ firewall_zone }}"
+        target: DROP
+        permanent: true
+        immediate: "{{ firewall_enable | bool }}"
+        state: enabled
+
+    - name: "Report that the policy was staged but not enabled"
+      ansible.builtin.debug:
+        msg: "Rules written to the permanent config, firewalld left stopped (firewall_enable=false)."
+      when: not firewall_enable | bool

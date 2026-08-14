@@ -1,0 +1,57 @@
+---
+# worker-remove.yml — remove a worker deployment from its host, and from Core.
+#
+# DESTRUCTIVE. By default this deletes the Core node rows, the containers, the
+# data volumes, /etc/taranis-ng (compose file, API keys, TLS material) and the
+# control-host copies of the API keys. Docker Engine itself is left installed.
+#
+# The order matters: Core is told first, so it stops dispatching work to a
+# worker that is about to disappear. If Core is unreachable the play fails
+# before anything on the host is touched.
+#
+#   cd ansible
+#
+#   # remove one host completely
+#   uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/worker-remove.yml --limit collectors.example.org
+#
+#   # see exactly what it would do first
+#   uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
+#     playbooks/worker-remove.yml --limit collectors.example.org --check --diff
+#
+# Narrowing what gets removed (each is independent):
+#
+#   -e worker_remove_volumes=false    keep collected data / presenter templates
+#   -e worker_remove_config=false     keep /etc/taranis-ng, including the API keys
+#   -e worker_deregister_node=false   leave the node rows in Core (use when Core
+#                                     is already gone, or when you are moving the
+#                                     worker and want to re-attach it later)
+#   -e worker_remove_images=true      also delete the worker images from the host
+#
+# ALWAYS pass --limit. Without it this removes every host in worker_hosts.
+
+- name: "Remove the Taranis-NG worker deployment"
+  hosts: worker_hosts
+  become: true
+  gather_facts: false
+
+  tasks:
+    # import_role, not include_role: importing is static, so the role's defaults
+    # (worker_compose_project, worker_config_dir, the removal flags …) land in
+    # play scope for the deregistration step below, which lives in a different
+    # role. Role defaults stay lowest-precedence, so host_vars still win.
+    - name: "Resolve the worker identity"
+      ansible.builtin.import_role:
+        name: taranis-ng-worker
+        tasks_from: identity.yml
+
+    - name: "Deregister the nodes from Core"
+      ansible.builtin.include_role:
+        name: taranis-ng-node-register
+        tasks_from: deregister.yml
+      when: worker_deregister_node | bool
+
+    - name: "Remove the deployment from the host"
+      ansible.builtin.include_role:
+        name: taranis-ng-worker
+        tasks_from: remove.yml

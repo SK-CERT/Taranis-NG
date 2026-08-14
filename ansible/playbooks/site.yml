@@ -1,0 +1,84 @@
+---
+# site.yml — single-host (all-in-one) Taranis-NG deployment.
+#
+# This is the DEFAULT playbook. It deploys the standard docker-compose stack
+# (Core + GUI + collectors + bots + presenters + publishers + postgres + redis
+# + traefik) onto one host.
+#
+# Run it FROM THE ansible/ DIRECTORY — ansible.cfg is only picked up from the
+# current working directory, and it is what supplies both the default inventory
+# and roles_path:
+#
+#   cd ansible && ansible-playbook playbooks/site.yml
+#
+# That brings the stack up from the images already on the host. To rebuild them
+# from source first, add:
+#
+#   -e taranis_compose_build=always
+#
+# For a remote single host, copy group_vars/core.example.yml → core.yml,
+# set taranis_source_dir there, put the host in distributed.local.yml's [core]
+# group, then:
+#
+#   cd ansible
+#   ansible-playbook -i inventory/distributed.local.yml playbooks/site.yml
+
+- name: "Install Docker Engine and bring up the all-in-one stack"
+  hosts: core
+  become: true
+  gather_facts: true
+
+  vars:
+    # playbook_dir is <repo>/ansible/playbooks — two hops back to the repo root.
+    taranis_repo_root: "{{ playbook_dir | dirname | dirname }}"
+    # Where the source tree lives ON THE TARGET. Only correct by default when
+    # the target is the control host (the localhost.yml case); set
+    # taranis_source_dir in group_vars/core.yml for a remote Core.
+    taranis_compose_dir: "{{ taranis_source_dir | default(taranis_repo_root) }}/docker"
+    # "policy" (default) honours the Compose file and only builds an image that
+    # is missing. Set "always" to rebuild every service from source, the
+    # equivalent of `docker compose up -d --build`; "never" to forbid building.
+    taranis_compose_build: "policy"
+
+  pre_tasks:
+    - name: "Validate target OS family"
+      ansible.builtin.assert:
+        that: ansible_facts['os_family'] in ['Debian', 'RedHat']
+        fail_msg: >-
+          site.yml only supports Debian/Ubuntu and RedHat-family hosts.
+          Got OS family '{{ ansible_facts['os_family'] }}'.
+
+    - name: "Validate the compose file is present on the target"
+      ansible.builtin.stat:
+        path: "{{ taranis_compose_dir }}/docker-compose.yml"
+      register: taranis_compose_stat
+
+    - name: "Fail with a useful message when the source tree is missing"
+      ansible.builtin.fail:
+        msg: >-
+          No docker-compose.yml at {{ taranis_compose_dir }}. Check out the
+          Taranis-NG source on {{ inventory_hostname }} and set taranis_source_dir
+          (group_vars/core.yml) to its path.
+      when: not taranis_compose_stat.stat.exists
+
+  roles:
+    - role: taranis-ng-docker
+
+  post_tasks:
+    # Do not add `files:` or `project_name:` here. Compose's own file discovery
+    # is what picks up docker/docker-compose.override.yml, and the project
+    # identity comes from COMPOSE_PROJECT_NAME in the .env it auto-loads from
+    # project_src. Pinning either one deploys a second stack beside the running
+    # one.
+    - name: "Bring up the all-in-one Taranis-NG stack"
+      community.docker.docker_compose_v2:
+        project_src: "{{ taranis_compose_dir }}"
+        env_files: "{{ [taranis_env_file] if (taranis_env_file | default('')) | length > 0 else omit }}"
+        build: "{{ taranis_compose_build }}"
+        state: present
+      register: compose_up_result
+
+    - name: "Show what compose changed"
+      ansible.builtin.debug:
+        var: compose_up_result.actions
+      when: compose_up_result.actions | default([]) | length > 0

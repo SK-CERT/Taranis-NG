@@ -309,10 +309,10 @@ describe('ContentDataAssess list reloads', () => {
             await flushPromises()
             expect(wrapper.find('.new-items-banner__button').text()).toContain('1 neues Element')
 
-            wrapper.vm.pendingNewItems = freshItems(12000)
+            wrapper.vm.pendingNewItems = freshItems(1200)
             await flushPromises()
             const button = wrapper.find('.new-items-banner__button')
-            expect(button.text()).toContain('12.000 neue Elemente')
+            expect(button.text()).toContain('1.200 neue Elemente')
 
             await button.trigger('click')
             await flushPromises()

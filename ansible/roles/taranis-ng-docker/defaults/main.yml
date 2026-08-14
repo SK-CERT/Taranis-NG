@@ -1,0 +1,8 @@
+---
+# Default variables for the taranis-ng-docker role.
+# Operators can override these via group_vars/host_vars (see .example files).
+
+# Members of this list get added to the docker group on the target, so they can
+# run docker without sudo. ansible_user is unset unless the inventory or --user
+# supplies it, hence the fallbacks.
+docker_users: ["{{ ansible_user | default(ansible_facts['env'].SUDO_USER | default(ansible_facts['user_id'])) }}"]

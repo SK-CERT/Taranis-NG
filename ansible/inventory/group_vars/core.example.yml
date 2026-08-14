@@ -1,0 +1,19 @@
+---
+# group_vars/core.example.yml
+#
+# Vars applied to the [core] group — the machine running the all-in-one stack.
+# Copy to group_vars/core.yml and fill in if running site.yml against a remote
+# Core host (rather than localhost). The filename must be exactly the group
+# name or Ansible never loads it. core.yml is gitignored.
+#
+#     cp group_vars/core.example.yml group_vars/core.yml
+
+# Path to the Taranis-NG source tree on the Core host (where docker/ lives).
+# Used by site.yml to run `docker compose up` against the stack.
+taranis_source_dir: "/opt/Taranis-NG"
+
+# OPTIONAL, for an env file not named `.env` — Compose loads docker/.env by
+# itself. The path is relative to docker/. It REPLACES the default .env rather
+# than adding to it, so a custom file must also define COMPOSE_PROJECT_NAME.
+#
+# taranis_env_file: ".env.production"

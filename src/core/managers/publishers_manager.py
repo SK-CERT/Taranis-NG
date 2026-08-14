@@ -10,7 +10,6 @@ from model.publisher import Publisher
 from model.publisher_preset import PublisherPreset
 from model.publishers_node import PublishersNode
 from remote.publishers_api import PublishersApi
-
 from shared.schema.publisher import PublisherInput, PublisherInputSchema
 from shared.schema.publishers_node import PublishersNode as PublishersNodeSchema
 
@@ -79,12 +78,15 @@ def publish(preset: PublisherPreset, data: dict, message_title: str, message_bod
     data_data = None
     data_mime = None
     att_file_name = None
+    # None when publishing without a presenter (e.g. asset notifications) — publishers treat that as plain text.
+    message_body_mime_type = None
     if data is not None:
         data_data = data["data"]
         data_mime = data["mime_type"]
         message_title = data.get("message_title")
         message_body = data.get("message_body")
         att_file_name = data.get("att_file_name")
+        message_body_mime_type = data.get("message_body_mime_type")
 
     input_data = PublisherInput(
         preset.name,
@@ -96,6 +98,7 @@ def publish(preset: PublisherPreset, data: dict, message_title: str, message_bod
         message_body,
         recipients,
         att_file_name,
+        message_body_mime_type,
     )
     input_schema = PublisherInputSchema()
 

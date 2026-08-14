@@ -1,0 +1,135 @@
+# Taranis-NG worker compose — rendered by Ansible onto the remote worker host.
+# This file is generated from templates/docker-compose.worker.yml.j2 and must
+# NOT be edited directly on the worker — changes will be overwritten on the
+# next ansible-playbook run.
+#
+# One Traefik fronts ALL worker_types on this host. Each worker_type service
+# has its own Traefik router keyed on the per-type subdomain
+# (<type>.<worker_base_hostname>), so Core reaches each worker_type at
+# https://<type>.<worker_base_hostname>/.
+#
+# This is a per-host compose; it is separate from the all-in-one
+# docker/docker-compose.yml used on the Core host.
+#
+# Traefik takes its static configuration from EXACTLY ONE source, and a mounted
+# /etc/traefik/traefik.yml silently beats CLI flags. ACME mode therefore ships
+# the static file and no `command:`; the other modes ship `command:` and no
+# static file. Never both.
+
+services:
+  traefik:
+    image: docker.io/traefik:{{ worker_traefik_version }}
+    restart: unless-stopped
+{% if worker_tls_mode == "acme" %}
+    # ACME mode: the whole static config lives in /etc/traefik/traefik.yml
+    # (rendered from traefik.yml.j2), so no `command:` here.
+{% else %}
+    # {{ worker_tls_mode | capitalize }} mode: TLS terminated with our own cert,
+    # which the file provider picks up from /etc/traefik/dynamic/certs.yml.
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.http.tls=true"
+{% endif %}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+{% if worker_tls_mode == "acme" %}
+      - "{{ worker_tls_dir }}/traefik.yml:/etc/traefik/traefik.yml:ro"
+{% endif %}
+      # The dynamic/ SUBDIRECTORY only — mounting {{ worker_tls_dir }} itself
+      # would feed traefik.yml back in as a dynamic document.
+      - "{{ worker_tls_dir }}/dynamic:/etc/traefik/dynamic:ro{{ worker_selinux_mount_suffix }}"
+{% if worker_tls_mode != "acme" %}
+      - "{{ worker_tls_dir }}/certs:/etc/traefik/certs:ro{{ worker_selinux_mount_suffix }}"
+{% else %}
+      - "acme_storage:/letsencrypt"
+{% endif %}
+{% if worker_tls_mode == "acme" and worker_acme_challenge == "dns" and worker_acme_dns_env | length > 0 %}
+    environment:
+{% for k, v in worker_acme_dns_env.items() %}
+      {{ k }}: "{{ v }}"
+{% endfor %}
+{% endif %}
+    networks:
+      - worker_net
+
+{% for worker_type in worker_types %}
+  {{ worker_type }}:
+    image: "{{ worker_image_prefix }}{{ worker_type }}:{{ taranis_ng_tag }}"
+    restart: unless-stopped
+    environment:
+      TARANIS_NG_CORE_URL: "{{ core_url }}"
+{% if worker_type == "bots" %}
+      TARANIS_NG_CORE_SSE: "{{ core_sse_url }}"
+{% endif %}
+      TZ: "{{ worker_tz }}"
+      TARANIS_LOG_LEVEL: "{{ taranis_log_level }}"
+      MODULES_LOG_LEVEL: "{{ modules_log_level }}"
+{% if worker_type == "presenters" %}
+      JINJA_TEMPLATES_ROOT: "{{ jinja_templates_root }}"
+{% endif %}
+{% if worker_type == "collectors" %}
+      COLLECTOR_CONFIG_FILE: "/app/storage/id.txt"
+{% endif %}
+{% if worker_type == "collectors" %}
+    volumes:
+      - "{{ worker_type }}_storage:/app/storage"
+{% elif worker_type == "presenters" %}
+    volumes:
+      - "{{ worker_type }}_storage:/app/templates/user_templates"
+{% endif %}
+    # `target: api_key` is load-bearing: every worker reads the key from
+    # /run/secrets/api_key (see src/<type>/config.py read_secret("api_key")).
+    secrets:
+      - source: api_key_{{ worker_type }}
+        target: api_key
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.{{ worker_type }}.rule=Host(`{{ worker_type }}.{{ worker_base_hostname }}`)"
+      - "traefik.http.routers.{{ worker_type }}.entrypoints=websecure"
+{% if worker_tls_mode == "acme" %}
+      - "traefik.http.routers.{{ worker_type }}.tls.certresolver=myresolver"
+{% else %}
+      - "traefik.http.routers.{{ worker_type }}.tls=true"
+{% endif %}
+      - "traefik.http.services.{{ worker_type }}.loadbalancer.server.port=80"
+    networks:
+      - worker_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+{% endfor %}
+secrets:
+{% for worker_type in worker_types %}
+  api_key_{{ worker_type }}:
+    file: "{{ worker_secrets_dir }}/api_key.{{ worker_type }}.txt"
+{% endfor %}
+
+{# A bare `volumes:` key with no children is invalid compose. #}
+{% set named_volumes = worker_types | select('in', ['collectors', 'presenters']) | list %}
+{% if named_volumes | length > 0 or worker_tls_mode == "acme" %}
+volumes:
+{% for worker_type in named_volumes %}
+  {{ worker_type }}_storage:
+{% endfor %}
+{% if worker_tls_mode == "acme" %}
+  acme_storage:
+{% endif %}
+{% endif %}
+
+networks:
+  worker_net:
+    driver: bridge

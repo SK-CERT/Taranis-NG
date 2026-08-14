@@ -1,0 +1,12 @@
+---
+# Triggered by changes to TLS material — the certificate, the key, or the
+# Traefik configuration. That material is bind-mounted content rather than
+# compose config, so docker_compose_v2 cannot detect it and the containers need
+# this explicit restart to re-read it.
+- name: "Restart worker compose"
+  community.docker.docker_compose_v2:
+    project_src: "{{ worker_compose_dir }}"
+    project_name: "{{ worker_compose_project }}"
+    files:
+      - docker-compose.worker.yml
+    state: restarted

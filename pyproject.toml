@@ -50,10 +50,32 @@ classifiers = [
 dev = [
     "djlint==1.44.2",
     "ruff==0.16.2",
+    # Keep in lockstep with [tool.uv] required-version below. Declared here so
+    # `uv sync` reinstalls it into .venv instead of pruning it — an undeclared
+    # .venv/bin/uv gets removed by the first sync, after which no uv on the
+    # machine satisfies required-version and every uv command in the repo fails.
+    "uv==0.11.19",
+]
+# Ansible deployment tooling (see ansible/). Deliberately NOT in `dev`, which
+# scripts/check_tool_versions.py treats as the lockstep source for the
+# pre-commit and CI lint pins; a GUI-only contributor also has no reason to
+# install Ansible.
+# `docker` is the Docker SDK for Python, which taranis-ng-image-transfer needs
+# on the CONTROL host only — worker hosts are driven through the compose CLI.
+ansible = [
+    "ansible-core==2.21.3",
+    "ansible-lint==26.8.0",
+    "docker>=7.1.0",
 ]
 
 [tool.uv]
 required-version = "0.11.19"
+
+# The `ansible` group needs a newer Python than the project as a whole
+# (ansible-core 2.21 is 3.12+, while the services still support 3.11). Scoping
+# it here keeps `requires-python` for the application untouched.
+[tool.uv.dependency-groups]
+ansible = { requires-python = ">=3.12" }
 
 # uv workspace: each backend service is an independent member with its own uv.lock.
 # The `shared` package is consumed as a path source by all services via their
@@ -92,6 +114,7 @@ ignore = [
 "scripts/check_tool_versions.py" = ["T201"]
 "scripts/check_shared_lock_consistency.py" = ["T201"]
 "scripts/bump_version.py" = ["T201", "S603"]
+"scripts/check_ansible_syntax.py" = ["T201", "S603"]
 "src/core/tests/**/*.py" = ["D103", "PLR2004", "S101", "S105", "S106", "SLF001"]
 
 [tool.ruff.format]

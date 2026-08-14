@@ -33,6 +33,25 @@ src/.env
 src/publishers/crypto
 !src/publishers/crypto/README.md
 *.key
+
+# Ansible operator-supplied values (see the .example files in tree).
+# The top-level inventory can be named anything; it is passed with -i.
+ansible/inventory/*.local.yml
+# Ansible loads group_vars/host_vars strictly by group or host NAME, so real
+# files here are all.yml / core.yml / <inventory_hostname>.yml. Ignore the
+# directories wholesale and re-admit only the tracked .example templates
+# (whose names deliberately match no group or host, so Ansible skips them).
+ansible/inventory/group_vars/*
+ansible/inventory/host_vars/*
+!ansible/inventory/group_vars/*.example.yml
+!ansible/inventory/host_vars/*.example.yml
+ansible/collections/
+# Project-local Ansible collection cache populated by
+# scripts/check_ansible_syntax.py (pre-commit + CI).
+.cache/
+# Worker stack operator values (staged API keys are covered by
+# docker/secrets/*.txt above; worker TLS material lives on the worker host)
+docker/.env.worker
 *.log
 *.crt
 *.asc

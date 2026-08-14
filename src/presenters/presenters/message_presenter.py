@@ -5,6 +5,7 @@ Returns:
 """
 
 from base64 import b64encode
+from pathlib import Path
 
 from shared.config_presenter import ConfigPresenter
 
@@ -43,7 +44,19 @@ class MESSAGEPresenter(BasePresenter):
         message_body_template_path = presenter_input.param_key_values["BODY_TEMPLATE_PATH"]
         att_template_path = common.read_str_parameter("ATTACHMENT_TEMPLATE_PATH", None, presenter_input)
         att_file_name = common.read_str_parameter("ATTACHMENT_FILE_NAME", None, presenter_input)
-        presenter_output = {"mime_type": "text/plain", "message_title": None, "message_body": None, "data": None, "att_file_name": None}
+        # `mime_type` describes the optional attachment — the PDF branch below overwrites it — so the
+        # message body has to declare its own content type. Without it the EMAIL publisher is left to
+        # sniff the body, and content-sniffing misreads plain text that merely contains a "<p"-like
+        # placeholder (e.g. "port <port_numbers>") as HTML, collapsing every newline in the client.
+        body_suffix = Path(message_body_template_path).suffix.lower()
+        presenter_output = {
+            "mime_type": "text/plain",
+            "message_body_mime_type": "text/html" if body_suffix in (".html", ".htm") else "text/plain",
+            "message_title": None,
+            "message_body": None,
+            "data": None,
+            "att_file_name": None,
+        }
 
         try:
             input_data = BasePresenter.generate_input_data(presenter_input)

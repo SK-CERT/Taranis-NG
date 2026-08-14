@@ -1,0 +1,34 @@
+---
+# Tasks common to both Debian/Ubuntu and RHEL/Fedora: add users to the docker
+# group and verify the daemon is reachable.
+- name: "Ensure docker group exists"
+  ansible.builtin.group:
+    name: docker
+    state: present
+
+- name: "Add configured users to docker group"
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+
+- name: "Ensure docker service is enabled and started"
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+# The CLI keeps this role free of the Docker SDK for Python, which is not in
+# the RHEL-family base repositories.
+- name: "Verify the docker daemon is reachable"
+  ansible.builtin.command: "docker version --format {% raw %}'{{ .Server.Version }}'{% endraw %}"
+  register: docker_version_result
+  changed_when: false
+  until: docker_version_result.rc == 0
+  retries: 5
+  delay: 3
+
+- name: "Show installed docker version"
+  ansible.builtin.debug:
+    msg: "Docker {{ docker_version_result.stdout | trim }} installed on {{ inventory_hostname }}"

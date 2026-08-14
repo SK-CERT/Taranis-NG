@@ -79,3 +79,70 @@ jobs:
           # Verify each shared dep pin matches the version recorded in every
           # service uv.lock so a shared bump that isn't relocked gets caught.
           python3 scripts/check_shared_lock_consistency.py
+
+  ansible-checks:
+    name: Ansible syntax check and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Depth 2 so HEAD^1..HEAD is the PR diff (matches the lint job above).
+          fetch-depth: 2
+      - name: Skip if no ansible-related files changed
+        # These checks only matter when ansible/ or its check script changes —
+        # saves CI minutes on PRs that don't touch the deployment machinery.
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            changed=$(git diff --name-only --diff-filter=ACMR HEAD^1 HEAD -- \
+              'ansible/' \
+              'scripts/check_ansible_syntax.py' \
+              '.github/workflows/linting.yaml')
+          else
+            # workflow_dispatch or push: always run.
+            changed=" ansible/  (forced)"
+          fi
+          if [ -z "$changed" ]; then
+            echo "No ansible-related files changed; skipping Ansible checks."
+            echo "SKIP_ANSIBLE_CHECK=1" >> "$GITHUB_ENV"
+          else
+            echo "Ansible-related files changed:"
+            echo "$changed"
+          fi
+      - name: Set up Python
+        if: env.SKIP_ANSIBLE_CHECK != '1'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install uv
+        if: env.SKIP_ANSIBLE_CHECK != '1'
+        uses: astral-sh/setup-uv@v6
+        with:
+          # Pinned to match [tool.uv] required-version in root pyproject.toml.
+          version: "0.11.19"
+          enable-cache: true
+      - name: Install Ansible tooling from the locked dependency group
+        if: env.SKIP_ANSIBLE_CHECK != '1'
+        # Versions come from [dependency-groups] ansible in pyproject.toml and
+        # uv.lock, so CI and .venv run the identical ansible-core/ansible-lint.
+        run: uv sync --group ansible --no-install-project
+      - name: Syntax-check playbooks
+        if: env.SKIP_ANSIBLE_CHECK != '1'
+        # The script installs required Ansible collections into a project-local
+        # cache (gitignored under .cache/) before running --syntax-check on
+        # every playbook in ansible/playbooks/. Runs first so the cache it
+        # populates is available to the lint step below.
+        # --require-ansible: the script skips itself when ansible-core is absent
+        # (so contributors without the optional group can still commit); CI has
+        # just installed it, so a missing binary here is a real failure.
+        run: uv run --group ansible python3 scripts/check_ansible_syntax.py --verbose --require-ansible
+      - name: Lint playbooks and roles
+        if: env.SKIP_ANSIBLE_CHECK != '1'
+        # From ansible/, so both ansible.cfg (roles_path) and .ansible-lint are
+        # picked up — ansible-lint reads them from the working directory.
+        # --offline: the collections are already in the cache the previous step
+        # populated, and CI should not reach out to Galaxy mid-run.
+        working-directory: ansible
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/.cache/ansible-collections
+        run: uv run --group ansible ansible-lint --offline playbooks/ roles/

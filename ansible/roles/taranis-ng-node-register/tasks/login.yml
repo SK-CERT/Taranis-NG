@@ -1,0 +1,74 @@
+---
+# Obtain an admin JWT from Core. Shared by main.yml (register) and
+# deregister.yml, so both speak to Core the same way.
+
+- name: "Ensure the taranis-ng-worker variables this role builds on are present"
+  ansible.builtin.assert:
+    that:
+      - worker_types is defined
+      - worker_base_hostname is defined
+    fail_msg: >-
+      taranis-ng-node-register reuses variables defined by taranis-ng-worker
+      (worker_types, worker_base_hostname). Import that role's identity.yml
+      first, as distribute-worker.yml and worker-remove.yml do.
+
+- name: "Ensure Core admin credentials are set"
+  ansible.builtin.assert:
+    that:
+      - core_url | length > 0
+      - taranis_admin_user | length > 0
+      - taranis_admin_password | length > 0
+    fail_msg: "Set core_url, taranis_admin_user and taranis_admin_password in group_vars/all.yml."
+
+# The login below carries the admin password, so it runs under no_log — which
+# also censors its failures. A stopped Core stack would surface only
+# "Status code was -1", with the real cause (connection refused) hidden. Probe
+# the unauthenticated health endpoint first so the diagnosis is readable.
+- name: "Check that Core is reachable"
+  ansible.builtin.uri:
+    url: "{{ core_url }}/api/v1/isalive"
+    method: GET
+    status_code: [200]
+    validate_certs: "{{ register_validate_certs }}"
+    timeout: 10
+  register: core_isalive
+  delegate_to: localhost
+  become: false
+  failed_when: false
+  # Read-only, and uri has no check-mode support: without this the probe is
+  # skipped under --check and the guard below fires on every dry run.
+  check_mode: false
+
+- name: "Fail with a usable message when Core is down"
+  ansible.builtin.fail:
+    msg: >-
+      Core is not answering at {{ core_url }}/api/v1/isalive
+      ({{ core_isalive.msg | default('HTTP ' ~ (core_isalive.status | default('?'))) }}).
+      Start the stack on the Core host — `cd docker && docker compose up -d` —
+      or correct core_url in group_vars/all.yml.
+      Running worker-remove.yml and Core is gone for good? Re-run with
+      -e worker_deregister_node=false to skip Core and clean only the host.
+  when: core_isalive.status | default(-1) != 200
+
+- name: "Log in to Core as admin"
+  ansible.builtin.uri:
+    url: "{{ core_url }}/api/v1/auth/login"
+    method: POST
+    body_format: json
+    body:
+      username: "{{ taranis_admin_user }}"
+      password: "{{ taranis_admin_password }}"
+    status_code: 200
+    validate_certs: "{{ register_validate_certs }}"
+  register: core_login_result
+  delegate_to: localhost
+  become: false
+  # Obtaining a token changes nothing, and every later task needs it — so run
+  # it under --check too.
+  check_mode: false
+  no_log: true
+
+- name: "Extract JWT access token"
+  ansible.builtin.set_fact:
+    core_access_token: "{{ core_login_result.json.access_token }}"
+  no_log: true

@@ -80,11 +80,20 @@ class KeycloakAuthenticator(BaseAuthenticator):
     @staticmethod
     def _get_redirect_uri() -> str | None:
         """Return the exact Vue 3 callback URI used for the authorization request."""
-        candidate = request.args.get("redirect_uri") or request.headers.get("Referer")
-        if not candidate:
+        candidate = request.args.get("redirect_uri")
+        if candidate:
+            parsed = urlsplit(candidate)
+            if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.path not in {"/login", "/v2/login"}:
+                return None
+            return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+
+        # Old VUE2 logic for backward compatibility. TODO: remove when we drop support for VUE2, also remove the /v2/login check above
+        referer = request.headers.get("Referer")
+        if not referer:
             return None
 
-        parsed = urlsplit(candidate)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.path not in {"/login", "/v2/login"}:
+        parsed = urlsplit(referer)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
             return None
-        return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+
+        return urlunsplit((parsed.scheme, parsed.netloc, "/login", "", ""))

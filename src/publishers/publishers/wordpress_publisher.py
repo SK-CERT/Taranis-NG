@@ -6,7 +6,6 @@ from datetime import datetime
 from http import HTTPStatus
 
 import requests
-
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
@@ -18,15 +17,15 @@ class WORDPRESSPublisher(BasePublisher):
     """Publisher for Wordpress.
 
     Attributes:
-        type (str): Publisher type.
+        publisher_type (str): Publisher type.
         config (ConfigPublisher): Publisher configuration.
         name (str): Publisher name.
         description (str): Publisher description.
         parameters (list): Publisher parameters.
     """
 
-    type = "WORDPRESS_PUBLISHER"
-    config = ConfigPublisher().get_config_by_type(type)
+    publisher_type = "WORDPRESS_PUBLISHER"
+    config = ConfigPublisher().get_config_by_type(publisher_type)
     name = config.name
     description = config.description
     parameters = config.parameters

@@ -1,0 +1,135 @@
+---
+# Per-worker-type registration + probe — invoked via include_tasks with
+# `worker_type` set as the loop variable.
+
+# 2a — read the staged per-type api_key.
+- name: "Read the staged api_key for {{ worker_type }}"
+  ansible.builtin.slurp:
+    path: "{{ worker_api_key_staging_dir }}/api_key.worker.{{ inventory_hostname }}.{{ worker_type }}.txt"
+  register: worker_api_key_slurp
+  delegate_to: localhost
+  become: false
+  no_log: true
+
+- name: "Set per-type api key value"
+  ansible.builtin.set_fact:
+    current_worker_api_key: "{{ worker_api_key_slurp.content | b64decode | trim }}"
+  no_log: true
+
+# 2b — per-type endpoint addresses. All four node types are served by the v1
+# config API, which supports GET (list), POST (create) and PUT (update).
+- name: "Set the *Node collection endpoint for {{ worker_type }}"
+  ansible.builtin.set_fact:
+    node_collection_url: "{{ core_url }}/api/v1/config/{{ worker_type }}-nodes"
+    current_worker_api_url: "https://{{ worker_type }}.{{ worker_base_hostname }}"
+
+# 2c — fetch existing nodes + find one already pointing at this api_url.
+- name: "Fetch existing nodes from Core for {{ worker_type }}"
+  ansible.builtin.uri:
+    url: "{{ node_collection_url }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ core_access_token }}"
+    status_code: 200
+    validate_certs: "{{ register_validate_certs }}"
+  register: existing_nodes_result
+  delegate_to: localhost
+  become: false
+  check_mode: false
+
+- name: "Check by api_url whether Core already knows {{ worker_type }}"
+  ansible.builtin.set_fact:
+    existing_worker_node: >-
+      {{
+        (existing_nodes_result.json['items'] | default([]))
+        | selectattr('api_url', 'defined')
+        | selectattr('api_url', 'equalto', current_worker_api_url)
+        | list | first | default({})
+      }}
+
+- name: "Record whether the node already exists"
+  ansible.builtin.set_fact:
+    worker_already_registered: "{{ 'id' in existing_worker_node }}"
+
+# 2d — POST a new node, or PUT the existing one so a rotated api_key actually
+# reaches Core instead of being silently skipped.
+#
+# `id` is required in the body even on create: Core loads the payload through
+# <Type>NodeSchema.create(), whose post_load calls <Type>Node(**data), and that
+# constructor takes `id` as a positional argument. On create it discards the
+# value and assigns a fresh uuid4, so the empty string here is only there to
+# satisfy the signature — omit it and Core answers 400 with
+# "__init__() missing 1 required positional argument: 'id'".
+- name: "POST a new node to Core for {{ worker_type }}"
+  ansible.builtin.uri:
+    url: "{{ node_collection_url }}"
+    method: POST
+    body_format: json
+    body:
+      id: ""
+      name: "{{ worker_node_name }}"
+      description: "{{ worker_node_description }}"
+      api_url: "{{ current_worker_api_url }}"
+      api_key: "{{ current_worker_api_key }}"
+    headers:
+      Authorization: "Bearer {{ core_access_token }}"
+    status_code: [200, 201]
+    validate_certs: "{{ register_validate_certs }}"
+  register: node_add_result
+  delegate_to: localhost
+  become: false
+  when: not worker_already_registered | bool
+  no_log: true
+
+- name: "Update the existing node in Core (refreshes the api_key) for {{ worker_type }}"
+  ansible.builtin.uri:
+    url: "{{ node_collection_url }}/{{ existing_worker_node.id }}"
+    method: PUT
+    body_format: json
+    body:
+      # Unlike create, this id is used: update_*_node probes the worker with
+      # get_*_info(node.id).
+      id: "{{ existing_worker_node.id }}"
+      name: "{{ worker_node_name }}"
+      description: "{{ worker_node_description }}"
+      api_url: "{{ current_worker_api_url }}"
+      api_key: "{{ current_worker_api_key }}"
+    headers:
+      Authorization: "Bearer {{ core_access_token }}"
+    status_code: [200, 201, 204]
+    validate_certs: "{{ register_validate_certs }}"
+  register: node_update_result
+  delegate_to: localhost
+  become: false
+  when: worker_already_registered | bool
+  no_log: true
+
+- name: "Report the node registration result for {{ worker_type }}"
+  ansible.builtin.debug:
+    msg: >-
+      {{ worker_node_name }} ({{ current_worker_api_url }})
+      {{ 'updated in Core (api_key refreshed)' if worker_already_registered | bool else 'registered with Core' }}.
+
+# 2e — Core→worker connectivity probe.
+#
+# isalive is the one endpoint every worker type answers with a GET and no auth
+# (/api/v1/collectors is POST-only). Sending no key keeps this task free of
+# secrets, so failures stay readable; the key itself is already verified by
+# Core's own probe during the POST/PUT above. The retries wait out ACME
+# issuance on a first deployment.
+- name: "Verify Core can reach the worker serving {{ worker_type }}"
+  ansible.builtin.uri:
+    url: "{{ current_worker_api_url }}/api/v1/isalive"
+    method: GET
+    status_code: [200]
+    validate_certs: "{{ register_validate_certs }}"
+  register: worker_probe_result
+  delegate_to: localhost
+  become: false
+  until: worker_probe_result.status == 200
+  retries: 5
+  delay: 3
+
+- name: "Report Core → worker connectivity for {{ worker_type }}"
+  ansible.builtin.debug:
+    msg: "Core → {{ worker_type }} probe ({{ current_worker_api_url }}/api/v1/isalive): HTTP {{ worker_probe_result.status }}"

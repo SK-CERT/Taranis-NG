@@ -1,0 +1,32 @@
+---
+# Docker Engine installation for RHEL/CentOS/Fedora/Rocky/Alma (dnf).
+- name: "Ensure required packages are present"
+  ansible.builtin.package:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg2  # gnupg on Debian
+    state: present
+
+- name: "Add Docker dnf repository"
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: "Docker CE Stable - $basearch"
+    baseurl: "https://download.docker.com/linux/{{ 'fedora' if ansible_facts['distribution'] == 'Fedora' else 'centos' }}/$releasever/$basearch/stable"
+    gpgcheck: true
+    gpgkey: "https://download.docker.com/linux/{{ 'fedora' if ansible_facts['distribution'] == 'Fedora' else 'centos' }}/gpg"
+    enabled: true
+
+# allowerasing: RHEL 9 and Fedora ship podman's runc / containerd variants,
+# which conflict with containerd.io. Without it the install aborts with
+# "problem with installed package".
+- name: "Install Docker Engine (dnf)"
+  ansible.builtin.dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    allowerasing: true

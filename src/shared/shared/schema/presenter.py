@@ -187,21 +187,31 @@ class PresenterInputSchema(Schema):
 class PresenterOutput:
     """Class for "presenter output"."""
 
-    def __init__(self, mime_type: str, data: str, message_body: str, message_title: str, att_file_name: str) -> None:
+    def __init__(
+        self,
+        mime_type: str,
+        data: str,
+        message_body: str,
+        message_title: str,
+        att_file_name: str,
+        message_body_mime_type: str = "text/plain",
+    ) -> None:
         """Initialize the "presenter output".
 
         Args:
-            mime_type (str): MIME type of the output.
+            mime_type (str): MIME type of the output (the attachment, when there is one).
             data (str): The data itself.
             message_body (str): Body of the message.
             message_title (str): Title of the message.
             att_file_name (str): Attached file name.
+            message_body_mime_type (str): MIME type of the message body itself. Defaults to "text/plain".
         """
         self.mime_type = mime_type
         self.data = data
         self.message_body = message_body
         self.message_title = message_title
         self.att_file_name = att_file_name
+        self.message_body_mime_type = message_body_mime_type
 
 
 class PresenterOutputSchema(Schema):
@@ -216,6 +226,7 @@ class PresenterOutputSchema(Schema):
     message_body = fields.Str()
     message_title = fields.Str()
     att_file_name = fields.Str()
+    message_body_mime_type = fields.Str(allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> PresenterOutput:  # noqa: ANN003, ARG002

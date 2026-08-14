@@ -4,7 +4,6 @@ from base64 import b64decode
 from http import HTTPStatus
 
 import tweepy
-
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
 
@@ -15,15 +14,15 @@ class TWITTERPublisher(BasePublisher):
     """Publisher for Twitter.
 
     Attributes:
-        type (str): Publisher type.
+        publisher_type (str): Publisher type.
         config (ConfigPublisher): Publisher configuration.
         name (str): Publisher name.
         description (str): Publisher description.
         parameters (list): Publisher parameters.
     """
 
-    type = "TWITTER_PUBLISHER"
-    config = ConfigPublisher().get_config_by_type(type)
+    publisher_type = "TWITTER_PUBLISHER"
+    config = ConfigPublisher().get_config_by_type(publisher_type)
     name = config.name
     description = config.description
     parameters = config.parameters

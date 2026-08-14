@@ -42,6 +42,15 @@ repos:
         language: python
         pass_filenames: false
         always_run: true
+      - id: ansible-syntax-check
+        name: Ansible playbook syntax check
+        entry: python3 scripts/check_ansible_syntax.py
+        language: system
+        pass_filenames: false
+        files: ^ansible/.*\.(yml|yaml|j2)$
+        # Run only when ansible/ files change; pre-commit filters by `files:`.
+        # `always_run: false` is the default — left explicit here for clarity.
+        always_run: false
       - id: gui3-precommit
         name: gui3-precommit
         entry: node src/gui-v3/scripts/precommit.cjs
