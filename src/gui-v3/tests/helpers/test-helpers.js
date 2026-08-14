@@ -172,6 +172,27 @@ export async function saveDialog(page) {
 }
 
 /**
+ * The rendered content panel of a tabbed config view (Access Management, …).
+ *
+ * These views used to keep every tab mounted inside a `<v-window>` and this scope
+ * was `.v-window-item--active`. They now render exactly one panel via
+ * `<component :is>` (see AccessManagementView.vue), so that class no longer exists
+ * anywhere in the page and every locator built on it silently matched nothing.
+ *
+ * `.v-main` is the equivalent scope: it holds the tab bar plus the single live
+ * panel, and — crucially — it excludes dialogs. Vuetify teleports every overlay
+ * into a `.v-overlay-container` appended to `document.body` (see
+ * vuetify/composables/teleport), so a dialog's own EntitySelectTable "Search" box
+ * or data table can never collide with the panel's.
+ *
+ * @param {import('@playwright/test').Page} page - Playwright page object
+ * @returns {import('@playwright/test').Locator} The page-content scope
+ */
+export function activePanel(page) {
+    return page.locator('.v-main')
+}
+
+/**
  * Find a row in the active config table by typing its name into the Search box.
  *
  * Why this exists: the config tables are server-side paginated (default 10 per
@@ -185,22 +206,18 @@ export async function saveDialog(page) {
  * @param {import('@playwright/test').Page} page - Playwright page object
  * @param {string} name - Exact row name to search for
  * @returns {import('@playwright/test').Locator} The matching row, scoped to the
- *   active panel (Vuetify keeps previous tabs' DOM around).
+ *   page content (see activePanel).
  */
 export async function findRowByName(page, name) {
-    // Scope the search box to `.v-window-item--active` so a leftover (closed
-    // but not yet unmounted) NewAuthProvider-style dialog — which embeds its
-    // own EntitySelectTable with ANOTHER "Search" textbox — does not collide.
+    // Scope the search box to the page content so a leftover (closed but not yet
+    // unmounted) NewAuthProvider-style dialog — which embeds its own
+    // EntitySelectTable with ANOTHER "Search" textbox — does not collide.
     // Vuetify's `<v-dialog v-model="false">` leaves the dialog's DOM in the
     // outgoing transition for a moment; the dialog's Search box is `disabled`
     // but Playwright's `getByRole('textbox', { name })` includes disabled
     // textbox elements in its match set, so without a scope this throws
     // `strict mode violation: ... resolved to 2 elements`.
-    //
-    // Scoping to `.v-window-item--active` matches only the active Access
-    // Management panel's main Search box (the row table it sits above is
-    // always inside the active panel). Avoids `getByRole`'s broad match.
-    const search = page.locator('.v-window-item--active').getByRole('textbox', { name: 'Search' }).first()
+    const search = activePanel(page).getByRole('textbox', { name: 'Search' }).first()
     // Intentionally NO explicit wait here. The search GET the fill() triggers
     // is followed (at every call site) by `expect(row).toBeVisible()` or
     // `expect(row).toHaveCount(0)`, which Playwright AUTO-RETRIES until the row
@@ -218,7 +235,7 @@ export async function findRowByName(page, name) {
     // Brief debounce + GET + re-render is well under the default 5 s assertion
     // timeout; auto-retry is the simplest and most robust synchronization here.
     await search.fill(name)
-    return page.locator('.v-window-item--active').locator('tbody tr').filter({ hasText: name })
+    return activePanel(page).locator('tbody tr').filter({ hasText: name })
 }
 
 /**
@@ -263,6 +280,56 @@ export async function hasPermission(page, selector) {
         return true
     } catch {
         return false
+    }
+}
+
+/**
+ * Fill every still-empty dynamic module parameter inside an open config dialog.
+ *
+ * Collector/presenter/publisher/bot parameters are declared in
+ * `src/shared/shared/config_*.py` via `param_type`, which has NO `required`
+ * flag — so the backend never sends one. `dynamicParameterRules` therefore
+ * keeps the legacy Vue-2 behaviour (`v-validate="'required'"` on every generated
+ * field) and treats each parameter as required. Parameters declared without a
+ * `default_value` (PROXY_SERVER, USER_AGENT, the EMAIL_PUBLISHER credentials, …)
+ * consequently render empty and block Save with "Please fill in all required
+ * fields", even when the test does not care about them.
+ *
+ * Specs fill the fields they actually assert on first, then call this to satisfy
+ * the remaining ones. The default value is `none`, which the collectors read as
+ * "no proxy" (see BaseCollector.get_parsed_proxy) and is harmless elsewhere.
+ *
+ * @param {import('@playwright/test').Locator} dialog - The open dialog locator
+ * @param {string} value - Value to type into each empty parameter field
+ */
+export async function fillRequiredParameters(dialog, value = 'none') {
+    // The parameter fields live in the `<div>` that holds the "Parameters" heading.
+    // Ancestors come first in DOM order, so `.last()` is the innermost qualifying div —
+    // the parameters block itself, not the surrounding card/form. Scoping matters: the
+    // same dialogs embed EntitySelectTable "Search" boxes, and filling one of those
+    // would filter the table the spec then selects from.
+    //
+    // The second filter is not redundant: NewProductType wraps its heading in a flex row
+    // (heading + help button) that holds no field, so matching on the heading alone would
+    // settle on that row and quietly fill nothing.
+    //
+    // Both `has:` locators are built from the PAGE, not from `dialog`: Playwright re-queries
+    // them relative to each candidate <div>, so a dialog-rooted locator (`.v-dialog… >>
+    // heading`) matches nothing and the filter silently yields 0.
+    const page = dialog.page()
+    const section = dialog
+        .locator('div')
+        .filter({ has: page.getByRole('heading', { name: 'Parameters' }) })
+        .filter({ has: page.locator('input') })
+        .last()
+    if ((await section.count()) === 0) return
+
+    const inputs = section.locator('input')
+    for (let i = 0; i < (await inputs.count()); i++) {
+        const input = inputs.nth(i)
+        if ((await input.inputValue()) === '') {
+            await input.fill(value)
+        }
     }
 }
 

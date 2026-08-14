@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, navigateToConfig, openDialog, saveDialog, generateTestName } from '../helpers/test-helpers'
+import { login, navigateToConfig, openDialog, saveDialog, generateTestName, activePanel } from '../helpers/test-helpers'
 
 /**
  * Role Management CRUD E2E Tests
@@ -60,13 +60,10 @@ test.describe('Role Management', () => {
         // The list is paginated, so the new row may land on a later page. Filter by the
         // (unique) name to surface it regardless of which page it's on.
         //
-        // Scope the search field to the *active* Access Management window item. The view
-        // (Users/Roles/ACL/Organizations tabs) renders a SearchField per tab; Vuetify's
-        // v-window-item transition leaves the previous tab's search input cloned in the
-        // DOM (hidden) on tab switch, so a page-wide `getByRole('textbox', { name: 'Search' })`
-        // is ambiguous (strict-mode violation: resolved to 2 elements).
-        const activePanel = page.locator('.v-window-item--active')
-        await activePanel.getByRole('textbox', { name: 'Search' }).fill(roleName)
+        // Scope the search field to the page content (see the activePanel helper): a
+        // page-wide `getByRole('textbox', { name: 'Search' })` also matches the Search
+        // box embedded in a dialog's EntitySelectTable, which is a strict-mode violation.
+        await activePanel(page).getByRole('textbox', { name: 'Search' }).fill(roleName)
         await expect(page.locator('tbody tr').filter({ hasText: roleName })).toBeVisible()
     })
 
@@ -130,10 +127,9 @@ test.describe('Role Management', () => {
     })
 
     test('should filter/search roles', async ({ page }) => {
-        // Scope to the active Access Management window item — see the create test for why a
-        // page-wide search locator is ambiguous (Vuetify leaves a cloned input from the
-        // previous tab in the DOM).
-        const searchInput = page.locator('.v-window-item--active').getByRole('textbox', { name: 'Search' })
+        // Scope to the page content — see the create test for why a page-wide search
+        // locator is ambiguous.
+        const searchInput = activePanel(page).getByRole('textbox', { name: 'Search' })
         await expect(searchInput).toBeVisible()
 
         await searchInput.fill('Admin')

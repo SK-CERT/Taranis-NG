@@ -32,8 +32,9 @@ test.describe('Authentication', () => {
         // Should redirect to dashboard
         await expect(page).toHaveURL(/\/v2\/(dashboard)?$/)
 
-        // Should show user info or dashboard content
-        await expect(page.locator('text=Dashboard')).toBeVisible()
+        // Assert on the dashboard's own heading. A bare `text=Dashboard` also matches the
+        // primary-navigation link of the same name — two elements, strict-mode violation.
+        await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
     })
 
     test('should show error with invalid credentials', async ({ page }) => {
@@ -94,6 +95,6 @@ test.describe('Authentication', () => {
 
         // Should still be logged in
         await expect(page).toHaveURL(/\/v2\/(dashboard)?$/)
-        await expect(page.locator('text=Dashboard')).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
     })
 })

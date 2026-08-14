@@ -1,15 +1,34 @@
 name: GUI-v3 Tests
 
+# The E2E job drives the real backend (Docker stack built from this checkout), so the
+# path filter covers the services it exercises as well as the GUI itself: a core or
+# collectors change that breaks the GUI contract has to be caught here, not at whatever
+# unrelated PR next happens to touch src/gui-v3. The consequence is that lint and unit
+# tests also run on backend-only changes; both are a couple of minutes.
 on:
   push:
     branches: [vue3, main]
     paths:
       - 'src/gui-v3/**'
+      - 'src/core/**'
+      - 'src/collectors/**'
+      - 'src/presenters/**'
+      - 'src/publishers/**'
+      - 'src/shared/**'
+      - 'docker/**'
+      - 'scripts/test-setup.sh'
       - '.github/workflows/gui-v3-tests.yml'
   pull_request:
     branches: [vue3, main]
     paths:
       - 'src/gui-v3/**'
+      - 'src/core/**'
+      - 'src/collectors/**'
+      - 'src/presenters/**'
+      - 'src/publishers/**'
+      - 'src/shared/**'
+      - 'docker/**'
+      - 'scripts/test-setup.sh'
       - '.github/workflows/gui-v3-tests.yml'
 
 concurrency:
@@ -59,9 +78,12 @@ jobs:
 
   e2e-tests:
     name: E2E Tests (${{ matrix.browser }})
-    if: false # Temporarily disabled
     runs-on: ubuntu-latest
     needs: unit-tests
+    # Building the four backend images (~2.3 GB) takes the bulk of this; the suite
+    # itself is ~10 min for chromium and ~15 min for firefox on one worker (the
+    # Playwright config pins workers: 1 because the specs share one backend).
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -75,8 +97,55 @@ jobs:
           cache-dependency-path: src/gui-v3/package-lock.json
       - run: npm ci
       - run: node scripts/update-version.cjs
-      - run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      # docker/secrets/*.txt is gitignored (see .gitignore), so a fresh checkout has
+      # none and compose refuses to start. The committed .example values are throwaway
+      # dev credentials, which is exactly right for an ephemeral single-run stack — the
+      # same copy step docker/README.md documents for local setup. The seed spec also
+      # reads docker/secrets/api_key.txt directly to register the collector/presenter/
+      # publisher nodes, so it has to exist on disk, not just inside the containers.
+      - name: Provision throwaway Docker secrets
+        working-directory: .
+        run: |
+          for example in docker/secrets/*.txt.example; do
+            secret="${example%.example}"
+            [ -f "$secret" ] || cp "$example" "$secret"
+          done
+          ls -1 docker/secrets/*.txt
+
+      # Start the stack in its OWN step rather than letting Playwright's webServer do
+      # it. That webServer entry runs this same script but under a 120 s timeout, which
+      # is nowhere near enough for `docker compose up --build` of the backend images.
+      # Because the entry is `reuseExistingServer: true` with an isalive `url` probe,
+      # Playwright finds the stack already up and skips re-running the script.
+      - name: Build and start the E2E backend stack
+        working-directory: .
+        timeout-minutes: 30
+        run: bash scripts/test-setup.sh
+
+      # Chromium is installed for EVERY matrix entry, not just the chromium one: the
+      # `setup` project (00-config-seed) is pinned to `devices['Desktop Chrome']` in
+      # playwright.config.js and each browser project lists it under `dependencies`, so
+      # the seed runs in Chromium no matter which browser is under test. Installing only
+      # ${{ matrix.browser }} fails the firefox job at the very first test with
+      # "Executable doesn't exist at .../chromium_headless_shell-*". Duplicate names are
+      # deduplicated by the installer, so this is also correct when the matrix is chromium.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium ${{ matrix.browser }}
+
       - run: npx playwright test --project=${{ matrix.browser }}
+
+      # An E2E failure is often a backend failure (a 500 surfaces in the GUI as a
+      # generic "Could not connect to X node." alert). Print the container logs so the
+      # cause is in the same run log as the Playwright output.
+      - name: Dump backend logs
+        if: failure()
+        working-directory: docker
+        run: |
+          docker compose --env-file .env.e2e \
+            -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e \
+            logs --no-color --tail=500
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

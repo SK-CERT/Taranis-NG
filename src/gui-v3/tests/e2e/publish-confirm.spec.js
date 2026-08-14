@@ -76,9 +76,10 @@ test.describe('Publish confirmation dialog', () => {
         // The confirmation should contain the product title.
         await expect(confirmDialog).toContainText(productTitle)
 
-        // It should contain the "Product Type" label and the "Publisher Presets" label.
-        await expect(confirmDialog).toContainText(/Product Type/i)
-        await expect(confirmDialog).toContainText(/Publisher Presets/i)
+        // It should carry the product-type and publishers labels
+        // (product.publish_confirmation_type / _publishers).
+        await expect(confirmDialog).toContainText(/Product type:/i)
+        await expect(confirmDialog).toContainText(/Publishers:/i)
 
         // Cancel — don't actually publish a throwaway product.
         await confirmDialog.getByRole('button', { name: 'Cancel' }).click()

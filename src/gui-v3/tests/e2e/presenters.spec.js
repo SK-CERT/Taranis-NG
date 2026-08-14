@@ -23,11 +23,11 @@ test.describe('Presenters', () => {
     test('should show the two presenters tabs', async ({ page }) => {
         await expect(page).toHaveURL(/\/config\/presenters/)
         await expect(page.getByRole('tab', { name: 'Product Types' })).toBeVisible()
-        await expect(page.getByRole('tab', { name: 'Presenters Nodes' })).toBeVisible()
+        await expect(page.getByRole('tab', { name: 'Presenter Nodes' })).toBeVisible()
     })
 
     test('should switch to the Presenters Nodes tab', async ({ page }) => {
-        await page.getByRole('tab', { name: 'Presenters Nodes' }).click()
+        await page.getByRole('tab', { name: 'Presenter Nodes' }).click()
         await expect(page).toHaveURL(/tab=nodes/)
         await expect(page.getByRole('button', { name: 'Add New' })).toBeVisible()
     })

@@ -27,7 +27,8 @@ test.describe('Assess', () => {
     })
 
     test('should accept input in the search field', async ({ page }) => {
-        const search = page.locator('.v-toolbar .v-text-field input').first()
+        // The toolbar is BaseToolbarFilter's own `section.toolbar-filter`, not a `v-toolbar`.
+        const search = page.locator('.toolbar-filter__search input').first()
         await expect(search).toBeVisible()
 
         await search.fill('apt')
@@ -43,13 +44,16 @@ test.describe('Assess', () => {
 
         await todayChip.click()
 
-        // Active range chip switches to the filled primary variant.
-        await expect(todayChip).toHaveClass(/bg-primary/)
+        // The active range chip switches to the tonal primary variant
+        // (`:color="primary" :variant="tonal"` in BaseToolbarFilter). Vuetify renders a
+        // tonal chip with `text-primary`; only flat/elevated variants get `bg-primary`.
+        await expect(todayChip).toHaveClass(/v-chip--variant-tonal/)
+        await expect(todayChip).toHaveClass(/text-primary/)
     })
 
     test('should show the three-state filter chips (read / important / relevant)', async ({ page }) => {
         // The custom-filters slot renders three clickable icon chips.
-        const filterChips = page.locator('.v-toolbar .v-chip')
+        const filterChips = page.locator('.toolbar-filter__custom .v-chip')
         await expect(filterChips.first()).toBeVisible()
         expect(await filterChips.count()).toBeGreaterThanOrEqual(3)
     })
