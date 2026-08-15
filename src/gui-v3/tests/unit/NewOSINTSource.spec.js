@@ -243,3 +243,163 @@ describe('NewOSINTSource — edit-mode collector sync', () => {
         expect(configApi.getAllCollectorsNodes).toHaveBeenCalledWith({ search: '' })
     })
 })
+
+// ── Moving a source between collectors nodes ────────────────────────────────
+// Collector rows are per-node: the same collector TYPE has a different id on
+// every node. Picking a different node must therefore resolve the collector by
+// type, and carry the parameter values across by parameter.key. Selecting the
+// node's first collector instead lands on an unrelated type, blanks every
+// field, and the backend then rejects the save with
+// "Cannot move source to collector of type X (source is bound to type Y)".
+
+// Two nodes exposing the SAME collector types in DIFFERENT order, with
+// per-node collector ids and per-node parameter ids — exactly what
+// /api/v1/config/collectors-nodes returns in a real deployment.
+function makeTwoNodes() {
+    const params = (prefix) => [
+        { id: `${prefix}-1`, key: 'PROXY_SERVER', name: 'Proxy', default_value: '' },
+        { id: `${prefix}-2`, key: 'WEB_URL', name: 'Web URL', default_value: '' }
+    ]
+    return [
+        {
+            id: 'node-local',
+            name: 'Default Docker Collector',
+            collectors: [
+                { id: 'web-local', type: 'WEB_COLLECTOR', name: 'Web Collector', parameters: params('local-web') },
+                { id: 'rss-local', type: 'RSS_COLLECTOR', name: 'RSS Collector', parameters: params('local-rss') }
+            ]
+        },
+        {
+            id: 'node-remote',
+            name: 'Collectors on remote host',
+            // NOTE: RSS first here — so collectors[0] is the WRONG type.
+            collectors: [
+                { id: 'rss-remote', type: 'RSS_COLLECTOR', name: 'RSS Collector', parameters: params('remote-rss') },
+                { id: 'web-remote', type: 'WEB_COLLECTOR', name: 'Web Collector', parameters: params('remote-web') }
+            ]
+        }
+    ]
+}
+
+function makeWebSourceOnLocalNode() {
+    return {
+        id: 'src-1',
+        name: 'Some advisory feed',
+        description: 'desc',
+        collector_id: 'web-local',
+        parameter_values: [
+            { value: 'socks5://proxy:1080', parameter: { id: 'local-web-1', key: 'PROXY_SERVER' } },
+            { value: 'https://example.org/advisories', parameter: { id: 'local-web-2', key: 'WEB_URL' } }
+        ],
+        word_lists: [],
+        osint_source_groups: [],
+        collector: { id: 'web-local', type: 'WEB_COLLECTOR', name: 'Web Collector' }
+    }
+}
+
+describe('NewOSINTSource — moving a source to another collectors node', () => {
+    beforeEach(async () => {
+        vi.clearAllMocks()
+        mockCheckPermission.mockReturnValue(true)
+        configApi = await import('@/api/config')
+        vi.mocked(configApi.getAllCollectorsNodes).mockResolvedValue({ items: makeTwoNodes() })
+    })
+
+    it('keeps the collector type and carries the parameter values over', async () => {
+        const wrapper = await mountForEdit(makeWebSourceOnLocalNode())
+        await flushPromises()
+
+        // Opened on the local node, bound to its WEB_COLLECTOR.
+        expect(wrapper.vm.selectedNode.id).toBe('node-local')
+        expect(wrapper.vm.selectedCollector.id).toBe('web-local')
+        expect(wrapper.vm.parameterValues).toEqual(['socks5://proxy:1080', 'https://example.org/advisories'])
+
+        // The operator picks the remote node.
+        wrapper.vm.selectedNode = makeTwoNodes()[1]
+        await flushPromises()
+
+        // Same TYPE, not collectors[0] (which is RSS on the remote node).
+        expect(wrapper.vm.selectedCollector.type).toBe('WEB_COLLECTOR')
+        expect(wrapper.vm.selectedCollector.id).toBe('web-remote')
+
+        // ...and the configuration survived the move.
+        expect(wrapper.vm.parameterValues).toEqual(['socks5://proxy:1080', 'https://example.org/advisories'])
+    })
+
+    // A node whose FIRST collector has a different parameter key set than the one the
+    // edited source is bound to. The dialog is mounted before any row is picked, so
+    // loadNodes selects collectors[0] (SITEMAP) for create mode; opening an existing
+    // WEB source then switches the selection to the second collector.
+    function makeNodeWithTwoCollectorTypes() {
+        return [
+            {
+                id: 'node-1',
+                name: 'Collector Node',
+                collectors: [
+                    {
+                        id: 'sitemap-1',
+                        type: 'SITEMAP_COLLECTOR',
+                        name: 'Sitemap Collector',
+                        parameters: [{ id: 'p-sitemap', key: 'SITEMAP_URL', name: 'Sitemap URL', default_value: '' }]
+                    },
+                    {
+                        id: 'web-1',
+                        type: 'WEB_COLLECTOR',
+                        name: 'Web Collector',
+                        parameters: [{ id: 'p-web', key: 'WEB_URL', name: 'Web URL', default_value: '' }]
+                    }
+                ]
+            }
+        ]
+    }
+
+    // Reproduces the production sequence: the dialog is mounted with no editItem (the
+    // view always renders it), loadNodes resolves and leaves collectors[0] selected,
+    // and only THEN does the operator pick a row and editItem arrive.
+    it('shows the stored parameter values on the first open of the dialog', async () => {
+        vi.mocked(configApi.getAllCollectorsNodes).mockResolvedValue({ items: makeNodeWithTwoCollectorTypes() })
+
+        const wrapper = mountWithPlugins(NewOSINTSource, {
+            props: { editItem: null },
+            global: { stubs: { VDialog: VDialogStub } }
+        })
+        await flushPromises()
+
+        // Create-mode default: the node's first collector, unrelated to the record below.
+        expect(wrapper.vm.selectedCollector.id).toBe('sitemap-1')
+
+        await wrapper.setProps({
+            editItem: {
+                id: 'src-9',
+                name: 'Some feed',
+                description: '',
+                collector_id: 'web-1',
+                parameter_values: [{ value: 'https://example.org/feed', parameter: { id: 'p-web', key: 'WEB_URL' } }],
+                word_lists: [],
+                osint_source_groups: [],
+                collector: { id: 'web-1', type: 'WEB_COLLECTOR', name: 'Web Collector' }
+            }
+        })
+        await flushPromises()
+
+        expect(wrapper.vm.selectedCollector.id).toBe('web-1')
+        expect(wrapper.vm.parameterValues).toEqual(['https://example.org/feed'])
+    })
+
+    it('carries over edits made before the node was changed', async () => {
+        const wrapper = await mountForEdit(makeWebSourceOnLocalNode())
+        await flushPromises()
+
+        // The operator retypes the URL *before* switching node — a normal order
+        // of operations, and the values the dialog must preserve are now the
+        // live ones, not the pair that was loaded from the server.
+        wrapper.vm.parameterValues = ['socks5://proxy:1080', 'https://example.org/NEW-feed']
+        await flushPromises()
+
+        wrapper.vm.selectedNode = makeTwoNodes()[1]
+        await flushPromises()
+
+        expect(wrapper.vm.selectedCollector.id).toBe('web-remote')
+        expect(wrapper.vm.parameterValues).toEqual(['socks5://proxy:1080', 'https://example.org/NEW-feed'])
+    })
+})

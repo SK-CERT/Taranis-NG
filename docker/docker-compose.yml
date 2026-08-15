@@ -1,6 +1,6 @@
 services:
   redis:
-    image: "redis:${REDIS_TAG}"
+    image: "redis:6-alpine"
     restart: unless-stopped
     command:
       - "--loglevel notice" # Change this to 'debug', 'verbose', 'notice', 'warning'
@@ -15,7 +15,7 @@ services:
         max-file: "10"
 
   postgres:
-    image: "postgres:${POSTGRES_TAG}"
+    image: "postgres:16-alpine"
     restart: unless-stopped
     environment:
       POSTGRES_DB: "taranis-ng"

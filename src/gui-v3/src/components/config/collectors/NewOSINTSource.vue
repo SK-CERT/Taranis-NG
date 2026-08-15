@@ -40,7 +40,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving || loadingNodes || !canSave"
+                        :disabled="saving || loadingNodes || !canSave"
                         :loading="loadingNodes"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
@@ -56,7 +56,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving || !canSave"
+                        :disabled="saving || !canSave"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
 
@@ -207,6 +207,9 @@
     type Collector = {
         id: string | number
         name?: string
+        // Collector rows are per-node, so `type` — not `id` — is what identifies
+        // the equivalent collector on another node.
+        type?: string
         parameters?: CollectorParameter[]
         [key: string]: unknown
     }
@@ -292,6 +295,10 @@
     const nodes = ref<CollectorNode[]>([])
     const selectedNode = ref<CollectorNode | null>(null)
     const selectedCollector = ref<Collector | null>(null)
+    // Collector type the source is bound to, captured when the dialog opens.
+    // Switching nodes uses it to find the equivalent collector on the target
+    // node; the backend only permits moves between collectors of the same type.
+    const boundCollectorType = ref<string | null>(null)
     const parameterValues = ref<string[]>([])
     const selectedWordListIds = ref<Array<string | number>>([])
     const selectedOSINTSourceGroupIds = ref<Array<string | number>>([])
@@ -346,11 +353,35 @@
     const mapParameterValues = (collector: Collector, incomingValues: ParameterValue[] = []): string[] => {
         return (
             collector.parameters?.map((param) => {
-                const paramValue = incomingValues.find((value) => value.parameter?.id === param.id)
+                // Match by parameter.id first (same collector, re-edit case)…
+                let paramValue = incomingValues.find((value) => value.parameter?.id === param.id)
+                // …then fall back to parameter.key (moving the source to a
+                // collector on a different node — same parameter set, different ids).
+                if (!paramValue && param.key) {
+                    paramValue = incomingValues.find((value) => value.parameter?.key === param.key)
+                }
                 return String(paramValue?.value ?? param.default_value ?? '')
             }) || []
         )
     }
+
+    // Which collector the values currently held in `parameterValues` belong to. This is NOT
+    // the same as the selectedCollector watcher's `oldValue`: syncCollectorSelection writes
+    // the record's values for the INCOMING collector synchronously, while the outgoing
+    // selection is still whatever create mode left behind (the first node's first collector).
+    // Labelling the record's values with that unrelated collector's keys is what blanked
+    // every parameter on the first open of the dialog.
+    const parameterValuesKeyedTo = ref<Collector | null>(null)
+
+    // Snapshot what is currently in the parameter inputs, shaped like the record's own
+    // parameter_values so mapParameterValues can match it. The inputs are bound by index to
+    // `collector.parameters` (see the v-for in the template), so the collector they were
+    // rendered from is what supplies their keys.
+    const liveParameterValues = (collector: Collector): ParameterValue[] =>
+        collector.parameters?.map((param, index) => ({
+            value: String(parameterValues.value[index] ?? ''),
+            parameter: param
+        })) ?? []
 
     const syncCollectorSelection = (collectorId: string | number | null | undefined): void => {
         if (collectorId === undefined || collectorId === null) {
@@ -363,6 +394,8 @@
             // live state becomes the collector's defaults — every subsequent create-open would
             // spuriously report unsaved changes. The edit path below already sets this synchronously.
             parameterValues.value = selectedCollector.value?.parameters?.map((param) => String(param.default_value ?? '')) || []
+            parameterValuesKeyedTo.value = selectedCollector.value
+            boundCollectorType.value = null
             return
         }
 
@@ -371,14 +404,18 @@
             if (collector) {
                 selectedNode.value = node
                 selectedCollector.value = collector
+                boundCollectorType.value = collector.type ?? null
                 parameterValues.value = mapParameterValues(collector, localItem.value.parameter_values)
+                parameterValuesKeyedTo.value = collector
                 return
             }
         }
 
         selectedNode.value = null
         selectedCollector.value = null
+        boundCollectorType.value = null
         parameterValues.value = []
+        parameterValuesKeyedTo.value = null
     }
 
     const openCreateDialog = (): void => {
@@ -437,7 +474,9 @@
         localItem.value = { ...defaultItem }
         selectedNode.value = null
         selectedCollector.value = null
+        boundCollectorType.value = null
         parameterValues.value = []
+        parameterValuesKeyedTo.value = null
         selectedWordListIds.value = []
         selectedOSINTSourceGroupIds.value = []
         showValidationError.value = false
@@ -576,21 +615,45 @@
             }
         }
 
+        // Moving an existing source to another node. Collector rows are per-node,
+        // so the id above never matches here — match on TYPE instead. That is
+        // what makes the move work at all: the backend rejects a move between
+        // collectors of different types, and only a same-type collector has the
+        // parameter keys mapParameterValues needs to carry the values over.
+        // Falling back to collectors[0] would silently land on an unrelated
+        // collector, blank every field, and then fail to save.
+        if (isEdit.value && boundCollectorType.value) {
+            selectedCollector.value = collectors.find((entry) => entry.type === boundCollectorType.value) ?? null
+            return
+        }
+
         selectedCollector.value = collectors[0] ?? null
     })
 
     watch(selectedCollector, (newCollector) => {
         if (!newCollector) {
             parameterValues.value = []
+            parameterValuesKeyedTo.value = null
             return
         }
 
         if (isEdit.value) {
-            parameterValues.value = mapParameterValues(newCollector, localItem.value.parameter_values)
+            // Carry over what the operator can actually see, keyed by the collector those
+            // values belong to rather than by the watcher's outgoing value. When the operator
+            // switches node this is the collector they were just editing, so in-progress edits
+            // survive the move; during (re)initialisation syncCollectorSelection has already
+            // pointed it at the incoming collector, so this re-maps the record's own values
+            // onto themselves and leaves them intact. Before the first resolve it is null and
+            // the values come straight off the loaded record.
+            const source = parameterValuesKeyedTo.value
+            const incoming = source ? liveParameterValues(source) : localItem.value.parameter_values
+            parameterValues.value = mapParameterValues(newCollector, incoming)
+            parameterValuesKeyedTo.value = newCollector
             return
         }
 
         parameterValues.value = newCollector.parameters?.map((param) => String(param.default_value ?? '')) || []
+        parameterValuesKeyedTo.value = newCollector
     })
 
     watch(dialog, (newValue) => {

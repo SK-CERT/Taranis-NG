@@ -289,15 +289,14 @@ export async function hasPermission(page, selector) {
  * Collector/presenter/publisher/bot parameters are declared in
  * `src/shared/shared/config_*.py` via `param_type`, which has NO `required`
  * flag — so the backend never sends one. `dynamicParameterRules` therefore
- * keeps the legacy Vue-2 behaviour (`v-validate="'required'"` on every generated
- * field) and treats each parameter as required. Parameters declared without a
- * `default_value` (PROXY_SERVER, USER_AGENT, the EMAIL_PUBLISHER credentials, …)
- * consequently render empty and block Save with "Please fill in all required
- * fields", even when the test does not care about them.
+ * treats every generated field as optional, and empty parameters no longer
+ * block Save.
  *
- * Specs fill the fields they actually assert on first, then call this to satisfy
- * the remaining ones. The default value is `none`, which the collectors read as
- * "no proxy" (see BaseCollector.get_parsed_proxy) and is harmless elsewhere.
+ * This helper is consequently no longer needed to get past validation. It is
+ * kept because specs still use it to put a deterministic value into fields they
+ * do not assert on, rather than leaving them empty. The default value is `none`,
+ * which the collectors read as "no proxy" (see BaseCollector.get_parsed_proxy)
+ * and is harmless elsewhere.
  *
  * @param {import('@playwright/test').Locator} dialog - The open dialog locator
  * @param {string} value - Value to type into each empty parameter field
