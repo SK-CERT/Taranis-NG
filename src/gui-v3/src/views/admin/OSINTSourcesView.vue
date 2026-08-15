@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref, onMounted } from 'vue'
+    import { computed, ref, onMounted, nextTick } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteOSINTSource } from '@/api/config'
@@ -111,7 +111,12 @@
         }
     }
 
-    const handleEdit = (source: OSINTSourceItem): void => {
+    const handleEdit = async (source: OSINTSourceItem): Promise<void> => {
+        // Reset first so re-selecting the same row reopens the dialog. The dialog
+        // watches `editItem` by reference; assigning the same object again is not a
+        // change, so after closing without saving a second click would do nothing.
+        editItem.value = null
+        await nextTick()
         editItem.value = source
     }
 

@@ -13,7 +13,7 @@ jobs:
     name: Code linting and formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # Depth 2 so the PR merge commit's parents are available for the
           # changed-files diff in the ruff lint step below.
@@ -56,7 +56,7 @@ jobs:
         # "." is the root workspace lock (dev tool group + the shared member).
         directory: ['.', src/bots, src/collectors, src/core, src/presenters, src/publishers]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
@@ -69,7 +69,7 @@ jobs:
     name: Verify src/shared dependency pins match service locks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Check shared deps are reflected in all service uv.lock files
         run: |
           set -euo pipefail
@@ -83,7 +83,7 @@ jobs:
     name: Ansible syntax check and lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # Depth 2 so HEAD^1..HEAD is the PR diff (matches the lint job above).
           fetch-depth: 2

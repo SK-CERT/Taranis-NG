@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
+    import { ref, onMounted, nextTick } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteRemoteNode } from '@/api/config'
@@ -85,7 +85,12 @@
         }
     }
 
-    const handleEdit = (item: RemoteNodeItem): void => {
+    const handleEdit = async (item: RemoteNodeItem): Promise<void> => {
+        // Reset first so re-selecting the same row reopens the dialog. The dialog
+        // watches `editItem` by reference; assigning the same object again is not a
+        // change, so after closing without saving a second click would do nothing.
+        editItem.value = null
+        await nextTick()
         editItem.value = item
     }
 

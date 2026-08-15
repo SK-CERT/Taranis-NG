@@ -1,13 +1,20 @@
 """BotPreset model."""
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
 from managers.db_manager import db
 from marshmallow import fields, post_load
+from model.bot import Bot
 from model.parameter_value import NewParameterValueSchema
+from shared.schema.bot_preset import BotPresetPresentationSchema, BotPresetSchema
 from sqlalchemy import or_, orm
 
-from shared.schema.bot_preset import BotPresetPresentationSchema, BotPresetSchema
+if TYPE_CHECKING:
+    from model.bots_node import BotsNode
+    from model.parameter_value import ParameterValue
 
 
 class NewBotPresetSchema(BotPresetSchema):
@@ -20,11 +27,12 @@ class NewBotPresetSchema(BotPresetSchema):
     parameter_values = fields.List(fields.Nested(NewParameterValueSchema))
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> BotPreset:  # noqa: ARG002, ANN003
         """Create a new BotPreset object from the schema data.
 
         Args:
             data: Data from the schema.
+            **kwargs: Additional arguments.
 
         Returns:
             BotPreset object.
@@ -53,7 +61,14 @@ class BotPreset(db.Model):
 
     parameter_values = db.relationship("ParameterValue", secondary="bot_preset_parameter_value", cascade="all")
 
-    def __init__(self, id, name, description, bot_id, parameter_values):
+    def __init__(
+        self,
+        id: str,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        bot_id: str,
+        parameter_values: list[ParameterValue],
+    ) -> None:
         """Initialize a new BotPreset object."""
         self.id = str(uuid.uuid4())
         self.name = name
@@ -65,14 +80,14 @@ class BotPreset(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the BotPreset object."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-robot"
 
     @classmethod
-    def find(cls, preset_id):
+    def find(cls, preset_id: str) -> BotPreset | None:
         """Find a BotPreset object by its identifier.
 
         Args:
@@ -81,11 +96,10 @@ class BotPreset(db.Model):
         Returns:
             BotPreset object.
         """
-        preset = db.session.get(cls, preset_id)
-        return preset
+        return db.session.get(cls, preset_id)
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[BotPreset]:
         """Get all BotPreset objects.
 
         Returns:
@@ -94,7 +108,7 @@ class BotPreset(db.Model):
         return cls.query.order_by(db.asc(BotPreset.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str) -> tuple[list[BotPreset], int]:
         """Get all BotPreset objects that match the search string.
 
         Args:
@@ -112,7 +126,7 @@ class BotPreset(db.Model):
         return query.order_by(db.asc(BotPreset.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str) -> dict:
         """Get all BotPreset objects in JSON format.
 
         Args:
@@ -126,7 +140,7 @@ class BotPreset(db.Model):
         return {"total_count": count, "items": bot_schema.dump(bots)}
 
     @classmethod
-    def get_all_for_bot_json(cls, bots_node, bot_type):
+    def get_all_for_bot_json(cls, bots_node: BotsNode, bot_type: str) -> dict | None:
         """Get all BotPreset objects for a bot in JSON format.
 
         Args:
@@ -141,9 +155,10 @@ class BotPreset(db.Model):
                 if bot.type == bot_type:
                     presets_schema = BotPresetSchema(many=True)
                     return presets_schema.dump(bot.presets)
+        return None
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict) -> None:
         """Add a new BotPreset object.
 
         Args:
@@ -155,7 +170,7 @@ class BotPreset(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, preset_id):
+    def delete(cls, preset_id: str) -> None:
         """Delete a BotPreset object.
 
         Args:
@@ -166,7 +181,7 @@ class BotPreset(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, preset_id, data):
+    def update(cls, preset_id: str, data: dict) -> None:
         """Update a BotPreset object.
 
         Args:
@@ -178,6 +193,26 @@ class BotPreset(db.Model):
         preset = db.session.get(cls, preset_id)
         preset.name = updated_preset.name
         preset.description = updated_preset.description
+
+        # Reassign the preset to a different bot (and possibly a different bots
+        # node) when the operator changed bot_id via the GUI. The target bot
+        # must already exist and be of the same type as the current bot so
+        # that the parameter set is compatible. Parameter values are re-mapped
+        # by parameter.key.
+        if updated_preset.bot_id and updated_preset.bot_id != preset.bot_id:
+            target_bot = db.session.get(Bot, updated_preset.bot_id)
+            if target_bot is None:
+                msg = f"Target bot {updated_preset.bot_id} not found"
+                raise ValueError(msg)
+            if target_bot.type != preset.bot.type:
+                msg = f"Cannot move preset to bot of type '{target_bot.type}' (preset is bound to type '{preset.bot.type}')"
+                raise ValueError(msg)
+            preset.bot_id = target_bot.id
+            for pv in preset.parameter_values:
+                for target_param in target_bot.parameters:
+                    if pv.parameter.key == target_param.key:
+                        pv.parameter_id = target_param.id
+                        break
 
         for value in preset.parameter_values:
             for updated_value in updated_preset.parameter_values:

@@ -1,13 +1,20 @@
 """Publisher preset model."""
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.parameter_value import NewParameterValueSchema
+from model.publisher import Publisher
+from shared.schema.publisher_preset import PublisherPresetPresentationSchema, PublisherPresetSchema
 from sqlalchemy import or_, orm
 
-from shared.schema.publisher_preset import PublisherPresetPresentationSchema, PublisherPresetSchema
+if TYPE_CHECKING:
+    from model.parameter_value import ParameterValue
+    from model.publishers_node import PublishersNode
 
 
 class NewPublisherPresetSchema(PublisherPresetSchema):
@@ -20,11 +27,13 @@ class NewPublisherPresetSchema(PublisherPresetSchema):
     parameter_values = fields.List(fields.Nested(NewParameterValueSchema))
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> PublisherPreset:  # noqa: ARG002, ANN003
         """Create a new publisher preset.
 
         Args:
             data: Publisher preset data
+            **kwargs: Additional arguments.
+
         Returns:
             PublisherPreset: New publisher preset
         """
@@ -55,7 +64,15 @@ class PublisherPreset(db.Model):
 
     parameter_values = db.relationship("ParameterValue", secondary="publisher_preset_parameter_value", cascade="all")
 
-    def __init__(self, id, name, description, publisher_id, use_for_notifications, parameter_values):
+    def __init__(
+        self,
+        id: str,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        publisher_id: str,
+        use_for_notifications: bool,
+        parameter_values: list[ParameterValue],
+    ) -> None:
         """Initialize a new publisher preset."""
         self.id = str(uuid.uuid4())
         self.name = name
@@ -68,14 +85,14 @@ class PublisherPreset(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct a publisher preset."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-file-star-outline"
 
     @classmethod
-    def find(cls, preset_id):
+    def find(cls, preset_id: str) -> PublisherPreset | None:
         """Find a publisher preset by id.
 
         Args:
@@ -83,11 +100,10 @@ class PublisherPreset(db.Model):
         Returns:
             PublisherPreset: Publisher preset
         """
-        preset = db.session.get(cls, preset_id)
-        return preset
+        return db.session.get(cls, preset_id)
 
     @classmethod
-    def find_for_notifications(cls):
+    def find_for_notifications(cls) -> PublisherPreset | None:
         """Find a publisher preset for notifications.
 
         Returns:
@@ -96,7 +112,7 @@ class PublisherPreset(db.Model):
         return cls.query.filter_by(use_for_notifications=True).first()
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[PublisherPreset]:
         """Get all publisher presets.
 
         Returns:
@@ -105,7 +121,7 @@ class PublisherPreset(db.Model):
         return cls.query.order_by(db.asc(PublisherPreset.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str) -> tuple[list[PublisherPreset], int]:
         """Get publisher presets.
 
         Args:
@@ -122,7 +138,7 @@ class PublisherPreset(db.Model):
         return query.order_by(db.asc(PublisherPreset.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str) -> dict:
         """Get all publisher presets in JSON format.
 
         Args:
@@ -135,7 +151,7 @@ class PublisherPreset(db.Model):
         return {"total_count": count, "items": publisher_schema.dump(publishers)}
 
     @classmethod
-    def get_all_for_publisher_json(cls, publisher_node, publisher_type):
+    def get_all_for_publisher_json(cls, publisher_node: PublishersNode, publisher_type: str) -> dict | None:
         """Get all publisher presets for a publisher in JSON format.
 
         Args:
@@ -149,9 +165,10 @@ class PublisherPreset(db.Model):
             if publisher.type == publisher_type:
                 presets_schema = PublisherPresetSchema(many=True)
                 return presets_schema.dump(publisher.sources)
+        return None
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict) -> None:
         """Add a new publisher preset.
 
         Args:
@@ -163,7 +180,7 @@ class PublisherPreset(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, preset_id):
+    def delete(cls, preset_id: str) -> None:
         """Delete a publisher preset.
 
         Args:
@@ -174,7 +191,7 @@ class PublisherPreset(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, preset_id, data):
+    def update(cls, preset_id: str, data: dict) -> None:
         """Update a publisher preset.
 
         Args:
@@ -186,6 +203,26 @@ class PublisherPreset(db.Model):
         preset = db.session.get(cls, preset_id)
         preset.name = updated_preset.name
         preset.description = updated_preset.description
+
+        # Reassign the preset to a different publisher (and possibly a different
+        # publishers node) when the operator changed publisher_id via the GUI.
+        # The target publisher must already exist and be of the same type as
+        # the current publisher so that the parameter set is compatible.
+        # Parameter values are re-mapped by parameter.key.
+        if updated_preset.publisher_id and updated_preset.publisher_id != preset.publisher_id:
+            target_publisher = db.session.get(Publisher, updated_preset.publisher_id)
+            if target_publisher is None:
+                msg = f"Target publisher {updated_preset.publisher_id} not found"
+                raise ValueError(msg)
+            if target_publisher.type != preset.publisher.type:
+                msg = f"Cannot move preset to publisher of type '{target_publisher.type}' (preset is bound to type '{preset.publisher.type}')"
+                raise ValueError(msg)
+            preset.publisher_id = target_publisher.id
+            for pv in preset.parameter_values:
+                for target_param in target_publisher.parameters:
+                    if pv.parameter.key == target_param.key:
+                        pv.parameter_id = target_param.id
+                        break
 
         for value in preset.parameter_values:
             for updated_value in updated_preset.parameter_values:
