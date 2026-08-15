@@ -20,9 +20,6 @@ from model.collector import Collector
 from model.parameter import Parameter
 from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.word_list import WordList
-from sqlalchemy import and_, func, or_, orm
-from sqlalchemy.types import JSON
-
 from shared.common import TZ
 from shared.schema.acl_entry import ItemType
 from shared.schema.osint_source import (
@@ -34,6 +31,8 @@ from shared.schema.osint_source import (
     OSINTSourceSchema,
 )
 from shared.schema.word_list import WordListIdSchema
+from sqlalchemy import and_, func, or_, orm
+from sqlalchemy.types import JSON
 
 
 class OSINTSource(db.Model):
@@ -334,6 +333,32 @@ class OSINTSource(db.Model):
         osint_source = db.session.get(cls, osint_source_id)
         osint_source.name = updated_osint_source.name
         osint_source.description = updated_osint_source.description
+
+        # Reassign the source to a different collector (and possibly a different
+        # collectors node) when the operator changed collector_id via the GUI.
+        # The new collector must already exist (it is created when the node is
+        # registered) and must be of the same type as the current collector so
+        # that the parameter set is compatible. Parameter values are re-mapped
+        # by parameter.key — see CollectorsNode.delete for the original pattern.
+        if updated_osint_source.collector_id and updated_osint_source.collector_id != osint_source.collector_id:
+            target_collector = db.session.get(Collector, updated_osint_source.collector_id)
+            if target_collector is None:
+                msg = f"Target collector {updated_osint_source.collector_id} not found"
+                raise ValueError(msg)
+            if target_collector.type != osint_source.collector.type:
+                msg = (
+                    f"Cannot move source to collector of type '{target_collector.type}' "
+                    f"(source is bound to type '{osint_source.collector.type}')"
+                )
+                raise ValueError(msg)
+            osint_source.collector_id = target_collector.id
+            # Re-map ParameterValue.parameter_id onto the target collector's
+            # parameter set (matched by parameter.key).
+            for pv in osint_source.parameter_values:
+                for target_param in target_collector.parameters:
+                    if pv.parameter.key == target_param.key:
+                        pv.parameter_id = target_param.id
+                        break
 
         for value in osint_source.parameter_values:
             for updated_value in updated_osint_source.parameter_values:
