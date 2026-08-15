@@ -111,7 +111,7 @@
                 {{ t('security.passkeys_title') }}
                 <v-spacer />
                 <AddNewButton
-                    :label="t('security.passkey_add')"
+                    label="security.passkey_add"
                     @click="addPasskey"
                 />
             </v-card-title>

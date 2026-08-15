@@ -2,13 +2,27 @@
 
 Run these commands from the repository root.
 
+## Tests
+
+`dev_setup.py` installs every test dependency; `run_tests.py` runs every suite and is the
+same entry point the pre-commit hooks and CI use.
+
+```bash
+python3 scripts/dev_setup.py      # --all adds Playwright browsers + ansible tooling
+python3 scripts/run_tests.py      # --suite <name> for one; e2e is opt-in
+```
+
+Both are documented in [../docs/testing.md](../docs/testing.md), along with the editor
+setup and where each tool version is pinned. `--help` lists the flags.
+
 ## Release version lockstep
 
 `VERSION.md` is the canonical release version. `bump_version.py` synchronizes:
 
 - root, shared, and service `pyproject.toml` project versions;
 - each service's `taranis-ng-shared` dependency pin;
-- Vue 2 and Vue 3 `package.json` and `package-lock.json` versions; and
+- Vue 2 and Vue 3 `package.json` and `package-lock.json` versions;
+- `TARANIS_NG_TAG` in `docker/.env.example` and `docker/.env.e2e`; and
 - root and service `uv.lock` files.
 
 Release versions use `YY.MM.PATCH`.
@@ -72,13 +86,10 @@ rm -rf .cache/ansible-collections
 python3 scripts/check_ansible_syntax.py
 ```
 
-The script needs `ansible-core` on PATH:
+It needs `ansible-core`, installed by `dev_setup.py --all` (the `ansible` group is
+optional, so it is not part of the default install). When it is absent the script *skips*
+rather than failing, so contributors without the group can still commit.
 
-```bash
-pip install ansible-core
-```
-
-The `ansible-syntax-check` pre-commit hook runs only when files under
-`ansible/` change (so unrelated commits stay fast). The Linting CI workflow
-runs the same check on every PR (with a path-based skip so PRs that don't
-touch `ansible/` don't spend CI minutes installing `ansible-core`).
+Normally you run it through `run_tests.py --suite ansible`, which adds `ansible-lint` and
+is what the `ansible-tests` pre-commit hook and the Linting CI workflow both call. Both
+are gated on `ansible/` changing, so unrelated commits and PRs stay fast.

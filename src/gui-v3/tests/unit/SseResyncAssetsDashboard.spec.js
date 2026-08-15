@@ -62,6 +62,11 @@ const createDashboardI18n = () =>
         legacy: false,
         locale: 'de-DE',
         fallbackLocale: 'en',
+        // The de-DE catalogue below is deliberately partial — the dashboard's other
+        // keys are meant to fall back to `en`, which is what these specs assert. Left
+        // on, vue-i18n warns twice for each of those keys on every render.
+        missingWarn: false,
+        fallbackWarn: false,
         messages: {
             en,
             'de-DE': {

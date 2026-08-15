@@ -3,14 +3,28 @@
 
 version: 2
 updates:
+  # Workflow action pins (actions/checkout, setup-python, setup-node, astral-sh/setup-uv,
+  # docker/*, upload-artifact, ...). Without this entry nothing bumps them and they drift
+  # apart silently, which is exactly what happened before it was added.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
   - package-ecosystem: "docker"
     directory: "/docker"
     schedule:
       interval: "weekly"
     labels:
       - "dependencies"
-  # Dev/CI tooling (ruff, djlint) pinned in the root [dependency-groups] dev.
-  # Kept in lockstep with .pre-commit-config.yaml rev: by scripts/check_tool_versions.py.
+  # Dev/CI tooling pinned in the root pyproject.toml dependency groups:
+  #   dev     - ruff, djlint, uv        (uv also mirrored in [tool.uv] required-version)
+  #   test    - pytest                  (the ONLY pytest pin in the repo)
+  #   ansible - ansible-core, ansible-lint
+  # ruff/djlint are kept in lockstep with .pre-commit-config.yaml rev: by
+  # scripts/check_tool_versions.py. The uv pin needs no workflow update: the workflows
+  # omit `version:` so setup-uv reads [tool.uv] required-version from this same file.
   - package-ecosystem: "uv"
     directory: "/"
     schedule:

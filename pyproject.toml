@@ -43,8 +43,9 @@ classifiers = [
 # Central source of truth for dev/CI tooling versions.
 # These pins are kept in lockstep with:
 #   - .pre-commit-config.yaml  (ruff-pre-commit / djLint rev: → stripped of leading "v")
-#   - .github/workflows/linting.yaml (djlint and ruff versions)
 #   - .github/dependabot.yml uv ecosystem entry (auto-bumps these)
+# CI does not restate them: the workflows `uv sync --group dev` and run the tools from
+# this lockfile, and setup-uv reads the uv pin from [tool.uv] required-version below.
 # Lockstep is enforced by scripts/check_tool_versions.py (run as a pre-commit hook).
 [dependency-groups]
 dev = [
@@ -55,6 +56,12 @@ dev = [
     # .venv/bin/uv gets removed by the first sync, after which no uv on the
     # machine satisfies required-version and every uv command in the repo fails.
     "uv==0.11.19",
+]
+# The ONLY pytest pin in the repo; the services deliberately declare no `test` group.
+# scripts/dev_setup.py installs it into the one root .venv. Never sync this group on its
+# own — `--group test` alone prunes .venv/bin/uv. See docs/testing.md.
+test = [
+    "pytest==9.1.1",
 ]
 # Ansible deployment tooling (see ansible/). Deliberately NOT in `dev`, which
 # scripts/check_tool_versions.py treats as the lockstep source for the
@@ -83,6 +90,15 @@ ansible = { requires-python = ">=3.12" }
 # so `uv` commands at the repo root resolve it locally.
 [tool.uv.workspace]
 members = ["src/shared"]
+
+# Aggregate config so ONE run from the repo root discovers every suite — which is how
+# editors find them, since they issue a single pytest invocation per workspace folder.
+# scripts/run_tests.py instead runs pytest per project, picking up that project's own
+# [tool.pytest.ini_options]. Keep in sync with PYTEST_SUITES in scripts/run_tests.py.
+[tool.pytest.ini_options]
+testpaths = ["src/core/tests", "src/shared/tests"]
+# The projects are never pip-installed for a test run, so their roots go on sys.path.
+pythonpath = ["src/core", "src/shared"]
 
 [tool.ruff]
 required-version = "0.16.2"
@@ -115,7 +131,23 @@ ignore = [
 "scripts/check_shared_lock_consistency.py" = ["T201"]
 "scripts/bump_version.py" = ["T201", "S603"]
 "scripts/check_ansible_syntax.py" = ["T201", "S603"]
-"src/core/tests/**/*.py" = ["D103", "PLR2004", "S101", "S105", "S106", "SLF001"]
+"scripts/run_tests.py" = ["T201", "S603"]
+"scripts/dev_setup.py" = ["T201", "S603"]
+# Alembic owns this directory and loads env.py by path rather than importing it,
+# so there is no package for an __init__.py to complete.
+"src/core/migrations/*.py" = ["INP001"]
+# Every service keeps its unit tests in <service>/tests/ (see each service's
+# [tool.pytest.ini_options] testpaths), so the exemptions apply repo-wide:
+# bare asserts, magic values, hardcoded test credentials and private-member
+# access are all normal in tests.
+# INP001 is exempted rather than fixed: these directories must NOT become packages.
+# `src/core/__init__.py` exists, so an __init__.py in tests/ makes pytest import the
+# suite as `core.tests.*`, which imports src/core/__init__.py -> create_app -> the
+# whole Flask chain, which reads Docker secrets from /run/secrets at import time and
+# so cannot run outside a container. Left as namespace directories, pytest imports
+# each test module top-level against `pythonpath` above — which is exactly what
+# src/core/tests/conftest.py relies on.
+"src/*/tests/**/*.py" = ["D103", "INP001", "PLR2004", "S101", "S105", "S106", "SLF001"]
 
 [tool.ruff.format]
 line-ending = "lf"

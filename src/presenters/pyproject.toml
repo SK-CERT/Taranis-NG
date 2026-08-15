@@ -22,5 +22,12 @@ dependencies = [
 requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The presenters modules import as top-level packages (api.*, presenters.*,
+# template_migrations.*), so the package root must be importable when pytest
+# runs from here.
+pythonpath = ["."]
+
 [tool.uv.sources]
 taranis-ng-shared = { path = "../shared" }

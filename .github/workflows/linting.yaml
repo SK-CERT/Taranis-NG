@@ -21,12 +21,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version-file: .github/python-version
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          # Pinned to match [tool.uv] required-version in root pyproject.toml.
-          version: "0.11.19"
+          # No `version:` on purpose - setup-uv reads [tool.uv] required-version from
+          # the root pyproject.toml, keeping the uv pin in exactly one place.
           enable-cache: true
       - name: Install dev tools (ruff, djlint) from lockstepped dependency group
         run: uv sync --group dev --no-install-project
@@ -60,7 +60,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.11.19"
           enable-cache: true
       - name: Check uv.lock is up to date
         working-directory: ${{ matrix.directory }}
@@ -113,36 +112,24 @@ jobs:
         if: env.SKIP_ANSIBLE_CHECK != '1'
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version-file: .github/python-version
       - name: Install uv
         if: env.SKIP_ANSIBLE_CHECK != '1'
         uses: astral-sh/setup-uv@v6
         with:
-          # Pinned to match [tool.uv] required-version in root pyproject.toml.
-          version: "0.11.19"
+          # No `version:` on purpose - setup-uv reads [tool.uv] required-version from
+          # the root pyproject.toml, keeping the uv pin in exactly one place.
           enable-cache: true
       - name: Install Ansible tooling from the locked dependency group
         if: env.SKIP_ANSIBLE_CHECK != '1'
         # Versions come from [dependency-groups] ansible in pyproject.toml and
         # uv.lock, so CI and .venv run the identical ansible-core/ansible-lint.
-        run: uv sync --group ansible --no-install-project
-      - name: Syntax-check playbooks
+        run: uv sync --group dev --group ansible --no-install-project
+      - name: Syntax-check and lint playbooks
         if: env.SKIP_ANSIBLE_CHECK != '1'
-        # The script installs required Ansible collections into a project-local
-        # cache (gitignored under .cache/) before running --syntax-check on
-        # every playbook in ansible/playbooks/. Runs first so the cache it
-        # populates is available to the lint step below.
-        # --require-ansible: the script skips itself when ansible-core is absent
-        # (so contributors without the optional group can still commit); CI has
-        # just installed it, so a missing binary here is a real failure.
-        run: uv run --group ansible python3 scripts/check_ansible_syntax.py --verbose --require-ansible
-      - name: Lint playbooks and roles
-        if: env.SKIP_ANSIBLE_CHECK != '1'
-        # From ansible/, so both ansible.cfg (roles_path) and .ansible-lint are
-        # picked up — ansible-lint reads them from the working directory.
-        # --offline: the collections are already in the cache the previous step
-        # populated, and CI should not reach out to Galaxy mid-run.
-        working-directory: ansible
-        env:
-          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/.cache/ansible-collections
-        run: uv run --group ansible ansible-lint --offline playbooks/ roles/
+        # Same entry point as the ansible-tests pre-commit hook, so CI and local runs
+        # cannot drift. It runs check_ansible_syntax.py first (which provisions the
+        # collections cache under .cache/) and then ansible-lint --offline against that
+        # cache. --require turns the local "skip when ansible-core is absent" behaviour
+        # into a hard failure here, where the previous step has just installed it.
+        run: uv run --group ansible python3 scripts/run_tests.py --suite ansible --require

@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "Налаштування",
         "logout": "Вийти",
-        "security": "Security",
+        "security": "Безпека",
         "unknown_user": "Невідомий користувач",
         "no_organization": "Немає організації"
     },
@@ -312,8 +312,8 @@
         "reports": "Звіти",
         "asset_groups": "Групи активів",
         "notification_templates": "Шаблони сповіщень",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "Способи входу",
+        "security": "Безпека"
     },
     "notification": {
         "close": "Закрити"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "Налаштування користувача",
         "tab_general": "Загальні",
-        "tab_security": "Security",
+        "tab_security": "Безпека",
         "tab_wordlists": "Списки слів",
         "tab_hotkeys": "Сполучення клавіш",
         "close_item_1": "Закрити елемент (сполучення 1)",
@@ -1229,8 +1229,8 @@
         "coming_soon": "Незабаром...",
         "details": "Відомості",
         "actions": "Дії",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "Закрити",
+        "use_suggested": "Використати запропоноване значення"
     },
     "collectors": {
         "groups": {

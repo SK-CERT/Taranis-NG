@@ -49,6 +49,7 @@
                                 size="small"
                             />
                             <i18n-t
+                                scope="global"
                                 keypath="attribute.last_updated_at"
                                 tag="span"
                             >
@@ -66,6 +67,7 @@
                                 size="small"
                             />
                             <i18n-t
+                                scope="global"
                                 keypath="attribute.updated_by_user"
                                 tag="span"
                             >

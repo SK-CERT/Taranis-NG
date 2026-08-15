@@ -28,6 +28,10 @@ function mountPluralSnackbar() {
     const i18n = createI18n({
         legacy: false,
         locale: 'en',
+        // Catalogue holds only the plural message under test; the component's other
+        // keys are irrelevant here and would otherwise warn on every render.
+        missingWarn: false,
+        fallbackWarn: false,
         messages: {
             en: {
                 test: {

@@ -30,7 +30,10 @@
                                     aria-hidden="true"
                                     >mdi-clock-outline</v-icon
                                 >
-                                <i18n-t :keypath="card.updated_by ? 'publish.updated_at_by' : 'publish.updated_at'">
+                                <i18n-t
+                                    scope="global"
+                                    :keypath="card.updated_by ? 'publish.updated_at_by' : 'publish.updated_at'"
+                                >
                                     <template #date>
                                         <bdi :dir="updatedAtDisplay.direction">{{ updatedAtDisplay.text }}</bdi>
                                     </template>

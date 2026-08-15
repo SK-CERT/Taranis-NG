@@ -134,7 +134,10 @@
                             v-if="settings.updated_by"
                             class="text-caption text-medium-emphasis"
                         >
-                            <i18n-t keypath="access_management.security.last_updated">
+                            <i18n-t
+                                scope="global"
+                                keypath="access_management.security.last_updated"
+                            >
                                 <template #user>
                                     <bdi dir="auto">{{ settings.updated_by }}</bdi>
                                 </template>

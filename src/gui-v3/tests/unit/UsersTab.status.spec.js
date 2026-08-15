@@ -1,10 +1,52 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import UsersTab from '@/components/config/access-management/UsersTab.vue'
 import { useConfigStore } from '@/stores/config'
 import { updateUserStatus, deleteUser } from '@/api/config'
 
+// Hoisted so the vi.mock factory below — hoisted above all top-level code — can
+// serve the same fixtures the assertions use.
+const { USERS } = vi.hoisted(() => ({
+    USERS: [
+        {
+            id: 1,
+            username: 'admin',
+            name: 'Admin',
+            status: 'active',
+            organizations: [{ id: 1, name: 'CERT' }],
+            identities: [],
+            has_password: true,
+            mfa: { totp: true, passkeys: 0 }
+        },
+        {
+            id: 2,
+            username: 'newcomer',
+            name: 'New Comer',
+            status: 'pending',
+            organizations: [],
+            identities: [{ id: 9, provider_name: 'Corp SAML', external_username: 'newcomer@idp' }],
+            has_password: false,
+            mfa: { totp: false, passkeys: 0 }
+        },
+        {
+            id: 3,
+            username: 'gone',
+            name: 'Gone Away',
+            status: 'disabled',
+            organizations: [],
+            identities: [],
+            has_password: true,
+            mfa: { totp: false, passkeys: 0 }
+        }
+    ]
+}))
+
+// Every export the component chain reaches must be listed: the factory replaces the
+// module wholesale, and a missing one throws on access, which UsersTab swallows into
+// console.error. `getAllUsers` is what the store's loadUsers calls.
 vi.mock('@/api/config', () => ({
+    getAllUsers: vi.fn().mockResolvedValue({ data: { total_count: USERS.length, items: USERS } }),
     updateUserStatus: vi.fn().mockResolvedValue({ data: {} }),
     deleteUser: vi.fn().mockResolvedValue({ data: {} }),
     resetUserMfa: vi.fn().mockResolvedValue({ data: {} }),
@@ -20,45 +62,12 @@ vi.mock('@/composables/useAuth', () => ({
     useAuth: () => ({ checkPermission: () => true })
 }))
 
-const USERS = [
-    {
-        id: 1,
-        username: 'admin',
-        name: 'Admin',
-        status: 'active',
-        organizations: [{ id: 1, name: 'CERT' }],
-        identities: [],
-        has_password: true,
-        mfa: { totp: true, passkeys: 0 }
-    },
-    {
-        id: 2,
-        username: 'newcomer',
-        name: 'New Comer',
-        status: 'pending',
-        organizations: [],
-        identities: [{ id: 9, provider_name: 'Corp SAML', external_username: 'newcomer@idp' }],
-        has_password: false,
-        mfa: { totp: false, passkeys: 0 }
-    },
-    {
-        id: 3,
-        username: 'gone',
-        name: 'Gone Away',
-        status: 'disabled',
-        organizations: [],
-        identities: [],
-        has_password: true,
-        mfa: { totp: false, passkeys: 0 }
-    }
-]
-
 async function mountTab() {
     const wrapper = mountWithPlugins(UsersTab)
     const store = useConfigStore()
-    store.users = { total_count: USERS.length, items: USERS }
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    store.users = { total_count: USERS.length, items: USERS }
+    // onMounted's loadData now resolves, so the rows come from the store's own load
+    // path rather than being seeded around a failing one.
+    await flushPromises()
     await wrapper.vm.$nextTick()
     return { wrapper, store }
 }

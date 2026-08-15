@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "Configurações",
         "logout": "Sair",
-        "security": "Security",
+        "security": "Segurança",
         "unknown_user": "Usuário desconhecido",
         "no_organization": "Nenhuma organização"
     },
@@ -312,8 +312,8 @@
         "reports": "Relatórios",
         "asset_groups": "Grupos de ativos",
         "notification_templates": "Modelos de notificação",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "Métodos de login",
+        "security": "Segurança"
     },
     "notification": {
         "close": "Fechar"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "Configurações do usuário",
         "tab_general": "Geral",
-        "tab_security": "Security",
+        "tab_security": "Segurança",
         "tab_wordlists": "Listas de palavras",
         "tab_hotkeys": "Atalhos de teclado",
         "close_item_1": "Fechar item (atalho 1)",
@@ -1229,8 +1229,8 @@
         "coming_soon": "Em breve...",
         "details": "Detalhes",
         "actions": "Ações",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "Fechar",
+        "use_suggested": "Usar valor sugerido"
     },
     "collectors": {
         "groups": {
@@ -1245,7 +1245,7 @@
             "removed": "Grupo de fontes OSINT excluído com sucesso",
             "removed_error": "Grupo de fontes OSINT está em uso e não pôde ser excluído",
             "title": "Título",
-            "osint_sources": "OSINT Sources",
+            "osint_sources": "Fontes OSINT",
             "total_count": "{count} grupo de fontes OSINT | {count} grupos de fontes OSINT",
             "default_group": "Sem categoria",
             "default_group_description": "Grupo padrão para fontes OSINT sem categoria",

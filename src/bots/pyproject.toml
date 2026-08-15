@@ -24,5 +24,11 @@ dependencies = [
 requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The bots modules import as top-level packages (api.*, bots.*, managers.*),
+# so the package root must be importable when pytest runs from here.
+pythonpath = ["."]
+
 [tool.uv.sources]
 taranis-ng-shared = { path = "../shared" }

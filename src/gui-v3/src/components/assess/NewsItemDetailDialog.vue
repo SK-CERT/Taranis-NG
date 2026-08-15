@@ -92,6 +92,7 @@
                                 class="text-center"
                             >
                                 <i18n-t
+                                    scope="global"
                                     keypath="card_item.collected_at"
                                     tag="div"
                                     class="text-overline font-weight-bold"
@@ -109,6 +110,7 @@
                                 class="text-center"
                             >
                                 <i18n-t
+                                    scope="global"
                                     keypath="card_item.published_at"
                                     tag="div"
                                     class="text-overline font-weight-bold"
@@ -126,6 +128,7 @@
                                 class="text-center"
                             >
                                 <i18n-t
+                                    scope="global"
                                     keypath="card_item.source_with_value"
                                     tag="div"
                                     class="text-overline font-weight-bold"
@@ -143,6 +146,7 @@
                                 class="text-center"
                             >
                                 <i18n-t
+                                    scope="global"
                                     keypath="card_item.author_with_value"
                                     tag="div"
                                     class="text-overline font-weight-bold"
@@ -174,7 +178,10 @@
                     >
                         <v-divider class="mb-3" />
                         <div class="text-caption">
-                            <i18n-t keypath="card_item.link_with_url">
+                            <i18n-t
+                                scope="global"
+                                keypath="card_item.link_with_url"
+                            >
                                 <template #url>
                                     <a
                                         v-if="isSafeNewsItemLink"

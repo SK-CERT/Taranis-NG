@@ -20,6 +20,7 @@
                         @update:model-value="debounceSearch"
                     />
                     <i18n-t
+                        scope="global"
                         :keypath="totalCountTitle"
                         :plural="totalCount"
                         tag="div"
@@ -32,6 +33,7 @@
                     </i18n-t>
                     <i18n-t
                         v-if="showSelectedCount"
+                        scope="global"
                         :keypath="selectedCountTitle"
                         :plural="selectedCount"
                         tag="div"

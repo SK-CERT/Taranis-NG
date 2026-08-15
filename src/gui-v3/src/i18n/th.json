@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "การตั้งค่า",
         "logout": "ออกจากระบบ",
-        "security": "Security",
+        "security": "ความปลอดภัย",
         "unknown_user": "ผู้ใช้ที่ไม่รู้จัก",
         "no_organization": "ไม่มีองค์กร"
     },
@@ -312,8 +312,8 @@
         "reports": "รายงาน",
         "asset_groups": "กลุ่มสินทรัพย์",
         "notification_templates": "เทมเพลตการแจ้งเตือน",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "วิธีเข้าสู่ระบบ",
+        "security": "ความปลอดภัย"
     },
     "notification": {
         "close": "ปิด"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "การตั้งค่าผู้ใช้",
         "tab_general": "ทั่วไป",
-        "tab_security": "Security",
+        "tab_security": "ความปลอดภัย",
         "tab_wordlists": "รายการคำ",
         "tab_hotkeys": "ปุ่มลัด",
         "close_item_1": "ปิดรายการ (ปุ่มลัด 1)",
@@ -1229,8 +1229,8 @@
         "coming_soon": "เร็ว ๆ นี้…",
         "details": "รายละเอียด",
         "actions": "การดำเนินการ",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "ปิด",
+        "use_suggested": "ใช้ค่าที่แนะนำ"
     },
     "collectors": {
         "groups": {

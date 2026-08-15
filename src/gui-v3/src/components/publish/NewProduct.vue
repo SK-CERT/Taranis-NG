@@ -57,14 +57,20 @@
                 <bdi dir="auto">{{ product.title }}</bdi>
             </div>
             <div class="mb-1">
-                <i18n-t keypath="product.publish_confirmation_type">
+                <i18n-t
+                    scope="global"
+                    keypath="product.publish_confirmation_type"
+                >
                     <template #type>
                         <bdi dir="auto">{{ selectedType?.title || $t('product.no_type') }}</bdi>
                     </template>
                 </i18n-t>
             </div>
             <div class="mb-1">
-                <i18n-t keypath="product.publish_confirmation_publishers">
+                <i18n-t
+                    scope="global"
+                    keypath="product.publish_confirmation_publishers"
+                >
                     <template #publishers>
                         <bdi
                             v-if="selectedPublisherPresetNames.length > 0"

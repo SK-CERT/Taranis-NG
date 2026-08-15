@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "सेटिंग्स",
         "logout": "लॉग आउट",
-        "security": "Security",
+        "security": "सुरक्षा",
         "unknown_user": "अज्ञात उपयोगकर्ता",
         "no_organization": "कोई संगठन नहीं"
     },
@@ -312,8 +312,8 @@
         "reports": "रिपोर्टें",
         "asset_groups": "परिसंपत्ति समूह",
         "notification_templates": "सूचना टेम्पलेट",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "लॉगिन विधियाँ",
+        "security": "सुरक्षा"
     },
     "notification": {
         "close": "बंद करें"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "उपयोगकर्ता सेटिंग्स",
         "tab_general": "सामान्य",
-        "tab_security": "Security",
+        "tab_security": "सुरक्षा",
         "tab_wordlists": "शब्द सूचियाँ",
         "tab_hotkeys": "हॉटकी",
         "close_item_1": "आइटम बंद करें (हॉटकी 1)",
@@ -1229,8 +1229,8 @@
         "coming_soon": "जल्द उपलब्ध…",
         "details": "विवरण",
         "actions": "कार्रवाइयाँ",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "बंद करें",
+        "use_suggested": "सुझाया गया मान उपयोग करें"
     },
     "collectors": {
         "groups": {

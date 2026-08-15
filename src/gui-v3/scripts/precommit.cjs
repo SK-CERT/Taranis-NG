@@ -27,4 +27,6 @@ run("npx", ["lint-staged"]);
 // here to keep a bare `npm run test:coverage` (and this hook) working.
 run("node", ["scripts/update-version.cjs"]);
 
-run("npm", ["run", "test:coverage"]);
+// test:unit, not test:coverage: the V8 coverage pass adds time on every commit and
+// nothing local consumes the report. CI still runs test:coverage and uploads it.
+run("npm", ["run", "test:unit"]);

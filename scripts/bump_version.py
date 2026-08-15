@@ -42,6 +42,11 @@ NPM_DIRS = ["src/gui", "src/gui-v3"]
 # uv projects whose uv.lock records project/shared versions and must be relocked after a bump.
 UV_LOCK_DIRS = [".", *SERVICE_DIRS]
 
+# Docker env files carrying TARANIS_NG_TAG, the image tag the compose stacks pull. It has
+# to track the release version or the e2e stack builds against one tree and pulls another.
+ENV_FILES = ["docker/.env.example", "docker/.env.e2e"]
+ENV_TAG_RE = re.compile(r"(?m)^(TARANIS_NG_TAG=)(.+)$")
+
 
 class DriftedPin(NamedTuple):
     """A version pin that disagrees with VERSION.md."""
@@ -80,6 +85,13 @@ def collect_npm_pins(directory: Path) -> list[tuple[Path, str, str]]:
     return pins
 
 
+def collect_env_pins(path: Path) -> list[tuple[str, str]]:
+    """Return ``(what, found)`` TARANIS_NG_TAG pins from a docker env file."""
+    if not path.exists():
+        return []
+    return [("TARANIS_NG_TAG", match.group(2)) for match in ENV_TAG_RE.finditer(path.read_text(encoding="utf-8"))]
+
+
 def check_lockstep(version: str) -> list[DriftedPin]:
     """Return every version pin that disagrees with ``version``."""
     drifted: list[DriftedPin] = []
@@ -88,6 +100,9 @@ def check_lockstep(version: str) -> list[DriftedPin]:
         drifted.extend(DriftedPin(path, what, found) for what, found in collect_pyproject_pins(path) if found != version)
     for rel in NPM_DIRS:
         drifted.extend(DriftedPin(path, what, found) for path, what, found in collect_npm_pins(REPO_ROOT / rel) if found != version)
+    for rel in ENV_FILES:
+        path = REPO_ROOT / rel
+        drifted.extend(DriftedPin(path, what, found) for what, found in collect_env_pins(path) if found != version)
     return drifted
 
 
@@ -112,6 +127,14 @@ def rewrite_npm(directory: Path, version: str) -> None:
         path.write_text(json.dumps(data, indent=4, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def rewrite_env(path: Path, version: str) -> None:
+    """Rewrite TARANIS_NG_TAG in a docker env file."""
+    if not path.exists():
+        return
+    text = ENV_TAG_RE.sub(lambda m: m.group(1) + version, path.read_text(encoding="utf-8"))
+    path.write_text(text, encoding="utf-8")
+
+
 def relock() -> int:
     """Re-run ``uv lock`` for the root workspace and every service; return exit status."""
     uv = shutil.which("uv")
@@ -134,6 +157,8 @@ def bump(version: str, *, lock: bool) -> int:
         rewrite_pyproject(REPO_ROOT / rel, version)
     for rel in NPM_DIRS:
         rewrite_npm(REPO_ROOT / rel, version)
+    for rel in ENV_FILES:
+        rewrite_env(REPO_ROOT / rel, version)
     print(f"Version pins updated to {version}.")
     if not lock:
         print("Skipped 'uv lock' (--no-lock); the check-locks CI job will fail until the locks are refreshed.")

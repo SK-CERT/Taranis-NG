@@ -113,9 +113,11 @@ def test_oversized_or_non_json_payload_is_rejected(memory_redis: MemoryRedis) ->
 @pytest.mark.parametrize(
     "raw",
     [
-        b"not-json",
-        b'{"version":1,"kind":"oauth_state","payload":[]}',
-        b"x" * (auth_transaction_manager.MAX_SERIALIZED_BYTES + 1),
+        pytest.param(b"not-json", id="not-json"),
+        pytest.param(b'{"version":1,"kind":"oauth_state","payload":[]}', id="payload-not-a-mapping"),
+        # Named for the same reason as the oversized SAML response in test_saml_security.py:
+        # an unnamed value becomes the test ID verbatim, all 64 KB of it.
+        pytest.param(b"x" * (auth_transaction_manager.MAX_SERIALIZED_BYTES + 1), id="oversized"),
     ],
 )
 def test_malformed_or_oversized_stored_envelope_fails_closed(memory_redis: MemoryRedis, raw: bytes) -> None:

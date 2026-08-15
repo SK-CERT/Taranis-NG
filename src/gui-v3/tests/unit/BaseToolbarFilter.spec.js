@@ -144,8 +144,11 @@ describe('BaseToolbarFilter', () => {
                 global: { stubs }
             })
 
-            const textField = wrapper.findComponent({ name: 'VTextField' })
-            await textField.vm.$emit('update:model-value', 'test query')
+            // Type into the field rather than emitting at the Vuetify component: VTextField
+            // declares `update:modelValue`, so emitting the hyphenated spelling by hand only
+            // produced a "not declared in the emits option" warning while bypassing the real
+            // v-model path this test is about.
+            await wrapper.find('input').setValue('test query')
             vi.advanceTimersByTime(150)
             await wrapper.vm.$nextTick()
 

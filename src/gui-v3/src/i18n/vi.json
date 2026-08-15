@@ -1229,8 +1229,8 @@
         "coming_soon": "Sắp ra mắt...",
         "details": "Chi tiết",
         "actions": "Hành động",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "Đóng",
+        "use_suggested": "Dùng giá trị đề xuất"
     },
     "collectors": {
         "groups": {

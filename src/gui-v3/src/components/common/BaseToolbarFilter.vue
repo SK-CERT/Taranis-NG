@@ -85,6 +85,7 @@
 
         <footer class="toolbar-filter__summary">
             <i18n-t
+                scope="global"
                 :keypath="totalCountTitle"
                 :plural="totalCount"
                 tag="span"
@@ -96,6 +97,7 @@
             </i18n-t>
             <i18n-t
                 v-if="currentlyShowingCount !== undefined"
+                scope="global"
                 keypath="toolbar_filter.currently_showing"
                 :plural="currentlyShowingCount"
                 tag="span"
@@ -107,6 +109,7 @@
             </i18n-t>
             <i18n-t
                 v-if="showSelectedCount"
+                scope="global"
                 keypath="toolbar_filter.selected_count"
                 :plural="selectedCount"
                 tag="span"

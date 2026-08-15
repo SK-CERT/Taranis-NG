@@ -10,3 +10,13 @@ requires-python = ">=3.11"
 dependencies = [
     "marshmallow==4.3.1"
 ]
+
+# NOTE: no [dependency-groups] here, and none in the services either. pytest is declared
+# exactly once, in the root pyproject's `test` group, and installed into the single root
+# .venv by scripts/dev_setup.py. pytest itself does read the settings below, because it
+# keys off the working directory rather than off any dependency group.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `shared` is a real package (src/shared/shared/), but this project is never
+# pip-installed during a test run, so put the package root on sys.path.
+pythonpath = ["."]

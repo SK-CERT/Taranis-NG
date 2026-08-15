@@ -1,0 +1,43 @@
+name: Python Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    # Named for the language, not just "Unit Tests": the GUI-v3 workflow has a unit job
+    # too, and the PR checks list shows job names without their workflow, so two bare
+    # "Unit Tests" entries are indistinguishable there.
+    name: Python Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: .github/python-version
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          # No `version:` on purpose - setup-uv reads [tool.uv] required-version from
+          # the root pyproject.toml, keeping the uv pin in exactly one place.
+          enable-cache: true
+      - name: Install Python test environment
+        # The same script contributors run. It builds ONE .venv holding pytest (declared
+        # once, in the root `test` group) plus every service's runtime dependencies, so
+        # there is no per-service install step and no per-service pytest pin to drift.
+        # --skip-gui because this job runs no JavaScript.
+        run: python3 scripts/dev_setup.py --skip-gui
+      - name: Run pytest
+        # Same entry point as the python-tests pre-commit hook, so CI and local runs
+        # cannot drift. --require turns the local "skip when tooling is missing"
+        # behaviour into a hard failure here.
+        run: python3 scripts/run_tests.py --suite pytest --require -- -v

@@ -3,10 +3,12 @@
 The Vue 3 test suite combines Vitest component/unit tests with Playwright
 browser workflows.
 
-Run commands from `src/gui-v3` after installing the locked dependencies:
+Install once from the repository root, then run the commands below from
+`src/gui-v3`. See [../../../docs/testing.md](../../../docs/testing.md) for the
+repository-wide test setup.
 
 ```bash
-npm ci
+python3 scripts/dev_setup.py        # --all also fetches the Playwright browsers
 ```
 
 ## Unit and component tests
@@ -37,13 +39,8 @@ notifications, SSE, attributes, CVSS, dialogs, and shared components.
 
 ## End-to-end tests
 
-Install the Playwright browsers once:
-
-```bash
-npx playwright install
-```
-
-The default Playwright configuration:
+`scripts/dev_setup.py --all` installs the Playwright browsers. The default
+Playwright configuration:
 
 - starts a dedicated `taranis-e2e` Docker backend;
 - starts the Vue 3 Vite server on `http://localhost:4444`;
@@ -100,10 +97,11 @@ paths.
 
 ### Continuous integration
 
-`.github/workflows/gui-v3-tests.yml` runs the suite on Chromium and Firefox as
-two parallel jobs, after lint and the unit tests pass. Its path filter also
-covers `src/core`, `src/collectors`, `src/presenters`, `src/publishers`,
-`src/shared`, and `docker`, because the suite drives the real backend.
+`.github/workflows/gui-v3-tests.yml` runs the suite on Chromium, Firefox and
+WebKit as parallel jobs, after lint, typecheck and the unit tests pass. Its path
+filter also covers `src/core`, `src/collectors`, `src/presenters`,
+`src/publishers`, `src/shared`, and `docker`, because the suite drives the real
+backend.
 
 Three differences from a local run:
 

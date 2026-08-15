@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "Ustawienia",
         "logout": "Wyloguj",
-        "security": "Security",
+        "security": "Bezpieczeństwo",
         "unknown_user": "Nieznany użytkownik",
         "no_organization": "Brak organizacji"
     },
@@ -312,8 +312,8 @@
         "reports": "Raporty",
         "asset_groups": "Grupy zasobów",
         "notification_templates": "Szablony powiadomień",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "Metody logowania",
+        "security": "Bezpieczeństwo"
     },
     "notification": {
         "close": "Zamknij"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "Ustawienia użytkownika",
         "tab_general": "Ogólne",
-        "tab_security": "Security",
+        "tab_security": "Bezpieczeństwo",
         "tab_wordlists": "Listy słów",
         "tab_hotkeys": "Skróty klawiszowe",
         "close_item_1": "Zamknij element (skrót 1)",
@@ -1229,8 +1229,8 @@
         "coming_soon": "Wkrótce...",
         "details": "Szczegóły",
         "actions": "Działania",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "Zamknij",
+        "use_suggested": "Użyj sugerowanej wartości"
     },
     "collectors": {
         "groups": {

@@ -309,9 +309,13 @@ key value, so leaving the files in place is a no-op.
 2. Install the required Ansible collections:
 
    ```bash
-   uv sync --group ansible --no-install-project
+   python3 scripts/dev_setup.py --all
    uv run --group ansible ansible-galaxy collection install -r ansible/requirements.yml
    ```
+
+   Not a bare `uv sync --group ansible`: that makes the environment match only
+   the groups named, removing pytest, the service dependencies and
+   `.venv/bin/uv`. See [testing.md](testing.md).
 
 3. Run the playbook limited to `worker_hosts` (or a single host):
 
