@@ -172,6 +172,7 @@
                                         >mdi-progress-clock</v-icon
                                     >
                                     <i18n-t
+                                        scope="global"
                                         keypath="card_item.in_analyze_count"
                                         :plural="inProgressReportsCount"
                                     >
@@ -194,6 +195,7 @@
                                         >mdi-check-circle</v-icon
                                     >
                                     <i18n-t
+                                        scope="global"
                                         keypath="card_item.analyzed_count"
                                         :plural="completedReportsCount"
                                     >

@@ -1,4 +1,3 @@
-# ruff: noqa: INP001
 """Repair the distribution bundle skipped by migration 1c4eed243364.
 
 This is a narrowly scoped compatibility repair. It deliberately refuses to

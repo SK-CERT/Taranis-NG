@@ -41,6 +41,7 @@
                         <v-icon size="25">mdi-newspaper-variant-multiple-outline</v-icon>
                     </div>
                     <i18n-t
+                        scope="global"
                         keypath="dashboard.metrics.news_items_summary"
                         tag="div"
                         class="metric-card__body"
@@ -102,6 +103,7 @@
                     <v-icon size="25">{{ metric.icon }}</v-icon>
                 </div>
                 <i18n-t
+                    scope="global"
                     :keypath="metric.messageKey"
                     tag="div"
                     class="metric-card__body"
@@ -337,6 +339,7 @@
                 <small>
                     <i18n-t
                         v-if="built"
+                        scope="global"
                         keypath="dashboard.about.built_at"
                     >
                         <template #date>
@@ -351,6 +354,7 @@
                 <small>
                     <i18n-t
                         v-if="commited"
+                        scope="global"
                         keypath="dashboard.about.committed_at"
                     >
                         <template #date>

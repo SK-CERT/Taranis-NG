@@ -68,6 +68,7 @@
                     <v-card-text>
                         <i18n-t
                             v-if="conflictTimeDisplay"
+                            scope="global"
                             keypath="report_item.conflict.message"
                             tag="p"
                             class="mb-4"

@@ -977,7 +977,7 @@
                     "descending": "Zoradiť podľa dátumu vytvorenia zostupne"
                 }
             },
-            "compact_mode": "Toggle compact mode",
+            "compact_mode": "Prepnúť kompaktný režim",
             "toggle_selection": "Režim výberu publikácií",
             "select_all": "Vybrať všetko",
             "unselect_all": "Zrušiť výber",
@@ -1644,7 +1644,7 @@
         "message_body": "Text správy",
         "new_recipient": "Nový príjemca",
         "recipient_name": "Meno príjemcu",
-        "email": "Email",
+        "email": "E-mail",
         "recipients": "Príjemcovia",
         "successful": "Nová šablóna notifikácie bola úspešne pridaná",
         "successful_edit": "Šablóna notifikácie bola úspešne aktualizovaná",

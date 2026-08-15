@@ -188,7 +188,10 @@
                 dark
             >
                 <v-card-text class="white--text">
-                    <i18n-t keypath="settings.press_key_for">
+                    <i18n-t
+                        scope="global"
+                        keypath="settings.press_key_for"
+                    >
                         <template #action>
                             <strong>{{ t('settings.' + currentHotkeyAlias) }}</strong>
                         </template>

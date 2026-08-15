@@ -30,7 +30,10 @@
                                     aria-hidden="true"
                                     >mdi-clock-outline</v-icon
                                 >
-                                <i18n-t :keypath="card.updated_by ? 'analyze.updated_at_by' : 'analyze.updated_at'">
+                                <i18n-t
+                                    scope="global"
+                                    :keypath="card.updated_by ? 'analyze.updated_at_by' : 'analyze.updated_at'"
+                                >
                                     <template #date>
                                         <bdi :dir="updatedAtDisplay.direction">{{ updatedAtDisplay.text }}</bdi>
                                     </template>
@@ -44,6 +47,7 @@
                         <h2 class="report-card__title">
                             <i18n-t
                                 v-if="card.title_prefix"
+                                scope="global"
                                 keypath="analyze.title_with_prefix"
                             >
                                 <template #prefix>

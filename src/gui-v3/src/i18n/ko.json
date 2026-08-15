@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "설정",
         "logout": "로그아웃",
-        "security": "Security",
+        "security": "보안",
         "unknown_user": "알 수 없는 사용자",
         "no_organization": "소속 조직 없음"
     },
@@ -312,8 +312,8 @@
         "reports": "보고서",
         "asset_groups": "자산 그룹",
         "notification_templates": "알림 템플릿",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "로그인 방법",
+        "security": "보안"
     },
     "notification": {
         "close": "닫기"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "사용자 설정",
         "tab_general": "일반",
-        "tab_security": "Security",
+        "tab_security": "보안",
         "tab_wordlists": "단어 목록",
         "tab_hotkeys": "단축키",
         "close_item_1": "항목 닫기(단축키 1)",
@@ -1229,8 +1229,8 @@
         "coming_soon": "곧 제공 예정…",
         "details": "세부 정보",
         "actions": "작업",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "닫기",
+        "use_suggested": "제안된 값 사용"
     },
     "collectors": {
         "groups": {

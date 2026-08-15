@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "Configuración",
         "logout": "Cerrar sesión",
-        "security": "Security",
+        "security": "Seguridad",
         "unknown_user": "Usuario desconocido",
         "no_organization": "Sin organización"
     },
@@ -312,8 +312,8 @@
         "reports": "Informes",
         "asset_groups": "Grupos de activos",
         "notification_templates": "Plantillas de notificación",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "Métodos de inicio de sesión",
+        "security": "Seguridad"
     },
     "notification": {
         "close": "Cerrar"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "Configuración del usuario",
         "tab_general": "General",
-        "tab_security": "Security",
+        "tab_security": "Seguridad",
         "tab_wordlists": "Listas de palabras",
         "tab_hotkeys": "Atajos de teclado",
         "close_item_1": "Cerrar elemento (atajo 1)",
@@ -1229,8 +1229,8 @@
         "coming_soon": "Próximamente...",
         "details": "Detalles",
         "actions": "Acciones",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "Cerrar",
+        "use_suggested": "Usar el valor sugerido"
     },
     "collectors": {
         "groups": {

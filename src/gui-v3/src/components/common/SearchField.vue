@@ -1,7 +1,7 @@
 <template>
     <v-text-field
         v-bind="$attrs"
-        id="search"
+        :id="resolvedId"
         v-model="model"
         :label="resolvedLabel"
         :prepend-inner-icon="resolvedIcon"
@@ -27,7 +27,7 @@
      *   <SearchField v-model="search" :width="350" />          <!-- fixed width -->
      *   <SearchField v-model="search" :label="t('x')" icon="mdi-account-search" />
      */
-    import { computed } from 'vue'
+    import { computed, useAttrs, useId } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
 
@@ -46,6 +46,15 @@
 
     const model = defineModel<string | undefined>({ default: '' })
     const { t } = useI18n()
+    const attrs = useAttrs()
+
+    // A per-instance id. The previous hardcoded `id="search"` gave every instance the
+    // same one, so any view showing two search fields (a list toolbar plus a dialog,
+    // say) emitted duplicate DOM ids — invalid HTML that breaks `<label for>` binding
+    // and makes Vuetify report a duplicate input name inside a v-form. It sat after
+    // `v-bind="$attrs"`, so a caller could not override it either; now they can.
+    const generatedId = useId()
+    const resolvedId = computed(() => (typeof attrs['id'] === 'string' ? attrs['id'] : generatedId))
 
     const resolvedLabel = computed(() => props.label ?? t('toolbar_filter.search'))
     const resolvedIcon = computed(() => props.icon ?? ICONS.MAGNIFY)

@@ -17,6 +17,7 @@
                             <span v-if="firstNewsItem">
                                 <i18n-t
                                     v-if="sourceType"
+                                    scope="global"
                                     keypath="card_item.source_with_type"
                                 >
                                     <template #source
@@ -37,6 +38,7 @@
                         <v-col cols="auto">
                             <i18n-t
                                 v-if="firstNewsItem"
+                                scope="global"
                                 keypath="card_item.published_at"
                                 tag="span"
                             >
@@ -47,7 +49,10 @@
                         </v-col>
                         <v-spacer />
                         <v-col cols="auto">
-                            <i18n-t keypath="card_item.collected_at">
+                            <i18n-t
+                                scope="global"
+                                keypath="card_item.collected_at"
+                            >
                                 <template #date
                                     ><bdi dir="auto">{{ collectedValue }}</bdi></template
                                 >

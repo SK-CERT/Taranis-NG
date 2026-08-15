@@ -115,6 +115,7 @@
                                             <v-col cols="auto">
                                                 <i18n-t
                                                     v-if="getNewsItemCount(item) > 0"
+                                                    scope="global"
                                                     keypath="card_item.published_at"
                                                     tag="span"
                                                 >

@@ -26,13 +26,17 @@
                     class="mb-4"
                 >
                     <div class="remote-report__identity">
-                        <i18n-t keypath="report_item.id_with_value">
+                        <i18n-t
+                            scope="global"
+                            keypath="report_item.id_with_value"
+                        >
                             <template #id>
                                 <bdi dir="ltr">{{ reportItem.uuid }}</bdi>
                             </template>
                         </i18n-t>
                         <i18n-t
                             v-if="reportItem.remote_user"
+                            scope="global"
                             keypath="card_item.source_with_value"
                         >
                             <template #source>

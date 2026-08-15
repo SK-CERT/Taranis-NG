@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "Настройки",
         "logout": "Выйти",
-        "security": "Security",
+        "security": "Безопасность",
         "unknown_user": "Неизвестный пользователь",
         "no_organization": "Нет организации"
     },
@@ -312,8 +312,8 @@
         "reports": "Отчеты",
         "asset_groups": "Группы активов",
         "notification_templates": "Шаблоны уведомлений",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "Способы входа",
+        "security": "Безопасность"
     },
     "notification": {
         "close": "Закрыть"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "Настройки пользователя",
         "tab_general": "Общие",
-        "tab_security": "Security",
+        "tab_security": "Безопасность",
         "tab_wordlists": "Списки слов",
         "tab_hotkeys": "Сочетания клавиш",
         "close_item_1": "Закрыть элемент (сочетание 1)",
@@ -1229,8 +1229,8 @@
         "coming_soon": "Скоро...",
         "details": "Сведения",
         "actions": "Действия",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "Закрыть",
+        "use_suggested": "Использовать предложенное значение"
     },
     "collectors": {
         "groups": {

@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "設定",
         "logout": "ログアウト",
-        "security": "Security",
+        "security": "セキュリティ",
         "unknown_user": "不明なユーザー",
         "no_organization": "組織なし"
     },
@@ -312,8 +312,8 @@
         "reports": "レポート",
         "asset_groups": "アセットグループ",
         "notification_templates": "通知テンプレート",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "ログイン方法",
+        "security": "セキュリティ"
     },
     "notification": {
         "close": "閉じる"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "ユーザー設定",
         "tab_general": "一般",
-        "tab_security": "Security",
+        "tab_security": "セキュリティ",
         "tab_wordlists": "単語リスト",
         "tab_hotkeys": "ホットキー",
         "close_item_1": "項目を閉じる（ホットキー1）",
@@ -1229,8 +1229,8 @@
         "coming_soon": "近日提供予定…",
         "details": "詳細",
         "actions": "操作",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "閉じる",
+        "use_suggested": "推奨値を使用"
     },
     "collectors": {
         "groups": {

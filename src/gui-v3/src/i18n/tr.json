@@ -1229,8 +1229,8 @@
         "coming_soon": "Yakında...",
         "details": "Ayrıntılar",
         "actions": "İşlemler",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "Kapat",
+        "use_suggested": "Önerilen değeri kullan"
     },
     "collectors": {
         "groups": {

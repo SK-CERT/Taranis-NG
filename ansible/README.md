@@ -34,8 +34,13 @@ The tooling lives in the project's `.venv`, pinned by the `ansible` dependency
 group in the root `pyproject.toml`:
 
 ```bash
-uv sync --group ansible --no-install-project
+python3 scripts/dev_setup.py --all
 ```
+
+Use that rather than a bare `uv sync --group ansible`: `uv sync` makes the
+environment match exactly the groups it is given, so naming `ansible` alone
+removes pytest, the service dependencies and `.venv/bin/uv` itself — and no
+other uv exists to run the command that would put it back.
 
 Every command below is prefixed with `uv run --group ansible` so it uses that
 environment; drop the prefix if you have `.venv/bin` on your `PATH`.

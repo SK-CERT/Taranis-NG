@@ -15,6 +15,7 @@
             >
             <i18n-t
                 v-if="showSerial"
+                scope="global"
                 keypath="asset.serial_with_value"
                 tag="span"
             >
@@ -51,6 +52,7 @@
         >
             <v-icon start>{{ vulnerable ? 'mdi-shield-alert' : 'mdi-shield-check' }}</v-icon>
             <i18n-t
+                scope="global"
                 keypath="asset.vulnerabilities_count"
                 :plural="vulnerabilityCount"
             >

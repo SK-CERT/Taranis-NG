@@ -206,7 +206,15 @@ def test_missing_id_on_assertion_protected_by_signed_response_is_rejected(authen
     assert authenticator.handle_response(_response(*idp_keypair, assertion_id=None), REQUEST_ID, ACS_URL) is None
 
 
-@pytest.mark.parametrize("value", ["not base64!", "A" * (MAX_SAML_RESPONSE_ENCODED_BYTES + 1)])
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("not base64!", id="not-base64"),
+        # Named, because pytest derives the test ID from the value itself: unnamed, this
+        # one spells the whole 1.4 MB payload into every -v run and CI log line.
+        pytest.param("A" * (MAX_SAML_RESPONSE_ENCODED_BYTES + 1), id="oversized"),
+    ],
+)
 def test_malformed_or_oversized_saml_response_is_rejected_without_replay_claim(authenticator, monkeypatch, value: str) -> None:  # noqa: ANN001
     claimed = False
 

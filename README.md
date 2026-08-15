@@ -82,6 +82,9 @@ fallback language in both interfaces.
 
 For instructions on configuring other components, refer to the [How to guide](docs/howto.md).
 
+Contributors: [Testing](docs/testing.md) covers installing the development environment and
+running every test suite.
+
 You can view the architecture block diagram [here](docs/images/block-diagram.png).
 
 The [requirements and design reference](docs/Taranis-NG-original-requirements.pdf)

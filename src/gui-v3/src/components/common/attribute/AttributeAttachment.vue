@@ -86,6 +86,7 @@
                             >
                             <i18n-t
                                 v-if="value.last_updated && value.user?.name"
+                                scope="global"
                                 keypath="drop_zone.last_updated_by_at"
                                 tag="span"
                                 class="attachment-row__meta-item"
@@ -99,6 +100,7 @@
                             </i18n-t>
                             <i18n-t
                                 v-else-if="value.last_updated"
+                                scope="global"
                                 keypath="drop_zone.last_updated_at"
                                 tag="span"
                                 class="attachment-row__meta-item"
@@ -109,6 +111,7 @@
                             </i18n-t>
                             <i18n-t
                                 v-else-if="value.user?.name"
+                                scope="global"
                                 keypath="drop_zone.attachment_by"
                                 tag="span"
                                 class="attachment-row__meta-item"

@@ -345,6 +345,7 @@
             >
                 <div class="text-subtitle-2 mb-1">{{ t('auth_provider.saml_idp_urls') }}</div>
                 <i18n-t
+                    scope="global"
                     keypath="auth_provider.saml_metadata_url_with_url"
                     tag="div"
                     class="text-body-2"
@@ -356,6 +357,7 @@
                     </template>
                 </i18n-t>
                 <i18n-t
+                    scope="global"
                     keypath="auth_provider.saml_acs_url_with_url"
                     tag="div"
                     class="text-body-2"
@@ -368,6 +370,7 @@
                 </i18n-t>
                 <i18n-t
                     v-if="federationModel"
+                    scope="global"
                     keypath="auth_provider.saml_disco_url_with_url"
                     tag="div"
                     class="text-body-2"

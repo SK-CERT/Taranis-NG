@@ -42,18 +42,30 @@ repos:
         language: python
         pass_filenames: false
         always_run: true
-      - id: ansible-syntax-check
-        name: Ansible playbook syntax check
-        entry: python3 scripts/check_ansible_syntax.py
+      # Every test hook below goes through scripts/run_tests.py, which is also what CI
+      # runs — so a suite cannot pass locally and be invoked differently in CI. Each one
+      # is gated by `files:` so a commit only pays for the suites it can affect, and each
+      # SKIPS when its tooling is absent (CI adds --require to make that fatal instead).
+      - id: ansible-tests
+        name: Ansible syntax check and lint
+        entry: python3 scripts/run_tests.py --suite ansible
         language: system
         pass_filenames: false
-        files: ^ansible/.*\.(yml|yaml|j2)$
-        # Run only when ansible/ files change; pre-commit filters by `files:`.
-        # `always_run: false` is the default — left explicit here for clarity.
+        files: ^(ansible/.*\.(yml|yaml|j2)|scripts/check_ansible_syntax\.py)$
+        always_run: false
+      - id: python-tests
+        name: Python unit tests (pytest)
+        entry: python3 scripts/run_tests.py --suite pytest
+        language: system
+        pass_filenames: false
+        files: ^src/(core|shared|bots|collectors|presenters|publishers)/.*\.py$
         always_run: false
       - id: gui3-precommit
-        name: gui3-precommit
+        name: GUI lint-staged and unit tests (Vitest)
         entry: node src/gui-v3/scripts/precommit.cjs
         language: system
         pass_filenames: false
-        always_run: true
+        # Was always_run: true, which ran the whole Vitest suite with coverage on every
+        # commit — including Python-only, ansible-only and docs-only ones.
+        files: ^src/gui-v3/
+        always_run: false

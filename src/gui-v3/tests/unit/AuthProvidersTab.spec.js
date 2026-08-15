@@ -1,10 +1,51 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import AuthProvidersTab from '@/components/config/access-management/AuthProvidersTab.vue'
 import { useConfigStore } from '@/stores/config'
-import { deleteAuthProvider } from '@/api/config'
+import { deleteAuthProvider, getAllAuthProviders } from '@/api/config'
 
+// Hoisted alongside the vi.mock factory below, which is itself hoisted above every
+// top-level statement in this file: a plain `const` here would still be in its
+// temporal dead zone when the factory runs.
+const { PROVIDERS } = vi.hoisted(() => ({
+    PROVIDERS: [
+        {
+            id: 1,
+            name: 'Local accounts',
+            kind: 'local',
+            enabled: true,
+            provisioning_mode: 'manual',
+            organization: null,
+            linked_identity_count: 0
+        },
+        {
+            id: 2,
+            name: 'Corp SSO',
+            kind: 'oidc',
+            enabled: true,
+            provisioning_mode: 'approval',
+            organization: { id: 1, name: 'CERT' },
+            linked_identity_count: 3
+        },
+        {
+            id: 3,
+            name: 'Corp SAML',
+            kind: 'saml',
+            enabled: false,
+            provisioning_mode: 'automatic',
+            organization: null,
+            linked_identity_count: 0
+        }
+    ]
+}))
+
+// The factory replaces the module wholesale, so every export the component chain
+// reaches must appear here — a missing one throws on property access, which the
+// component swallows into `console.error` and the suite then passes for the wrong
+// reason. `getAllAuthProviders` is what the store's loadAuthProviders calls.
 vi.mock('@/api/config', () => ({
+    getAllAuthProviders: vi.fn().mockResolvedValue({ data: { total_count: PROVIDERS.length, items: PROVIDERS } }),
     deleteAuthProvider: vi.fn().mockResolvedValue({ data: {} }),
     createNewAuthProvider: vi.fn().mockResolvedValue({ data: {} }),
     updateAuthProvider: vi.fn().mockResolvedValue({ data: {} }),
@@ -16,35 +57,12 @@ vi.mock('@/composables/useAuth', () => ({
     useAuth: () => ({ checkPermission: () => true })
 }))
 
-const PROVIDERS = [
-    {
-        id: 1,
-        name: 'Local accounts',
-        kind: 'local',
-        enabled: true,
-        provisioning_mode: 'manual',
-        organization: null,
-        linked_identity_count: 0
-    },
-    {
-        id: 2,
-        name: 'Corp SSO',
-        kind: 'oidc',
-        enabled: true,
-        provisioning_mode: 'approval',
-        organization: { id: 1, name: 'CERT' },
-        linked_identity_count: 3
-    },
-    { id: 3, name: 'Corp SAML', kind: 'saml', enabled: false, provisioning_mode: 'automatic', organization: null, linked_identity_count: 0 }
-]
-
 async function mountTab() {
     const wrapper = mountWithPlugins(AuthProvidersTab)
     const store = useConfigStore()
-    store.authProviders = { total_count: PROVIDERS.length, items: PROVIDERS }
-    // let onMounted's loadData settle, then render the seeded rows
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    store.authProviders = { total_count: PROVIDERS.length, items: PROVIDERS }
+    // onMounted's loadData now actually resolves, so the rows come from the store's
+    // own load path rather than being seeded around a failing one.
+    await flushPromises()
     await wrapper.vm.$nextTick()
     return { wrapper, store }
 }
@@ -56,7 +74,7 @@ describe('AuthProvidersTab', () => {
 
     it('loads the providers on mount', async () => {
         const { store } = await mountTab()
-        expect(store.loadAuthProviders).toBeTypeOf('function')
+        expect(getAllAuthProviders).toHaveBeenCalledWith({ search: '' })
         expect(store.authProviders.items).toHaveLength(3)
     })
 

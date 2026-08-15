@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "Instellingen",
         "logout": "Afmelden",
-        "security": "Security",
+        "security": "Beveiliging",
         "unknown_user": "Onbekende gebruiker",
         "no_organization": "Geen organisatie"
     },
@@ -312,8 +312,8 @@
         "reports": "Rapporten",
         "asset_groups": "Bedrijfsmiddelgroepen",
         "notification_templates": "Meldingssjablonen",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "Aanmeldmethoden",
+        "security": "Beveiliging"
     },
     "notification": {
         "close": "Sluiten"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "Gebruikersinstellingen",
         "tab_general": "Algemeen",
-        "tab_security": "Security",
+        "tab_security": "Beveiliging",
         "tab_wordlists": "Woordenlijsten",
         "tab_hotkeys": "Sneltoetsen",
         "close_item_1": "Item sluiten (sneltoets 1)",
@@ -1137,9 +1137,9 @@
             "product": "Product"
         },
         "state_types": {
-            "normal": "Normal",
+            "normal": "Normaal",
             "initial": "Initieel",
-            "final": "Final"
+            "final": "Definitief"
         }
     },
     "drop_zone": {
@@ -1229,8 +1229,8 @@
         "coming_soon": "Binnenkort beschikbaar...",
         "details": "Details",
         "actions": "Acties",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "Sluiten",
+        "use_suggested": "Voorgestelde waarde gebruiken"
     },
     "collectors": {
         "groups": {
@@ -1644,7 +1644,7 @@
         "message_body": "Berichttekst",
         "new_recipient": "Nieuwe ontvanger",
         "recipient_name": "Naam van ontvanger",
-        "email": "Email",
+        "email": "E-mail",
         "recipients": "Ontvangers",
         "successful": "Nieuwe meldingssjabloon is toegevoegd",
         "successful_edit": "Meldingssjabloon is bijgewerkt",
@@ -1669,7 +1669,7 @@
         "cpes": "CPE-codes",
         "value": "Waarde",
         "vulnerable": "Kwetsbaar",
-        "total": "Total",
+        "total": "Totaal",
         "total_count": "{count} bedrijfsmiddel | {count} bedrijfsmiddelen",
         "successful": "Nieuwe bedrijfsmiddel is toegevoegd",
         "successful_edit": "Bedrijfsmiddel is bijgewerkt",

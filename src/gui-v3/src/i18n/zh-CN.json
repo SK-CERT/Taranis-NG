@@ -213,7 +213,7 @@
     "user_menu": {
         "settings": "设置",
         "logout": "退出登录",
-        "security": "Security",
+        "security": "安全",
         "unknown_user": "未知用户",
         "no_organization": "无所属组织"
     },
@@ -312,8 +312,8 @@
         "reports": "报告",
         "asset_groups": "资产组",
         "notification_templates": "通知模板",
-        "login_methods": "Login Methods",
-        "security": "Security"
+        "login_methods": "登录方式",
+        "security": "安全"
     },
     "notification": {
         "close": "关闭"
@@ -1011,7 +1011,7 @@
     "settings": {
         "user_settings": "用户设置",
         "tab_general": "常规",
-        "tab_security": "Security",
+        "tab_security": "安全",
         "tab_wordlists": "词表",
         "tab_hotkeys": "快捷键",
         "close_item_1": "关闭条目（快捷键 1）",
@@ -1229,8 +1229,8 @@
         "coming_soon": "即将推出…",
         "details": "详细信息",
         "actions": "操作",
-        "close": "Close",
-        "use_suggested": "Use suggested value"
+        "close": "关闭",
+        "use_suggested": "使用建议值"
     },
     "collectors": {
         "groups": {
