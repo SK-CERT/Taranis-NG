@@ -40,7 +40,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving || loadingNodes"
+                        :disabled="saving || loadingNodes"
                         :loading="loadingNodes"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
@@ -56,7 +56,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving"
+                        :disabled="saving"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
 
@@ -301,9 +301,28 @@
 
     // Watch selected bot to initialize parameter values
     watch(selectedBot, (newBot: Bot | null) => {
-        if (!isEdit.value && newBot && newBot.parameters) {
-            parameterValues.value = newBot.parameters.map((param) => String(param.default_value ?? ''))
+        if (!newBot || !newBot.parameters) {
+            parameterValues.value = []
+            return
         }
+        if (!isEdit.value) {
+            parameterValues.value = newBot.parameters.map((param) => String(param.default_value ?? ''))
+            return
+        }
+        // Edit mode: the operator is moving the preset to a different bot
+        // (possibly on a different bots node). Rebuild the parameter scaffold
+        // from the target bot's parameter set and carry over values whose
+        // parameter.key matches the previously-selected bot's parameters.
+        const carried: Record<string, string> = {}
+        for (const pv of localItem.value.parameter_values ?? []) {
+            if (pv.parameter?.key) {
+                carried[pv.parameter.key] = String(pv.value ?? '')
+            }
+        }
+        parameterValues.value = newBot.parameters.map((param) => {
+            const carriedValue = param.key ? carried[param.key] : undefined
+            return carriedValue ?? String(param.default_value ?? '')
+        })
     })
 
     // Load bots nodes on mount

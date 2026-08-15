@@ -40,7 +40,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving || loadingNodes || !canSave"
+                        :disabled="saving || loadingNodes || !canSave"
                         :loading="loadingNodes"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
@@ -56,7 +56,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving || !canSave"
+                        :disabled="saving || !canSave"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
 
@@ -285,6 +285,9 @@
     type Presenter = {
         id: string | number
         name?: string
+        // Presenter rows are per-node, so `type` — not `id` — identifies the
+        // equivalent presenter on another node.
+        type?: string
         parameters?: PresenterParameter[]
         [key: string]: unknown
     }
@@ -383,6 +386,9 @@
     const nodes = ref<PresenterNode[]>([])
     const selectedNode = ref<PresenterNode | null>(null)
     const selectedPresenter = ref<Presenter | null>(null)
+    // Presenter type this product type is bound to, captured when the dialog
+    // opens; switching nodes uses it to find the equivalent presenter there.
+    const boundPresenterType = ref<string | null>(null)
     const parameterValues = ref<string[]>([])
 
     const defaultItem: ProductTypeItem = {
@@ -402,7 +408,13 @@
     const mapParameterValues = (presenter: Presenter, incomingValues: ParameterValue[] = []): string[] => {
         return (
             presenter.parameters?.map((param) => {
-                const paramValue = incomingValues.find((value) => value.parameter?.id === param.id)
+                // Match by parameter.id first (same presenter, re-edit case)…
+                let paramValue = incomingValues.find((value) => value.parameter?.id === param.id)
+                // …then fall back to parameter.key (moving the product type to
+                // a presenter on a different node — same parameter set, different ids).
+                if (!paramValue && param.key) {
+                    paramValue = incomingValues.find((value) => value.parameter?.key === param.key)
+                }
                 return String(paramValue?.value ?? param.default_value ?? '')
             }) || []
         )
@@ -427,6 +439,7 @@
             if (presenter) {
                 selectedNode.value = node
                 selectedPresenter.value = presenter
+                boundPresenterType.value = presenter.type ?? null
                 parameterValues.value = mapParameterValues(presenter, localItem.value.parameter_values)
                 return
             }
@@ -434,6 +447,7 @@
 
         selectedNode.value = null
         selectedPresenter.value = null
+        boundPresenterType.value = null
         parameterValues.value = []
     }
 
@@ -469,6 +483,7 @@
         localItem.value = { ...defaultItem }
         selectedNode.value = null
         selectedPresenter.value = null
+        boundPresenterType.value = null
         parameterValues.value = []
         showValidationError.value = false
         showError.value = false
@@ -572,6 +587,14 @@
                 selectedPresenter.value = presenter
                 return
             }
+        }
+
+        // Moving to another node: presenter rows are per-node so the id above
+        // never matches. Match on TYPE — only a same-type presenter has the
+        // parameter keys mapParameterValues needs to carry the values over.
+        if (isEdit.value && boundPresenterType.value) {
+            selectedPresenter.value = presenters.find((entry) => entry.type === boundPresenterType.value) ?? null
+            return
         }
 
         selectedPresenter.value = presenters[0] ?? null

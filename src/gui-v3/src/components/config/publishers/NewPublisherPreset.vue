@@ -40,7 +40,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving || loadingNodes"
+                        :disabled="saving || loadingNodes"
                         :loading="loadingNodes"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
@@ -56,7 +56,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving"
+                        :disabled="saving"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
 
@@ -313,9 +313,29 @@
 
     // Watch selected publisher to initialize parameter values
     watch(selectedPublisher, (newPublisher: Publisher | null) => {
-        if (!isEdit.value && newPublisher && newPublisher.parameters) {
-            parameterValues.value = newPublisher.parameters.map((param) => String(param.default_value ?? ''))
+        if (!newPublisher || !newPublisher.parameters) {
+            parameterValues.value = []
+            return
         }
+        if (!isEdit.value) {
+            parameterValues.value = newPublisher.parameters.map((param) => String(param.default_value ?? ''))
+            return
+        }
+        // Edit mode: the operator is moving the preset to a different
+        // publisher (possibly on a different publishers node). Rebuild the
+        // parameter scaffold from the target publisher's parameter set and
+        // carry over values whose parameter.key matches the previously-
+        // selected publisher's parameters.
+        const carried: Record<string, string> = {}
+        for (const pv of localItem.value.parameter_values ?? []) {
+            if (pv.parameter?.key) {
+                carried[pv.parameter.key] = String(pv.value ?? '')
+            }
+        }
+        parameterValues.value = newPublisher.parameters.map((param) => {
+            const carriedValue = param.key ? carried[param.key] : undefined
+            return carriedValue ?? String(param.default_value ?? '')
+        })
     })
 
     // Load publishers nodes on mount
