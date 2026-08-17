@@ -2,7 +2,8 @@
 # your group_vars/host_vars, not this file on the worker host; subsequent runs
 # overwrite it.
 #
-# Mirrors docker/traefik/dynamic/tls.yml.example on the Core stack, so both ends
+# Mirrors the Core stack's TLS options, which core serves to Traefik from
+# Configuration -> Application Settings -> Routing & TLS, so both ends
 # of the Core<->worker link enforce the same policy.
 #
 # tls.options is DYNAMIC configuration, which is why this lives in

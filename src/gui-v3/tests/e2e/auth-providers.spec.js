@@ -451,7 +451,7 @@ test.describe('Auth provider slug contract', () => {
             const expectedSlug = `e2e-slug-test-${name.split('_').slice(-1)[0]}`
             await expect(dialog.getByLabel('Slug', { exact: false })).toHaveValue(expectedSlug)
 
-            await page.getByRole('button', { name: 'Save' }).click()
+            await saveDialog(page)
             await expect(dialog).toHaveCount(0)
 
             // findRowByName: the Saved-row assertion must filter via the Search
@@ -484,7 +484,7 @@ test.describe('Auth provider slug contract', () => {
             await selectKind(page, 'OpenID Connect')
             await fillDialogField(page, 'Issuer URL', 'https://idp.example.org')
             await fillDialogField(page, 'Client ID', 'taranis-ng')
-            await page.getByRole('button', { name: 'Save' }).click()
+            await saveDialog(page)
             await expect(dialog).toHaveCount(0)
 
             const created = await fetchProviderByName(request, originalName)
@@ -503,7 +503,7 @@ test.describe('Auth provider slug contract', () => {
             await expect(dialog).toBeVisible()
 
             await fillDialogField(page, 'Name', newName)
-            await page.getByRole('button', { name: 'Save' }).click()
+            await saveDialog(page)
             await expect(dialog).toHaveCount(0)
 
             // The provider now has a new name but the slug is unchanged — this
@@ -532,8 +532,19 @@ test.describe('Auth provider slug contract', () => {
         test.setTimeout(60_000)
         // Two names whose slugify() output is identical ("E2E Collision X" vs
         // "E2E Collision  X" — multiple spaces collapse to a single hyphen).
-        const name1 = `E2E Collision A ${Date.now()}`
-        const name2 = `E2E Collision  A ${Date.now()}`
+        //
+        // ONE timestamp for both. Calling Date.now() twice makes the collision
+        // depend on both calls landing in the same millisecond: a 1 ms straddle
+        // gives the names different suffixes, so the slugs differ, the second
+        // save succeeds, and this test fails looking for an alert that was never
+        // meant to appear.
+        const stamp = Date.now()
+        const name1 = `E2E Collision A ${stamp}`
+        const name2 = `E2E Collision  A ${stamp}`
+        // The premise, asserted rather than assumed: the names must be equal once
+        // whitespace is collapsed, which is what slugify does to them. Checked here
+        // so a broken premise reports itself instead of surfacing as a missing alert.
+        expect(name2.replace(/\s+/g, ' '), 'the two names must differ only by the doubled space').toBe(name1)
         try {
             // First provider: clean create, slug is auto-derived.
             await page.getByRole('button', { name: 'Add New' }).click()
@@ -542,7 +553,7 @@ test.describe('Auth provider slug contract', () => {
             await selectKind(page, 'OpenID Connect')
             await fillDialogField(page, 'Issuer URL', 'https://idp.example.org')
             await fillDialogField(page, 'Client ID', 'taranis-ng')
-            await page.getByRole('button', { name: 'Save' }).click()
+            await saveDialog(page)
             await expect(dialog).toHaveCount(0)
 
             const p1 = await fetchProviderByName(request, name1)
@@ -555,7 +566,7 @@ test.describe('Auth provider slug contract', () => {
             await selectKind(page, 'OpenID Connect')
             await fillDialogField(page, 'Issuer URL', 'https://idp.example.org')
             await fillDialogField(page, 'Client ID', 'taranis-ng')
-            await page.getByRole('button', { name: 'Save' }).click()
+            await saveDialog(page)
 
             // The dialog stays open with the auth_provider.error alert. Auto-retry
             // covers the alert render lag — find it inside the visible dialog. Scope to
@@ -577,7 +588,7 @@ test.describe('Auth provider slug contract', () => {
             // GUI auto-uniquifier substitutes for — the admin is in the loop.
             const rescuedSlug = `${p1.slug}-v2`
             await dialog.getByLabel('URL slug', { exact: false }).fill(rescuedSlug)
-            await page.getByRole('button', { name: 'Save' }).click()
+            await saveDialog(page)
             await expect(dialog).toHaveCount(0)
 
             const p2rescued = await fetchProviderByName(request, name2)

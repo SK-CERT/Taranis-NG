@@ -16,12 +16,22 @@
     current_worker_api_key: "{{ worker_api_key_slurp.content | b64decode | trim }}"
   no_log: true
 
-# 2b — per-type endpoint addresses. All four node types are served by the v1
-# config API, which supports GET (list), POST (create) and PUT (update).
+# 2b — per-type endpoint addresses. Every node type is served by the v1 config
+# API, which supports GET (list), POST (create) and PUT (update). That API is the
+# browser-facing one, so it stays on Core's 443 - only the satellite prefixes moved.
+#
+# The worker API itself is on worker_api_port, not 443: a public-web host has to
+# publish 443 to the world, so the API needs its own port to be firewallable.
 - name: "Set the *Node collection endpoint for {{ worker_type }}"
   ansible.builtin.set_fact:
     node_collection_url: "{{ core_url }}/api/v1/config/{{ worker_type }}-nodes"
-    current_worker_api_url: "https://{{ worker_type }}.{{ worker_base_hostname }}"
+    current_worker_api_url: "https://{{ worker_type }}.{{ worker_base_hostname }}:{{ worker_api_port }}"
+    # Addresses that mean "this worker". The port-less form is what deployments
+    # made before the API moved off 443 recorded; matching it too is what makes
+    # an upgrade UPDATE that node instead of creating a duplicate beside it.
+    current_worker_api_url_aliases:
+      - "https://{{ worker_type }}.{{ worker_base_hostname }}:{{ worker_api_port }}"
+      - "https://{{ worker_type }}.{{ worker_base_hostname }}"
 
 # 2c — fetch existing nodes + find one already pointing at this api_url.
 - name: "Fetch existing nodes from Core for {{ worker_type }}"
@@ -43,7 +53,7 @@
       {{
         (existing_nodes_result.json['items'] | default([]))
         | selectattr('api_url', 'defined')
-        | selectattr('api_url', 'equalto', current_worker_api_url)
+        | selectattr('api_url', 'in', current_worker_api_url_aliases)
         | list | first | default({})
       }}
 
@@ -66,11 +76,19 @@
     method: POST
     body_format: json
     body:
-      id: ""
+      # public-web's id is an autoincrement INTEGER, so "" fails schema
+      # validation there; its constructor takes id as an optional keyword and
+      # simply omitting it is correct. The uuid-keyed types still need the
+      # placeholder described above.
+      id: "{{ '' if worker_type != 'public-web' else omit }}"
       name: "{{ worker_node_name }}"
       description: "{{ worker_node_description }}"
       api_url: "{{ current_worker_api_url }}"
       api_key: "{{ current_worker_api_key }}"
+      # Tells core which resolver name to put in the routers it serves back to this
+      # worker. Only public-web has any: the other four serve no public hostnames, so
+      # core never builds routers for them and their schemas have no such field.
+      cert_resolver: "{{ worker_acme_resolver_name if worker_type == 'public-web' else omit }}"
     headers:
       Authorization: "Bearer {{ core_access_token }}"
     status_code: [200, 201]
@@ -80,6 +98,41 @@
   become: false
   when: not worker_already_registered | bool
   no_log: true
+  failed_when: false
+
+# The POST above is no_log'd because the body carries the node api_key, and that
+# hides Core's reason for a rejection along with it - a bare "Status code was 400"
+# with the explanation only in Core's container log. The registered result is
+# still readable here even though it was not printed, so the status is re-raised
+# with the reason that actually causes it.
+#
+# Core's create handler probes the worker over HTTPS before storing the node, so
+# a 400 is usually not about this payload at all: it is that probe failing.
+- name: "Explain a rejected registration for {{ worker_type }}"
+  ansible.builtin.assert:
+    that: node_add_result.status | int in [200, 201]
+    fail_msg: |
+      Core rejected the {{ worker_type }} node with HTTP {{ node_add_result.status | default('(no status)') }}.
+
+      Core probes the worker before storing a node, and verifies its certificate
+      while doing so, so a 400 here is most often that probe failing rather than
+      anything wrong with the payload. Ask Core directly - the probe runs from
+      inside its container, so its trust store is the one that counts:
+
+        docker compose exec -T core python -c "import requests; \
+          print(requests.get('{{ current_worker_api_url }}/api/v1/isalive', timeout=8).status_code)"
+
+      401 means TLS verified and the node is reachable, so the rejection is
+      something else - read Core's log for the reason it recorded:
+
+        docker compose logs --since 10m core | grep -A3 'Could not create'
+
+      A TLS error instead means the certificate for
+      {{ worker_type }}.{{ worker_base_hostname }} is not verifiable from Core.
+      "self-signed certificate" specifically means Traefik answered with its own
+      default certificate, which it does while an ACME certificate has not landed
+      yet - re-run once issuance completes.
+  when: not worker_already_registered | bool
 
 - name: "Update the existing node in Core (refreshes the api_key) for {{ worker_type }}"
   ansible.builtin.uri:
@@ -94,6 +147,10 @@
       description: "{{ worker_node_description }}"
       api_url: "{{ current_worker_api_url }}"
       api_key: "{{ current_worker_api_key }}"
+      # Sent on update too, so a node registered before this existed - or one whose
+      # worker_acme_resolver_name has since changed - is corrected on the next run
+      # rather than silently keeping a name its Traefik no longer declares.
+      cert_resolver: "{{ worker_acme_resolver_name if worker_type == 'public-web' else omit }}"
     headers:
       Authorization: "Bearer {{ core_access_token }}"
     status_code: [200, 201, 204]
@@ -112,15 +169,20 @@
 
 # 2e — Core→worker connectivity probe.
 #
-# isalive is the one endpoint every worker type answers with a GET and no auth
-# (/api/v1/collectors is POST-only). Sending no key keeps this task free of
-# secrets, so failures stay readable; the key itself is already verified by
-# Core's own probe during the POST/PUT above. The retries wait out ACME
-# issuance on a first deployment.
+# isalive is the one endpoint every worker type answers with a plain GET
+# (/api/v1/collectors is POST-only), and every type now serves it at this one
+# path. It is authenticated like the rest of the worker API - an open liveness
+# probe advertises the node to anyone who finds the host - so this task carries
+# the key and is no_log'd. A 401 here therefore means the key Core was just given
+# is not the key the container is running with.
+#
+# The retries wait out ACME issuance on a first deployment.
 - name: "Verify Core can reach the worker serving {{ worker_type }}"
   ansible.builtin.uri:
     url: "{{ current_worker_api_url }}/api/v1/isalive"
     method: GET
+    headers:
+      Authorization: "ApiKey {{ current_worker_api_key }}"
     status_code: [200]
     validate_certs: "{{ register_validate_certs }}"
   register: worker_probe_result
@@ -129,6 +191,7 @@
   until: worker_probe_result.status == 200
   retries: 5
   delay: 3
+  no_log: true
 
 - name: "Report Core → worker connectivity for {{ worker_type }}"
   ansible.builtin.debug:
