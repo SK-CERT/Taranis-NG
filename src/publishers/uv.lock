@@ -809,16 +809,16 @@ wheels = [
 
 [[package]]
 name = "pymisp"
-version = "2.5.34.1"
+version = "2.5.34.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "deprecated" },
     { name = "python-dateutil" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/95/59/d195ab701e1cb2c1fb44cdfb83fbef46cf40b3a206ce313666817cfb9098/pymisp-2.5.34.1.tar.gz", hash = "sha256:dc7d44213064b5fc920dfeb8feae21165eb6543288e3809f2a5c6dd86ec37fa5", size = 2071382, upload-time = "2026-04-28T12:07:12.433Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ef/14/e03cecf52a99d951175107e1a8fe61dbb56894d9cfa6bdb65fec559d9d4a/pymisp-2.5.34.2.tar.gz", hash = "sha256:cbf42d6753e788ec4eabeb3b4cfdece12faf36d43551869d4b7cec2329ee9aaf", size = 2083849, upload-time = "2026-08-14T11:55:20.877Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/64/3746646025f649d233f769e14ee4ab1da41d6dd36812c78b1f969393e1ff/pymisp-2.5.34.1-py3-none-any.whl", hash = "sha256:7ed974fa4ab325ddcb8eee4be7d6723636f849516c54a055da1ea1638cbfcd37", size = 544181, upload-time = "2026-04-28T12:07:10.535Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/d6/044256e07350511d23e81c6b5a8f27cc46b794002273bf37fee53ac05c3b/pymisp-2.5.34.2-py3-none-any.whl", hash = "sha256:63f0e2618c22029a0b2d7ea065a68b2b2aa430835b9ce57ad60a57e4e184c44c", size = 565244, upload-time = "2026-08-14T11:55:19.174Z" },
 ]
 
 [[package]]
@@ -985,7 +985,7 @@ requires-dist = [
     { name = "marshmallow", specifier = "==4.3.1" },
     { name = "mastodon-py", specifier = "==2.2.1" },
     { name = "paramiko", specifier = "==5.0.0" },
-    { name = "pymisp", specifier = "==2.5.34.1" },
+    { name = "pymisp", specifier = "==2.5.34.2" },
     { name = "python-dotenv", specifier = "==1.2.2" },
     { name = "requests", specifier = "==2.34.2" },
     { name = "taranis-ng-shared", directory = "../shared" },
