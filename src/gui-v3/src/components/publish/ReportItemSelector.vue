@@ -412,7 +412,7 @@
 
     .selector-results {
         min-height: 0;
-        margin-top: 0;
+        overflow-y: auto;
     }
 
     :deep(.v-dialog .v-card) {
