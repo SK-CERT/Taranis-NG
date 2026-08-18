@@ -37,7 +37,7 @@
         "date-fns": "^4.4.0",
         "dompurify": "^3.4.13",
         "pinia": "^4.0.3",
-        "primeicons": "^7.0.0",
+        "primeicons": "^8.0.0",
         "primevue": "^4.5.5",
         "qrcode": "^1.5.4",
         "quill": "^2.0.3",
