@@ -19,7 +19,7 @@ jobs:
           # changed-files diff in the ruff lint step below.
           fetch-depth: 2
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version-file: .github/python-version
       - name: Install uv
@@ -110,7 +110,7 @@ jobs:
           fi
       - name: Set up Python
         if: env.SKIP_ANSIBLE_CHECK != '1'
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version-file: .github/python-version
       - name: Install uv
