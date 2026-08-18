@@ -23,7 +23,7 @@ jobs:
         with:
           python-version-file: .github/python-version
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           # No `version:` on purpose - setup-uv reads [tool.uv] required-version from
           # the root pyproject.toml, keeping the uv pin in exactly one place.
@@ -58,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       - name: Check uv.lock is up to date
@@ -115,7 +115,7 @@ jobs:
           python-version-file: .github/python-version
       - name: Install uv
         if: env.SKIP_ANSIBLE_CHECK != '1'
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           # No `version:` on purpose - setup-uv reads [tool.uv] required-version from
           # the root pyproject.toml, keeping the uv pin in exactly one place.
