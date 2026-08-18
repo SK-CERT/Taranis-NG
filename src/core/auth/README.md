@@ -46,6 +46,48 @@ The URL is derived from the incoming request (honoring the reverse proxy's
 `X-Forwarded-*` headers); if that does not work in your deployment, set the
 provider's *Redirect URI override* field explicitly.
 
+## Testing an OIDC / OAuth 2.0 configuration
+
+*Test configuration* in the provider dialog checks the settings in the form
+against the identity provider before they are saved: it resolves the endpoints
+(fetching and validating the discovery document for OIDC), reads the signing
+keys, and asks the token endpoint whether it accepts the client ID and secret.
+Nothing is stored, and no state is created at the identity provider.
+
+The credential check puts the **client ID and client secret** to the provider
+directly, using the same client authentication a real login uses. It tries the
+available checks in order of how sharply each isolates the credentials, and stops
+at the first straight answer:
+
+1. the **introspection endpoint** (RFC 7662), if discovery advertises one;
+2. the **revocation endpoint** (RFC 7009), likewise.
+
+   Client authentication is the only precondition of either, and both answer
+   `200` for a token they have never heard of. Nothing but the credentials can
+   change the outcome, so `200` means accepted and `401` means refused.
+3. the **`client_credentials` grant**, which also authenticates the client and
+   nothing else. An error about the grant rather than the client
+   (`unsupported_grant_type`) still proves the credentials were accepted.
+4. as a last resort, an **authorization code that was never issued**. This one
+   assumes the server authenticates the client before it validates the grant
+   (RFC 6749 section 5.2); implementations that check the code first would answer
+   `invalid_grant` without ever reading the secret, so when the verdict rests on
+   this probe alone the result is reported as *inconclusive* rather than as a
+   pass.
+
+A provider with no client secret configured (a public client) is told so
+explicitly: the test can then only confirm that the identity provider knows the
+client ID.
+
+Editing a saved provider leaves the secret field blank to keep the stored
+secret; the test then uses that stored secret, so it also catches a secret that
+can no longer be decrypted after the secrets encryption key changed.
+
+At login time the same distinction is kept: a provider whose credentials the IdP
+refuses returns `provider_misconfigured` ("This login method is misconfigured")
+rather than a generic authentication failure, and the IdP's own wording is
+recorded in the audit log rather than shown to the user.
+
 ## PKCE (OIDC / OAuth 2.0)
 
 Per-provider *PKCE code challenge method* selector (RFC 7636):
@@ -304,6 +346,35 @@ An optional **allowed e-mail domains** filter further restricts auto-creation.
 If the reported username collides with an existing account, the login is
 rejected - an administrator resolves this by linking the identity to the
 existing account.
+
+One case is settled without an administrator: an account holding **no local
+password, no identity at any provider and no passkey** is an orphan - nothing
+can log into it - and is adopted by the provider instead of being reported as a
+collision. Such accounts are left behind when the provider that created them is
+deleted (deleting a login method removes its identity links) or when a user's
+identities are cleared, and before this they blocked the same person from ever
+being provisioned again. An account that still has a password, a passkey, or an
+identity at another provider belongs to somebody and is never adopted (TOTP does
+not count - it is only ever a second factor).
+
+**Adoption re-provisions the account, it does not inherit it.** Roles,
+permissions, organization, display name, e-mail and status are all reset to what
+a first login through that provider grants, so the outcome is exactly what you
+get by deleting the orphan and letting it be created afresh. This matters for
+two reasons: an orphaned *administrator* account would otherwise hand its rights
+to whoever can present that username at the identity provider, and an orphan left
+in the *active* state would otherwise walk straight past the approval step that
+"auto-create, admin approves" promises. An enrolled TOTP secret is the one thing
+kept, which makes adoption fail closed - whoever claims the account is challenged
+for a code they do not have.
+
+Adoption therefore grants nobody any authority they could not already obtain by
+signing in with a username no account is using. If even that is more than your
+identity provider's usernames should be trusted with, set the provider to
+*Linked users only*, which never auto-provisions and never adopts.
+
+A login that fails part way through provisioning rolls its account back, so a
+misconfigured provider cannot leave a half-created user behind either.
 
 Users can be **disabled** at any time; this blocks new logins and invalidates
 existing sessions on their next request.

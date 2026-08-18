@@ -384,7 +384,10 @@
         'username_collision',
         'account_not_linked',
         'domain_not_allowed',
-        'auth_cancelled'
+        'auth_cancelled',
+        // The IdP refused this service's own credentials: nothing the person at the
+        // keyboard did wrong, and nothing they can do about it either.
+        'provider_misconfigured'
     ])
 
     // Maps backend error codes (POST payload code / redirect login_error param) to i18n keys
@@ -396,6 +399,7 @@
             account_not_linked: 'login.account_not_linked',
             domain_not_allowed: 'login.domain_not_allowed',
             auth_cancelled: 'login.auth_cancelled',
+            provider_misconfigured: 'login.provider_misconfigured',
             totp_invalid: 'login.totp_invalid'
         }
         return keys[code.toLowerCase()] || 'login.error'

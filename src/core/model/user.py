@@ -20,6 +20,7 @@ from shared.schema.role import PermissionIdSchema, RoleIdSchema
 from shared.schema.user import USER_STATUSES, HotkeySchema, UserIdentitySchema, UserPresentationSchema, UserSchemaBase
 from shared.schema.word_list import WordListSchema
 from sqlalchemy import or_, orm
+from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash
 
 
@@ -362,16 +363,126 @@ class User(db.Model):
             external_id (str): Stable subject identifier at the provider.
 
         Returns:
-            User: The newly created user.
+            User: The newly created user, or the one a concurrent login created first.
+
+        Raises:
+            IntegrityError: When the account could not be written for a reason
+                other than a concurrent login having already created it.
         """
-        status = "active" if provider.provisioning_mode == "automatic" else "pending"
-        user = cls(-1, username, name or username, None, None, None, None, email=email, status=status)
-        if provider.organization:
-            user.organizations = [provider.organization]
-        user.roles = list(provider.default_roles)
+        user = cls(-1, username, name or username, None, None, None, None)
+        cls._apply_provider_defaults(user, provider, name, email)
         user.auth_identities = [UserAuthIdentity(None, provider.id, username, external_id)]
         db.session.add(user)
-        db.session.commit()
+        return cls._commit_provisioning(user, provider, username, external_id)
+
+    @classmethod
+    def _apply_provider_defaults(cls, user: User, provider: AuthProvider, name: str | None, email: str | None) -> None:
+        """Give an account exactly what a first login through this provider grants, and nothing more.
+
+        Shared by :meth:`provision_external` and :meth:`adopt_external` so the two
+        can never drift: whether the account row is new or an adopted orphan, what
+        it ends up holding is decided by the provider alone.
+
+        Args:
+            user (User): The account being provisioned.
+            provider (AuthProvider): The provider the user authenticated against.
+            name (str): Display name reported by the provider.
+            email (str): E-mail address reported by the provider.
+        """
+        user.status = "active" if provider.provisioning_mode == "automatic" else "pending"
+        user.organizations = [provider.organization] if provider.organization else []
+        user.roles = list(provider.default_roles)
+        # Direct per-user grants are not inherited either: an adopted account must
+        # end up with the provider's authority, never with whatever authority the
+        # row happened to carry before it was orphaned.
+        user.permissions = []
+        user.name = name or user.username
+        user.email = email
+
+    @classmethod
+    def adopt_external(
+        cls,
+        provider: AuthProvider,
+        user: User,
+        username: str,
+        name: str | None,
+        email: str | None,
+        external_id: str | None,
+    ) -> User:
+        """Link an existing account that has no way in to an external provider.
+
+        Used when auto-provisioning finds the username taken by an account that
+        holds no credential able to log into it (see
+        :func:`managers.auth_manager._is_orphaned_account`) - typically left
+        behind when the provider it was provisioned by was deleted or re-created.
+        Adopting it spares the administrator having to delete and re-provision the
+        user by hand.
+
+        The row is **re-provisioned, not inherited**: roles, permissions,
+        organization and status are reset to what a first login through this
+        provider grants. Keeping them would hand whoever can present this username
+        at the identity provider whatever authority the account happened to carry -
+        an orphaned administrator would give away its rights - and would let an
+        already-active row walk past the approval step that "auto-create, admin
+        approves" promises. The outcome is instead exactly what the administrator
+        gets today by deleting the orphan and letting it be provisioned afresh.
+
+        ``totp_secret`` is deliberately kept: it makes adoption fail closed, since
+        whoever claims the row is then challenged for a code they do not have,
+        while a returning legitimate user keeps the factor they enrolled.
+
+        Args:
+            provider (AuthProvider): The provider the user authenticated against.
+            user (User): The orphaned account to link.
+            username (str): Username reported by the provider.
+            name (str): Display name reported by the provider.
+            email (str): E-mail address reported by the provider.
+            external_id (str): Stable subject identifier at the provider.
+
+        Returns:
+            User: The linked account, or the one a concurrent login resolved to.
+
+        Raises:
+            IntegrityError: When the link could not be written for a reason other
+                than a concurrent login having already created it.
+        """
+        # Set directly rather than through set_status: the last-active-admin guard
+        # must not fire here, because an orphan cannot log in and so was never a
+        # reachable administrator to be the last of.
+        cls._apply_provider_defaults(user, provider, name, email)
+        user.auth_identities.append(UserAuthIdentity(user.id, provider.id, username, external_id))
+        return cls._commit_provisioning(user, provider, username, external_id)
+
+    @classmethod
+    def _commit_provisioning(cls, user: User, provider: AuthProvider, username: str, external_id: str | None) -> User:
+        """Commit a provisioning change, conceding to a concurrent login that won the race.
+
+        Two callbacks for the same subject can arrive at once - a double-clicked
+        login button is enough. The loser hits the identity uniqueness constraint;
+        rather than leaving a failed transaction on the session for the rest of
+        the request, it rolls back and adopts the winner's result.
+
+        Args:
+            user (User): The user the pending change belongs to.
+            provider (AuthProvider): The provider being linked.
+            username (str): Username reported by the provider.
+            external_id (str): Stable subject identifier at the provider.
+
+        Returns:
+            User: The user owning the identity after the commit.
+
+        Raises:
+            IntegrityError: When the conflict was not a concurrent provisioning
+                of this same identity.
+        """
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            identity = UserAuthIdentity.find_by_external(provider.id, external_id, username)
+            if not identity:
+                raise
+            return identity.user
         return user
 
     @classmethod

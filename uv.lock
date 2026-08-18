@@ -1317,7 +1317,6 @@ dev = [
     { name = "djlint" },
     { name = "ruff" },
     { name = "ty" },
-    { name = "ty" },
     { name = "uv" },
 ]
 test = [

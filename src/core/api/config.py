@@ -12,7 +12,7 @@ import os
 from http import HTTPStatus
 
 import requests
-from auth import saml_authenticator, saml_federation, saml_metadata
+from auth import oauth2_authenticator, saml_authenticator, saml_federation, saml_metadata
 from auth import url_guard as saml_url_guard
 from flask import request, send_file
 from flask_jwt_extended import jwt_required
@@ -469,6 +469,54 @@ class SamlFederationVerifyResource(Resource):
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = f"The federation metadata could not be verified: {ex}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class OAuthVerifyResource(Resource):
+    """Test an OIDC / OAuth 2.0 configuration against the identity provider."""
+
+    @auth_required("CONFIG_AUTH_PROVIDER_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Resolve the provider's endpoints and check whether it accepts our client credentials.
+
+        Accepts ``kind``, ``config``, an optional plaintext ``secret`` and the
+        ``redirect_uri`` to be registered. Nothing is stored and no state is
+        created at the identity provider: the discovery document and signing keys
+        are fetched, and the token endpoint is asked to reject a throwaway
+        authorization code, which answers whether the client ID and secret are
+        accepted. When the secret is blank and ``id`` names a saved provider, the
+        stored secret is tested - the same "an empty secret keeps the stored one"
+        rule the update endpoint follows.
+
+        Returns:
+            (dict, int): The resolved endpoints and the client credential verdict,
+                or an error.
+        """
+        data = request.json or {}
+        try:
+            secret = data.get("secret") or None
+            if not secret and data.get("id"):
+                stored = auth_provider.AuthProvider.find(data["id"])
+                secret = stored.get_secret_plaintext() if stored else None
+                if stored and stored.secret and secret is None:
+                    msg = (
+                        "The stored client secret could not be decrypted - was the secrets encryption key changed? "
+                        "Enter the client secret again to test it."
+                    )
+                    raise ValueError(msg)  # noqa: TRY301 - reported to the admin like every other configuration problem
+            result = oauth2_authenticator.verify_configuration(
+                data.get("kind", ""),
+                data.get("config") or {},
+                secret,
+                data.get("redirect_uri"),
+                data.get("name") or "this login method",
+            )
+            return result, HTTPStatus.OK
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = f"The login method could not be tested: {ex}"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
@@ -2546,6 +2594,7 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(SamlMetadataImportResource, "/api/v1/config/auth-providers/saml/import-metadata")
     api.add_resource(SamlKeypairResource, "/api/v1/config/auth-providers/saml/generate-keypair")
     api.add_resource(SamlFederationVerifyResource, "/api/v1/config/auth-providers/saml/verify-federation")
+    api.add_resource(OAuthVerifyResource, "/api/v1/config/auth-providers/oauth/verify")
     api.add_resource(SecuritySettingsResource, "/api/v1/config/security")
 
     api.add_resource(ExternalUsersResource, "/api/v1/config/external-users")

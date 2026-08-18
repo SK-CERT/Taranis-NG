@@ -82,6 +82,10 @@ export function verifySamlFederation(payload) {
     return ApiService.post('/config/auth-providers/saml/verify-federation', payload)
 }
 
+export function verifyOauthProvider(payload) {
+    return ApiService.post('/config/auth-providers/oauth/verify', payload)
+}
+
 export function getSecuritySettings() {
     return ApiService.get('/config/security')
 }
