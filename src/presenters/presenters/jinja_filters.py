@@ -18,12 +18,20 @@ def filter_strfdate(date: str, fmtin: str | None = None, fmtout: str | None = No
         str: The converted date string.
 
     """
-    if date == "":
+    if not date:
         return ""
-    if not fmtin:
-        fmtin = "%Y.%m.%d"
-    date = datetime.datetime.strptime(date, fmtin).replace(tzinfo=TZ)
-    native = date
+
+    formats = [fmtin] if fmtin else ["%Y-%m-%d", "%Y.%m.%d"]
+    for fmt in formats:
+        try:
+            native = datetime.datetime.strptime(date, fmt).replace(tzinfo=TZ)
+            break
+        except ValueError:
+            continue
+    else:
+        msg = f"Unsupported date format: {date!r}. Expected one of: {', '.join(formats)}"
+        raise ValueError(msg)
+
     if not fmtout:
         fmtout = "%-d.%-m.%Y"
     return native.strftime(fmtout)
@@ -56,7 +64,7 @@ def filter_truncate_on_symbol(text: str, symbol: str) -> str:
 
     """
     if symbol in text:
-        return text.split(symbol)[0]
+        return text.split(symbol, maxsplit=1)[0]
     return text
 
 
