@@ -50,7 +50,7 @@ classifiers = [
 [dependency-groups]
 dev = [
     "djlint==1.44.2",
-    "ruff==0.16.2",
+    "ruff==0.16.3",
     # Keep in lockstep with [tool.uv] required-version below. Declared here so
     # `uv sync` reinstalls it into .venv instead of pruning it — an undeclared
     # .venv/bin/uv gets removed by the first sync, after which no uv on the
@@ -101,7 +101,7 @@ testpaths = ["src/core/tests", "src/shared/tests"]
 pythonpath = ["src/core", "src/shared"]
 
 [tool.ruff]
-required-version = "0.16.2"
+required-version = "0.16.3"
 line-length = 142
 target-version = "py313"
 fix = true

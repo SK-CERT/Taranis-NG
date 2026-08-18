@@ -48,15 +48,15 @@ repos:
       # SKIPS when its tooling is absent (CI adds --require to make that fatal instead).
       - id: ansible-tests
         name: Ansible syntax check and lint
-        entry: python3 scripts/run_tests.py --suite ansible
-        language: system
+        entry: scripts/run_tests.py --suite ansible
+        language: python
         pass_filenames: false
         files: ^(ansible/.*\.(yml|yaml|j2)|scripts/check_ansible_syntax\.py)$
         always_run: false
       - id: python-tests
         name: Python unit tests (pytest)
-        entry: python3 scripts/run_tests.py --suite pytest
-        language: system
+        entry: scripts/run_tests.py --suite pytest
+        language: python
         pass_filenames: false
         files: ^src/(core|shared|bots|collectors|presenters|publishers)/.*\.py$
         always_run: false
