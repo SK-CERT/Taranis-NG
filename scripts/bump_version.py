@@ -33,8 +33,18 @@ VERSION_RE = re.compile(r"^\d{2}\.\d{2}\.\d+$")
 
 SERVICE_DIRS = ["src/bots", "src/collectors", "src/core", "src/presenters", "src/publishers"]
 
+# Services that carry a [project] version and pin taranis-ng-shared, but have no uv.lock
+# of their own: public-web installs straight from its pyproject in Dockerfile.public-web.
+# Kept out of UV_LOCK_DIRS below - `uv lock` there would create a lockfile the image does
+# not use - but they must still be version-bumped, or their pin silently goes stale.
+LOCKLESS_SERVICE_DIRS = ["src/public_web"]
+
 # All pyproject.toml files carrying a [project] version; services also pin taranis-ng-shared.
-PYPROJECT_FILES = ["pyproject.toml", "src/shared/pyproject.toml", *(f"{d}/pyproject.toml" for d in SERVICE_DIRS)]
+PYPROJECT_FILES = [
+    "pyproject.toml",
+    "src/shared/pyproject.toml",
+    *(f"{d}/pyproject.toml" for d in (*SERVICE_DIRS, *LOCKLESS_SERVICE_DIRS)),
+]
 
 # npm projects: package.json plus the root-package version fields in package-lock.json.
 NPM_DIRS = ["src/gui", "src/gui-v3"]

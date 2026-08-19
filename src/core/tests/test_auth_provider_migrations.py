@@ -62,7 +62,15 @@ def test_auth_migrations_extend_the_current_head_in_three_steps() -> None:
         elif parent:
             referenced_revisions.update(parent)
 
-    assert revisions - referenced_revisions == {"a6b7c8d9e0f1"}
+    # Exactly one head. What matters is the count, not which revision holds it: a
+    # second head breaks `alembic upgrade head` outright, while the head itself moves
+    # with every feature that adds a migration. Naming it here made this auth test fail
+    # for unrelated features, so the invariant is asserted directly.
+    heads = revisions - referenced_revisions
+    assert len(heads) == 1, f"expected a single Alembic head, found {sorted(heads)}"
+
+    # The auth chain must still be part of that single line of descent.
+    assert {"e3f9d1a7c8b5", "4c8e1f7a2b90", "a6b7c8d9e0f1"} <= revisions
 
 
 def test_schema_upgrade_is_deterministic_and_schema_only() -> None:

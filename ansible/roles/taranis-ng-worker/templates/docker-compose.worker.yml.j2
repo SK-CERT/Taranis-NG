@@ -6,7 +6,13 @@
 # One Traefik fronts ALL worker_types on this host. Each worker_type service
 # has its own Traefik router keyed on the per-type subdomain
 # (<type>.<worker_base_hostname>), so Core reaches each worker_type at
-# https://<type>.<worker_base_hostname>/.
+# https://<type>.<worker_base_hostname>:{{ worker_api_port }}/.
+#
+# Two exposure classes, two entrypoints. The worker API answers on
+# `api` ({{ worker_api_port }}), which a firewall restricts to the Core host;
+# public-web's own webs answer on `websecure` (443), which must stay open to the
+# world. They cannot share a port: Host-header routing is invisible to a packet
+# filter, so one port carrying both admits everybody or nobody.
 #
 # This is a per-host compose; it is separate from the all-in-one
 # docker/docker-compose.yml used on the Core host.
@@ -33,14 +39,34 @@ services:
       - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.api.address=:{{ worker_api_port }}"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.http.tls=true"
+      - "--entrypoints.api.http.tls=true"
+{% if "public-web" in worker_types %}
+      # This host's public webs, their certificates and the security-headers
+      # middleware, scoped to THIS node and authenticated with its own api_key.
+      - "--providers.http.endpoint={{ core_satellite_url }}/traefik/dynamic/node"
+      - "--providers.http.pollinterval=10s"
+      - "--providers.http.headers.Authorization=ApiKey {{ worker_effective_api_keys['public-web'] }}"
+{% endif %}
 {% endif %}
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+      # The API Core calls. Published with NO host address when it should listen
+      # everywhere, exactly like 80 and 443 above, because naming one pins the mapping
+      # to that address FAMILY: "0.0.0.0:8443:8443" is IPv4 only, leaving every
+      # hostname with an AAAA record unreachable here - as a timeout, not a refusal,
+      # which reads like a routing fault. Naming a real address is single-family too,
+      # which is the point of worker_api_bind: one address on one interface.
+{% if worker_api_bind in ["0.0.0.0", "::", ""] %}
+      - "{{ worker_api_port }}:{{ worker_api_port }}"
+{% else %}
+      - "{{ worker_api_bind }}:{{ worker_api_port }}:{{ worker_api_port }}"
+{% endif %}
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 {% if worker_tls_mode == "acme" %}
@@ -68,7 +94,7 @@ services:
     image: "{{ worker_image_prefix }}{{ worker_type }}:{{ taranis_ng_tag }}"
     restart: unless-stopped
     environment:
-      TARANIS_NG_CORE_URL: "{{ core_url }}"
+      TARANIS_NG_CORE_URL: "{{ core_satellite_url }}"
 {% if worker_type == "bots" %}
       TARANIS_NG_CORE_SSE: "{{ core_sse_url }}"
 {% endif %}
@@ -95,14 +121,30 @@ services:
         target: api_key
     labels:
       - "traefik.enable=true"
+      # The API Core calls, on the restricted entrypoint. Same subdomain as
+      # before, different port - it is what this node's api_url points at.
       - "traefik.http.routers.{{ worker_type }}.rule=Host(`{{ worker_type }}.{{ worker_base_hostname }}`)"
-      - "traefik.http.routers.{{ worker_type }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ worker_type }}.entrypoints=api"
 {% if worker_tls_mode == "acme" %}
-      - "traefik.http.routers.{{ worker_type }}.tls.certresolver=myresolver"
+      - "traefik.http.routers.{{ worker_type }}.tls.certresolver={{ worker_acme_resolver_name }}"
 {% else %}
       - "traefik.http.routers.{{ worker_type }}.tls=true"
 {% endif %}
       - "traefik.http.services.{{ worker_type }}.loadbalancer.server.port=80"
+{% if worker_type == "public-web" %}
+      # The public side. Every configured web gets its own Host() router from
+      # core's provider; this is the catch-all beneath them, at the lowest
+      # priority, so an unconfigured hostname still reaches the app and gets a
+      # clean 404 instead of a Traefik error page.
+      - "traefik.http.routers.{{ worker_type }}-public.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.{{ worker_type }}-public.entrypoints=websecure"
+      - "traefik.http.routers.{{ worker_type }}-public.priority=1"
+      - "traefik.http.routers.{{ worker_type }}-public.tls=true"
+      # @file, not @http: the fallback has to keep working when core is
+      # unreachable, which is exactly when the node is serving from its cache.
+      - "traefik.http.routers.{{ worker_type }}-public.middlewares=public-web-security-headers@file"
+      - "traefik.http.routers.{{ worker_type }}-public.service={{ worker_type }}"
+{% endif %}
     networks:
       - worker_net
     logging:

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from http import HTTPStatus
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -10,11 +12,15 @@ from auth import oauth2_authenticator
 from auth.oauth2_authenticator import OAuth2Authenticator
 from auth.url_guard import MAX_JSON_BYTES, OUTBOUND_TIMEOUT, assert_auth_endpoint_url, fetch_auth_json, read_limited_json
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 
 class FakeResponse:
     """Minimal streaming requests response used by the outbound guard tests."""
 
     def __init__(self, body: bytes = b"{}", *, status_code: int = 200, headers: dict | None = None) -> None:
+        """Build a response with the given body, status and headers."""
         self.body = body
         self.status_code = status_code
         self.headers = headers or {}
@@ -23,18 +29,22 @@ class FakeResponse:
         self.closed = False
 
     def raise_for_status(self) -> None:
-        if self.status_code >= 400:
-            raise RuntimeError(f"HTTP {self.status_code}")
+        """Raise for a 4xx/5xx status, as requests does."""
+        if self.status_code >= HTTPStatus.BAD_REQUEST:
+            msg = f"HTTP {self.status_code}"
+            raise RuntimeError(msg)
 
-    def iter_content(self, chunk_size: int):
+    def iter_content(self, chunk_size: int) -> Iterator[bytes]:
+        """Yield the body in chunks, as a streamed response does."""
         for offset in range(0, len(self.body), chunk_size):
             yield self.body[offset : offset + chunk_size]
 
     def close(self) -> None:
+        """Record that the caller released the connection."""
         self.closed = True
 
 
-def _provider(kind: str = "oauth2", **config) -> SimpleNamespace:
+def _provider(kind: str = "oauth2", **config: str) -> SimpleNamespace:
     defaults = {
         "authorize_url": "https://login.example.test/authorize",
         "token_url": "https://login.example.test/token",
@@ -49,6 +59,7 @@ def _provider(kind: str = "oauth2", **config) -> SimpleNamespace:
         kind=kind,
         config=defaults,
         updated_at="marker",
+        secret="encrypted-secret",
         get_secret_plaintext=lambda: "secret",
     )
 
@@ -62,7 +73,7 @@ def test_private_https_auth_endpoint_remains_compatible() -> None:
     ["http://idp.example.test/token", "https://user:pass@idp.example.test/token", "https://idp.example.test/token#fragment"],
 )
 def test_insecure_auth_endpoint_is_rejected(url: str) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="authentication endpoint"):
         assert_auth_endpoint_url(url)
 
 
@@ -75,7 +86,7 @@ def test_auth_json_fetch_disables_redirects_sets_timeouts_and_closes() -> None:
     response = FakeResponse(b'{"issuer":"https://idp.example.test"}')
     calls: list[tuple[str, dict]] = []
 
-    def request_get(url: str, **kwargs) -> FakeResponse:
+    def request_get(url: str, **kwargs: object) -> FakeResponse:
         calls.append((url, kwargs))
         return response
 
@@ -128,7 +139,7 @@ def test_plain_authorization_url_uses_the_verifier_as_an_explicit_legacy_challen
     assert query["code_challenge"] == [verifier]
 
 
-def test_oidc_discovery_requires_matching_issuer(monkeypatch) -> None:
+def test_oidc_discovery_requires_matching_issuer(monkeypatch: pytest.MonkeyPatch) -> None:
     provider = _provider(kind="oidc", issuer_url="https://idp.example.test", pkce_method="S256")
     provider.config.pop("authorize_url")
     provider.config.pop("token_url")
@@ -149,18 +160,18 @@ def test_oidc_discovery_requires_matching_issuer(monkeypatch) -> None:
 
 
 @pytest.mark.parametrize("pkce_method", ["S256", "plain"])
-def test_token_exchange_disables_redirects_and_uses_bounded_timeout(monkeypatch, pkce_method: str) -> None:
+def test_token_exchange_disables_redirects_and_uses_bounded_timeout(monkeypatch: pytest.MonkeyPatch, pkce_method: str) -> None:
     calls: dict[str, object] = {}
 
     class FakeSession:
-        def __init__(self, *_args, **_kwargs) -> None:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
             pass
 
-        def fetch_token(self, url: str, **kwargs) -> dict:
+        def fetch_token(self, url: str, **kwargs: object) -> dict:
             calls["token"] = (url, kwargs)
             return {"access_token": "token"}
 
-        def get(self, url: str, **kwargs) -> FakeResponse:
+        def get(self, url: str, **kwargs: object) -> FakeResponse:
             calls["userinfo"] = (url, kwargs)
             return FakeResponse(b'{"preferred_username":"alice","id":"stable-id"}')
 

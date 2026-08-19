@@ -1,0 +1,28 @@
+[project]
+name = "TARANIS-NG-public-web"
+version = "26.05.1"
+description = "Taranis-NG Public Web service."
+requires-python = ">=3.10"
+dependencies = [
+    "bleach[css]==6.4.0",
+    "cachelib==0.14.0",
+    "cvss==3.6",
+    "envelope==2.3.1",
+    "feedgen==1.0.0",
+    "Flask==3.1.3",
+    "gevent==26.5.0",
+    "gunicorn==26.0.0",
+    "packaging==26.2",
+    "requests==2.34.2",
+    "taranis-ng-shared==26.05.1"
+]
+
+[build-system]
+requires = ["setuptools>=82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+# Run from src/public_web (scripts/run_tests.py cds here). These tests read the
+# templates and catalogs as files and import nothing from the app, so the service's
+# own dependencies are not needed to run them.
+testpaths = ["tests"]

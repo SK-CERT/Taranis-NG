@@ -21,6 +21,12 @@ entryPoints:
   websecure:
     address: ":443"
     http3: {}
+  # The worker API, kept off 443 so a firewall can admit only the Core host
+  # while 443 stays world-open for public-web's own hostnames. ACME is
+  # unaffected: challenges are answered on :80 (HTTP-01) or :443 (TLS-ALPN-01)
+  # whichever entrypoint ends up serving the router, so :80 must stay reachable.
+  api:
+    address: ":{{ worker_api_port }}"
   traefik:
     address: ":9090"
 
@@ -37,9 +43,21 @@ providers:
   file:
     directory: /etc/traefik/dynamic
     watch: true
+{% if "public-web" in worker_types %}
+  # This host's public webs: a router per hostname, their certificates and the
+  # security-headers middleware, served by core. Scoped to THIS node and
+  # authenticated with its own api_key - the unscoped /traefik/dynamic carries
+  # every node's webs and the private keys inlined beside them, and is not
+  # published.
+  http:
+    endpoint: "{{ core_satellite_url }}/traefik/dynamic/node"
+    pollInterval: "10s"
+    headers:
+      Authorization: "ApiKey {{ worker_effective_api_keys['public-web'] }}"
+{% endif %}
 
 certificatesResolvers:
-  myresolver:
+  {{ worker_acme_resolver_name }}:
     acme:
       email: "{{ worker_acme_email }}"
       storage: /letsencrypt/acme.json

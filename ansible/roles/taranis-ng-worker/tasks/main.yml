@@ -95,6 +95,20 @@
   register: worker_api_keys_slurp
   no_log: true
 
+# The keys the templates need, keyed by worker_type. NOT worker_api_keys: that
+# holds only PRE-SUPPLIED keys and is empty on the normal path, where the role
+# generates them. Built from the slurp above, so it reflects whichever key the
+# container is actually running with - generated, supplied or pre-existing.
+- name: "Resolve the effective per-type API keys for templating"
+  ansible.builtin.set_fact:
+    worker_effective_api_keys: >-
+      {{ worker_effective_api_keys | default({})
+         | combine({item.worker_type_item: (item.content | b64decode | trim)}) }}
+  loop: "{{ worker_api_keys_slurp.results }}"
+  loop_control:
+    label: "{{ item.worker_type_item }}"
+  no_log: true
+
 # copy does not create missing parent directories.
 - name: "Ensure the control-host staging directory exists"
   ansible.builtin.file:
@@ -222,6 +236,25 @@
     mode: "0644"
   notify: "Restart worker compose"
 
+# The catch-all router on a public-web host names this middleware, and Traefik
+# disables a router whose middleware is missing - so the whole public side of the
+# node would go dark without it. Only tls.options/tls.stores are barred from this
+# directory (they are not namespaced per provider); a middleware is fine.
+- name: "Ship the public-web security-headers fallback"
+  ansible.builtin.copy:
+    src: "{{ worker_fallback_src }}"
+    dest: "{{ worker_tls_dynamic_dir }}/fallback.yml"
+    mode: "0644"
+  when: "'public-web' in worker_types"
+  notify: "Restart worker compose"
+
+- name: "Remove the public-web fallback when the host no longer serves one"
+  ansible.builtin.file:
+    path: "{{ worker_tls_dynamic_dir }}/fallback.yml"
+    state: absent
+  when: "'public-web' not in worker_types"
+  notify: "Restart worker compose"
+
 # ACME issues certificates into its own storage volume, so a stale certs.yml
 # left over from a previous selfsigned run would keep overriding them.
 - name: "Remove the non-ACME dynamic TLS configuration when using ACME"
@@ -274,11 +307,18 @@
   notify: "Restart worker compose"
 
 # ---------------------------------------------------------------------------
-# Step 3c — local firewall. Traefik needs 80/443; on the RedHat family
-# firewalld is enabled by default and silently blackholes both, which looks
-# exactly like a DNS or routing problem from Core's side.
+# Step 3c — local firewall. Traefik needs 80/443 and the API port; on the RedHat
+# family firewalld is enabled by default and silently blackholes them, which
+# looks exactly like a DNS or routing problem from Core's side.
+#
+# The API port is opened here even though a published container port is usually said
+# to bypass the host firewall, because that is only true over IPv4 - Docker ships with
+# ip6tables management off, so IPv6 has no DNAT rule and reaches the container through
+# the userland proxy in the HOST namespace, traversing INPUT like any host service.
+# Closed, every AAAA name times out on this port. host_vars/worker.example.yml has the
+# operator-facing version, including what it means for restricting the port.
 # ---------------------------------------------------------------------------
-- name: "Open the worker HTTP/HTTPS ports"
+- name: "Open the worker HTTP/HTTPS and API ports"
   when: worker_open_firewall | bool
   block:
     - name: "Collect service state"
@@ -296,13 +336,22 @@
       when: >-
         ansible_facts.services['firewalld.service'].state | default('') == 'running'
 
+    - name: "Open the API port in firewalld"
+      ansible.posix.firewalld:
+        port: "{{ worker_api_port }}/tcp"
+        permanent: true
+        immediate: true
+        state: enabled
+      when: >-
+        ansible_facts.services['firewalld.service'].state | default('') == 'running'
+
     - name: "Check whether ufw is running"
       ansible.builtin.command: "ufw status"
       register: worker_ufw_state
       changed_when: false
       failed_when: false
 
-    - name: "Open ports 80/443 in ufw"
+    - name: "Open ports 80/443 and the API port in ufw"
       community.general.ufw:
         rule: allow
         port: "{{ item }}"
@@ -310,6 +359,7 @@
       loop:
         - "80"
         - "443"
+        - "{{ worker_api_port }}"
       # The defaults cover ufw not being installed at all.
       when:
         - worker_ufw_state.rc | default(1) == 0
@@ -344,22 +394,44 @@
 
 # ---------------------------------------------------------------------------
 # Step 5 — wait for each worker_type's Traefik router to be reachable.
-# Probe every per-type subdomain — each gets its own cert via the ACME
-# resolver, and the first probe (TLS-ALPN-01 especially) may take a few
-# seconds while Traefik negotiates with the CA.
+# Probe every per-type subdomain: Traefik routes by Host(), so one type
+# answering proves nothing about the others.
 #
-# isalive is the one endpoint every worker type answers with a GET and no auth
-# (/api/v1/collectors is POST-only, so a GET there returns 405).
+# isalive is the one endpoint every worker type answers with a plain GET
+# (/api/v1/collectors is POST-only, so a GET there returns 405). It is
+# authenticated like the rest of the worker API, and it answers on the API port,
+# not 443 - 443 belongs to public-web's own hostnames.
+#
+# Deliberately does NOT validate the certificate. This task asks one question -
+# "is Traefik up and routing this hostname to its container" - and a chain it
+# cannot verify is a different problem with a different fix, checked separately
+# below. Verifying here made every certificate problem report itself as a dead
+# worker, after burning the full retry budget per type, with `no_log` censoring
+# which hostname was even at fault.
 # ---------------------------------------------------------------------------
 - name: "Wait for each worker_type's HTTPS router"
   ansible.builtin.uri:
-    url: "https://{{ item }}.{{ worker_base_hostname }}/api/v1/isalive"
+    url: "https://{{ item }}.{{ worker_base_hostname }}:{{ worker_api_port }}/api/v1/isalive"
     method: GET
-    validate_certs: "{{ worker_tls_mode != 'selfsigned' }}"
+    headers:
+      Authorization: "ApiKey {{ worker_effective_api_keys[item] }}"
+    validate_certs: false
     status_code: [200]
     return_content: false
+  no_log: true
   loop: "{{ worker_types }}"
   register: worker_health_checks
   until: worker_health_checks.status == 200
   retries: 15
   delay: 3
+
+# ---------------------------------------------------------------------------
+# Step 6 — wait for each worker_type's certificate, before Core is asked to
+# probe the same hostnames during node registration.
+#
+# Non-fatal here on purpose; the verdict is asserted by the playbook after
+# registration, so a type still waiting on a CA cannot stop the types that are
+# ready from being registered. See wait_for_trust.yml.
+# ---------------------------------------------------------------------------
+- name: "Wait for each worker_type to serve a verifiable certificate"
+  ansible.builtin.import_tasks: wait_for_trust.yml

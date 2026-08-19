@@ -67,11 +67,20 @@ export const configLinks: GroupNavItem[] = [
         translate: true
     },
     {
+        id: 13,
+        icon: 'mdi-web',
+        title: 'nav_menu.public_web',
+        route: '/config/public-web',
+        permission: 'CONFIG_PUBLIC_WEB_NODE_ACCESS',
+        translate: true
+    },
+    {
         id: 9,
         icon: 'mdi-application-cog-outline',
         title: 'nav_menu.settings',
         route: '/config/settings',
-        permission: 'CONFIG_SETTINGS_ACCESS',
+        // Either tab of the view is reason enough to show the entry.
+        permissions: ['CONFIG_SETTINGS_ACCESS', 'CONFIG_TRAEFIK_ACCESS'],
         translate: true
     },
     {

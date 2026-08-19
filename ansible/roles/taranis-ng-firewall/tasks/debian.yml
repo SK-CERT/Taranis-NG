@@ -44,6 +44,18 @@
         proto: udp
       loop: "{{ firewall_allowed_udp_ports }}"
 
+    # One rule per (port, source) pair: ufw takes a single address per rule, and
+    # a rule with no `src` would open the port to everybody.
+    - name: "Allow restricted inbound TCP ports from their permitted sources only"
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.0.port }}"
+        proto: tcp
+        src: "{{ item.1 }}"
+      loop: "{{ firewall_restricted_tcp_ports | subelements('sources') }}"
+      loop_control:
+        label: "{{ item.0.port }} from {{ item.1 }}"
+
     - name: "Deny everything else inbound"
       community.general.ufw:
         default: deny

@@ -11,6 +11,32 @@ const settingsStore = useSettingsStore()
 const configStore = useConfigStore()
 const assessStore = useAssessStore()
 
+// Input types that do not accept typed characters, so a shortcut may still fire
+// while one has focus. Everything else - text, password, email, number, search,
+// tel, url, date... - swallows the keystroke. The list is deliberately of what
+// is *safe* rather than of what types: an input type nobody thought of must not
+// silently leak keystrokes into the shortcut handler, which is how a password
+// field came to trigger shortcuts (users could not type Shift+J into one).
+const NON_TYPING_INPUT_TYPES = new Set(['button', 'checkbox', 'color', 'file', 'hidden', 'image', 'radio', 'range', 'reset', 'submit'])
+
+/**
+ * Tell whether the element being typed into should swallow keyboard shortcuts.
+ *
+ * Exported for the unit tests; the composable reads `document.activeElement`.
+ */
+export function isTypingTarget(element: Element | null): boolean {
+    if (!element) return false
+
+    if (element.tagName === 'INPUT') {
+        return !NON_TYPING_INPUT_TYPES.has((element as HTMLInputElement).type)
+    }
+    if (element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') return true
+
+    // Covers rich text editors (Quill's .ql-editor among them), including a
+    // focused descendant of a contenteditable container.
+    return (element as HTMLElement).isContentEditable === true
+}
+
 interface Shortcut {
     key: string
     alias: HotkeyActionType
@@ -185,21 +211,7 @@ export function useKeyboard(targetId: string, router: Router) {
     }
 
     function isInputFieldFocused(): boolean {
-        const activeElement = document.activeElement
-
-        if (!activeElement) return false
-
-        // Check for text input/textarea
-        if (activeElement.tagName === 'INPUT') {
-            const inputElement = activeElement as HTMLInputElement
-            if (inputElement.type === 'text') return true
-        }
-        if (activeElement.tagName === 'TEXTAREA') return true
-
-        // Check for rich text editor
-        if ((activeElement as HTMLElement).classList?.contains('ql-editor')) return true
-
-        return false
+        return isTypingTarget(document.activeElement)
     }
 
     function groupPosition(direction: boolean): void {

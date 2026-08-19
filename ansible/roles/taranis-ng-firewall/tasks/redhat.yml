@@ -51,6 +51,19 @@
         state: enabled
       loop: "{{ firewall_allowed_udp_ports }}"
 
+    # A rich rule rather than a plain port: firewalld's `port:` has no source, so
+    # it would open the port to the whole zone. One rule per (port, source) pair.
+    - name: "Allow restricted inbound TCP ports from their permitted sources only"
+      ansible.posix.firewalld:
+        zone: "{{ firewall_zone }}"
+        rich_rule: "rule family='ipv4' source address='{{ item.1 }}' port port='{{ item.0.port }}' protocol='tcp' accept"
+        permanent: true
+        immediate: "{{ firewall_enable | bool }}"
+        state: enabled
+      loop: "{{ firewall_restricted_tcp_ports | subelements('sources') }}"
+      loop_control:
+        label: "{{ item.0.port }} from {{ item.1 }}"
+
     # A stock public zone permits services such as ssh, cockpit and
     # dhcpv6-client. The policy is "only the listed ports", and those ports are
     # opened above by number, so the service entries are removed rather than

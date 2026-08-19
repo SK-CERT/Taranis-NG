@@ -12,12 +12,12 @@
       - worker_types | length > 0
     fail_msg: >-
       worker_types must be set to a non-empty list of worker types
-      (collectors, bots, presenters, publishers) — define it in
+      (collectors, bots, presenters, publishers, public-web) — define it in
       host_vars/<host>.yml.
 
 - name: "Validate each worker_type entry"
   ansible.builtin.assert:
-    that: item in ['collectors', 'bots', 'presenters', 'publishers']
+    that: item in ['collectors', 'bots', 'presenters', 'publishers', 'public-web']
     fail_msg: "worker_types contains an unknown type: {{ item }}"
   loop: "{{ worker_types }}"
 
@@ -26,7 +26,7 @@
 # and registered in Core as a node nothing can reach.
 - name: "Validate worker_base_hostname is not already prefixed with a worker type"
   ansible.builtin.assert:
-    that: worker_base_hostname.split('.')[0] not in ['collectors', 'bots', 'presenters', 'publishers']
+    that: worker_base_hostname.split('.')[0] not in ['collectors', 'bots', 'presenters', 'publishers', 'public-web']
     fail_msg: >-
       worker_base_hostname is '{{ worker_base_hostname }}', whose first label is
       already a worker type. The per-type FQDN would become

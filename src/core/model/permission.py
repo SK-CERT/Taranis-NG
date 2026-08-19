@@ -1,9 +1,11 @@
 """Permission model module."""
 
-from managers.db_manager import db
-from sqlalchemy import or_
+from typing import Any
 
+from managers.db_manager import db
 from shared.schema.role import PermissionSchema
+from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 
 
 class Permission(db.Model):
@@ -20,20 +22,19 @@ class Permission(db.Model):
     description = db.Column(db.String())
 
     @classmethod
-    def find(cls, permission_id):
+    def find(cls, permission_id: str) -> "Permission | None":
         """Retrieve a permission record from the database by its ID.
 
         Args:
-            permission_id (int): The ID of the permission to retrieve.
+            permission_id (str): The ID of the permission to retrieve.
 
         Returns:
-            Permission: The permission object if found, otherwise None.
+            Permission | None: The permission object if found, otherwise None.
         """
-        permission = db.session.get(cls, permission_id)
-        return permission
+        return db.session.get(cls, permission_id)
 
     @classmethod
-    def add(cls, id, name, description):
+    def add(cls, id: str, name: str, description: str) -> None:  # noqa: A002
         """Add a new permission to the database.
 
         Args:
@@ -51,26 +52,32 @@ class Permission(db.Model):
         else:
             permission.name = name
             permission.description = description
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # Another process (e.g. the scheduler vs. a gunicorn worker during
+            # the first boot after an upgrade) inserted the same permission
+            # concurrently; theirs is identical, so keep it.
+            db.session.rollback()
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list["Permission"]:
         """Retrieve all permissions from the database.
 
         Returns:
-            list: A list of all permissions in the database.
+            list[Permission]: A list of all permissions in the database.
         """
         return cls.query.order_by(db.asc(Permission.id)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str | None) -> tuple[list["Permission"], int]:
         """Retrieve all permissions from the database.
 
         Args:
-            search (str): The search string to filter the permissions by.
+            search (str | None): The search string to filter the permissions by.
 
         Returns:
-            list: A list of all permissions in the database.
+            tuple[list[Permission], int]: A tuple containing a list of permissions and total count.
         """
         query = cls.query
 
@@ -81,14 +88,14 @@ class Permission(db.Model):
         return query.order_by(db.asc(Permission.id)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str | None) -> dict[str, Any]:
         """Retrieve all permissions from the database as JSON.
 
         Args:
-            search (str): The search string to filter the permissions by.
+            search (str | None): The search string to filter the permissions by.
 
         Returns:
-            dict: A dictionary containing the total count of permissions and a list of permissions.
+            dict[str, Any]: A dictionary containing the total count of permissions and a list of permissions.
         """
         permissions, count = cls.get(search)
         permissions_schema = PermissionSchema(many=True)

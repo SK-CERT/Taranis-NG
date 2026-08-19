@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+
     import Flask
     from shared.time_manager import SchedulerManager
 
@@ -32,6 +35,7 @@ from flask import request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
 from flask_jwt_extended.exceptions import JWTExtendedException
 from managers import log_manager, totp_manager, webauthn_manager
+from managers.db_manager import db
 from model.apikey import ApiKey
 from model.auth_provider import FORM_KINDS, OAUTH_KINDS, AuthProvider, UserAuthIdentity
 from model.bots_node import BotsNode
@@ -40,6 +44,7 @@ from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
 from model.product_type import ProductType
+from model.public_web_node import PublicWebNode
 from model.publishers_node import PublishersNode
 from model.remote import RemoteAccess
 from model.report_item import ReportItem
@@ -413,6 +418,52 @@ def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[d
     (pending/active) when the optional domain filter passes and the username
     is free.
 
+    Nothing is left behind when this fails: a login that errors out anywhere
+    after the account is written rolls the transaction back, so a provider that
+    is misconfigured today cannot block the same person from being provisioned
+    once it is fixed.
+
+    Args:
+        provider (AuthProvider): The provider the subject authenticated against.
+        identity (ExternalIdentity): The externally authenticated identity.
+
+    Returns:
+        tuple: The login response.
+    """
+    try:
+        return _provision_and_issue_jwt(provider, identity)
+    except Exception as ex:
+        db.session.rollback()
+        log_manager.store_auth_error_activity(f"Provisioning of '{identity.username}' via provider '{provider.name}' failed", ex)
+        return BaseAuthenticator.generate_error()
+
+
+def _is_orphaned_account(user: User) -> bool:
+    """Tell whether an account holds no credential that could ever log into it.
+
+    An orphan is left behind when the provider that created it is deleted (which
+    removes its identity links) or when a user's identities are cleared: the row
+    survives with no way in, and the username collision check then refuses to
+    provision the same person ever again. Linking such an account to the provider
+    takes it away from nobody, which is what makes the adoption safe.
+
+    Every credential that alone grants entry counts, not just the password: a
+    passkey is a passwordless login on its own, so an account holding one belongs
+    to somebody and must still be reported as a collision. TOTP is deliberately
+    not counted - it is only ever a second factor.
+
+    Args:
+        user (User): The existing account whose username the identity collides with.
+
+    Returns:
+        bool: True when nothing can log into the account.
+    """
+    return not (user.password or user.auth_identities or user.webauthn_credentials)
+
+
+def _provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[dict, HTTPStatus]:
+    """Resolve the identity and issue the JWT (see :func:`provision_and_issue_jwt`).
+
     Args:
         provider (AuthProvider): The provider the subject authenticated against.
         identity (ExternalIdentity): The externally authenticated identity.
@@ -445,14 +496,23 @@ def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[d
                 "DOMAIN_NOT_ALLOWED",
             )
 
-    if User.find(identity.username):
-        log_manager.store_auth_error_activity(
-            f"Provisioning of '{identity.username}' via provider '{provider.name}' collides with an existing username",
+    existing = User.find(identity.username)
+    if existing:
+        if not _is_orphaned_account(existing):
+            log_manager.store_auth_error_activity(
+                f"Provisioning of '{identity.username}' via provider '{provider.name}' collides with an existing username",
+            )
+            return BaseAuthenticator.generate_error_code(
+                "An account with this username already exists. Ask your administrator to link this identity to it.",
+                "USERNAME_COLLISION",
+            )
+        user = User.adopt_external(provider, existing, identity.username, identity.name, identity.email, identity.external_id)
+        log_manager.store_user_activity(
+            user,
+            "PROVISION",
+            f"Orphaned account re-provisioned via auth provider '{provider.name}' with status '{user.status}'",
         )
-        return BaseAuthenticator.generate_error_code(
-            "An account with this username already exists. Ask your administrator to link this identity to it.",
-            "USERNAME_COLLISION",
-        )
+        return _finalize_login(provider, user)
 
     user = User.provision_external(provider, identity.username, identity.name, identity.email, identity.external_id)
     log_manager.store_user_activity(user, "PROVISION", f"Auto-created via auth provider '{provider.name}' with status '{user.status}'")
@@ -939,7 +999,7 @@ def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set | None:
         return None
 
 
-def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> tuple[dict, HTTPStatus]:
+def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Check if the user has the required permissions and ACL access.
 
     Args:
@@ -1005,7 +1065,7 @@ def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> tupl
     return auth_required_wrap
 
 
-def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
+def api_key_required(key_type: str | None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Enforce API key authentication with additional resource type parameter.
 
     Args:
@@ -1042,6 +1102,8 @@ def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
                 master_class = BotsNode
             elif key_type == "remote":
                 master_class = RemoteAccess
+            elif key_type == "public_web":
+                master_class = PublicWebNode
             else:
                 log_manager.store_auth_error_activity(f"Incorrect validation type: {key_type}")
                 return error
@@ -1071,7 +1133,7 @@ def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
     return decorator
 
 
-def jwt_token_required(fn) -> tuple[dict, HTTPStatus]:  # noqa: ANN001
+def jwt_token_required(fn: Callable[..., Any]) -> Callable[..., Any]:
     """Check if a valid JWT is present in the request headers.
 
     Args:

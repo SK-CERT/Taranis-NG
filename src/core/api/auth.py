@@ -5,6 +5,7 @@ import uuid
 from http import HTTPStatus
 
 from auth import saml_authenticator, saml_federation
+from auth.base_authenticator import ProviderConfigurationError
 from config import Config
 from flask import Response, make_response, redirect
 from flask_jwt_extended import get_jwt
@@ -376,7 +377,14 @@ class OAuthCallback(Resource):
             return _login_error_redirect(goto_url, "auth_failed")
 
         redirect_uri = _oauth_redirect_uri(provider_slug, authenticator.config)
-        identity = authenticator.handle_callback(redirect_uri, code, state.get("nonce"), code_verifier=state.get("code_verifier"))
+        try:
+            identity = authenticator.handle_callback(redirect_uri, code, state.get("nonce"), code_verifier=state.get("code_verifier"))
+        except ProviderConfigurationError:
+            # The identity provider refused this service's own credentials. Say so
+            # rather than blaming the person logging in - they cannot fix it, and
+            # an administrator reading "authentication failed" would not know to
+            # look at the login method. The detail stays in the audit log.
+            return _login_error_redirect(goto_url, "provider_misconfigured")
         if not identity:
             return _login_error_redirect(goto_url, "auth_failed")
 
