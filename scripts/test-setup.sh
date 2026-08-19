@@ -36,6 +36,13 @@ echo "Starting Taranis-NG backend services for E2E tests (project=taranis-e2e, c
 # down -v only ever wipes the E2E stack's own volumes (taranis-e2e_postgres_data etc.)
 # and cannot touch a production stack's taranis-ng_* volumes.
 cd "$COMPOSE_DIR"
+
+# The satellite API is authenticated, isalive included, so the readiness probes below
+# have to present the shared node key. Core's own /api/v1/isalive stays open - it backs
+# the container HEALTHCHECK and Playwright's webServer probe - so only the
+# collectors/presenters/publishers probes need this.
+E2E_API_KEY="$(cat "$COMPOSE_DIR/secrets/api_key.txt" 2>/dev/null || true)"
+E2E_AUTH_HEADER="Authorization: ApiKey ${E2E_API_KEY}"
 docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e down -v --remove-orphans >/dev/null 2>&1 || true
 
 # Start core, postgres, redis with localhost port exposure for the frontend dev server.
@@ -99,7 +106,7 @@ for service in collectors presenters publishers; do
   ready=0
   for i in {1..60}; do
     # 1) The service's own HTTP must be serving on its host port-forward.
-    if curl -sf "http://127.0.0.1:${port}/api/v1/isalive" > /dev/null 2>&1; then
+    if curl -sf -H "$E2E_AUTH_HEADER" "http://127.0.0.1:${port}/api/v1/isalive" > /dev/null 2>&1; then
       ready=1
     fi
     # 2) The CORE container must be able to resolve the service via Docker DNS and reach
@@ -109,7 +116,7 @@ for service in collectors presenters publishers; do
     #    seed test fires before DNS resolves, the node-add 500s with the misleading
     #    "Could not connect to <x> node." alert. Exec-ing a curl from core closes that gap.
     if [ "$ready" = "1" ]; then
-      if docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core curl -sf "http://${service}/api/v1/isalive" > /dev/null 2>&1; then
+      if docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core curl -sf -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" > /dev/null 2>&1; then
         echo "✓ $service is ready (isalive on :${port} AND core resolves http://${service})"
         break
       fi

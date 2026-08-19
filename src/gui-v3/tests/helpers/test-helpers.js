@@ -165,10 +165,15 @@ export async function fillField(page, fieldName, value) {
 
 /**
  * Save form in dialog
+ *
+ * Scoped to the visible dialog, not the page. A page-wide "Save" also matches any
+ * Save button on the view behind the overlay, which is a strict-mode violation the
+ * moment one exists — and until then it can silently click the wrong one.
+ *
  * @param {import('@playwright/test').Page} page - Playwright page object
  */
 export async function saveDialog(page) {
-    await page.getByRole('button', { name: 'Save' }).click()
+    await page.locator('.v-dialog:visible').getByRole('button', { name: 'Save' }).click()
 }
 
 /**

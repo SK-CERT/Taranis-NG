@@ -1,0 +1,57 @@
+---
+# The verdict on wait_for_trust.yml's probe. Split from it so the WAIT can run
+# before node registration while the FAILURE lands after it: core needs the
+# certificates in place to register a node at all, but a type whose certificate
+# never appears must not stop the other types from being registered.
+# A status of -1 means the request never became HTTP - here that is the TLS
+# handshake or the chain. Any real status code means trust was fine, whatever
+# the code was, so this deliberately does not care which.
+- name: "Fail with the hostnames whose certificate could not be verified"
+  ansible.builtin.assert:
+    that: untrusted | length == 0
+    fail_msg: |
+      worker_tls_mode is "{{ worker_tls_mode }}", but these hostnames served a
+      certificate this control host could not verify:
+      {% for check in untrusted %}
+        - {{ check.item }}.{{ worker_base_hostname }}:{{ worker_api_port }}
+          {{ check.msg | default('no detail reported') }}
+      {% endfor %}
+
+      Core verifies worker certificates too, so those worker types will register
+      and then never be reachable.
+
+      Slow issuance is ruled out: each name was given
+      {{ worker_trust_retries | int * worker_trust_delay | int }} seconds to appear.
+      Traefik is serving its own self-signed certificate for these names and is not
+      replacing it. The ACME log on the worker says which of the two applies:
+
+        ssh {{ inventory_hostname }} \
+          'sudo docker logs $(sudo docker ps -qf name=traefik) 2>&1 \
+           | grep -iE "acme|certificate|error" | tail -40'
+
+        - "domains are not whitelisted", "not authorized", or an order rejected at
+          creation: the ACME account is not approved for the name. A CA that
+          pre-validates domains against the account its EAB credential binds to
+          issues only for names already approved on the account behind
+          worker_acme_eab_kid, and each host's EAB kid is its OWN account - names
+          approved for Core do not carry over. Get these names approved, then
+          re-run. Note Traefik asks per worker_type, one Host() per router, so
+          partial approval fails partially.
+        - a challenge failure (timeout, 404 on /.well-known/acme-challenge, DNS):
+          reachability, not authorisation. With worker_acme_challenge "http", port
+          80 must be open to the world and the name must resolve publicly - the
+          certificate is used on {{ worker_api_port }}, but it is validated on 80.
+
+      If issuance is simply slower than the budget, raise worker_trust_retries.
+      For a "provided" cert from a private CA that Core trusts but this control
+      host does not, the check is a false alarm - set
+      worker_verify_public_trust: false for this host.
+  vars:
+    untrusted: >-
+      {{
+        worker_trust_checks.results | default([])
+        | rejectattr('skipped', 'defined')
+        | selectattr('status', 'defined')
+        | selectattr('status', 'le', 0)
+        | list
+      }}

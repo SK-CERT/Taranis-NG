@@ -18,9 +18,87 @@
 #   worker_types: ["collectors"]                      # one collectors node
 #   worker_types: ["collectors", "bots"]              # collectors + bots on one host
 #   worker_types: ["collectors", "bots", "presenters", "publishers"]  # full worker stack
+#   worker_types: ["public-web"]                      # a public report feed
 #
-# Each value must be one of: collectors, bots, presenters, publishers.
+# Each value must be one of: collectors, bots, presenters, publishers, public-web.
+#
+# public-web is the odd one out. The other four are private endpoints only Core
+# calls; a public web serves the INTERNET on its own hostnames, so that host
+# publishes 443 to the world as well as the Core-only API port below. Spell it
+# with the hyphen: it is what makes the node endpoint, the image name and the
+# subdomain all come out right.
 worker_types: ["collectors"]
+
+# Port the worker API listens on, and the one Core dials.
+#
+# Deliberately not 443. A host running public-web must publish 443 to the world
+# for the webs it serves, and Host-header routing is invisible to a packet
+# filter - so with both on one port there is no firewall rule that admits Core
+# and nobody else. On its own port the API can be restricted to the Core host
+# (see the taranis-ng-firewall role) while 443 stays open.
+#
+# Certificates are unaffected: ACME validates on 80 (HTTP-01) or 443
+# (TLS-ALPN-01), both world-open, whichever entrypoint ends up serving the
+# router. Keep 80 reachable or renewals fail ~30 days later.
+worker_api_port: 8443
+
+# Host address the API port is published on.
+#
+# 0.0.0.0 (every interface) is the default because Core is usually a different
+# machine on an unknown network. Note a host firewall narrows this over IPv6 only,
+# never over IPv4 - see the firewall step in tasks/main.yml for why.
+#
+# Set this to the host's private/VPN address when Core reaches it that way: the
+# listener then exists only there, which Docker does honour, and the port stops
+# being world-visible with no firewall rule involved. The alternative is a rule
+# in Docker's DOCKER-USER chain.
+#
+# Per host, so set it in host_vars/<host>.yml - see host_vars/worker.example.yml.
+worker_api_bind: "0.0.0.0"
+
+# After deploying, check that every per-type hostname serves a certificate this
+# control host can verify, and fail naming the ones that do not.
+#
+# On by default because Core verifies worker certificates (plain `requests`, no
+# `verify=` override), so an unverifiable chain is a node that registers and then
+# never works - much cheaper to catch here than to debug later.
+#
+# Set false when the certificates are trusted by Core but not by this control
+# host: worker_tls_mode "provided" with a private CA is the case that matters,
+# where the check is a false alarm rather than a finding. Skipped automatically
+# under "selfsigned", which can never satisfy it.
+worker_verify_public_trust: true
+
+# How long that check waits per hostname for a certificate to appear, as
+# retries x delay seconds. Default 3 minutes. Waiting is what separates "still being
+# issued" from "the CA refuses this name" - see wait_for_trust.yml.
+#
+# A name that will never be issued burns the full budget, so lower these when iterating
+# against a CA that is refusing names, and raise them for a CA slower than 3 minutes.
+worker_trust_retries: 18
+worker_trust_delay: 10
+
+# Name of the ACME resolver this worker's Traefik declares.
+#
+# Sent to core when the public-web node is registered, and core then names it in the
+# routers it serves back to this worker. The two MUST agree: a resolver name only means
+# something inside the Traefik that declares it, so a router naming one this worker does
+# not have makes Traefik disable ACME for it and serve its default certificate - the
+# hostname answers on the wrong certificate, with only a log line to say why.
+#
+# Changing it here changes both ends together, which is the point of it being one
+# variable rather than a literal in the templates.
+worker_acme_resolver_name: "myresolver"
+
+# Port on the Core host serving the satellite API and the per-node Traefik
+# provider - docker/.env TARANIS_NG_SATELLITE_PORT on that machine.
+core_satellite_port: 8443
+
+# The security-headers middleware shipped to a public-web worker, copied from the
+# Core stack's own copy rather than duplicated here so the two cannot drift. The
+# catch-all router names it "@file" because it has to survive core being
+# unreachable, which is precisely when the node is serving from its cache.
+worker_fallback_src: "{{ playbook_dir | dirname | dirname }}/docker/traefik/dynamic/fallback.yml"
 
 # Image tag — mirrors docker/.env TARANIS_NG_TAG.
 taranis_ng_tag: "latest"
@@ -49,8 +127,17 @@ worker_node_description: "Remote {{ worker_type }} node deployed via Ansible."
 # Operator MUST override — no safe default.
 core_url: ""
 
-# (bots only) Core SSE URL. Defaults to <core_url>/sse.
-core_sse_url: "{{ core_url }}/sse"
+# Core's base URL as a SATELLITE sees it - core_url plus the satellite port.
+#
+# core_url stays port-less because node registration uses the config API
+# (/api/v1/config/...), which is served on 443 alongside the GUI. The traffic
+# satellites generate - /api/v1/{collectors,bots,public-web} and /sse - is carved out
+# of that 443 router so its port can be restricted to worker hosts, so a worker calling
+# the port-less url for those prefixes gets a 404 from an otherwise healthy Core.
+core_satellite_url: "{{ core_url }}:{{ core_satellite_port }}"
+
+# (bots only) Core's SSE stream, on the satellite port with the rest.
+core_sse_url: "{{ core_satellite_url }}/sse"
 
 # ---------------------------------------------------------------------------
 # Worker API addressing
@@ -158,8 +245,9 @@ worker_selinux_mount_suffix: "{{ ',z' if ansible_facts['selinux'].status | defau
 # TLS policy (rendered to {{ worker_tls_dynamic_dir }}/tls-options.yml)
 # ---------------------------------------------------------------------------
 # Without this Traefik falls back to Go's defaults, which accept TLS 1.2 with
-# CBC suites such as ECDHE-ECDSA-AES128-SHA. Mirrors the Core stack's
-# docker/traefik/dynamic/tls.yml.example so both ends match.
+# CBC suites such as ECDHE-ECDSA-AES128-SHA. Mirrors the Core stack's own TLS
+# options, which core now serves to Traefik from Configuration -> Application
+# Settings -> Routing & TLS, so both ends match.
 
 # VersionTLS13 | VersionTLS12. TLS 1.3 defines no CBC suites, so the default
 # removes them by construction. Core reaches workers with python-requests on
