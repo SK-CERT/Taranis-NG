@@ -9,6 +9,38 @@ echo "Running migrations..."
 python db_migration.py
 echo "Migrations are done."
 
+echo "Reading API key from file..."
+API_KEY=$(cat "/run/secrets/api_key")
+
+# The public-web feed is optional (compose profile "public-web"), so unlike the
+# collector and bot nodes its default node is only seeded when the service is
+# actually part of this deployment. Seeding it regardless would put a node in
+# Configuration -> Public Web that nothing backs: it can never be reached, and
+# core would keep dialling a host that does not resolve.
+PUBLIC_WEB_PROFILES=$(echo "${COMPOSE_PROFILES:-}" | tr -d ' ')
+case ",${PUBLIC_WEB_PROFILES}," in
+    *,public-web,*)
+        (
+            if [ "$(python ./manage.py public-web --list | grep 'Total:' | cut -d ' ' -f2)" == 0 ]; then
+                echo "Creating default public-web node..."
+                # --fronted-by-core: this node runs beside core in this stack, so
+                # core's own Traefik publishes its webs. A remote node registered by
+                # ansible fronts its own and must NOT be marked.
+                python ./manage.py public-web --create --name "Default Public Web" --description "A local public-web feed node configured as a part of Taranis NG default installation." --api-url "http://public-web" --api-key "$API_KEY" --fronted-by-core
+            fi
+            # Ensure the default node has a web so the running feed is represented in
+            # the GUI. It is created without a hostname: a node can serve several
+            # webs on several hostnames, so that belongs in Configuration ->
+            # Public Web, next to the rest of the web's settings.
+            echo "Ensuring default public-web web..."
+            python ./manage.py public-web --ensure-web --name "Default Public Web" --web-name "Default Web" --api-url "http://public-web"
+        ) &
+        ;;
+    *)
+        echo "Public-web feed is not enabled (COMPOSE_PROFILES=\"${COMPOSE_PROFILES:-}\"); skipping its default node."
+        ;;
+esac
+
 echo "Starting scheduler..."
 python ./scheduler.py &
 

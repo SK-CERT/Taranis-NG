@@ -5,7 +5,12 @@
 - name: "Set the *Node collection endpoint for {{ worker_type }}"
   ansible.builtin.set_fact:
     node_collection_url: "{{ core_url }}/api/v1/config/{{ worker_type }}-nodes"
-    current_worker_api_url: "https://{{ worker_type }}.{{ worker_base_hostname }}"
+    current_worker_api_url: "https://{{ worker_type }}.{{ worker_base_hostname }}:{{ worker_api_port }}"
+    # Both forms, so a node registered before the API moved off 443 is still
+    # found and removed rather than left orphaned. Mirrors per_type.yml.
+    current_worker_api_url_aliases:
+      - "https://{{ worker_type }}.{{ worker_base_hostname }}:{{ worker_api_port }}"
+      - "https://{{ worker_type }}.{{ worker_base_hostname }}"
 
 - name: "Fetch existing nodes from Core for {{ worker_type }}"
   ansible.builtin.uri:
@@ -29,7 +34,7 @@
       {{
         (existing_nodes_result.json['items'] | default([]))
         | selectattr('api_url', 'defined')
-        | selectattr('api_url', 'equalto', current_worker_api_url)
+        | selectattr('api_url', 'in', current_worker_api_url_aliases)
         | list | first | default({})
       }}
 

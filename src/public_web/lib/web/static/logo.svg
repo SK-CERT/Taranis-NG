@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" role="img" aria-label="Public Web">
+  <rect x="4" y="4" width="232" height="112" rx="12" fill="none" stroke="#5a5a5a" stroke-width="3"/>
+  <text x="120" y="56" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#5a5a5a">Public</text>
+  <text x="120" y="90" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#5a5a5a">Web</text>
+</svg>

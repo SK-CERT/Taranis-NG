@@ -1,0 +1,51 @@
+---
+# Wait for every worker_type on this host to serve a verifiable certificate.
+#
+# Runs at the END of this role, which is BEFORE taranis-ng-node-register, and it
+# is deliberately non-fatal. Registration makes core probe these same hostnames
+# over HTTPS with verification on, so a certificate that has not landed yet does
+# not merely fail a check here - it makes core's probe fail and registration
+# answer 400, whose body ansible cannot show because the request carries the node
+# api_key and is no_log'd. Waiting here is what stops a slow issuance from
+# surfacing as an unexplained 400 several tasks later.
+#
+# The verdict is asserted by verify_trust.yml, which the playbook runs after
+# registration so that types whose certificates are fine still get deployed.
+#
+# Core reaches every worker over HTTPS with plain `requests` and no `verify=`
+# override, so verification is on: a chain Core cannot build is a node it cannot
+# talk to, however healthy the container behind it is.
+#
+# Sent WITHOUT the API key on purpose. No secret means no `no_log`, which means
+# the operator gets to see which hostname failed and why. A 401 is the expected
+# answer and proves exactly what is being asked: the handshake completed and the
+# chain verified.
+#
+# It WAITS, because issuance is neither instant nor simultaneous. Traefik asks for
+# one certificate per worker_type and they land independently, so a single-shot
+# check reports whichever ones had not arrived yet - a different scattered subset
+# on every run, indistinguishable from names the CA refuses outright. Only the
+# second is worth failing on, and waiting is what separates them.
+#
+# `failed_when: false` keeps a name that never arrives from aborting the play
+# here, so the assert can name them all at once instead of dying on the first.
+# Verified: `until` retries per item regardless of `failed_when`.
+# ---------------------------------------------------------------------------
+- name: "Check the certificate each worker_type's router serves"
+  ansible.builtin.uri:
+    url: "https://{{ item }}.{{ worker_base_hostname }}:{{ worker_api_port }}/api/v1/isalive"
+    method: GET
+    validate_certs: true
+    status_code: [401]
+    return_content: false
+  loop: "{{ worker_types }}"
+  loop_control:
+    label: "{{ item }}.{{ worker_base_hostname }}"
+  register: worker_trust_checks
+  failed_when: false
+  until: worker_trust_checks.status | int > 0
+  retries: "{{ worker_trust_retries }}"
+  delay: "{{ worker_trust_delay }}"
+  when:
+    - worker_tls_mode != 'selfsigned'
+    - worker_verify_public_trust | bool

@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+
     import Flask
     from shared.time_manager import SchedulerManager
 
@@ -32,6 +35,7 @@ from flask import request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
 from flask_jwt_extended.exceptions import JWTExtendedException
 from managers import log_manager, totp_manager, webauthn_manager
+from managers.db_manager import db
 from model.apikey import ApiKey
 from model.auth_provider import FORM_KINDS, OAUTH_KINDS, AuthProvider, UserAuthIdentity
 from model.bots_node import BotsNode
@@ -40,6 +44,7 @@ from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
 from model.product_type import ProductType
+from model.public_web_node import PublicWebNode
 from model.publishers_node import PublishersNode
 from model.remote import RemoteAccess
 from model.report_item import ReportItem
@@ -243,8 +248,10 @@ def get_login_methods() -> dict:
 
     Returns:
         dict: Items with id, name, kind, form (credentials form applies) and
-              login_url (redirect-based kinds only), plus passkey_enabled -
-              passkeys are a site-wide capability, not a provider. No
+              login_url (redirect-based kinds only), plus passkey_enabled and
+              passkey_login_enabled - passkeys are a site-wide capability, not a
+              provider. The login page needs both: the first says the feature
+              exists, the second whether a passkey may start a login at all. No
               configuration or secrets are exposed.
     """
     items = []
@@ -264,7 +271,11 @@ def get_login_methods() -> dict:
                 "login_url": login_url,
             },
         )
-    return {"items": items, "passkey_enabled": webauthn_manager.passkeys_enabled()}
+    return {
+        "items": items,
+        "passkey_enabled": webauthn_manager.passkeys_enabled(),
+        "passkey_login_enabled": webauthn_manager.passkey_first_factor_enabled(),
+    }
 
 
 def make_scoped_token(username: str, scope: str, expires_minutes: int = SCOPED_TOKEN_MINUTES, **claims: str) -> str:
@@ -315,7 +326,22 @@ def decode_scoped_token(token: str, scope: str) -> dict | None:
     return payload
 
 
-def mfa_required(provider: AuthProvider, user: User) -> bool:
+def _mfa_session_expired() -> tuple[dict, HTTPStatus]:
+    """Refuse a second-factor step whose scoped token no longer resolves to a user.
+
+    Kept distinct from a plain authentication failure: the first factor did
+    succeed, the short-lived token carrying that fact has simply run out (or was
+    tampered with). Without a code the GUI can only fall back to its generic
+    "username or password is incorrect", which is nonsense on a screen that asks
+    for neither and leaves the person stranded mid-login instead of starting over.
+
+    Returns:
+        tuple: A 401 carrying the MFA_TOKEN_INVALID code.
+    """
+    return {"error": "Your sign-in session has expired", "code": "MFA_TOKEN_INVALID"}, HTTPStatus.UNAUTHORIZED
+
+
+def mfa_required(provider: AuthProvider | None, user: User) -> bool:
     """Tell whether this user must hold a second factor.
 
     Four levels can demand it and they are OR-ed - the site, the user's
@@ -324,21 +350,32 @@ def mfa_required(provider: AuthProvider, user: User) -> bool:
     that does not.
 
     Args:
-        provider (AuthProvider): The provider used for the first factor.
+        provider (AuthProvider): The provider used for the first factor, or None
+            for a passkey sign-in, which uses no provider at all.
         user (User): The authenticated user.
 
     Returns:
         bool: Whether a second factor is mandatory for this user.
     """
+    if provider is not None:
+        method_requires = provider.require_mfa
+    else:
+        # A passkey sign-in has no provider of its own - passkeys are credentials
+        # owned by users. Take the strictest of the providers the account can log
+        # in through, so choosing a passkey cannot walk around a requirement set
+        # on the user's own login methods.
+        method_requires = any(
+            identity.provider.require_mfa for identity in user.auth_identities if identity.provider and identity.provider.enabled
+        )
     return bool(
         SecuritySettings.mfa_required()
         or any(organization.require_mfa for organization in user.organizations)
-        or provider.require_mfa
+        or method_requires
         or user.require_mfa,
     )
 
 
-def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | None:
+def _mfa_gate(provider: AuthProvider | None, user: User, *, passkey_used: bool = False) -> tuple[dict, HTTPStatus] | None:
     """Decide whether a login must complete a second factor.
 
     Triggered when any level requires MFA (see :func:`mfa_required`) or the user
@@ -350,14 +387,20 @@ def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | N
     and a user who owns nothing but passkeys is walked through TOTP enrollment.
 
     Args:
-        provider (AuthProvider): The provider used for the first factor.
+        provider (AuthProvider): The provider used for the first factor, or None
+            for a passkey sign-in.
         user (User): The authenticated user.
+        passkey_used (bool): Whether a passkey was the first factor.
 
     Returns:
         tuple | None: The MFA challenge response, or None when no MFA applies.
     """
     totp_enrolled = bool(user.totp_secret)
-    has_passkeys = len(user.webauthn_credentials) > 0 and webauthn_manager.passkey_second_factor_enabled()
+    # A passkey that has just been the first factor cannot also be the second
+    # one: another credential from the same authenticator proves nothing new, so
+    # TOTP is the only second factor a passkey sign-in can be completed with.
+    passkey_accepted = webauthn_manager.passkey_second_factor_enabled() and not passkey_used
+    has_passkeys = len(user.webauthn_credentials) > 0 and passkey_accepted
     if not (mfa_required(provider, user) or totp_enrolled or has_passkeys):
         return None
     if totp_enrolled or has_passkeys:
@@ -371,7 +414,7 @@ def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | N
     # Nothing enrolled yet: offer every factor this installation accepts, so a user
     # forced to set one up is not pushed into an authenticator app when a passkey
     # would do.
-    enrollable = ["totp", "passkey"] if webauthn_manager.passkey_second_factor_enabled() else ["totp"]
+    enrollable = ["totp", "passkey"] if passkey_accepted else ["totp"]
     return BaseAuthenticator.generate_error_code(
         "Two-factor authentication enrollment is required",
         "MFA_ENROLLMENT_REQUIRED",
@@ -380,17 +423,21 @@ def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | N
     )
 
 
-def _finalize_login(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus]:
+def _finalize_login(provider: AuthProvider | None, user: User, *, passkey_used: bool = False) -> tuple[dict, HTTPStatus]:
     """Run the status gate, then the MFA gate, then issue the JWT.
 
-    The MFA gate applies to every provider kind. A factor the user enrolled is
-    theirs, not the provider's: skipping it for redirect logins would leave the
-    external path weaker than the local one, and an attacker holding the account
-    at the identity provider could then bypass the second factor by choosing it.
+    The MFA gate applies to every provider kind, and to a passkey sign-in as
+    well. A factor the user enrolled is theirs, not the provider's: skipping it
+    for redirect logins would leave the external path weaker than the local one,
+    and an attacker holding the account at the identity provider could then
+    bypass the second factor by choosing it. The same reasoning makes a passkey
+    sign-in a *first* factor like any other rather than a way past the step.
 
     Args:
-        provider (AuthProvider): The provider the user authenticated against.
+        provider (AuthProvider): The provider the user authenticated against, or
+            None for a passkey sign-in.
         user (User): The authenticated user.
+        passkey_used (bool): Whether a passkey was the first factor.
 
     Returns:
         tuple: The login response.
@@ -398,7 +445,7 @@ def _finalize_login(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatu
     status_error = BaseAuthenticator.check_user_status(user)
     if status_error:
         return status_error
-    mfa_challenge = _mfa_gate(provider, user)
+    mfa_challenge = _mfa_gate(provider, user, passkey_used=passkey_used)
     if mfa_challenge:
         return mfa_challenge
     return BaseAuthenticator.generate_jwt(user)
@@ -412,6 +459,52 @@ def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[d
     rejects unlinked identities, "approval"/"automatic" auto-create the user
     (pending/active) when the optional domain filter passes and the username
     is free.
+
+    Nothing is left behind when this fails: a login that errors out anywhere
+    after the account is written rolls the transaction back, so a provider that
+    is misconfigured today cannot block the same person from being provisioned
+    once it is fixed.
+
+    Args:
+        provider (AuthProvider): The provider the subject authenticated against.
+        identity (ExternalIdentity): The externally authenticated identity.
+
+    Returns:
+        tuple: The login response.
+    """
+    try:
+        return _provision_and_issue_jwt(provider, identity)
+    except Exception as ex:
+        db.session.rollback()
+        log_manager.store_auth_error_activity(f"Provisioning of '{identity.username}' via provider '{provider.name}' failed", ex)
+        return BaseAuthenticator.generate_error()
+
+
+def _is_orphaned_account(user: User) -> bool:
+    """Tell whether an account holds no credential that could ever log into it.
+
+    An orphan is left behind when the provider that created it is deleted (which
+    removes its identity links) or when a user's identities are cleared: the row
+    survives with no way in, and the username collision check then refuses to
+    provision the same person ever again. Linking such an account to the provider
+    takes it away from nobody, which is what makes the adoption safe.
+
+    Every credential that alone grants entry counts, not just the password: a
+    passkey is a passwordless login on its own, so an account holding one belongs
+    to somebody and must still be reported as a collision. TOTP is deliberately
+    not counted - it is only ever a second factor.
+
+    Args:
+        user (User): The existing account whose username the identity collides with.
+
+    Returns:
+        bool: True when nothing can log into the account.
+    """
+    return not (user.password or user.auth_identities or user.webauthn_credentials)
+
+
+def _provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[dict, HTTPStatus]:
+    """Resolve the identity and issue the JWT (see :func:`provision_and_issue_jwt`).
 
     Args:
         provider (AuthProvider): The provider the subject authenticated against.
@@ -445,14 +538,23 @@ def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[d
                 "DOMAIN_NOT_ALLOWED",
             )
 
-    if User.find(identity.username):
-        log_manager.store_auth_error_activity(
-            f"Provisioning of '{identity.username}' via provider '{provider.name}' collides with an existing username",
+    existing = User.find(identity.username)
+    if existing:
+        if not _is_orphaned_account(existing):
+            log_manager.store_auth_error_activity(
+                f"Provisioning of '{identity.username}' via provider '{provider.name}' collides with an existing username",
+            )
+            return BaseAuthenticator.generate_error_code(
+                "An account with this username already exists. Ask your administrator to link this identity to it.",
+                "USERNAME_COLLISION",
+            )
+        user = User.adopt_external(provider, existing, identity.username, identity.name, identity.email, identity.external_id)
+        log_manager.store_user_activity(
+            user,
+            "PROVISION",
+            f"Orphaned account re-provisioned via auth provider '{provider.name}' with status '{user.status}'",
         )
-        return BaseAuthenticator.generate_error_code(
-            "An account with this username already exists. Ask your administrator to link this identity to it.",
-            "USERNAME_COLLISION",
-        )
+        return _finalize_login(provider, user)
 
     user = User.provision_external(provider, identity.username, identity.name, identity.email, identity.external_id)
     log_manager.store_user_activity(user, "PROVISION", f"Auto-created via auth provider '{provider.name}' with status '{user.status}'")
@@ -520,7 +622,7 @@ def complete_mfa_totp(mfa_token: str, code: str) -> tuple[dict, HTTPStatus]:
     payload = decode_scoped_token(mfa_token, "mfa")
     user = User.find(payload["sub"]) if payload else None
     if not user:
-        return BaseAuthenticator.generate_error()
+        return _mfa_session_expired()
     if not totp_manager.verify_code(user, code):
         log_manager.store_auth_error_activity(f"Invalid TOTP code for user: {user.username}")
         time.sleep(random.uniform(1, 3))  # noqa: S311 - timing jitter, not cryptographic
@@ -544,7 +646,7 @@ def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict,
     payload = decode_scoped_token(enroll_token, "mfa_enroll")
     user = User.find(payload["sub"]) if payload else None
     if not user:
-        return BaseAuthenticator.generate_error()
+        return _mfa_session_expired()
     if not code:
         return {"otpauth_uri": totp_manager.begin_enrollment(user.username)}, HTTPStatus.OK
     if not totp_manager.confirm_enrollment(user, code):
@@ -577,7 +679,7 @@ def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, cre
     payload = decode_scoped_token(enroll_token, "mfa_enroll")
     user = User.find(payload["sub"]) if payload else None
     if not user:
-        return BaseAuthenticator.generate_error()
+        return _mfa_session_expired()
 
     try:
         if not credential:
@@ -607,6 +709,9 @@ def get_user_from_scoped_token(token: str, scope: str) -> User | None:
 def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatus]:
     """Start a passkey ceremony for passwordless login or the MFA step.
 
+    Each mode is refused when its own switch is off, so a client cannot reach a
+    ceremony the site does not offer by calling the endpoint directly.
+
     Args:
         mfa_token (str): Scoped MFA token (second-factor mode); None for
             passwordless (discoverable credential) login.
@@ -616,9 +721,13 @@ def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatu
     """
     user = None
     if mfa_token:
+        if not webauthn_manager.passkey_second_factor_enabled():
+            return BaseAuthenticator.generate_error_code("Passkeys are not accepted as a second factor", "PASSKEY_NOT_ALLOWED")
         user = get_user_from_scoped_token(mfa_token, "mfa")
         if not user:
-            return BaseAuthenticator.generate_error()
+            return _mfa_session_expired()
+    elif not webauthn_manager.passkey_first_factor_enabled():
+        return BaseAuthenticator.generate_error_code("Passkey sign-in is not available", "PASSKEY_LOGIN_DISABLED")
     try:
         return webauthn_manager.begin_authentication(user), HTTPStatus.OK
     except ValueError as ex:
@@ -628,6 +737,10 @@ def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatu
 def complete_passkey_login(challenge_id: str, credential: dict) -> tuple[dict, HTTPStatus]:
     """Complete a passwordless passkey login.
 
+    The passkey is the *first* factor here, so the login runs the same status and
+    MFA gates as any other: where a second factor applies, it is asked for, and
+    only TOTP can satisfy it.
+
     Args:
         challenge_id (str): Handle from begin_passkey_authentication.
         credential (dict): The authenticator's assertion.
@@ -635,13 +748,15 @@ def complete_passkey_login(challenge_id: str, credential: dict) -> tuple[dict, H
     Returns:
         tuple: The login response.
     """
+    if not webauthn_manager.passkey_first_factor_enabled():
+        return BaseAuthenticator.generate_error_code("Passkey sign-in is not available", "PASSKEY_LOGIN_DISABLED")
     try:
         user = webauthn_manager.finish_authentication(challenge_id, credential)
     except ValueError as ex:
         return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
     if not user:
         return BaseAuthenticator.generate_error()
-    return BaseAuthenticator.generate_jwt(user)
+    return _finalize_login(None, user, passkey_used=True)
 
 
 def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) -> tuple[dict, HTTPStatus]:
@@ -655,9 +770,11 @@ def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) ->
     Returns:
         tuple: The login response.
     """
+    if not webauthn_manager.passkey_second_factor_enabled():
+        return BaseAuthenticator.generate_error_code("Passkeys are not accepted as a second factor", "PASSKEY_NOT_ALLOWED")
     payload = decode_scoped_token(mfa_token, "mfa")
     if not payload:
-        return BaseAuthenticator.generate_error()
+        return _mfa_session_expired()
     try:
         owner = webauthn_manager.finish_authentication(challenge_id, credential)
     except ValueError as ex:
@@ -939,7 +1056,7 @@ def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set | None:
         return None
 
 
-def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> tuple[dict, HTTPStatus]:
+def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Check if the user has the required permissions and ACL access.
 
     Args:
@@ -1005,7 +1122,7 @@ def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> tupl
     return auth_required_wrap
 
 
-def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
+def api_key_required(key_type: str | None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Enforce API key authentication with additional resource type parameter.
 
     Args:
@@ -1042,6 +1159,8 @@ def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
                 master_class = BotsNode
             elif key_type == "remote":
                 master_class = RemoteAccess
+            elif key_type == "public_web":
+                master_class = PublicWebNode
             else:
                 log_manager.store_auth_error_activity(f"Incorrect validation type: {key_type}")
                 return error
@@ -1071,7 +1190,7 @@ def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
     return decorator
 
 
-def jwt_token_required(fn) -> tuple[dict, HTTPStatus]:  # noqa: ANN001
+def jwt_token_required(fn: Callable[..., Any]) -> Callable[..., Any]:
     """Check if a valid JWT is present in the request headers.
 
     Args:

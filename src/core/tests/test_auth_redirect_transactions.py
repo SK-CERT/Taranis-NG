@@ -7,7 +7,9 @@ from http.cookies import SimpleCookie
 from types import SimpleNamespace
 from urllib.parse import parse_qs, urlencode, urlparse
 
+import pytest
 from api import auth
+from auth.base_authenticator import ProviderConfigurationError
 from flask import Flask
 from managers import auth_manager
 from managers.auth_transaction_manager import AuthTransactionKind
@@ -193,7 +195,9 @@ def test_oauth_callback_and_redirect_result_are_each_redeemable_once(monkeypatch
         headers={"Cookie": f"{auth.REDIRECT_REDEMPTION_COOKIE}={redemption_handle}"},
     ):
         replay_response = auth.AuthRedemption.post.__wrapped__(auth.AuthRedemption())
-    assert replay_response.status_code == HTTPStatus.UNAUTHORIZED
+    # A spent handle is "nothing to redeem", not an authentication failure - and it
+    # must stay indistinguishable from never having had one (asserted below).
+    assert replay_response.status_code == HTTPStatus.NO_CONTENT
     assert replay_response.headers["Cache-Control"] == "no-store"
     assert f"{auth.REDIRECT_REDEMPTION_COOKIE}=;" in replay_response.headers["Set-Cookie"]
 
@@ -249,3 +253,63 @@ def test_oauth_callback_rejects_handle_from_another_transaction_kind(monkeypatch
 
     assert response == ({"error": "Invalid state"}, HTTPStatus.UNAUTHORIZED)
     assert stored[(AuthTransactionKind.REDIRECT_REDEMPTION, handle)] == {"response": {"access_token": "jwt"}}
+
+
+def test_refused_client_credentials_are_reported_as_a_misconfiguration(monkeypatch) -> None:  # noqa: ANN001
+    """A provider the IdP refuses must not read as the user's authentication failing."""
+    authenticator = FakeOAuthAuthenticator()
+    stored, _created = _transaction_store(monkeypatch)
+    state = "A" * 43
+    stored[(AuthTransactionKind.OAUTH_STATE, state)] = {
+        "provider_id": 17,
+        "goto_url": "/v2/dashboard",
+        "nonce": "oidc-nonce",
+        "code_verifier": "server-side-verifier",
+        "pkce_method": "S256",
+    }
+
+    def refuse(*_args: object, **_kwargs: object) -> None:
+        msg = "Provider 'Corporate login' rejected our client credentials"
+        raise ProviderConfigurationError(msg)
+
+    authenticator.handle_callback = refuse
+    monkeypatch.setattr(auth_manager, "get_oauth_authenticator", lambda _slug: authenticator)
+    monkeypatch.setattr(
+        auth_manager,
+        "provision_and_issue_jwt",
+        lambda *_args: pytest.fail("no account may be provisioned when the provider itself is refused"),
+    )
+
+    with app.test_request_context(
+        f"/api/v1/auth/oauth/corporate/callback?state={state}&code=authorization-code",
+        base_url="https://taranis.example",
+    ):
+        response = auth.OAuthCallback.get.__wrapped__(auth.OAuthCallback(), "corporate")
+
+    assert response.status_code == HTTPStatus.FOUND
+    assert response.location == "/v2/dashboard?login_error=provider_misconfigured"
+    # The IdP's own wording stays in the audit log, never in the browser.
+    assert "Corporate login" not in response.location
+
+
+def test_a_visit_with_no_handle_is_indistinguishable_from_a_spent_one() -> None:
+    """The login page asks on every visit, because the handle is HttpOnly.
+
+    Answering that with 401 made every plain visit to /login log a failed request
+    in the browser console, which is noise at best and a red herring while
+    debugging a real login problem. It must stay indistinguishable from a spent
+    or forged handle, so both answer 204 with no body.
+    """
+    app = Flask(__name__)
+
+    with app.test_request_context(
+        "/api/v1/auth/redeem",
+        method="POST",
+        base_url="https://taranis.example",
+        headers={"Origin": "https://taranis.example", "Sec-Fetch-Site": "same-origin"},
+    ):
+        response = auth.AuthRedemption.post.__wrapped__(auth.AuthRedemption())
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    assert response.get_data() == b""
+    assert response.headers["Cache-Control"] == "no-store"

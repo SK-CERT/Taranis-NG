@@ -5,6 +5,7 @@ import uuid
 from http import HTTPStatus
 
 from auth import saml_authenticator, saml_federation
+from auth.base_authenticator import ProviderConfigurationError
 from config import Config
 from flask import Response, make_response, redirect
 from flask_jwt_extended import get_jwt
@@ -298,7 +299,15 @@ class AuthRedemption(Resource):
         transaction = auth_transaction_manager.consume(AuthTransactionKind.REDIRECT_REDEMPTION, handle)
         response_data = transaction.get("response") if transaction else None
         if not isinstance(response_data, dict):
-            response = make_response({"error": "Invalid or expired redemption handle"}, HTTPStatus.UNAUTHORIZED)
+            # Nothing to redeem is the *normal* state: the handle is HttpOnly, so
+            # the GUI cannot tell whether one exists and has to ask on every visit
+            # to the login page. Answering 401 made each of those visits log a
+            # failed request in the browser console - a standing red herring for
+            # anyone debugging a real login problem. 204 says "nothing here"
+            # without claiming an authentication failure. A spent or forged
+            # handle answers identically to no handle at all, which is the
+            # non-disclosure the 401 was there for and is preserved here.
+            response = make_response("", HTTPStatus.NO_CONTENT)
         else:
             response = make_response(response_data, HTTPStatus.OK)
         response.delete_cookie(REDIRECT_REDEMPTION_COOKIE, path="/api/v1/auth/redeem")
@@ -376,7 +385,14 @@ class OAuthCallback(Resource):
             return _login_error_redirect(goto_url, "auth_failed")
 
         redirect_uri = _oauth_redirect_uri(provider_slug, authenticator.config)
-        identity = authenticator.handle_callback(redirect_uri, code, state.get("nonce"), code_verifier=state.get("code_verifier"))
+        try:
+            identity = authenticator.handle_callback(redirect_uri, code, state.get("nonce"), code_verifier=state.get("code_verifier"))
+        except ProviderConfigurationError:
+            # The identity provider refused this service's own credentials. Say so
+            # rather than blaming the person logging in - they cannot fix it, and
+            # an administrator reading "authentication failed" would not know to
+            # look at the login method. The detail stays in the audit log.
+            return _login_error_redirect(goto_url, "provider_misconfigured")
         if not identity:
             return _login_error_redirect(goto_url, "auth_failed")
 

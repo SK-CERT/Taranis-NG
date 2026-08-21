@@ -163,7 +163,7 @@ const reviewedCopyFor = (locale) => new Set([...exactCopyReviewed.universal, ...
 
 describe('translated authentication and security content', () => {
     it('audits every leaf in the complete authentication and security scopes', () => {
-        expect(auditedAuthPaths).toHaveLength(328)
+        expect(auditedAuthPaths).toHaveLength(336)
         expect(new Set(auditedAuthPaths).size).toBe(auditedAuthPaths.length)
     })
 

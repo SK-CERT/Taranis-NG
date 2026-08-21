@@ -24,7 +24,10 @@ class SecuritySettings(db.Model):
 
     Attributes:
         id (int): Always 1 - this table holds a single row.
-        passkey_enabled (bool): Whether passkey sign-in and registration are available.
+        passkey_enabled (bool): Whether passkeys are available at all - the master
+            switch that also governs registration.
+        passkey_first_factor (bool): Whether a passkey may start a login on its own.
+            Off means passkeys exist only as a second factor.
         passkey_second_factor (bool): Whether a registered passkey may satisfy the
             second-factor step. Off means TOTP is the only accepted second factor.
         require_mfa (bool): Whether every user must have a second factor.
@@ -40,6 +43,7 @@ class SecuritySettings(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     passkey_enabled = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
+    passkey_first_factor = db.Column(db.Boolean, nullable=False, default=True, server_default="true")
     passkey_second_factor = db.Column(db.Boolean, nullable=False, default=True, server_default="true")
     require_mfa = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
     auth_generation = db.Column(db.Integer, nullable=False, default=1, server_default="1")
@@ -61,6 +65,7 @@ class SecuritySettings(db.Model):
             record = cls()
             record.id = 1
             record.passkey_enabled = False
+            record.passkey_first_factor = True
             record.passkey_second_factor = True
             record.require_mfa = False
             record.auth_generation = 1
@@ -86,12 +91,13 @@ class SecuritySettings(db.Model):
             SecuritySettings: The updated settings row.
 
         Raises:
-            ValueError: When passkey sign-in is enabled without a complete
-                relying-party configuration.
+            ValueError: When passkeys are enabled without a complete relying-party
+                configuration, or with neither factor switch left on.
         """
         new = SecuritySettingsSchema().load(data)
         record = cls.get()
         record.passkey_enabled = bool(new.get("passkey_enabled"))
+        record.passkey_first_factor = bool(new.get("passkey_first_factor"))
         record.passkey_second_factor = bool(new.get("passkey_second_factor"))
         record.require_mfa = bool(new.get("require_mfa"))
         record.rp_id = (new.get("rp_id") or "").strip()
@@ -100,6 +106,12 @@ class SecuritySettings(db.Model):
 
         if record.passkey_enabled and not (record.rp_id and record.get_origins()):
             msg = "Passkey sign-in requires a relying-party ID and at least one origin"
+            raise ValueError(msg)
+
+        # Enabled with neither switch on, passkeys could be registered but never
+        # used for anything - refuse the combination rather than let it look armed.
+        if record.passkey_enabled and not (record.passkey_first_factor or record.passkey_second_factor):
+            msg = "Passkeys must be usable as a first or a second factor, or be switched off entirely"
             raise ValueError(msg)
 
         record.updated_by = user_name
@@ -113,9 +125,23 @@ class SecuritySettings(db.Model):
 
     @classmethod
     def passkeys_enabled(cls) -> bool:
-        """Tell whether passkey sign-in is available on this installation."""
+        """Tell whether passkeys are available at all on this installation.
+
+        The master switch: it governs registration, and both factor switches are
+        gated behind it. Where a passkey may actually be *used* is decided by
+        :meth:`passkey_first_factor_enabled` and :meth:`passkey_second_factor_enabled`.
+        """
         record = cls.get()
         return bool(record.passkey_enabled and record.rp_id and record.get_origins())
+
+    @classmethod
+    def passkey_first_factor_enabled(cls) -> bool:
+        """Tell whether a passkey may start a login on its own.
+
+        Requires the relying party to be configured at all - without it no passkey
+        can be verified, whatever this switch says.
+        """
+        return bool(cls.passkeys_enabled() and cls.get().passkey_first_factor)
 
     @classmethod
     def passkey_second_factor_enabled(cls) -> bool:

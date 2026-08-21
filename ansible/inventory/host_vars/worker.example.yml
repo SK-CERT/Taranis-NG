@@ -115,6 +115,15 @@ worker_api_keys: {}
 # worker_acme_eab_kid: "PER_HOST_EAB_KID"
 # worker_acme_eab_hmac: "PER_HOST_EAB_HMAC"
 # worker_acme_caserver: "https://acme.zerossl.com/v2/DV90"
+#
+# ⚠ With a CA that pre-validates domains against the account its EAB credential
+# binds to, EVERY <type>.<worker_base_hostname> this host serves must be approved
+# on the account behind that kid, before the first run. Traefik requests one
+# certificate per worker_type (each type's router carries its own Host()), so
+# approving some and not others leaves the rest on Traefik's self-signed cert.
+# Core verifies worker certificates, so those types register and then never work.
+# The kid is the account: names approved for the Core host do not carry over.
+# The role checks this after deploying and names the hostnames that fail.
 
 # ---------------------------------------------------------------------------
 # OPTIONAL: TLS mode override (otherwise inherited from group_vars/all.yml).
@@ -128,3 +137,55 @@ worker_api_keys: {}
 # (<type>.<worker_base_hostname> for each worker_type in worker_types).
 # worker_tls_cert: "/etc/ssl/certs/worker.crt"
 # worker_tls_key: "/etc/ssl/private/worker.key"
+#
+# After deploying, the role checks that every per-type hostname serves a chain
+# this control host can verify, and fails naming the ones that do not. Turn it
+# off only for a "provided" cert from a private CA that Core trusts but this
+# control host does not — there the check is a false alarm, not a finding.
+# worker_verify_public_trust: false
+
+# ---------------------------------------------------------------------------
+# OPTIONAL: host firewall (taranis-ng-firewall, via playbooks/firewall.yml).
+# ---------------------------------------------------------------------------
+# Set these HERE, per host, rather than editing the role defaults - a role
+# default is the whole fleet's default, so changing it there to suit one worker
+# changes every worker.
+#
+# READ THIS FIRST, because the answer differs per address family and the usual
+# "Docker bypasses your firewall" is only half of it:
+#
+#   IPv4 - bypasses these rules. Docker writes DNAT into nat/PREROUTING and filter
+#          rules into its own chain in filter/FORWARD; ufw and firewalld write to
+#          filter/INPUT, which that traffic never traverses. Listing a published
+#          port here buys nothing on v4.
+#   IPv6 - does NOT bypass them. Docker ships with ip6tables management off, so
+#          there is no v6 DNAT: the userland docker-proxy listens in the HOST
+#          namespace and the traffic goes through INPUT like any host service. A
+#          published port missing from this list is therefore reachable over v4
+#          and dropped over v6 - and dropped, not refused, so it times out and
+#          looks like a routing fault.
+#
+# The worker role already opens 80, 443 and worker_api_port itself for that
+# reason, so you do not need them here. What this list governs is traffic
+# terminating on the host - sshd above all.
+#
+# To restrict a published port over IPv4, bind it to one address
+# (worker_api_bind below) or add rules to Docker's DOCKER-USER chain, which is
+# traversed before Docker's own and which Docker never flushes. Over IPv6, a
+# source restriction in this role is effective on its own.
+#
+# firewall_allowed_tcp_ports: [22]        # host services only; 22 must stay
+# firewall_allowed_udp_ports: []
+#
+# Source-restricted host ports. Same caveat: effective for host services,
+# NOT for Docker-published ones.
+# firewall_restricted_tcp_ports:
+#   - port: 9100                         # e.g. a node_exporter run on the host
+#     sources: ["198.51.100.10"]
+#
+# Address the worker API port is published on. The default binds every
+# interface, which leaves the API reachable from anywhere - authentication is
+# then its only protection. Set the host's private/VPN address when Core
+# reaches it that way, and the port stops being world-visible without needing
+# any firewall rule at all.
+# worker_api_bind: "10.0.0.5"

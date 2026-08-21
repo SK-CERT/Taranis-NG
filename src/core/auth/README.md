@@ -46,6 +46,48 @@ The URL is derived from the incoming request (honoring the reverse proxy's
 `X-Forwarded-*` headers); if that does not work in your deployment, set the
 provider's *Redirect URI override* field explicitly.
 
+## Testing an OIDC / OAuth 2.0 configuration
+
+*Test configuration* in the provider dialog checks the settings in the form
+against the identity provider before they are saved: it resolves the endpoints
+(fetching and validating the discovery document for OIDC), reads the signing
+keys, and asks the token endpoint whether it accepts the client ID and secret.
+Nothing is stored, and no state is created at the identity provider.
+
+The credential check puts the **client ID and client secret** to the provider
+directly, using the same client authentication a real login uses. It tries the
+available checks in order of how sharply each isolates the credentials, and stops
+at the first straight answer:
+
+1. the **introspection endpoint** (RFC 7662), if discovery advertises one;
+2. the **revocation endpoint** (RFC 7009), likewise.
+
+   Client authentication is the only precondition of either, and both answer
+   `200` for a token they have never heard of. Nothing but the credentials can
+   change the outcome, so `200` means accepted and `401` means refused.
+3. the **`client_credentials` grant**, which also authenticates the client and
+   nothing else. An error about the grant rather than the client
+   (`unsupported_grant_type`) still proves the credentials were accepted.
+4. as a last resort, an **authorization code that was never issued**. This one
+   assumes the server authenticates the client before it validates the grant
+   (RFC 6749 section 5.2); implementations that check the code first would answer
+   `invalid_grant` without ever reading the secret, so when the verdict rests on
+   this probe alone the result is reported as *inconclusive* rather than as a
+   pass.
+
+A provider with no client secret configured (a public client) is told so
+explicitly: the test can then only confirm that the identity provider knows the
+client ID.
+
+Editing a saved provider leaves the secret field blank to keep the stored
+secret; the test then uses that stored secret, so it also catches a secret that
+can no longer be decrypted after the secrets encryption key changed.
+
+At login time the same distinction is kept: a provider whose credentials the IdP
+refuses returns `provider_misconfigured` ("This login method is misconfigured")
+rather than a generic authentication failure, and the IdP's own wording is
+recorded in the audit log rather than shown to the user.
+
 ## PKCE (OIDC / OAuth 2.0)
 
 Per-provider *PKCE code challenge method* selector (RFC 7636):
@@ -305,6 +347,35 @@ If the reported username collides with an existing account, the login is
 rejected - an administrator resolves this by linking the identity to the
 existing account.
 
+One case is settled without an administrator: an account holding **no local
+password, no identity at any provider and no passkey** is an orphan - nothing
+can log into it - and is adopted by the provider instead of being reported as a
+collision. Such accounts are left behind when the provider that created them is
+deleted (deleting a login method removes its identity links) or when a user's
+identities are cleared, and before this they blocked the same person from ever
+being provisioned again. An account that still has a password, a passkey, or an
+identity at another provider belongs to somebody and is never adopted (TOTP does
+not count - it is only ever a second factor).
+
+**Adoption re-provisions the account, it does not inherit it.** Roles,
+permissions, organization, display name, e-mail and status are all reset to what
+a first login through that provider grants, so the outcome is exactly what you
+get by deleting the orphan and letting it be created afresh. This matters for
+two reasons: an orphaned *administrator* account would otherwise hand its rights
+to whoever can present that username at the identity provider, and an orphan left
+in the *active* state would otherwise walk straight past the approval step that
+"auto-create, admin approves" promises. An enrolled TOTP secret is the one thing
+kept, which makes adoption fail closed - whoever claims the account is challenged
+for a code they do not have.
+
+Adoption therefore grants nobody any authority they could not already obtain by
+signing in with a username no account is using. If even that is more than your
+identity provider's usernames should be trusted with, set the provider to
+*Linked users only*, which never auto-provisions and never adopts.
+
+A login that fails part way through provisioning rolls its account back, so a
+misconfigured provider cannot leave a half-created user behind either.
+
 Users can be **disabled** at any time; this blocks new logins and invalidates
 existing sessions on their next request.
 
@@ -338,15 +409,47 @@ existing sessions on their next request.
   result behind an opaque one-time redemption handle in an HttpOnly cookie; the
   GUI exchanges it through the same-origin redemption endpoint and then runs
   the same TOTP/passkey step a form login would have run.
-- When passkey sign-in is enabled in *Access Management → Security*, the login
-  page offers passwordless "Sign in with a passkey" (discoverable credentials).
-  Whether a passkey may also satisfy the *second-factor* step is a separate
-  switch in the same place. With it off, TOTP is the only accepted second factor,
-  and a user who owns nothing but passkeys is sent through TOTP enrollment.
+- Passkeys are switched on site-wide in *Access Management → Security*, and
+  **where they may be used is two further switches in the same place**:
+  *allow signing in with a passkey* (the passwordless "Sign in with a passkey"
+  button, discoverable credentials) and *accept passkeys as a second factor*.
+  Either may be turned off on its own - a site can offer passkeys purely as a
+  second factor, or purely as a way in - but not both, which would leave a
+  feature nothing could use. With the second-factor switch off, TOTP is the only
+  accepted second factor and a user who owns nothing but passkeys is sent through
+  TOTP enrollment.
+- **A passkey sign-in is a first factor like any other**, and runs the same status
+  and MFA gates a password login runs. Where a second factor applies, it is asked
+  for, and **only TOTP can satisfy it**: another credential from the authenticator
+  that has just been presented proves nothing new, so a passkey is never offered
+  as the second factor of its own login. The login-method level of the policy has
+  no provider to read here - passkeys belong to users, not to a provider - so it
+  is taken as the strictest of the enabled providers the account is linked to.
+  Otherwise *require MFA* on a provider would be sidesteppable by choosing the
+  passkey button.
+- The second-factor step is carried by a scoped token that lives
+  `SCOPED_TOKEN_MINUTES` (5). When it runs out, every endpoint continuing that
+  login answers **401 `MFA_TOKEN_INVALID`** rather than a bare authentication
+  failure, and the GUI says the sign-in session expired and returns to the first
+  factor. A bare 401 there rendered as "username or password is incorrect" on a
+  screen that asks for neither, and left the person on a step that could no
+  longer complete. Note that a **redirect login spends part of that budget
+  before the person ever sees the screen** - the token is minted at the IdP
+  callback, and the redirect, the app boot and the redemption round trip all
+  come out of it.
 - Administrators can reset a user's MFA (*Reset MFA* in the user dialog) as a
   recovery path; `manage.py account` remains available for CLI recovery.
 - WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.
   The relying-party ID must match the site's domain.
+- The GUI document must also be **allowed to call WebAuthn by its
+  `Permissions-Policy`**. `publickey-credentials-get=()` is an *empty* allowlist
+  and disables the feature for the page's own origin, not just for cross-origin
+  frames: the browser then throws `NotAllowedError` and no passkey can be used,
+  to sign in or as a second factor, while registration keeps working (a missing
+  `publickey-credentials-create` falls back to its `(self)` default). Both are
+  spelled out as `(self)` in `src/gui-v3/extras/security-headers.inc`. A
+  deployment that terminates TLS behind its own reverse proxy must not overwrite
+  that header with a stricter one.
 - Passkeys are **not** an identity provider: they are credentials owned by
   users. The site-wide relying-party configuration (enable switch, rp_id,
   rp_name, allowed origins) lives in *Access Management → Security*, and the

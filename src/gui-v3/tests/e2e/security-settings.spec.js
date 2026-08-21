@@ -61,6 +61,7 @@ async function seedSecurityBaseline(request) {
         headers: { Authorization: `Bearer ${token}` },
         data: {
             passkey_enabled: false,
+            passkey_first_factor: true,
             passkey_second_factor: true,
             require_mfa: false,
             rp_id: '',
@@ -99,11 +100,41 @@ test.describe('Security settings (passkey relying party)', () => {
     test('refuses to enable passkeys without a relying-party configuration', async ({ page }) => {
         const panel = activePanel(page)
 
-        await panel.getByLabel('Enable passkey sign-in').click()
+        await panel.getByLabel('Enable passkeys').click()
         await panel.getByRole('button', { name: 'Save' }).click()
 
         // the required-field rules block the save; nothing is persisted
         await expect(panel.locator('.v-messages__message').first()).toBeVisible()
+    })
+
+    test('keeps passkeys as a second factor only when passkey sign-in is switched off', async ({ page, request }) => {
+        // Enable passkeys with a complete relying party, but withdraw the
+        // first-factor switch: registration and the second-factor step stay
+        // available while the login page stops offering "Sign in with a passkey".
+        const panel = activePanel(page)
+
+        const save = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith('/config/security'))
+        await panel.getByLabel('Enable passkeys').check()
+        await panel.getByLabel('Allow signing in with a passkey').uncheck()
+        await panel.getByLabel('Relying party ID').fill('localhost')
+        await panel.getByLabel('Allowed origins').fill('http://localhost:4445')
+        await panel.getByRole('button', { name: 'Save' }).click()
+        const saved = await save
+        expect(saved.ok(), `Save PUT /config/security failed: ${saved.status()} ${await saved.text()}`).toBe(true)
+
+        // The feature is on, but nothing may start a login with a passkey.
+        const methods = await (await request.get(`${CORE_API}/auth/methods`)).json()
+        expect(methods.passkey_enabled).toBe(true)
+        expect(methods.passkey_login_enabled).toBe(false)
+
+        await page.evaluate(() => localStorage.clear())
+        await page.goto('/v2/login')
+        await expect(page.locator('[data-test="login-passkey"]')).toHaveCount(0)
+        await expect(page.locator('[data-test="login-username"]')).toBeVisible()
+
+        // Restore the suite-wide baseline (passkeys off) via the API: the UI
+        // cleanup dance is only needed where the test asserts on the UI itself.
+        await seedSecurityBaseline(request)
     })
 
     test('saves the relying-party configuration and turns passkey sign-in on', async ({ page, request }) => {
@@ -121,7 +152,7 @@ test.describe('Security settings (passkey relying party)', () => {
         // the model by a tick, making a .click()'s net effect dependent on
         // timing. .check() always lands on "on" regardless of starting state.
         const enableSave = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith('/config/security'))
-        await panel.getByLabel('Enable passkey sign-in').check()
+        await panel.getByLabel('Enable passkeys').check()
         await panel.getByLabel('Relying party ID').fill('localhost')
         await panel.getByLabel('Allowed origins').fill('http://localhost:4445')
         await panel.getByRole('button', { name: 'Save' }).click()
@@ -152,7 +183,7 @@ test.describe('Security settings (passkey relying party)', () => {
         // (explicit off, idempotent) for the firefox switch-propagation reason
         // noted on the enable step above.
         const cleanupSave = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith('/config/security'))
-        await cleanupPanel.getByLabel('Enable passkey sign-in').uncheck()
+        await cleanupPanel.getByLabel('Enable passkeys').uncheck()
         await cleanupPanel.getByRole('button', { name: 'Save' }).click()
         const cleanupRes = await cleanupSave
         expect(cleanupRes.ok(), `cleanup Save PUT /config/security failed: ${cleanupRes.status()} ${await cleanupRes.text()}`).toBe(true)

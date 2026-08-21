@@ -29,6 +29,8 @@ from model import (  # noqa: F401  Don't remove 'osint_source' and bot_preset re
     osint_source,
     parameter,
     permission,
+    public_web,
+    public_web_node,
     role,
     user,
 )
@@ -558,7 +560,7 @@ def bot_management(
         for node in nodes:
             # refresh bot node id
             try:
-                bots_info, status_code = BotsApi(node.api_url, node.api_key).get_bots_info(node.id)
+                bots_info, status_code = BotsApi(node.api_url, node.api_key).get_bots_info()
                 if status_code == HTTPStatus.OK:
                     logger.info(f"Bot node '{node.name}' updated.")
                 else:
@@ -709,6 +711,118 @@ def api_keys_management(opt_list: bool, opt_create: bool, opt_delete: bool, opt_
 
         apikey.ApiKey.delete(k.id)
         logger.info(f"ApiKey '{opt_name}' has been deleted.")
+
+
+@cli.command("public-web")
+@click.option("--list", "-l", "opt_list", is_flag=True)
+@click.option("--create", "-c", "opt_create", is_flag=True)
+@click.option("--delete", "-d", "opt_delete", is_flag=True)
+@click.option("--ensure-web", "opt_ensure_web", is_flag=True)
+@click.option("--web-name", "opt_web_name", default="Default Web")
+@click.option("--hostname", "opt_hostname", default="")
+@click.option("--show-api-key", "opt_show_api_key", is_flag=True)
+@click.option("--id", "opt_id")
+@click.option("--name", "opt_name")
+@click.option("--description", "opt_description", default="")
+@click.option("--api-url", "opt_api_url", default="")
+@click.option("--api-key", "opt_api_key")
+@click.option("--fronted-by-core", "opt_fronted_by_core", is_flag=True)
+def public_web_management(
+    opt_list: bool,
+    opt_create: bool,
+    opt_delete: bool,
+    opt_ensure_web: bool,
+    opt_web_name: str,
+    opt_hostname: str,
+    opt_show_api_key: bool,
+    opt_id: str,
+    opt_name: str,
+    opt_description: str,
+    opt_api_url: str,
+    opt_api_key: str,
+    opt_fronted_by_core: bool,
+) -> None:
+    """Manage public-web nodes (read-only report-feed consumers).
+
+    Args:
+        opt_list (bool): List all public-web nodes.
+        opt_create (bool): Create a new public-web node.
+        opt_delete (bool): Delete an existing public-web node.
+        opt_ensure_web (bool): Ensure the node (by --name) has at least one web.
+        opt_web_name (str): Name for the default web created by --ensure-web.
+        opt_hostname (str): Hostname for the default web created by --ensure-web.
+        opt_show_api_key (bool): Show API key in the output.
+        opt_id (str): ID of the node.
+        opt_name (str): Name of the node.
+        opt_description (str): Description of the node.
+        opt_api_url (str): URL core uses to reach the node's management API.
+        opt_api_key (str): API key of the node.
+        opt_fronted_by_core (bool): Publish this node's webs from CORE's Traefik.
+            For the node running beside core in the same compose stack, which is
+            the only one core's Traefik can reach. A remote node fronts its own
+            webs, so leaving this off is right for anything ansible deploys.
+    """
+    if opt_list:
+        nodes = public_web_node.PublicWebNode.get_all()
+        for node in nodes:
+            api_key_str = f"API key: {node.api_key}\n\t" if opt_show_api_key else ""
+            logger.info(
+                f"Id: {node.id}\n\tName: {node.name}\n\t{api_key_str}Created: {node.created}\n\tLast seen: {node.last_seen}",
+            )
+        # We need to use print here, because prestart_core.sh relies on the output
+        print(f"Total: {len(nodes)}")  # noqa: T201
+
+    if opt_create:
+        if not opt_name or not opt_api_key:
+            logger.error("Please specify the public-web node name and API key!")
+            abort()
+
+        if public_web_node.PublicWebNode.get_by_name(opt_name):
+            logger.warning(f"Public-web node '{opt_name}' already exists!")
+            abort()
+
+        node = public_web_node.PublicWebNode(
+            opt_name,
+            opt_description,
+            opt_api_key,
+            opt_api_url,
+            fronted_by_core=opt_fronted_by_core,
+        )
+        db_manager.db.session.add(node)
+        db_manager.db.session.commit()
+        logger.info(f"Public-web node '{opt_name}' created.")
+
+    if opt_ensure_web:
+        node = public_web_node.PublicWebNode.get_by_name(opt_name) if opt_name else None
+        if not node:
+            logger.error("Public-web node not found (specify --name)!")
+            abort()
+        # Backfill the management URL on a pre-existing node (created before api_url
+        # existed, or seeded without one) so core can reach it for health checks and
+        # config-change cache-reset pushes.
+        if opt_api_url and not node.api_url:
+            node.api_url = opt_api_url
+            db_manager.db.session.commit()
+            logger.info(f"Set api_url for node '{node.name}' to '{opt_api_url}'.")
+        if node.webs:
+            logger.info(f"Public-web node '{node.name}' already has {len(node.webs)} web(s).")
+        else:
+            web = public_web.PublicWeb(opt_web_name, node.id, opt_hostname, {})
+            db_manager.db.session.add(web)
+            db_manager.db.session.commit()
+            logger.info(f"Default web '{opt_web_name}' created for node '{node.name}'.")
+
+    if opt_delete:
+        node = None
+        if opt_id:
+            node = db_manager.db.session.get(public_web_node.PublicWebNode, opt_id)
+        elif opt_name:
+            node = public_web_node.PublicWebNode.get_by_name(opt_name)
+        if not node:
+            logger.error("Public-web node not found (specify --id or --name)!")
+            abort()
+        public_web_node.PublicWebNode.delete(node.id)
+        logger.info(f"Public-web node '{node.name}' has been deleted.")
 
 
 if __name__ == "__main__":

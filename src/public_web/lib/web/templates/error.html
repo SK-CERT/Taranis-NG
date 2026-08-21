@@ -1,0 +1,36 @@
+{% extends "main.html" %}
+{%- import '_macros.html' as macros with context -%}
+
+{%- block title %}
+    {{ metadata["site_name"] }} – {{ name }}
+{%- endblock %}
+
+{# Inspiration from www.frontendshape.com/post/bootstrap-5-404-page-examples #}
+{%- block content %}
+    <div class="vh-100 d-flex align-items-center justify-content-center mx-4">
+        <div class="text-center">
+            <h1 class="display-1 fw-bold">
+                {{ code }}
+            </h1>
+            {%- if name -%}
+                <p class="fs-2">
+                    {{ name }}
+                </p>
+            {%- endif -%}
+            <p class="lead fs-4">
+                {%- if code == 404 -%}
+                    {{ translate_ui("error_404") }}
+                {%- elif code == 400 -%}
+                    {{ desc }}
+                {%- else -%}
+                    {{ translate_ui("error_other") }}
+                {%- endif -%}
+            </p>
+            {%- if code == 503 and content["service_description_url"] -%}
+                {{ macros.homepage_button(content["service_description_url"]) }}
+            {%- else -%}
+                {{ macros.homepage_button() }}
+            {%- endif -%}
+        </div>
+    </div>
+{%- endblock %}

@@ -91,3 +91,18 @@
     - role: taranis-ng-image-transfer
     - role: taranis-ng-worker
     - role: taranis-ng-node-register
+
+  # The certificate VERDICT, deliberately last. The probe itself already ran at
+  # the end of taranis-ng-worker, i.e. before registration, because core has to
+  # verify those same certificates to register a node at all - a slow issuance
+  # otherwise surfaces as an unexplained 400 from Core rather than as the
+  # certificate problem it is.
+  #
+  # Only the failure waits until here: a worker_type whose chain never verifies is
+  # one Core will never talk to and is worth failing the play over, but it must
+  # not stop the types that ARE ready from being registered and starting work.
+  post_tasks:
+    - name: "Fail if any worker_type lacks a verifiable certificate"
+      ansible.builtin.import_role:
+        name: taranis-ng-worker
+        tasks_from: verify_trust
