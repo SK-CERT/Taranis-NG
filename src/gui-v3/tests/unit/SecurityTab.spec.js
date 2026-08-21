@@ -149,7 +149,7 @@ describe('SecurityTab (passkey relying-party settings)', () => {
         await wrapper.vm.$nextTick()
 
         expect(wrapper.vm.requireMfaHint).toContain('Every user must enroll')
-        expect(wrapper.vm.passkeyEnabledHint).toContain('is offered')
+        expect(wrapper.vm.passkeyEnabledHint).toContain('the switches below decide where a passkey may be used')
     })
 
     // ── Validation ────────────────────────────────
@@ -223,6 +223,30 @@ describe('SecurityTab (passkey relying-party settings)', () => {
         await wrapper.vm.save()
 
         expect(updateSecuritySettings).toHaveBeenCalledWith(expect.objectContaining({ passkey_second_factor: false }))
+    })
+
+    it('saves the passkey first-factor switch', async () => {
+        const wrapper = await mountTab(SAVED)
+        updateSecuritySettings.mockResolvedValue({ data: { ...SAVED, passkey_first_factor: false } })
+        stubValidation(wrapper)
+
+        // Keeping passkeys on as a second factor while withdrawing passwordless sign-in.
+        wrapper.vm.settings.passkey_first_factor = false
+        await wrapper.vm.save()
+
+        expect(updateSecuritySettings).toHaveBeenCalledWith(expect.objectContaining({ passkey_first_factor: false }))
+    })
+
+    it('cannot allow a passkey sign-in while passkeys are switched off', async () => {
+        const wrapper = await mountTab()
+
+        const firstFactor = wrapper.find('[data-test="security-passkey-first-factor"] input')
+        expect(firstFactor.attributes('disabled')).toBeDefined()
+
+        wrapper.vm.settings.passkey_enabled = true
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.find('[data-test="security-passkey-first-factor"] input').attributes('disabled')).toBeUndefined()
     })
 
     it('cannot accept passkeys as a second factor while passkeys are switched off', async () => {

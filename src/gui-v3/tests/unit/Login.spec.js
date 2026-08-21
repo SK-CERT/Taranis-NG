@@ -7,6 +7,7 @@ import {
     mfaTotp,
     mfaTotpEnroll,
     mfaWebauthnEnroll,
+    mfaWebauthnBegin,
     passkeyLoginBegin,
     passkeyLoginFinish,
     redeemRedirectLogin
@@ -53,9 +54,14 @@ const METHODS = [
 /**
  * Mount the login page; the backend reports `methods` as the enabled providers and
  * `passkeyEnabled` as the site-wide passkey capability (a security setting, not a provider).
+ * `passkeyLoginEnabled` is the separate switch that decides whether a passkey may
+ * start a login at all - a site can enable passkeys purely as a second factor -
+ * and it is what the sign-in button follows. It defaults to `passkeyEnabled`.
  */
-async function mountLogin(methods = METHODS, passkeyEnabled = true) {
-    getLoginMethods.mockResolvedValue({ data: { items: methods, passkey_enabled: passkeyEnabled } })
+async function mountLogin(methods = METHODS, passkeyEnabled = true, passkeyLoginEnabled = passkeyEnabled) {
+    getLoginMethods.mockResolvedValue({
+        data: { items: methods, passkey_enabled: passkeyEnabled, passkey_login_enabled: passkeyLoginEnabled }
+    })
     const wrapper = mountWithPlugins(Login)
     const authStore = useAuthStore()
     // let onMounted's loadLoginMethods() resolve so the page renders the methods
@@ -110,6 +116,15 @@ describe('Login page', () => {
 
         const { wrapper: noPasskey } = await mountLogin(METHODS, false)
         expect(noPasskey.find('[data-test="login-passkey"]').exists()).toBe(false)
+    })
+
+    it('hides the passkey button when passkeys are only accepted as a second factor', async () => {
+        const { wrapper } = await mountLogin(METHODS, true, false)
+
+        // Passkeys are on, so registration still works - but nothing may start a
+        // login with one, so the button must not be offered.
+        expect(wrapper.find('[data-test="login-passkey"]').exists()).toBe(false)
+        expect(wrapper.find('[data-test="login-username"]').exists()).toBe(true)
     })
 
     it('hides the provider select when only one form-based provider exists', async () => {
@@ -216,6 +231,42 @@ describe('Login page', () => {
 
         expect(wrapper.vm.showLoginError).toBe(true)
         expect(wrapper.vm.totpCode).toBe('')
+    })
+
+    it('returns to the login form when the second-factor session has expired', async () => {
+        // The scoped token behind the MFA screen is short-lived, and a redirect
+        // (OIDC/SAML) login spends part of that budget on the round trip. Once it
+        // is gone every button on that screen fails the same way, so the person
+        // must be told what happened and put back on a form that still works -
+        // not shown "username or password is incorrect" on a screen with neither.
+        const { wrapper } = await mountLogin()
+        mfaWebauthnBegin.mockImplementation(() => loginRejection({ code: 'MFA_TOKEN_INVALID' }))
+
+        wrapper.vm.step = 'mfa'
+        wrapper.vm.mfaToken = 'expired-token'
+        await wrapper.vm.handleMfaPasskey()
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.vm.step).toBe('credentials')
+        expect(wrapper.vm.mfaToken).toBe('')
+        expect(wrapper.vm.showLoginError).toBe(true)
+        expect(wrapper.find('[data-test="login-error"]').text()).toContain('session expired')
+        expect(wrapper.find('[data-test="login-error"]').text()).not.toContain('password is incorrect')
+    })
+
+    it('reports an expired second-factor session as a warning, not an auth failure', async () => {
+        const { wrapper } = await mountLogin()
+        mfaTotp.mockImplementation(() => loginRejection({ code: 'MFA_TOKEN_INVALID' }))
+
+        wrapper.vm.step = 'mfa'
+        wrapper.vm.mfaToken = 'expired-token'
+        wrapper.vm.totpCode = '123456'
+        await wrapper.vm.handleTotpSubmit()
+        await wrapper.vm.$nextTick()
+
+        // The first factor did succeed - nothing the person typed was wrong.
+        expect(wrapper.vm.alertType).toBe('warning')
+        expect(wrapper.vm.step).toBe('credentials')
     })
 
     // ── Forced TOTP enrollment ────────────────────
@@ -342,7 +393,20 @@ describe('Login page', () => {
         expect(document.cookie).not.toContain('enroll-from-idp')
     })
 
-    it('shows the provider chooser when the redemption handle is missing or expired', async () => {
+    it('shows the provider chooser when there is nothing to redeem (204)', async () => {
+        // The normal answer on a plain visit to /login: the handle is HttpOnly, so
+        // the page has to ask every time, and 204 carries no body.
+        redeemRedirectLogin.mockResolvedValue({ status: 204, data: '' })
+
+        const { wrapper } = await mountLogin()
+
+        expect(wrapper.vm.step).toBe('credentials')
+        expect(wrapper.vm.showLoginError).toBe(false)
+    })
+
+    it('still accepts a 401 from a core older than this GUI', async () => {
+        // Core and GUI are separate containers and upgrade independently; the
+        // older core answers 401 where this one answers 204, meaning the same thing.
         redeemRedirectLogin.mockImplementation(() => redemptionRejection(401))
 
         const { wrapper } = await mountLogin()
@@ -373,6 +437,41 @@ describe('Login page', () => {
         expect(passkeyLoginBegin).toHaveBeenCalled()
         expect(passkeyLoginFinish).toHaveBeenCalledWith('chal-1', { id: 'credential-1' })
         expect(authStore.finishLogin).toHaveBeenCalledWith('jwt-passkey')
+    })
+
+    it('asks for the TOTP code when a passkey sign-in still owes a second factor', async () => {
+        const { wrapper, authStore } = await mountLogin()
+        authStore.finishLogin = vi.fn()
+        passkeyLoginBegin.mockResolvedValue({ data: { options: {}, challenge_id: 'chal-1' } })
+        // The passkey was the first factor, so the backend offers TOTP and nothing else.
+        passkeyLoginFinish.mockImplementation(() => loginRejection({ code: 'MFA_REQUIRED', methods: ['totp'], mfa_token: 'mfa-token-1' }))
+
+        await wrapper.vm.handlePasskeyLogin()
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.vm.step).toBe('mfa')
+        expect(wrapper.vm.mfaToken).toBe('mfa-token-1')
+        expect(authStore.finishLogin).not.toHaveBeenCalled()
+        expect(wrapper.find('[data-test="login-totp"]').exists()).toBe(true)
+        // The passkey just presented cannot be offered as its own second factor.
+        expect(wrapper.text()).not.toContain('Use a passkey instead')
+    })
+
+    it('walks a passkey sign-in through TOTP enrollment when the site demands a second factor', async () => {
+        const { wrapper } = await mountLogin()
+        passkeyLoginBegin.mockResolvedValue({ data: { options: {}, challenge_id: 'chal-1' } })
+        passkeyLoginFinish.mockImplementation(() =>
+            loginRejection({ code: 'MFA_ENROLLMENT_REQUIRED', methods: ['totp'], enroll_token: 'enroll-token-1' })
+        )
+        mfaTotpEnroll.mockResolvedValue({ data: { otpauth_uri: 'otpauth://totp/taranis:alice?secret=SEED' } })
+
+        await wrapper.vm.handlePasskeyLogin()
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.vm.step).toBe('enroll')
+        expect(wrapper.vm.enrollToken).toBe('enroll-token-1')
+        expect(mfaTotpEnroll).toHaveBeenCalledWith('enroll-token-1')
+        expect(wrapper.find('[data-test="login-enroll-passkey"]').exists()).toBe(false)
     })
 
     it('reports a rejected passkey login (e.g. disabled account)', async () => {

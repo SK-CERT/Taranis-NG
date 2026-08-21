@@ -51,6 +51,17 @@
                         </v-col>
                         <v-col cols="12">
                             <v-switch
+                                v-model="settings.passkey_first_factor"
+                                :label="t('access_management.security.passkey_first_factor')"
+                                :hint="t('access_management.security.passkey_first_factor_hint')"
+                                persistent-hint
+                                color="primary"
+                                :disabled="!canUpdate || saving || !settings.passkey_enabled"
+                                data-test="security-passkey-first-factor"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-switch
                                 v-model="settings.passkey_second_factor"
                                 :label="t('access_management.security.passkey_second_factor')"
                                 :hint="t('access_management.security.passkey_second_factor_hint')"
@@ -175,6 +186,7 @@
     type SecuritySettingsItem = {
         require_mfa: boolean
         passkey_enabled: boolean
+        passkey_first_factor: boolean
         passkey_second_factor: boolean
         rp_id: string
         rp_name: string
@@ -204,6 +216,7 @@
     const settings = ref<SecuritySettingsItem>({
         require_mfa: false,
         passkey_enabled: false,
+        passkey_first_factor: true,
         passkey_second_factor: true,
         rp_id: '',
         rp_name: '',

@@ -53,6 +53,7 @@ describe('Auth store - login methods', () => {
         const store = useAuthStore()
         expect(store.loginMethods).toEqual([])
         expect(store.passkeyEnabled).toBe(false)
+        expect(store.passkeyLoginEnabled).toBe(false)
     })
 
     it('loads the enabled login methods from the backend', async () => {
@@ -67,14 +68,31 @@ describe('Auth store - login methods', () => {
     })
 
     it('reads passkey availability from the site-wide flag, not from a provider', async () => {
-        authApi.getLoginMethods.mockResolvedValue({ data: { items: METHODS, passkey_enabled: true } })
+        authApi.getLoginMethods.mockResolvedValue({
+            data: { items: METHODS, passkey_enabled: true, passkey_login_enabled: true }
+        })
         const store = useAuthStore()
 
         await store.loadLoginMethods()
 
         expect(store.passkeyEnabled).toBe(true)
+        expect(store.passkeyLoginEnabled).toBe(true)
         // passkeys are never listed as a login method
         expect(store.loginMethods.some((method) => method.kind === 'passkey')).toBe(false)
+    })
+
+    it('tracks passkey sign-in separately from the passkey feature itself', async () => {
+        // Passkeys are on, but only as a second factor - the login page must not
+        // offer to start a login with one.
+        authApi.getLoginMethods.mockResolvedValue({
+            data: { items: METHODS, passkey_enabled: true, passkey_login_enabled: false }
+        })
+        const store = useAuthStore()
+
+        await store.loadLoginMethods()
+
+        expect(store.passkeyEnabled).toBe(true)
+        expect(store.passkeyLoginEnabled).toBe(false)
     })
 
     it('falls back to an empty list when the endpoint fails (older backend)', async () => {
@@ -86,6 +104,7 @@ describe('Auth store - login methods', () => {
         expect(methods).toEqual([])
         expect(store.loginMethods).toEqual([])
         expect(store.passkeyEnabled).toBe(false)
+        expect(store.passkeyLoginEnabled).toBe(false)
     })
 
     it('login sends the selected provider_id along with the credentials', async () => {
