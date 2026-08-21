@@ -88,12 +88,12 @@
             </div>
 
             <!-- Alternative sign-in methods -->
-            <template v-if="passkeyEnabled || redirectMethods.length > 0 || authStore.hasExternalLoginUrl">
+            <template v-if="passkeyLoginEnabled || redirectMethods.length > 0 || authStore.hasExternalLoginUrl">
                 <v-divider v-if="hasFormMethods" />
 
                 <div class="form-actions flex-column">
                     <v-btn
-                        v-if="passkeyEnabled"
+                        v-if="passkeyLoginEnabled"
                         data-test="login-passkey"
                         prepend-icon="mdi-fingerprint"
                         size="large"
@@ -369,7 +369,9 @@
             .map((method: LoginMethod) => ({ ...method, name: providerName(method) }))
     )
     // Passkeys are a site-wide capability (a security setting), not a provider.
-    const passkeyEnabled = computed(() => authStore.passkeyEnabled)
+    // The sign-in button follows the first-factor switch: an installation can
+    // enable passkeys and still accept them only as a second factor.
+    const passkeyLoginEnabled = computed(() => authStore.passkeyLoginEnabled)
     const hasFormMethods = computed(() => formMethods.value.length > 0)
 
     const errorMessage = computed(() => t(errorKey.value))
@@ -387,7 +389,9 @@
         'auth_cancelled',
         // The IdP refused this service's own credentials: nothing the person at the
         // keyboard did wrong, and nothing they can do about it either.
-        'provider_misconfigured'
+        'provider_misconfigured',
+        // The first factor succeeded; only the short-lived token carrying it ran out.
+        'mfa_token_invalid'
     ])
 
     // Maps backend error codes (POST payload code / redirect login_error param) to i18n keys
@@ -400,7 +404,8 @@
             domain_not_allowed: 'login.domain_not_allowed',
             auth_cancelled: 'login.auth_cancelled',
             provider_misconfigured: 'login.provider_misconfigured',
-            totp_invalid: 'login.totp_invalid'
+            totp_invalid: 'login.totp_invalid',
+            mfa_token_invalid: 'login.mfa_session_expired'
         }
         return keys[code.toLowerCase()] || 'login.error'
     }
@@ -410,6 +415,15 @@
         errorKey.value = code ? errorKeyForCode(code) : 'login.error'
         alertType.value = normalized && WARNING_CODES.has(normalized) ? 'warning' : 'error'
         showLoginError.value = true
+        // The scoped token behind the second-factor screen is gone, so every button
+        // there would fail the same way. Return to the first factor rather than
+        // leaving the person on a step that can no longer complete.
+        if (normalized === 'mfa_token_invalid') {
+            step.value = 'credentials'
+            mfaToken.value = ''
+            enrollToken.value = ''
+            totpCode.value = ''
+        }
     }
 
     // Validation functions
@@ -468,6 +482,46 @@
     }
 
     /**
+     * Move the view to whatever step the backend's login verdict calls for.
+     *
+     * Every first factor - password, passkey, or a redirect provider - can be
+     * answered with the same three payloads, so the step machine is driven from
+     * one place rather than re-implemented per entry point.
+     *
+     * Returns true when the payload was a verdict this view has consumed.
+     */
+    const applyLoginVerdict = async (data: LoginErrorResponse & { access_token?: string }): Promise<boolean> => {
+        if (data.access_token) {
+            finishLoginWithToken(data.access_token)
+            return true
+        }
+
+        const code = data.code?.toUpperCase()
+        if (code === 'MFA_REQUIRED' && data.mfa_token) {
+            mfaToken.value = data.mfa_token
+            mfaMethods.value = data.methods || ['totp']
+            totpCode.value = ''
+            step.value = 'mfa'
+            return true
+        }
+        if (code === 'MFA_ENROLLMENT_REQUIRED' && data.enroll_token) {
+            enrollToken.value = data.enroll_token
+            mfaMethods.value = data.methods || ['totp']
+            if (mfaMethods.value.includes('totp')) {
+                await beginTotpEnrollment()
+            } else {
+                step.value = 'enroll'
+            }
+            return true
+        }
+        if (data.code) {
+            showError(data.code)
+            return true
+        }
+        return false
+    }
+
+    /**
      * Handle credentials form submission with validation
      */
     const handleFormSubmit = async (): Promise<void> => {
@@ -493,27 +547,7 @@
                 validationFailed()
             }
         } catch (error) {
-            const data = extractErrorData(error)
-            const code = data.code?.toUpperCase()
-            if (code === 'MFA_REQUIRED' && data.mfa_token) {
-                mfaToken.value = data.mfa_token
-                mfaMethods.value = data.methods || ['totp']
-                totpCode.value = ''
-                step.value = 'mfa'
-                return
-            }
-            if (code === 'MFA_ENROLLMENT_REQUIRED' && data.enroll_token) {
-                enrollToken.value = data.enroll_token
-                mfaMethods.value = data.methods || ['totp']
-                if (mfaMethods.value.includes('totp')) {
-                    await beginTotpEnrollment()
-                } else {
-                    step.value = 'enroll'
-                }
-                return
-            }
-            if (data.code) {
-                showError(data.code)
+            if (await applyLoginVerdict(extractErrorData(error))) {
                 return
             }
             console.error('[Login] Authentication error:', error)
@@ -617,6 +651,7 @@
     }
 
     const handleMfaPasskey = async (): Promise<void> => {
+        showLoginError.value = false
         try {
             const beginResponse = (await mfaWebauthnBegin(mfaToken.value)) as { data: { options: never; challenge_id: string } }
             const assertion = await startAuthentication({ optionsJSON: beginResponse.data.options })
@@ -630,6 +665,14 @@
         }
     }
 
+    /**
+     * Sign in with a passkey as the *first* factor.
+     *
+     * The passkey is one factor like any other, so the backend may still answer
+     * with an MFA challenge - which arrives as a 403 and so is read from the
+     * rejection. It only ever offers TOTP: the passkey just presented cannot
+     * also be the second factor.
+     */
     const handlePasskeyLogin = async (): Promise<void> => {
         showLoginError.value = false
         try {
@@ -640,8 +683,11 @@
             }
             finishLoginWithToken(finishResponse.data.access_token)
         } catch (error) {
+            if (await applyLoginVerdict(extractErrorData(error))) {
+                return
+            }
             console.error('[Login] Passkey login error:', error)
-            showError(extractErrorData(error).code)
+            showError()
         }
     }
 
@@ -675,40 +721,18 @@
      */
     const redeemRedirectLoginState = async (): Promise<boolean> => {
         try {
-            const response = (await redeemRedirectLogin()) as { data: LoginErrorResponse & { access_token?: string } }
-            const data = response.data
-            if (data.access_token) {
-                finishLoginWithToken(data.access_token)
-                return true
-            }
-
-            const code = data.code?.toUpperCase()
-            if (code === 'MFA_REQUIRED' && data.mfa_token) {
-                mfaToken.value = data.mfa_token
-                mfaMethods.value = data.methods || ['totp']
-                totpCode.value = ''
-                step.value = 'mfa'
-                return true
-            }
-            if (code === 'MFA_ENROLLMENT_REQUIRED' && data.enroll_token) {
-                enrollToken.value = data.enroll_token
-                mfaMethods.value = data.methods || ['totp']
-                if (mfaMethods.value.includes('totp')) {
-                    await beginTotpEnrollment()
-                } else {
-                    step.value = 'enroll'
-                }
-                return true
-            }
-            if (data.code) {
-                showError(data.code)
+            // 204 (nothing to redeem) is the normal answer on a plain visit to
+            // /login and carries an empty body, so the verdict falls through.
+            const response = (await redeemRedirectLogin()) as { data?: LoginErrorResponse & { access_token?: string } }
+            if (await applyLoginVerdict(response.data || {})) {
                 return true
             }
         } catch (error) {
             const status = (error as { response?: { status?: number } })?.response?.status
-            // A normal visit to /login has no redemption handle. An expired or
-            // already-used handle has the same 401 response and falls back safely
-            // to the provider chooser without exposing authentication state.
+            // A core older than this GUI still answers 401 for "nothing to redeem"
+            // (it now answers 204). Both mean the same thing here, and an expired
+            // or already-used handle is deliberately indistinguishable from no
+            // handle, so fall back to the provider chooser either way.
             if (status !== 401) {
                 console.error('[Login] Redirect redemption error:', error)
                 showError()

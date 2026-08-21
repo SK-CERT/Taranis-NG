@@ -409,15 +409,47 @@ existing sessions on their next request.
   result behind an opaque one-time redemption handle in an HttpOnly cookie; the
   GUI exchanges it through the same-origin redemption endpoint and then runs
   the same TOTP/passkey step a form login would have run.
-- When passkey sign-in is enabled in *Access Management → Security*, the login
-  page offers passwordless "Sign in with a passkey" (discoverable credentials).
-  Whether a passkey may also satisfy the *second-factor* step is a separate
-  switch in the same place. With it off, TOTP is the only accepted second factor,
-  and a user who owns nothing but passkeys is sent through TOTP enrollment.
+- Passkeys are switched on site-wide in *Access Management → Security*, and
+  **where they may be used is two further switches in the same place**:
+  *allow signing in with a passkey* (the passwordless "Sign in with a passkey"
+  button, discoverable credentials) and *accept passkeys as a second factor*.
+  Either may be turned off on its own - a site can offer passkeys purely as a
+  second factor, or purely as a way in - but not both, which would leave a
+  feature nothing could use. With the second-factor switch off, TOTP is the only
+  accepted second factor and a user who owns nothing but passkeys is sent through
+  TOTP enrollment.
+- **A passkey sign-in is a first factor like any other**, and runs the same status
+  and MFA gates a password login runs. Where a second factor applies, it is asked
+  for, and **only TOTP can satisfy it**: another credential from the authenticator
+  that has just been presented proves nothing new, so a passkey is never offered
+  as the second factor of its own login. The login-method level of the policy has
+  no provider to read here - passkeys belong to users, not to a provider - so it
+  is taken as the strictest of the enabled providers the account is linked to.
+  Otherwise *require MFA* on a provider would be sidesteppable by choosing the
+  passkey button.
+- The second-factor step is carried by a scoped token that lives
+  `SCOPED_TOKEN_MINUTES` (5). When it runs out, every endpoint continuing that
+  login answers **401 `MFA_TOKEN_INVALID`** rather than a bare authentication
+  failure, and the GUI says the sign-in session expired and returns to the first
+  factor. A bare 401 there rendered as "username or password is incorrect" on a
+  screen that asks for neither, and left the person on a step that could no
+  longer complete. Note that a **redirect login spends part of that budget
+  before the person ever sees the screen** - the token is minted at the IdP
+  callback, and the redirect, the app boot and the redemption round trip all
+  come out of it.
 - Administrators can reset a user's MFA (*Reset MFA* in the user dialog) as a
   recovery path; `manage.py account` remains available for CLI recovery.
 - WebAuthn requires a secure context: HTTPS, or plain HTTP only on localhost.
   The relying-party ID must match the site's domain.
+- The GUI document must also be **allowed to call WebAuthn by its
+  `Permissions-Policy`**. `publickey-credentials-get=()` is an *empty* allowlist
+  and disables the feature for the page's own origin, not just for cross-origin
+  frames: the browser then throws `NotAllowedError` and no passkey can be used,
+  to sign in or as a second factor, while registration keeps working (a missing
+  `publickey-credentials-create` falls back to its `(self)` default). Both are
+  spelled out as `(self)` in `src/gui-v3/extras/security-headers.inc`. A
+  deployment that terminates TLS behind its own reverse proxy must not overwrite
+  that header with a stricter one.
 - Passkeys are **not** an identity provider: they are credentials owned by
   users. The site-wide relying-party configuration (enable switch, rp_id,
   rp_name, allowed origins) lives in *Access Management → Security*, and the

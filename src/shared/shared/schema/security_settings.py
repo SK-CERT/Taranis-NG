@@ -17,6 +17,7 @@ class SecuritySettingsSchema(Schema):
         unknown = EXCLUDE
 
     passkey_enabled = fields.Bool(load_default=False)
+    passkey_first_factor = fields.Bool(load_default=True)
     passkey_second_factor = fields.Bool(load_default=True)
     require_mfa = fields.Bool(load_default=False)
     rp_id = fields.Str(load_default="", allow_none=True)
