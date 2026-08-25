@@ -38,7 +38,7 @@
         "dompurify": "^3.4.13",
         "pinia": "^4.0.3",
         "primeicons": "^8.0.0",
-        "primevue": "4.5.5",
+        "primevue": "5.0.1",
         "qrcode": "^1.5.4",
         "quill": "^2.0.3",
         "vee-validate": "^4.14.11",
