@@ -10,7 +10,7 @@ dependencies = [
     "Flask-Cors==6.0.5",
     "Flask-RESTful==0.3.10",
     "gevent==26.8.0",
-    "gunicorn==26.0.0",
+    "gunicorn==26.1.0",
     "Jinja2==3.1.6",
     "marshmallow==4.3.1",
     "python-dotenv==1.2.2",
