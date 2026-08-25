@@ -466,7 +466,7 @@
     )
     const usesUnencryptedHttpEndpoint = computed(() => {
         const endpointKeys: Partial<Record<string, Array<keyof ProviderConfig>>> = {
-            oidc: ['issuer_url'],
+            oidc: ['issuer_url', 'internal_issuer_url'],
             oauth2: ['authorize_url', 'token_url', 'userinfo_url'],
             saml: ['idp_sso_url', 'discovery_url', 'federation_metadata_url']
         }
@@ -761,6 +761,7 @@
         if (kind === 'oidc') {
             return pick([
                 'issuer_url',
+                'internal_issuer_url',
                 'client_id',
                 'scopes',
                 'username_claim',
