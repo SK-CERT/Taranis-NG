@@ -66,11 +66,15 @@ export function updateProduct(data) {
     return ApiService.put('/publish/products/' + data.id, data)
 }
 
+export function getProductById(product_id) {
+    return ApiService.get('/publish/products/' + product_id)
+}
+
 export function deleteProduct(product) {
     return ApiService.delete('/publish/products/' + product.id)
 }
 
-export function publishProduct(product, publisher_ids) {
+export function publishProduct(product: unknown, publisher_ids: Array<number | string>) {
     return ApiService.post('/publish/products/publish', {
         product,
         publisher_ids

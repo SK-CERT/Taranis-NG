@@ -56,9 +56,9 @@ describe('Arabic production catalog contracts', () => {
         }
     })
 
-    it('provides six nonempty forms for all 53 canonical count messages', () => {
+    it('provides six nonempty forms for all 55 canonical count messages', () => {
         const pluralMessages = englishStrings.filter(([, message]) => message.includes('|'))
-        expect(pluralMessages).toHaveLength(53)
+        expect(pluralMessages).toHaveLength(55)
 
         for (const [path] of pluralMessages) {
             const forms = arabicByPath.get(path).split('|')
@@ -163,6 +163,11 @@ describe('Arabic production catalog contracts', () => {
             'attribute.tlp_amber_strict',
             'attribute.tlp_red',
             'collectors.nodes.api_url',
+            // Protocol and web-standard names: the HSTS response header, and the
+            // favicon, are spelled the same wherever they appear.
+            'public_web.webs.hsts',
+            'public_web.webs.image_favicon',
+            'routing.hsts_title',
             'presenters.nodes.url',
             'presenters.nodes.api_url',
             'publishers.nodes.url',

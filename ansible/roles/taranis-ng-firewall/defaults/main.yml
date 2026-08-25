@@ -10,11 +10,29 @@
 #        role refuse to run; see firewall_guard_ssh below.
 #   80   HTTP — ACME HTTP-01 validation and Traefik's http→https redirect.
 #   443  HTTPS — the worker API Core calls.
-firewall_allowed_tcp_ports: [22, 80, 443]
+#
+# 80 is load-bearing for ACME HTTP-01: the CA validates every hostname there,
+# INCLUDING hostnames whose router lives on the restricted API port below, and a
+# closed 80 breaks renewal about thirty days later rather than immediately.
+firewall_allowed_tcp_ports: [22]
+
+# Inbound TCP ports open only to specific sources. Each entry is a port plus the
+# addresses allowed to reach it:
+#
+#   firewall_restricted_tcp_ports:
+#     - port: 8443
+#       sources: ["198.51.100.10", "203.0.113.0/24"]
+#
+# This is what makes the worker API port worth having. A host serving a public web
+# must publish 443 to the world, and Host-header routing is invisible to a packet
+# filter - so the API is on its own port (taranis-ng-worker: worker_api_port) and
+# admitted from the Core host alone. Ports listed here must NOT also appear in
+# firewall_allowed_tcp_ports, which would open them to everyone.
+firewall_restricted_tcp_ports: []
 
 # Inbound UDP ports left open:
 #   443  HTTP/3. The worker's Traefik advertises h3 and publishes 443/udp.
-firewall_allowed_udp_ports: [443]
+firewall_allowed_udp_ports: []
 
 # The SSH port to protect against lock-out. Follows ansible_port when the
 # inventory sets a non-standard one, so the guard in tasks/main.yml checks the

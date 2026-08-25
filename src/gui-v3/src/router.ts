@@ -197,6 +197,15 @@ const routes: RouteRecordRaw[] = [
         }
     },
     {
+        path: '/config/public-web',
+        name: 'public-web',
+        components: {
+            default: () => import('./views/admin/PublicWebNodesView.vue'),
+            nav: () => import('./views/nav/ConfigNav.vue')
+        },
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/config/bots',
         name: 'bots',
         components: {

@@ -26,7 +26,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: EUPL-1.2",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -42,7 +41,8 @@ classifiers = [
 
 # Central source of truth for dev/CI tooling versions.
 # These pins are kept in lockstep with:
-#   - .pre-commit-config.yaml  (ruff-pre-commit / djLint rev: → stripped of leading "v")
+#   - .pre-commit-config.yaml  (ruff-pre-commit / djLint / ty-pre-commit
+#     rev: → stripped of leading "v")
 #   - .github/dependabot.yml uv ecosystem entry (auto-bumps these)
 # CI does not restate them: the workflows `uv sync --group dev` and run the tools from
 # this lockfile, and setup-uv reads the uv pin from [tool.uv] required-version below.
@@ -51,11 +51,12 @@ classifiers = [
 dev = [
     "djlint==1.44.2",
     "ruff==0.16.3",
+    "ty==0.0.57",
     # Keep in lockstep with [tool.uv] required-version below. Declared here so
     # `uv sync` reinstalls it into .venv instead of pruning it — an undeclared
     # .venv/bin/uv gets removed by the first sync, after which no uv on the
     # machine satisfies required-version and every uv command in the repo fails.
-    "uv==0.11.19",
+    "uv>=0.11.19",
 ]
 # The ONLY pytest pin in the repo; the services deliberately declare no `test` group.
 # scripts/dev_setup.py installs it into the one root .venv. Never sync this group on its
@@ -76,7 +77,7 @@ ansible = [
 ]
 
 [tool.uv]
-required-version = "0.11.19"
+required-version = ">=0.11.19"
 
 # The `ansible` group needs a newer Python than the project as a whole
 # (ansible-core 2.21 is 3.12+, while the services still support 3.11). Scoping
@@ -96,7 +97,7 @@ members = ["src/shared"]
 # scripts/run_tests.py instead runs pytest per project, picking up that project's own
 # [tool.pytest.ini_options]. Keep in sync with PYTEST_SUITES in scripts/run_tests.py.
 [tool.pytest.ini_options]
-testpaths = ["src/core/tests", "src/shared/tests"]
+testpaths = ["src/core/tests", "src/shared/tests", "src/public_web/tests"]
 # The projects are never pip-installed for a test run, so their roots go on sys.path.
 pythonpath = ["src/core", "src/shared"]
 
@@ -148,6 +149,8 @@ ignore = [
 # each test module top-level against `pythonpath` above — which is exactly what
 # src/core/tests/conftest.py relies on.
 "src/*/tests/**/*.py" = ["D103", "INP001", "PLR2004", "S101", "S105", "S106", "SLF001"]
+"src/core/model/product.py" = ["A002"]
+"src/core/api/publish.py" = ["PLC0415"]
 
 [tool.ruff.format]
 line-ending = "lf"
@@ -161,6 +164,66 @@ max-args = 15
 max-branches = 35
 max-returns = 10
 max-statements = 100
+
+# -- ty (type checker) -------------------------------------------------------
+# The project is a monorepo with multiple services under src/. Each service has
+# its own flat layout and is not pip-installable individually, so we list every
+# service directory as an extra search path for ty's module resolution.
+[tool.ty.environment]
+python = ".venv"
+extra-paths = [
+    "src/core",
+    "src/shared",
+    "src/bots",
+    "src/collectors",
+    "src/presenters",
+    "src/publishers",
+    "src/public_web",
+]
+
+# The pre-commit ty hook runs on the whole repo by design (it refuses filenames,
+# since one file can introduce errors in another via imports). Legacy services
+# (bots/collectors/publishers/presenters) still have many well-understood ty
+# errors that predate the current staged cleanup. To keep the hook non-blocking
+# while those services are cleaned up incrementally, we downgrade the dominant
+# legacy rules to warnings so commits pass, then re-tighten each rule back to
+# "error" as the corresponding service gets fixed. This is temporary: every
+# "warn" here is a TODO to flip back to "error".
+[tool.ty.terminal]
+error-on-warning = false  # exit 0 even when warning diagnostics are emitted
+
+[tool.ty.rules]
+# Re-tighten to "error" once the legacy service owning these patterns is fixed.
+unresolved-attribute = "warn"     # self.preset / None-union attrs (bots, collectors)
+unresolved-import = "warn"        # .app relative imports (bots, collectors, publishers)
+unresolved-reference = "warn"     # module-level name resolution (bots)
+invalid-argument-type = "warn"    # HTTPStatus vs int, SchedulerManager interval
+invalid-return-type = "warn"     # response.status_code (int) vs HTTPStatus signature
+unsupported-operator = "warn"     # str + None / int concatenation in legacy APIs
+not-subscriptable = "warn"       # subscripting int/HTTPStatus in legacy code
+missing-argument = "warn"        # missing positional args in legacy call sites
+invalid-assignment = "warn"      # SSL context assignment (stdlib typing gap)
+no-matching-overload = "warn"    # re.search() dynamic pattern typing
+not-iterable = "warn"            # SQLAlchemy relationship() -> RelationshipProperty typing gap
+invalid-parameter-default = "warn"  # `Node = None` defaults in Flask-RESTful routes
+invalid-type-arguments = "warn"  # `dict[int]` missing value type arg
+invalid-type-form = "warn"      # lowercase `any` (user meant Any) in annotations
+unknown-argument = "warn"       # langchain kwarg drift (model_name vs model)
+too-many-positional-arguments = "warn"  # legacy collector call sites passing extra args
+
+# Files excluded from ty's type-checking scope. ty still parses these for
+# import resolution when other modules import them, but does not emit
+# diagnostics for them. Use sparingly — prefer fixing the code or downgrading
+# the rule to "warn" instead.
+[tool.ty.src]
+exclude = [
+    # Contains a backslash inside an f-string expression (line 89), which is
+    # invalid syntax on Python 3.10 (added in 3.12). `invalid-syntax` is a hard
+    # parse failure that CANNOT be downgraded to a warning via [tool.ty.rules].
+    # Excluded from scope until the file is fixed; revisiting this on every
+    # cleanup pass is a TODO.
+    "src/collectors/collectors/slack_collector.py",
+]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 40

@@ -20,6 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PRE_COMMIT_REPOS: dict[str, str] = {
     "ruff": "astral-sh/ruff-pre-commit",
     "djlint": "djlint/djLint",
+    "ty": "astral-sh/ty-pre-commit",
 }
 
 

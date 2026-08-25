@@ -74,21 +74,81 @@ services:
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
       DEBUG_SQL: "false"
+      # Default ACME resolver for the generated public-web routers. Must name one
+      # configured on the traefik service below; the GUI overrides it when set.
+      TRAEFIK_CERT_RESOLVER: "${TRAEFIK_CERT_RESOLVER:-}"
+      # So the certificate panel can report the main hostname alongside the webs.
+      TARANIS_NG_HOSTNAME: "${TARANIS_NG_HOSTNAME}"
+      # Which optional services this deployment runs. prestart_core.sh reads it to
+      # seed the default public-web node only when the public-web container really
+      # exists. Passing it here also means flipping the profile in .env recreates
+      # core, so the node is seeded the moment the feed is switched on.
+      COMPOSE_PROFILES: "${COMPOSE_PROFILES:-}"
     labels:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
 
+      # certresolver comes from .env so one variable covers every router. An
+      # empty value is Traefik's own default, so this is safe when ACME is off.
       traefik.http.routers.taranis-api-443.entrypoints: "websecure"
-      traefik.http.routers.taranis-api-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/api/`)"
+      # The browser-facing API. The satellite prefixes are carved out: they are
+      # what collectors, bots and public-web call in on, and a distributed
+      # deployment serves those on the satellite entrypoint instead, where a
+      # firewall can restrict them to worker hosts. The GUI never uses these
+      # three - it works through /api/v1/config/*.
+      traefik.http.routers.taranis-api-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/api/`)
+        && !PathPrefix(`/api/v1/collectors`) && !PathPrefix(`/api/v1/bots`) && !PathPrefix(`/api/v1/public-web`)"
       traefik.http.routers.taranis-api-443.tls: "true"
       traefik.http.routers.taranis-api-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-api-443.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-}"
+      # HSTS, from the GUI via core. Traefik terminates TLS, so it is the only
+      # component that knows whether the browser trusted the certificate. Core
+      # always serves this middleware ("max-age=0" when off), so the reference
+      # cannot dangle - except for one poll while Traefik starts, which logs
+      # 'middleware ... does not exist' and clears itself.
+      traefik.http.routers.taranis-api-443.middlewares: "taranis-hsts@http"
       traefik.http.routers.taranis-api-443.service: "taranis-api"
 
       traefik.http.routers.taranis-sse-443.entrypoints: "websecure"
       traefik.http.routers.taranis-sse-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/sse`)"
       traefik.http.routers.taranis-sse-443.tls: "true"
       traefik.http.routers.taranis-sse-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-sse-443.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-}"
+      traefik.http.routers.taranis-sse-443.middlewares: "taranis-hsts@http"
       traefik.http.routers.taranis-sse-443.service: "taranis-api"
+
+      # --- satellite entrypoint -------------------------------------------------
+      # What a REMOTE worker calls in on. Same core, same TLS, different port, so a
+      # firewall can allow these to worker hosts only while :443 stays world-open
+      # for the GUI. Unused on a single host: the satellites there reach core at
+      # http://core over the compose network and never traverse Traefik at all,
+      # which is why the published port below binds to loopback by default.
+      traefik.http.routers.taranis-api-satellite.entrypoints: "satellite"
+      traefik.http.routers.taranis-api-satellite.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && (PathPrefix(`/api/v1/collectors`)
+        || PathPrefix(`/api/v1/bots`) || PathPrefix(`/api/v1/public-web`))"
+      traefik.http.routers.taranis-api-satellite.tls: "true"
+      traefik.http.routers.taranis-api-satellite.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-api-satellite.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-}"
+      traefik.http.routers.taranis-api-satellite.service: "taranis-api"
+
+      # A remote node's Traefik polls this for its own routers. Node-scoped and
+      # authenticated with that node's api_key - unlike /traefik/dynamic, which is
+      # every node's webs plus their private keys and stays unrouted.
+      traefik.http.routers.taranis-provider-satellite.entrypoints: "satellite"
+      traefik.http.routers.taranis-provider-satellite.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/traefik/dynamic/node`)"
+      traefik.http.routers.taranis-provider-satellite.tls: "true"
+      traefik.http.routers.taranis-provider-satellite.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-provider-satellite.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-}"
+      traefik.http.routers.taranis-provider-satellite.service: "taranis-api"
+
+      # Remote bots subscribe here. /sse is the one path both the browser and a
+      # satellite need, so it is served on both entrypoints.
+      traefik.http.routers.taranis-sse-satellite.entrypoints: "satellite"
+      traefik.http.routers.taranis-sse-satellite.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/sse`)"
+      traefik.http.routers.taranis-sse-satellite.tls: "true"
+      traefik.http.routers.taranis-sse-satellite.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-sse-satellite.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-}"
+      traefik.http.routers.taranis-sse-satellite.service: "taranis-api"
     volumes:
       - "core_data:/data"
     logging:
@@ -297,6 +357,9 @@ services:
       traefik.http.routers.taranis-gui-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/`)"
       traefik.http.routers.taranis-gui-443.tls: "true"
       traefik.http.routers.taranis-gui-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-gui-443.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-}"
+      # See the note on taranis-api-443.
+      traefik.http.routers.taranis-gui-443.middlewares: "taranis-hsts@http"
       traefik.http.routers.taranis-gui-443.service: "taranis-gui"
 
     logging:
@@ -305,73 +368,186 @@ services:
         max-size: "200k"
         max-file: "10"
 
-#   gui-v3:
-#     depends_on:
-#       bootstrap:
-#         condition: service_completed_successfully
-#     restart: unless-stopped
-#     image: "skcert/taranis-ng-gui-v3:${TARANIS_NG_TAG}"
-#     build:
-#       context: ..
-#       dockerfile: ./docker/Dockerfile.gui-v3
-#       args:
-#         HTTP_PROXY: "${HTTP_PROXY}"
-#         HTTPS_PROXY: "${HTTPS_PROXY}"
-#         http_proxy: "${HTTP_PROXY}"
-#         https_proxy: "${HTTPS_PROXY}"
-# #    ports:
-# #      - "8081:80"
-#     environment:
-#       NGINX_WORKERS: "4"
-#       NGINX_CONNECTIONS: "16"
-#       VITE_APP_TARANIS_NG_URL: "${TARANIS_NG_HTTPS_URI}"
-#       VITE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
-#       VITE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
-#       VITE_APP_TARANIS_NG_LOCALE: "${VUE_APP_TARANIS_NG_LOCALE}"
-#       VITE_APP_TARANIS_NG_LOGIN_URL: "${VITE_APP_TARANIS_NG_LOGIN_URL:-}"
-#       VITE_APP_TARANIS_NG_LOGOUT_URL: "${VITE_APP_TARANIS_NG_LOGOUT_URL:-}"
-#       VITE_APP_VERSION: "3.0.0-beta"
-#       TZ: "${TZ}"
-#       NGINX_LOG_LEVEL: "warn"
-#       NGINX_ACCESS_LOG: "on"
-#     labels:
-#       traefik.enable: "true"
-#       traefik.http.services.taranis-gui-v3.loadbalancer.server.port: "80"
+  gui-v3:
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    image: "skcert/taranis-ng-gui-v3:${TARANIS_NG_TAG}"
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.gui-v3
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
+#    ports:
+#      - "8081:80"
+    environment:
+      NGINX_WORKERS: "4"
+      NGINX_CONNECTIONS: "16"
+      VITE_APP_TARANIS_NG_URL: "${TARANIS_NG_HTTPS_URI}"
+      VITE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
+      VITE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
+      VITE_APP_TARANIS_NG_LOCALE: "${VUE_APP_TARANIS_NG_LOCALE}"
+      VITE_APP_TARANIS_NG_LOGIN_URL: "${VITE_APP_TARANIS_NG_LOGIN_URL:-}"
+      VITE_APP_TARANIS_NG_LOGOUT_URL: "${VITE_APP_TARANIS_NG_LOGOUT_URL:-}"
+      VITE_APP_VERSION: "3.0.0-beta"
+      TZ: "${TZ}"
+      NGINX_LOG_LEVEL: "warn"
+      NGINX_ACCESS_LOG: "on"
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.taranis-gui-v3.loadbalancer.server.port: "80"
 
-#       traefik.http.middlewares.redirect-v2-to-443.redirectscheme.scheme: "https"
-#       traefik.http.middlewares.redirect-v2-to-443.redirectscheme.port: "${TARANIS_NG_HTTPS_PORT}"
-#       traefik.http.middlewares.redirect-v2-to-443.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.scheme: "https"
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.port: "${TARANIS_NG_HTTPS_PORT}"
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.permanent: "true"
 
-#       traefik.http.routers.taranis-gui-v3-80.entrypoints: "web"
-#       traefik.http.routers.taranis-gui-v3-80.rule: "PathPrefix(`/v2`)"
-#       traefik.http.routers.taranis-gui-v3-80.middlewares: "redirect-v2-to-443"
+      traefik.http.routers.taranis-gui-v3-80.entrypoints: "web"
+      traefik.http.routers.taranis-gui-v3-80.rule: "PathPrefix(`/v2`)"
+      traefik.http.routers.taranis-gui-v3-80.middlewares: "redirect-v2-to-443"
 
-#       traefik.http.routers.taranis-gui-v3-443.entrypoints: "websecure"
-#       traefik.http.routers.taranis-gui-v3-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/v2`)"
-#       traefik.http.routers.taranis-gui-v3-443.tls: "true"
-#       traefik.http.routers.taranis-gui-v3-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
-#       traefik.http.routers.taranis-gui-v3-443.service: "taranis-gui-v3"
+      traefik.http.routers.taranis-gui-v3-443.entrypoints: "websecure"
+      traefik.http.routers.taranis-gui-v3-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/v2`)"
+      traefik.http.routers.taranis-gui-v3-443.tls: "true"
+      traefik.http.routers.taranis-gui-v3-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-gui-v3-443.service: "taranis-gui-v3"
 
-#     logging:
-#       driver: "json-file"
-#       options:
-#         max-size: "200k"
-#         max-file: "10"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+  public-web:
+    # Gated behind a compose profile so it can be switched off from .env:
+    # COMPOSE_PROFILES=public-web enables it (build + run); empty disables it.
+    profiles:
+      - "public-web"
+    depends_on:
+      core:
+        condition: service_healthy
+    restart: unless-stopped
+    image: "skcert/taranis-ng-public-web:${TARANIS_NG_TAG}"
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.public-web
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
+    environment:
+      TARANIS_NG_CORE_URL: "http://core"
+      TZ: "${TZ}"
+      MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
+    secrets:
+      - api_key
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.taranis-public-web.loadbalancer.server.port: "80"
+
+      # No port-80 router: taranis-gui-80 already redirects every host to HTTPS.
+      #
+      # Configured webs get a router each, by hostname, from core's provider
+      # endpoint. This is the catch-all beneath them, at the lowest priority: an
+      # unconfigured hostname still reaches the app and gets a clean 404, on the
+      # default certificate.
+      traefik.http.routers.taranis-public-web-443.entrypoints: "websecure"
+      traefik.http.routers.taranis-public-web-443.rule: "PathPrefix(`/`)"
+      traefik.http.routers.taranis-public-web-443.tls: "true"
+      traefik.http.routers.taranis-public-web-443.priority: "1"
+      # @file, not @http: the fallback must survive core being unreachable.
+      traefik.http.routers.taranis-public-web-443.middlewares: "public-web-security-headers@file"
+      traefik.http.routers.taranis-public-web-443.service: "taranis-public-web"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
 
   traefik:
+    depends_on:
+      gui:
+        condition: service_started
+      # Traefik pulls the public webs' routers from core at startup, so wait for
+      # it to actually answer HTTP rather than merely exist.
+      core:
+        condition: service_healthy
     restart: unless-stopped
     image: "traefik:3.6.9"
+    # Traefik's whole static configuration. Naming rule: TRAEFIK_ + the YAML path,
+    # uppercased, joined with underscores.
+    #
+    # There is deliberately no traefik.yml: Traefik reads static config from one
+    # source only (file, then flags, then environment), and a file would silently
+    # make every variable here dead. Only dynamic/ is mounted below.
     environment:
-      TZ: "${TZ}"
+      - TZ=${TZ}
+
+      - TRAEFIK_ENTRYPOINTS_WEB_ADDRESS=:80
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS=:443
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP3=true
+      - TRAEFIK_ENTRYPOINTS_TRAEFIK_ADDRESS=:9090
+      # Satellite API. Separate from websecure so the published port can be
+      # firewalled to worker hosts while :443 stays world-open - see the
+      # taranis-*-satellite routers on the core service.
+      - TRAEFIK_ENTRYPOINTS_SATELLITE_ADDRESS=:8443
+
+      # Unauthenticated - keep TRAEFIK_MANAGEMENT_PORT on 127.0.0.1.
+      - TRAEFIK_API=true
+      - TRAEFIK_API_INSECURE=true
+      - TRAEFIK_API_DASHBOARD=true
+
+      # 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL' or 'PANIC'.
+      - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL:-WARN}
+      - TRAEFIK_ACCESSLOG=true
+
+      - TRAEFIK_PROVIDERS_DOCKER=true
+      - TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT=false
+      - TRAEFIK_PROVIDERS_FILE_DIRECTORY=/etc/traefik/dynamic
+      - TRAEFIK_PROVIDERS_FILE_WATCH=true
+      # Core serves the GUI-managed configuration: a router+service per public
+      # web, the middlewares, the TLS options and the default certificate. Outside
+      # /api/, so it is reachable on the compose network only.
+      - TRAEFIK_PROVIDERS_HTTP_ENDPOINT=http://core/traefik/dynamic
+      - TRAEFIK_PROVIDERS_HTTP_POLLINTERVAL=10s
+    # The ACME resolvers. Every TRAEFIK_CERTIFICATESRESOLVERS_<NAME>_ACME_* variable
+    # in this file reaches Traefik, so a deployment defines any CA under any name,
+    # and several at once, without editing this tracked file. Optional - absent
+    # means no ACME at all. See acme.env.example.
+    env_file:
+      - path: ./acme.env
+        required: false
+
     ports:
       - "${TARANIS_NG_HTTP_PORT}:80"
       - "${TARANIS_NG_HTTPS_PORT}:443"
       - "${TRAEFIK_MANAGEMENT_PORT}:9090"
+      # Bound to loopback by default: a single-host stack never uses it. A
+      # distributed one sets TARANIS_NG_SATELLITE_BIND=0.0.0.0 (and _BIND6=::)
+      # and firewalls the port to its worker hosts.
+      #
+      # Two mappings, because naming a host address pins the mapping to that
+      # address family. One "0.0.0.0:..." entry publishes IPv4 only, and a worker
+      # resolving this host's AAAA record then cannot reach the port at all -
+      # arriving as a timeout rather than a refusal, since with nothing published
+      # on v6 the packets fall through to filter/INPUT and a default-deny host
+      # firewall drops them. The other ports above name no address and so are
+      # already dual-stack; these have to ask for it explicitly.
+      - "${TARANIS_NG_SATELLITE_BIND:-127.0.0.1}:${TARANIS_NG_SATELLITE_PORT:-8443}:8443"
+      - "[${TARANIS_NG_SATELLITE_BIND6:-::1}]:${TARANIS_NG_SATELLITE_PORT:-8443}:8443"
       - "${TARANIS_NG_HTTPS_PORT}:443/udp"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./traefik:/etc/traefik:ro"
+      # Only dynamic/ - see the note on environment above.
+      - "./traefik/dynamic:/etc/traefik/dynamic:ro"
       - "./tls:/opt/certs"
+      # Without this, certificates are re-issued on every recreate.
+      - "acme_storage:/letsencrypt"
     logging:
       driver: "json-file"
       options:
@@ -391,6 +567,7 @@ secrets:
     file: ./secrets/secrets_encryption_key.txt
 
 volumes:
+  acme_storage:
   redis_conf:
   postgres_data:
   core_data:

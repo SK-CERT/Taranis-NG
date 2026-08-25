@@ -113,7 +113,3 @@
         window.removeEventListener('notification', handleNotification)
     })
 </script>
-
-<style scoped>
-    /* Additional styling if needed */
-</style>

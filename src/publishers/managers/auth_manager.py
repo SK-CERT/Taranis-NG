@@ -1,16 +1,19 @@
-"""Authentication manager for the API.
+"""Authorization manager for the API.
+
+The check itself lives in :mod:`shared.auth` so all satellites share one policy - this
+module only supplies the two service-specific accessors. It used to hold a
+byte-identical copy of the decorator, one per service.
 
 Returns:
-    _type_: _description_
+    wrapper: Wrapper function for the API endpoints.
 """
 
 import os
 import ssl
-from functools import wraps
-from http import HTTPStatus
 
 from config import Config
 from flask import request
+from shared.auth import make_api_key_required
 
 if os.getenv("SSL_VERIFICATION") == "False":
     try:
@@ -21,20 +24,9 @@ if os.getenv("SSL_VERIFICATION") == "False":
         ssl._create_default_https_context = _create_unverified_https_context  # noqa: SLF001
 
 
-def api_key_required(fn):  # noqa: ANN001, ANN201
-    """Check if the API key is valid.
-
-    Args:
-        fn: The function to be decorated.
-
-    Returns:
-        wrapper: Wrapper function for the API endpoints.
-    """
-
-    @wraps(fn)
-    def wrapper(*args, **kwargs) -> tuple[dict, HTTPStatus]:  # noqa: ANN002, ANN003
-        if "Authorization" not in request.headers or request.headers["Authorization"] != (f"ApiKey {Config.API_KEY}"):
-            return {"error": "not authorized"}, HTTPStatus.UNAUTHORIZED
-        return fn(*args, **kwargs)
-
-    return wrapper
+# Both accessors are read per request: Config.API_KEY so a reloaded key is honoured,
+# and the header because `request` only exists inside a request context.
+api_key_required = make_api_key_required(
+    lambda: Config.API_KEY,
+    lambda: request.headers.get("Authorization"),
+)
