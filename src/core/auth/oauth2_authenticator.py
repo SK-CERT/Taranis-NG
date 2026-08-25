@@ -71,7 +71,9 @@ class OAuth2Authenticator(BaseAuthenticator):
         if not issuer:
             msg = f"OIDC provider '{self.provider.name}' has no issuer URL"
             raise ValueError(msg)
-        metadata = fetch_auth_json(f"{issuer}/.well-known/openid-configuration")
+        internal_issuer = (self.config.get("internal_issuer_url") or "").rstrip("/")
+        connect_issuer = internal_issuer or issuer
+        metadata = fetch_auth_json(f"{connect_issuer}/.well-known/openid-configuration")
         discovered_issuer = metadata.get("issuer")
         if not isinstance(discovered_issuer, str) or discovered_issuer.rstrip("/") != issuer:
             msg = f"OIDC discovery issuer does not match the configured issuer for provider '{self.provider.name}'"
@@ -95,12 +97,21 @@ class OAuth2Authenticator(BaseAuthenticator):
         """Resolve the endpoints for this provider (discovery for oidc, config for oauth2)."""
         if self.provider.kind == "oidc":
             metadata = self._metadata()
+            issuer = metadata.get("issuer")
+            token = metadata["token_endpoint"]
+            userinfo = metadata.get("userinfo_endpoint")
+            jwks_uri = metadata.get("jwks_uri")
+            internal_issuer = (self.config.get("internal_issuer_url") or "").rstrip("/")
+            if internal_issuer:
+                token = token.replace(issuer, internal_issuer)
+                userinfo = userinfo.replace(issuer, internal_issuer)
+                jwks_uri = jwks_uri.replace(issuer, internal_issuer)
             return {
                 "authorize": metadata["authorization_endpoint"],
-                "token": metadata["token_endpoint"],
-                "userinfo": metadata.get("userinfo_endpoint"),
-                "jwks_uri": metadata.get("jwks_uri"),
-                "issuer": metadata.get("issuer"),
+                "token": token,
+                "userinfo": userinfo,
+                "jwks_uri": jwks_uri,
+                "issuer": issuer,
             }
         endpoints = {
             "authorize": self.config.get("authorize_url"),

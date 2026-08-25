@@ -1740,6 +1740,8 @@
         "require_mfa_disabled_hint": "Diese Anmeldemethode stellt keine zusätzliche MFA-Anforderung. Eine Richtlinie der Website, Organisation oder des Benutzers kann dennoch einen zweiten Faktor verlangen.",
         "issuer_url": "Aussteller-URL",
         "issuer_url_hint": "Basis-URL für die Discovery, z. B. https://idp.example.org/realms/main",
+        "internal_issuer_url": "Interne Issuer-URL",
+        "internal_issuer_url_hint": "Optional. Legen Sie dies nur fest, wenn der OIDC-Anbieter eine andere URL für die interne Kommunikation verwendet, z. B. https://idp.int.example.com:8084/realms/main. Leer lassen, um nur die Issuer-URL zu verwenden.",
         "client_id": "Client-ID",
         "scopes": "Scopes",
         "username_claim": "Claim für den Benutzernamen",

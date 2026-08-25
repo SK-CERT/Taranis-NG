@@ -1740,6 +1740,8 @@
         "require_mfa_disabled_hint": "Cette méthode de connexion n’ajoute aucune exigence MFA. Une politique du site, de l’organisation ou de l’utilisateur peut néanmoins exiger un second facteur.",
         "issuer_url": "URL de l’émetteur",
         "issuer_url_hint": "URL de base de découverte, p. ex. https://idp.example.org/realms/main",
+        "internal_issuer_url": "URL interne de l’émetteur",
+        "internal_issuer_url_hint": "Facultatif. Renseignez cette valeur uniquement lorsque le fournisseur OIDC utilise une URL différente pour la communication interne, p. ex. https://idp.int.example.com:8084/realms/main. Laissez vide pour utiliser uniquement l’URL de l’émetteur.",
         "client_id": "ID client",
         "scopes": "Portées",
         "username_claim": "Claim du nom d’utilisateur",

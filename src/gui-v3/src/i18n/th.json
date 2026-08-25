@@ -1740,6 +1740,8 @@
         "require_mfa_disabled_hint": "วิธีเข้าสู่ระบบนี้ไม่ได้เพิ่มข้อกำหนด MFA แต่นโยบายของไซต์ องค์กร หรือผู้ใช้อาจยังกำหนดให้ใช้ปัจจัยที่สองได้",
         "issuer_url": "URL ของผู้ออก",
         "issuer_url_hint": "URL ฐานสำหรับ Discovery เช่น https://idp.example.org/realms/main",
+        "internal_issuer_url": "URL ของผู้ออกภายใน",
+        "internal_issuer_url_hint": "ไม่บังคับ ให้ตั้งค่านี้เฉพาะเมื่อผู้ให้บริการ OIDC ใช้ URL อื่นสำหรับการสื่อสารภายใน เช่น https://idp.int.example.com:8084/realms/main เว้นว่างไว้เพื่อใช้เฉพาะ Issuer URL",
         "client_id": "ID ไคลเอนต์",
         "scopes": "ขอบเขต",
         "username_claim": "Claim ชื่อผู้ใช้",

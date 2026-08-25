@@ -8,6 +8,7 @@
  */
 export type ProviderConfig = {
     issuer_url?: string
+    internal_issuer_url?: string
     client_id?: string
     scopes?: string
     username_claim?: string

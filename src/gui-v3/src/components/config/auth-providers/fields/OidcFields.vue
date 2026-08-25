@@ -14,6 +14,20 @@
             />
         </v-col>
     </v-row>
+    <v-row>
+        <v-col cols="12">
+            <v-text-field
+                v-model="config.internal_issuer_url"
+                dir="ltr"
+                :label="t('auth_provider.internal_issuer_url')"
+                variant="outlined"
+                density="comfortable"
+                :hint="t('auth_provider.internal_issuer_url_hint')"
+                persistent-hint
+                :disabled="saving"
+            />
+        </v-col>
+    </v-row>
 </template>
 
 <script setup lang="ts">
