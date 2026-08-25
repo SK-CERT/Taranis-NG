@@ -20,7 +20,7 @@ dependencies = [
     "gunicorn==26.0.0",
     "Jinja2==3.1.6",
     "ldap3==2.10.2rc4",
-    "lxml==6.1.1",
+    "lxml==6.1.2",
     "minisaml==26.1",
     "marshmallow==4.3.1",
     "psycopg[binary]==3.3.4",
