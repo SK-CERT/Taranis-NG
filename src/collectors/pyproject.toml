@@ -15,7 +15,7 @@ dependencies = [
     "marshmallow==4.3.1",
     "PySocks==1.7.1",
     "python-dateutil==2.9.0.post0",
-    "python-dotenv==1.2.2",
+    "python-dotenv==1.2.3",
     "requests==2.34.2",
     "schedule==1.2.2",
     "selenium==4.47.0",
