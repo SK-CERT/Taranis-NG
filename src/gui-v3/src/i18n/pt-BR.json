@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "Este método de login não acrescenta uma exigência de MFA. A política do site, da organização ou do usuário ainda pode exigir um segundo fator.",
         "issuer_url": "URL do emissor",
         "issuer_url_hint": "URL base de descoberta, por exemplo, https://idp.example.org/realms/main",
+        "internal_issuer_url": "URL interno do emissor",
+        "internal_issuer_url_hint": "Opcional. Defina isto somente quando o provedor OIDC usar uma URL diferente para comunicação interna, por exemplo, https://idp.int.example.com:8084/realms/main. Deixe em branco para usar somente a URL do emissor.",
         "client_id": "ID do cliente",
         "scopes": "Escopos",
         "username_claim": "Claim do nome de usuário",

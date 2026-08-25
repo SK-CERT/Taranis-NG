@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "このログイン方法自体は MFA を要求しません。サイト、組織、またはユーザーポリシーによって第2要素が要求される場合があります。",
         "issuer_url": "発行者 URL",
         "issuer_url_hint": "Discovery のベース URL（例: https://idp.example.org/realms/main）",
+        "internal_issuer_url": "内部 Issuer URL",
+        "internal_issuer_url_hint": "オプション。OIDC プロバイダーが内部通信に異なる URL を使用する場合のみ設定してください（例: https://idp.int.example.com:8084/realms/main）。Issuer URL のみを使用する場合は空欄にしてください。",
         "client_id": "クライアント ID",
         "scopes": "スコープ",
         "username_claim": "ユーザー名 claim",

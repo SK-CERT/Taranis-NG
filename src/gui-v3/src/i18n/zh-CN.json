@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "此登录方式不增加 MFA 要求。站点、组织或用户策略仍可要求使用第二重验证。",
         "issuer_url": "签发者 URL",
         "issuer_url_hint": "发现服务的基础 URL，例如 https://idp.example.org/realms/main",
+        "internal_issuer_url": "内部签发者 URL",
+        "internal_issuer_url_hint": "可选。仅当 OIDC 提供商使用不同的 URL 进行内部通信时设置此项，例如 https://idp.int.example.com:8084/realms/main。留空则仅使用签发者 URL。",
         "client_id": "客户端 ID",
         "scopes": "作用域",
         "username_claim": "用户名声明",

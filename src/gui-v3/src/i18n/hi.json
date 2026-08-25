@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "यह लॉगिन विधि MFA आवश्यक नहीं करती। साइट, संगठन या उपयोगकर्ता नीति फिर भी दूसरा कारक आवश्यक कर सकती है।",
         "issuer_url": "जारीकर्ता URL",
         "issuer_url_hint": "Discovery का मूल URL, जैसे https://idp.example.org/realms/main",
+        "internal_issuer_url": "आंतरिक जारीकर्ता URL",
+        "internal_issuer_url_hint": "वैकल्पिक। इसे केवल तभी सेट करें जब OIDC प्रदाता आंतरिक संचार के लिए अलग URL का उपयोग करता हो, जैसे https://idp.int.example.com:8084/realms/main। केवल जारीकर्ता URL का उपयोग करने के लिए इसे खाली छोड़ दें।",
         "client_id": "क्लाइंट ID",
         "scopes": "स्कोप",
         "username_claim": "उपयोगकर्ता नाम claim",

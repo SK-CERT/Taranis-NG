@@ -26,9 +26,8 @@ describe('Arabic production catalog contracts', () => {
     const arabicStrings = collectStrings(ar)
     const arabicByPath = new Map(arabicStrings)
 
-    it('matches the post-cleanup canonical English leaf order', () => {
-        expect(englishStrings).toHaveLength(1799)
-        expect(arabicStrings).toHaveLength(1799)
+    it('matches the canonical English leaf order', () => {
+        expect(arabicStrings).toHaveLength(englishStrings.length)
         expect(arabicStrings.map(([path]) => path)).toEqual(englishStrings.map(([path]) => path))
     })
 
@@ -207,8 +206,7 @@ describe.each([
     const localizedStrings = collectStrings(catalog)
 
     it('matches the canonical English key order and placeholder names', () => {
-        expect(englishStrings).toHaveLength(1799)
-        expect(localizedStrings).toHaveLength(1799)
+        expect(localizedStrings).toHaveLength(englishStrings.length)
         expect(localizedStrings.map(([path]) => path)).toEqual(englishStrings.map(([path]) => path))
 
         for (let index = 0; index < englishStrings.length; index += 1) {
@@ -245,8 +243,7 @@ describe.each([
     const localizedStrings = collectStrings(catalog)
 
     it('matches the canonical English leaf order and placeholder names', () => {
-        expect(englishStrings).toHaveLength(1799)
-        expect(localizedStrings).toHaveLength(1799)
+        expect(localizedStrings).toHaveLength(englishStrings.length)
         expect(localizedStrings.map(([path]) => path)).toEqual(englishStrings.map(([path]) => path))
 
         for (let index = 0; index < englishStrings.length; index += 1) {

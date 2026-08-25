@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "Phương thức đăng nhập này không thêm yêu cầu MFA. Chính sách của trang, tổ chức hoặc người dùng vẫn có thể yêu cầu yếu tố thứ hai.",
         "issuer_url": "URL nhà phát hành",
         "issuer_url_hint": "URL cơ sở để khám phá, ví dụ https://idp.example.org/realms/main",
+        "internal_issuer_url": "URL Issuer nội bộ",
+        "internal_issuer_url_hint": "Tùy chọn. Chỉ đặt giá trị này khi nhà cung cấp OIDC sử dụng URL khác cho việc giao tiếp nội bộ, ví dụ https://idp.int.example.com:8084/realms/main. Để trống nếu chỉ sử dụng URL Issuer.",
         "client_id": "ID máy khách",
         "scopes": "Phạm vi",
         "username_claim": "Claim tên người dùng",

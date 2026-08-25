@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "Tento spôsob prihlásenia sám MFA nevyžaduje. Druhý faktor môže stále vyžadovať politika stránky, organizácie alebo používateľa.",
         "issuer_url": "Issuer URL",
         "issuer_url_hint": "Základná URL pre discovery, napr. https://idp.example.org/realms/main",
+        "internal_issuer_url": "Interná Issuer URL",
+        "internal_issuer_url_hint": "Voliteľné. Nastavte iba v prípade, že poskytovateľ OIDC používa inú URL pre internú komunikáciu, napr. https://idp.int.example.com:8084/realms/main. Ponechajte prázdne, ak sa má používať iba Issuer URL.",
         "client_id": "Client ID",
         "scopes": "Scopes",
         "username_claim": "Claim s používateľským menom",

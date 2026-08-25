@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "Ta metoda logowania nie nakłada wymogu MFA. Zasady witryny, organizacji lub użytkownika mogą nadal wymagać drugiego składnika.",
         "issuer_url": "URL wystawcy",
         "issuer_url_hint": "Bazowy URL używany do discovery, na przykład https://idp.example.org/realms/main",
+        "internal_issuer_url": "Wewnętrzny adres URL wystawcy",
+        "internal_issuer_url_hint": "Opcjonalne. Ustaw tylko wtedy, gdy dostawca OIDC używa innego adresu URL do komunikacji wewnętrznej, np. https://idp.int.example.com:8084/realms/main. Pozostaw puste, aby używać tylko adresu URL wystawcy.",
         "client_id": "Identyfikator klienta",
         "scopes": "Zakresy",
         "username_claim": "Claim nazwy użytkownika",

@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "لا تضيف طريقة تسجيل الدخول هذه أي متطلب MFA. وقد تظل سياسة الموقع أو المنظمة أو المستخدم تطلب عاملًا ثانيًا.",
         "issuer_url": "عنوان URL لجهة الإصدار",
         "issuer_url_hint": "عنوان URL الأساسي للاكتشاف، مثل https://idp.example.org/realms/main",
+        "internal_issuer_url": "عنوان URL الداخلي لجهة الإصدار",
+        "internal_issuer_url_hint": "اختياري. اضبط هذا فقط عندما يستخدم موفر OIDC عنوان URL مختلفًا للاتصال الداخلي، مثل https://idp.int.example.com:8084/realms/main. اتركه فارغًا لاستخدام عنوان URL لجهة الإصدار فقط.",
         "client_id": "معرّف العميل (ID)",
         "scopes": "النطاقات",
         "username_claim": "مطالبة اسم المستخدم",

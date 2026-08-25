@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "This login method adds no MFA requirement. Site, organization or user policy can still require a second factor.",
         "issuer_url": "Issuer URL",
         "issuer_url_hint": "Discovery base URL, e.g. https://idp.example.org/realms/main",
+        "internal_issuer_url": "Internal Issuer URL",
+        "internal_issuer_url_hint": "Optional. Set this only when the OIDC provider uses a different URL for internal communication, e.g. https://idp.int.example.com:8084/realms/main. Leave empty to use only the Issuer URL.",
         "client_id": "Client ID",
         "scopes": "Scopes",
         "username_claim": "Username claim",

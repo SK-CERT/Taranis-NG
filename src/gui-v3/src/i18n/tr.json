@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "Bu giriş yöntemi ek MFA zorunluluğu getirmez. Site, kuruluş veya kullanıcı ilkesi yine de ikinci faktör isteyebilir.",
         "issuer_url": "Yayıncı URL'si",
         "issuer_url_hint": "Keşif temel URL'si, örn. https://idp.example.org/realms/main",
+        "internal_issuer_url": "Dahili Yayıncı URL'si",
+        "internal_issuer_url_hint": "İsteğe bağlıdır. Bunu yalnızca OIDC sağlayıcısı dahili iletişim için farklı bir URL kullanıyorsa ayarlayın; ör. https://idp.int.example.com:8084/realms/main. Yalnızca Yayıncı URL'sini kullanmak için boş bırakın.",
         "client_id": "İstemci kimliği",
         "scopes": "Kapsamlar",
         "username_claim": "Kullanıcı adı claim'i",

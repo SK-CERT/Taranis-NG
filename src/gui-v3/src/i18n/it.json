@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "Questo metodo di accesso non aggiunge alcun requisito MFA. I criteri del sito, dell’organizzazione o dell’utente possono comunque richiedere un secondo fattore.",
         "issuer_url": "URL dell’emittente",
         "issuer_url_hint": "URL di base per il discovery, ad es. https://idp.example.org/realms/main",
+        "internal_issuer_url": "URL interna dell’emittente",
+        "internal_issuer_url_hint": "Facoltativo. Impostare questo valore solo quando il provider OIDC utilizza un URL diverso per la comunicazione interna, ad es. https://idp.int.example.com:8084/realms/main. Lasciare vuoto per utilizzare solo l’URL dell’emittente.",
         "client_id": "ID client",
         "scopes": "Ambiti",
         "username_claim": "Claim del nome utente",

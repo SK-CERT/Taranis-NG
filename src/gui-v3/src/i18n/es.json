@@ -1743,6 +1743,8 @@
         "require_mfa_disabled_hint": "Este método de inicio de sesión no añade ningún requisito de MFA. Las políticas del sitio, de la organización o del usuario pueden seguir exigiendo un segundo factor.",
         "issuer_url": "URL del emisor",
         "issuer_url_hint": "URL base de descubrimiento, p. ej. https://idp.example.org/realms/main",
+        "internal_issuer_url": "URL interna del emisor",
+        "internal_issuer_url_hint": "Opcional. Establezca este valor solo cuando el proveedor OIDC utilice una URL diferente para la comunicación interna, p. ej., https://idp.int.example.com:8084/realms/main. Déjelo vacío para utilizar únicamente la URL del emisor.",
         "client_id": "ID de cliente",
         "scopes": "Ámbitos",
         "username_claim": "Claim del nombre de usuario",
