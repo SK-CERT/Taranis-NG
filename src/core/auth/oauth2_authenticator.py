@@ -21,11 +21,13 @@ request and must only be selected for providers that cannot use S256.
 from __future__ import annotations
 
 import secrets
+from http import HTTPStatus
 from typing import TYPE_CHECKING
 
 import jwt as pyjwt
-from auth.base_authenticator import BaseAuthenticator, ExternalIdentity
+from auth.base_authenticator import BaseAuthenticator, ExternalIdentity, ProviderConfigurationError
 from auth.url_guard import OUTBOUND_TIMEOUT, assert_auth_endpoint_url, fetch_auth_json, read_limited_json
+from authlib.integrations.base_client import OAuthError
 from authlib.integrations.requests_client import OAuth2Session
 from managers import log_manager
 
@@ -39,10 +41,155 @@ PKCE_VERIFIER_BYTES = 64
 # ``none`` remains for providers that do not implement PKCE. ``plain`` is an
 # explicit legacy compatibility mode; it is never selected as a fallback.
 PKCE_METHODS = ("none", "S256", "plain")
+# provider kinds this module drives, and therefore the ones it can test
+OAUTH_VERIFIABLE_KINDS = ("oidc", "oauth2")
+# Length of the throwaway authorization code the configuration probe sends. It
+# only has to be a code no provider could ever have issued.
+PROBE_CODE_BYTES = 32
+
+# RFC 6749 section 5.2: the token endpoint authenticates the client before it
+# looks at the grant, so these codes can only be a verdict on our client
+# credentials. Keycloak answers a wrong secret with ``unauthorized_client``
+# rather than the ``invalid_client`` the RFC suggests, hence both.
+CLIENT_AUTH_ERRORS = ("invalid_client", "unauthorized_client")
+# Conversely, these are all decisions a server can only reach *after* it has
+# authenticated the client - the grant, the scope and the resource are all bound
+# to the client - so receiving one proves the credentials were accepted.
+# ``invalid_request`` is deliberately absent: a malformed request is rejected
+# before anyone is authenticated, so it proves nothing either way.
+POST_CLIENT_AUTH_ERRORS = ("invalid_grant", "unsupported_grant_type", "invalid_scope", "invalid_target")
 
 # per-provider caches, invalidated when the provider row is updated
 _metadata_cache: dict[int, tuple[str, dict]] = {}
 _jwks_cache: dict[int, tuple[str, dict]] = {}
+
+
+def fetch_discovery(issuer_url: str | None, provider_name: str, internal_issuer_url: str | None = None) -> dict:
+    """Fetch and validate an OIDC discovery document.
+
+    When ``internal_issuer_url`` is set, the document is fetched from that URL
+    (e.g. a host reachable from the backend that differs from the public issuer),
+    but the issuer it reports is still checked against the configured
+    ``issuer_url``.
+
+    Args:
+        issuer_url (str): The configured issuer (discovery base) URL.
+        provider_name (str): Provider name, for error messages.
+        internal_issuer_url (str): Optional URL to fetch discovery from when the
+            provider uses a different address for internal communication.
+
+    Returns:
+        dict: The discovery document.
+
+    Raises:
+        ValueError: When the issuer is missing, the document's own issuer does
+            not match the configured one, or a required endpoint is missing or
+            not an acceptable auth endpoint URL.
+    """
+    issuer = (issuer_url or "").rstrip("/")
+    if not issuer:
+        msg = f"OIDC provider '{provider_name}' has no issuer URL"
+        raise ValueError(msg)
+    connect_issuer = (internal_issuer_url or "").rstrip("/") or issuer
+    metadata = fetch_auth_json(f"{connect_issuer}/.well-known/openid-configuration")
+    discovered_issuer = metadata.get("issuer")
+    if not isinstance(discovered_issuer, str) or discovered_issuer.rstrip("/") != issuer:
+        msg = f"OIDC discovery issuer does not match the configured issuer for provider '{provider_name}'"
+        raise ValueError(msg)
+    for key in ("authorization_endpoint", "token_endpoint", "jwks_uri"):
+        endpoint = metadata.get(key)
+        if not isinstance(endpoint, str) or not endpoint:
+            msg = f"OIDC discovery document has no valid '{key}' for provider '{provider_name}'"
+            raise ValueError(msg)
+        assert_auth_endpoint_url(endpoint)
+    # userinfo is used at login; introspection and revocation only by the
+    # configuration test, but all three are fetched server-side and so must pass
+    # the same SSRF guard as the endpoints above.
+    for key in ("userinfo_endpoint", "introspection_endpoint", "revocation_endpoint"):
+        endpoint = metadata.get(key)
+        if endpoint is not None:
+            if not isinstance(endpoint, str) or not endpoint:
+                msg = f"OIDC discovery document has an invalid '{key}' for provider '{provider_name}'"
+                raise ValueError(msg)
+            assert_auth_endpoint_url(endpoint)
+    return metadata
+
+
+def resolve_endpoints(kind: str, config: dict, provider_name: str, metadata: dict | None = None) -> dict:
+    """Resolve a provider's endpoints (discovery for oidc, configuration for oauth2).
+
+    For OIDC providers, when ``internal_issuer_url`` is set, every server-side
+    endpoint (token, userinfo, jwks_uri, introspection, revocation) is rewritten
+    to use that internal host instead of the public one advertised in discovery.
+    The browser-facing ``authorize`` endpoint is left untouched.
+
+    Args:
+        kind (str): The provider kind (``oidc`` or ``oauth2``).
+        config (dict): The provider configuration.
+        provider_name (str): Provider name, for error messages.
+        metadata (dict): An already-fetched discovery document, when the caller
+            holds a cached one; fetched here otherwise.
+
+    Returns:
+        dict: The authorize / token / userinfo / jwks_uri / issuer endpoints.
+
+    Raises:
+        ValueError: When a required endpoint is missing or unacceptable.
+    """
+    if kind == "oidc":
+        metadata = (
+            metadata if metadata is not None else fetch_discovery(config.get("issuer_url"), provider_name, config.get("internal_issuer_url"))
+        )
+        issuer = metadata.get("issuer")
+        internal_issuer = (config.get("internal_issuer_url") or "").rstrip("/")
+        endpoints = {
+            "authorize": metadata["authorization_endpoint"],
+            "token": metadata["token_endpoint"],
+            "userinfo": metadata.get("userinfo_endpoint"),
+            "jwks_uri": metadata.get("jwks_uri"),
+            "issuer": issuer,
+            "introspect": metadata.get("introspection_endpoint"),
+            "revoke": metadata.get("revocation_endpoint"),
+        }
+        if internal_issuer and internal_issuer != issuer:
+            for key in ("token", "userinfo", "jwks_uri", "introspect", "revoke"):
+                if isinstance(endpoints[key], str) and issuer:
+                    endpoints[key] = endpoints[key].replace(issuer, internal_issuer)
+        return endpoints
+    endpoints = {
+        "authorize": config.get("authorize_url"),
+        "token": config.get("token_url"),
+        "userinfo": config.get("userinfo_url"),
+        "jwks_uri": None,
+        "issuer": None,
+        "introspect": None,
+        "revoke": None,
+    }
+    for key in ("authorize", "token"):
+        endpoint = endpoints[key]
+        if not isinstance(endpoint, str) or not endpoint:
+            msg = f"OAuth provider '{provider_name}' has no valid {key} URL"
+            raise ValueError(msg)
+        assert_auth_endpoint_url(endpoint)
+    if endpoints["userinfo"]:
+        assert_auth_endpoint_url(endpoints["userinfo"])
+    return endpoints
+
+
+def _token_error_code(ex: Exception) -> str | None:
+    """Return the OAuth 2.0 error code of a failed token request, when it carries one."""
+    error = getattr(ex, "error", None)
+    return error if isinstance(error, str) and error else None
+
+
+def _is_client_auth_rejection(ex: Exception) -> bool:
+    """Tell whether a token-endpoint failure was a rejection of our client credentials."""
+    if _token_error_code(ex) in CLIENT_AUTH_ERRORS:
+        return True
+    # A provider that answers client authentication failures with a bare 401 and
+    # no parsable body still tells us what we need to know.
+    response = getattr(ex, "response", None)
+    return getattr(response, "status_code", None) == HTTPStatus.UNAUTHORIZED
 
 
 class OAuth2Authenticator(BaseAuthenticator):
@@ -67,68 +214,34 @@ class OAuth2Authenticator(BaseAuthenticator):
         cached = _metadata_cache.get(self.provider.id)
         if cached and cached[0] == marker:
             return cached[1]
-        issuer = (self.config.get("issuer_url") or "").rstrip("/")
-        if not issuer:
-            msg = f"OIDC provider '{self.provider.name}' has no issuer URL"
-            raise ValueError(msg)
-        internal_issuer = (self.config.get("internal_issuer_url") or "").rstrip("/")
-        connect_issuer = internal_issuer or issuer
-        metadata = fetch_auth_json(f"{connect_issuer}/.well-known/openid-configuration")
-        discovered_issuer = metadata.get("issuer")
-        if not isinstance(discovered_issuer, str) or discovered_issuer.rstrip("/") != issuer:
-            msg = f"OIDC discovery issuer does not match the configured issuer for provider '{self.provider.name}'"
-            raise ValueError(msg)
-        for key in ("authorization_endpoint", "token_endpoint", "jwks_uri"):
-            endpoint = metadata.get(key)
-            if not isinstance(endpoint, str) or not endpoint:
-                msg = f"OIDC discovery document has no valid '{key}' for provider '{self.provider.name}'"
-                raise ValueError(msg)
-            assert_auth_endpoint_url(endpoint)
-        userinfo_endpoint = metadata.get("userinfo_endpoint")
-        if userinfo_endpoint is not None:
-            if not isinstance(userinfo_endpoint, str) or not userinfo_endpoint:
-                msg = f"OIDC discovery document has an invalid 'userinfo_endpoint' for provider '{self.provider.name}'"
-                raise ValueError(msg)
-            assert_auth_endpoint_url(userinfo_endpoint)
+        metadata = fetch_discovery(self.config.get("issuer_url"), self.provider.name, self.config.get("internal_issuer_url"))
         _metadata_cache[self.provider.id] = (marker, metadata)
         return metadata
 
     def _endpoints(self) -> dict:
         """Resolve the endpoints for this provider (discovery for oidc, config for oauth2)."""
-        if self.provider.kind == "oidc":
-            metadata = self._metadata()
-            issuer = metadata.get("issuer")
-            token = metadata["token_endpoint"]
-            userinfo = metadata.get("userinfo_endpoint")
-            jwks_uri = metadata.get("jwks_uri")
-            internal_issuer = (self.config.get("internal_issuer_url") or "").rstrip("/")
-            if internal_issuer:
-                token = token.replace(issuer, internal_issuer)
-                userinfo = userinfo.replace(issuer, internal_issuer)
-                jwks_uri = jwks_uri.replace(issuer, internal_issuer)
-            return {
-                "authorize": metadata["authorization_endpoint"],
-                "token": token,
-                "userinfo": userinfo,
-                "jwks_uri": jwks_uri,
-                "issuer": issuer,
-            }
-        endpoints = {
-            "authorize": self.config.get("authorize_url"),
-            "token": self.config.get("token_url"),
-            "userinfo": self.config.get("userinfo_url"),
-            "jwks_uri": None,
-            "issuer": None,
-        }
-        for key in ("authorize", "token"):
-            endpoint = endpoints[key]
-            if not isinstance(endpoint, str) or not endpoint:
-                msg = f"OAuth provider '{self.provider.name}' has no valid {key} URL"
-                raise ValueError(msg)
-            assert_auth_endpoint_url(endpoint)
-        if endpoints["userinfo"]:
-            assert_auth_endpoint_url(endpoints["userinfo"])
-        return endpoints
+        metadata = self._metadata() if self.provider.kind == "oidc" else None
+        return resolve_endpoints(self.provider.kind, self.config, self.provider.name, metadata)
+
+    def _client_secret(self) -> str | None:
+        """Return the decrypted client secret, refusing to log in with a broken one.
+
+        A secret that is stored but no longer decryptable (the secrets encryption
+        key changed) would otherwise be sent as no secret at all, and the IdP
+        would answer with an "invalid client credentials" error that points the
+        administrator at the value they typed rather than at the key.
+
+        Raises:
+            ProviderConfigurationError: When the stored secret cannot be decrypted.
+        """
+        secret = self.provider.get_secret_plaintext()
+        if self.provider.secret and secret is None:
+            msg = (
+                f"The stored client secret of provider '{self.provider.name}' could not be decrypted - "
+                f"was the secrets encryption key changed? Re-enter the client secret."
+            )
+            raise ProviderConfigurationError(msg)
+        return secret
 
     def _scopes(self) -> str:
         """Return the configured scopes (with kind-appropriate defaults)."""
@@ -216,10 +329,14 @@ class OAuth2Authenticator(BaseAuthenticator):
 
         Returns:
             ExternalIdentity: The authenticated identity, or None on failure.
+
+        Raises:
+            ProviderConfigurationError: When the identity provider rejected this
+                service's own client credentials, which no user can work around.
         """
         try:
             endpoints = self._endpoints()
-            secret = self.provider.get_secret_plaintext()
+            secret = self._client_secret()
             session = OAuth2Session(self.config.get("client_id"), secret, scope=self._scopes(), redirect_uri=redirect_uri)
             fetch_kwargs: dict[str, str] = {}
             if self._use_pkce():
@@ -231,14 +348,24 @@ class OAuth2Authenticator(BaseAuthenticator):
                     return None
                 fetch_kwargs["code_verifier"] = code_verifier
             assert_auth_endpoint_url(endpoints["token"])
-            token = session.fetch_token(
-                endpoints["token"],
-                code=code,
-                grant_type="authorization_code",
-                timeout=OUTBOUND_TIMEOUT,
-                allow_redirects=False,
-                **fetch_kwargs,
-            )
+            try:
+                token = session.fetch_token(
+                    endpoints["token"],
+                    code=code,
+                    grant_type="authorization_code",
+                    timeout=OUTBOUND_TIMEOUT,
+                    allow_redirects=False,
+                    **fetch_kwargs,
+                )
+            except Exception as ex:
+                if not _is_client_auth_rejection(ex):
+                    raise
+                msg = (
+                    f"Provider '{self.provider.name}' rejected our client credentials at the token endpoint "
+                    f"({_token_error_code(ex) or 'unauthorized'}); check the client ID and client secret"
+                )
+                log_manager.store_auth_error_activity(msg, ex)
+                raise ProviderConfigurationError(msg) from ex
 
             claims = {}
             if self.provider.kind == "oidc":
@@ -274,6 +401,10 @@ class OAuth2Authenticator(BaseAuthenticator):
                 name=claims.get(self.config.get("name_claim") or "name"),
                 email=claims.get(self.config.get("email_claim") or "email"),
             )
+        except ProviderConfigurationError:
+            # An administrator's problem, not the subject's: reported separately
+            # so the login page can say so. Already logged where it was raised.
+            raise
         except Exception as ex:
             log_manager.store_auth_error_activity(f"OAuth callback failed for provider '{self.provider.name}'", ex)
             return None
@@ -337,3 +468,219 @@ class OAuth2Authenticator(BaseAuthenticator):
             for key in pyjwt.PyJWKSet.from_dict(jwks).keys
             if key.algorithm_name == algorithm and key.public_key_use in (None, "sig") and (key_id is None or key.key_id == key_id)
         ]
+
+
+def _probe_client_authenticated_endpoint(session: OAuth2Session, url: str, method: str) -> tuple[str, str] | None:
+    """Ask an endpoint whose *only* precondition is client authentication.
+
+    RFC 7662 (introspection) and RFC 7009 (revocation) both require the client to
+    authenticate and both answer 200 for a token they know nothing about. That
+    makes them the sharpest possible test of a client ID and secret: nothing but
+    the credentials can decide the outcome, so 200 means they were accepted and
+    401 means they were not. Authlib signs the request with the same client
+    authentication the login uses, so a pass here is a pass at login too.
+
+    Args:
+        session (OAuth2Session): Session carrying the client ID and secret.
+        url (str): The introspection or revocation endpoint.
+        method (str): ``introspect_token`` or ``revoke_token``.
+
+    Returns:
+        tuple | None: The verdict and detail, or None when this endpoint gave no
+            usable answer and the next probe should be tried.
+    """
+    try:
+        response = getattr(session, method)(
+            url,
+            token=secrets.token_urlsafe(PROBE_CODE_BYTES),
+            token_type_hint="access_token",  # noqa: S106 - a hint about the throwaway token's type, not a secret
+            timeout=OUTBOUND_TIMEOUT,
+            allow_redirects=False,
+            stream=True,  # the body is irrelevant; the status code carries the verdict
+        )
+    except Exception:
+        return None
+    try:
+        if response.status_code == HTTPStatus.OK:
+            return "accepted", f"the client ID and secret were accepted at {url}"
+        # 401 is what RFC 6749 section 5.2 reserves for failed client
+        # authentication. 403 is not read as a rejection: it usually means the
+        # client authenticated but may not introspect, so let the next probe try.
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
+            return "rejected", f"{url} refused the client ID or client secret (HTTP 401)"
+    finally:
+        response.close()
+    return None
+
+
+def _probe_client_credentials_grant(session: OAuth2Session, token_url: str) -> tuple[str, str] | None:
+    """Ask the token endpoint for a client_credentials token, which tests only the credentials.
+
+    Args:
+        session (OAuth2Session): Session carrying the client ID and secret.
+        token_url (str): The token endpoint.
+
+    Returns:
+        tuple | None: The verdict and detail, or None when the answer does not
+            separate the credentials from the grant and the next probe should run.
+    """
+    try:
+        session.fetch_token(token_url, grant_type="client_credentials", timeout=OUTBOUND_TIMEOUT, allow_redirects=False)
+    except OAuthError as ex:
+        error = _token_error_code(ex) or "unknown_error"
+        if error == "invalid_client":
+            return "rejected", f"invalid_client: {ex.description or 'the client ID or client secret was refused'}"
+        if error in POST_CLIENT_AUTH_ERRORS:
+            # The server got past client authentication and only then refused the
+            # grant, so the credentials are good.
+            return "accepted", f"the client authenticated; only the client_credentials grant was refused ({error})"
+        # ``unauthorized_client`` is deliberately not decided here: Keycloak uses
+        # it both for a wrong secret and for a client with service accounts off.
+        return None
+    except Exception:
+        return None
+    return "accepted", "the client ID and secret were accepted for a client_credentials token"
+
+
+def _probe_authorization_code(session: OAuth2Session, token_url: str) -> tuple[str, str]:
+    """Last resort: exchange an authorization code that was never issued.
+
+    Weaker than the probes above, because it assumes the server authenticates the
+    client before it validates the grant (RFC 6749 section 5.2) - not every
+    implementation does, and one that checks the code first would answer
+    ``invalid_grant`` without ever looking at the secret. It is still the only
+    probe that works everywhere, so it decides when nothing better is available.
+
+    Args:
+        session (OAuth2Session): Session carrying the client ID and secret.
+        token_url (str): The token endpoint.
+
+    Returns:
+        tuple: The verdict and a detail describing what the provider answered.
+    """
+    try:
+        session.fetch_token(
+            token_url,
+            code=secrets.token_urlsafe(PROBE_CODE_BYTES),
+            grant_type="authorization_code",
+            timeout=OUTBOUND_TIMEOUT,
+            allow_redirects=False,
+        )
+    except OAuthError as ex:
+        error = _token_error_code(ex) or "unknown_error"
+        if _is_client_auth_rejection(ex):
+            return "rejected", f"{error}: {ex.description or 'the client ID or client secret was refused'}"
+        if error in POST_CLIENT_AUTH_ERRORS:
+            return "inconclusive", (
+                f"the throwaway authorization code was refused ({error}) before the client credentials were reported on; "
+                f"this provider publishes no introspection or revocation endpoint, so the secret could not be confirmed"
+            )
+        return "inconclusive", f"{error}: {ex.description or 'unexpected token endpoint response'}"
+    except Exception as ex:
+        if _is_client_auth_rejection(ex):
+            return "rejected", "the token endpoint refused the client ID or client secret"
+        return "inconclusive", f"the token endpoint could not be reached: {ex}"
+    # A provider that issues a token for a code nobody ever authorized is broken,
+    # but it did accept our credentials, so report both halves.
+    return "accepted", "the token endpoint issued a token for an invented authorization code - verify the provider's configuration"
+
+
+def _probe_client_credentials(endpoints: dict, client_id: str, secret: str | None, redirect_uri: str | None) -> tuple[str, str]:
+    """Decide whether the identity provider accepts this client ID and secret.
+
+    Tries the checks in order of how sharply each separates the credentials from
+    everything else, stopping at the first that gives a straight answer:
+    introspection, then revocation (both require client authentication and
+    nothing else), then the client_credentials grant, and finally an
+    authorization code that was never issued. No state is created at the provider
+    by any of them.
+
+    Args:
+        endpoints (dict): Resolved provider endpoints.
+        client_id (str): The configured client ID.
+        secret (str): The client secret, or None for a public client.
+        redirect_uri (str): Our callback URL, so a mismatch surfaces too.
+
+    Returns:
+        tuple: The verdict (``accepted`` | ``rejected`` | ``inconclusive``) and a
+            detail string describing what the provider answered.
+    """
+    session = OAuth2Session(client_id, secret, redirect_uri=redirect_uri)
+    for url, method in ((endpoints.get("introspect"), "introspect_token"), (endpoints.get("revoke"), "revoke_token")):
+        if url:
+            verdict = _probe_client_authenticated_endpoint(session, url, method)
+            if verdict:
+                return verdict
+    verdict = _probe_client_credentials_grant(session, endpoints["token"])
+    if verdict:
+        return verdict
+    return _probe_authorization_code(session, endpoints["token"])
+
+
+def verify_configuration(
+    kind: str,
+    config: dict,
+    secret: str | None,
+    redirect_uri: str | None = None,
+    provider_name: str = "this login method",
+) -> dict:
+    """Check an unsaved OIDC/OAuth 2.0 configuration against the identity provider.
+
+    Resolves the endpoints (discovery for oidc), fetches the signing keys, and
+    puts the client ID and client secret to the identity provider directly (see
+    :func:`_probe_client_credentials`), so a wrong credential is caught here
+    rather than as an opaque failed login. Nothing is stored and no state is
+    created at the provider.
+
+    Args:
+        kind (str): The provider kind (``oidc`` or ``oauth2``).
+        config (dict): The provider configuration being tested.
+        secret (str): The client secret in plaintext, or None.
+        redirect_uri (str): The callback URL registered at the provider.
+        provider_name (str): Provider name, for error messages.
+
+    Returns:
+        dict: The resolved endpoints, the signing key count and the client
+            credential verdict (``client_status`` and ``detail``).
+
+    Raises:
+        ValueError: When the configuration itself is unusable (missing issuer or
+            client ID, discovery mismatch, unreachable or unacceptable endpoint).
+    """
+    if kind not in OAUTH_VERIFIABLE_KINDS:
+        msg = f"Only OIDC and OAuth 2.0 login methods can be tested, not '{kind}'"
+        raise ValueError(msg)
+
+    metadata = fetch_discovery(config.get("issuer_url"), provider_name) if kind == "oidc" else None
+    endpoints = resolve_endpoints(kind, config, provider_name, metadata)
+
+    client_id = (config.get("client_id") or "").strip()
+    if not client_id:
+        msg = f"No client ID is configured for {provider_name}"
+        raise ValueError(msg)
+
+    signing_key_count = None
+    if endpoints["jwks_uri"]:
+        jwks = fetch_auth_json(endpoints["jwks_uri"])
+        try:
+            signing_key_count = len([key for key in pyjwt.PyJWKSet.from_dict(jwks).keys if key.public_key_use in (None, "sig")])
+        except Exception as ex:
+            msg = f"The signing keys published at {endpoints['jwks_uri']} could not be read: {ex}"
+            raise ValueError(msg) from ex
+
+    client_status, detail = _probe_client_credentials(endpoints, client_id, secret, redirect_uri)
+    if not secret:
+        # Say so plainly: with no secret to send, a pass means the identity
+        # provider knows this client ID, not that any credential was verified.
+        detail = f"no client secret is configured, so only the client ID was checked - {detail}"
+
+    return {
+        "issuer": endpoints["issuer"],
+        "authorize_url": endpoints["authorize"],
+        "token_url": endpoints["token"],
+        "userinfo_url": endpoints["userinfo"],
+        "signing_key_count": signing_key_count,
+        "client_status": client_status,
+        "has_secret": bool(secret),
+        "detail": detail,
+    }

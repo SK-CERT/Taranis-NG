@@ -51,7 +51,7 @@
                     <v-row>
                         <v-col
                             cols="12"
-                            md="6"
+                            md="8"
                         >
                             <!-- The built-in local provider is a singleton with a fixed
                                  identity: its name is locked and shown translated, while the
@@ -87,31 +87,13 @@
                                 :rules="[(v) => !!v || t('error.required')]"
                             />
                         </v-col>
-                        <v-col
-                            cols="12"
-                            md="2"
-                        >
-                            <v-switch
-                                v-model="localItem.enabled"
-                                :label="t('auth_provider.enabled_for_sign_in')"
-                                color="primary"
-                                :disabled="saving"
-                                aria-describedby="auth-provider-enabled-help"
-                                data-test="auth-provider-enabled"
-                            />
-                            <AuthProviderHelp id="auth-provider-enabled-help">
-                                {{ providerEnabledHint }}
-                            </AuthProviderHelp>
-                        </v-col>
                     </v-row>
 
-                    <!-- Stable URL identifier. Auto-filled from the name for a new provider
-                         until the admin edits it; it is what appears in the IdP-facing URLs. -->
-                    <v-row
-                        v-if="['oidc', 'oauth2', 'saml'].includes(localItem.kind)"
-                        class="mt-n3 mb-2"
-                    >
+                    <v-row class="mt-n3 mb-2">
+                        <!-- Stable URL identifier. Auto-filled from the name for a new provider
+                             until the admin edits it; it is what appears in the IdP-facing URLs. -->
                         <v-col
+                            v-if="['oidc', 'oauth2', 'saml'].includes(localItem.kind)"
                             cols="12"
                             md="6"
                         >
@@ -125,6 +107,18 @@
                                 :rules="slugRules"
                                 :disabled="saving"
                                 @update:model-value="slugManuallyEdited = true"
+                            />
+                        </v-col>
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
+                            <v-switch
+                                v-model="localItem.enabled"
+                                :label="t('auth_provider.enabled_for_sign_in')"
+                                color="primary"
+                                :disabled="saving"
+                                data-test="auth-provider-enabled"
                             />
                         </v-col>
                     </v-row>
@@ -222,6 +216,10 @@
                             :has-secret="hasSecret"
                             :redirect-uri="hasValidSlug ? oauthRedirectUri : ''"
                             scopes-placeholder="openid profile email"
+                            :verifying="verifyingOauth"
+                            :verify-message="oauthVerifyMessage"
+                            :verify-status="oauthVerifyStatus"
+                            @verify-oauth="verifyOauth"
                         />
                     </template>
 
@@ -238,6 +236,10 @@
                             :saving="saving"
                             :has-secret="hasSecret"
                             :redirect-uri="hasValidSlug ? oauthRedirectUri : ''"
+                            :verifying="verifyingOauth"
+                            :verify-message="oauthVerifyMessage"
+                            :verify-status="oauthVerifyStatus"
+                            @verify-oauth="verifyOauth"
                         />
                     </template>
 
@@ -369,7 +371,8 @@
         getAllRoles,
         importSamlMetadata,
         generateSamlKeypair,
-        verifySamlFederation
+        verifySamlFederation,
+        verifyOauthProvider
     } from '@/api/config'
 
     type AuthProviderItem = {
@@ -461,9 +464,6 @@
     // The built-in local accounts provider is a singleton and cannot be renamed.
     const isLocalProvider = computed(() => localItem.value.kind === 'local')
     const dialogTitle = computed(() => (isEdit.value ? t('auth_provider.edit') : t('auth_provider.add_new')))
-    const providerEnabledHint = computed(() =>
-        t(localItem.value.enabled ? 'auth_provider.enabled_for_sign_in_hint' : 'auth_provider.disabled_for_sign_in_hint')
-    )
     const usesUnencryptedHttpEndpoint = computed(() => {
         const endpointKeys: Partial<Record<string, Array<keyof ProviderConfig>>> = {
             oidc: ['issuer_url', 'internal_issuer_url'],
@@ -617,6 +617,49 @@
             (config.value.redirect_uri_override || '').trim() ||
             `${window.location.origin}/api/v1/auth/oauth/${localItem.value.slug}/callback`
     )
+
+    // Test the OIDC/OAuth2 configuration against the identity provider before saving, so a
+    // wrong client ID or secret surfaces here instead of as an opaque failed login later.
+    // Nothing is stored and no state is created at the provider.
+    const verifyingOauth = ref(false)
+    const oauthVerifyMessage = ref('')
+    const oauthVerifyStatus = ref<'success' | 'warning' | 'error'>('success')
+
+    const verifyOauth = async (): Promise<void> => {
+        verifyingOauth.value = true
+        oauthVerifyMessage.value = ''
+        try {
+            const response = (await verifyOauthProvider({
+                // An edit leaves the secret field blank to keep the stored one; the id lets
+                // the backend test that stored secret rather than nothing at all.
+                id: localItem.value.id,
+                name: localItem.value.name,
+                kind: localItem.value.kind,
+                config: config.value,
+                secret: secretInput.value,
+                redirect_uri: hasValidSlug.value ? oauthRedirectUri.value : ''
+            })) as { data: { client_status: string; detail: string; has_secret: boolean; issuer: string | null; token_url: string } }
+            const { client_status: clientStatus, detail } = response.data
+            if (clientStatus === 'accepted') {
+                // Report what the provider actually confirmed rather than a blanket success:
+                // with no secret configured, only the client ID was ever put to the test.
+                oauthVerifyStatus.value = response.data.has_secret ? 'success' : 'warning'
+                oauthVerifyMessage.value = t('auth_provider.oauth_verify_result', { detail })
+            } else if (clientStatus === 'rejected') {
+                oauthVerifyStatus.value = 'error'
+                oauthVerifyMessage.value = t('auth_provider.oauth_verify_rejected', { detail })
+            } else {
+                oauthVerifyStatus.value = 'warning'
+                oauthVerifyMessage.value = t('auth_provider.oauth_verify_inconclusive', { detail })
+            }
+        } catch (error) {
+            const data = (error as { response?: { data?: { error?: string } } })?.response?.data
+            oauthVerifyStatus.value = 'error'
+            oauthVerifyMessage.value = data?.error || t('auth_provider.oauth_verify_error')
+        } finally {
+            verifyingOauth.value = false
+        }
+    }
 
     // Slug: a URL-safe stable identifier auto-generated from the name for a new provider
     // until the admin edits it (an existing provider's slug is left untouched).

@@ -140,6 +140,38 @@
                 :disabled="saving"
             />
         </v-col>
+        <v-col
+            cols="12"
+            class="d-flex align-center"
+        >
+            <v-btn
+                color="primary"
+                variant="flat"
+                size="small"
+                prepend-icon="mdi-shield-check"
+                :loading="verifying"
+                :disabled="saving || !config.client_id"
+                data-test="verify-oauth"
+                @click="$emit('verify-oauth')"
+            >
+                {{ t('auth_provider.oauth_verify') }}
+            </v-btn>
+            <span class="text-caption text-medium-emphasis ms-4">{{ t('auth_provider.oauth_verify_hint') }}</span>
+        </v-col>
+        <v-col
+            v-if="verifyMessage"
+            cols="12"
+            class="pt-0"
+        >
+            <v-alert
+                :type="verifyStatus"
+                density="compact"
+                variant="tonal"
+                data-test="oauth-verify-result"
+            >
+                {{ verifyMessage }}
+            </v-alert>
+        </v-col>
     </v-row>
 </template>
 
@@ -167,6 +199,17 @@
         scopesPlaceholder?: string
         /** Derived callback URI to register with either an OIDC or OAuth2 provider. */
         redirectUri?: string
+        /** Whether a configuration test is in flight. */
+        verifying?: boolean
+        /** Outcome of the last configuration test, shown in an alert. */
+        verifyMessage?: string
+        /** Alert severity for that outcome: success, warning (inconclusive) or error. */
+        verifyStatus?: 'success' | 'warning' | 'error'
+    }>()
+
+    defineEmits<{
+        /** Test the configuration in the form against the identity provider. */
+        (event: 'verify-oauth'): void
     }>()
 
     const secretModel = defineModel<string>({ default: '' })

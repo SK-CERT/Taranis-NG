@@ -17,6 +17,17 @@ from model.token_blacklist import TokenBlacklist
 from model.user import User
 
 
+class ProviderConfigurationError(Exception):
+    """The identity provider rejected *our* configuration, not the subject's credentials.
+
+    Raised when a login fails for a reason only an administrator can fix - a
+    client secret the IdP refuses, or one stored under an encryption key we no
+    longer hold. It is kept apart from an ordinary authentication failure so the
+    login page can say so instead of blaming the person trying to log in; the
+    detail stays in the audit log and never reaches the browser.
+    """
+
+
 @dataclass
 class ExternalIdentity:
     """Identity of a subject authenticated by an external provider.
