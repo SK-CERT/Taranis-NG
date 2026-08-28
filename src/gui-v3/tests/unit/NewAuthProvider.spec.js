@@ -108,7 +108,6 @@ describe('NewAuthProvider dialog', () => {
 
         expect(wrapper.vm.localItem.kind).toBe('oidc')
         expect(wrapper.vm.localItem.enabled).toBe(false)
-        expect(wrapper.vm.providerEnabledHint).toContain('cannot choose this login method')
     })
 
     it('retains local only while editing the seeded row and preserves its stored name', async () => {

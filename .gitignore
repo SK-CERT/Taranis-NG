@@ -9,8 +9,7 @@ build/
 *.egg-info/
 .installed.cfg
 *.egg
-.pytest_cache/
-.ruff_cache/
+.*/
 src/gui/git-info.json
 src/gui-v3/coverage/
 src/gui-v3/playwright-report/
