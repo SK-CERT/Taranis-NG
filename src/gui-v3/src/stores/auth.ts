@@ -37,7 +37,10 @@ export const useAuthStore = defineStore('auth', () => {
     const loginMethodsLoaded = ref(false)
     const loginMethodsError = ref(false)
     // Passkeys are a site-wide capability (a security setting), not a provider.
+    // Whether one may *start* a login is a switch of its own: an installation can
+    // offer passkeys purely as a second factor.
     const passkeyEnabled = ref(false)
+    const passkeyLoginEnabled = ref(false)
 
     // Getters
     const getUserData = computed(() => {
@@ -162,10 +165,12 @@ export const useAuthStore = defineStore('auth', () => {
             const response = (await getLoginMethods()) as ApiResponse<LoginMethodsResponse>
             loginMethods.value = response.data?.items || []
             passkeyEnabled.value = !!response.data?.passkey_enabled
+            passkeyLoginEnabled.value = !!response.data?.passkey_login_enabled
         } catch (error) {
             console.error('[Auth] Failed to load login methods:', error)
             loginMethods.value = []
             passkeyEnabled.value = false
+            passkeyLoginEnabled.value = false
             loginMethodsError.value = true
         } finally {
             loginMethodsLoaded.value = true
@@ -190,6 +195,7 @@ export const useAuthStore = defineStore('auth', () => {
         loginMethodsLoaded,
         loginMethodsError,
         passkeyEnabled,
+        passkeyLoginEnabled,
 
         // Getters
         getUserData,

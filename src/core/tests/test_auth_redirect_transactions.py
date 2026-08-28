@@ -195,7 +195,9 @@ def test_oauth_callback_and_redirect_result_are_each_redeemable_once(monkeypatch
         headers={"Cookie": f"{auth.REDIRECT_REDEMPTION_COOKIE}={redemption_handle}"},
     ):
         replay_response = auth.AuthRedemption.post.__wrapped__(auth.AuthRedemption())
-    assert replay_response.status_code == HTTPStatus.UNAUTHORIZED
+    # A spent handle is "nothing to redeem", not an authentication failure - and it
+    # must stay indistinguishable from never having had one (asserted below).
+    assert replay_response.status_code == HTTPStatus.NO_CONTENT
     assert replay_response.headers["Cache-Control"] == "no-store"
     assert f"{auth.REDIRECT_REDEMPTION_COOKIE}=;" in replay_response.headers["Set-Cookie"]
 
@@ -288,3 +290,26 @@ def test_refused_client_credentials_are_reported_as_a_misconfiguration(monkeypat
     assert response.location == "/v2/dashboard?login_error=provider_misconfigured"
     # The IdP's own wording stays in the audit log, never in the browser.
     assert "Corporate login" not in response.location
+
+
+def test_a_visit_with_no_handle_is_indistinguishable_from_a_spent_one() -> None:
+    """The login page asks on every visit, because the handle is HttpOnly.
+
+    Answering that with 401 made every plain visit to /login log a failed request
+    in the browser console, which is noise at best and a red herring while
+    debugging a real login problem. It must stay indistinguishable from a spent
+    or forged handle, so both answer 204 with no body.
+    """
+    app = Flask(__name__)
+
+    with app.test_request_context(
+        "/api/v1/auth/redeem",
+        method="POST",
+        base_url="https://taranis.example",
+        headers={"Origin": "https://taranis.example", "Sec-Fetch-Site": "same-origin"},
+    ):
+        response = auth.AuthRedemption.post.__wrapped__(auth.AuthRedemption())
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    assert response.get_data() == b""
+    assert response.headers["Cache-Control"] == "no-store"

@@ -248,8 +248,10 @@ def get_login_methods() -> dict:
 
     Returns:
         dict: Items with id, name, kind, form (credentials form applies) and
-              login_url (redirect-based kinds only), plus passkey_enabled -
-              passkeys are a site-wide capability, not a provider. No
+              login_url (redirect-based kinds only), plus passkey_enabled and
+              passkey_login_enabled - passkeys are a site-wide capability, not a
+              provider. The login page needs both: the first says the feature
+              exists, the second whether a passkey may start a login at all. No
               configuration or secrets are exposed.
     """
     items = []
@@ -269,7 +271,11 @@ def get_login_methods() -> dict:
                 "login_url": login_url,
             },
         )
-    return {"items": items, "passkey_enabled": webauthn_manager.passkeys_enabled()}
+    return {
+        "items": items,
+        "passkey_enabled": webauthn_manager.passkeys_enabled(),
+        "passkey_login_enabled": webauthn_manager.passkey_first_factor_enabled(),
+    }
 
 
 def make_scoped_token(username: str, scope: str, expires_minutes: int = SCOPED_TOKEN_MINUTES, **claims: str) -> str:
@@ -320,7 +326,22 @@ def decode_scoped_token(token: str, scope: str) -> dict | None:
     return payload
 
 
-def mfa_required(provider: AuthProvider, user: User) -> bool:
+def _mfa_session_expired() -> tuple[dict, HTTPStatus]:
+    """Refuse a second-factor step whose scoped token no longer resolves to a user.
+
+    Kept distinct from a plain authentication failure: the first factor did
+    succeed, the short-lived token carrying that fact has simply run out (or was
+    tampered with). Without a code the GUI can only fall back to its generic
+    "username or password is incorrect", which is nonsense on a screen that asks
+    for neither and leaves the person stranded mid-login instead of starting over.
+
+    Returns:
+        tuple: A 401 carrying the MFA_TOKEN_INVALID code.
+    """
+    return {"error": "Your sign-in session has expired", "code": "MFA_TOKEN_INVALID"}, HTTPStatus.UNAUTHORIZED
+
+
+def mfa_required(provider: AuthProvider | None, user: User) -> bool:
     """Tell whether this user must hold a second factor.
 
     Four levels can demand it and they are OR-ed - the site, the user's
@@ -329,21 +350,32 @@ def mfa_required(provider: AuthProvider, user: User) -> bool:
     that does not.
 
     Args:
-        provider (AuthProvider): The provider used for the first factor.
+        provider (AuthProvider): The provider used for the first factor, or None
+            for a passkey sign-in, which uses no provider at all.
         user (User): The authenticated user.
 
     Returns:
         bool: Whether a second factor is mandatory for this user.
     """
+    if provider is not None:
+        method_requires = provider.require_mfa
+    else:
+        # A passkey sign-in has no provider of its own - passkeys are credentials
+        # owned by users. Take the strictest of the providers the account can log
+        # in through, so choosing a passkey cannot walk around a requirement set
+        # on the user's own login methods.
+        method_requires = any(
+            identity.provider.require_mfa for identity in user.auth_identities if identity.provider and identity.provider.enabled
+        )
     return bool(
         SecuritySettings.mfa_required()
         or any(organization.require_mfa for organization in user.organizations)
-        or provider.require_mfa
+        or method_requires
         or user.require_mfa,
     )
 
 
-def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | None:
+def _mfa_gate(provider: AuthProvider | None, user: User, *, passkey_used: bool = False) -> tuple[dict, HTTPStatus] | None:
     """Decide whether a login must complete a second factor.
 
     Triggered when any level requires MFA (see :func:`mfa_required`) or the user
@@ -355,14 +387,20 @@ def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | N
     and a user who owns nothing but passkeys is walked through TOTP enrollment.
 
     Args:
-        provider (AuthProvider): The provider used for the first factor.
+        provider (AuthProvider): The provider used for the first factor, or None
+            for a passkey sign-in.
         user (User): The authenticated user.
+        passkey_used (bool): Whether a passkey was the first factor.
 
     Returns:
         tuple | None: The MFA challenge response, or None when no MFA applies.
     """
     totp_enrolled = bool(user.totp_secret)
-    has_passkeys = len(user.webauthn_credentials) > 0 and webauthn_manager.passkey_second_factor_enabled()
+    # A passkey that has just been the first factor cannot also be the second
+    # one: another credential from the same authenticator proves nothing new, so
+    # TOTP is the only second factor a passkey sign-in can be completed with.
+    passkey_accepted = webauthn_manager.passkey_second_factor_enabled() and not passkey_used
+    has_passkeys = len(user.webauthn_credentials) > 0 and passkey_accepted
     if not (mfa_required(provider, user) or totp_enrolled or has_passkeys):
         return None
     if totp_enrolled or has_passkeys:
@@ -376,7 +414,7 @@ def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | N
     # Nothing enrolled yet: offer every factor this installation accepts, so a user
     # forced to set one up is not pushed into an authenticator app when a passkey
     # would do.
-    enrollable = ["totp", "passkey"] if webauthn_manager.passkey_second_factor_enabled() else ["totp"]
+    enrollable = ["totp", "passkey"] if passkey_accepted else ["totp"]
     return BaseAuthenticator.generate_error_code(
         "Two-factor authentication enrollment is required",
         "MFA_ENROLLMENT_REQUIRED",
@@ -385,17 +423,21 @@ def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | N
     )
 
 
-def _finalize_login(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus]:
+def _finalize_login(provider: AuthProvider | None, user: User, *, passkey_used: bool = False) -> tuple[dict, HTTPStatus]:
     """Run the status gate, then the MFA gate, then issue the JWT.
 
-    The MFA gate applies to every provider kind. A factor the user enrolled is
-    theirs, not the provider's: skipping it for redirect logins would leave the
-    external path weaker than the local one, and an attacker holding the account
-    at the identity provider could then bypass the second factor by choosing it.
+    The MFA gate applies to every provider kind, and to a passkey sign-in as
+    well. A factor the user enrolled is theirs, not the provider's: skipping it
+    for redirect logins would leave the external path weaker than the local one,
+    and an attacker holding the account at the identity provider could then
+    bypass the second factor by choosing it. The same reasoning makes a passkey
+    sign-in a *first* factor like any other rather than a way past the step.
 
     Args:
-        provider (AuthProvider): The provider the user authenticated against.
+        provider (AuthProvider): The provider the user authenticated against, or
+            None for a passkey sign-in.
         user (User): The authenticated user.
+        passkey_used (bool): Whether a passkey was the first factor.
 
     Returns:
         tuple: The login response.
@@ -403,7 +445,7 @@ def _finalize_login(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatu
     status_error = BaseAuthenticator.check_user_status(user)
     if status_error:
         return status_error
-    mfa_challenge = _mfa_gate(provider, user)
+    mfa_challenge = _mfa_gate(provider, user, passkey_used=passkey_used)
     if mfa_challenge:
         return mfa_challenge
     return BaseAuthenticator.generate_jwt(user)
@@ -580,7 +622,7 @@ def complete_mfa_totp(mfa_token: str, code: str) -> tuple[dict, HTTPStatus]:
     payload = decode_scoped_token(mfa_token, "mfa")
     user = User.find(payload["sub"]) if payload else None
     if not user:
-        return BaseAuthenticator.generate_error()
+        return _mfa_session_expired()
     if not totp_manager.verify_code(user, code):
         log_manager.store_auth_error_activity(f"Invalid TOTP code for user: {user.username}")
         time.sleep(random.uniform(1, 3))  # noqa: S311 - timing jitter, not cryptographic
@@ -604,7 +646,7 @@ def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict,
     payload = decode_scoped_token(enroll_token, "mfa_enroll")
     user = User.find(payload["sub"]) if payload else None
     if not user:
-        return BaseAuthenticator.generate_error()
+        return _mfa_session_expired()
     if not code:
         return {"otpauth_uri": totp_manager.begin_enrollment(user.username)}, HTTPStatus.OK
     if not totp_manager.confirm_enrollment(user, code):
@@ -637,7 +679,7 @@ def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, cre
     payload = decode_scoped_token(enroll_token, "mfa_enroll")
     user = User.find(payload["sub"]) if payload else None
     if not user:
-        return BaseAuthenticator.generate_error()
+        return _mfa_session_expired()
 
     try:
         if not credential:
@@ -667,6 +709,9 @@ def get_user_from_scoped_token(token: str, scope: str) -> User | None:
 def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatus]:
     """Start a passkey ceremony for passwordless login or the MFA step.
 
+    Each mode is refused when its own switch is off, so a client cannot reach a
+    ceremony the site does not offer by calling the endpoint directly.
+
     Args:
         mfa_token (str): Scoped MFA token (second-factor mode); None for
             passwordless (discoverable credential) login.
@@ -676,9 +721,13 @@ def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatu
     """
     user = None
     if mfa_token:
+        if not webauthn_manager.passkey_second_factor_enabled():
+            return BaseAuthenticator.generate_error_code("Passkeys are not accepted as a second factor", "PASSKEY_NOT_ALLOWED")
         user = get_user_from_scoped_token(mfa_token, "mfa")
         if not user:
-            return BaseAuthenticator.generate_error()
+            return _mfa_session_expired()
+    elif not webauthn_manager.passkey_first_factor_enabled():
+        return BaseAuthenticator.generate_error_code("Passkey sign-in is not available", "PASSKEY_LOGIN_DISABLED")
     try:
         return webauthn_manager.begin_authentication(user), HTTPStatus.OK
     except ValueError as ex:
@@ -688,6 +737,10 @@ def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatu
 def complete_passkey_login(challenge_id: str, credential: dict) -> tuple[dict, HTTPStatus]:
     """Complete a passwordless passkey login.
 
+    The passkey is the *first* factor here, so the login runs the same status and
+    MFA gates as any other: where a second factor applies, it is asked for, and
+    only TOTP can satisfy it.
+
     Args:
         challenge_id (str): Handle from begin_passkey_authentication.
         credential (dict): The authenticator's assertion.
@@ -695,13 +748,15 @@ def complete_passkey_login(challenge_id: str, credential: dict) -> tuple[dict, H
     Returns:
         tuple: The login response.
     """
+    if not webauthn_manager.passkey_first_factor_enabled():
+        return BaseAuthenticator.generate_error_code("Passkey sign-in is not available", "PASSKEY_LOGIN_DISABLED")
     try:
         user = webauthn_manager.finish_authentication(challenge_id, credential)
     except ValueError as ex:
         return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
     if not user:
         return BaseAuthenticator.generate_error()
-    return BaseAuthenticator.generate_jwt(user)
+    return _finalize_login(None, user, passkey_used=True)
 
 
 def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) -> tuple[dict, HTTPStatus]:
@@ -715,9 +770,11 @@ def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) ->
     Returns:
         tuple: The login response.
     """
+    if not webauthn_manager.passkey_second_factor_enabled():
+        return BaseAuthenticator.generate_error_code("Passkeys are not accepted as a second factor", "PASSKEY_NOT_ALLOWED")
     payload = decode_scoped_token(mfa_token, "mfa")
     if not payload:
-        return BaseAuthenticator.generate_error()
+        return _mfa_session_expired()
     try:
         owner = webauthn_manager.finish_authentication(challenge_id, credential)
     except ValueError as ex:

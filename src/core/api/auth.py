@@ -299,7 +299,15 @@ class AuthRedemption(Resource):
         transaction = auth_transaction_manager.consume(AuthTransactionKind.REDIRECT_REDEMPTION, handle)
         response_data = transaction.get("response") if transaction else None
         if not isinstance(response_data, dict):
-            response = make_response({"error": "Invalid or expired redemption handle"}, HTTPStatus.UNAUTHORIZED)
+            # Nothing to redeem is the *normal* state: the handle is HttpOnly, so
+            # the GUI cannot tell whether one exists and has to ask on every visit
+            # to the login page. Answering 401 made each of those visits log a
+            # failed request in the browser console - a standing red herring for
+            # anyone debugging a real login problem. 204 says "nothing here"
+            # without claiming an authentication failure. A spent or forged
+            # handle answers identically to no handle at all, which is the
+            # non-disclosure the 401 was there for and is preserved here.
+            response = make_response("", HTTPStatus.NO_CONTENT)
         else:
             response = make_response(response_data, HTTPStatus.OK)
         response.delete_cookie(REDIRECT_REDEMPTION_COOKIE, path="/api/v1/auth/redeem")

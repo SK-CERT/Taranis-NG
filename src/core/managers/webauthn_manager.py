@@ -37,8 +37,13 @@ CHALLENGE_TTL = 300
 
 
 def passkeys_enabled() -> bool:
-    """Tell whether passkey sign-in is enabled and fully configured."""
+    """Tell whether passkeys are enabled and fully configured (the master switch)."""
     return SecuritySettings.passkeys_enabled()
+
+
+def passkey_first_factor_enabled() -> bool:
+    """Tell whether a passkey may start a login on its own."""
+    return SecuritySettings.passkey_first_factor_enabled()
 
 
 def passkey_second_factor_enabled() -> bool:

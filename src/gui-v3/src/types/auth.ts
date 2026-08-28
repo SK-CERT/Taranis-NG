@@ -47,7 +47,10 @@ export interface LoginMethod {
 // a security setting.
 export interface LoginMethodsResponse {
     items: LoginMethod[]
+    // Whether passkeys exist at all on this installation.
     passkey_enabled: boolean
+    // Whether a passkey may start a login on its own, which is a separate switch.
+    passkey_login_enabled: boolean
 }
 
 // Error payload returned by the login/MFA endpoints (HTTP 403)

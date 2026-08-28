@@ -669,13 +669,13 @@ async function setupPasskeyRelyingParty(page, request, { rpId, origins }) {
     await expect(panel.getByText(/last updated by/i)).toBeVisible({ timeout: 10_000 })
 
     // Capture the Save request PUT to /config/security and inspect its payload,
-    // so we can debug what gets sent when "Enable passkey sign-in" + rp_id +
+    // so we can debug what gets sent when "Enable passkeys" + rp_id +
     // origins don't end up in the persisted record. (Lots of pain here: an
     // async load racing the click+fill, or a Vue binding issue that leaves the
     // model unchanged, both manifest as `passkey_enabled=false` after save.)
     const saveResponse = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().endsWith('/config/security'))
 
-    await panel.getByLabel('Enable passkey sign-in').check()
+    await panel.getByLabel('Enable passkeys').check()
     await panel.getByLabel('Relying party ID').fill(rpId)
     await panel.getByLabel('Allowed origins').fill(origins)
     await panel.getByRole('button', { name: 'Save' }).click()
@@ -710,6 +710,7 @@ async function cleanupPasskeyRelyingParty(request) {
             headers,
             data: {
                 passkey_enabled: false,
+                passkey_first_factor: true,
                 passkey_second_factor: true,
                 require_mfa: false,
                 rp_id: '',
@@ -726,4 +727,7 @@ async function cleanupPasskeyRelyingParty(request) {
 async function passkeysMustBeEnabledOnLoginPage(request) {
     const methods = await (await request.get(`${CORE_API}/auth/methods`)).json()
     expect(methods.passkey_enabled).toBe(true)
+    // The setup leaves the first-factor switch at its default, so the login page
+    // must still offer the sign-in button; only its own switch withdraws it.
+    expect(methods.passkey_login_enabled).toBe(true)
 }

@@ -13,6 +13,7 @@ MIGRATIONS = CORE_ROOT / "migrations" / "versions"
 SCHEMA_MIGRATION = MIGRATIONS / "e3f9d1a7c8b5_auth_providers.py"
 DATA_MIGRATION = MIGRATIONS / "4c8e1f7a2b90_seed_auth_provider_defaults.py"
 AUTH_GENERATION_MIGRATION = MIGRATIONS / "a6b7c8d9e0f1_add_auth_generation.py"
+PASSKEY_FIRST_FACTOR_MIGRATION = MIGRATIONS / "b8d3e6f5a417_add_passkey_first_factor.py"
 AUTH_PROVIDER_MODEL = CORE_ROOT / "model" / "auth_provider.py"
 
 
@@ -156,6 +157,34 @@ def test_auth_generation_is_added_after_the_previously_released_data_revision() 
     assert '"auth_generation > 0"' in generation_source
     assert 'op.drop_column("security_settings", "auth_generation")' in generation_source
     assert "Refusing to remove auth_generation after it has advanced" in generation_source
+
+
+def test_passkey_first_factor_is_added_after_the_previously_released_revisions() -> None:
+    schema_source = SCHEMA_MIGRATION.read_text(encoding="utf-8")
+    data_source = DATA_MIGRATION.read_text(encoding="utf-8")
+    first_factor_source = PASSKEY_FIRST_FACTOR_MIGRATION.read_text(encoding="utf-8")
+
+    # Existing databases may already be stamped at 4c8 with the original schema,
+    # so neither already-released revision may claim ownership of this column.
+    assert "passkey_first_factor" not in schema_source
+    assert "passkey_first_factor" not in data_source
+
+    assert "op.add_column(" in first_factor_source
+    assert 'sa.Column("passkey_first_factor", sa.BOOLEAN(), nullable=False, server_default=sa.text("true"))' in first_factor_source
+    # True keeps passwordless sign-in working on installations that have it today.
+    assert 'op.drop_column("security_settings", "passkey_first_factor")' in first_factor_source
+
+
+def test_passkey_first_factor_revision_is_frozen_and_has_no_orm_imports() -> None:
+    module = _module(PASSKEY_FIRST_FACTOR_MIGRATION)
+    imports = [
+        node
+        for node in module.body
+        if isinstance(node, ast.ImportFrom) and node.module and (node.module == "model" or node.module.startswith("model."))
+    ]
+
+    assert imports == []
+    assert not any(isinstance(node, ast.ClassDef) for node in module.body)
 
 
 def test_auth_generation_revision_is_frozen_and_has_no_orm_imports() -> None:
