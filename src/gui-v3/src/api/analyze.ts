@@ -106,6 +106,9 @@ export function getReportItemData(report_item_id, data) {
         params += '&remote_report_item_ids=' + encodeURIComponent(remote_report_item_ids)
     }
 
+    // Deliberately the first '&' only: it becomes the '?' that opens the query
+    // string, and the rest must stay as separators. Not a sanitizer, despite
+    // what CodeQL's js/incomplete-sanitization rule makes of it.
     params = params.replace('&', '?')
 
     return ApiService.get('/analyze/report-items/' + report_item_id + '/data' + params)

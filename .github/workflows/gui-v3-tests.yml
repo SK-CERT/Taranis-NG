@@ -39,6 +39,10 @@ defaults:
   run:
     working-directory: src/gui-v3
 
+# Least privilege: these jobs only read the repository.
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint

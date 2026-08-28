@@ -10,6 +10,7 @@ build/
 .installed.cfg
 *.egg
 .*/
+!.github/
 src/gui/git-info.json
 src/gui-v3/coverage/
 src/gui-v3/playwright-report/
