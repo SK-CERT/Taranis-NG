@@ -141,10 +141,17 @@ def _push_reset_cache(targets: list[tuple[str, str, str]]) -> None:
     """Send the cache reset to each target ``(name, api_url, api_key)``.
 
     Runs on a worker thread and touches no database state, so it needs no app
-    context; failures are logged and otherwise ignored.
+    context; failures are logged and otherwise ignored. The whole loop is
+    guarded: this thread has no supervisor, so any exception (e.g. a proxy
+    answering a non-standard status code, which ``HTTPStatus(...)`` turns into
+    ``ValueError``) would otherwise kill it with a traceback.
     """
     for name, api_url, api_key in targets:
-        _, status = PublicWebApi(api_url, api_key).reset_cache()
+        try:
+            _, status = PublicWebApi(api_url, api_key).reset_cache()
+        except Exception as ex:  # the thread must survive any single-node failure
+            logger.debug(f"Public-web node cache reset to '{name}' failed: {ex}")
+            continue
         if status != HTTPStatus.OK:
             logger.debug(f"Public-web node '{name}' did not accept the cache reset ({status}).")
 

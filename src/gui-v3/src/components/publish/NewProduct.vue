@@ -831,14 +831,27 @@
     async function loadPublicWebOptions() {
         // The store fetches the publish-scoped list once and caches it; a failed
         // fetch must not touch the product's saved targeting below.
+        const wasPristine = !hasUnsavedChanges()
         await publishStore.loadPublicWebOptions()
         normalizePublicWebSelection()
+        // When this call actually refilled emptied options, the normalization above
+        // can adjust the targeting (stale ids dropped, the legacy "no mapping means
+        // all webs" made explicit). On a form the user has not touched yet that is
+        // our own adjustment, not their edit, so re-baseline the unsaved-changes
+        // snapshot rather than warning them about a change they did not make.
+        if (wasPristine && initialFormState.value !== null) {
+            initialFormState.value = snapshotForm()
+        }
     }
 
     // Public methods for opening dialog
     function openDialog(): void {
         visible.value = true
         resetForm()
+        // Cheap when the options are already cached; it only re-requests after an
+        // invalidation (a web created or deleted elsewhere), so the target
+        // selector cannot go missing on a dialog opened later in the same view.
+        void loadPublicWebOptions()
     }
 
     function openEditDialog(data: ProductEditPayload | ProductDetailPayload, editMeta?: { modify: boolean; access: boolean }): void {
@@ -862,6 +875,10 @@
         selectedType.value = productTypes.value.find((type) => type.id === data.product_type_id) || null
         normalizePublicWebSelection()
         initialFormState.value = snapshotForm()
+        // See openDialog: refills the options after an invalidation. It runs after
+        // the product is in place, so its own normalizePublicWebSelection() call
+        // reconciles the loaded targeting against the freshly fetched options.
+        void loadPublicWebOptions()
     }
 
     // Event listeners

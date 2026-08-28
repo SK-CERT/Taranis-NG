@@ -489,6 +489,7 @@
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useAuth } from '@/composables/useAuth'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
+    import { usePublishStore } from '@/stores/publish'
     import {
         createNewPublicWeb,
         updatePublicWeb,
@@ -550,6 +551,7 @@
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
+    const publishStore = usePublishStore()
 
     const imageKinds = ['logo', 'favicon', 'preview'] as const
     type ImageKind = (typeof imageKinds)[number]
@@ -830,6 +832,10 @@
             if (webId != null) {
                 await syncImages(webId)
             }
+            // The Publish view caches the public-web options; a new or renamed
+            // web must be dropped from that cache so product targeting offers
+            // it on the next dialog open.
+            publishStore.invalidatePublicWebOptions()
             emit('saved')
             return true
         } catch (error) {

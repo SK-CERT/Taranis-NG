@@ -30,6 +30,24 @@ MAX_JSON_BYTES = 1024 * 1024
 REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
 
 
+def is_loopback_host(host: str) -> bool:
+    """Tell whether a URL host is a loopback address (or the localhost name).
+
+    Shared by :func:`assert_auth_endpoint_url` and the auth-provider model so
+    "plain HTTP only on loopback" is one rule with one behaviour.
+
+    Args:
+        host (str): The parsed URL hostname.
+
+    Returns:
+        bool: True for IPv4/IPv6 loopback addresses and "localhost".
+    """
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return host.lower() == "localhost"
+
+
 def assert_public_url(url: str, *, require_https: bool = False) -> None:
     """Refuse a URL that is not an http(s) URL to a globally-routable host.
 
@@ -100,15 +118,9 @@ def assert_auth_endpoint_url(url: str, *, allow_insecure: bool = False) -> None:
     if parsed.fragment:
         msg = "The authentication endpoint URL must not contain a fragment"
         raise ValueError(msg)
-    if parsed.scheme == "http" and not allow_insecure:
-        host = parsed.hostname
-        try:
-            is_loopback = ipaddress.ip_address(host).is_loopback
-        except ValueError:
-            is_loopback = host.lower() == "localhost"
-        if not is_loopback:
-            msg = "The authentication endpoint must use HTTPS except on localhost"
-            raise ValueError(msg)
+    if parsed.scheme == "http" and not allow_insecure and not is_loopback_host(parsed.hostname):
+        msg = "The authentication endpoint must use HTTPS except on localhost"
+        raise ValueError(msg)
 
 
 def read_limited_json(response: requests.Response, *, max_bytes: int = MAX_JSON_BYTES) -> dict[str, Any]:

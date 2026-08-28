@@ -138,12 +138,10 @@
                                     :label="t('auth_provider.provisioning_mode')"
                                     variant="outlined"
                                     density="comfortable"
-                                    aria-describedby="auth-provider-provisioning-help"
+                                    :hint="t('auth_provider.provisioning_mode_hint')"
+                                    persistent-hint
                                     :disabled="saving"
                                 />
-                                <AuthProviderHelp id="auth-provider-provisioning-help">
-                                    {{ t('auth_provider.provisioning_mode_hint') }}
-                                </AuthProviderHelp>
                             </v-col>
                             <v-col
                                 v-if="isAutoCreate"
@@ -809,7 +807,7 @@
             return result as ProviderConfig
         }
         if (kind === 'oidc') {
-            return pick([
+            const picked = pick([
                 'issuer_url',
                 'internal_issuer_url',
                 'allow_insecure_internal_transport',
@@ -822,6 +820,19 @@
                 'logout_url',
                 'pkce_method'
             ])
+            // A whitespace-only internal issuer passes the field rule (blank is
+            // treated as unset) but is truthy server-side, so it would redirect
+            // every back-channel request to an invalid URL. Trim and drop it; if
+            // no internal issuer remains, the insecure-transport opt-in is
+            // meaningless and must not be persisted either.
+            const internalIssuer = typeof picked.internal_issuer_url === 'string' ? picked.internal_issuer_url.trim() : ''
+            if (internalIssuer) {
+                picked.internal_issuer_url = internalIssuer
+            } else {
+                delete picked.internal_issuer_url
+                delete picked.allow_insecure_internal_transport
+            }
+            return picked
         }
         if (kind === 'oauth2') {
             return pick([

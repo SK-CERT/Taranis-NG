@@ -116,8 +116,9 @@ def fetch_discovery(
     if not issuer:
         msg = f"OIDC provider '{provider_name}' has no issuer URL"
         raise ValueError(msg)
-    connect_issuer = (internal_issuer_url or "").rstrip("/") or issuer
-    using_internal = bool(internal_issuer_url) and connect_issuer != issuer
+    # A whitespace-only internal issuer counts as absent (see resolve_endpoints).
+    connect_issuer = str(internal_issuer_url or "").strip().rstrip("/") or issuer
+    using_internal = bool(str(internal_issuer_url or "").strip()) and connect_issuer != issuer
     metadata = fetch_auth_json(
         f"{connect_issuer}/.well-known/openid-configuration",
         allow_insecure=allow_insecure_internal and using_internal,
@@ -190,6 +191,28 @@ def _rebase_internal(
     return rebased
 
 
+def _config_flag(config: dict, key: str) -> bool:
+    """Read a boolean config flag defensively.
+
+    ``config`` is a free-form JSON dict, so a non-boolean value can arrive via
+    the API. Only ``True`` (bool) and the unambiguous truthy spellings count —
+    the string ``"false"`` must not enable an insecure transport.
+
+    Args:
+        config (dict): The provider configuration.
+        key (str): The config key to read.
+
+    Returns:
+        bool: The flag's boolean meaning.
+    """
+    value = config.get(key)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in ("true", "1", "yes", "on")
+    return bool(value) and not isinstance(value, (dict, list))
+
+
 def _allow_insecure_internal(kind: str, config: dict) -> bool:
     """Tell whether a provider opted in to plain HTTP for its internal back channel.
 
@@ -205,7 +228,8 @@ def _allow_insecure_internal(kind: str, config: dict) -> bool:
     Returns:
         (bool): True when rebased back-channel endpoints may use plain HTTP.
     """
-    return kind == "oidc" and bool(config.get("internal_issuer_url")) and bool(config.get("allow_insecure_internal_transport"))
+    internal_issuer_set = bool(str(config.get("internal_issuer_url") or "").strip())
+    return kind == "oidc" and internal_issuer_set and _config_flag(config, "allow_insecure_internal_transport")
 
 
 def resolve_endpoints(kind: str, config: dict, provider_name: str, metadata: dict | None = None) -> dict:
@@ -236,7 +260,7 @@ def resolve_endpoints(kind: str, config: dict, provider_name: str, metadata: dic
             sit under the issuer, so it cannot be rebased.
     """
     if kind == "oidc":
-        allow_insecure_internal = bool(config.get("allow_insecure_internal_transport"))
+        allow_insecure_internal = _config_flag(config, "allow_insecure_internal_transport")
         if metadata is None:
             metadata = fetch_discovery(
                 config.get("issuer_url"),
@@ -246,7 +270,10 @@ def resolve_endpoints(kind: str, config: dict, provider_name: str, metadata: dic
             )
         issuer = metadata.get("issuer")
         public_base = (issuer or "").rstrip("/")
-        internal_base = (config.get("internal_issuer_url") or "").rstrip("/")
+        # A whitespace-only internal issuer (writable via the API's free-form
+        # config dict) must count as absent, exactly as a blank string would:
+        # rebasing onto "   /realms/..." produces garbage endpoints.
+        internal_base = str(config.get("internal_issuer_url") or "").strip().rstrip("/")
         endpoints = {
             "authorize": metadata["authorization_endpoint"],
             "token": metadata["token_endpoint"],
@@ -329,7 +356,7 @@ class OAuth2Authenticator(BaseAuthenticator):
             self.config.get("issuer_url"),
             self.provider.name,
             self.config.get("internal_issuer_url"),
-            allow_insecure_internal=bool(self.config.get("allow_insecure_internal_transport")),
+            allow_insecure_internal=_config_flag(self.config, "allow_insecure_internal_transport"),
         )
         _metadata_cache[self.provider.id] = (marker, metadata)
         return metadata
@@ -774,7 +801,7 @@ def verify_configuration(
             config.get("issuer_url"),
             provider_name,
             config.get("internal_issuer_url"),
-            allow_insecure_internal=bool(config.get("allow_insecure_internal_transport")),
+            allow_insecure_internal=_config_flag(config, "allow_insecure_internal_transport"),
         )
         if kind == "oidc"
         else None

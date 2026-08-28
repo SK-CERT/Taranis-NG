@@ -291,6 +291,32 @@ def test_http_internal_issuer_is_allowed_when_opted_in() -> None:
     assert ep["token"] == "http://keycloak:8080/realms/main/protocol/openid-connect/token"
 
 
+@pytest.mark.parametrize("value", ["false", "0", "no", "off", "", None, [], {}])
+def test_non_boolean_insecure_transport_values_do_not_enable_plain_http(value: object) -> None:
+    # A free-form config dict can smuggle non-boolean values through the API;
+    # bool("false") used to be True, silently opting into cleartext transport.
+    cfg = {
+        "issuer_url": PUBLIC,
+        "internal_issuer_url": "http://keycloak:8080",
+        "allow_insecure_internal_transport": value,
+    }
+    with pytest.raises(ValueError, match="HTTPS"):
+        resolve_endpoints("oidc", cfg, "p", _md())
+
+
+def test_blank_internal_issuer_never_activates_the_opt_in() -> None:
+    # Runtime treats a blank string as set (bool(" ") is true), which would
+    # fetch discovery from a whitespace-only URL; it must be treated as absent.
+    for blank in ("", "   "):
+        cfg = {
+            "issuer_url": PUBLIC,
+            "internal_issuer_url": blank,
+            "allow_insecure_internal_transport": True,
+        }
+        ep = resolve_endpoints("oidc", cfg, "p", _md())
+        assert ep["token"] == f"{PUBLIC}/realms/main/protocol/openid-connect/token"
+
+
 def _fetch_discovery_with_stub(metadata: dict, config: dict, monkeypatch: pytest.MonkeyPatch) -> dict:
     """Run ``fetch_discovery`` for ``config`` with the discovery document served from memory.
 

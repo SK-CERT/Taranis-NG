@@ -263,12 +263,14 @@ class AuthProvider(db.Model):
 
     @classmethod
     def _validate(cls, provider: AuthProvider, provider_id: int | None = None) -> None:
-        """Validate provider constraints (kind values, singleton kinds, SAML certificate).
+        """Validate provider constraints (kind values, singleton kinds, certificates, OIDC config).
 
         Raises:
             ValueError: When the kind is unknown, a singleton kind already
-                exists, the slug is malformed or taken, or a SAML certificate
-                cannot be parsed.
+                exists, the slug is malformed or taken, a SAML certificate
+                cannot be parsed, or the OIDC/OAuth2 config is inconsistent
+                (unusable internal issuer URL, invalid insecure-transport
+                opt-in, or plain HTTP without the opt-in).
         """
         if provider.kind not in AUTH_PROVIDER_KINDS:
             msg = f"Unknown authentication provider kind: {provider.kind}"
@@ -325,6 +327,86 @@ class AuthProvider(db.Model):
                     msg = "A service provider keypair needs both the private key and the certificate"
                     raise ValueError(msg)
                 validate_sp_keypair(private_key, certificate)
+        if provider.kind in OAUTH_KINDS:
+            cls._validate_oidc_config(provider.config or {})
+
+    @classmethod
+    def _validate_oidc_config(cls, config: dict) -> None:
+        """Validate the OAuth2/OIDC ``config`` dict at save time.
+
+        The GUI enforces these rules in its forms, but ``config`` is a free-form
+        dict writable through the API, where an invalid value would otherwise
+        only surface as an opaque "auth_failed" on the first login:
+
+        - a whitespace-only ``internal_issuer_url`` is normalised to absent, so
+          it cannot redirect every back-channel call to an invalid URL (the
+          runtime treats blank as set because ``bool(" ")`` is true);
+        - the insecure-transport opt-in must be a real boolean — the string
+          ``"false"`` previously evaluated truthy and enabled plain HTTP;
+        - a leftover opt-in with no internal issuer is dropped (it is a no-op
+          at runtime; persisting it would silently re-arm later);
+        - a plain-HTTP internal issuer is rejected unless the opt-in is on or
+          the host is loopback, mirroring
+          :func:`auth.url_guard.assert_auth_endpoint_url`.
+
+        Raises:
+            ValueError: When the internal issuer URL is not an acceptable
+                http(s) URL, or plain HTTP is used without the opt-in.
+        """
+        from urllib.parse import urlparse  # noqa: PLC0415 - stdlib, but keep the hot import path lean
+
+        internal_issuer = str(config.get("internal_issuer_url") or "").strip()
+        if "internal_issuer_url" in config:
+            if internal_issuer:
+                config["internal_issuer_url"] = internal_issuer
+            else:
+                config.pop("internal_issuer_url", None)
+
+        flag = config.get("allow_insecure_internal_transport")
+        if "allow_insecure_internal_transport" in config:
+            if flag is True or flag is False:
+                pass
+            elif isinstance(flag, str):
+                # Accept obvious JSON-ish spellings, reject anything murky.
+                lowered = flag.strip().lower()
+                if lowered in ("true", "1", "yes", "on"):
+                    config["allow_insecure_internal_transport"] = True
+                elif lowered in ("false", "0", "no", "off", ""):
+                    config["allow_insecure_internal_transport"] = False
+                else:
+                    msg = "allow_insecure_internal_transport must be a boolean"
+                    raise ValueError(msg)
+            elif isinstance(flag, int):
+                config["allow_insecure_internal_transport"] = bool(flag)
+            else:
+                msg = "allow_insecure_internal_transport must be a boolean"
+                raise ValueError(msg)
+
+        if not internal_issuer:
+            # The opt-in is meaningless without an internal issuer; drop it so a
+            # later-added URL cannot silently inherit the stale opt-in.
+            config.pop("allow_insecure_internal_transport", None)
+            return
+
+        parsed = urlparse(internal_issuer)
+        if parsed.scheme not in ("http", "https"):
+            msg = "The internal issuer URL must be an http(s) URL"
+            raise ValueError(msg)
+        if not parsed.hostname:
+            msg = "The internal issuer URL has no host"
+            raise ValueError(msg)
+        if parsed.username is not None or parsed.password is not None:
+            msg = "The internal issuer URL must not contain credentials"
+            raise ValueError(msg)
+        if parsed.fragment:
+            msg = "The internal issuer URL must not contain a fragment"
+            raise ValueError(msg)
+        if parsed.scheme == "http" and not config.get("allow_insecure_internal_transport"):
+            from auth.url_guard import is_loopback_host  # noqa: PLC0415 - avoid an import cycle at module load
+
+            if not is_loopback_host(parsed.hostname):
+                msg = 'The internal issuer URL must use HTTPS unless "Allow insecure internal transport" is enabled'
+                raise ValueError(msg)
 
     @classmethod
     def add_new(cls, data: dict, user_name: str) -> AuthProvider:

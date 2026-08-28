@@ -313,3 +313,84 @@ def test_publish_treats_an_unavailable_predicate_as_disabled(monkeypatch: pytest
     monkeypatch.setattr(public_web_manager, "public_web_enabled", boom)
 
     assert publish._public_web_enabled() is False
+
+
+# --- the push thread --------------------------------------------------------
+
+
+def test_push_reset_cache_survives_a_single_node_failing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """One unreachable node must not prevent the remaining nodes from being pushed."""
+    seen: list[str] = []
+
+    class _FlakyApi:
+        def __init__(self, api_url: str, _api_key: str) -> None:
+            self._api_url = api_url
+
+        def reset_cache(self) -> tuple[dict, HTTPStatus]:
+            seen.append(self._api_url)
+            if self._api_url == "http://broken-node":
+                msg = "connection refused"
+                raise RuntimeError(msg)
+            return {}, HTTPStatus.OK
+
+    monkeypatch.setattr(public_web_manager, "PublicWebApi", _FlakyApi)
+    logged: list[str] = []
+    monkeypatch.setattr(public_web_manager, "logger", types.SimpleNamespace(debug=lambda message: logged.append(str(message))))
+
+    public_web_manager._push_reset_cache(
+        [
+            ("broken", "http://broken-node", "key-1"),
+            ("fine", "http://fine-node", "key-2"),
+        ],
+    )
+    assert seen == ["http://broken-node", "http://fine-node"]
+    assert any("broken" in line for line in logged)
+
+
+def test_push_reset_cache_survives_a_non_standard_status_code(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A proxy answering code 599 makes ``HTTPStatus(599)`` raise ValueError.
+
+    That exception used to escape and kill the daemon thread mid-loop, skipping
+    the remaining targets; the guard keeps it best-effort as documented.
+    """
+    asked: list[str] = []
+
+    class _OddProxyApi:
+        def __init__(self, api_url: str, _api_key: str) -> None:
+            self._api_url = api_url
+
+        def reset_cache(self) -> tuple[dict, HTTPStatus]:
+            asked.append(self._api_url)
+            if self._api_url == "http://proxy-599":
+                return {}, HTTPStatus(599)  # type: ignore[arg-type] - exactly the failure being pinned
+            return {}, HTTPStatus.OK
+
+    monkeypatch.setattr(public_web_manager, "PublicWebApi", _OddProxyApi)
+    logged: list[str] = []
+    monkeypatch.setattr(public_web_manager, "logger", types.SimpleNamespace(debug=lambda message: logged.append(str(message))))
+
+    public_web_manager._push_reset_cache([("odd", "http://proxy-599", "key"), ("fine", "http://fine-node", "key")])
+
+    # the ValueError was contained to the 'odd' node, and the loop went on to
+    # contact the healthy one — a dead thread would have skipped it
+    assert any("599" in line for line in logged)
+    assert asked == ["http://proxy-599", "http://fine-node"]
+
+
+def test_push_reset_cache_logs_a_rejecting_node(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A node that answers but refuses the reset is noted, not raised."""
+
+    class _RejectingApi:
+        def __init__(self, *_args: object) -> None:
+            pass
+
+        def reset_cache(self) -> tuple[dict, HTTPStatus]:
+            return {"error": "denied"}, HTTPStatus.UNAUTHORIZED
+
+    monkeypatch.setattr(public_web_manager, "PublicWebApi", _RejectingApi)
+    logged: list[str] = []
+    monkeypatch.setattr(public_web_manager, "logger", types.SimpleNamespace(debug=lambda message: logged.append(str(message))))
+
+    public_web_manager._push_reset_cache([("web", "http://public-web", "key")])
+
+    assert any("did not accept" in line for line in logged)

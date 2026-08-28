@@ -3,6 +3,15 @@ import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 
+// Vitest defaults NODE_ENV to 'test' only when it is not already set, so an
+// ambient NODE_ENV=production (some shells and container images export it)
+// silently builds Vue in production mode. There `<script setup>` bindings are
+// not exposed on the component instance and dev-only warnings are compiled out,
+// which fails hundreds of these tests with misleading errors
+// ("wrapper.vm.<x> is not a function", real network calls). The suite is only
+// ever meaningful in test mode, so pin it before the plugins read it.
+process.env.NODE_ENV = 'test'
+
 /**
  * Vitest Unit/Component Test Configuration
  * See https://vitest.dev/config/

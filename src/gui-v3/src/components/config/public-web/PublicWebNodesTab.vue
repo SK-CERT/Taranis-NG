@@ -159,6 +159,7 @@
     import { ref, computed, onMounted, onUnmounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
+    import { usePublishStore } from '@/stores/publish'
     import { useAuth } from '@/composables/useAuth'
     import { getPublicWebs, deletePublicWebNode, deletePublicWeb, updatePublicWeb } from '@/api/config'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
@@ -184,6 +185,7 @@
 
     const { t } = useI18n()
     const configStore = useConfigStore()
+    const publishStore = usePublishStore()
     const { checkPermission } = useAuth()
 
     const filter = ref<{ search: string }>({ search: '' })
@@ -319,6 +321,11 @@
                 await deletePublicWeb(target.nodeId, target.web)
                 await loadWebs(target.nodeId)
             }
+            // Deleting a web (or a whole node with its webs) must invalidate the
+            // Publish view's cached targeting options: a stale id saved into a
+            // product is silently dropped by the backend and the product turns
+            // global (visible on every web).
+            publishStore.invalidatePublicWebOptions()
         } catch (error) {
             console.error('Error deleting:', error)
         } finally {
