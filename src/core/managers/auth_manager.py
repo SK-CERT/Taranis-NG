@@ -34,7 +34,7 @@ from config import Config
 from flask import request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
 from flask_jwt_extended.exceptions import JWTExtendedException
-from managers import log_manager, totp_manager, webauthn_manager
+from managers import log_manager, login_throttle, totp_manager, webauthn_manager
 from managers.db_manager import db
 from model.apikey import ApiKey
 from model.auth_provider import FORM_KINDS, OAUTH_KINDS, AuthProvider, UserAuthIdentity
@@ -582,6 +582,12 @@ def authenticate_with_provider(provider_id: object, credentials: dict) -> tuple[
     if not username or not password:
         return BaseAuthenticator.generate_error()
 
+    # Brute-force gate: a username with too many recent failures is refused
+    # before any credential check runs (works across all gunicorn workers
+    # through Redis). Anonymous POST /auth/login keeps rendering the page.
+    if not login_throttle.check_lock(username):
+        return BaseAuthenticator.generate_error()
+
     if provider_id:
         try:
             provider = AuthProvider.find(int(provider_id))
@@ -595,12 +601,15 @@ def authenticate_with_provider(provider_id: object, credentials: dict) -> tuple[
         if provider.kind == "local":
             user = PasswordAuthenticator.verify(credentials)
             if user:
+                login_throttle.register_success(username)
                 return _finalize_login(provider, user)
         elif provider.kind == "ldap":
             identity = LDAPAuthenticator(provider).verify(credentials)
             if identity:
+                login_throttle.register_success(username)
                 return provision_and_issue_jwt(provider, identity)
 
+    login_throttle.register_failure(username)
     data = request.get_json(silent=True) or {}
     if data.get("password"):
         data["password"] = log_manager.sensitive_value(data["password"])
@@ -623,10 +632,14 @@ def complete_mfa_totp(mfa_token: str, code: str) -> tuple[dict, HTTPStatus]:
     user = User.find(payload["sub"]) if payload else None
     if not user:
         return _mfa_session_expired()
+    if not login_throttle.check_lock(user.username):
+        return _mfa_session_expired()
     if not totp_manager.verify_code(user, code):
+        login_throttle.register_failure(user.username)
         log_manager.store_auth_error_activity(f"Invalid TOTP code for user: {user.username}")
         time.sleep(random.uniform(1, 3))  # noqa: S311 - timing jitter, not cryptographic
         return BaseAuthenticator.generate_error_code("Invalid authentication code", "TOTP_INVALID")
+    login_throttle.register_success(user.username)
     return BaseAuthenticator.generate_jwt(user)
 
 

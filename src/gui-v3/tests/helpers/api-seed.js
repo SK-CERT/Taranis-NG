@@ -20,7 +20,19 @@ async function getToken(request, username = 'admin', password = 'admin') {
                 const body = await res.json()
                 return body.access_token
             }
-        } catch {
+            if (res.status() === 401) {
+                // A live backend rejecting the credentials will keep rejecting them.
+                // Retrying here would spend the failed-login budget (5 per 5 minutes,
+                // see managers/login_throttle.py) and lock the account the rest of
+                // the suite logs in with — turning a wrong password into a cascade of
+                // unrelated failures. Fail fast and say so instead.
+                throw new Error(
+                    `E2E seed: backend rejected ${username} credentials (HTTP 401). Not retrying, ` +
+                        'to avoid tripping the login throttle and locking the account.'
+                )
+            }
+        } catch (error) {
+            if (error instanceof Error && error.message.startsWith('E2E seed:')) throw error
             // backend not yet reachable — keep polling
         }
         await new Promise((resolve) => setTimeout(resolve, 1000))
