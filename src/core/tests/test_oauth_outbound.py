@@ -248,6 +248,17 @@ def test_endpoint_outside_issuer_prefix_raises() -> None:
         resolve_endpoints("oidc", cfg, "p", md)
 
 
+def test_sibling_domain_is_not_rebased() -> None:
+    # The public base echoed by a *sibling* domain (idp.example.com.evil.com)
+    # starts with the issuer's hostname as a plain string, but is not under it:
+    # the boundary check must anchor the prefix at the issuer's own "/".
+    md = _md()
+    md["token_endpoint"] = "https://idp.example.com.evil.com/token"
+    cfg = {"issuer_url": PUBLIC, "internal_issuer_url": INTERNAL}
+    with pytest.raises(ValueError, match="token"):
+        resolve_endpoints("oidc", cfg, "p", md)
+
+
 def test_rewrite_is_anchored_not_a_global_replace() -> None:
     md = _md()
     md["token_endpoint"] = f"{PUBLIC}/token?next={PUBLIC}/cb"
