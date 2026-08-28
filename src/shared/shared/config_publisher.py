@@ -43,6 +43,13 @@ class ConfigPublisher(ConfigBase):
         mod.parameters = [
             param_type("SFTP_URL", "SFTP URL", "SFTP server URL", ParameterType.STRING),
             param_type("PORT", "SSH port", "Port remote machine is using for SSH (default 22)", ParameterType.STRING),
+            param_type(
+                "HOST_KEY",
+                "SSH host key",
+                "Expected public key of the SFTP server, as a known_hosts line or a 'keytype base64' pair. "
+                "Leave empty to accept whatever key the server presents (unverified, logs a warning).",
+                ParameterType.STRING,
+            ),
             param_type("SSH_KEY", "SSH key", "Private key which should be used for SSH connection", ParameterType.STRING),
             param_type("SSH_KEY_PASSWORD", "SSH key password", "Password for the SSH private key", ParameterType.STRING),
             param_type("USERNAME", "Username", "Username for SFTP", ParameterType.STRING),

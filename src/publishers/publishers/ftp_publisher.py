@@ -1,8 +1,4 @@
-"""Publisher for publishing to FTP and SFTP server.
-
-Raises:
-    Exception: _description_
-"""
+"""Publisher for publishing to an FTP server."""
 
 import datetime
 import ftplib
@@ -12,7 +8,6 @@ from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import urlsplit
 
-import paramiko
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
@@ -37,7 +32,7 @@ class FTPPublisher(BasePublisher):
     parameters = config.parameters
 
     def publish(self, publisher_input: dict) -> tuple[dict, HTTPStatus]:
-        """Publish to FTP or SFTP server.
+        """Publish to an FTP server.
 
         Arguments:
             publisher_input: intput data for publisher
@@ -67,17 +62,6 @@ class FTPPublisher(BasePublisher):
 
             remote_path = ftp_data.path + filename
 
-            if ftp_data.scheme == "sftp":
-                ssh_port = ftp_data.port or 22
-                ssh = paramiko.SSHClient()
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # noqa: S507  # unsafe connect
-                self.logger.debug(f"Connecting SFTP: {ftp_hostname}, port {ssh_port}, user {ftp_username}")
-                ssh.connect(hostname=ftp_hostname, port=ssh_port, username=ftp_username, password=ftp_password)
-                sftp = ssh.open_sftp()
-                sftp.put(filename, remote_path)
-                sftp.close()
-                return {}, HTTPStatus.OK
-
             if ftp_data.scheme == "ftp":
                 ftp_port = ftp_data.port or 21
                 ftp = ftplib.FTP()  # noqa: S321  # FTP is considered insecure
@@ -89,7 +73,7 @@ class FTPPublisher(BasePublisher):
                 ftp.quit()
                 return {}, HTTPStatus.OK
 
-            msg = f"Schema '{ftp_data.scheme}' not supported, choose 'ftp' or 'sftp'"
+            msg = f"Scheme '{ftp_data.scheme}' not supported by the FTP publisher; use 'ftp' (for sftp, use the SFTP publisher)"
             self.logger.error(msg)
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 

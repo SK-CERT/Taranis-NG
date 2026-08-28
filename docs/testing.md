@@ -136,6 +136,18 @@ point CI uses.
   `config` module before any application import — the same pattern `src/core/tests`
   uses. `tests/__init__.py` is deliberately absent (matching core) so pytest imports the
   test modules top-level instead of walking up to the service-root `__init__.py`.
-- **`src/bots`, `src/collectors`, `src/publishers` have no tests yet.** Add a `tests/`
-  directory, then list the project in `PYTEST_SUITES` in `scripts/run_tests.py` and in
-  `testpaths` in the root `pyproject.toml`.
+- **`src/bots`, `src/collectors` have no tests yet.** Add a `tests/` directory, then list
+  the project in `PYTEST_SUITES` in `scripts/run_tests.py` and in `testpaths` in the root
+  `pyproject.toml`.
+- **`src/publishers` cannot be collected yet.** Adding `tests/` there is not enough: pytest
+  tries to import the service root `src/publishers/__init__.py` as a test module, that
+  `__init__` does `from .app import create_app`, and the chain reaches
+  `managers/publishers_manager.py`'s `from publishers.email_publisher import ...` while the
+  service-root package named `publishers` is still half-initialized — so collection dies on
+  `ModuleNotFoundError: No module named 'publishers.email_publisher'`, even for an empty
+  test file, and `--import-mode=importlib` does not help. Presenters has the same
+  service-root/inner-package name clash but survives it. Making this suite runnable means
+  breaking the clash (rename the inner `publishers/` package, or drop the service-root
+  `__init__.py`), which is a structural change rather than a pytest setting.
+  `managers/ssh_host_keys.py` is the code most in need of it: its host-key verification is
+  a security control with no automated coverage until this is resolved.
