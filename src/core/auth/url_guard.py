@@ -73,12 +73,19 @@ def assert_public_url(url: str, *, require_https: bool = False) -> None:
             raise ValueError(msg)
 
 
-def assert_auth_endpoint_url(url: str) -> None:
+def assert_auth_endpoint_url(url: str, *, allow_insecure: bool = False) -> None:
     """Validate an OAuth/OIDC endpoint without breaking private HTTPS IdPs.
 
     HTTPS endpoints may resolve privately because intranet identity providers
     are a supported deployment shape. Plain HTTP is limited to loopback
     development endpoints. Redirects are controlled by the request helper.
+
+    Args:
+        url (str): The endpoint URL to validate.
+        allow_insecure (bool): Permit plain HTTP for an administrator-declared
+            internal back-channel address. Every other check still applies: the
+            URL must be http(s), carry a host, and contain neither embedded
+            credentials nor a fragment.
     """
     parsed = urlparse(url)
     if parsed.scheme not in DEFAULT_PORTS:
@@ -93,7 +100,7 @@ def assert_auth_endpoint_url(url: str) -> None:
     if parsed.fragment:
         msg = "The authentication endpoint URL must not contain a fragment"
         raise ValueError(msg)
-    if parsed.scheme == "http":
+    if parsed.scheme == "http" and not allow_insecure:
         host = parsed.hostname
         try:
             is_loopback = ipaddress.ip_address(host).is_loopback
@@ -144,10 +151,11 @@ def fetch_auth_json(
     url: str,
     *,
     max_bytes: int = MAX_JSON_BYTES,
+    allow_insecure: bool = False,
     request_get: Callable[..., requests.Response] = requests.get,
 ) -> dict[str, Any]:
     """Fetch bounded JSON from a validated auth URL without following redirects."""
-    assert_auth_endpoint_url(url)
+    assert_auth_endpoint_url(url, allow_insecure=allow_insecure)
     response = request_get(
         url,
         timeout=OUTBOUND_TIMEOUT,

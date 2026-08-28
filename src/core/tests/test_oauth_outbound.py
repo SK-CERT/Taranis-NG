@@ -9,8 +9,9 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from auth import oauth2_authenticator
-from auth.oauth2_authenticator import OAuth2Authenticator, resolve_endpoints
+from auth.oauth2_authenticator import OAuth2Authenticator, fetch_discovery, resolve_endpoints, verify_configuration
 from auth.url_guard import MAX_JSON_BYTES, OUTBOUND_TIMEOUT, assert_auth_endpoint_url, fetch_auth_json, read_limited_json
+from authlib.integrations.base_client import OAuthError
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -147,7 +148,7 @@ def test_oidc_discovery_requires_matching_issuer(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(
         oauth2_authenticator,
         "fetch_auth_json",
-        lambda _url: {
+        lambda _url, **_kwargs: {
             "issuer": "https://attacker.example.test",
             "authorization_endpoint": "https://idp.example.test/authorize",
             "token_endpoint": "https://idp.example.test/token",
@@ -272,3 +273,157 @@ def test_no_internal_issuer_leaves_everything_alone() -> None:
     ep = resolve_endpoints("oidc", cfg, "p", _md())
     for value in ep.values():
         assert value is None or not value.startswith(INTERNAL)
+
+
+def test_http_internal_issuer_is_refused_by_default() -> None:
+    cfg = {"issuer_url": PUBLIC, "internal_issuer_url": "http://keycloak:8080"}
+    with pytest.raises(ValueError, match="HTTPS"):
+        resolve_endpoints("oidc", cfg, "p", _md())
+
+
+def test_http_internal_issuer_is_allowed_when_opted_in() -> None:
+    cfg = {
+        "issuer_url": PUBLIC,
+        "internal_issuer_url": "http://keycloak:8080",
+        "allow_insecure_internal_transport": True,
+    }
+    ep = resolve_endpoints("oidc", cfg, "p", _md())
+    assert ep["token"] == "http://keycloak:8080/realms/main/protocol/openid-connect/token"
+
+
+def _fetch_discovery_with_stub(metadata: dict, config: dict, monkeypatch: pytest.MonkeyPatch) -> dict:
+    """Run ``fetch_discovery`` for ``config`` with the discovery document served from memory.
+
+    The stub keeps the genuine URL guard on the fetch itself, so an opt-in that
+    must not apply to the fetched URL cannot silently relax it.
+    """
+
+    def fake_fetch(url: str, **kwargs: object) -> dict:
+        assert_auth_endpoint_url(url, allow_insecure=bool(kwargs.get("allow_insecure")))
+        return metadata
+
+    monkeypatch.setattr(oauth2_authenticator, "fetch_auth_json", fake_fetch)
+    return fetch_discovery(
+        config.get("issuer_url"),
+        "p",
+        config.get("internal_issuer_url"),
+        allow_insecure_internal=bool(config.get("allow_insecure_internal_transport")),
+    )
+
+
+def test_opt_in_does_not_relax_the_public_issuer(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The flag is about the internal hop only; a public http:// endpoint still fails."""
+    md = _md()
+    md["authorization_endpoint"] = "http://idp.example.com/auth"
+    cfg = {"issuer_url": "http://idp.example.com", "allow_insecure_internal_transport": True}
+    with pytest.raises(ValueError, match="HTTPS"):
+        _fetch_discovery_with_stub(md, cfg, monkeypatch)
+
+
+def test_opt_in_covers_every_back_channel_fetch_of_the_configuration_test(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The Test-configuration button must fetch the rebased JWKS over the opted-in plain HTTP too."""
+    seen: list[tuple[str, bool]] = []
+
+    def fake_fetch(url: str, **kwargs: object) -> dict:
+        seen.append((url, bool(kwargs.get("allow_insecure"))))
+        if "openid-configuration" in url:
+            md = _md()
+            del md["introspection_endpoint"]
+            del md["revocation_endpoint"]
+            return md
+        return {"keys": []}
+
+    monkeypatch.setattr(oauth2_authenticator, "fetch_auth_json", fake_fetch)
+    monkeypatch.setattr(oauth2_authenticator.pyjwt, "PyJWKSet", SimpleNamespace(from_dict=lambda _jwks: SimpleNamespace(keys=[])))
+
+    class FakeSession:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            pass
+
+        def fetch_token(self, *_args: object, **_kwargs: object) -> dict:
+            raise OAuthError(error="invalid_grant", description="Code not found")
+
+    monkeypatch.setattr(oauth2_authenticator, "OAuth2Session", FakeSession)
+
+    result = verify_configuration(
+        "oidc",
+        {
+            "issuer_url": PUBLIC,
+            "internal_issuer_url": "http://keycloak:8080",
+            "allow_insecure_internal_transport": True,
+            "client_id": "taranis",
+        },
+        "s3cret",
+    )
+
+    assert seen == [
+        ("http://keycloak:8080/.well-known/openid-configuration", True),
+        ("http://keycloak:8080/realms/main/protocol/openid-connect/certs", True),
+    ]
+    assert result["client_status"] == "accepted", result["detail"]
+
+
+def test_opted_in_login_reaches_the_internal_back_channel_endpoints(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A full login against a plain-HTTP internal issuer must work when opted in.
+
+    The rebased token, userinfo and JWKS URLs are re-checked at use time; the
+    opt-in has to reach those checks or the callback swallows a guard ValueError
+    and returns None.
+    """
+    calls: dict[str, object] = {}
+    monkeypatch.setattr(oauth2_authenticator, "_metadata_cache", {})
+    monkeypatch.setattr(oauth2_authenticator, "_jwks_cache", {})
+
+    def fake_fetch(url: str, **kwargs: object) -> dict:
+        calls.setdefault("fetches", []).append((url, bool(kwargs.get("allow_insecure"))))
+        if "openid-configuration" in url:
+            return _md()
+        return {"keys": ["signing-key"]}
+
+    monkeypatch.setattr(oauth2_authenticator, "fetch_auth_json", fake_fetch)
+    signing_key = SimpleNamespace(algorithm_name="RS256", public_key_use="sig", key_id="k1", key="public-key")
+    monkeypatch.setattr(
+        oauth2_authenticator.pyjwt,
+        "PyJWKSet",
+        SimpleNamespace(from_dict=lambda _jwks: SimpleNamespace(keys=[signing_key])),
+    )
+    monkeypatch.setattr(oauth2_authenticator.pyjwt, "get_unverified_header", lambda _token: {"alg": "RS256", "kid": "k1"})
+    monkeypatch.setattr(
+        oauth2_authenticator.pyjwt,
+        "decode",
+        lambda *_args, **_kwargs: {"sub": "alice", "preferred_username": "alice", "nonce": "state-nonce"},
+    )
+
+    class FakeSession:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            pass
+
+        def fetch_token(self, url: str, **_kwargs: object) -> dict:
+            calls["token"] = url
+            return {"access_token": "token", "id_token": "header.payload.signature"}
+
+        def get(self, url: str, **_kwargs: object) -> FakeResponse:
+            calls["userinfo"] = url
+            return FakeResponse(b'{"upn":"alice","sub":"alice"}')
+
+    monkeypatch.setattr(oauth2_authenticator, "OAuth2Session", FakeSession)
+
+    provider = _provider(kind="oidc", issuer_url=PUBLIC, internal_issuer_url="http://keycloak:8080", username_claim="upn")
+    provider.config["allow_insecure_internal_transport"] = True
+
+    identity = OAuth2Authenticator(provider).handle_callback(
+        "https://taranis.example.test/callback",
+        "the-code",
+        "state-nonce",
+        "the-verifier",
+    )
+
+    assert identity is not None
+    assert identity.username == "alice"
+    # Every back-channel request went to the opted-in internal address.
+    assert calls["token"] == "http://keycloak:8080/realms/main/protocol/openid-connect/token"
+    assert calls["userinfo"] == "http://keycloak:8080/realms/main/protocol/openid-connect/userinfo"
+    assert calls["fetches"] == [
+        ("http://keycloak:8080/.well-known/openid-configuration", True),
+        ("http://keycloak:8080/realms/main/protocol/openid-connect/certs", True),
+    ]
