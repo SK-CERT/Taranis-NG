@@ -1,5 +1,6 @@
 """Configuration settings for collectors."""
 
+import os
 from pathlib import Path
 
 
@@ -28,4 +29,8 @@ class Config:
             raise RuntimeError(msg) from err
 
     API_KEY = read_secret("api_key")
-    DEBUG = True
+    # Never default the Werkzeug debugger on (RCE from any traceback page); opt in
+    # explicitly for local development instead. This service does not load Config
+    # into app.config, so the value only reaches Flask if that changes - it is set
+    # correctly here so the default is safe if it ever does.
+    DEBUG = os.getenv("FLASK_DEBUG", "false").strip().lower() in ("1", "true", "yes", "on")

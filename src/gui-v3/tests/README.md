@@ -95,6 +95,20 @@ Assess, access management, roles, organizations, collectors, presenters,
 workflow states, selected Publish behavior, and My Assets permission and CRUD
 paths.
 
+Some specs are API-level rather than browser workflows, covering security
+behavior that only shows up against a real stack — the unit suites stub exactly
+the parts that matter (the attachment ACL query is monkeypatched, Redis is
+faked, and nothing else asserts a response header). They are named after the
+behavior they pin, for example:
+
+- `security-headers.spec.js` — the hardening headers on every response, and that
+  a foreign origin gets no CORS grant.
+- `publish-preview-ticket.spec.js` — product preview tickets are single use, and
+  the CSP matches what the rendered format needs.
+
+These need no browser, so `--no-deps` runs them without the seed project when you
+only want a quick check.
+
 ### Continuous integration
 
 `.github/workflows/gui-v3-tests.yml` runs the suite on Chromium, Firefox and
