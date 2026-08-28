@@ -108,7 +108,7 @@ export const configLinks: GroupNavItem[] = [
         translate: true
     },
     {
-        id: 13,
+        id: 14,
         icon: 'mdi-file-cabinet',
         title: 'nav_menu.external',
         route: '/config/external',
