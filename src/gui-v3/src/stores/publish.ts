@@ -51,6 +51,10 @@ export const usePublishStore = defineStore('publish', () => {
     const selectedProducts = computed(() => {
         return new Set(selection.value.map((item) => item.id))
     })
+    // The "any public web exists" flag (the GUI's public-web gate). This is NOT
+    // NewProduct's choice predicate (publicWebOptions.length > 1 in
+    // NewProduct.vue, which only shows the target selector when there is a
+    // choice); kept as the store's public API.
     const publicWebEnabled = computed(() => publicWebOptions.value.length > 0)
 
     // Actions

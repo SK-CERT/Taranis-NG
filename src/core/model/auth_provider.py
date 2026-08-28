@@ -8,7 +8,7 @@ Kind-specific non-secret settings live in the ``config`` JSON column:
   on the internal issuer hop only), client_id, scopes, username_claim,
   name_claim, email_claim, redirect_uri_override, logout_url, pkce_method
 - oauth2: authorize_url, token_url, userinfo_url, client_id, scopes,
-  username_claim, name_claim, email_claim
+  username_claim, name_claim, email_claim, pkce_method
 - saml (single IdP): idp_sso_url, idp_entity_id, idp_certificate, sp_entity_id,
   acs_url_override, username_attr, name_attr, email_attr
 - saml (federation / discovery mode, when discovery_url is set): discovery_url,
