@@ -53,8 +53,9 @@ class PasswordAuthenticator(BaseAuthenticator):
         user = PasswordAuthenticator.verify(credentials)
 
         if not user:
-            data = request.get_json()
-            data["password"] = log_manager.sensitive_value(data["password"])
+            data = request.get_json(silent=True) or {}
+            if "password" in data:
+                data["password"] = log_manager.sensitive_value(data["password"])
             log_manager.store_auth_error_activity(f"Authentication failed for user: {credentials['username']}", request_data=data)
             time.sleep(random.uniform(1, 3))  # noqa: S311 - timing jitter, not cryptographic
             return BaseAuthenticator.generate_error()

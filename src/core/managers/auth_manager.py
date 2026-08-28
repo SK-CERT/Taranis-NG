@@ -1113,8 +1113,15 @@ def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> Call
                 log_manager.store_user_auth_error_activity(user, f"Access denied by ACL for user: {user.username}")
                 return error
 
-            # allow
-            log_manager.store_user_activity(user, str(required_permissions_set), str(request.get_json(force=True, silent=True)))
+            # allow - pass the parsed body through request_data so
+            # generate_escaped_data redacts known-sensitive keys (passwords,
+            # tokens, api keys) before it reaches the activity log.
+            log_manager.store_user_activity(
+                user,
+                str(required_permissions_set),
+                "",
+                request_data=request.get_json(force=True, silent=True),
+            )
             return fn(*args, **kwargs)
 
         return wrapper
