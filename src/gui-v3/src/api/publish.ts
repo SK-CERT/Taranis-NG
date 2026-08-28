@@ -81,6 +81,10 @@ export function publishProduct(product: unknown, publisher_ids: Array<number | s
     })
 }
 
+export function getPublishPublicWebs() {
+    return ApiService.get('/publish/public-webs')
+}
+
 export function previewProduct(data, ctrl_key, jwt) {
     return ApiService.post('/publish/products/preview-ticket', {
         product: data,

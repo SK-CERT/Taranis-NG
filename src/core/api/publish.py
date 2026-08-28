@@ -469,6 +469,30 @@ class PublishProduct(Resource):
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+class PublishPublicWebs(Resource):
+    """List the public webs a product can be targeted at.
+
+    The Publish view needs this to render its target selector, so it is scoped to
+    PUBLISH_ACCESS rather than the configuration permission - an ordinary
+    publishing user must be able to read it. An empty list is also how the GUI
+    learns that this deployment has no public-web feed and can skip the rest of
+    the feature.
+    """
+
+    @auth_required("PUBLISH_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Return every public web as id/name pairs.
+
+        Returns:
+            (dict, HTTPStatus): ``{"total_count": int, "items": [...]}``.
+        """
+        from model.public_web import PublicWeb
+
+        webs = PublicWeb.query.order_by(db.asc(PublicWeb.name)).all()
+        items = [{"id": web.id, "name": web.name or str(web.id)} for web in webs]
+        return {"total_count": len(items), "items": items}, HTTPStatus.OK
+
+
 def initialize(api: Api) -> None:
     """Initialize the publish module.
 
@@ -480,6 +504,7 @@ def initialize(api: Api) -> None:
     api.add_resource(ProductSetPreview, "/api/v1/publish/products/preview-ticket")
     api.add_resource(ProductGetPreview, "/api/v1/publish/products/preview/<string:token>")
     api.add_resource(PublishProduct, "/api/v1/publish/products/publish")
+    api.add_resource(PublishPublicWebs, "/api/v1/publish/public-webs")
 
     Permission.add("PUBLISH_ACCESS", "Publish access", "Access to publish module")
     Permission.add("PUBLISH_CREATE", "Publish create", "Create product")

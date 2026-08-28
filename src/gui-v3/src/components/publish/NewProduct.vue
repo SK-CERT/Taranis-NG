@@ -336,11 +336,12 @@
 
 <script setup lang="ts">
     import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+    import { storeToRefs } from 'pinia'
     import { useI18n } from 'vue-i18n'
     import { useAuthStore } from '@/stores/auth'
+    import { usePublishStore } from '@/stores/publish'
     import { ICONS } from '@/config/ui-constants'
     import { createProduct, updateProduct, publishProduct, previewProduct, getProductById } from '@/api/publish'
-    import { getAllPublicWebNodes, getPublicWebs } from '@/api/config'
     import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
@@ -392,20 +393,6 @@
         [key: string]: unknown
     }
 
-    type PublicWebNode = {
-        id: number | string
-    }
-
-    type PublicWeb = {
-        id: number | string
-        name?: string
-    }
-
-    type PublicWebOption = {
-        id: number | string
-        name: string
-    }
-
     type ProductEditPayload = {
         id: number
         title: string
@@ -433,6 +420,8 @@
     const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
     const authStore = useAuthStore()
+    const publishStore = usePublishStore()
+    const { publicWebOptions } = storeToRefs(publishStore)
 
     // Component state
     const visible = ref<boolean>(false)
@@ -461,7 +450,6 @@
     const reportItems = ref<ReportItem[]>([])
     const productTypes = ref<ProductType[]>([])
     const publisherPresets = ref<PublisherPreset[]>([])
-    const publicWebOptions = ref<PublicWebOption[]>([])
     const availableStates = ref<AvailableState[]>([])
     const reportItemSelector = ref<{ openSelector?: () => void } | null>(null)
 
@@ -533,6 +521,13 @@
     }
 
     function normalizePublicWebSelection() {
+        // Without options the valid-id set is empty, so filtering here would
+        // silently wipe the product's saved targeting (e.g. after a failed
+        // options fetch). Leave the stored selection alone instead.
+        if (publicWebOptions.value.length === 0) {
+            return
+        }
+
         const validIds = new Set(normalizePublicWebIds(publicWebOptions.value.map((web) => web.id)))
         const selectedIds = normalizePublicWebIds(product.value.public_web_ids)
 
@@ -834,38 +829,10 @@
     }
 
     async function loadPublicWebOptions() {
-        try {
-            const nodesResponse = await getAllPublicWebNodes({ search: '' })
-            const nodes: PublicWebNode[] = nodesResponse.data?.items || []
-
-            const webResponses = await Promise.all(
-                nodes.filter((node) => node.id !== undefined && node.id !== null).map((node) => getPublicWebs(node.id, { search: '' }))
-            )
-
-            const options: PublicWebOption[] = webResponses.flatMap((response) => {
-                const items: PublicWeb[] = response.data?.items || []
-                return items
-                    .filter((web) => web.id !== undefined && web.id !== null)
-                    .map((web) => ({
-                        id: Number(web.id),
-                        name: web.name || String(web.id)
-                    }))
-            })
-
-            const deduplicated = new Map<number | string, PublicWebOption>()
-            options.forEach((option) => {
-                if (!deduplicated.has(option.id)) {
-                    deduplicated.set(option.id, option)
-                }
-            })
-
-            publicWebOptions.value = Array.from(deduplicated.values())
-            normalizePublicWebSelection()
-        } catch (error: unknown) {
-            console.error('Failed to load public-web websites:', error)
-            publicWebOptions.value = []
-            product.value.public_web_ids = []
-        }
+        // The store fetches the publish-scoped list once and caches it; a failed
+        // fetch must not touch the product's saved targeting below.
+        await publishStore.loadPublicWebOptions()
+        normalizePublicWebSelection()
     }
 
     // Public methods for opening dialog

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { getAllProducts } from '@/api/publish'
+import { getAllProducts, getPublishPublicWebs } from '@/api/publish'
 import { getAllUserPublishersPresets } from '@/api/user'
 
 type SearchFilter = {
@@ -21,6 +21,16 @@ type ApiResponse<T> = {
     data?: T
 }
 
+type PublicWebOption = {
+    id: number | string
+    name: string
+}
+
+type PublicWebsState = {
+    total_count: number
+    items: PublicWebOption[]
+}
+
 const emptyListState = (): ItemListState => ({ total_count: 0, items: [] })
 
 export const usePublishStore = defineStore('publish', () => {
@@ -30,6 +40,8 @@ export const usePublishStore = defineStore('publish', () => {
     const multi_select = ref(false)
     const selection = ref<SelectableItem[]>([])
     const pendingNewProduct = ref<unknown | null>(null)
+    const publicWebOptions = ref<PublicWebOption[]>([])
+    const publicWebOptionsLoaded = ref(false)
 
     // Getters
     const getProducts = computed(() => products.value || emptyListState())
@@ -39,6 +51,7 @@ export const usePublishStore = defineStore('publish', () => {
     const selectedProducts = computed(() => {
         return new Set(selection.value.map((item) => item.id))
     })
+    const publicWebEnabled = computed(() => publicWebOptions.value.length > 0)
 
     // Actions
     async function loadProducts(data: SearchFilter | Record<string, unknown>): Promise<ApiResponse<unknown>> {
@@ -53,6 +66,21 @@ export const usePublishStore = defineStore('publish', () => {
         const response = (await getAllUserPublishersPresets()) as ApiResponse<ItemListState>
         products_publisher_presets.value = response.data || emptyListState()
         return response
+    }
+
+    // The Publish view is the only consumer, so one fetch per session is enough;
+    // a failed request stays unmarked and is retried on the next mount.
+    async function loadPublicWebOptions(): Promise<void> {
+        if (publicWebOptionsLoaded.value) {
+            return
+        }
+        try {
+            const response = (await getPublishPublicWebs()) as ApiResponse<PublicWebsState>
+            publicWebOptions.value = response.data?.items || []
+            publicWebOptionsLoaded.value = true
+        } catch (error: unknown) {
+            console.error('Failed to load public-web websites:', error)
+        }
     }
 
     function multiSelect(enable: boolean): void {
@@ -81,6 +109,7 @@ export const usePublishStore = defineStore('publish', () => {
         multi_select,
         selection,
         pendingNewProduct,
+        publicWebOptions,
 
         // Getters
         getProducts,
@@ -88,10 +117,12 @@ export const usePublishStore = defineStore('publish', () => {
         getMultiSelect,
         getSelection,
         selectedProducts,
+        publicWebEnabled,
 
         // Actions
         loadProducts,
         loadUserPublishersPresets,
+        loadPublicWebOptions,
         multiSelect,
         select,
         deselect
