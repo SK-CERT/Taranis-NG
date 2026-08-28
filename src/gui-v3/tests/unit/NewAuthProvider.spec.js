@@ -253,6 +253,182 @@ describe('NewAuthProvider dialog', () => {
         )
     })
 
+    it('rejects a plain-http internal issuer while insecure internal transport is off', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: 'http://keycloak:8080',
+                client_id: 'taranis',
+                pkce_method: 'S256'
+            }
+        })
+
+        const oidcFields = wrapper.findComponent(OidcFields)
+        // the opt-in checkbox is always rendered (disabled while no internal
+        // issuer URL is set) so its state is never hidden from the admin
+        expect(oidcFields.findComponent({ name: 'VCheckbox' }).exists()).toBe(true)
+        const internalField = oidcFields.findAllComponents({ name: 'VTextField' })[1]
+        await internalField.vm.validate()
+
+        expect(internalField.vm.isValid).toBe(false)
+        expect(internalField.text()).toContain(
+            'The internal issuer URL must use https:// unless "Allow insecure internal transport" is enabled.'
+        )
+        // the internal hop is the field rule's job now and is no longer double-reported as a soft warning
+        expect(wrapper.vm.insecureConfigurationWarnings).not.toContain(
+            'At least one authentication endpoint uses unencrypted HTTP. HTTP is intended only for loopback development services.'
+        )
+    })
+
+    it('allows a plain-http internal issuer once insecure internal transport is opted in', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: 'http://keycloak:8080',
+                client_id: 'taranis',
+                pkce_method: 'S256',
+                allow_insecure_internal_transport: true
+            }
+        })
+
+        const internalField = wrapper.findComponent(OidcFields).findAllComponents({ name: 'VTextField' })[1]
+        await internalField.vm.validate()
+        expect(internalField.vm.isValid).toBe(true)
+
+        // the opted-in risk is still surfaced in the save summary
+        expect(wrapper.vm.insecureConfigurationWarnings).toContain(
+            'Permit a plain http:// internal issuer URL. The back channel carries the client secret and the authorization code, so only enable this on a trusted internal network.'
+        )
+    })
+
+    it('includes the insecure internal transport opt-in in the payload posted on save', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: 'https://keycloak.internal:8443',
+                client_id: 'taranis',
+                pkce_method: 'S256',
+                allow_insecure_internal_transport: true
+            }
+        })
+        wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+
+        await wrapper.vm.persist()
+
+        expect(updateAuthProvider).toHaveBeenCalledTimes(1)
+        expect(updateAuthProvider.mock.calls[0][0].config).toEqual(
+            expect.objectContaining({
+                internal_issuer_url: 'https://keycloak.internal:8443',
+                allow_insecure_internal_transport: true
+            })
+        )
+    })
+
+    it('clears the https error on the internal issuer field as soon as the opt-in is ticked', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: 'http://keycloak:8080',
+                client_id: 'taranis',
+                pkce_method: 'S256'
+            }
+        })
+
+        const oidcFields = wrapper.findComponent(OidcFields)
+        const internalField = oidcFields.findAllComponents({ name: 'VTextField' })[1]
+        await internalField.vm.validate()
+        expect(internalField.vm.isValid).toBe(false)
+
+        // Vuetify re-runs a field's rules only for its own value or focus, so the
+        // stale error would otherwise survive the very change that permits it.
+        oidcFields.vm.config.allow_insecure_internal_transport = true
+        await flushPromises()
+
+        expect(internalField.vm.isValid).toBe(true)
+        expect(internalField.text()).not.toContain('The internal issuer URL must use https://')
+    })
+
+    it('trims a whitespace-only internal issuer out of the payload and drops the opt-in with it', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                // the field rule treats a blank value as unset and passes it
+                internal_issuer_url: '   ',
+                allow_insecure_internal_transport: true,
+                client_id: 'taranis',
+                pkce_method: 'S256'
+            }
+        })
+        wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+
+        await wrapper.vm.persist()
+
+        const config = updateAuthProvider.mock.calls[0][0].config
+        // runtime treats blank as set (bool(" ") is true), so it must not be posted
+        expect(config.internal_issuer_url).toBeUndefined()
+        expect(config.allow_insecure_internal_transport).toBeUndefined()
+    })
+
+    it('keeps a trimmed internal issuer and its opt-in in the payload', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: '  http://keycloak:8080  ',
+                allow_insecure_internal_transport: true,
+                client_id: 'taranis',
+                pkce_method: 'S256'
+            }
+        })
+        wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+
+        await wrapper.vm.persist()
+
+        const config = updateAuthProvider.mock.calls[0][0].config
+        expect(config.internal_issuer_url).toBe('http://keycloak:8080')
+        expect(config.allow_insecure_internal_transport).toBe(true)
+    })
+
+    it('resets the opt-in when the internal issuer is cleared so it cannot silently re-arm', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: 'https://kc.internal:8443',
+                allow_insecure_internal_transport: true,
+                client_id: 'taranis',
+                pkce_method: 'S256'
+            }
+        })
+
+        const oidcFields = wrapper.findComponent(OidcFields)
+        // The checkbox stays rendered with the URL set and is enabled.
+        const checkbox = oidcFields.findComponent({ name: 'VCheckbox' })
+        expect(checkbox.exists()).toBe(true)
+        expect(checkbox.props('disabled')).toBe(false)
+
+        oidcFields.vm.config.internal_issuer_url = '   '
+        await wrapper.vm.$nextTick()
+
+        // Clearing the URL disables the checkbox (so the state is never hidden)
+        // and drops the persisted opt-in, so a later re-added URL cannot
+        // silently resurrect the insecure transport.
+        expect(checkbox.props('disabled')).toBe(true)
+        expect(oidcFields.vm.config.allow_insecure_internal_transport).toBe(false)
+    })
+
     // ── Auto-create gating ────────────────────────
     it('enables the default-roles picker only for the auto-create provisioning modes', async () => {
         const wrapper = await mountDialog()

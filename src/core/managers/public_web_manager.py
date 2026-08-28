@@ -1,5 +1,10 @@
 """Core's side of the core->public-web-node channel.
 
+Every side effect here is gated on :func:`public_web_enabled`: a deployment
+without at least one configured node has nothing to ping or push to, so the
+health-check job and :func:`notify_nodes` return right after that single cheap
+existence query instead of loading nodes that cannot exist.
+
 A scheduled job calls each public-web node's management ``isalive`` endpoint and
 records a successful contact in ``last_seen``, which drives the green/orange/red
 status shown in the Configuration UI (mirroring the other nodes).
@@ -26,6 +31,7 @@ if TYPE_CHECKING:
     from flask import Flask
     from shared.time_manager import SchedulerManager
 
+from managers.db_manager import db
 from managers.log_manager import logger
 from model.public_web_node import PublicWebNode
 from remote.public_web_api import PublicWebApi
@@ -33,9 +39,27 @@ from remote.public_web_api import PublicWebApi
 _ALLOWED_SCHEMES = ("http", "https")
 
 
+def public_web_enabled() -> bool:
+    """Tell whether this deployment has a public-web node at all.
+
+    Every core-side public-web side effect - the health-check ping, the
+    cache-reset pushes, the product hooks - is meaningless without a node to
+    talk to, so they all short-circuit on this. Deliberately a live query and
+    not a cached flag: core runs several worker processes plus the scheduler,
+    so a cached answer would need cross-process invalidation to avoid silently
+    swallowing pushes after the first node is registered.
+
+    Returns:
+        (bool): True when at least one public-web node is configured.
+    """
+    return db.session.query(PublicWebNode.id).first() is not None
+
+
 def job(app: Flask) -> None:
     """Ping every public-web node that has a management URL; refresh last_seen."""
     with app.app_context():
+        if not public_web_enabled():
+            return
         for node in PublicWebNode.get_all():
             if not node.api_url:
                 continue
@@ -117,10 +141,17 @@ def _push_reset_cache(targets: list[tuple[str, str, str]]) -> None:
     """Send the cache reset to each target ``(name, api_url, api_key)``.
 
     Runs on a worker thread and touches no database state, so it needs no app
-    context; failures are logged and otherwise ignored.
+    context; failures are logged and otherwise ignored. The whole loop is
+    guarded: this thread has no supervisor, so any exception (e.g. a proxy
+    answering a non-standard status code, which ``HTTPStatus(...)`` turns into
+    ``ValueError``) would otherwise kill it with a traceback.
     """
     for name, api_url, api_key in targets:
-        _, status = PublicWebApi(api_url, api_key).reset_cache()
+        try:
+            _, status = PublicWebApi(api_url, api_key).reset_cache()
+        except Exception as ex:  # the thread must survive any single-node failure
+            logger.debug(f"Public-web node cache reset to '{name}' failed: {ex}")
+            continue
         if status != HTTPStatus.OK:
             logger.debug(f"Public-web node '{name}' did not accept the cache reset ({status}).")
 
@@ -138,7 +169,12 @@ def notify_nodes(nodes: Iterable[PublicWebNode]) -> None:
     The push itself runs on a daemon thread so a slow node cannot hold up the API
     response either. It is best-effort in both directions: if it fails, the
     change simply appears once the node's cache TTL expires.
+
+    With no node configured at all it returns before even looking at ``nodes``;
+    see :func:`public_web_enabled`.
     """
+    if not public_web_enabled():
+        return
     targets = [(node.name, node.api_url, node.api_key) for node in nodes if node.api_url and node.is_reachable()]
     if not targets:
         return
@@ -150,5 +186,10 @@ def initialize(app: Flask) -> None:
 
 
 def schedule(manager: SchedulerManager, app: Flask) -> None:
-    """Schedule the public-web node health check every minute."""
+    """Schedule the public-web node health check every minute.
+
+    Registered unconditionally: with no node configured the job costs one cheap
+    existence query per minute (see :func:`public_web_enabled`), while a node
+    registered after boot starts being health-checked without a core restart.
+    """
     manager.schedule_job_minutes(1, job, "Public-web node health check", app)

@@ -9,6 +9,7 @@
 export type ProviderConfig = {
     issuer_url?: string
     internal_issuer_url?: string
+    allow_insecure_internal_transport?: boolean
     client_id?: string
     scopes?: string
     username_claim?: string

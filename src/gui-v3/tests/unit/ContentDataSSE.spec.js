@@ -44,7 +44,12 @@ const mockPublishStore = {
     getProducts: { total_count: 2, items: [] },
     loadProducts: vi.fn(),
     select: vi.fn(),
-    deselect: vi.fn()
+    deselect: vi.fn(),
+    // The SSE resync handler re-fetches the publish store's public-web options,
+    // so webs created/deleted elsewhere are reflected without leaving the cache
+    // empty for the product dialog mounted alongside this view.
+    invalidatePublicWebOptions: vi.fn(),
+    refreshPublicWebOptions: vi.fn().mockResolvedValue(undefined)
 }
 
 const mockGetAllUserProductTypes = vi.fn()

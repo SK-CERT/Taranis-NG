@@ -132,15 +132,29 @@ class ProductResource(Resource):
         return result
 
 
+def _public_web_enabled() -> bool:
+    """Whether any public-web node is configured; see public_web_manager."""
+    try:
+        from managers import public_web_manager
+
+        return public_web_manager.public_web_enabled()
+    except Exception as ex:
+        logger.debug(f"Could not determine whether public-web is enabled: {ex}")
+        return False
+
+
 def _is_published_state(state_id: int | None) -> bool:
     """Return whether a product state is the public-web published state."""
+    if not _public_web_enabled():
+        return False
     if state_id is None:
         return False
     try:
         from model.state import StateDefinition, StateEnum
 
         published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
-    except Exception:
+    except Exception as ex:
+        logger.debug(f"Could not determine the published state: {ex}")
         return False
     return bool(published_state and state_id == published_state.id)
 
@@ -151,6 +165,8 @@ def _notify_public_web_nodes() -> None:
     Nodes that are not currently running are skipped rather than dialled and
     waited on; see :func:`managers.public_web_manager.notify_nodes`.
     """
+    if not _public_web_enabled():
+        return
     try:
         from managers import public_web_manager
         from model.public_web_node import PublicWebNode
@@ -169,6 +185,8 @@ def _reset_public_web_cache_if_published_changed(
     This fires when a product is already published and is edited, or when a
     product transitions from or to the published state.
     """
+    if not _public_web_enabled():
+        return
     try:
         from model.state import StateDefinition, StateEnum
 
@@ -451,6 +469,30 @@ class PublishProduct(Resource):
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+class PublishPublicWebs(Resource):
+    """List the public webs a product can be targeted at.
+
+    The Publish view needs this to render its target selector, so it is scoped to
+    PUBLISH_ACCESS rather than the configuration permission - an ordinary
+    publishing user must be able to read it. An empty list is also how the GUI
+    learns that this deployment has no public-web feed and can skip the rest of
+    the feature.
+    """
+
+    @auth_required("PUBLISH_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Return every public web as id/name pairs.
+
+        Returns:
+            (dict, HTTPStatus): ``{"total_count": int, "items": [...]}``.
+        """
+        from model.public_web import PublicWeb
+
+        webs = PublicWeb.query.order_by(db.asc(PublicWeb.name)).all()
+        items = [{"id": web.id, "name": web.name or str(web.id)} for web in webs]
+        return {"total_count": len(items), "items": items}, HTTPStatus.OK
+
+
 def initialize(api: Api) -> None:
     """Initialize the publish module.
 
@@ -462,6 +504,7 @@ def initialize(api: Api) -> None:
     api.add_resource(ProductSetPreview, "/api/v1/publish/products/preview-ticket")
     api.add_resource(ProductGetPreview, "/api/v1/publish/products/preview/<string:token>")
     api.add_resource(PublishProduct, "/api/v1/publish/products/publish")
+    api.add_resource(PublishPublicWebs, "/api/v1/publish/public-webs")
 
     Permission.add("PUBLISH_ACCESS", "Publish access", "Access to publish module")
     Permission.add("PUBLISH_CREATE", "Publish create", "Create product")

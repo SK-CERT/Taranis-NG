@@ -279,7 +279,15 @@
         updateData(false, true)
     }
 
-    useSseResync(() => updateData(false, true))
+    useSseResync(async () => {
+        // Public webs may have been created/deleted elsewhere while this view was
+        // mounted; the options cache is written once, so force a re-fetch on
+        // resync. It has to be a refresh and not a bare invalidation: the product
+        // dialog is mounted alongside this component for the whole life of the
+        // view and would otherwise keep an empty option list, hiding the target
+        // selector until the route is left and re-entered.
+        await Promise.all([publishStore.refreshPublicWebOptions(), updateData(false, true)])
+    })
 
     onMounted(() => {
         updateData(false, false)

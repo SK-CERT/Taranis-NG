@@ -1,12 +1,29 @@
 """OIDC / OAuth 2.0 authenticator driven by a database-configured provider.
 
 Provider ``config`` keys:
-    oidc kind: issuer_url (discovery base), client_id, scopes (default
-        "openid profile email"), username_claim (default "preferred_username"),
-        name_claim (default "name"), email_claim (default "email"),
-        redirect_uri_override, logout_url, pkce_method (default "none").
+    oidc kind: issuer_url (discovery base), internal_issuer_url (back-channel
+        address of the same issuer, optional), allow_insecure_internal_transport
+        (default False; permits plain HTTP on the internal issuer hop only - the
+        discovery fetch from the internal address and the endpoints rebased onto
+        it), client_id, scopes (default "openid profile email"),
+        username_claim (default "preferred_username"), name_claim (default
+        "name"), email_claim (default "email"), redirect_uri_override,
+        logout_url, pkce_method (default "none").
     oauth2 kind: authorize_url, token_url, userinfo_url, client_id, scopes,
         username_claim, name_claim, email_claim, pkce_method (default "none").
+
+An OIDC provider is reached over two channels. The browser drives the front
+channel: it is sent to ``authorization_endpoint`` and comes back to our
+redirect URI, and the ``iss`` claim of the resulting ID token carries the
+public issuer. Core drives the back channel on its own: discovery, token,
+userinfo, jwks_uri, introspection and revocation. Inside a container network
+the public hostname is often unroutable, so ``internal_issuer_url`` names an
+address that is routable, and every back-channel endpoint is rebased onto it.
+The front-channel ``authorize`` endpoint and the ``issuer`` are never rewritten:
+the browser could not reach the internal address, and rewriting the issuer
+would break ``iss`` validation. Plain HTTP on the internal hop is an explicit
+per-provider opt-in, ``allow_insecure_internal_transport``; the public issuer
+never loses its HTTPS requirement.
 
 The client secret is the provider's encrypted secret. ID tokens are verified
 against the issuer's JWKS (signature, issuer, audience, expiry, nonce).
@@ -64,7 +81,13 @@ _metadata_cache: dict[int, tuple[str, dict]] = {}
 _jwks_cache: dict[int, tuple[str, dict]] = {}
 
 
-def fetch_discovery(issuer_url: str | None, provider_name: str, internal_issuer_url: str | None = None) -> dict:
+def fetch_discovery(
+    issuer_url: str | None,
+    provider_name: str,
+    internal_issuer_url: str | None = None,
+    *,
+    allow_insecure_internal: bool = False,
+) -> dict:
     """Fetch and validate an OIDC discovery document.
 
     When ``internal_issuer_url`` is set, the document is fetched from that URL
@@ -77,6 +100,9 @@ def fetch_discovery(issuer_url: str | None, provider_name: str, internal_issuer_
         provider_name (str): Provider name, for error messages.
         internal_issuer_url (str): Optional URL to fetch discovery from when the
             provider uses a different address for internal communication.
+        allow_insecure_internal (bool): Permit plain HTTP for the discovery fetch
+            when it goes to the internal issuer address. It never applies to the
+            public issuer or to the endpoints validated below.
 
     Returns:
         dict: The discovery document.
@@ -90,8 +116,13 @@ def fetch_discovery(issuer_url: str | None, provider_name: str, internal_issuer_
     if not issuer:
         msg = f"OIDC provider '{provider_name}' has no issuer URL"
         raise ValueError(msg)
-    connect_issuer = (internal_issuer_url or "").rstrip("/") or issuer
-    metadata = fetch_auth_json(f"{connect_issuer}/.well-known/openid-configuration")
+    # A whitespace-only internal issuer counts as absent (see resolve_endpoints).
+    connect_issuer = str(internal_issuer_url or "").strip().rstrip("/") or issuer
+    using_internal = bool(str(internal_issuer_url or "").strip()) and connect_issuer != issuer
+    metadata = fetch_auth_json(
+        f"{connect_issuer}/.well-known/openid-configuration",
+        allow_insecure=allow_insecure_internal and using_internal,
+    )
     discovered_issuer = metadata.get("issuer")
     if not isinstance(discovered_issuer, str) or discovered_issuer.rstrip("/") != issuer:
         msg = f"OIDC discovery issuer does not match the configured issuer for provider '{provider_name}'"
@@ -115,13 +146,103 @@ def fetch_discovery(issuer_url: str | None, provider_name: str, internal_issuer_
     return metadata
 
 
+def _rebase_internal(
+    url: str | None,
+    public_base: str,
+    internal_base: str,
+    key: str,
+    provider_name: str,
+    *,
+    allow_insecure: bool = False,
+) -> str | None:
+    """Move one discovered endpoint from the public issuer onto the internal one.
+
+    Anchored at the origin: only a URL that *is* the public base or sits under
+    it is rebased, and the match is a prefix, never a substring - a public base
+    echoed in a query parameter must survive untouched.
+
+    Args:
+        url (str | None): The discovered endpoint, or None when absent.
+        public_base (str): The public issuer, trailing slash already stripped.
+        internal_base (str): The internal issuer, trailing slash already stripped.
+        key (str): The endpoint's name, for the error message.
+        provider_name (str): Provider name, for the error message.
+        allow_insecure (bool): Permit plain HTTP for the rebased URL.
+
+    Returns:
+        (str | None): The rebased URL, or None when ``url`` was absent.
+
+    Raises:
+        ValueError: When the endpoint does not sit under the public issuer, so
+            rebasing it would silently do nothing.
+    """
+    if not isinstance(url, str) or not url:
+        return None
+    if url != public_base and not url.startswith(public_base + "/"):
+        msg = (
+            f"OIDC provider '{provider_name}' has an internal issuer URL, but its '{key}' endpoint "
+            f"({url}) is not under the issuer ({public_base}), so it cannot be rebased onto the "
+            f"internal host. Clear the internal issuer URL, or use a provider that serves every "
+            f"endpoint under its issuer."
+        )
+        raise ValueError(msg)
+    rebased = internal_base + url[len(public_base) :]
+    assert_auth_endpoint_url(rebased, allow_insecure=allow_insecure)
+    return rebased
+
+
+def _config_flag(config: dict, key: str) -> bool:
+    """Read a boolean config flag defensively.
+
+    ``config`` is a free-form JSON dict, so a non-boolean value can arrive via
+    the API. Only ``True`` (bool) and the unambiguous truthy spellings count —
+    the string ``"false"`` must not enable an insecure transport.
+
+    Args:
+        config (dict): The provider configuration.
+        key (str): The config key to read.
+
+    Returns:
+        bool: The flag's boolean meaning.
+    """
+    value = config.get(key)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in ("true", "1", "yes", "on")
+    return bool(value) and not isinstance(value, (dict, list))
+
+
+def _allow_insecure_internal(kind: str, config: dict) -> bool:
+    """Tell whether a provider opted in to plain HTTP for its internal back channel.
+
+    The opt-in covers the internal issuer hop only, so it has an effect solely
+    for an OIDC provider with an ``internal_issuer_url``: only then are the
+    back-channel endpoints rebased onto the internal address. URLs that were
+    never rebased keep the strict HTTPS rule wherever they are re-checked.
+
+    Args:
+        kind (str): The provider kind.
+        config (dict): The provider configuration.
+
+    Returns:
+        (bool): True when rebased back-channel endpoints may use plain HTTP.
+    """
+    internal_issuer_set = bool(str(config.get("internal_issuer_url") or "").strip())
+    return kind == "oidc" and internal_issuer_set and _config_flag(config, "allow_insecure_internal_transport")
+
+
 def resolve_endpoints(kind: str, config: dict, provider_name: str, metadata: dict | None = None) -> dict:
     """Resolve a provider's endpoints (discovery for oidc, configuration for oauth2).
 
     For OIDC providers, when ``internal_issuer_url`` is set, every server-side
     endpoint (token, userinfo, jwks_uri, introspection, revocation) is rewritten
     to use that internal host instead of the public one advertised in discovery.
-    The browser-facing ``authorize`` endpoint is left untouched.
+    The browser-facing ``authorize`` endpoint is left untouched, and so is the
+    returned ``issuer``: it stays the raw discovered value, which is what an ID
+    token's ``iss`` claim is checked against. When
+    ``allow_insecure_internal_transport`` is set, the rebased endpoints may use
+    plain HTTP; everything else keeps the strict HTTPS rule.
 
     Args:
         kind (str): The provider kind (``oidc`` or ``oauth2``).
@@ -134,14 +255,25 @@ def resolve_endpoints(kind: str, config: dict, provider_name: str, metadata: dic
         dict: The authorize / token / userinfo / jwks_uri / issuer endpoints.
 
     Raises:
-        ValueError: When a required endpoint is missing or unacceptable.
+        ValueError: When a required endpoint is missing or unacceptable, or when
+            an internal issuer is configured and a server-side endpoint does not
+            sit under the issuer, so it cannot be rebased.
     """
     if kind == "oidc":
-        metadata = (
-            metadata if metadata is not None else fetch_discovery(config.get("issuer_url"), provider_name, config.get("internal_issuer_url"))
-        )
+        allow_insecure_internal = _config_flag(config, "allow_insecure_internal_transport")
+        if metadata is None:
+            metadata = fetch_discovery(
+                config.get("issuer_url"),
+                provider_name,
+                config.get("internal_issuer_url"),
+                allow_insecure_internal=allow_insecure_internal,
+            )
         issuer = metadata.get("issuer")
-        internal_issuer = (config.get("internal_issuer_url") or "").rstrip("/")
+        public_base = (issuer or "").rstrip("/")
+        # A whitespace-only internal issuer (writable via the API's free-form
+        # config dict) must count as absent, exactly as a blank string would:
+        # rebasing onto "   /realms/..." produces garbage endpoints.
+        internal_base = str(config.get("internal_issuer_url") or "").strip().rstrip("/")
         endpoints = {
             "authorize": metadata["authorization_endpoint"],
             "token": metadata["token_endpoint"],
@@ -151,10 +283,16 @@ def resolve_endpoints(kind: str, config: dict, provider_name: str, metadata: dic
             "introspect": metadata.get("introspection_endpoint"),
             "revoke": metadata.get("revocation_endpoint"),
         }
-        if internal_issuer and internal_issuer != issuer:
+        if internal_base and public_base and internal_base != public_base:
             for key in ("token", "userinfo", "jwks_uri", "introspect", "revoke"):
-                if isinstance(endpoints[key], str) and issuer:
-                    endpoints[key] = endpoints[key].replace(issuer, internal_issuer)
+                endpoints[key] = _rebase_internal(
+                    endpoints[key],
+                    public_base,
+                    internal_base,
+                    key,
+                    provider_name,
+                    allow_insecure=allow_insecure_internal,
+                )
         return endpoints
     endpoints = {
         "authorize": config.get("authorize_url"),
@@ -214,7 +352,12 @@ class OAuth2Authenticator(BaseAuthenticator):
         cached = _metadata_cache.get(self.provider.id)
         if cached and cached[0] == marker:
             return cached[1]
-        metadata = fetch_discovery(self.config.get("issuer_url"), self.provider.name, self.config.get("internal_issuer_url"))
+        metadata = fetch_discovery(
+            self.config.get("issuer_url"),
+            self.provider.name,
+            self.config.get("internal_issuer_url"),
+            allow_insecure_internal=_config_flag(self.config, "allow_insecure_internal_transport"),
+        )
         _metadata_cache[self.provider.id] = (marker, metadata)
         return metadata
 
@@ -336,6 +479,7 @@ class OAuth2Authenticator(BaseAuthenticator):
         """
         try:
             endpoints = self._endpoints()
+            allow_insecure_internal = _allow_insecure_internal(self.provider.kind, self.config)
             secret = self._client_secret()
             session = OAuth2Session(self.config.get("client_id"), secret, scope=self._scopes(), redirect_uri=redirect_uri)
             fetch_kwargs: dict[str, str] = {}
@@ -347,7 +491,7 @@ class OAuth2Authenticator(BaseAuthenticator):
                     )
                     return None
                 fetch_kwargs["code_verifier"] = code_verifier
-            assert_auth_endpoint_url(endpoints["token"])
+            assert_auth_endpoint_url(endpoints["token"], allow_insecure=allow_insecure_internal)
             try:
                 token = session.fetch_token(
                     endpoints["token"],
@@ -375,7 +519,7 @@ class OAuth2Authenticator(BaseAuthenticator):
 
             username_claim = self.config.get("username_claim") or "preferred_username"
             if username_claim not in claims and endpoints["userinfo"]:
-                assert_auth_endpoint_url(endpoints["userinfo"])
+                assert_auth_endpoint_url(endpoints["userinfo"], allow_insecure=allow_insecure_internal)
                 userinfo = session.get(
                     endpoints["userinfo"],
                     timeout=OUTBOUND_TIMEOUT,
@@ -423,13 +567,14 @@ class OAuth2Authenticator(BaseAuthenticator):
         if not id_token or not endpoints["jwks_uri"]:
             log_manager.store_auth_error_activity(f"Provider '{self.provider.name}' returned no verifiable ID token")
             return None
-        assert_auth_endpoint_url(endpoints["jwks_uri"])
+        allow_insecure_internal = _allow_insecure_internal(self.provider.kind, self.config)
+        assert_auth_endpoint_url(endpoints["jwks_uri"], allow_insecure=allow_insecure_internal)
         marker = self._cache_marker()
         cached = _jwks_cache.get(self.provider.id)
         if cached and cached[0] == marker:
             jwks = cached[1]
         else:
-            jwks = fetch_auth_json(endpoints["jwks_uri"])
+            jwks = fetch_auth_json(endpoints["jwks_uri"], allow_insecure=allow_insecure_internal)
             _jwks_cache[self.provider.id] = (marker, jwks)
         header = pyjwt.get_unverified_header(id_token)
         algorithm = header.get("alg")
@@ -441,7 +586,7 @@ class OAuth2Authenticator(BaseAuthenticator):
         if len(candidates) != 1 and cached:
             # Normal IdP key rollover must not require an administrator to edit
             # the provider merely to invalidate our provider-row cache marker.
-            jwks = fetch_auth_json(endpoints["jwks_uri"])
+            jwks = fetch_auth_json(endpoints["jwks_uri"], allow_insecure=allow_insecure_internal)
             _jwks_cache[self.provider.id] = (marker, jwks)
             candidates = self._matching_signing_keys(jwks, algorithm, key_id)
         if len(candidates) != 1:
@@ -651,7 +796,16 @@ def verify_configuration(
         msg = f"Only OIDC and OAuth 2.0 login methods can be tested, not '{kind}'"
         raise ValueError(msg)
 
-    metadata = fetch_discovery(config.get("issuer_url"), provider_name) if kind == "oidc" else None
+    metadata = (
+        fetch_discovery(
+            config.get("issuer_url"),
+            provider_name,
+            config.get("internal_issuer_url"),
+            allow_insecure_internal=_config_flag(config, "allow_insecure_internal_transport"),
+        )
+        if kind == "oidc"
+        else None
+    )
     endpoints = resolve_endpoints(kind, config, provider_name, metadata)
 
     client_id = (config.get("client_id") or "").strip()
@@ -661,7 +815,7 @@ def verify_configuration(
 
     signing_key_count = None
     if endpoints["jwks_uri"]:
-        jwks = fetch_auth_json(endpoints["jwks_uri"])
+        jwks = fetch_auth_json(endpoints["jwks_uri"], allow_insecure=_allow_insecure_internal(kind, config))
         try:
             signing_key_count = len([key for key in pyjwt.PyJWKSet.from_dict(jwks).keys if key.public_key_use in (None, "sig")])
         except Exception as ex:
