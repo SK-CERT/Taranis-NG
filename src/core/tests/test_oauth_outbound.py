@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from auth import oauth2_authenticator
-from auth.oauth2_authenticator import OAuth2Authenticator
+from auth.oauth2_authenticator import OAuth2Authenticator, resolve_endpoints
 from auth.url_guard import MAX_JSON_BYTES, OUTBOUND_TIMEOUT, assert_auth_endpoint_url, fetch_auth_json, read_limited_json
 
 if TYPE_CHECKING:
@@ -193,3 +193,71 @@ def test_token_exchange_disables_redirects_and_uses_bounded_timeout(monkeypatch:
     assert token_kwargs["code_verifier"] == verifier
     _userinfo_url, userinfo_kwargs = calls["userinfo"]
     assert userinfo_kwargs == {"timeout": OUTBOUND_TIMEOUT, "allow_redirects": False, "stream": True}
+
+
+# An OIDC provider reachable under two names: the public issuer the browser and
+# the `iss` claim use, and the internal address core reaches it at.
+PUBLIC = "https://idp.example.com"
+INTERNAL = "https://kc.internal:8443"
+
+
+def _md(issuer: str = PUBLIC, base: str = PUBLIC) -> dict:
+    """Return a discovery document whose endpoints all sit under ``base``."""
+    return {
+        "issuer": issuer,
+        "authorization_endpoint": f"{base}/realms/main/protocol/openid-connect/auth",
+        "token_endpoint": f"{base}/realms/main/protocol/openid-connect/token",
+        "userinfo_endpoint": f"{base}/realms/main/protocol/openid-connect/userinfo",
+        "jwks_uri": f"{base}/realms/main/protocol/openid-connect/certs",
+        "introspection_endpoint": f"{base}/realms/main/protocol/openid-connect/token/introspect",
+        "revocation_endpoint": f"{base}/realms/main/protocol/openid-connect/revoke",
+    }
+
+
+def test_internal_issuer_rebases_back_channel_only() -> None:
+    cfg = {"issuer_url": PUBLIC, "internal_issuer_url": INTERNAL}
+    ep = resolve_endpoints("oidc", cfg, "p", _md())
+    for key in ("token", "userinfo", "jwks_uri", "introspect", "revoke"):
+        assert ep[key].startswith(INTERNAL), key
+    # Front channel and identity are never rewritten.
+    assert ep["authorize"].startswith(PUBLIC)
+    assert ep["issuer"] == PUBLIC
+
+
+def test_trailing_slash_issuer_produces_well_formed_urls() -> None:
+    cfg = {"issuer_url": PUBLIC, "internal_issuer_url": INTERNAL}
+    ep = resolve_endpoints("oidc", cfg, "p", _md(issuer=PUBLIC + "/"))
+    assert ep["token"] == f"{INTERNAL}/realms/main/protocol/openid-connect/token"
+    # The raw discovery issuer is preserved for `iss` validation.
+    assert ep["issuer"] == PUBLIC + "/"
+
+
+def test_missing_userinfo_endpoint_is_none_not_a_crash() -> None:
+    md = _md()
+    del md["userinfo_endpoint"]
+    cfg = {"issuer_url": PUBLIC, "internal_issuer_url": INTERNAL}
+    ep = resolve_endpoints("oidc", cfg, "p", md)
+    assert ep["userinfo"] is None
+
+
+def test_endpoint_outside_issuer_prefix_raises() -> None:
+    md = _md()
+    md["token_endpoint"] = "https://oauth2.googleapis.com/token"
+    cfg = {"issuer_url": PUBLIC, "internal_issuer_url": INTERNAL}
+    with pytest.raises(ValueError, match="token"):
+        resolve_endpoints("oidc", cfg, "p", md)
+
+
+def test_rewrite_is_anchored_not_a_global_replace() -> None:
+    md = _md()
+    md["token_endpoint"] = f"{PUBLIC}/token?next={PUBLIC}/cb"
+    cfg = {"issuer_url": PUBLIC, "internal_issuer_url": INTERNAL}
+    ep = resolve_endpoints("oidc", cfg, "p", md)
+    assert ep["token"] == f"{INTERNAL}/token?next={PUBLIC}/cb"
+
+
+def test_no_internal_issuer_leaves_everything_alone() -> None:
+    cfg = {"issuer_url": PUBLIC}
+    ep = resolve_endpoints("oidc", cfg, "p", _md())
+    for value in ep.values():
+        assert value is None or not value.startswith(INTERNAL)

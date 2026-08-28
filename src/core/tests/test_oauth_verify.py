@@ -261,3 +261,36 @@ def test_a_public_client_is_told_the_secret_was_not_what_passed(monkeypatch, _di
     assert result["client_status"] == "accepted"
     assert result["has_secret"] is False
     assert "no client secret is configured" in result["detail"]
+
+
+PUBLIC = DISCOVERY["issuer"]
+INTERNAL = "https://kc.internal:8443"
+
+
+def test_verify_configuration_fetches_discovery_from_internal_issuer(monkeypatch) -> None:  # noqa: ANN001
+    """BUG 1: the Test-configuration button must use the back-channel URL."""
+    seen: list[str] = []
+
+    def fake_fetch(url, **_kwargs) -> dict:  # noqa: ANN001, ANN003
+        seen.append(url)
+        return DISCOVERY if "openid-configuration" in url else {"keys": []}
+
+    monkeypatch.setattr(oauth2_authenticator, "fetch_auth_json", fake_fetch)
+    monkeypatch.setattr(oauth2_authenticator.pyjwt, "PyJWKSet", SimpleNamespace(from_dict=lambda _jwks: SimpleNamespace(keys=[])))
+    monkeypatch.setattr(
+        oauth2_authenticator,
+        "OAuth2Session",
+        _session_raising(OAuthError(error="invalid_grant", description="Code not found")),
+    )
+
+    result = oauth2_authenticator.verify_configuration(
+        "oidc",
+        {"issuer_url": PUBLIC, "internal_issuer_url": INTERNAL, "client_id": "taranis"},
+        None,
+    )
+
+    assert seen[0] == f"{INTERNAL}/.well-known/openid-configuration"
+    # The signing keys are a back-channel fetch too, so they come from the internal host.
+    assert seen[1] == f"{INTERNAL}/jwks"
+    # ...while the identity reported back to the administrator stays the public issuer.
+    assert result["issuer"] == PUBLIC

@@ -2,8 +2,10 @@
 
 Kind-specific non-secret settings live in the ``config`` JSON column:
 
-- oidc: issuer_url, client_id, scopes, username_claim, name_claim, email_claim,
-  redirect_uri_override, logout_url
+- oidc: issuer_url, internal_issuer_url (back-channel address of the same
+  issuer; the browser-facing endpoints and the issuer itself are never rewritten
+  to it), client_id, scopes, username_claim, name_claim, email_claim,
+  redirect_uri_override, logout_url, pkce_method
 - oauth2: authorize_url, token_url, userinfo_url, client_id, scopes,
   username_claim, name_claim, email_claim
 - saml (single IdP): idp_sso_url, idp_entity_id, idp_certificate, sp_entity_id,
