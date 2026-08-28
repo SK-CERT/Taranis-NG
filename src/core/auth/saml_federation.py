@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 
 import requests
 from auth.saml_authenticator import PEM_FOOTER, PEM_HEADER, load_idp_certificates
-from auth.url_guard import assert_public_url
+from auth.url_guard import assert_no_redirect, assert_public_url
 from managers import log_manager
 from minisignxml.config import VerifyConfig
 from minisignxml.verify import extract_verified_element_and_certificate
@@ -140,7 +140,10 @@ def _fetch(url: str) -> bytes:
             :data:`MAX_METADATA_BYTES`.
     """
     assert_public_url(url)
-    with requests.get(url, timeout=HTTP_TIMEOUT, stream=True) as response:
+    # allow_redirects=False: assert_public_url only vets the typed URL, so a
+    # followed redirect would reach an unchecked host (see assert_no_redirect).
+    with requests.get(url, timeout=HTTP_TIMEOUT, stream=True, allow_redirects=False) as response:
+        assert_no_redirect(response, "The federation metadata")
         response.raise_for_status()
         chunks: list[bytes] = []
         total = 0

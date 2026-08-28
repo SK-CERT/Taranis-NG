@@ -3,13 +3,13 @@
 import io
 from http import HTTPStatus
 
-from flask import request, send_file
+from flask import Response, request, send_file
 from flask_restful import Resource
-from managers import auth_manager
+from managers import auth_manager, log_manager
 from managers.auth_manager import ACLCheck, auth_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
-from model.news_item import NewsItem, NewsItemAggregate, NewsItemAttribute
+from model.news_item import NewsItem, NewsItemAggregate, NewsItemData
 from model.osint_source import OSINTSource, OSINTSourceGroup
 from model.permission import Permission
 
@@ -202,19 +202,30 @@ class DownloadAttachment(Resource):
     @auth_required("ASSESS_ACCESS")
     def post(
         self,
-        item_data_id: str,  # noqa: ARG002, auth_required ACLCheck is build for news_item (item_id, int), this is news_item_data (item_data_id, str)
+        item_data_id: str,
         attribute_id: str,
-    ) -> None:
+    ) -> tuple[dict, HTTPStatus] | Response:
         """Download attachment.
+
+        The attribute is resolved only within its owning news item data, and the
+        news item data must pass the caller's ACL - a bare attribute ID from
+        another user's group must not yield the file.
 
         Args:
             item_data_id (str): The item data ID
             attribute_id (str): The attribute ID
 
         Returns:
-            (file): The file
+            (file): The file, or an error response
         """
-        attribute = NewsItemAttribute.find(attribute_id)
+        user = auth_manager.get_user_from_jwt()
+        if not NewsItemData.allowed_with_acl(item_data_id, user, see=False, access=True, modify=False):
+            log_manager.store_user_auth_error_activity(user, f"Unauthorized attachment download for news item data: {item_data_id}")
+            return {"error": "not authorized"}, HTTPStatus.UNAUTHORIZED
+
+        attribute = NewsItemData.find_data_attribute(item_data_id, attribute_id)
+        if attribute is None or attribute.binary_data is None or attribute.binary_mime_type is None:
+            return {"error": "Attachment not found"}, HTTPStatus.NOT_FOUND
         response = send_file(
             io.BytesIO(attribute.binary_data),
             download_name=attribute.value,

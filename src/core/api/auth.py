@@ -240,6 +240,12 @@ def _oauth_redirect_uri(provider_slug: str, config: dict) -> str:
 def _login_error_redirect(goto_url: str, code: str) -> Response:
     """Redirect back to the GUI login page with a login_error query parameter.
 
+    Every redirect-flow exit funnels through here, so the same-origin check
+    belongs here rather than at the fifteen call sites: several of them read
+    goto_url straight out of the stored auth transaction, and one that forgets to
+    sanitize would be an open redirect off the back of a login attempt.
+    ``_safe_goto_url`` is idempotent, so re-checking an already-checked URL is free.
+
     Args:
         goto_url (str): The GUI URL to return to.
         code (str): The machine-readable error code.
@@ -247,6 +253,7 @@ def _login_error_redirect(goto_url: str, code: str) -> Response:
     Returns:
         Response: The redirect response.
     """
+    goto_url = _safe_goto_url(goto_url)
     separator = "&" if "?" in goto_url else "?"
     return redirect(f"{goto_url}{separator}login_error={urllib.parse.quote(code.lower())}")
 
@@ -262,9 +269,13 @@ def _finish_redirect_login(goto_url: str, response: dict) -> Response:
         goto_url (str): The GUI URL to return to.
         response (dict): The login response from the auth manager.
 
+    As in :func:`_login_error_redirect`, goto_url is re-checked here because this
+    is the chokepoint every redirect flow passes through.
+
     Returns:
         Response: The redirect response.
     """
+    goto_url = _safe_goto_url(goto_url)
     code = response.get("code", "auth_failed")
 
     redeemable = (

@@ -187,6 +187,10 @@ class NewsItemData(db.Model):
             True if user is allowed to access news item data, False otherwise
         """
         news_item_data = db.session.get(cls, news_item_data_id)
+        if news_item_data is None:
+            # An ID that does not resolve is not "allowed" - returning False lets
+            # the caller answer 401/404 instead of raising AttributeError below.
+            return False
         if news_item_data.remote_source is not None:
             return True
         query = db.session.query(NewsItemData.id).distinct().group_by(NewsItemData.id).filter(NewsItemData.id == news_item_data_id)
@@ -204,6 +208,29 @@ class NewsItemData(db.Model):
         query = ACLEntry.apply_query(query, user, see, access, modify)
 
         return query.scalar() is not None
+
+    @classmethod
+    def find_data_attribute(cls, news_item_data_id: str, attribute_id: int | str) -> NewsItemAttribute | None:
+        """Find a binary attribute only within its owning news item data.
+
+        A bare attribute ID is not trusted: the lookup succeeds only when the
+        attribute belongs to the named news item data, mirroring
+        ``ReportItem.find_attachment`` for the report side.
+
+        Args:
+            news_item_data_id: News item data ID
+            attribute_id: Attribute ID
+
+        Returns:
+            The matching attribute, or None when the pair does not exist.
+        """
+        news_item_data = db.session.get(cls, news_item_data_id)
+        if news_item_data is None:
+            return None
+        for attribute in news_item_data.attributes:
+            if str(attribute.id) == str(attribute_id):
+                return attribute
+        return None
 
     @classmethod
     def identical(cls, hash_string: str) -> bool:

@@ -123,6 +123,28 @@ def assert_auth_endpoint_url(url: str, *, allow_insecure: bool = False) -> None:
         raise ValueError(msg)
 
 
+def assert_no_redirect(response: requests.Response, what: str = "The document") -> None:
+    """Refuse a redirect on a fetch whose target was vetted before connecting.
+
+    :func:`assert_public_url` resolves the host and rejects non-global addresses,
+    but it only ever sees the URL the administrator typed. If the fetch then
+    follows a 302, the redirect target is reached with no check at all - a public
+    host can bounce the request to 169.254.169.254 or an internal service and the
+    body comes straight back to the caller. Fetches must therefore pass
+    ``allow_redirects=False`` and hand the response here.
+
+    Args:
+        response (requests.Response): The un-redirected response.
+        what (str): Noun phrase naming the document, used in the error message.
+
+    Raises:
+        ValueError: When the response is a redirect.
+    """
+    if response.status_code in REDIRECT_STATUS_CODES or response.is_redirect or response.is_permanent_redirect:
+        msg = f"{what} URL redirects, which is not allowed: a redirect target skips the non-public address check"
+        raise ValueError(msg)
+
+
 def read_limited_json(response: requests.Response, *, max_bytes: int = MAX_JSON_BYTES) -> dict[str, Any]:
     """Read a successful non-redirect response as a size-bounded JSON object."""
     if response.status_code in REDIRECT_STATUS_CODES or response.is_redirect or response.is_permanent_redirect:

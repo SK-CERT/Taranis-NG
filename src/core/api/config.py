@@ -384,7 +384,10 @@ def _read_idp_metadata_xml(data: dict) -> str:
         # Rejects http(s)-only and, crucially, non-public hosts: this endpoint
         # reflects the fetched document back, so an unguarded fetch is an SSRF.
         saml_url_guard.assert_public_url(url)
-        response = requests.get(url, timeout=SAML_METADATA_TIMEOUT, stream=True)
+        # allow_redirects=False: assert_public_url only vets the typed URL, so a
+        # followed redirect would reach an unchecked host (see assert_no_redirect).
+        response = requests.get(url, timeout=SAML_METADATA_TIMEOUT, stream=True, allow_redirects=False)
+        saml_url_guard.assert_no_redirect(response, "The metadata")
         response.raise_for_status()
         xml = response.raw.read(SAML_METADATA_MAX_BYTES + 1, decode_content=True).decode("utf-8", errors="replace")
         if len(xml.encode()) > SAML_METADATA_MAX_BYTES:
