@@ -466,7 +466,7 @@
     const dialogTitle = computed(() => (isEdit.value ? t('auth_provider.edit') : t('auth_provider.add_new')))
     const usesUnencryptedHttpEndpoint = computed(() => {
         const endpointKeys: Partial<Record<string, Array<keyof ProviderConfig>>> = {
-            oidc: ['issuer_url', 'internal_issuer_url'],
+            oidc: ['issuer_url'],
             oauth2: ['authorize_url', 'token_url', 'userinfo_url'],
             saml: ['idp_sso_url', 'discovery_url', 'federation_metadata_url']
         }
@@ -489,6 +489,13 @@
         }
         if (usesUnencryptedHttpEndpoint.value) {
             warnings.push(t('auth_provider.insecure_http_endpoint'))
+        }
+        if (
+            localItem.value.kind === 'oidc' &&
+            config.value.allow_insecure_internal_transport &&
+            (config.value.internal_issuer_url || '').trim().toLowerCase().startsWith('http://')
+        ) {
+            warnings.push(t('auth_provider.allow_insecure_internal_transport_hint'))
         }
         return warnings
     })
@@ -805,6 +812,7 @@
             return pick([
                 'issuer_url',
                 'internal_issuer_url',
+                'allow_insecure_internal_transport',
                 'client_id',
                 'scopes',
                 'username_claim',

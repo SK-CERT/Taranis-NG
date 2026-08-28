@@ -253,6 +253,82 @@ describe('NewAuthProvider dialog', () => {
         )
     })
 
+    it('rejects a plain-http internal issuer while insecure internal transport is off', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: 'http://keycloak:8080',
+                client_id: 'taranis',
+                pkce_method: 'S256'
+            }
+        })
+
+        const oidcFields = wrapper.findComponent(OidcFields)
+        // the opt-in checkbox only appears once an internal issuer URL is present
+        expect(oidcFields.findComponent({ name: 'VCheckbox' }).exists()).toBe(true)
+        const internalField = oidcFields.findAllComponents({ name: 'VTextField' })[1]
+        await internalField.vm.validate()
+
+        expect(internalField.vm.isValid).toBe(false)
+        expect(internalField.text()).toContain(
+            'The internal issuer URL must use https:// unless "Allow insecure internal transport" is enabled.'
+        )
+        // the internal hop is the field rule's job now and is no longer double-reported as a soft warning
+        expect(wrapper.vm.insecureConfigurationWarnings).not.toContain(
+            'At least one authentication endpoint uses unencrypted HTTP. HTTP is intended only for loopback development services.'
+        )
+    })
+
+    it('allows a plain-http internal issuer once insecure internal transport is opted in', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: 'http://keycloak:8080',
+                client_id: 'taranis',
+                pkce_method: 'S256',
+                allow_insecure_internal_transport: true
+            }
+        })
+
+        const internalField = wrapper.findComponent(OidcFields).findAllComponents({ name: 'VTextField' })[1]
+        await internalField.vm.validate()
+        expect(internalField.vm.isValid).toBe(true)
+
+        // the opted-in risk is still surfaced in the save summary
+        expect(wrapper.vm.insecureConfigurationWarnings).toContain(
+            'Permit a plain http:// internal issuer URL. The back channel carries the client secret and the authorization code, so only enable this on a trusted internal network.'
+        )
+    })
+
+    it('includes the insecure internal transport opt-in in the payload posted on save', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...OIDC_PROVIDER,
+            config: {
+                issuer_url: 'https://idp.example.org',
+                internal_issuer_url: 'https://keycloak.internal:8443',
+                client_id: 'taranis',
+                pkce_method: 'S256',
+                allow_insecure_internal_transport: true
+            }
+        })
+        wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+
+        await wrapper.vm.persist()
+
+        expect(updateAuthProvider).toHaveBeenCalledTimes(1)
+        expect(updateAuthProvider.mock.calls[0][0].config).toEqual(
+            expect.objectContaining({
+                internal_issuer_url: 'https://keycloak.internal:8443',
+                allow_insecure_internal_transport: true
+            })
+        )
+    })
+
     // ── Auto-create gating ────────────────────────
     it('enables the default-roles picker only for the auto-create provisioning modes', async () => {
         const wrapper = await mountDialog()
