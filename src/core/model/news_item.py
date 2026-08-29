@@ -15,10 +15,14 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 
 from managers.db_manager import db
+from managers.log_manager import logger
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
+from model.attribute_extraction_rule import AttributeExtractionRule
 from model.osint_source import OSINTSource, OSINTSourceGroup
+from model.setting import Setting
 from model.tag_cloud import TagCloud
+from shared.attribute_extraction import ExtractionRule, extract_attributes
 from shared.common import TZ, remove_empty_html_tags, simplify_html_text, smart_truncate, strip_html
 from shared.schema.acl_entry import ItemType
 from shared.schema.news_item import NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemDataSchema, NewsItemRemoteSchema, NewsItemSchema
@@ -1048,6 +1052,53 @@ class NewsItemAggregate(db.Model):
 
         return osint_source_ids
 
+    @staticmethod
+    def _apply_attribute_extraction(news_item_data: NewsItemData) -> None:
+        """Attach attributes found in a manually entered item's text.
+
+        Collected items are processed in the collector, where the text arrives; this covers
+        the manual path, which has no collector. Both call the same shared matcher.
+
+        A failure here must never stop the item being saved: the user typed it, and losing
+        their input because a pattern misbehaved would be far worse than missing an
+        attribute.
+
+        Args:
+            news_item_data (NewsItemData): The sanitized item, before it is persisted.
+        """
+        try:
+            if not Setting.get_setting_bool(None, "ATTRIBUTE_EXTRACTION_ENABLED", default_value=True):
+                return
+            rules = AttributeExtractionRule.get_all_enabled()
+            source = OSINTSource.find(news_item_data.osint_source_id) if news_item_data.osint_source_id else None
+            applicable = [
+                ExtractionRule(
+                    name=rule.name,
+                    attribute_key=rule.attribute_key,
+                    pattern=rule.pattern,
+                    capture_group=rule.capture_group,
+                    max_matches=rule.max_matches,
+                )
+                for rule in rules
+                if rule.applies_to_source(source)
+            ]
+            if not applicable:
+                return
+
+            existing = {(attribute.key, attribute.value) for attribute in (news_item_data.attributes or [])}
+            for key, value in extract_attributes(
+                news_item_data.title,
+                news_item_data.review,
+                news_item_data.content,
+                applicable,
+                logger=logger,
+            ):
+                if (key, value) not in existing:
+                    existing.add((key, value))
+                    news_item_data.attributes.append(NewsItemAttribute(key, value, None, None))
+        except Exception as error:
+            logger.exception(f"Attribute extraction failed for a manually added news item: {error}")
+
     @classmethod
     def add_news_item(cls, news_item_data: NewsItemData) -> dict[int]:
         """Add news item.
@@ -1068,6 +1119,10 @@ class NewsItemAggregate(db.Model):
         news_item_data.review = smart_truncate(strip_html(news_item_data.review))
         news_item_data.content = remove_empty_html_tags(simplify_html_text(news_item_data.content))
         news_item_data.author = strip_html(news_item_data.author)
+        # Manually entered items never pass through a collector, so extraction is applied
+        # here instead. This is the single place a manual item is created, and the text has
+        # just been sanitized above, which is what the rules should see.
+        cls._apply_attribute_extraction(news_item_data)
         db.session.add(news_item_data)
         cls.create_new_for_all_groups(news_item_data)
         TagCloud.generate_tag_cloud_words(news_item_data)
