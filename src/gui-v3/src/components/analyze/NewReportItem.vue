@@ -709,7 +709,7 @@
                     const attrType = attribute_groups.value[i].attribute_group_items[j].attribute_group_item.attribute.type
 
                     if (attrType === 'CPE') {
-                        value = value.replace('*', '%')
+                        value = value.replaceAll('*', '%')
                     } else if (attrType === 'BOOLEAN') {
                         value = value === true ? 'true' : 'false'
                     }
@@ -961,7 +961,7 @@
                                 const attrType = selected_type.value.attribute_groups[i].attribute_group_items[j].attribute.type
 
                                 if (attrType === 'CPE') {
-                                    value = value.replace('%', '*')
+                                    value = value.replaceAll('%', '*')
                                 } else if (attrType === 'BOOLEAN') {
                                     value = value === 'true'
                                 }
@@ -999,7 +999,7 @@
                                     const attrType = selected_type.value.attribute_groups[i].attribute_group_items[j].attribute.type
 
                                     if (attrType === 'CPE') {
-                                        value = value.replace('%', '*')
+                                        value = value.replaceAll('%', '*')
                                     } else if (attrType === 'BOOLEAN') {
                                         value = value === 'true'
                                     }
@@ -1057,7 +1057,7 @@
                             const attrType = attribute_groups.value[i].attribute_group_items[j].attribute_group_item.attribute.type
 
                             if (attrType === 'CPE') {
-                                value = value.replace('%', '*')
+                                value = value.replaceAll('%', '*')
                             } else if (attrType === 'BOOLEAN') {
                                 value = value === 'true'
                             }

@@ -7,6 +7,11 @@ on:
     branches:
       - main
 
+# This job commits the merged files back to main, so it needs write on contents
+# and nothing else.
+permissions:
+  contents: write
+
 jobs:
   merge_osint_json_files:
     runs-on: ubuntu-latest

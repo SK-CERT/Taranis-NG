@@ -11,6 +11,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege: these jobs only read the repository.
+permissions:
+  contents: read
+
 jobs:
   unit:
     # Named for the language, not just "Unit Tests": the GUI-v3 workflow has a unit job

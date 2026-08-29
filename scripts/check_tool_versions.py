@@ -69,12 +69,43 @@ def extract_pre_commit_revs(precommit: Path) -> dict[str, str]:
 
 
 def extract_ruff_required_version(pyproject: Path) -> str | None:
-    """Return ``[tool.ruff] required-version`` value (or None)."""
-    text = pyproject.read_text(encoding="utf-8")
-    match = re.search(r'^\[tool\.ruff\][^\n]*\n(?:[^\[]*\n)*?required-version\s*=\s*"(?P<val>[^"]+)"', text, re.MULTILINE)
-    if match:
-        return strip_leading_v(match.group("val"))
-    return None
+    """Return ``[tool.ruff] required-version`` value (or None).
+
+    Parsed rather than pattern-matched: the regex this replaced nested two
+    quantifiers and backtracked quadratically (CodeQL py/polynomial-redos).
+    """
+    data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    value = data.get("tool", {}).get("ruff", {}).get("required-version")
+    return strip_leading_v(value) if isinstance(value, str) else None
+
+
+def _replace_ruff_required_version(text: str, new_version: str) -> str:
+    """Rewrite ``required-version`` inside ``[tool.ruff]``, preserving formatting.
+
+    Scans line by line rather than with a section-spanning regex: the pattern
+    this replaced nested quantifiers and backtracked quadratically. The rewrite
+    cannot go through tomllib, which would discard comments and layout.
+
+    Args:
+        text (str): The full pyproject.toml text.
+        new_version (str): The version to pin.
+
+    Returns:
+        str: The text with the pin updated (unchanged if the key is absent).
+    """
+    lines = text.splitlines(keepends=True)
+    in_ruff = False
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith("["):
+            # any new table header ends the [tool.ruff] table
+            in_ruff = stripped in ("[tool.ruff]", '["tool.ruff"]')
+            continue
+        if in_ruff and stripped.startswith("required-version"):
+            prefix, _, _ = line.partition("=")
+            lines[index] = f'{prefix}= "{new_version}"\n'
+            break
+    return "".join(lines)
 
 
 def check_lockstep(*, fix: bool = False) -> list[DriftedFile]:
@@ -111,13 +142,7 @@ def apply_fixes(drifted: list[DriftedFile], expected: dict[str, str]) -> None:
     for drift in drifted:
         new_version = expected[drift.tool]
         if drift.path == pyproject and drift.tool == "ruff":
-            text = pyproject.read_text(encoding="utf-8")
-            text = re.sub(
-                r'(\[tool\.ruff\][^\n]*\n(?:[^\[]*\n)*?required-version\s*=\s*")[^"]+(")',
-                lambda m, v=new_version: m.group(1) + v + m.group(2),
-                text,
-                count=1,
-            )
+            text = _replace_ruff_required_version(pyproject.read_text(encoding="utf-8"), new_version)
             pyproject.write_text(text, encoding="utf-8")
         elif drift.path == precommit:
             text = precommit.read_text(encoding="utf-8")
