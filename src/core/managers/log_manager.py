@@ -117,6 +117,37 @@ def decrypt(enc_dict: str, password: str) -> str:
     return decrypted.decode("UTF-8")
 
 
+# Request bodies we are willing to log verbatim. Anything else - an upload, an
+# octet-stream - is summarised by _request_body_for_log instead of dumped.
+_TEXTUAL_MIMETYPES = frozenset({"", "application/json", "application/x-www-form-urlencoded", "text/plain"})
+
+
+def _request_body_for_log() -> bytes | str:
+    """Return something loggable for the current request body.
+
+    Only used when a caller passed no ``request_data`` of its own. A file upload
+    must never reach the log verbatim: the body is the file, so the record would
+    hold kilobytes of image bytes, and PostgreSQL rejects the insert outright
+    because a text column cannot contain NUL. Summarise those instead.
+
+    Note that the body is readable here at all only because ``auth_required``
+    calls ``get_json(force=True)``, which reads and caches it regardless of
+    content type.
+
+    Returns:
+        bytes | str: The raw body for textual requests, or a short summary.
+    """
+    if request.mimetype in _TEXTUAL_MIMETYPES:
+        return request.data
+
+    described = ""
+    try:
+        described = ", ".join(f"{field}={file.filename!r} ({file.mimetype})" for field, file in request.files.items())
+    except Exception:  # form parsing is best-effort; never break logging over it
+        described = ""
+    return f"<{request.mimetype or 'binary'} body, {request.content_length or 0} bytes{': ' + described if described else ''}>"
+
+
 def generate_escaped_data(request_data: dict) -> str:
     """Generate escaped data from the given request data.
 
@@ -136,7 +167,7 @@ def generate_escaped_data(request_data: dict) -> str:
         data (str): The generated escaped data.
     """
     if request_data is None:
-        request_data = request.data
+        request_data = _request_body_for_log()
 
     if request_data is None:
         return ""
@@ -477,6 +508,24 @@ def store_system_error_activity(
     store_record(ip, None, None, system_id, system_name, None, activity_type, activity_detail, request_data)
 
 
+def _no_nul(value: str | None) -> str | None:
+    r"""Strip NUL from a value bound for a text column.
+
+    PostgreSQL refuses ``\x00`` in text outright and fails the whole
+    transaction, so a log write can take down the request it was only meant to
+    record. Callers should keep binary out of here in the first place - see
+    :func:`_request_body_for_log` - and this is the last line of defence for
+    anything that still slips through.
+
+    Args:
+        value (str | None): The value about to be stored.
+
+    Returns:
+        str | None: The value without NUL bytes.
+    """
+    return value.replace("\x00", "") if isinstance(value, str) else value
+
+
 def store_record(
     ip_address: str,
     user_id: int,
@@ -513,7 +562,7 @@ def store_record(
         module_id,
         activity_type,
         resolve_resource(),
-        activity_detail,
+        _no_nul(activity_detail),
         resolve_method(),
-        generate_escaped_data(request_data),
+        _no_nul(generate_escaped_data(request_data)),
     )
