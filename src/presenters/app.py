@@ -4,7 +4,6 @@ import logging
 import os
 
 from flask import Flask
-from flask_cors import CORS
 from managers import api_manager, presenters_manager
 
 # fix for fontTools which is ignoring global logging settings and puts garbage into the logs
@@ -29,8 +28,6 @@ def create_app() -> Flask:
     app = Flask(__name__)
 
     with app.app_context():
-        CORS(app)
-
         api_manager.initialize(app)
         presenters_manager.initialize()
 

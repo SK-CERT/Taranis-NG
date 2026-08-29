@@ -90,7 +90,10 @@ class Config:
     JWT_SECRET_KEY = read_secret("jwt_secret_key")
     JWT_IDENTITY_CLAIM = "sub"
     JWT_ACCESS_TOKEN_EXPIRES = 14400
-    DEBUG = True
+    # Flask DEBUG enables the Werkzeug interactive debugger (arbitrary code
+    # execution from a traceback) - it must never be on in a deployment. Opt in
+    # explicitly for local development instead.
+    DEBUG = os.getenv("FLASK_DEBUG", "false").strip().lower() in ("1", "true", "yes", "on")
 
     # Key used to encrypt secrets stored in the database (auth provider client
     # secrets, LDAP bind passwords, TOTP seeds). Falls back to JWT_SECRET_KEY so

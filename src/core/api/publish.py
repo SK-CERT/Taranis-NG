@@ -302,6 +302,10 @@ class ProductGetPreview(Resource):
                 log_manager.store_auth_error_activity(err_msg)
                 return Response(err_msg, HTTPStatus.NOT_FOUND, mimetype="text/plain")
 
+            # Single use: consume the ticket right away, so a URL that leaked
+            # (proxy logs, browser history, shared links) cannot serve the
+            # report a second time.
+            redis_client.delete(cache_key)
             cached_data = json.loads(cached_bytes)
             preview_data = base64.b64decode(cached_data["data"])
             preview_mime = cached_data["mime"]
@@ -344,7 +348,7 @@ class ProductSetPreview(Resource):
         """
         err_msg = None
         user = None
-        cache_ttl = 3600  # 1 hour, Expiration time in seconds (time-to-live)
+        cache_ttl = 600  # 10 minutes: the ticket is single-use; this bounds how long an unused one stays valid
 
         jwt = request.json.get("jwt")
         if not jwt:

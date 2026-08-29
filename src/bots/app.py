@@ -2,7 +2,6 @@
 
 from dotenv import load_dotenv
 from flask import Flask
-from flask_cors import CORS
 from managers import api_manager, bots_manager, sse_manager
 from shared.time_manager import SchedulerManager
 
@@ -17,8 +16,6 @@ def create_app() -> Flask:
     load_dotenv()
 
     with app.app_context():
-        CORS(app)
-
         SchedulerManager.init_scheduler()
         api_manager.initialize(app)
         bots_manager.initialize()

@@ -1,5 +1,6 @@
 """Configuration settings for bots."""
 
+import os
 from pathlib import Path
 
 
@@ -27,5 +28,9 @@ class Config:
             msg = f"Secret file not found: {file_path}"
             raise RuntimeError(msg) from err
 
-    DEBUG = True
+    # Never default the Werkzeug debugger on (RCE from any traceback page); opt in
+    # explicitly for local development instead. This service does not load Config
+    # into app.config, so the value only reaches Flask if that changes - it is set
+    # correctly here so the default is safe if it ever does.
+    DEBUG = os.getenv("FLASK_DEBUG", "false").strip().lower() in ("1", "true", "yes", "on")
     API_KEY = read_secret("api_key")

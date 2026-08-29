@@ -62,6 +62,12 @@ services:
       LDAP_CA_CERT_PATH:
       SQLALCHEMY_WARN_20: "1"
       PYTHONWARNINGS: "default"
+      # Cross-origin API access, off unless an origin list is given. A normal
+      # deployment needs none: Traefik serves the GUI and the API under one
+      # hostname. `npm run dev:remote` does, though - it points the GUI at an
+      # absolute API base on another port, so the browser treats every call as
+      # cross-origin. docker/.env.e2e sets this for the E2E stack.
+      TARANIS_NG_CORS_ORIGINS: "${TARANIS_NG_CORS_ORIGINS:-}"
 
       OPENID_LOGOUT_URL: ""
       GUNICORN_WORKERS: "AUTO"
