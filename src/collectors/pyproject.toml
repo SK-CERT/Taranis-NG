@@ -17,6 +17,9 @@ dependencies = [
     "PySocks==1.7.1",
     "python-dateutil==2.9.0.post0",
     "python-dotenv==1.2.3",
+    # drop-in re superset; needed for finditer(timeout=) so an operator-supplied
+    # pattern cannot stall collection (see shared/attribute_extraction.py)
+    "regex==2026.7.10",
     "requests==2.34.2",
     "schedule==1.2.2",
     "selenium==4.47.0",
