@@ -77,5 +77,14 @@ VOLUME ["/data"]
 # traefik - then refuses to start on a slow or busy machine.
 HEALTHCHECK --interval=5s --timeout=3s --start-period=300s --retries=5 CMD curl --fail http://localhost/api/v1/isalive || exit 1
 
+
+# SK-CERT#723: run the service as an unprivileged user. su-exec lets
+# docker/entrypoint.sh fix volume/secret ownership as root and then drop to this
+# user before exec'ing gunicorn, so no application process runs as uid 0.
+RUN apk add --no-cache su-exec \
+    && adduser -D -u 10001 taranis
+ENV TARANIS_USER="taranis"
+ENV TARANIS_WRITABLE_PATHS="/data"
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]

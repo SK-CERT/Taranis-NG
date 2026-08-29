@@ -35,6 +35,14 @@ services:
        - postgres_password
 
   core:
+    # SK-CERT#723: the service runs as an unprivileged user (see
+    # docker/entrypoint.sh). This sysctl is namespaced to the container's own
+    # network namespace and lets it keep binding :80, so every internal URL,
+    # Traefik label, healthcheck and stored node api_url stays as it was.
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       - "redis"
       - "postgres"
@@ -169,6 +177,11 @@ services:
       - secrets_encryption_key
 
   bots:
+    # Unprivileged runtime user; see the note on the core service.
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       core:
         condition: service_healthy
@@ -197,6 +210,11 @@ services:
       - api_key
 
   collectors:
+    # Unprivileged runtime user; see the note on the core service.
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       core:
         condition: service_healthy
@@ -226,6 +244,11 @@ services:
       - api_key
 
   presenters:
+    # Unprivileged runtime user; see the note on the core service.
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       core:
         condition: service_healthy
@@ -258,6 +281,11 @@ services:
       - api_key
 
   publishers:
+    # Unprivileged runtime user; see the note on the core service.
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       core:
         condition: service_healthy
@@ -428,6 +456,11 @@ services:
         max-file: "10"
 
   public-web:
+    # Unprivileged runtime user; see the note on the core service.
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    security_opt:
+      - no-new-privileges:true
     # Gated behind a compose profile so it can be switched off from .env:
     # COMPOSE_PROFILES=public-web enables it (build + run); empty disables it.
     profiles:

@@ -68,5 +68,13 @@ ENV PYTHONPATH="/app" \
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import sys,urllib.request; key=open('/run/secrets/api_key', encoding='utf-8').read().strip(); req=urllib.request.Request('http://127.0.0.1:80/management/isalive', headers={'Authorization': 'ApiKey ' + key}); sys.exit(0 if urllib.request.urlopen(req, timeout=4).status==200 else 1)"
 
+
+# SK-CERT#723: run the service as an unprivileged user. su-exec lets
+# docker/entrypoint.sh fix volume/secret ownership as root and then drop to this
+# user before exec'ing gunicorn, so no application process runs as uid 0.
+RUN apk add --no-cache su-exec \
+    && adduser -D -u 10001 taranis
+ENV TARANIS_USER="taranis"
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]
