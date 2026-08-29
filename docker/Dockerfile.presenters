@@ -48,9 +48,9 @@ RUN \
     font-misc-misc \
     font-croscore \
     freetype && \
-    fc-cache -f && \
     update-ms-fonts && \
-    rm -rf /var/cache/*
+    fc-cache -f && \
+    rm -rf /var/cache/apk/*
 
 # install "shared" package from build_shared stage
 COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl /tmp/custom_packages/
@@ -92,6 +92,16 @@ ENV GUNICORN_CMD_ARGS="--timeout 120"
 
 
 VOLUME ["/app/templates"]
+
+
+# SK-CERT#723: run the service as an unprivileged user. su-exec lets
+# docker/entrypoint.sh fix volume/secret ownership as root and then drop to this
+# user before exec'ing gunicorn, so no application process runs as uid 0.
+RUN apk add --no-cache su-exec \
+    && adduser -D -u 10001 taranis \
+    && chown -R taranis:taranis /var/cache/fontconfig
+ENV TARANIS_USER="taranis"
+ENV TARANIS_WRITABLE_PATHS="/app/templates"
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]
