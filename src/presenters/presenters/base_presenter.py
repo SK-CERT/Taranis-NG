@@ -20,6 +20,7 @@ from typing import ClassVar
 
 import jinja2
 from cvss import CVSS2, CVSS3, CVSS4
+from jinja2.sandbox import SandboxedEnvironment
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.presenter import PresenterSchema
@@ -474,18 +475,14 @@ class BasePresenter:
             ValueError: If a template path is outside allowed templates root.
         """
         if template_string:
-            env = jinja2.Environment(autoescape=False)  # noqa: S701 # safe for plaintext
+            env = SandboxedEnvironment(autoescape=False)  # safe for plaintext
             cls.load_filters(env)
             template = env.from_string(template_string)
         else:
             head, tail = cls.resolve_template_path(template_path)
-            env = jinja2.Environment(loader=jinja2.FileSystemLoader(head), autoescape=escape_html)  # noqa: S701
+            env = SandboxedEnvironment(loader=jinja2.FileSystemLoader(head), autoescape=escape_html)
             cls.load_filters(env)
             template = env.get_template(tail)
-        func_dict = {
-            "vars": vars,
-        }
-        template.globals.update(func_dict)
 
         if is_pdf:
             output_text = template.render(data=input_data)

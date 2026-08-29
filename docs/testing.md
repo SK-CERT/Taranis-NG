@@ -131,12 +131,11 @@ point CI uses.
 
 ## Known gaps
 
-- **`src/presenters/tests` does not run.** The service directory is itself a package
-  (`src/presenters/__init__.py`) *and* contains an inner package of the same name
-  (`src/presenters/presenters/`), so pytest walks up to `src/` and
-  `import presenters.html_presenter` resolves to the service root, which has no such
-  module. Fixing it means dropping the service-root `__init__.py` or renaming the inner
-  package — a structural change, not a pytest setting.
+- **`src/presenters/tests` runs with a stubbed config.** The service reads its Docker
+  secret (`/run/secrets/api_key`) at import time, so `tests/conftest.py` injects a stub
+  `config` module before any application import — the same pattern `src/core/tests`
+  uses. `tests/__init__.py` is deliberately absent (matching core) so pytest imports the
+  test modules top-level instead of walking up to the service-root `__init__.py`.
 - **`src/bots`, `src/collectors`, `src/publishers` have no tests yet.** Add a `tests/`
   directory, then list the project in `PYTEST_SUITES` in `scripts/run_tests.py` and in
   `testpaths` in the root `pyproject.toml`.
