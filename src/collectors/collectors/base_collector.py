@@ -35,12 +35,20 @@ class BaseCollector:
     description = "Base abstract type for all collectors"
     parameters: ClassVar[list] = []
 
+    # Attribute extraction rules are cached on the class, not the instance, and
+    # deliberately so: `run_collector` builds a throwaway `self.__class__()` for every
+    # collection, so anything cached per instance by `refresh()` is invisible to the
+    # object that actually publishes. They are global configuration shared by every
+    # collector, so one cache for all of them is also the honest model.
+    #
+    # A failed fetch keeps the previous set rather than silently dropping extraction
+    # until the next refresh succeeds.
+    attribute_extraction_rules: ClassVar[list] = []
+    attribute_extraction_rule_groups: ClassVar[dict] = {}
+
     def __init__(self) -> None:
         """Initialize the BaseCollector object."""
         self.osint_sources = []
-        # Rules are re-read on refresh; a failed fetch keeps the previous set rather than
-        # silently dropping extraction until the next refresh succeeds.
-        self.attribute_extraction_rules = []
 
     @property
     def type(self) -> str:
@@ -207,10 +215,13 @@ class BaseCollector:
         rules = [ExtractionRule.from_dict(item) for item in response.get("items") or []]
         # Group scoping is resolved here rather than in core, so one payload serves every
         # source this collector runs.
-        self.attribute_extraction_rule_groups = {
+        # Assigned on BaseCollector rather than on self: `self.x = ...` would create an
+        # instance attribute shadowing the class one, and the throwaway runner in
+        # `run_collector` would never see it.
+        BaseCollector.attribute_extraction_rule_groups = {
             item.get("name"): {group.get("id") for group in item.get("osint_source_groups") or []} for item in response.get("items") or []
         }
-        self.attribute_extraction_rules = rules
+        BaseCollector.attribute_extraction_rules = rules
         state = "enabled" if response.get("enabled", True) else "disabled"
         logger.debug(f"{self.name}: {len(rules)} attribute extraction rules loaded ({state})")
 
@@ -261,7 +272,7 @@ class BaseCollector:
         A rule with no groups applies everywhere; otherwise the source must belong to one of
         them.
         """
-        groups = getattr(self, "attribute_extraction_rule_groups", {}).get(rule.name) or set()
+        groups = self.attribute_extraction_rule_groups.get(rule.name) or set()
         if not groups:
             return True
         source_groups = {
