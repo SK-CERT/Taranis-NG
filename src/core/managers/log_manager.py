@@ -142,11 +142,20 @@ def generate_escaped_data(request_data: dict) -> str:
         return ""
 
     data = request_data
-    data = _redact_sensitive_body(data.decode("utf-8", errors="replace")) if isinstance(data, (bytes, bytearray)) else str(data)
+    if isinstance(data, (dict, list)):
+        # Callers holding a parsed body (e.g. the API authorization wrapper)
+        # pass it verbatim - redact it the same way as a raw JSON body so no
+        # path dodges the masking.
+        data = json.dumps(_redact_dict(data), ensure_ascii=False)
+    elif isinstance(data, (bytes, bytearray)):
+        data = _redact_sensitive_body(data.decode("utf-8", errors="replace"))
+    else:
+        data = str(data)
 
     data = data[:4096]
-    data = re.sub(r"\s+", " ", data)
-    return re.sub(r"(^\s+)|(\s+$)", "", data)
+    # str.strip() rather than a trimming regex: `(^\s+)|(\s+$)` backtracks
+    # quadratically on a long run of whitespace (CodeQL py/polynomial-redos).
+    return re.sub(r"\s+", " ", data).strip()
 
 
 # Keys whose values are redacted from logged request bodies. Lower-cased for
@@ -285,7 +294,9 @@ def store_data_error_activity(user: User, activity_detail: str, exception: Excep
         request_data (dict, optional): The data associated with the request.
     """
     if exception:
-        logger.exception(f"{activity_detail}: {exception}")
+        # .error, not .exception: `exception` is a parameter here, not a caught
+        # exception, so .exception() would append a bogus "NoneType: None" traceback.
+        logger.error(f"{activity_detail}: {exception}")
     db.session.rollback()
     ip = resolve_ip_address()
     log_text = (
@@ -310,7 +321,9 @@ def store_data_error_activity_no_user(activity_detail: str, exception: Exception
         request_data (dict, optional): The data associated with the request.
     """
     if exception:
-        logger.exception(f"{activity_detail}: {exception}")
+        # .error, not .exception: `exception` is a parameter here, not a caught
+        # exception, so .exception() would append a bogus "NoneType: None" traceback.
+        logger.error(f"{activity_detail}: {exception}")
     db.session.rollback()
     ip = resolve_ip_address()
     log_text = (
@@ -341,7 +354,9 @@ def store_auth_error_activity(activity_detail: str, exception: Exception | None 
         request_data (dict, optional): The data associated with the request.
     """
     if exception:
-        logger.exception(f"{activity_detail}: {exception}")
+        # .error, not .exception: `exception` is a parameter here, not a caught
+        # exception, so .exception() would append a bogus "NoneType: None" traceback.
+        logger.error(f"{activity_detail}: {exception}")
     db.session.rollback()
     log_text = (
         f"TARANIS NG Auth Error (Method: {resolve_method()}, Resource: {resolve_resource()}, Activity Detail: {activity_detail}, "
@@ -371,7 +386,9 @@ def store_auth_warning_activity(activity_detail: str, exception: Exception | Non
         request_data (dict, optional): The data associated with the request.
     """
     if exception:
-        logger.exception(f"{activity_detail}: {exception}")
+        # .error, not .exception: `exception` is a parameter here, not a caught
+        # exception, so .exception() would append a bogus "NoneType: None" traceback.
+        logger.error(f"{activity_detail}: {exception}")
     db.session.rollback()
     log_text = (
         f"TARANIS NG Auth Warning (Method: {resolve_method()}, Resource: {resolve_resource()}, Activity Detail: {activity_detail}, "
