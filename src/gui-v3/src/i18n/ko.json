@@ -2074,5 +2074,29 @@
         "header_value_invalid": "값에는 줄 바꿈이 포함될 수 없습니다",
         "last_updated": "{user} 사용자가 {at}에 마지막으로 업데이트함",
         "error": "라우팅 및 TLS 설정을 저장하지 못했습니다"
+    },
+    "attribute_extraction": {
+        "title": "속성 추출 규칙",
+        "tab_description": "수집 중 뉴스 본문에서 값을 감지하여 속성으로 저장합니다",
+        "add": "추출 규칙 추가",
+        "edit": "추출 규칙 편집",
+        "none": "구성된 추출 규칙이 없습니다",
+        "name": "이름",
+        "attribute_key": "속성 키",
+        "attribute_key_hint": "찾은 값을 저장할 키입니다. 예: CVE",
+        "pattern": "정규식",
+        "pattern_hint": "Python 정규식입니다. 제목, 요약, 본문과 대조합니다.",
+        "capture_group": "캡처 그룹",
+        "capture_group_hint": "0은 전체 일치를, 1은 첫 번째 그룹을 저장합니다",
+        "max_matches": "최대 일치 수",
+        "max_matches_hint": "하나의 규칙이 뉴스 하나에 추가할 수 있는 값의 상한",
+        "source_groups": "소스 그룹",
+        "source_groups_hint": "비워 두면 모든 소스에 규칙이 적용됩니다",
+        "all_sources": "모든 소스",
+        "description": "설명",
+        "enabled": "사용",
+        "required": "이 필드는 필수입니다",
+        "invalid_pattern": "잘못된 정규식: {error}",
+        "disabled_hint": "속성 추출이 전역으로 꺼져 있습니다. 아래 규칙은 저장되지만 적용되지 않습니다. 설정에서 ATTRIBUTE_EXTRACTION_ENABLED를 켜십시오."
     }
 }

@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Une valeur ne doit pas contenir de saut de ligne",
         "last_updated": "Dernière mise à jour par {user} le {at}",
         "error": "Les paramètres de routage et TLS n'ont pas pu être enregistrés"
+    },
+    "attribute_extraction": {
+        "title": "Règles d'extraction d'attributs",
+        "tab_description": "Détecter des valeurs dans le texte des actualités lors de la collecte et les enregistrer comme attributs",
+        "add": "Ajouter une règle d'extraction",
+        "edit": "Modifier la règle d'extraction",
+        "none": "Aucune règle d'extraction configurée",
+        "name": "Nom",
+        "attribute_key": "Clé d'attribut",
+        "attribute_key_hint": "Clé sous laquelle la valeur trouvée est enregistrée, par exemple CVE",
+        "pattern": "Expression régulière",
+        "pattern_hint": "Expression régulière Python. Comparée au titre, au résumé et au contenu.",
+        "capture_group": "Groupe de capture",
+        "capture_group_hint": "0 enregistre la correspondance entière, 1 le premier groupe",
+        "max_matches": "Correspondances maximales",
+        "max_matches_hint": "Limite du nombre de valeurs qu'une règle peut ajouter à une actualité",
+        "source_groups": "Groupes de sources",
+        "source_groups_hint": "Laisser vide pour appliquer la règle à toutes les sources",
+        "all_sources": "Toutes les sources",
+        "description": "Description",
+        "enabled": "Activé",
+        "required": "Ce champ est obligatoire",
+        "invalid_pattern": "Expression régulière invalide : {error}",
+        "disabled_hint": "L'extraction d'attributs est désactivée globalement. Les règles sont enregistrées mais non appliquées. Activez ATTRIBUTE_EXTRACTION_ENABLED dans les Paramètres."
     }
 }

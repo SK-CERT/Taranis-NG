@@ -2074,5 +2074,29 @@
         "header_value_invalid": "値に改行を含めることはできません",
         "last_updated": "{user} が {at} に最終更新",
         "error": "ルーティングと TLS の設定を保存できませんでした"
+    },
+    "attribute_extraction": {
+        "title": "属性抽出ルール",
+        "tab_description": "収集時にニュース本文から値を検出し、属性として保存します",
+        "add": "抽出ルールを追加",
+        "edit": "抽出ルールを編集",
+        "none": "抽出ルールが設定されていません",
+        "name": "名前",
+        "attribute_key": "属性キー",
+        "attribute_key_hint": "検出した値を保存するキー（例: CVE）",
+        "pattern": "正規表現",
+        "pattern_hint": "Python の正規表現。タイトル、要約、本文に対して照合されます。",
+        "capture_group": "キャプチャグループ",
+        "capture_group_hint": "0 は一致全体、1 は最初のグループを保存します",
+        "max_matches": "最大一致数",
+        "max_matches_hint": "1 つのルールが 1 件のニュースに追加できる値の上限",
+        "source_groups": "ソースグループ",
+        "source_groups_hint": "空のままにすると、すべてのソースにルールが適用されます",
+        "all_sources": "すべてのソース",
+        "description": "説明",
+        "enabled": "有効",
+        "required": "この項目は必須です",
+        "invalid_pattern": "正規表現が不正です: {error}",
+        "disabled_hint": "属性抽出は全体で無効になっています。以下のルールは保存されますが適用されません。設定で ATTRIBUTE_EXTRACTION_ENABLED を有効にしてください。"
     }
 }

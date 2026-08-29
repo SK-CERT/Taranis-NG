@@ -2074,5 +2074,29 @@
         "header_value_invalid": "值不能包含换行符",
         "last_updated": "{user} 于 {at} 最后更新",
         "error": "无法保存路由与 TLS 设置"
+    },
+    "attribute_extraction": {
+        "title": "属性提取规则",
+        "tab_description": "在采集时从新闻文本中识别值并保存为属性",
+        "add": "添加提取规则",
+        "edit": "编辑提取规则",
+        "none": "尚未配置提取规则",
+        "name": "名称",
+        "attribute_key": "属性键",
+        "attribute_key_hint": "保存所找到值的键，例如 CVE",
+        "pattern": "正则表达式",
+        "pattern_hint": "Python 正则表达式，将与标题、摘要和正文进行匹配。",
+        "capture_group": "捕获组",
+        "capture_group_hint": "0 保存整个匹配，1 保存第一个分组",
+        "max_matches": "最大匹配数",
+        "max_matches_hint": "单条规则可为一条新闻添加的值的上限",
+        "source_groups": "来源组",
+        "source_groups_hint": "留空则该规则适用于所有来源",
+        "all_sources": "所有来源",
+        "description": "描述",
+        "enabled": "启用",
+        "required": "此字段为必填项",
+        "invalid_pattern": "正则表达式无效：{error}",
+        "disabled_hint": "属性提取已全局关闭。以下规则会被保存但不会应用。请在设置中启用 ATTRIBUTE_EXTRACTION_ENABLED。"
     }
 }

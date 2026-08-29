@@ -2074,5 +2074,29 @@
         "header_value_invalid": "A value must not contain a line break",
         "last_updated": "Last updated by {user} at {at}",
         "error": "The routing and TLS settings could not be saved"
+    },
+    "attribute_extraction": {
+        "title": "Attribute extraction rules",
+        "tab_description": "Detect values in news item text during collection and store them as attributes",
+        "add": "Add extraction rule",
+        "edit": "Edit extraction rule",
+        "none": "No extraction rules configured",
+        "name": "Name",
+        "attribute_key": "Attribute key",
+        "attribute_key_hint": "Key the found value is stored under, for example CVE",
+        "pattern": "Regular expression",
+        "pattern_hint": "Python regular expression. Matched against the title, review and content.",
+        "capture_group": "Capture group",
+        "capture_group_hint": "0 stores the whole match; 1 stores the first group",
+        "max_matches": "Maximum matches",
+        "max_matches_hint": "Upper bound on values one rule may add to a single news item",
+        "source_groups": "Source groups",
+        "source_groups_hint": "Leave empty to apply the rule to every source",
+        "all_sources": "All sources",
+        "description": "Description",
+        "enabled": "Enabled",
+        "required": "This field is required",
+        "invalid_pattern": "Invalid regular expression: {error}",
+        "disabled_hint": "Attribute extraction is switched off globally. Rules below are saved but not applied. Enable ATTRIBUTE_EXTRACTION_ENABLED in Settings."
     }
 }

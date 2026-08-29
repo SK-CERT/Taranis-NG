@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Ein Wert darf keinen Zeilenumbruch enthalten",
         "last_updated": "Zuletzt von {user} am {at} aktualisiert",
         "error": "Die Routing- und TLS-Einstellungen konnten nicht gespeichert werden"
+    },
+    "attribute_extraction": {
+        "title": "Regeln zur Attributerkennung",
+        "tab_description": "Werte im Text von Nachrichten während der Sammlung erkennen und als Attribute speichern",
+        "add": "Erkennungsregel hinzufügen",
+        "edit": "Erkennungsregel bearbeiten",
+        "none": "Keine Erkennungsregeln konfiguriert",
+        "name": "Name",
+        "attribute_key": "Attributschlüssel",
+        "attribute_key_hint": "Schlüssel, unter dem der gefundene Wert gespeichert wird, zum Beispiel CVE",
+        "pattern": "Regulärer Ausdruck",
+        "pattern_hint": "Regulärer Python-Ausdruck. Wird mit Titel, Kurzfassung und Inhalt abgeglichen.",
+        "capture_group": "Erfassungsgruppe",
+        "capture_group_hint": "0 speichert den gesamten Treffer, 1 die erste Gruppe",
+        "max_matches": "Maximale Treffer",
+        "max_matches_hint": "Obergrenze für Werte, die eine Regel einer Nachricht hinzufügen darf",
+        "source_groups": "Quellengruppen",
+        "source_groups_hint": "Leer lassen, damit die Regel für alle Quellen gilt",
+        "all_sources": "Alle Quellen",
+        "description": "Beschreibung",
+        "enabled": "Aktiviert",
+        "required": "Dieses Feld ist erforderlich",
+        "invalid_pattern": "Ungültiger regulärer Ausdruck: {error}",
+        "disabled_hint": "Die Attributerkennung ist global deaktiviert. Regeln werden gespeichert, aber nicht angewendet. Aktivieren Sie ATTRIBUTE_EXTRACTION_ENABLED in den Einstellungen."
     }
 }

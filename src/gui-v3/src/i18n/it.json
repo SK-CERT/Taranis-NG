@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Un valore non deve contenere interruzioni di riga",
         "last_updated": "Ultimo aggiornamento da {user} il {at}",
         "error": "Non è stato possibile salvare le impostazioni di routing e TLS"
+    },
+    "attribute_extraction": {
+        "title": "Regole di estrazione degli attributi",
+        "tab_description": "Rileva valori nel testo delle notizie durante la raccolta e salvali come attributi",
+        "add": "Aggiungi regola di estrazione",
+        "edit": "Modifica regola di estrazione",
+        "none": "Nessuna regola di estrazione configurata",
+        "name": "Nome",
+        "attribute_key": "Chiave attributo",
+        "attribute_key_hint": "Chiave con cui viene salvato il valore trovato, ad esempio CVE",
+        "pattern": "Espressione regolare",
+        "pattern_hint": "Espressione regolare Python. Confrontata con titolo, sintesi e contenuto.",
+        "capture_group": "Gruppo di cattura",
+        "capture_group_hint": "0 salva l'intera corrispondenza, 1 il primo gruppo",
+        "max_matches": "Corrispondenze massime",
+        "max_matches_hint": "Limite di valori che una regola può aggiungere a una singola notizia",
+        "source_groups": "Gruppi di fonti",
+        "source_groups_hint": "Lasciare vuoto per applicare la regola a tutte le fonti",
+        "all_sources": "Tutte le fonti",
+        "description": "Descrizione",
+        "enabled": "Abilitato",
+        "required": "Questo campo è obbligatorio",
+        "invalid_pattern": "Espressione regolare non valida: {error}",
+        "disabled_hint": "L'estrazione degli attributi è disattivata globalmente. Le regole vengono salvate ma non applicate. Attiva ATTRIBUTE_EXTRACTION_ENABLED nelle Impostazioni."
     }
 }

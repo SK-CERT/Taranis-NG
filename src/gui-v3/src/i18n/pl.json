@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Wartość nie może zawierać znaku końca wiersza",
         "last_updated": "Ostatnia aktualizacja przez użytkownika {user} o {at}",
         "error": "Nie udało się zapisać ustawień routingu i TLS"
+    },
+    "attribute_extraction": {
+        "title": "Reguły wyodrębniania atrybutów",
+        "tab_description": "Wykrywaj wartości w tekście wiadomości podczas zbierania i zapisuj je jako atrybuty",
+        "add": "Dodaj regułę wyodrębniania",
+        "edit": "Edytuj regułę wyodrębniania",
+        "none": "Nie skonfigurowano reguł wyodrębniania",
+        "name": "Nazwa",
+        "attribute_key": "Klucz atrybutu",
+        "attribute_key_hint": "Klucz, pod którym zapisywana jest znaleziona wartość, na przykład CVE",
+        "pattern": "Wyrażenie regularne",
+        "pattern_hint": "Wyrażenie regularne języka Python. Porównywane z tytułem, streszczeniem i treścią.",
+        "capture_group": "Grupa przechwytująca",
+        "capture_group_hint": "0 zapisuje całe dopasowanie, 1 pierwszą grupę",
+        "max_matches": "Maksymalna liczba dopasowań",
+        "max_matches_hint": "Górny limit wartości, które jedna reguła doda do jednej wiadomości",
+        "source_groups": "Grupy źródeł",
+        "source_groups_hint": "Pozostaw puste, aby reguła obejmowała wszystkie źródła",
+        "all_sources": "Wszystkie źródła",
+        "description": "Opis",
+        "enabled": "Włączone",
+        "required": "To pole jest wymagane",
+        "invalid_pattern": "Nieprawidłowe wyrażenie regularne: {error}",
+        "disabled_hint": "Wyodrębnianie atrybutów jest globalnie wyłączone. Reguły są zapisywane, ale nie stosowane. Włącz ATTRIBUTE_EXTRACTION_ENABLED w Ustawieniach."
     }
 }
