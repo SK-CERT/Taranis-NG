@@ -30,6 +30,15 @@
 - name: "Apply the ufw policy"
   when: firewall_ufw_binary.stat.exists or not ansible_check_mode
   block:
+    # Everything below only adds rules, so without this a previously-added
+    # blanket rule outlives the run and overrides a narrower one written here.
+    # `reset` disables ufw first, so the session applying the policy is not
+    # filtered in the gap between the wipe and `ufw enable` at the end.
+    - name: "Discard the existing ruleset"
+      community.general.ufw:
+        state: reset
+      when: firewall_reset | bool
+
     - name: "Allow inbound TCP ports"
       community.general.ufw:
         rule: allow
@@ -53,6 +62,16 @@
         proto: tcp
         src: "{{ item.1 }}"
       loop: "{{ firewall_restricted_tcp_ports | subelements('sources') }}"
+      loop_control:
+        label: "{{ item.0.port }} from {{ item.1 }}"
+
+    - name: "Allow restricted inbound UDP ports from their permitted sources only"
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.0.port }}"
+        proto: udp
+        src: "{{ item.1 }}"
+      loop: "{{ firewall_restricted_udp_ports | subelements('sources') }}"
       loop_control:
         label: "{{ item.0.port }} from {{ item.1 }}"
 

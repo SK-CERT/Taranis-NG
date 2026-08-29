@@ -45,9 +45,15 @@ The connection is **bidirectional**:
 
 | Direction                 | Path                                  | Purpose                                  |
 | ------------------------- | ------------------------------------- | ---------------------------------------- |
-| Worker → Core             | `https://<core>/api/v1/...`           | Workers poll Core for work (collectors fetch source list, bots poll presets) |
-| Worker → Core (bots only) | `https://<core>/sse`                  | Long-lived SSE stream of bot events      |
-| Core → Worker             | `https://<worker>/api/v1/...`         | Core pushes work (collectors refresh, presenter generate, publisher publish) |
+| Worker → Core             | `https://<core>:8443/api/v1/...`      | Workers poll Core for work (collectors fetch source list, bots poll presets) |
+| Worker → Core (bots only) | `https://<core>:8443/sse`             | Long-lived SSE stream of bot events      |
+| Worker → Core (public-web) | `https://<core>:8443/traefik/dynamic/node` | The worker's Traefik polls Core for its routers and certificates |
+| Core → Worker             | `https://<type>.<worker>:8443/api/v1/...` | Core pushes work (collectors refresh, presenter generate, publisher publish) |
+| Control host → Core       | `https://<core>/api/v1/config/...`    | Ansible registers the node rows over Core's 443 |
+
+Both 8443s are separate ports on separate hosts: `core_satellite_port` on Core
+and `worker_api_port` on the worker. Only the control host's registration calls
+use Core's 443.
 
 Both legs must be reachable. Failures here are the most common distributed
 deployment issue.
@@ -86,9 +92,11 @@ On each **worker host**:
     443 router and served only here, so a worker that can reach Core's 443 but
     not its 8443 registers fine and then does no work.
 
-  Core does not publish that port unless told to: set
-  `TARANIS_NG_SATELLITE_BIND=0.0.0.0` in the Core host's `.env` and restrict it
-  to your worker addresses.
+  Core does not publish that port unless told to: it binds `127.0.0.1` and
+  `::1` by default. Set `TARANIS_NG_SATELLITE_BIND=0.0.0.0` and
+  `TARANIS_NG_SATELLITE_BIND6=::` in the Core host's `.env` — one per address
+  family, so a worker that reaches Core over IPv6 needs the second one — and
+  restrict the port to your worker addresses.
 
 ## Addressing model — VM hostname vs public API hostname
 
@@ -129,7 +137,7 @@ worker_hosts:
 # host_vars/collectors.example.org.yml
 worker_types: ["collectors"]
 worker_base_hostname: "example.org"
-# → collectors API at https://collectors.example.org  (matches the VM's hostname ✓)
+# → collectors API at https://collectors.example.org:8443  (matches the VM's hostname ✓)
 ```
 
 *(Without the `worker_base_hostname: "example.org"` override, the default
@@ -152,8 +160,8 @@ worker_hosts:
 # host_vars/taranis1.yml   (filename matches inventory key)
 worker_types: ["collectors", "bots"]
 worker_base_hostname: "taranis1.example.org"
-# → collectors API at https://collectors.taranis1.example.org  ✓
-# → bots API at       https://bots.taranis1.example.org        ✓
+# → collectors API at https://collectors.taranis1.example.org:8443  ✓
+# → bots API at       https://bots.taranis1.example.org:8443        ✓
 # (Cert SANs match — Traefik requests them via the per-type Host() labels.)
 ```
 
@@ -198,8 +206,8 @@ with `worker_base_hostname: "taranis1.example.org"`:
 | Collectors container's public FQDN | `collectors.taranis1.example.org` | computed as `<type>.<base>` |
 | Bots container's public FQDN | `bots.taranis1.example.org` | same |
 | ACME cert SAN for collectors router | `collectors.taranis1.example.org` | driven by Traefik `Host()` label |
-| Core's `CollectorsNode.api_url` | `https://collectors.taranis1.example.org` | registered by `taranis-ng-node-register` |
-| Core's `BotsNode.api_url` | `https://bots.taranis1.example.org` | registered by `taranis-ng-node-register` |
+| Core's `CollectorsNode.api_url` | `https://collectors.taranis1.example.org:8443` | registered by `taranis-ng-node-register` |
+| Core's `BotsNode.api_url` | `https://bots.taranis1.example.org:8443` | registered by `taranis-ng-node-register` |
 
 ## Addressing & TLS
 
@@ -209,7 +217,7 @@ or `host_vars/<host>.yml`:
 
 1. **`selfsigned`** (default) — Ansible generates a self-signed cert on the
    worker host via `community.crypto`. Core then reaches the worker at
-   `https://<worker_fqdn>/...` but the Core host must trust the cert.
+   `https://<worker_fqdn>:8443/...` but the Core host must trust the cert.
    Currently a manual step: copy the worker cert into the Core host's trust
    store (`/usr/local/share/ca-certificates/` + `update-ca-certificates`).
    See TODO below.
@@ -243,15 +251,29 @@ nobody — hence the split.
 | Core | 443 | world | GUI, the browser API, `/sse` |
 | Core | `TARANIS_NG_SATELLITE_PORT` (8443) | worker hosts only | `/api/v1/{collectors,bots,public-web}`, `/sse`, `/traefik/dynamic/node` |
 
-**A host firewall does not restrict the container ports.** Docker publishes a port
-by writing DNAT rules into `nat/PREROUTING` and filter rules into its own chain in
-`filter/FORWARD`; ufw and firewalld write to `filter/INPUT`, which container-bound
-traffic never traverses. So 80, 443 and the API port are reachable whatever
-`firewall_allowed_tcp_ports` lists, and the `taranis-ng-firewall` role governs only
-traffic terminating on the host itself — sshd above all. Keep 22 there and set the
-rest per host in `host_vars/<host>.yml`, not in the role defaults.
+**Whether a host firewall restricts these ports depends on the address family**,
+and the familiar "Docker bypasses your firewall" is only half of it:
 
-To narrow the API port for real, pick one of:
+- **IPv4 — bypassed.** Docker publishes a port by writing DNAT rules into
+  `nat/PREROUTING` and filter rules into its own chain in `filter/FORWARD`; ufw
+  and firewalld write to `filter/INPUT`, which that traffic never traverses. So
+  80, 443 and the API port are reachable over v4 whatever
+  `firewall_allowed_tcp_ports` lists.
+- **IPv6 — not bypassed.** Docker ships with `ip6tables` management off, so
+  there is no v6 DNAT: `docker-proxy` listens in the host namespace and the
+  traffic goes through `INPUT` like any host service. A published port missing
+  from the firewall lists is therefore reachable over v4 and *dropped* over v6 —
+  a timeout, not a refusal, so it reads like a routing fault.
+
+IPv6 is thus the only family in which a rule in `taranis-ng-firewall` does
+anything for a published container port; a source of `::/0` opens one for v6
+only. Set those ports per host in `host_vars/<host>.yml`, not in the role
+defaults, which are the whole fleet's. Note that `taranis-ng-worker` opens 80,
+443 and `worker_api_port` unrestricted itself whenever ufw is already active, so
+set `worker_open_firewall: false` on a host whose policy you want
+`taranis-ng-firewall` to own.
+
+To narrow the API port over IPv4, pick one of:
 
 ```yaml
 # host_vars/<host>.yml — bind the listener to one address. Docker honours this,
@@ -445,14 +467,14 @@ key value, so leaving the files in place is a no-op.
      or use ACME where Traefik requests per-type certs on demand).
    - Authenticates to Core as an admin user and POSTs a node row to
      `/api/v1/config/<type>-nodes` for each `worker_types` entry (the same
-     collection endpoint for all four types). Core's `add_*_node` manager probes
+     collection endpoint shape for every type). Core's `add_*_node` manager probes
      the worker with the supplied key before persisting — so a successful POST
      also verifies the Core→worker direction *and* the key. When a node with
      that `api_url` already exists the playbook PUTs instead, so a rotated key
      reaches Core rather than being silently skipped.
 
 5. The new collectors node appears in the Core GUI under
-   `Config → Collector Nodes` and can receive OSINT sources.
+   *Configuration → Collector Nodes* and can receive OSINT sources.
 
 ## Managing a worker after deployment
 
@@ -515,14 +537,22 @@ installed. Each part is independent:
 ### Firewalling a worker host
 
 `firewall.yml` applies a deny-by-default inbound policy and leaves outbound
-unrestricted:
+unrestricted. The role's own default opens **SSH and nothing else** — every
+other port a host needs is declared in that host's `host_vars/<host>.yml`,
+because a role default is the whole fleet's default:
 
-| Port | Why it stays open |
+| Variable | What it opens |
 | --- | --- |
-| tcp/22 | SSH — Ansible's own transport |
-| tcp/80 | ACME HTTP-01 validation and Traefik's http→https redirect |
-| tcp/443 | the worker API Core calls |
-| udp/443 | HTTP/3, which the worker's Traefik advertises and publishes |
+| `firewall_allowed_tcp_ports` (default `[22]`) | TCP ports open to everyone, on both address families |
+| `firewall_allowed_udp_ports` (default `[]`) | the same for UDP |
+| `firewall_restricted_tcp_ports` / `_udp_ports` (default `[]`) | `{port, sources}` entries, one rule per (port, source) pair |
+| `firewall_reset` (default `false`) | discard the host's existing ruleset first, so this policy is the whole policy rather than a delta |
+
+A worker host typically wants 80 (ACME HTTP-01 and the http→https redirect), 443
+plus udp/443 (a public-web's own hostnames, and HTTP/3, which Traefik
+advertises), and `worker_api_port` restricted to the Core host.
+[`host_vars/worker.example.yml`](../ansible/inventory/host_vars/worker.example.yml)
+carries a worked example of exactly that.
 
 ```bash
 cd ansible
@@ -539,38 +569,37 @@ missing from `firewall_allowed_tcp_ports` — override with
 
 Other knobs: `-e firewall_hosts=core` to target a different group,
 `-e firewall_enable=false` to stage the rules without switching the firewall on,
-and `-e '{"firewall_allowed_tcp_ports": [22, 80, 443, 9090]}'` to open more.
+and `-e '{"firewall_allowed_tcp_ports": [22, 80, 443]}'` to open more.
 
-> **Docker publishes past the firewall.** Docker inserts its own iptables rules
-> ahead of ufw's, so container ports published with `-p` are reachable whatever
-> the policy says; firewalld behaves similarly. The worker stack publishes only
-> 80 and 443 — the ports this policy opens anyway — so nothing is currently
-> exposed beyond it. Publish a container on another port later and it *will* be
-> reachable regardless of these rules. The play prints the currently published
-> ports at the end so the gap stays visible.
+> **Over IPv4, Docker publishes past the firewall.** Container ports published
+> with `-p` are reachable over v4 whatever this policy says; over IPv6 they are
+> not, and a published port left off these lists is dropped there. See
+> [Ports and exposure](#ports-and-exposure) for the mechanism and for the
+> `worker_open_firewall: false` interaction with `taranis-ng-worker`, which
+> otherwise re-adds blanket rules for 80, 443 and `worker_api_port` on every
+> deploy. The play prints the currently published ports at the end so the v4 gap
+> stays visible.
 
 ## Moving work items between nodes
 
 Once multiple nodes of a given type exist (e.g. two collectors nodes), you can
 move individual work items (OSINT sources, bot presets, product types,
-publisher presets) between them directly from the existing admin dialogs in the
-**Vue 3 GUI** (`src/gui-v3/`, served at `/`):
+publisher presets) between them from the admin dialogs in the **Vue 3 GUI**
+(`src/gui-v3/`, served at `/`):
 
-1. Open the work item's edit dialog (e.g. `Config → OSINT Sources → Edit`).
-2. The **Node** and **Collector/Bot/Presenter/Publisher** `v-select`s are now
-   editable in edit mode (previously they were locked to the create-time
-   choice — `:disabled="isEdit || ..."`).
-3. Pick the target node + worker. Parameter values whose `parameter.key`
-   matches are carried over to the new worker's parameter set automatically;
-   parameters absent on the new worker fall back to their defaults.
-4. Save. The backend `update()` validates that the target worker is of the
-   same type as the current worker (so you can move an RSS source between two
-   collectors nodes hosting `RSS_COLLECTOR`, but not from `RSS_COLLECTOR`
-   to `PLAYWRIGHT_COLLECTOR`).
+1. Open the work item's edit dialog (e.g. *Configuration → OSINT Sources →
+   Edit*).
+2. Pick the target node and worker — both selects stay editable in edit mode.
+   Parameter values whose `parameter.key` matches are carried over to the new
+   worker's parameter set automatically; parameters absent on the new worker
+   fall back to their defaults.
+3. Save. The backend validates that the target worker is of the same type as
+   the current one, so you can move an RSS source between two collectors nodes
+   hosting `RSS_COLLECTOR`, but not from `RSS_COLLECTOR` to
+   `PLAYWRIGHT_COLLECTOR`.
 
-> **Note:** The Vue 2 GUI (`src/gui/`) is left intentionally untouched by this
-> change — operators using the Vue 2 UI will not see the unlock. Move work
-> items via the Vue 3 UI or via the admin REST API directly.
+> **Note:** the Vue 2 GUI (`src/gui/`) does not offer this; move work items via
+> the Vue 3 UI or the admin REST API.
 
 ## Operator-supplied values never dirty the repo
 
@@ -662,9 +691,10 @@ be fixed.
 - **Worker Traefik logs `Provider error … context deadline exceeded` for
   `/traefik/dynamic/node`**: the worker cannot reach Core's satellite port. Nearly
   always the opt-in publish — Core binds `:8443` to loopback by default
-  (`TARANIS_NG_SATELLITE_BIND=127.0.0.1`), so from outside the Core host there is
-  no listener at all. Set it to `0.0.0.0`, `docker compose up -d traefik`, and
-  confirm with `ss -tlnp | grep 8443`.
+  (`TARANIS_NG_SATELLITE_BIND=127.0.0.1`, `TARANIS_NG_SATELLITE_BIND6=::1`), so
+  from outside the Core host there is no listener at all. Set them to `0.0.0.0`
+  and `::` respectively, `docker compose up -d traefik`, and confirm with
+  `ss -tlnp | grep 8443` — check both families, since they are separate publishes.
 
   The error text tells you which leg is broken, so read it before changing
   anything: **timeout** (`context deadline exceeded`, `i/o timeout`) means packets
@@ -681,7 +711,7 @@ be fixed.
   `worker_api_port`, neither of which uses this leg — and then do no work at all.
 - **A public web serves the wrong certificate, or 404s every hostname**: the
   worker's Traefik could not poll `/traefik/dynamic/node`. Check that the Core
-  host publishes its satellite port (`TARANIS_NG_SATELLITE_BIND=0.0.0.0`) and
+  host publishes its satellite port (`TARANIS_NG_SATELLITE_BIND` / `_BIND6`) and
   admits this worker, and that the node's API key matches. The catch-all keeps
   answering from `fallback.yml` meanwhile, which is why the site stays up but
   unconfigured.
@@ -726,6 +756,12 @@ be fixed.
   default install.
 - [`ansible/playbooks/distribute-worker.yml`](../ansible/playbooks/distribute-worker.yml)
   — remote-only worker deployment + node registration.
+- [`ansible/playbooks/worker-power.yml`](../ansible/playbooks/worker-power.yml)
+  — stop / start / restart a deployed worker host.
+- [`ansible/playbooks/worker-remove.yml`](../ansible/playbooks/worker-remove.yml)
+  — remove a worker from its host and from Core.
+- [`ansible/playbooks/firewall.yml`](../ansible/playbooks/firewall.yml) —
+  deny-by-default host firewall (`taranis-ng-firewall`).
 - [`ansible/roles/taranis-ng-docker/`](../ansible/roles/taranis-ng-docker/) —
   Docker Engine install role (apt + dnf).
 - [`ansible/roles/taranis-ng-image-transfer/`](../ansible/roles/taranis-ng-image-transfer/)
@@ -761,7 +797,7 @@ Supported:
   - `["public-web"]` — a public report feed; see "A public-web worker" above.
 - **Per-worker-type node rows in Core.** Each entry in `worker_types` becomes
   a separate row in the corresponding `*Node` table; each has its own
-  per-type subdomain (so Core addresses `https://<type>.<host>/...`) and its
+  per-type subdomain (so Core addresses `https://<type>.<host>:8443/...`) and its
   own `api_key` (separate secret file at
   `/etc/taranis-ng/secrets/api_key.<type>.txt`).
 - **ACME** — one ACME resolver on the host's Traefik requests per-type certs

@@ -1,17 +1,18 @@
 # Ansible deployment
 
-Taranis-NG ships two supported Ansible playbooks:
+Taranis-NG ships two deployment playbooks:
 
 - **`playbooks/site.yml`** — the default single-host install. Installs Docker
   Engine on the target host and brings up the all-in-one Compose stack
   (`docker/docker-compose.yml`). No operator customization required when run
   against the default `inventory/localhost.yml`.
 - **`playbooks/distribute-worker.yml`** — distributed (remote worker) install.
-  Deploys one or more worker containers (collectors/bots/presenters/publishers)
-  to each remote host over SSH, then registers every new node in Core. Runs only
-  against the worker groups defined in your `inventory/distributed.local.yml`.
+  Deploys one or more worker containers (collectors / bots / presenters /
+  publishers / public-web) to each remote host over SSH, then registers every
+  new node in Core. Runs against the worker groups defined in your
+  `inventory/distributed.local.yml`.
 
-Two more playbooks manage a worker after it is deployed:
+Three more playbooks operate on a host after it is deployed:
 
 - **`playbooks/worker-power.yml`** — stop, start or restart the worker
   containers on a remote host. Non-destructive and fully reversible; the Core
@@ -19,9 +20,12 @@ Two more playbooks manage a worker after it is deployed:
 - **`playbooks/worker-remove.yml`** — remove a worker deployment: delete its
   node rows from Core, then the containers, volumes, `/etc/taranis-ng` and the
   control-host copies of its API keys. Destructive; always pass `--limit`.
-- **`playbooks/firewall.yml`** — deny-by-default host firewall: allows inbound
-  tcp/22, tcp/80, tcp/443 and udp/443 only, outbound unrestricted. ufw on
-  Debian/Ubuntu, firewalld on the RedHat family.
+- **`playbooks/firewall.yml`** — deny-by-default host firewall: inbound is
+  denied except the ports you list, outbound is unrestricted. ufw on
+  Debian/Ubuntu, firewalld on the RedHat family. The role's own default opens
+  SSH and nothing else, so set the ports the host actually needs in its
+  `host_vars/<host>.yml` before running it — `host_vars/worker.example.yml`
+  has a worked example.
 
 See [`docs/distributed-deployment.md`](../docs/distributed-deployment.md) for
 the full distributed path (architecture, addressing & TLS, secrets,
@@ -39,8 +43,7 @@ python3 scripts/dev_setup.py --all
 
 Use that rather than a bare `uv sync --group ansible`: `uv sync` makes the
 environment match exactly the groups it is given, so naming `ansible` alone
-removes pytest, the service dependencies and `.venv/bin/uv` itself — and no
-other uv exists to run the command that would put it back.
+removes pytest, the service dependencies and `.venv/bin/uv` itself.
 
 Every command below is prefixed with `uv run --group ansible` so it uses that
 environment; drop the prefix if you have `.venv/bin` on your `PATH`.
