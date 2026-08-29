@@ -16,6 +16,7 @@ from io import BytesIO
 from pathlib import Path
 
 import paramiko
+from managers.ssh_host_keys import apply_host_key_policy
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
@@ -96,7 +97,7 @@ class SFTPPublisher(BasePublisher):
             ssh_key = _get_key(ssh_key, ssh_key_password) if ssh_key else None
 
             ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # noqa: S507  # unsafe connect
+            apply_host_key_policy(ssh, publisher_input.param_key_values.get("HOST_KEY"), url, port, self.logger)
             self.logger.debug(f"Connecting to {url}, port {port}, user {username}")
             if ssh_key:
                 ssh.connect(hostname=url, port=port, username=username, pkey=ssh_key)
