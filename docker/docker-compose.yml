@@ -35,10 +35,10 @@ services:
        - postgres_password
 
   core:
-    # SK-CERT#723: the service runs as an unprivileged user (see
-    # docker/entrypoint.sh). This sysctl is namespaced to the container's own
-    # network namespace and lets it keep binding :80, so every internal URL,
-    # Traefik label, healthcheck and stored node api_url stays as it was.
+    # The service runs as an unprivileged user (see docker/entrypoint.sh). This
+    # sysctl is namespaced to the container's own network namespace and lets it
+    # keep binding :80, so every internal URL, Traefik label, healthcheck and
+    # stored node api_url stays as it was.
     sysctls:
       - net.ipv4.ip_unprivileged_port_start=0
     security_opt:
@@ -93,11 +93,6 @@ services:
       TRAEFIK_CERT_RESOLVER: "${TRAEFIK_CERT_RESOLVER:-}"
       # So the certificate panel can report the main hostname alongside the webs.
       TARANIS_NG_HOSTNAME: "${TARANIS_NG_HOSTNAME}"
-      # Which optional services this deployment runs. prestart_core.sh reads it to
-      # seed the default public-web node only when the public-web container really
-      # exists. Passing it here also means flipping the profile in .env recreates
-      # core, so the node is seeded the moment the feed is switched on.
-      COMPOSE_PROFILES: "${COMPOSE_PROFILES:-}"
     labels:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
@@ -324,6 +319,11 @@ services:
         condition: service_started
       publishers:
         condition: service_started
+      # Optional (compose profile "public-web"), hence required: false - with the
+      # profile off the service does not exist and compose must not wait for it.
+      public-web:
+        condition: service_started
+        required: false
     restart: "no"
     image: "skcert/taranis-ng-core:${TARANIS_NG_TAG}"
     command: ["python", "bootstrap_docker.py"]
@@ -338,6 +338,11 @@ services:
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
       DEBUG_SQL: "false"
+      # Which optional services this deployment runs. bootstrap_docker.py reads it
+      # to seed the default public-web node only when the public-web container
+      # really exists. This service re-runs on every `docker compose up`, so
+      # switching the feed on in .env seeds the node on the next start.
+      COMPOSE_PROFILES: "${COMPOSE_PROFILES:-}"
     logging:
       driver: "json-file"
       options:

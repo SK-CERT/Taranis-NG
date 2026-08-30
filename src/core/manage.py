@@ -769,8 +769,7 @@ def public_web_management(
             logger.info(
                 f"Id: {node.id}\n\tName: {node.name}\n\t{api_key_str}Created: {node.created}\n\tLast seen: {node.last_seen}",
             )
-        # We need to use print here, because prestart_core.sh relies on the output
-        print(f"Total: {len(nodes)}")  # noqa: T201
+        logger.info(f"Total: {len(nodes)}")
 
     if opt_create:
         if not opt_name or not opt_api_key:

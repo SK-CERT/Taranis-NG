@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -10,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from flask import Flask
-from managers import bots_manager, collectors_manager, db_manager, presenters_manager, publishers_manager
+from managers import bots_manager, collectors_manager, db_manager, presenters_manager, public_web_manager, publishers_manager
 from migrations.repair_distribution_bundle import repair_distribution_bundle
 from model import (  # noqa: F401  Import the complete relationship graph before configuring mappers.
     attribute,
@@ -34,16 +35,29 @@ from model import (  # noqa: F401  Import the complete relationship graph before
 from model.bots_node import BotsNode
 from model.collectors_node import CollectorsNode
 from model.presenters_node import PresentersNode
+from model.public_web import PublicWeb
+from model.public_web_node import PublicWebNode
 from model.publishers_node import PublishersNode
 from sqlalchemy import func
 
-NodeModel = type[BotsNode] | type[CollectorsNode] | type[PresentersNode] | type[PublishersNode]
+NodeModel = type[BotsNode] | type[CollectorsNode] | type[PresentersNode] | type[PublicWebNode] | type[PublishersNode]
 NodeOperation = Callable[[dict[str, str]], HTTPStatus | int]
 NodeUpdateOperation = Callable[[str, dict[str, str]], HTTPStatus | int]
 
 DEFAULT_PRESENTER_URL = "http://presenters/"
 MAX_ATTEMPTS = 30
 RETRY_SECONDS = 2
+
+# The public-web feed is optional (compose profile "public-web"), so unlike the
+# other satellites its default node is only seeded when the service is actually
+# part of this deployment. Seeding it regardless would put a node in
+# Configuration -> Public Web that nothing backs: it can never be reached, and
+# core would keep dialling a host that does not resolve.
+PUBLIC_WEB_PROFILE = "public-web"
+DEFAULT_PUBLIC_WEB_URL = "http://public-web"
+DEFAULT_PUBLIC_WEB_NAME = "Default Public Web"
+DEFAULT_PUBLIC_WEB_DESCRIPTION = "A local public-web feed node configured as a part of Taranis NG default installation."
+DEFAULT_PUBLIC_WEB_WEB_NAME = "Default Web"
 
 
 @dataclass(frozen=True)
@@ -175,6 +189,100 @@ def _node_specs() -> tuple[NodeSpec, ...]:
     )
 
 
+def _public_web_enabled() -> bool:
+    """Tell whether this deployment runs the optional public-web feed.
+
+    Read from COMPOSE_PROFILES rather than probing the network, so a stack with
+    the feed switched off is never held up waiting for a container that compose
+    was never asked to create.
+
+    Returns:
+        (bool): True when the "public-web" compose profile is active.
+    """
+    profiles = os.getenv("COMPOSE_PROFILES", "").replace(" ", "")
+    return PUBLIC_WEB_PROFILE in profiles.split(",")
+
+
+def _create_public_web_node(api_key: str) -> PublicWebNode:
+    """Register the public-web node that runs beside core in this stack."""
+    # fronted_by_core: this node runs beside core, so core's own Traefik publishes
+    # its webs. A remote node registered by ansible fronts its own and must NOT be
+    # marked - see the PublicWebNode.fronted_by_core docstring.
+    node = PublicWebNode(
+        _available_name(PublicWebNode, DEFAULT_PUBLIC_WEB_NAME),
+        DEFAULT_PUBLIC_WEB_DESCRIPTION,
+        api_key,
+        DEFAULT_PUBLIC_WEB_URL,
+        fronted_by_core=True,
+    )
+    db_manager.db.session.add(node)
+    db_manager.db.session.commit()
+    return node
+
+
+def _seed_public_web(api_key: str) -> None:
+    """Create the default public-web node and its web, once, if they are missing.
+
+    Matched on api_url rather than on "is the table empty", so an operator who
+    renamed the node in Configuration -> Public Web keeps their name instead of
+    getting a second node beside it.
+    """
+    node = _node_by_url(PublicWebNode, DEFAULT_PUBLIC_WEB_URL)
+    if node is None:
+        node = _create_public_web_node(api_key)
+        print(f"Default public-web node '{node.name}' created.", flush=True)  # noqa: T201
+
+    # A node created before api_url existed, or seeded without one, has no
+    # core->node channel: backfill it so health checks and cache-reset pushes work.
+    if not node.api_url:
+        node.api_url = DEFAULT_PUBLIC_WEB_URL
+        db_manager.db.session.commit()
+
+    # A node can serve several webs on several hostnames, so this one is created
+    # without a hostname: that belongs in Configuration -> Public Web, next to the
+    # rest of the web's settings.
+    if not node.webs:
+        db_manager.db.session.add(PublicWeb(DEFAULT_PUBLIC_WEB_WEB_NAME, node.id, "", {}))
+        db_manager.db.session.commit()
+        print(f"Default web '{DEFAULT_PUBLIC_WEB_WEB_NAME}' created for node '{node.name}'.", flush=True)  # noqa: T201
+
+    print(f"Default public-web node ready: {node.name}", flush=True)  # noqa: T201
+
+
+def _ensure_public_web(api_key: str) -> None:
+    """Seed the default public-web node once its service answers.
+
+    Deliberately best-effort: unlike the four mandatory satellites this one is an
+    optional profile, and `gui`/`gui-v3` wait on this whole script completing
+    successfully. Raising here would take the entire stack down over a feed the
+    deployment can live without, so a node that never answers is reported and
+    skipped.
+    """
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        # The same check the configuration UI runs on node registration, so a node
+        # that is not really there is never stored.
+        problem = public_web_manager.verify_node(DEFAULT_PUBLIC_WEB_URL, api_key)
+        if problem is None:
+            try:
+                _seed_public_web(api_key)
+            except Exception as error:
+                db_manager.db.session.rollback()
+                print(f"Default public-web node attempt {attempt}/{MAX_ATTEMPTS} failed: {error}", flush=True)  # noqa: T201
+            else:
+                return
+        elif attempt in (1, MAX_ATTEMPTS):
+            print(f"Default public-web node attempt {attempt}/{MAX_ATTEMPTS}: {problem}", flush=True)  # noqa: T201
+
+        if attempt < MAX_ATTEMPTS:
+            time.sleep(RETRY_SECONDS)
+
+    print(  # noqa: T201
+        f"WARNING: the default public-web node was not seeded after {MAX_ATTEMPTS} attempts; "
+        "register it by hand under Configuration -> Public Web. Continuing.",
+        flush=True,
+    )
+
+
 def bootstrap() -> None:
     """Run the idempotent Docker initialization sequence."""
     app = Flask(__name__)
@@ -186,6 +294,12 @@ def bootstrap() -> None:
         api_key = _read_api_key()
         for spec in _node_specs():
             _ensure_node(spec, api_key)
+
+        if _public_web_enabled():
+            _ensure_public_web(api_key)
+        else:
+            profiles = os.getenv("COMPOSE_PROFILES", "")
+            print(f"Public-web feed is not enabled (COMPOSE_PROFILES={profiles!r}); skipping its default node.", flush=True)  # noqa: T201
 
         repair_distribution_bundle(db_manager.db.engine, DEFAULT_PRESENTER_URL, preserve_partial=True)
         print("Docker initialization complete.", flush=True)  # noqa: T201
