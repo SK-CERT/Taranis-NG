@@ -43,6 +43,7 @@ class Config:
         OIDC_RESOURCE_CHECK_AUD (bool): Whether to check the audience of OIDC resource.
         OIDC_CLOCK_SKEW (int): The clock skew in seconds for OIDC.
         OPENID_LOGOUT_URL (str): The URL for OIDC logout.
+        CORS_ORIGINS (list): The origins allowed to call the API cross-origin with credentials.
 
     """
 
@@ -119,3 +120,14 @@ class Config:
     OIDC_CLOCK_SKEW = 560
 
     OPENID_LOGOUT_URL = os.getenv("OPENID_LOGOUT_URL")
+
+    # Origins allowed to drive the GUI cross-origin with credentials. Empty by
+    # default: the production deployment serves the GUI and the API from one
+    # origin, and a credentials-capable CORS grant must never reflect arbitrary
+    # origins. A development GUI on another port opts in explicitly (see
+    # TARANIS_NG_CORS_ORIGINS in docker/.env.example). Read here rather than at
+    # each use so the CORS grant in app.py and the same-origin check on the
+    # redirect-login redemption endpoint can never disagree about the list.
+    CORS_ORIGINS: ClassVar[list[str]] = [
+        origin.strip() for origin in (os.getenv("TARANIS_NG_CORS_ORIGINS") or "").split(",") if origin.strip()
+    ]

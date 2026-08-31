@@ -21,6 +21,28 @@ test.describe('Authentication', () => {
         await expect(page.locator('[data-test="login-submit"]')).toBeVisible()
     })
 
+    test('should reach the login page without a rejected redemption', async ({ page }) => {
+        // The login page POSTs /auth/redeem on every mount: the one-time handle left by an
+        // OIDC/SAML round trip is HttpOnly, so the GUI cannot tell whether one exists and
+        // has to ask. Anything but a clean answer surfaces as a failed request in the
+        // console and a login-error banner on an otherwise ordinary visit. This runs in the
+        // dev-server setup Playwright boots (see playwright.config.js), where the GUI is on
+        // :4444 and core on another port - a cross-origin call that core accepts only
+        // because TARANIS_NG_CORS_ORIGINS in docker/.env.e2e grants that origin.
+        // Armed before navigating and awaited after: the POST is only issued once
+        // /auth/methods resolves, which is also what renders the form, so waiting on
+        // the form and then reading collected responses races the request. The wait
+        // times out if the call never happens, which is the other half of the check.
+        const redemption = page.waitForResponse('**/api/v1/auth/redeem')
+
+        await page.goto('/v2/login')
+
+        // 204 is the normal "nothing to redeem"; 200 carries a verdict to apply.
+        expect((await redemption).status()).toBeLessThan(400)
+        await expect(page.locator('[data-test="login-submit"]')).toBeVisible()
+        await expect(page.locator('[data-test="login-error"]')).toBeHidden()
+    })
+
     test('should login with valid credentials', async ({ page }) => {
         // Fill login form
         await page.locator('[data-test="login-username"] input').fill('admin')
