@@ -2,10 +2,12 @@
 # distribute-worker.yml — deploy Taranis-NG worker container(s) to remote
 # host(s) over SSH and register each one as a node in Core.
 #
-# Each remote host can run ONE OR MORE worker types — set `worker_types` in
-# that host's `host_vars/<host>.yml`. The play brings up ONE Traefik
-# per host fronting ALL the worker_types on that host, with per-type
-# subdomain routing (e.g. collectors.hostA.example.com, bots.hostA.example.com).
+# Each remote host can run ONE OR MORE worker types (collectors, bots,
+# presenters, publishers, public-web) — set `worker_types` in that host's
+# `host_vars/<host>.yml`. The play brings up ONE Traefik per host fronting ALL
+# the worker_types on that host, with per-type subdomain routing (e.g.
+# collectors.hostA.example.com, bots.hostA.example.com), served on
+# worker_api_port.
 #
 # Run the playbook against the worker_hosts group defined in your
 # distributed.local.yml inventory:
@@ -60,6 +62,7 @@
               worker_types: ["collectors"]
               worker_types: ["collectors", "bots"]
               worker_types: ["collectors", "bots", "presenters", "publishers"]
+              worker_types: ["public-web"]
 
     # A group_vars/host_vars file whose name does not exactly match the group or
     # host is never loaded, and the failure is otherwise silent — every value

@@ -1,10 +1,16 @@
 ---
-# firewall.yml — deny all inbound traffic on a host except SSH, HTTP and HTTPS.
+# firewall.yml — deny-by-default inbound host firewall.
 #
-# Opens tcp/22, tcp/80, tcp/443 and udp/443; denies everything else inbound;
-# leaves outbound unrestricted. ufw on Debian/Ubuntu, firewalld on the RedHat
-# family. Allow rules are always applied before the deny policy, so the SSH
-# session Ansible is running over is never cut.
+# Opens the ports listed in firewall_allowed_tcp_ports / _udp_ports (plus the
+# source-restricted ones), denies everything else inbound and leaves outbound
+# unrestricted. ufw on Debian/Ubuntu, firewalld on the RedHat family. Allow
+# rules are always applied before the deny policy, so the SSH session Ansible is
+# running over is never cut.
+#
+# The role default opens SSH and nothing else. A worker host needs 80, 443 and
+# worker_api_port on top of that — set them per host in host_vars/<host>.yml
+# (see host_vars/worker.example.yml for a worked example), not in the role
+# defaults, which are the whole fleet's.
 #
 #   cd ansible
 #
@@ -26,11 +32,13 @@
 #   -e '{"firewall_allowed_tcp_ports": [22, 80, 443, 9090]}'   extra port
 #   -e firewall_enable=false                                    stage without enabling
 #
-# NOTE: Docker publishes container ports past both ufw and firewalld. The
-# worker stack publishes only 80 and 443, which this policy opens anyway, so
-# nothing is currently exposed beyond it — but a container published on another
-# port later would be reachable regardless of these rules. The play prints the
-# published ports at the end so that stays visible.
+# NOTE: over IPv4, Docker publishes container ports past both ufw and
+# firewalld — the worker's 80, 443 and worker_api_port are reachable whatever
+# this policy says. Over IPv6 they are not: Docker leaves ip6tables management
+# off, so that traffic traverses INPUT like any host service and a port missing
+# from the lists above is dropped. The play prints the published ports at the
+# end so the v4 gap stays visible; see the taranis-ng-firewall role defaults for
+# the full reasoning.
 
 - name: "Enable a deny-by-default host firewall"
   hosts: "{{ firewall_hosts | default('worker_hosts') }}"

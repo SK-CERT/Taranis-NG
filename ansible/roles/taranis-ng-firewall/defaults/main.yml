@@ -5,15 +5,18 @@
 # open ports. Outbound is left open because workers must reach Core, the ACME
 # CA and whatever OSINT sources they collect from.
 
-# Inbound TCP ports left open:
-#   22   SSH — Ansible's own transport. Dropping it from this list makes the
-#        role refuse to run; see firewall_guard_ssh below.
-#   80   HTTP — ACME HTTP-01 validation and Traefik's http→https redirect.
-#   443  HTTPS — the worker API Core calls.
+# Inbound TCP ports opened to everyone. SSH only by default — dropping it from
+# this list makes the role refuse to run; see firewall_guard_ssh below.
 #
-# 80 is load-bearing for ACME HTTP-01: the CA validates every hostname there,
-# INCLUDING hostnames whose router lives on the restricted API port below, and a
-# closed 80 breaks renewal about thirty days later rather than immediately.
+# A worker host also needs 80 (ACME HTTP-01 and Traefik's http→https redirect),
+# 443 (a public-web's own hostnames) and worker_api_port. Add them per host in
+# host_vars/<host>.yml, blanket here or source-restricted below — a role default
+# is the whole fleet's default.
+#
+# 80 is load-bearing for ACME HTTP-01 wherever certificates are issued: the CA
+# validates every hostname there, INCLUDING hostnames whose router lives on the
+# restricted API port below, and a closed 80 breaks renewal about thirty days
+# later rather than immediately.
 firewall_allowed_tcp_ports: [22]
 
 # Inbound TCP ports open only to specific sources. Each entry is a port plus the
@@ -28,11 +31,28 @@ firewall_allowed_tcp_ports: [22]
 # filter - so the API is on its own port (taranis-ng-worker: worker_api_port) and
 # admitted from the Core host alone. Ports listed here must NOT also appear in
 # firewall_allowed_tcp_ports, which would open them to everyone.
+#
+# A source of "::/0" is the useful special case on a Docker host: it opens the
+# port for IPv6 only. IPv4 reaches a published container through nat/PREROUTING
+# and FORWARD without ever traversing INPUT, so a v4 rule here grants nothing to
+# the container and only ever exposes a HOST process that later binds the port.
+# IPv6 has no DNAT (Docker leaves ip6tables management off), goes through the
+# userland proxy in the host namespace, and does traverse INPUT - so v6 is the
+# only family for which the rule does any work.
 firewall_restricted_tcp_ports: []
 
-# Inbound UDP ports left open:
-#   443  HTTP/3. The worker's Traefik advertises h3 and publishes 443/udp.
+# Inbound UDP ports opened to everyone. Empty by default; a worker host serving
+# a public web wants 443 here or below, since its Traefik advertises h3 and
+# publishes 443/udp.
 firewall_allowed_udp_ports: []
+
+# Inbound UDP ports open only to specific sources. Identical shape and identical
+# reasoning to firewall_restricted_tcp_ports above, including the "::/0" case:
+#
+#   firewall_restricted_udp_ports:
+#     - port: 443
+#       sources: ["::/0"]
+firewall_restricted_udp_ports: []
 
 # The SSH port to protect against lock-out. Follows ansible_port when the
 # inventory sets a non-standard one, so the guard in tasks/main.yml checks the
@@ -47,6 +67,25 @@ firewall_guard_ssh: true
 # Switch the firewall on at the end. Set false to install the rules and leave
 # the firewall inactive — useful for staging a policy before committing to it.
 firewall_enable: true
+
+# Discard the existing ruleset before writing this one.
+#
+# The tasks below only ADD rules; nothing here removes one. On a host with no
+# prior rules that is the same thing as a declarative policy, but on a host that
+# already has some it is not: a stale allow rule survives, and because ufw and
+# firewalld both take the first matching rule, a leftover blanket "allow 8443"
+# silently overrides a source-restricted 8443 added here. The deny-by-default
+# target never sees that traffic. So the role's contract — "only these ports,
+# only from these sources" — holds only when the ruleset started empty or this
+# is true.
+#
+# Left false because a reset also discards rules someone added deliberately and
+# outside this role. Turn it on for a host whose policy this role owns
+# end-to-end, which is the normal case for a Taranis worker.
+#
+# It is not a lock-out risk in itself: ufw is disabled while reset, so nothing
+# is filtered until the allow rules are back and `ufw enable` runs at the end.
+firewall_reset: false
 
 # firewalld zone (RedHat family only). Ignored on Debian/Ubuntu, which uses ufw.
 firewall_zone: public

@@ -44,11 +44,12 @@ cp group_vars/all.example.yml            group_vars/all.yml
 cp group_vars/core.example.yml           group_vars/core.yml
 
 # Per-host overrides — REQUIRED one file per remote host (named after the
-# inventory hostname). Defines the worker_types list for that host.
-# Examples:
+# inventory hostname). Defines the worker_types list for that host, chosen from
+# collectors, bots, presenters, publishers and public-web. Examples:
 #   host_vars/collector-01.yml:    worker_types: ["collectors"]
 #   host_vars/worker-multi-01.yml: worker_types: ["collectors", "bots"]
 #   host_vars/worker-all-01.yml:   worker_types: ["collectors", "bots", "presenters", "publishers"]
+#   host_vars/feed-01.yml:         worker_types: ["public-web"]
 cp host_vars/worker.example.yml host_vars/collector-01.yml
 ```
 
@@ -67,10 +68,16 @@ worker_base_hostname: "worker-multi-01.example.org"
 ```
 
 On the host above, Ansible deploys:
-- `collectors` container → reachable at `https://collectors.worker-multi-01.example.org`
-- `bots` container → reachable at `https://bots.worker-multi-01.example.org`
+- `collectors` container → Core reaches it at
+  `https://collectors.worker-multi-01.example.org:8443`
+- `bots` container → Core reaches it at
+  `https://bots.worker-multi-01.example.org:8443`
 - ONE Traefik serving both, with per-type subdomain routing
 - ONE node row per worker_type registered in Core (so two rows: collectors + bots)
+
+The API lives on `worker_api_port` (8443), not 443, so a `public-web` host can
+publish 443 to the world while the API stays restrictable to the Core host. The
+names must still resolve publicly for ACME to validate them.
 
 ### Run
 
@@ -86,5 +93,8 @@ uv run --group ansible ansible-playbook -i inventory/distributed.local.yml \
   playbooks/distribute-worker.yml --limit worker-multi-01
 ```
 
-After editing, `git status` should report a clean working tree — all real
-inventory files are gitignored under the `*.yml` convention.
+After editing, `git status` should report a clean working tree: `.gitignore`
+ignores `group_vars/` and `host_vars/` wholesale and re-admits only the tracked
+`*.example.yml` templates, plus `inventory/*.local.yml` for the top-level
+inventory. Anything of yours that shows up there means the ignore rules missed
+it.

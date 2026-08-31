@@ -6,14 +6,19 @@
 # rules are written BEFORE the deny policy takes effect, so the SSH session
 # Ansible is running over is never cut.
 #
-# ── Docker publishes past the firewall ──────────────────────────────────────
-# Docker inserts its own iptables rules ahead of ufw's, and container ports
-# published with `-p` are therefore reachable whatever ufw says. The same is
-# broadly true of firewalld. The worker stack publishes only 80, 443/tcp and
-# 443/udp — exactly the ports this role opens anyway — so today nothing is
-# exposed beyond the policy. But publishing another container port later WILL
-# make it reachable from the internet regardless of these rules. The final task
-# prints what is currently published so the gap is visible rather than assumed.
+# ── Docker publishes past the firewall, but only over IPv4 ──────────────────
+# Docker DNATs a published port in nat/PREROUTING and filters it in its own
+# chain in filter/FORWARD; ufw and firewalld write to filter/INPUT, which that
+# traffic never traverses. So the worker's 80, 443/tcp, 443/udp and
+# worker_api_port stay reachable over IPv4 whatever this policy says — narrowing
+# them there needs a DOCKER-USER rule or worker_api_bind.
+#
+# Over IPv6 the opposite holds: Docker ships with ip6tables management off, so
+# there is no v6 DNAT and docker-proxy takes the traffic through INPUT like any
+# host service. A published port missing from the lists here is therefore
+# reachable on v4 and dropped on v6 — a timeout that reads like a routing fault.
+# The final task prints what is currently published so the v4 gap is visible
+# rather than assumed.
 
 - name: "Refuse to lock ourselves out of SSH"
   ansible.builtin.assert:
@@ -52,11 +57,23 @@
   # skipped, it would report "none" while ports are in fact published.
   check_mode: false
 
+# Summarised separately so the report below can name the source-restricted ports
+# too: with only the blanket lists in it, a policy built out of restricted
+# entries reported itself as far tighter than it actually is.
+- name: "Summarise the source-restricted ports"
+  ansible.builtin.set_fact:
+    firewall_restricted_summary: >-
+      {{ (firewall_restricted_tcp_ports | map(attribute='port') | map('regex_replace', '^', 'tcp/') | list)
+      + (firewall_restricted_udp_ports | map(attribute='port') | map('regex_replace', '^', 'udp/') | list) }}
+
 - name: "Report the policy and the container ports that bypass it"
   ansible.builtin.debug:
     msg: >-
       {{ inventory_hostname }}: inbound denied except
-      tcp/{{ firewall_allowed_tcp_ports | join(',') }} and
-      udp/{{ firewall_allowed_udp_ports | join(',') }}; outbound unrestricted.
-      Container ports published past the firewall:
+      tcp/{{ firewall_allowed_tcp_ports | join(',') | default('none', true) }},
+      udp/{{ firewall_allowed_udp_ports | join(',') | default('none', true) }}
+      from anywhere, plus
+      {{ firewall_restricted_summary | join(',') | default('nothing', true) }}
+      from named sources only; outbound unrestricted.
+      Container ports published past the firewall over IPv4:
       {{ firewall_published_ports.stdout_lines | default([]) | join(' | ') | default('none', true) }}
