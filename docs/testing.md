@@ -139,15 +139,19 @@ point CI uses.
 - **`src/bots`, `src/collectors` have no tests yet.** Add a `tests/` directory, then list
   the project in `PYTEST_SUITES` in `scripts/run_tests.py` and in `testpaths` in the root
   `pyproject.toml`.
-- **`src/publishers` cannot be collected yet.** Adding `tests/` there is not enough: pytest
-  tries to import the service root `src/publishers/__init__.py` as a test module, that
-  `__init__` does `from .app import create_app`, and the chain reaches
-  `managers/publishers_manager.py`'s `from publishers.email_publisher import ...` while the
-  service-root package named `publishers` is still half-initialized — so collection dies on
-  `ModuleNotFoundError: No module named 'publishers.email_publisher'`, even for an empty
-  test file, and `--import-mode=importlib` does not help. Presenters has the same
-  service-root/inner-package name clash but survives it. Making this suite runnable means
-  breaking the clash (rename the inner `publishers/` package, or drop the service-root
-  `__init__.py`), which is a structural change rather than a pytest setting.
-  `managers/ssh_host_keys.py` is the code most in need of it: its host-key verification is
-  a security control with no automated coverage until this is resolved.
+- **`src/publishers/tests` has to bind its own package before pytest does.** It stubs
+  `config` like presenters, and works around a service-root/inner-package name clash on
+  top of that: `src/publishers/__init__.py` makes the service root a package called
+  `publishers`, so pytest imports it, its `from .app import create_app` reaches
+  `managers/publishers_manager.py`'s `from publishers.email_publisher import ...` while
+  that same name is still half-initialized, and collection dies on `ModuleNotFoundError:
+  No module named 'publishers.email_publisher'` — even for an empty test file, and
+  `--import-mode=importlib` does not help. `tests/conftest.py` therefore imports
+  `publishers` itself first, binding it to the inner package the way the running service
+  does (its `PYTHONPATH` is `/app`); pytest then finds it in `sys.modules` and never
+  executes the service-root `__init__`. Presenters has the same clash and survives it
+  only by luck of `sys.path` ordering, so do not read that suite as proof the layout is
+  fine.
+- **`managers/ssh_host_keys.py` still has no coverage.** Its host-key verification is a
+  security control, and the publishers suite covers key loading and the publishers
+  themselves but not the pinning policy.

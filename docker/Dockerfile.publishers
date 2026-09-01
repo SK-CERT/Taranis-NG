@@ -60,11 +60,17 @@ ENV GUNICORN_CMD_ARGS="--timeout 120"
 # Run the service as an unprivileged user; docker/entrypoint.sh drops to it via
 # su-exec. /app stays root-owned so the runtime user cannot rewrite its own code;
 # the bytecode is precompiled instead.
+
 RUN apk add --no-cache su-exec \
     && adduser -D -u 10001 taranis \
-    && python -m compileall -q /app
+    && python -m compileall -q /app \
+    && mkdir -p /app/crypto \
+    && chown -R taranis /app/crypto
 ENV PYTHONDONTWRITEBYTECODE="1"
 ENV TARANIS_USER="taranis"
+# Covers the other way the material arrives: a bind mount over /app/crypto, whose
+# ownership comes from the host and so cannot be fixed at build time.
+ENV TARANIS_WRITABLE_PATHS="/app/crypto"
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]
