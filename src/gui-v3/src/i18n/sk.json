@@ -1280,6 +1280,7 @@
             "total_count": "Žiadne zdroje OSINT | {count} zdroj OSINT | {count} zdroje OSINT | {count} zdrojov OSINT",
             "osint_source_groups": "Skupiny OSINT zdrojov",
             "tooltip": {
+                "toggle_selection": "Režim výberu OSINT zdrojov",
                 "select_all": "Vybrať všetko",
                 "unselect_all": "Zrušiť výber všetkého"
             },
@@ -1298,7 +1299,6 @@
             "file": "Súbor na import",
             "file_required": "Vyberte súbor na import",
             "node_required": "Vyberte uzol kolektora",
-            "export_all_hint": "Exportovať všetky zdroje",
             "export_selected_hint": "Exportovať vybrané zdroje",
             "selected_count": "Nie sú vybrané žiadne zdroje OSINT | Vybraný {count} zdroj OSINT | Vybrané {count} zdroje OSINT | Vybraných {count} zdrojov OSINT"
         },

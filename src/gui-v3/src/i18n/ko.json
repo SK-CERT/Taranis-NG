@@ -1280,6 +1280,7 @@
             "total_count": "OSINT 소스 {count}개 | OSINT 소스 {count}개",
             "osint_source_groups": "OSINT 소스 그룹",
             "tooltip": {
+                "toggle_selection": "OSINT 소스 선택 모드 전환",
                 "select_all": "모두 선택",
                 "unselect_all": "모두 선택 해제"
             },
@@ -1298,7 +1299,6 @@
             "file": "파일 가져오기",
             "file_required": "가져올 파일 선택",
             "node_required": "수집기 노드 선택",
-            "export_all_hint": "모든 소스 내보내기",
             "export_selected_hint": "선택한 소스 내보내기",
             "selected_count": "OSINT 소스 {count}개 선택됨 | OSINT 소스 {count}개 선택됨"
         },

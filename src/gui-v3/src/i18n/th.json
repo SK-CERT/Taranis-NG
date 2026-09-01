@@ -1280,6 +1280,7 @@
             "total_count": "ไม่มีแหล่ง OSINT | แหล่ง OSINT {count} แหล่ง | แหล่ง OSINT {count} แหล่ง",
             "osint_source_groups": "กลุ่มแหล่ง OSINT",
             "tooltip": {
+                "toggle_selection": "สลับโหมดเลือกรายการแหล่ง OSINT",
                 "select_all": "เลือกทั้งหมด",
                 "unselect_all": "ยกเลิกการเลือกทั้งหมด"
             },
@@ -1298,7 +1299,6 @@
             "file": "นำเข้าไฟล์",
             "file_required": "เลือกไฟล์นำเข้า",
             "node_required": "เลือกโหนดตัวรวบรวม",
-            "export_all_hint": "ส่งออกแหล่งที่มาทั้งหมด",
             "export_selected_hint": "ส่งออกแหล่งที่เลือก",
             "selected_count": "ไม่ได้เลือกแหล่ง OSINT | เลือกแหล่ง OSINT {count} แหล่ง | เลือกแหล่ง OSINT {count} แหล่ง"
         },

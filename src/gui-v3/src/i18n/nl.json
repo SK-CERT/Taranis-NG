@@ -1280,6 +1280,7 @@
             "total_count": "{count} OSINT-bron | {count} OSINT-bronnen",
             "osint_source_groups": "OSINT-brongroepen",
             "tooltip": {
+                "toggle_selection": "Selectiemodus voor OSINT-bronnen in- of uitschakelen",
                 "select_all": "Alles selecteren",
                 "unselect_all": "Alles deselecteren"
             },
@@ -1298,7 +1299,6 @@
             "file": "Importbestand",
             "file_required": "Selecteer een importbestand",
             "node_required": "Selecteer een collectorknooppunt",
-            "export_all_hint": "Alle bronnen exporteren",
             "export_selected_hint": "Geselecteerde bronnen exporteren",
             "selected_count": "{count} OSINT-bron geselecteerd | {count} OSINT-bronnen geselecteerd"
         },
