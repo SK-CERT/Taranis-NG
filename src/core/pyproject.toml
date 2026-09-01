@@ -17,7 +17,7 @@ dependencies = [
     "Flask-RESTful==0.3.10",
     "Flask-SQLAlchemy==3.1.1",
     "gevent==26.8.0",
-    "gunicorn==26.1.0",
+    "gunicorn==26.2.0",
     "Jinja2==3.1.6",
     "ldap3==2.10.2rc4",
     "lxml==6.1.2",
