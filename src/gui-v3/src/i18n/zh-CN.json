@@ -1280,6 +1280,7 @@
             "total_count": "{count} 个 OSINT 来源 | {count} 个 OSINT 来源",
             "osint_source_groups": "OSINT 来源组",
             "tooltip": {
+                "toggle_selection": "切换 OSINT 来源选择模式",
                 "select_all": "选择全部",
                 "unselect_all": "取消全选"
             },
@@ -1298,7 +1299,6 @@
             "file": "导入文件",
             "file_required": "选择导入文件",
             "node_required": "选择采集器节点",
-            "export_all_hint": "导出所有来源",
             "export_selected_hint": "导出所选来源",
             "selected_count": "已选择 {count} 个 OSINT 来源 | 已选择 {count} 个 OSINT 来源"
         },

@@ -1280,6 +1280,7 @@
             "total_count": "{count} OSINT स्रोत | {count} OSINT स्रोत",
             "osint_source_groups": "OSINT स्रोत समूह",
             "tooltip": {
+                "toggle_selection": "OSINT स्रोत चयन मोड बदलें",
                 "select_all": "सभी चुनें",
                 "unselect_all": "सभी का चयन हटाएँ"
             },
@@ -1298,7 +1299,6 @@
             "file": "फ़ाइल आयात करें",
             "file_required": "आयात फ़ाइल चुनें",
             "node_required": "संग्राहक नोड चुनें",
-            "export_all_hint": "सभी स्रोत निर्यात करें",
             "export_selected_hint": "चुने गए स्रोत निर्यात करें",
             "selected_count": "{count} OSINT स्रोत चुना गया | {count} OSINT स्रोत चुने गए"
         },

@@ -1,7 +1,7 @@
 <template>
     <v-container
         fluid
-        :class="isDenseList ? 'pa-0' : 'pa-2'"
+        class="pa-0"
     >
         <div
             class="card-container d-flex align-center"
@@ -365,9 +365,9 @@
     // and leave the card looking unlike its siblings.
     const isModulePreset = computed(() => props.card?.presenter_id != null || props.card?.publisher_id != null || props.card?.bot_id != null)
 
-    const isReviewCard = computed(
-        () => props.card?.report_type_name != null || props.card?.product_type_name != null || Array.isArray(props.card?.news_items)
-    )
+    const isReviewCard = computed(() => {
+        return props.card?.report_type_name != null || props.card?.product_type_name != null || Array.isArray(props.card?.news_items)
+    })
     const highlightWords = computed(() => collectHighlightWords(settingsStore.getProfileWordLists))
     const isDenseList = computed(() => isReviewCard.value || props.listMode)
     const hasWorkflowState = computed(() => props.card?.report_type_name != null || props.card?.product_type_name != null)
@@ -468,13 +468,12 @@
     }
 
     .card-compact {
+        background: var(--review-list-row);
+        border: 1px solid rgba(var(--v-theme-outline), 0.26);
+        border-radius: 4px;
         cursor: pointer;
         transition: all 0.3s ease;
         flex-grow: 1;
-    }
-
-    .card-compact:hover {
-        transform: translateY(-2px);
     }
 
     .card-compact--review,
@@ -482,7 +481,6 @@
         border: 1px solid var(--review-list-border);
         border-inline-width: 0;
         border-radius: 0;
-        background: var(--review-list-row);
         box-shadow: none;
         transform: none !important;
         transition:

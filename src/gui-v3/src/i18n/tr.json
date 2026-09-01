@@ -1280,6 +1280,7 @@
             "total_count": "OSINT kaynağı yok | {count} OSINT kaynağı | {count} OSINT kaynağı",
             "osint_source_groups": "OSINT kaynak grupları",
             "tooltip": {
+                "toggle_selection": "OSINT kaynakları seçim modunu aç/kapat",
                 "select_all": "Tümünü seç",
                 "unselect_all": "Tüm seçimleri kaldır"
             },
@@ -1298,7 +1299,6 @@
             "file": "İçe aktarma dosyası",
             "file_required": "Bir içe aktarma dosyası seçin",
             "node_required": "Bir toplayıcı düğümü seçin",
-            "export_all_hint": "Tüm kaynakları dışa aktar",
             "export_selected_hint": "Seçili kaynakları dışa aktar",
             "selected_count": "OSINT kaynağı seçilmedi | {count} OSINT kaynağı seçildi | {count} OSINT kaynağı seçildi"
         },
