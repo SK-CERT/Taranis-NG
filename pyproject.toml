@@ -51,7 +51,7 @@ classifiers = [
 dev = [
     "djlint==1.44.2",
     "ruff==0.16.4",
-    "ty==0.0.57",
+    "ty==0.0.75",
     # Keep in lockstep with [tool.uv] required-version below. Declared here so
     # `uv sync` reinstalls it into .venv instead of pruning it — an undeclared
     # .venv/bin/uv gets removed by the first sync, after which no uv on the
