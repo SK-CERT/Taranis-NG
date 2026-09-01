@@ -7,6 +7,7 @@ from http import HTTPStatus
 from pathlib import Path
 
 from envelope import Envelope
+from managers.key_files import unreadable_key_error
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
@@ -58,6 +59,24 @@ class EMAILPublisher(BasePublisher):
 
         smtp = {"host": smtp_server, "port": smtp_server_port, "user": user, "password": password}
 
+        def _read_key(key_path: str, description: str) -> str:
+            """Read the signing or encryption key the preset points at.
+
+            Args:
+                key_path (str): The configured path to the key file.
+                description (str): What the file is, for the error message.
+
+            Returns:
+                str: The key material.
+
+            Raises:
+                OSError: The key file cannot be read.
+            """
+            try:
+                return Path(key_path).read_text()
+            except OSError as error:
+                raise unreadable_key_error(key_path, description, error) from error
+
         envelope = Envelope()
 
         # if attachment data available from presenter
@@ -104,18 +123,20 @@ class EMAILPublisher(BasePublisher):
         envelope.from_(sender)
         envelope.to(recipients)
 
-        if sign == "auto":
-            envelope.signature(key=sign)
-        elif Path(sign).is_file():
-            self.logger.info(f"Signing email with file {sign}")
-            with Path(sign).open("r") as sign_file:
-                envelope.signature(key=sign_file.read(), passphrase=sign_password)
-        if encrypt == "auto":
-            envelope.encryption(key=encrypt)
-        elif Path(encrypt).is_file():
-            self.logger.info(f"Encrypting email with file {encrypt}")
-            with Path(encrypt).open("r") as encrypt_file:
-                envelope.encryption(key=encrypt_file.read())
+        try:
+            if sign == "auto":
+                envelope.signature(key=sign)
+            elif sign:
+                self.logger.info(f"Signing email with file {sign}")
+                envelope.signature(key=_read_key(sign, "email signing key"), passphrase=sign_password)
+            if encrypt == "auto":
+                envelope.encryption(key=encrypt)
+            elif encrypt:
+                self.logger.info(f"Encrypting email with file {encrypt}")
+                envelope.encryption(key=_read_key(encrypt, "email encryption key"))
+        except OSError as error:
+            self.logger.exception(f"Error: {error}")
+            return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR
 
         email_string = str(envelope)
         max_length = 3000

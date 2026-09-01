@@ -16,6 +16,7 @@ from io import BytesIO
 from pathlib import Path
 
 import paramiko
+from managers.key_files import unreadable_key_error
 from managers.ssh_host_keys import apply_host_key_policy
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
@@ -60,23 +61,44 @@ class SFTPPublisher(BasePublisher):
         now = datetime.now(TZ).strftime("%Y%m%d%H%M%S")
 
         def _get_key(key_path: str, ssh_key_password: str | None) -> PKey:
-            try:
-                return paramiko.RSAKey(filename=key_path, password=ssh_key_password)
-            except paramiko.ssh_exception.SSHException:
-                pass
-            try:
-                return paramiko.Ed25519Key(filename=key_path, password=ssh_key_password)
-            except paramiko.ssh_exception.SSHException:
-                pass
-            try:
-                return paramiko.ECDSAKey(filename=key_path, password=ssh_key_password)
-            except paramiko.ssh_exception.SSHException:
-                pass
-            try:
-                return paramiko.DSSKey(filename=key_path, password=ssh_key_password)
-            except paramiko.ssh_exception.SSHException as error:
-                self.logger.exception(f"Issue with SSH key {key_path}: {error}")
-                return None
+            """Load the configured private key, trying every type paramiko supports.
+
+            Args:
+                key_path (str): Path to the private key, absolute or relative to the
+                    publishers working directory.
+                ssh_key_password (str | None): Passphrase, if the key is encrypted.
+
+            Returns:
+                PKey: The loaded private key.
+
+            Raises:
+                OSError: The key file cannot be read.
+                paramiko.ssh_exception.SSHException: The file is not a private key of
+                    any supported type, or its passphrase is missing or wrong.
+            """
+            resolved = str(Path(key_path).resolve())
+            # An unset preset field arrives as "", which paramiko takes for a real
+            # passphrase and fails deep in bcrypt with "password and salt must not
+            # be empty". None gets the meaningful "private key file is encrypted".
+            ssh_key_password = ssh_key_password or None
+            last_error = None
+            # paramiko 5 dropped DSSKey along with DSA support, so these three are
+            # every private key type it can still load.
+            key_classes = (paramiko.RSAKey, paramiko.Ed25519Key, paramiko.ECDSAKey)
+            for key_class in key_classes:
+                try:
+                    return key_class(filename=resolved, password=ssh_key_password)
+                except paramiko.PasswordRequiredException:
+                    # The OpenSSH envelope is decrypted before the key type inside it
+                    # matters, so no other class gets further with this passphrase.
+                    raise
+                except paramiko.ssh_exception.SSHException as error:
+                    last_error = error
+                except OSError as error:
+                    raise unreadable_key_error(key_path, "SSH key", error) from error
+            supported = ", ".join(key_class.__name__.removesuffix("Key") for key_class in key_classes)
+            msg = f"{resolved} is not a private key of any supported type ({supported}): {last_error}"
+            raise paramiko.ssh_exception.SSHException(msg)
 
         try:
             # decide filename and extension
