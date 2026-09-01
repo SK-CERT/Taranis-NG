@@ -48,7 +48,9 @@ def create_app() -> Flask:
         # deployment serves the GUI and the API from the same origin. A
         # development GUI on another port opts in explicitly:
         #   TARANIS_NG_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-        cors_origins = [origin for origin in (os.getenv("TARANIS_NG_CORS_ORIGINS") or "").split(",") if origin.strip()]
+        # The list is parsed once in config.Config so that this grant and the
+        # same-origin check on /auth/redeem always agree on who is trusted.
+        cors_origins = app.config.get("CORS_ORIGINS") or []
         if cors_origins:
             CORS(app, supports_credentials=True, origins=cors_origins)
 

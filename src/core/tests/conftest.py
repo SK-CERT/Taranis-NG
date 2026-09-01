@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import sys
 import types
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import pytest
 
@@ -32,6 +32,12 @@ if "config" not in sys.modules:
 
     class Config(metaclass=_AnyConfig):
         """Stub of ``config.Config`` for import-time use in tests."""
+
+        # Declared explicitly because the metaclass fallback hands back a string,
+        # and code that iterates this list would then silently walk its characters
+        # instead of failing. Empty is also the production default: CORS is off
+        # unless TARANIS_NG_CORS_ORIGINS names the origins to trust.
+        CORS_ORIGINS: ClassVar[list[str]] = []
 
     _module.Config = Config
     sys.modules["config"] = _module
