@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Giá trị không được chứa ký tự xuống dòng",
         "last_updated": "Cập nhật lần cuối bởi {user} lúc {at}",
         "error": "Không thể lưu cài đặt định tuyến và TLS"
+    },
+    "attribute_extraction": {
+        "title": "Quy tắc trích xuất thuộc tính",
+        "tab_description": "Phát hiện giá trị trong nội dung tin tức khi thu thập và lưu thành thuộc tính",
+        "add": "Thêm quy tắc trích xuất",
+        "edit": "Sửa quy tắc trích xuất",
+        "none": "Chưa cấu hình quy tắc trích xuất nào",
+        "name": "Tên",
+        "attribute_key": "Khóa thuộc tính",
+        "attribute_key_hint": "Khóa dùng để lưu giá trị tìm được, ví dụ CVE",
+        "pattern": "Biểu thức chính quy",
+        "pattern_hint": "Biểu thức chính quy Python. Được đối chiếu với tiêu đề, tóm tắt và nội dung.",
+        "capture_group": "Nhóm bắt",
+        "capture_group_hint": "0 lưu toàn bộ kết quả khớp, 1 lưu nhóm đầu tiên",
+        "max_matches": "Số kết quả tối đa",
+        "max_matches_hint": "Giới hạn số giá trị một quy tắc có thể thêm cho một tin tức",
+        "source_groups": "Nhóm nguồn",
+        "source_groups_hint": "Để trống để áp dụng quy tắc cho mọi nguồn",
+        "all_sources": "Tất cả nguồn",
+        "description": "Mô tả",
+        "enabled": "Bật",
+        "required": "Trường này là bắt buộc",
+        "invalid_pattern": "Biểu thức chính quy không hợp lệ: {error}",
+        "disabled_hint": "Trích xuất thuộc tính đang tắt trên toàn hệ thống. Các quy tắc vẫn được lưu nhưng không áp dụng. Hãy bật ATTRIBUTE_EXTRACTION_ENABLED trong Cài đặt."
     }
 }

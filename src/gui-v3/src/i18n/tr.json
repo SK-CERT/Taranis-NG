@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Bir değer satır sonu içeremez",
         "last_updated": "Son güncelleme: {user}, {at}",
         "error": "Yönlendirme ve TLS ayarları kaydedilemedi"
+    },
+    "attribute_extraction": {
+        "title": "Öznitelik çıkarma kuralları",
+        "tab_description": "Toplama sırasında haber metnindeki değerleri algılayın ve öznitelik olarak kaydedin",
+        "add": "Çıkarma kuralı ekle",
+        "edit": "Çıkarma kuralını düzenle",
+        "none": "Yapılandırılmış çıkarma kuralı yok",
+        "name": "Ad",
+        "attribute_key": "Öznitelik anahtarı",
+        "attribute_key_hint": "Bulunan değerin kaydedileceği anahtar, örneğin CVE",
+        "pattern": "Düzenli ifade",
+        "pattern_hint": "Python düzenli ifadesi. Başlık, özet ve içerikle karşılaştırılır.",
+        "capture_group": "Yakalama grubu",
+        "capture_group_hint": "0 eşleşmenin tamamını, 1 ilk grubu kaydeder",
+        "max_matches": "En fazla eşleşme",
+        "max_matches_hint": "Bir kuralın tek bir habere ekleyebileceği değer sayısı üst sınırı",
+        "source_groups": "Kaynak grupları",
+        "source_groups_hint": "Kuralın tüm kaynaklara uygulanması için boş bırakın",
+        "all_sources": "Tüm kaynaklar",
+        "description": "Açıklama",
+        "enabled": "Etkin",
+        "required": "Bu alan zorunludur",
+        "invalid_pattern": "Geçersiz düzenli ifade: {error}",
+        "disabled_hint": "Öznitelik çıkarma genel olarak kapalı. Kurallar kaydedilir ancak uygulanmaz. Ayarlar'dan ATTRIBUTE_EXTRACTION_ENABLED seçeneğini etkinleştirin."
     }
 }

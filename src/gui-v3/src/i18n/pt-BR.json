@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Um valor não pode conter quebra de linha",
         "last_updated": "Última atualização por {user} em {at}",
         "error": "Não foi possível salvar as configurações de roteamento e TLS"
+    },
+    "attribute_extraction": {
+        "title": "Regras de extração de atributos",
+        "tab_description": "Detecte valores no texto das notícias durante a coleta e salve-os como atributos",
+        "add": "Adicionar regra de extração",
+        "edit": "Editar regra de extração",
+        "none": "Nenhuma regra de extração configurada",
+        "name": "Nome",
+        "attribute_key": "Chave do atributo",
+        "attribute_key_hint": "Chave sob a qual o valor encontrado é salvo, por exemplo CVE",
+        "pattern": "Expressão regular",
+        "pattern_hint": "Expressão regular do Python. Comparada com título, resumo e conteúdo.",
+        "capture_group": "Grupo de captura",
+        "capture_group_hint": "0 salva a correspondência inteira, 1 o primeiro grupo",
+        "max_matches": "Máximo de correspondências",
+        "max_matches_hint": "Limite de valores que uma regra pode adicionar a uma notícia",
+        "source_groups": "Grupos de fontes",
+        "source_groups_hint": "Deixe vazio para aplicar a regra a todas as fontes",
+        "all_sources": "Todas as fontes",
+        "description": "Descrição",
+        "enabled": "Ativado",
+        "required": "Este campo é obrigatório",
+        "invalid_pattern": "Expressão regular inválida: {error}",
+        "disabled_hint": "A extração de atributos está desativada globalmente. As regras são salvas, mas não aplicadas. Ative ATTRIBUTE_EXTRACTION_ENABLED nas Configurações."
     }
 }

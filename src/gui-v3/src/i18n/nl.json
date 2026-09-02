@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Een waarde mag geen regeleinde bevatten",
         "last_updated": "Laatst bijgewerkt door {user} op {at}",
         "error": "De routerings- en TLS-instellingen konden niet worden opgeslagen"
+    },
+    "attribute_extraction": {
+        "title": "Regels voor attribuutextractie",
+        "tab_description": "Waarden in de tekst van nieuwsitems tijdens het verzamelen herkennen en als attributen opslaan",
+        "add": "Extractieregel toevoegen",
+        "edit": "Extractieregel bewerken",
+        "none": "Geen extractieregels geconfigureerd",
+        "name": "Naam",
+        "attribute_key": "Attribuutsleutel",
+        "attribute_key_hint": "Sleutel waaronder de gevonden waarde wordt opgeslagen, bijvoorbeeld CVE",
+        "pattern": "Reguliere expressie",
+        "pattern_hint": "Python reguliere expressie. Vergeleken met titel, samenvatting en inhoud.",
+        "capture_group": "Capture-groep",
+        "capture_group_hint": "0 slaat de volledige overeenkomst op, 1 de eerste groep",
+        "max_matches": "Maximum aantal overeenkomsten",
+        "max_matches_hint": "Bovengrens voor waarden die één regel aan één nieuwsitem toevoegt",
+        "source_groups": "Brongroepen",
+        "source_groups_hint": "Laat leeg om de regel op alle bronnen toe te passen",
+        "all_sources": "Alle bronnen",
+        "description": "Beschrijving",
+        "enabled": "Ingeschakeld",
+        "required": "Dit veld is verplicht",
+        "invalid_pattern": "Ongeldige reguliere expressie: {error}",
+        "disabled_hint": "Attribuutextractie is globaal uitgeschakeld. Regels worden opgeslagen maar niet toegepast. Schakel ATTRIBUTE_EXTRACTION_ENABLED in bij Instellingen."
     }
 }

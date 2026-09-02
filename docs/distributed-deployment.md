@@ -367,7 +367,7 @@ play output** for security — only the file paths where it lives are surfaced
 
 | Location | Purpose |
 | --- | --- |
-| `/etc/taranis-ng/secrets/api_key.<type>.txt` on the worker host (mode 0600, root:root) | Mounted into the worker container as `/run/secrets/api_key` (via the compose secret's `target:`, which every worker's `read_secret("api_key")` depends on) — the worker uses it to authenticate to Core |
+| `/etc/taranis-ng/secrets/api_key.<type>.txt` on the worker host (mode 0644 inside a 0750 directory, root:root) | Mounted into the worker container as `/run/secrets/api_key` (via the compose secret's `target:`, which every worker's `read_secret("api_key")` depends on) — the worker uses it to authenticate to Core |
 | `docker/secrets/api_key.worker.<host>.<type>.txt` on the Ansible control host (gitignored, mode 0600) | Staging copy used by `taranis-ng-node-register` to feed Core's node-registration API |
 | Core's `*Node.api_key` column for the registered node row (e.g. `collectors_node.api_key`) | What Core uses to authenticate to the worker via the `Authorization: ApiKey <key>` header |
 
@@ -383,7 +383,7 @@ file paths during the run, e.g.:
 ```
 TASK [taranis-ng-worker : Show where each per-type API key is stored (path only — value is never printed)] ***
 ok: [collector-01] => (item=...) => {
-    "msg": "collectors API key on collector-01: worker host → /etc/taranis-ng/secrets/api_key.collectors.txt (mode 0600, root:root); control host staging → /home/you/Taranis-NG/docker/secrets/api_key.worker.collector-01.collectors.txt (gitignored, mode 0600). Core's collectors_node row will store the same key after taranis-ng-node-register runs."
+    "msg": "collectors API key on collector-01: worker host → /etc/taranis-ng/secrets/api_key.collectors.txt (mode 0644 inside a 0750 directory, root:root); control host staging → /home/you/Taranis-NG/docker/secrets/api_key.worker.collector-01.collectors.txt (gitignored, mode 0600). Core's collectors_node row will store the same key after taranis-ng-node-register runs."
 }
 ```
 

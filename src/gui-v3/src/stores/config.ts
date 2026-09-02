@@ -4,6 +4,7 @@ import {
     getAllACLEntries,
     getAllAttributes,
     getAllAiProviders,
+    getAllAttributeExtractionRules,
     getAllDataProviders,
     getAllBotPresets,
     getAllBotsNodes,
@@ -69,6 +70,7 @@ export const useConfigStore = defineStore('config', () => {
     // State
     const attributes = ref<ListState>(emptyListState())
     const aiProviders = ref<ListState>(emptyListState())
+    const attributeExtractionRules = ref<ListState>(emptyListState())
     const dataProviders = ref<ListState>(emptyListState())
     const reportItemTypesConfig = ref<ListState>(emptyListState())
     const productTypes = ref<ListState>(emptyListState())
@@ -139,6 +141,10 @@ export const useConfigStore = defineStore('config', () => {
 
     async function loadAiProviders(data: FilterPayload): Promise<ApiResponse<ListState>> {
         return await loadListState(getAllAiProviders, data, aiProviders)
+    }
+
+    async function loadAttributeExtractionRules(data: FilterPayload): Promise<ApiResponse<ListState>> {
+        return await loadListState(getAllAttributeExtractionRules, data, attributeExtractionRules)
     }
 
     async function loadDataProviders(data: FilterPayload): Promise<ApiResponse<ListState>> {
@@ -265,6 +271,7 @@ export const useConfigStore = defineStore('config', () => {
         // State
         attributes,
         aiProviders,
+        attributeExtractionRules,
         dataProviders,
         reportItemTypesConfig,
         productTypes,
@@ -296,6 +303,7 @@ export const useConfigStore = defineStore('config', () => {
         // Actions
         loadAttributes,
         loadAiProviders,
+        loadAttributeExtractionRules,
         loadDataProviders,
         loadReportItemTypesConfig,
         loadProductTypes,

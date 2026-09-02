@@ -61,6 +61,33 @@ class CoreApi:
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @classmethod
+    def get_attribute_extraction_rules(cls) -> tuple[dict, HTTPStatus]:
+        """Retrieve the enabled attribute extraction rules.
+
+        Core decides what is enabled, including the global switch, so an empty list here
+        simply means nothing is extracted.
+
+        Returns:
+            tuple: The JSON response and the HTTP status code.
+        """
+        result = cls.read_collector_config_id()
+        if "error" in result:
+            return result, HTTPStatus.INTERNAL_SERVER_ERROR
+        collector_id = result["id"]
+
+        try:
+            response = requests.get(
+                f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}/attribute-extraction-rules",
+                headers=cls.headers,
+                timeout=10,
+            )
+            return response.json(), response.status_code
+        except Exception as ex:
+            msg = "Get attribute extraction rules failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+    @classmethod
     def update_collector_status(cls) -> tuple[dict, HTTPStatus]:
         """Update the status of the collector.
 

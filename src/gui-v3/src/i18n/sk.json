@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Hodnota nesmie obsahovať koniec riadka",
         "last_updated": "Naposledy upravil {user} dňa {at}",
         "error": "Nastavenia smerovania a TLS sa nepodarilo uložiť"
+    },
+    "attribute_extraction": {
+        "title": "Pravidlá extrakcie atribútov",
+        "tab_description": "Rozpoznávajte hodnoty v texte správ počas zberu a ukladajte ich ako atribúty",
+        "add": "Pridať pravidlo extrakcie",
+        "edit": "Upraviť pravidlo extrakcie",
+        "none": "Nie sú nastavené žiadne pravidlá extrakcie",
+        "name": "Názov",
+        "attribute_key": "Kľúč atribútu",
+        "attribute_key_hint": "Kľúč, pod ktorým sa nájdená hodnota uloží, napríklad CVE",
+        "pattern": "Regulárny výraz",
+        "pattern_hint": "Regulárny výraz jazyka Python. Porovnáva sa s nadpisom, anotáciou a obsahom.",
+        "capture_group": "Zachytávajúca skupina",
+        "capture_group_hint": "0 uloží celú zhodu, 1 uloží prvú skupinu",
+        "max_matches": "Maximálny počet zhôd",
+        "max_matches_hint": "Horná hranica počtu hodnôt, ktoré jedno pravidlo pridá k jednej správe",
+        "source_groups": "Skupiny zdrojov",
+        "source_groups_hint": "Ponechajte prázdne, aby sa pravidlo použilo na všetky zdroje",
+        "all_sources": "Všetky zdroje",
+        "description": "Popis",
+        "enabled": "Zapnuté",
+        "required": "Toto pole je povinné",
+        "invalid_pattern": "Neplatný regulárny výraz: {error}",
+        "disabled_hint": "Extrakcia atribútov je globálne vypnutá. Pravidlá nižšie sa ukladajú, ale nepoužijú. Zapnite ATTRIBUTE_EXTRACTION_ENABLED v Nastaveniach."
     }
 }

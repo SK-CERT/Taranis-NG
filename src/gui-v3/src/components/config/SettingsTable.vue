@@ -244,6 +244,7 @@
         [Settings.REPORT_SELECTOR_READ_ONLY]: 'mdi-eye-lock-outline',
         [Settings.TIME_FORMAT]: 'mdi-clock-outline',
         [Settings.CASCADE_STATES_ENABLED]: 'mdi-state-machine',
+        [Settings.ATTRIBUTE_EXTRACTION_ENABLED]: 'mdi-regex',
         [Settings.CONTENT_DEFAULT_LANGUAGE]: 'mdi-file-document-edit-outline',
         [Settings.DARK_THEME]: 'mdi-theme-light-dark',
         [Settings.HOTKEYS]: 'mdi-keyboard-outline',

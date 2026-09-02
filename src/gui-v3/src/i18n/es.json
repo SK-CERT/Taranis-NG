@@ -2074,5 +2074,29 @@
         "header_value_invalid": "Un valor no debe contener un salto de línea",
         "last_updated": "Última actualización por {user} el {at}",
         "error": "No se pudieron guardar los ajustes de enrutamiento y TLS"
+    },
+    "attribute_extraction": {
+        "title": "Reglas de extracción de atributos",
+        "tab_description": "Detectar valores en el texto de las noticias durante la recopilación y guardarlos como atributos",
+        "add": "Añadir regla de extracción",
+        "edit": "Editar regla de extracción",
+        "none": "No hay reglas de extracción configuradas",
+        "name": "Nombre",
+        "attribute_key": "Clave de atributo",
+        "attribute_key_hint": "Clave con la que se guarda el valor encontrado, por ejemplo CVE",
+        "pattern": "Expresión regular",
+        "pattern_hint": "Expresión regular de Python. Se compara con el título, el resumen y el contenido.",
+        "capture_group": "Grupo de captura",
+        "capture_group_hint": "0 guarda la coincidencia completa, 1 el primer grupo",
+        "max_matches": "Coincidencias máximas",
+        "max_matches_hint": "Límite de valores que una regla puede añadir a una sola noticia",
+        "source_groups": "Grupos de fuentes",
+        "source_groups_hint": "Dejar vacío para aplicar la regla a todas las fuentes",
+        "all_sources": "Todas las fuentes",
+        "description": "Descripción",
+        "enabled": "Activado",
+        "required": "Este campo es obligatorio",
+        "invalid_pattern": "Expresión regular no válida: {error}",
+        "disabled_hint": "La extracción de atributos está desactivada globalmente. Las reglas se guardan pero no se aplican. Active ATTRIBUTE_EXTRACTION_ENABLED en Configuración."
     }
 }

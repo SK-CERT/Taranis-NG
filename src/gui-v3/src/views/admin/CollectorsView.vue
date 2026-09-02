@@ -44,6 +44,7 @@
     import CollectorsNodesView from './CollectorsNodesView.vue'
     import OSINTSourcesView from './OSINTSourcesView.vue'
     import OSINTSourceGroupsView from './OSINTSourceGroupsView.vue'
+    import AttributeExtractionTab from '@/components/config/attribute-extraction/AttributeExtractionTab.vue'
 
     const { t } = useI18n()
     const tabs = [
@@ -70,6 +71,14 @@
             icon: ICONS.SERVER_NETWORK,
             component: CollectorsNodesView,
             permission: 'CONFIG_COLLECTORS_NODE_ACCESS'
+        },
+        {
+            value: 'extraction',
+            title: 'attribute_extraction.title',
+            description: 'attribute_extraction.tab_description',
+            icon: ICONS.REGEX,
+            component: AttributeExtractionTab,
+            permission: 'CONFIG_ATTRIBUTE_EXTRACTION_ACCESS'
         }
     ] as const
 

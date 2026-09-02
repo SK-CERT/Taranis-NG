@@ -78,6 +78,7 @@ export const ICONS = Object.freeze({
     LOCK: 'mdi-lock-outline',
     LOCK_CHECK: 'mdi-lock-check',
     MAGNIFY: 'mdi-magnify',
+    REGEX: 'mdi-regex',
     MULTISELECT: 'mdi-checkbox-multiple-marked-outline',
     NEWSPAPER_VARIANT: 'mdi-newspaper-variant',
     NEWSPAPER_VARIANT_OUTLINE: 'mdi-newspaper-variant-outline',

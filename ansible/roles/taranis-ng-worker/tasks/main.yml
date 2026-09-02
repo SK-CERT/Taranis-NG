@@ -65,11 +65,15 @@
          | first)
     and (worker_api_keys[worker_type] | default('')) | length == 0
 
+# 0644, not 0600: the worker containers run as an unprivileged user (SK-CERT#723),
+# and Compose bind-mounts a secret read-only with the source file's permissions, so a
+# root-only key is unreadable inside the container and the entrypoint refuses to start.
+# worker_secrets_dir is 0750, so the keys are still not world-readable on the host.
 - name: "Write each generated API key to the worker host"
   ansible.builtin.copy:
     content: "{{ item.stdout }}\n"
     dest: "{{ worker_secrets_dir }}/api_key.{{ item.worker_type }}.txt"
-    mode: "0600"
+    mode: "0644"
   loop: "{{ generated_api_keys_raw.results | selectattr('stdout', 'defined') | list }}"
   no_log: true
 
@@ -77,10 +81,20 @@
   ansible.builtin.copy:
     content: "{{ worker_api_keys[item] }}\n"
     dest: "{{ worker_secrets_dir }}/api_key.{{ item }}.txt"
-    mode: "0600"
+    mode: "0644"
   loop: "{{ worker_types }}"
   when: (worker_api_keys[item] | default('')) | length > 0
   no_log: true
+
+# The two tasks above only run for keys that did not already exist, so on an existing
+# deployment they are skipped and a previously written 0600 key would keep its mode -
+# leaving the containers unable to read it. Enforce the mode on every key file.
+- name: "Ensure existing API keys are readable by the unprivileged container user"
+  ansible.builtin.file:
+    path: "{{ worker_secrets_dir }}/api_key.{{ item }}.txt"
+    mode: "0644"
+    state: file
+  loop: "{{ worker_types }}"
 
 # worker_type_item, not item: setting loop_var renames the loop variable, so
 # `item` is undefined here. The downstream tasks read item.worker_type_item off
@@ -137,7 +151,7 @@
   ansible.builtin.debug:
     msg: >-
       {{ item.worker_type_item }} API key on {{ inventory_hostname }}:
-      worker host → {{ worker_secrets_dir }}/api_key.{{ item.worker_type_item }}.txt (mode 0600, root:root);
+      worker host → {{ worker_secrets_dir }}/api_key.{{ item.worker_type_item }}.txt (mode 0644 inside a 0750 directory, root:root);
       control host staging → {{ worker_api_key_staging_dir }}/api_key.worker.{{ inventory_hostname }}.{{ item.worker_type_item }}.txt (gitignored, mode 0600).
       Core's {{ item.worker_type_item }}_node row will store the same key after taranis-ng-node-register runs.
   loop: "{{ worker_api_keys_slurp.results }}"

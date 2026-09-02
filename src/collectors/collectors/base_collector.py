@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import socks
 from dateutil.parser import parse as date_parse
 from remote.core_api import CoreApi
+from shared.attribute_extraction import ExtractionRule, extract_attributes
 from shared.common import TZ, remove_empty_html_tags, simplify_html_text, smart_truncate, strip_html
 from shared.log_manager import create_logger, logger
 from shared.schema import collector, news_item, osint_source
@@ -33,6 +34,17 @@ class BaseCollector:
     name = "Base Collector"
     description = "Base abstract type for all collectors"
     parameters: ClassVar[list] = []
+
+    # Attribute extraction rules are cached on the class, not the instance, and
+    # deliberately so: `run_collector` builds a throwaway `self.__class__()` for every
+    # collection, so anything cached per instance by `refresh()` is invisible to the
+    # object that actually publishes. They are global configuration shared by every
+    # collector, so one cache for all of them is also the honest model.
+    #
+    # A failed fetch keeps the previous set rather than silently dropping extraction
+    # until the next refresh succeeds.
+    attribute_extraction_rules: ClassVar[list] = []
+    attribute_extraction_rule_groups: ClassVar[dict] = {}
 
     def __init__(self) -> None:
         """Initialize the BaseCollector object."""
@@ -183,8 +195,91 @@ class BaseCollector:
         """
         self.source.logger.debug(f"Collected {len(news_items)} news items")
         filtered_news_items = self.filter_by_word_list(news_items, self.source)
+        filtered_news_items = self.extract_attributes(filtered_news_items, self.source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
         CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
+
+    def refresh_attribute_extraction_rules(self) -> None:
+        """Re-read the attribute extraction rules from core.
+
+        Core applies the global on/off switch, so an empty list here means the feature is
+        off or nothing is configured. A failed fetch leaves the previous rules in place:
+        losing extraction is better than stopping collection, and a transient error should
+        not silently change behaviour.
+        """
+        response, code = CoreApi.get_attribute_extraction_rules()
+        if code != HTTPStatus.OK or not isinstance(response, dict):
+            logger.warning(f"{self.name}: attribute extraction rules not received (code {code}); keeping the previous set")
+            return
+
+        rules = [ExtractionRule.from_dict(item) for item in response.get("items") or []]
+        # Group scoping is resolved here rather than in core, so one payload serves every
+        # source this collector runs.
+        # Assigned on BaseCollector rather than on self: `self.x = ...` would create an
+        # instance attribute shadowing the class one, and the throwaway runner in
+        # `run_collector` would never see it.
+        BaseCollector.attribute_extraction_rule_groups = {
+            item.get("name"): {group.get("id") for group in item.get("osint_source_groups") or []} for item in response.get("items") or []
+        }
+        BaseCollector.attribute_extraction_rules = rules
+        state = "enabled" if response.get("enabled", True) else "disabled"
+        logger.debug(f"{self.name}: {len(rules)} attribute extraction rules loaded ({state})")
+
+    def extract_attributes(self, news_items: list, source: object) -> list:
+        """Attach attributes found in each item's text.
+
+        Runs here, in the collector, because this is where the text arrives - rather than
+        later from a bot polling core for items it has already stored.
+
+        Args:
+            news_items (list): The items about to be published.
+            source (object): The OSINT source they came from.
+
+        Returns:
+            list: The same items, with any found attributes appended.
+        """
+        rules = [rule for rule in self.attribute_extraction_rules if self._rule_applies(rule, source)]
+        if not rules:
+            return news_items
+
+        source_logger = getattr(source, "logger", logger)
+        total = 0
+        for item in news_items:
+            try:
+                existing = {(attribute.key, attribute.value) for attribute in (item.attributes or [])}
+                for key, value in extract_attributes(
+                    getattr(item, "title", ""),
+                    getattr(item, "review", ""),
+                    getattr(item, "content", ""),
+                    rules,
+                    logger=source_logger,
+                ):
+                    if (key, value) not in existing:
+                        existing.add((key, value))
+                        item.attributes.append(news_item.NewsItemAttribute(key, value, "", ""))
+                        total += 1
+            except Exception as error:
+                # One item must not cost the whole batch.
+                source_logger.exception(f"Attribute extraction failed for a news item: {error}")
+
+        if total:
+            source_logger.debug(f"Attribute extraction added {total} attribute(s) across {len(news_items)} item(s)")
+        return news_items
+
+    def _rule_applies(self, rule: ExtractionRule, source: object) -> bool:
+        """Tell whether a rule is in scope for the source being collected.
+
+        A rule with no groups applies everywhere; otherwise the source must belong to one of
+        them.
+        """
+        groups = self.attribute_extraction_rule_groups.get(rule.name) or set()
+        if not groups:
+            return True
+        source_groups = {
+            getattr(group, "id", None) or (group.get("id") if isinstance(group, dict) else None)
+            for group in getattr(source, "osint_source_groups", None) or []
+        }
+        return bool(groups & source_groups)
 
     def refresh(self) -> None:
         """Refresh the OSINT sources for the collector."""
@@ -193,6 +288,7 @@ class BaseCollector:
         logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 
         self.osint_sources = []
+        self.refresh_attribute_extraction_rules()
 
         response, code = CoreApi.get_osint_sources(self.collector_type)
         try:
@@ -358,5 +454,8 @@ def _not_modified_http_error(source: object, http_error: object, log_prefix: str
     if http_error.code in [HTTPStatus.UNAUTHORIZED, HTTPStatus.TOO_MANY_REQUESTS, HTTPStatus.FORBIDDEN]:
         source.logger.info(f"{log_prefix} HTTP {http_error.code} {http_error.reason} for {source.url}. Continuing...")
         return False
-    source.logger.exception(f"{log_prefix} HTTP error occurred")
+    # The only caller is inside `except urllib.error.HTTPError`, so there is a live
+    # exception here and .exception() logs its traceback. Ruff cannot see across the
+    # call boundary, hence the suppression.
+    source.logger.exception(f"{log_prefix} HTTP error occurred")  # noqa: LOG004
     return False

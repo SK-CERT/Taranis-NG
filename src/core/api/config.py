@@ -35,6 +35,7 @@ from model import (
     acl_entry,
     ai_provider,
     attribute,
+    attribute_extraction_rule,
     auth_provider,
     bot_preset,
     bots_node,
@@ -61,6 +62,7 @@ from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.state import StateDefinition, StateEntityType
 from shared.schema.ai_provider import AiProviderSchema
+from shared.schema.attribute_extraction_rule import AttributeExtractionRuleSchema
 from shared.schema.auth_provider import AuthProviderSchema
 from shared.schema.data_provider import DataProviderSchema
 from shared.schema.role import PermissionSchema
@@ -254,6 +256,83 @@ class AiProvidersResource(Resource):
             msg = "Could not create AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class AttributeExtractionRulesResource(Resource):
+    """Attribute extraction rules API endpoint."""
+
+    @auth_required("CONFIG_ATTRIBUTE_EXTRACTION_ACCESS")
+    def get(self) -> dict:
+        """Get all attribute extraction rules.
+
+        Returns:
+            (dict): The rules
+        """
+        search = request.args.get("search")
+        return attribute_extraction_rule.AttributeExtractionRule.get_all_json(search)
+
+    @auth_required("CONFIG_ATTRIBUTE_EXTRACTION_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create an attribute extraction rule.
+
+        Returns:
+            (dict, int): The created rule, or the reason it was rejected
+        """
+        error = attribute_extraction_rule.AttributeExtractionRule.validate_pattern((request.json or {}).get("pattern"))
+        if error:
+            # Reject here so a typo surfaces in the GUI rather than silently failing
+            # inside a collector at the next refresh.
+            return {"error": f"Invalid regular expression: {error}"}, HTTPStatus.BAD_REQUEST
+        try:
+            user = auth_manager.get_user_from_jwt()
+            record = attribute_extraction_rule.AttributeExtractionRule.add_new(request.json, user.name)
+            return AttributeExtractionRuleSchema().dump(record), HTTPStatus.OK
+        except Exception as ex:
+            msg = "Could not create attribute extraction rule"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class AttributeExtractionRuleResource(Resource):
+    """Attribute extraction rule API endpoint."""
+
+    @auth_required("CONFIG_ATTRIBUTE_EXTRACTION_UPDATE")
+    def put(self, rule_id: int) -> tuple[dict, HTTPStatus]:
+        """Update an attribute extraction rule.
+
+        Args:
+            rule_id (int): The rule ID
+        Returns:
+            (dict, int): The updated rule, or the reason it was rejected
+        """
+        error = attribute_extraction_rule.AttributeExtractionRule.validate_pattern((request.json or {}).get("pattern"))
+        if error:
+            return {"error": f"Invalid regular expression: {error}"}, HTTPStatus.BAD_REQUEST
+        try:
+            user = auth_manager.get_user_from_jwt()
+            record = attribute_extraction_rule.AttributeExtractionRule.update(rule_id, request.json, user.name)
+            return AttributeExtractionRuleSchema().dump(record), HTTPStatus.OK
+        except Exception as ex:
+            msg = "Could not update attribute extraction rule"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_ATTRIBUTE_EXTRACTION_DELETE")
+    def delete(self, rule_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete an attribute extraction rule.
+
+        Args:
+            rule_id (int): The rule ID
+        Returns:
+            (str, int): The result of the delete
+        """
+        try:
+            attribute_extraction_rule.AttributeExtractionRule.delete(rule_id)
+        except Exception as ex:
+            msg = "Could not delete attribute extraction rule"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        return None
 
 
 class AiProviderResource(Resource):
@@ -2568,6 +2647,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(AttributeEnumResource, "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>")
     api.add_resource(AiProvidersResource, "/api/v1/config/aiproviders")
     api.add_resource(AiProviderResource, "/api/v1/config/aiprovider/<int:ai_provider_id>")
+    api.add_resource(AttributeExtractionRulesResource, "/api/v1/config/attribute-extraction-rules")
+    api.add_resource(AttributeExtractionRuleResource, "/api/v1/config/attribute-extraction-rules/<int:rule_id>")
     api.add_resource(DataProvidersResource, "/api/v1/config/data-providers")
     api.add_resource(DataProviderResource, "/api/v1/config/data-provider/<int:data_provider_id>")
 
