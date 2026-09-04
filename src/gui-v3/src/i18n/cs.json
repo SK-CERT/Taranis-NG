@@ -357,7 +357,9 @@
         "not_available": "Není k dispozici",
         "aggregated_items_count": "Žádné sloučené novinky | {count} sloučená novinka | {count} sloučené novinky | {count} sloučených novinek",
         "in_analyze_count": "Žádné probíhající analýzy | {count} probíhající analýza | {count} probíhající analýzy | {count} probíhajících analýz",
-        "analyzed_count": "Žádné dokončené analýzy | {count} dokončená analýza | {count} dokončené analýzy | {count} dokončených analýz"
+        "analyzed_count": "Žádné dokončené analýzy | {count} dokončená analýza | {count} dokončené analýzy | {count} dokončených analýz",
+        "next_run": "Další sběr",
+        "state": "Stav"
     },
     "attribute": {
         "add_constant": "Přidat konstantu",
@@ -1237,7 +1239,15 @@
         "details": "Podrobnosti",
         "actions": "Akce",
         "close": "Zavřít",
-        "use_suggested": "Použít navrženou hodnotu"
+        "use_suggested": "Použít navrženou hodnotu",
+        "collect_now": "Sbírat nyní",
+        "node_status": {
+            "alive": "Dostupný",
+            "late": "Pomalá odezva",
+            "unreachable": "Nedostupný",
+            "never_seen": "Nikdy nepřipojen",
+            "last_seen": "naposledy viděn"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Vyberte soubor k importu",
             "node_required": "Vyberte uzel kolektoru",
             "export_selected_hint": "Exportovat vybrané zdroje",
-            "selected_count": "Nejsou vybrány žádné zdroje OSINT | Vybrán {count} zdroj OSINT | Vybrány {count} zdroje OSINT | Vybráno {count} zdrojů OSINT"
+            "selected_count": "Nejsou vybrány žádné zdroje OSINT | Vybrán {count} zdroj OSINT | Vybrány {count} zdroje OSINT | Vybráno {count} zdrojů OSINT",
+            "collecting": "Probíhá sběr…",
+            "disabled": "Vypnuto",
+            "collect_started": "Sběr byl zahájen",
+            "collect_error": "Sběr se nepodařilo spustit",
+            "collect_conflict": "Tento zdroj se právě sbírá",
+            "enable_error": "Stav zdroje se nepodařilo změnit",
+            "enabled": "Zapnuto",
+            "due": "Čeká na spuštění",
+            "state_error": "Chyba",
+            "state_stale": "Zastaralé",
+            "state_pending": "Čeká",
+            "none": "Na tomto uzlu nejsou žádné zdroje OSINT",
+            "group_all": "Vše",
+            "group_uncategorized": "Nezařazené",
+            "delete_selected_hint": "Smazat vybrané zdroje",
+            "delete_selected_confirm": "Smazat {count} vybraných zdrojů? Tuto akci nelze vrátit zpět.",
+            "delete_selected_success": "Vybrané zdroje byly smazány",
+            "delete_selected_error": "Některé vybrané zdroje se nepodařilo smazat"
         },
         "nodes": {
             "tab_description": "Zde můžete spravovat uzly sběračů.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Instance kolektoru byl upraven",
             "removed": "Instance kolektoru byla smazána",
             "removed_error": "Instance kolektoru je používám a nelze jej smazat",
-            "total_count": "Žádné uzly kolektorů | {count} uzel kolektoru | {count} uzly kolektorů | {count} uzlů kolektorů"
+            "total_count": "Žádné uzly kolektorů | {count} uzel kolektoru | {count} uzly kolektorů | {count} uzlů kolektorů",
+            "delete_error": "Uzel sběračů se nepodařilo smazat"
         }
     },
     "presenters": {
@@ -2003,14 +2032,7 @@
         },
         "confirm_delete_title": "Potvrdit smazání",
         "confirm_delete_node": "Smazat uzel public-web '{name}' a všechny jeho weby?",
-        "confirm_delete_web": "Smazat web '{name}'?",
-        "status": {
-            "alive": "Dostupný",
-            "late": "Pomalá odezva",
-            "unreachable": "Nedostupný",
-            "never_seen": "Nikdy nepřipojen",
-            "last_seen": "naposledy viděn"
-        }
+        "confirm_delete_web": "Smazat web '{name}'?"
     },
     "routing": {
         "tab_title": "Směrování a TLS",
