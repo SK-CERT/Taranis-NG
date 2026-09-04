@@ -50,7 +50,7 @@ classifiers = [
 [dependency-groups]
 dev = [
     "djlint==1.44.2",
-    "ruff==0.16.4",
+    "ruff==0.16.5",
     "ty==0.0.57",
     # Keep in lockstep with [tool.uv] required-version below. Declared here so
     # `uv sync` reinstalls it into .venv instead of pruning it — an undeclared
@@ -109,7 +109,7 @@ testpaths = [
 pythonpath = ["src/core", "src/shared"]
 
 [tool.ruff]
-required-version = "0.16.4"
+required-version = "0.16.5"
 line-length = 142
 target-version = "py313"
 fix = true
