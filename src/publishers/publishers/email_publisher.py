@@ -12,6 +12,8 @@ from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
 
+from shared import mail_headers
+
 from .base_publisher import BasePublisher
 
 
@@ -122,6 +124,18 @@ class EMAILPublisher(BasePublisher):
             envelope.subject(subject)
         envelope.from_(sender)
         envelope.to(recipients)
+
+        # The presenter already sanitized these, but it is a separate node reached over the
+        # network, so re-check rather than trust the wire: envelope.header() reroutes `bcc`
+        # (and `to`/`cc`) into the real SMTP recipient list, so an unchecked header could add
+        # a recipient. Note these headers sit outside any S/MIME or PGP signature.
+        # envelope.header() only catches TypeError, and the try below starts after this point,
+        # so guard here too - a decorative header must never cost the send.
+        try:
+            for custom_header in mail_headers.sanitize_headers(publisher_input.message_headers or []):
+                envelope.header(custom_header["name"], custom_header["value"])
+        except Exception as error:
+            self.logger.warning(f"Custom headers skipped: {error}")
 
         try:
             if sign == "auto":
