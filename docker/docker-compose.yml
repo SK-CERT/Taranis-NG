@@ -582,9 +582,9 @@ services:
       # on v6 the packets fall through to filter/INPUT and a default-deny host
       # firewall drops them. The other ports above name no address and so are
       # already dual-stack; these have to ask for it explicitly.
-      - "${TARANIS_NG_SATELLITE_BIND:-127.0.0.1}:${TARANIS_NG_SATELLITE_PORT:-8443}:8443"
-      - "[${TARANIS_NG_SATELLITE_BIND6:-::1}]:${TARANIS_NG_SATELLITE_PORT:-8443}:8443"
-      - "${TARANIS_NG_HTTPS_PORT}:443/udp"
+      # - "${TARANIS_NG_SATELLITE_BIND:-127.0.0.1}:${TARANIS_NG_SATELLITE_PORT:-8443}:8443"
+      # - "[${TARANIS_NG_SATELLITE_BIND6:-::1}]:${TARANIS_NG_SATELLITE_PORT:-8443}:8443"
+      # - "${TARANIS_NG_HTTPS_PORT}:443/udp"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       # Only dynamic/ - see the note on environment above.
