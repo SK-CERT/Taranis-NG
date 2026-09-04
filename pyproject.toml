@@ -97,7 +97,14 @@ members = ["src/shared"]
 # scripts/run_tests.py instead runs pytest per project, picking up that project's own
 # [tool.pytest.ini_options]. Keep in sync with PYTEST_SUITES in scripts/run_tests.py.
 [tool.pytest.ini_options]
-testpaths = ["src/core/tests", "src/shared/tests", "src/presenters/tests", "src/public_web/tests", "src/publishers/tests"]
+testpaths = [
+    "src/core/tests",
+    "src/shared/tests",
+    "src/collectors/tests",
+    "src/presenters/tests",
+    "src/public_web/tests",
+    "src/publishers/tests",
+]
 # The projects are never pip-installed for a test run, so their roots go on sys.path.
 pythonpath = ["src/core", "src/shared"]
 

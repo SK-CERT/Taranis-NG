@@ -63,9 +63,11 @@ class RSSCollector(BaseCollector):
                         # try to get all <pre> tags text in body
                         content_html = [str(pre) for pre in soup.find_all("pre")]
                     if not content_html:
-                        # No tags found, treat as plaintext and wrap in <pre> tags
-                        # decode bytes to string if needed
-                        plaintext = html.decode(errors="replace") if isinstance(html, bytes) else str(html)
+                        # No tags we can quote, so take the page's text and wrap it in <pre>.
+                        # Read it off the soup rather than the raw bytes: a page built from
+                        # tags we do not quote is not plaintext, and its markup would now be
+                        # escaped into the item instead of being swallowed by the parser.
+                        plaintext = soup.get_text(separator="\n", strip=True)
                         return text_to_simple_html(plaintext, preformatted_text=True)
                     return "".join(content_html)
 
@@ -112,7 +114,8 @@ class RSSCollector(BaseCollector):
             dict: The parsed feed data or an empty dictionary if not modified.
         """
         # Check if the feed has been modified since the last collection
-        if self.source.last_collected and not_modified(self.source):
+        check_if_modified = read_bool_parameter("CHECK_IF_MODIFIED", default_value=True, object_dict=self.source)
+        if check_if_modified and self.source.last_collected and not_modified(self.source):
             return None
 
         self.source.logger.debug(f"Fetching feed from URL: {self.source.url}")

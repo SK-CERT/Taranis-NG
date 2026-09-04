@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 import socks
 from dateutil.parser import parse as date_parse
 from remote.core_api import CoreApi
-from shared.common import TZ, remove_empty_html_tags, simplify_html_text, smart_truncate, strip_html
+from shared.common import TZ, remove_empty_html_tags, resolve_relative_links, simplify_html_text, smart_truncate, strip_html
 from shared.log_manager import create_logger, logger
 from shared.schema import collector, news_item, osint_source
 from shared.time_manager import SchedulerManager
@@ -171,7 +171,10 @@ class BaseCollector:
 
         news_item.title = smart_truncate(strip_html(news_item.title), 200)
         news_item.review = smart_truncate(strip_html(news_item.review))
-        news_item.content = remove_empty_html_tags(simplify_html_text(news_item.content))
+        # The article's own URL is the base for its links; sources collected as a single page
+        # carry the index URL as their link, which is the right base for that markup too.
+        base_url = news_item.link or getattr(source, "url", "")
+        news_item.content = remove_empty_html_tags(resolve_relative_links(simplify_html_text(news_item.content), base_url))
         news_item.author = strip_html(news_item.author)
         return news_item
 
@@ -358,5 +361,5 @@ def _not_modified_http_error(source: object, http_error: object, log_prefix: str
     if http_error.code in [HTTPStatus.UNAUTHORIZED, HTTPStatus.TOO_MANY_REQUESTS, HTTPStatus.FORBIDDEN]:
         source.logger.info(f"{log_prefix} HTTP {http_error.code} {http_error.reason} for {source.url}. Continuing...")
         return False
-    source.logger.exception(f"{log_prefix} HTTP error occurred")
+    source.logger.error(f"{log_prefix} HTTP error occurred")
     return False

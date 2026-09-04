@@ -1,5 +1,6 @@
 """Module for Web collector."""
 
+import contextlib
 import copy
 import datetime
 import hashlib
@@ -16,7 +17,7 @@ from urllib.parse import urlparse
 import selenium
 from dateutil.parser import parse
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.action_chains import ActionChains
@@ -50,6 +51,7 @@ class WebCollector(BaseCollector):
         interpret_as (str): The type of the URL (uri or directory).
         user_agent (str): The user agent for the web page.
         tor_service (bool): The Tor service status.
+        check_if_modified (bool): Whether to skip collection when the server reports the content is unchanged.
         pagination_limit (int): The maximum number of pages to visit.
         links_limit (int): The maximum number of article links to process.
         word_limit (int): The limit for the article body.
@@ -68,6 +70,11 @@ class WebCollector(BaseCollector):
     description = config.description
     parameters = config.parameters
     logger.debug(f"{name}: Selenium version: {selenium.__version__}")
+
+    IMPLICIT_WAIT_SECONDS = 10
+    # A single page application draws its list after document ready, so the index page needs
+    # longer than the implicit wait before we can conclude the selector matched nothing.
+    ARTICLE_ITEMS_WAIT_SECONDS = 20
 
     SELECTOR_MAP: ClassVar[dict[str, str]] = {
         "id": By.ID,
@@ -153,7 +160,11 @@ class WebCollector(BaseCollector):
                 ret = self.__find_element_by(driver, element_selector)
                 if ret:
                     text = ret.text
-                    if text == "":
+                    if not text:
+                        # .text is the rendered text, so it is empty for anything the page does not
+                        # display - <head><title> above all. textContent reads it regardless.
+                        text = (ret.get_attribute("textContent") or "").strip()
+                    if not text:
                         self.source.logger.warning(f"Element found, but text content is empty: {element_selector}")
                     return text
                 self.source.logger.warning(f"Element not found: {element_selector}")
@@ -176,12 +187,15 @@ class WebCollector(BaseCollector):
         """
         try:
             if element_selector:
-                ret = self.__find_element_by(driver, element_selector)
-                if ret:
-                    outer_html = ret.get_attribute("innerHTML")
-                    if outer_html == "":
+                found = self.__find_elements_by(driver, element_selector)
+                if found:
+                    # Every match, not just the first: a body is often several blocks rather than
+                    # one wrapper, which is what selectors like "h2 + p" or "section > *" express.
+                    # Taking only the first silently dropped the rest of the article.
+                    html = "".join(element.get_attribute("outerHTML") or "" for element in found)
+                    if all(not (element.get_attribute("innerHTML") or "") for element in found):
                         self.source.logger.warning(f"Element found, but html content is empty: {element_selector}")
-                    return outer_html
+                    return html
                 self.source.logger.warning(f"Element not found: {element_selector}")
             return ""
         except NoSuchElementException:
@@ -222,6 +236,40 @@ class WebCollector(BaseCollector):
             return elements or None
         except NoSuchElementException:
             return None
+
+    def __wait_for_article_items(self, browser: WebDriver) -> None:
+        """Give a JavaScript-rendered index page time to draw its article links.
+
+        ``browser.get()`` returns on document ready, which on a single page application is
+        before the list of articles exists. The implicit wait is too short for the slowest of
+        them, and combining it with an explicit wait makes every poll pay it, so it is turned
+        off for the duration and restored afterwards.
+
+        A timeout is not an error here: the caller reports the empty result.
+
+        Parameters:
+            browser (WebDriver): The browser instance.
+        """
+        locator = self.__get_element_locator(self.selectors["single_article_link"])
+        if locator is None:
+            return
+        browser.implicitly_wait(0)
+        try:
+            with contextlib.suppress(TimeoutException):
+                WebDriverWait(browser, self.ARTICLE_ITEMS_WAIT_SECONDS).until(ec.presence_of_all_elements_located(locator))
+            # The list keeps growing while the page hydrates, and every element found before the
+            # last redraw goes stale. Wait for the count to settle before the caller takes hold
+            # of them, or iterating them raises StaleElementReferenceException.
+            previous = -1
+            deadline = time.monotonic() + self.ARTICLE_ITEMS_WAIT_SECONDS
+            while time.monotonic() < deadline:
+                current = len(browser.find_elements(*locator))
+                if current and current == previous:
+                    break
+                previous = current
+                time.sleep(1)
+        finally:
+            browser.implicitly_wait(self.IMPLICIT_WAIT_SECONDS)
 
     def __wait_for_new_tab(self, browser: WebDriver, timeout: int, current_tab: str) -> None:
         """Wait for a new tab to open in the browser.
@@ -320,6 +368,7 @@ class WebCollector(BaseCollector):
         # parse other arguments
         self.source.user_agent = self.source.param_key_values["USER_AGENT"]
         self.tor_service = read_bool_parameter("TOR", default_value=False, object_dict=self.source)
+        self.check_if_modified = read_bool_parameter("CHECK_IF_MODIFIED", default_value=True, object_dict=self.source)
         self.pagination_limit = read_int_parameter("PAGINATION_LIMIT", 1, self.source)
         self.links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
         self.word_limit = read_int_parameter("WORD_LIMIT", 0, self.source)
@@ -402,7 +451,9 @@ class WebCollector(BaseCollector):
         firefox_options.add_argument("--incognito")
 
         if self.source.user_agent:
-            firefox_options.add_argument(f"user-agent={self.source.user_agent}")
+            # Firefox has no user-agent switch; passing one as an argument is silently ignored,
+            # so the configured USER_AGENT never reached the site. This preference is the way.
+            firefox_options.set_preference("general.useragent.override", self.source.user_agent)
 
         if self.tor_service:
             firefox_options.set_preference("network.proxy.type", 1)  # manual proxy config
@@ -441,7 +492,7 @@ class WebCollector(BaseCollector):
                 browser = self.__get_headless_driver_firefox()
             else:
                 browser = self.__get_headless_driver_chrome()
-            browser.implicitly_wait(7)  # how long to wait for elements when selector doesn't match
+            browser.implicitly_wait(self.IMPLICIT_WAIT_SECONDS)  # how long to wait for elements when selector doesn't match
             return browser
         except Exception as error:
             self.source.logger.exception(f"Get headless driver failed: {error}")
@@ -477,7 +528,7 @@ class WebCollector(BaseCollector):
         proxy_handler = self.get_proxy_handler() if self.source.parsed_proxy else None
         self.source.opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
         url_not_modified = False
-        if self.source.last_collected:
+        if self.source.last_collected and self.check_if_modified:
             url_not_modified = not_modified(self.source)
             if url_not_modified:
                 self.source.logger.info("Will not collect the feed because nothing has changed.")
@@ -606,6 +657,7 @@ class WebCollector(BaseCollector):
             failed_articles (int): A number of failed articles.
         """
         failed_articles = 0
+        self.__wait_for_article_items(browser)
         article_items = self.__safe_find_elements_by(browser, self.selectors["single_article_link"])
         if article_items is None:
             self.source.logger.warning("Invalid page or incorrect selector for article items")
@@ -698,6 +750,13 @@ class WebCollector(BaseCollector):
 
         content = self.__find_element_html_by(scope, self.selectors["article_full_text"])
         # we use html content, so word_limit is not possible here
+
+        if not title and not content:
+            # Neither selector matched, so this is not the article: a page that never finished
+            # rendering, or a browser error page. Whatever a description selector picks up there
+            # is not a news item - it would be stored with that stray text as its title.
+            self.source.logger.warning(f"Neither title nor content found, not an article page: {current_url}")
+            return None
 
         review = self.__find_element_text_by(scope, self.selectors["article_description"]) if self.selectors["article_description"] else ""
         if not review:
