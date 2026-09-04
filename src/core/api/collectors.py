@@ -12,6 +12,7 @@ from http import HTTPStatus
 
 from flask import request
 from flask_restful import Resource, reqparse
+from managers import run_state_cache
 from managers.auth_manager import api_key_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
@@ -68,7 +69,35 @@ class OSINTSourceLastAttempt(Resource):
             msg = "OSINT source with this ID does not exists"
             logger.warning(msg)
             return {"error": msg}, 404
-        source.update_last_attempt(osint_source_id)
+        # The collector calls this as a run begins, so it doubles as the "collecting" signal.
+        OSINTSource.mark_collection_started(osint_source_id)
+        return {}, HTTPStatus.OK
+
+
+class CollectorSourcesSchedule(Resource):
+    """When the node plans to collect each of its sources."""
+
+    @api_key_required("collectors")
+    def post(
+        self,
+        collector_id: str,  # noqa: ARG002
+        collectors_node: CollectorsNode = None,  # noqa: ARG002
+    ) -> tuple[dict, HTTPStatus]:
+        """Record the next run time of every source the node reports.
+
+        Only the node knows this: an interval can be minutes, a daily time or a weekday and time,
+        and the node is also the only thing that knows how far behind its scheduler is running.
+
+        Args:
+            collector_id (str): The collectors node ID, from the path
+            collectors_node (CollectorsNode): The collectors node
+        Returns:
+            (dict): Empty dictionary
+            (int): The response code
+        """
+        for source_id, next_run in (request.json or {}).items():
+            if next_run:
+                run_state_cache.set_next_run(source_id, next_run)
         return {}, HTTPStatus.OK
 
 
@@ -98,7 +127,9 @@ class OSINTSourceLastErrorMessage(Resource):
 
         error_message = request.args.get("message", None)
 
-        source.update_last_error_message(osint_source_id, error_message)
+        # The collector calls this as a run ends, whether or not anything went wrong, so it is
+        # also what clears the "collecting" signal.
+        OSINTSource.mark_collection_finished(osint_source_id, error_message)
         return {}, HTTPStatus.OK
 
 
@@ -155,5 +186,6 @@ def initialize(api: Api) -> None:
     api.add_resource(OSINTSourcesForCollectors, "/api/v1/collectors/<string:collector_id>/osint-sources")
     api.add_resource(OSINTSourceLastAttempt, "/api/v1/collectors/osint-sources/<string:osint_source_id>/attempt")
     api.add_resource(OSINTSourceLastErrorMessage, "/api/v1/collectors/osint-sources/<string:osint_source_id>/error_message")
+    api.add_resource(CollectorSourcesSchedule, "/api/v1/collectors/<string:collector_id>/schedule")
     api.add_resource(CollectorStatusUpdate, "/api/v1/collectors/<string:collector_id>")
     api.add_resource(AddNewsItems, "/api/v1/collectors/news-items")

@@ -357,7 +357,9 @@
         "not_available": "Not available",
         "aggregated_items_count": "No aggregated news items | {count} aggregated news item | {count} aggregated news items",
         "in_analyze_count": "No analyses in progress | {count} analysis in progress | {count} analyses in progress",
-        "analyzed_count": "No completed analyses | {count} completed analysis | {count} completed analyses"
+        "analyzed_count": "No completed analyses | {count} completed analysis | {count} completed analyses",
+        "next_run": "Next run",
+        "state": "State"
     },
     "attribute": {
         "add_constant": "Add constant",
@@ -1237,7 +1239,15 @@
         "details": "Details",
         "actions": "Actions",
         "close": "Close",
-        "use_suggested": "Use suggested value"
+        "use_suggested": "Use suggested value",
+        "collect_now": "Collect now",
+        "node_status": {
+            "alive": "Reachable",
+            "late": "Slow to respond",
+            "unreachable": "Unreachable",
+            "never_seen": "Never connected",
+            "last_seen": "last seen"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Select an import file",
             "node_required": "Select a collectors node",
             "export_selected_hint": "Export selected sources",
-            "selected_count": "{count} OSINT source selected | {count} OSINT sources selected"
+            "selected_count": "{count} OSINT source selected | {count} OSINT sources selected",
+            "collecting": "Collecting…",
+            "disabled": "Disabled",
+            "collect_started": "Collection started",
+            "collect_error": "Could not start collection",
+            "collect_conflict": "This source is already being collected",
+            "enable_error": "Could not change the source state",
+            "enabled": "Enabled",
+            "due": "Due",
+            "state_error": "Error",
+            "state_stale": "Stale",
+            "state_pending": "Pending",
+            "none": "No OSINT sources on this node",
+            "group_all": "All",
+            "group_uncategorized": "Uncategorized",
+            "delete_selected_hint": "Delete selected sources",
+            "delete_selected_confirm": "Delete {count} selected sources? This cannot be undone.",
+            "delete_selected_success": "Selected sources deleted",
+            "delete_selected_error": "Some selected sources could not be deleted"
         },
         "nodes": {
             "tab_description": "Here you can manage collector nodes.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Collectors node was successfully updated",
             "removed": "Collectors node was successfully deleted",
             "removed_error": "Collectors node is in use and could not be deleted",
-            "total_count": "{count} collector node | {count} collector nodes"
+            "total_count": "{count} collector node | {count} collector nodes",
+            "delete_error": "Could not delete the collectors node"
         }
     },
     "presenters": {
@@ -2003,14 +2032,7 @@
         },
         "confirm_delete_title": "Confirm deletion",
         "confirm_delete_node": "Delete public-web node '{name}' and all its webs?",
-        "confirm_delete_web": "Delete web '{name}'?",
-        "status": {
-            "alive": "Reachable",
-            "late": "Slow to respond",
-            "unreachable": "Unreachable",
-            "never_seen": "Never connected",
-            "last_seen": "last seen"
-        }
+        "confirm_delete_web": "Delete web '{name}'?"
     },
     "routing": {
         "tab_title": "Routing & TLS",
