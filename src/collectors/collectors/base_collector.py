@@ -2,6 +2,7 @@
 
 import datetime
 import hashlib
+import threading
 import time
 import urllib.request
 import uuid
@@ -34,9 +35,58 @@ class BaseCollector:
     description = "Base abstract type for all collectors"
     parameters: ClassVar[list] = []
 
+    # Ids of the sources being collected right now, shared by every collector type: source ids are
+    # unique, and one registry means a scheduled run and an on-demand run cannot both start the
+    # same source. This is the guarantee that a source is never collected twice at once - two
+    # concurrent runs mean two browsers, two tor processes and duplicated news items.
+    _running_sources: ClassVar[set[str]] = set()
+    _running_guard: ClassVar[threading.Lock] = threading.Lock()
+
     def __init__(self) -> None:
         """Initialize the BaseCollector object."""
         self.osint_sources = []
+        # Held for the whole of refresh(), so two refreshes cannot interleave cancelling and
+        # rescheduling each other's jobs. A bulk save sends several refresh requests in a row.
+        self._refresh_guard = threading.Lock()
+
+    @classmethod
+    def _try_begin_run(cls, source_id: str) -> bool:
+        """Claim a source for collection, if nothing else is collecting it.
+
+        Args:
+            source_id (str): The id of the source about to be collected.
+
+        Returns:
+            (bool): True when the caller took the claim and must call _end_run afterwards.
+        """
+        with cls._running_guard:
+            if source_id in cls._running_sources:
+                return False
+            cls._running_sources.add(source_id)
+            return True
+
+    @classmethod
+    def _end_run(cls, source_id: str) -> None:
+        """Release a source claimed by _try_begin_run.
+
+        Args:
+            source_id (str): The id of the source that finished collecting.
+        """
+        with cls._running_guard:
+            cls._running_sources.discard(source_id)
+
+    @classmethod
+    def is_running(cls, source_id: str) -> bool:
+        """Report whether a source is being collected right now.
+
+        Args:
+            source_id (str): The id of the source.
+
+        Returns:
+            (bool): True while a run holds the claim.
+        """
+        with cls._running_guard:
+            return source_id in cls._running_sources
 
     @property
     def type(self) -> str:
@@ -189,30 +239,41 @@ class BaseCollector:
         news_items_schema = news_item.NewsItemDataSchema(many=True)
         CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
 
-    def refresh(self) -> None:
-        """Refresh the OSINT sources for the collector."""
-        logger.debug(f"{self.name}: Awaiting initialization of CORE (timeout: 20s)")
-        time.sleep(20)  # wait for the CORE
-        logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
+    @property
+    def _collector_tag(self) -> str:
+        """Scheduler tag owning every job this collector registers."""
+        return f"collector:{self.collector_type}"
 
-        self.osint_sources = []
+    def refresh(self) -> None:
+        """Reload the OSINT sources for the collector and rebuild their schedule."""
+        with self._refresh_guard:
+            self._refresh()
+
+    def _refresh(self) -> None:
+        logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 
         response, code = CoreApi.get_osint_sources(self.collector_type)
         try:
             if code != HTTPStatus.OK or response is None:
                 logger.error(f"OSINT sources not received, Code: {code}{', response: ' + str(response) if response is not None else ''}")
+                # Leave the existing sources and their schedule alone: a temporary core outage
+                # must not tear down a working collector.
                 return
 
             source_schema = osint_source.OSINTSourceSchema(many=True)
             self.osint_sources = source_schema.load(response)
             logger.debug(f"{self.name}: {len(self.osint_sources)} sources loaded")
 
+            # Drop the jobs registered by the previous refresh before registering new ones.
+            # Without this every refresh left its jobs behind, so a source ended up scheduled -
+            # and collected - once per refresh that had ever run.
+            SchedulerManager.cancel_jobs_by_tag(self._collector_tag)
+
             for source in self.osint_sources:
                 interval = source.param_key_values["REFRESH_INTERVAL"]
                 if interval in ["", "0"]:
                     logger.info(f"{self.name} '{getattr(source, 'name', '')}': Disabled")
                     continue
-                self._initialize_source(source)
                 self.run_collector(source)
                 self._schedule_source(source, interval)
         except Exception as error:
@@ -224,10 +285,27 @@ class BaseCollector:
         source.logger = create_logger(log_prefix=source.log_prefix)
         source.logger.stored_message_levels = ["error", "exception", "warning", "critical"]
 
+    def _source_logger(self, source: object) -> object:
+        """Return the source's logger, or the module logger when it has not been initialized yet.
+
+        A source only gets its own logger once a run starts, but scheduling happens before that.
+
+        Args:
+            source: The source object.
+
+        Returns:
+            (object): A logger safe to write to.
+        """
+        return getattr(source, "logger", None) or logger
+
     def _schedule_source(self, source: object, interval: str) -> None:
+        # Tagged by collector and by source, so refresh() can drop this collector's jobs and a
+        # single source's job can be found again without keeping a registry in sync.
+        tags = (self._collector_tag, f"source:{source.id}")
+
         # run task every day at XY
         if interval[0].isdigit() and ":" in interval:
-            source.scheduler_job = SchedulerManager.schedule_job_every_day(interval, self.run_collector, source.name, source)
+            SchedulerManager.schedule_job_every_day(interval, self.run_collector, source.name, source, tags=tags)
             return
 
         # run task at a specific day (XY, ZZ:ZZ:ZZ)
@@ -235,7 +313,7 @@ class BaseCollector:
             try:
                 day, at = [x.strip() for x in interval.split(",", 1)]
             except ValueError:
-                source.logger.warning(f"Invalid interval format: {interval}")
+                self._source_logger(source).warning(f"Invalid interval format: {interval}")
                 return
             day_map = {
                 "Monday": SchedulerManager.schedule_job_on_monday,
@@ -248,17 +326,17 @@ class BaseCollector:
             }
             schedule_func = day_map.get(day)
             if schedule_func:
-                source.scheduler_job = schedule_func(at, self.run_collector, source.name, source)
+                schedule_func(at, self.run_collector, source.name, source, tags=tags)
             else:
-                source.logger.warning(f"Unknown day for scheduling: {day}")
+                self._source_logger(source).warning(f"Unknown day for scheduling: {day}")
             return
 
         # run task every XY minutes
         try:
             minutes = int(interval)
-            source.scheduler_job = SchedulerManager.schedule_job_minutes(minutes, self.run_collector, source.name, source)
+            SchedulerManager.schedule_job_minutes(minutes, self.run_collector, source.name, source, tags=tags)
         except Exception:
-            source.logger.warning(f"Invalid interval value: {interval}")
+            self._source_logger(source).warning(f"Invalid interval value: {interval}")
 
     def get_proxy_handler(self) -> object:
         """Get the proxy handler for the collector.
@@ -294,13 +372,18 @@ class BaseCollector:
         self.source.logger.warning(f"Invalid proxy server: {self.source.proxy}. Not using proxy.")
         return None
 
-    def run_collector(self, source: object) -> None:
-        """Run the collector on the given source.
+    def _do_run(self, source: object) -> None:
+        """Collect one source. The caller must already hold the run claim for it.
+
+        The source is initialized on the per-run collector instance, never on the shared one: some
+        collectors keep the source on self, so initializing on the singleton would let two runs
+        overwrite each other's source.
 
         Args:
             source: The source to collect data from.
         """
         runner = self.__class__()  # get right type of collector
+        runner._initialize_source(source)  # noqa: SLF001
         source.logger.info("Start")
         self.update_last_attempt(source)
         runner.source = source
@@ -308,8 +391,27 @@ class BaseCollector:
         source.logger.info("End")
         self.update_last_error_message(source)
 
+    def run_collector(self, source: object) -> None:
+        """Run the collector on the given source, unless it is already being collected.
+
+        This is what the scheduler calls, so the claim covers scheduled runs as well as on-demand
+        ones and the two can never overlap on the same source.
+
+        Args:
+            source: The source to collect data from.
+        """
+        if not self._try_begin_run(source.id):
+            logger.warning(f"{self.name} '{getattr(source, 'name', '')}': still collecting, skipping this run")
+            return
+        try:
+            self._do_run(source)
+        finally:
+            self._end_run(source.id)
+
     def initialize(self) -> None:
         """Initialize the collector."""
+        logger.debug(f"{self.name}: Awaiting initialization of CORE (timeout: 20s)")
+        time.sleep(20)  # wait for the CORE
         self.refresh()
 
 
