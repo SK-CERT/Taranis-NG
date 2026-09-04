@@ -92,18 +92,26 @@ ansible = { requires-python = ">=3.12" }
 [tool.uv.workspace]
 members = ["src/shared"]
 
-# Aggregate config so ONE run from the repo root discovers every suite — which is how
-# editors find them, since they issue a single pytest invocation per workspace folder.
-# scripts/run_tests.py instead runs pytest per project, picking up that project's own
-# [tool.pytest.ini_options]. Keep in sync with PYTEST_SUITES in scripts/run_tests.py.
+# Config for a single run from the repo root — which is how editors find tests, since they
+# issue one pytest invocation per workspace folder. It lists the two suites that one
+# interpreter can actually host, NOT every suite.
+#
+# The other four services cannot join them, and listing them here collected nothing at all.
+# Each service has a flat layout with its own top-level `managers`, `api`, `model` and
+# `remote` packages, and a single interpreter binds each of those names once. Gathering six
+# suites into one process meant src/publishers/tests/conftest.py prepending its own service
+# root to sys.path during collection, after which every `import managers` in core's tests
+# resolved to the publishers copy: 36 collection errors and zero tests run, from an editor
+# and from a bare `pytest` alike.
+#
+# The full set runs one process per service, each in its own directory picking up its own
+# [tool.pytest.ini_options]: `python3 scripts/run_tests.py --suite pytest`, which is what
+# pre-commit and CI invoke. PYTEST_SUITES there is the list to keep complete; this one
+# deliberately stops at what `pythonpath` below can make importable.
 [tool.pytest.ini_options]
 testpaths = [
     "src/core/tests",
     "src/shared/tests",
-    "src/collectors/tests",
-    "src/presenters/tests",
-    "src/public_web/tests",
-    "src/publishers/tests",
 ]
 # The projects are never pip-installed for a test run, so their roots go on sys.path.
 pythonpath = ["src/core", "src/shared"]

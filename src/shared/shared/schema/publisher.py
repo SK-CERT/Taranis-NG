@@ -1,7 +1,8 @@
 """Schema for Publisher and Publisher Input."""
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
+from shared.schema.message_header import MessageHeaderSchema
 from shared.schema.parameter import ParameterSchema
 from shared.schema.parameter_value import ParameterValueSchema
 
@@ -31,6 +32,7 @@ class PublisherInput:
         recipients: list,
         att_file_name: str,
         message_body_mime_type: str | None = None,
+        message_headers: list | None = None,
     ) -> None:
         """Initialize the PublisherInput object.
 
@@ -46,6 +48,8 @@ class PublisherInput:
             att_file_name (str): The attachment file name.
             message_body_mime_type (str | None): MIME type of the message body, as declared by the
                 presenter. None when no presenter was involved; publishers should then assume plain text.
+            message_headers (list | None): Custom mail headers as {name, value} pairs. Empty when no
+                presenter was involved, or when the presenter has no headers template configured.
         """
         self.name = name
         self.type = type
@@ -57,6 +61,7 @@ class PublisherInput:
         self.recipients = recipients
         self.att_file_name = att_file_name
         self.message_body_mime_type = message_body_mime_type
+        self.message_headers = message_headers or []
 
         self.param_key_values = {}
         for pv in parameter_values:
@@ -65,6 +70,16 @@ class PublisherInput:
 
 class PublisherInputSchema(Schema):
     """Schema for Publisher Input."""
+
+    class Meta:
+        """Meta class to define schema behavior.
+
+        Unknown fields are excluded so a core running ahead of a publishers node - they are
+        deployed and upgraded separately - does not fail the whole publish on a field this
+        version has never heard of.
+        """
+
+        unknown = EXCLUDE
 
     name = fields.Str()
     type = fields.Str()
@@ -76,6 +91,7 @@ class PublisherInputSchema(Schema):
     recipients = fields.List(fields.String, allow_none=True)
     att_file_name = fields.Str(allow_none=True)
     message_body_mime_type = fields.Str(allow_none=True)
+    message_headers = fields.List(fields.Nested(MessageHeaderSchema), allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> PublisherInput:  # noqa: ANN003, ARG002

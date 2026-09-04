@@ -84,6 +84,7 @@ export const ICONS = Object.freeze({
     NO_STATE: 'mdi-progress-helper',
     OFFICE_BUILDING: 'mdi-office-building',
     OPEN: 'mdi-open-in-new',
+    PLAY: 'mdi-play-circle-outline',
     PLUS: 'mdi-plus-circle-outline',
     PLUS_BOX: 'mdi-plus-box',
     PUBLISH: 'mdi-file-outline',
@@ -122,6 +123,19 @@ export const ICONS = Object.freeze({
     VIEW_HEADLINE: 'mdi-view-headline',
     WRENCH: 'mdi-wrench'
 })
+
+export const COLLECTOR_TYPE_ICONS: Readonly<Record<string, string>> = Object.freeze({
+    RSS_COLLECTOR: 'mdi-rss',
+    WEB_COLLECTOR: 'mdi-web',
+    EMAIL_COLLECTOR: 'mdi-email-outline',
+    SLACK_COLLECTOR: 'mdi-slack',
+    TWITTER_COLLECTOR: 'mdi-twitter',
+    MANUAL_COLLECTOR: 'mdi-hand-back-right-outline',
+    SCHEDULED_TASKS_COLLECTOR: 'mdi-clock-outline'
+})
+
+/** Shown when a collector type has no icon of its own, so the column never renders empty. */
+export const COLLECTOR_TYPE_FALLBACK_ICON = 'mdi-help-circle-outline'
 
 /**
  * Button configurations - Standard button props for common actions
@@ -175,6 +189,13 @@ export const BUTTON_CONFIGS = Object.freeze({
         variant: 'text',
         size: 'small',
         titleKey: 'common.open_source'
+    },
+    COLLECT: {
+        icon: ICONS.PLAY,
+        color: 'success',
+        variant: 'text',
+        size: 'small',
+        titleKey: 'common.collect_now'
     }
 })
 

@@ -357,7 +357,9 @@
         "not_available": "Niet beschikbaar",
         "aggregated_items_count": "Geen samengevoegde nieuwsitems | {count} samengevoegd nieuwsitem | {count} samengevoegde nieuwsitems",
         "in_analyze_count": "Geen analyses in uitvoering | {count} analyse in uitvoering | {count} analyses in uitvoering",
-        "analyzed_count": "Geen voltooide analyses | {count} voltooide analyse | {count} voltooide analyses"
+        "analyzed_count": "Geen voltooide analyses | {count} voltooide analyse | {count} voltooide analyses",
+        "next_run": "Volgende run",
+        "state": "Status"
     },
     "attribute": {
         "add_constant": "Constante toevoegen",
@@ -1237,7 +1239,15 @@
         "details": "Details",
         "actions": "Acties",
         "close": "Sluiten",
-        "use_suggested": "Voorgestelde waarde gebruiken"
+        "use_suggested": "Voorgestelde waarde gebruiken",
+        "collect_now": "Nu verzamelen",
+        "node_status": {
+            "alive": "Bereikbaar",
+            "late": "Reageert traag",
+            "unreachable": "Onbereikbaar",
+            "never_seen": "Nooit verbonden",
+            "last_seen": "laatst gezien"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Selecteer een importbestand",
             "node_required": "Selecteer een collectorknooppunt",
             "export_selected_hint": "Geselecteerde bronnen exporteren",
-            "selected_count": "{count} OSINT-bron geselecteerd | {count} OSINT-bronnen geselecteerd"
+            "selected_count": "{count} OSINT-bron geselecteerd | {count} OSINT-bronnen geselecteerd",
+            "collecting": "Bezig met verzamelen…",
+            "disabled": "Uitgeschakeld",
+            "collect_started": "Verzamelen gestart",
+            "collect_error": "Verzamelen kon niet worden gestart",
+            "collect_conflict": "Deze bron wordt al verzameld",
+            "enable_error": "Kon de status van de bron niet wijzigen",
+            "enabled": "Ingeschakeld",
+            "due": "Verwacht",
+            "state_error": "Fout",
+            "state_stale": "Verouderd",
+            "state_pending": "In afwachting",
+            "none": "Geen OSINT-bronnen op deze node",
+            "group_all": "Alle",
+            "group_uncategorized": "Niet ingedeeld",
+            "delete_selected_hint": "Geselecteerde bronnen verwijderen",
+            "delete_selected_confirm": "{count} geselecteerde bronnen verwijderen? Dit kan niet ongedaan worden gemaakt.",
+            "delete_selected_success": "Geselecteerde bronnen verwijderd",
+            "delete_selected_error": "Sommige geselecteerde bronnen konden niet worden verwijderd"
         },
         "nodes": {
             "tab_description": "Hier kunt u collectorknooppunten beheren.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Collectorknooppunt is bijgewerkt",
             "removed": "Collectorknooppunt is verwijderd",
             "removed_error": "De collectorknooppunt is in gebruik en kon niet worden verwijderd",
-            "total_count": "{count} collectorknooppunt | {count} collectorknooppunten"
+            "total_count": "{count} collectorknooppunt | {count} collectorknooppunten",
+            "delete_error": "Kon de collectors-node niet verwijderen"
         }
     },
     "presenters": {
@@ -2003,14 +2032,7 @@
         },
         "confirm_delete_title": "Verwijderen bevestigen",
         "confirm_delete_node": "Public-web-knooppunt '{name}' en al zijn websites verwijderen?",
-        "confirm_delete_web": "Website '{name}' verwijderen?",
-        "status": {
-            "alive": "Bereikbaar",
-            "late": "Reageert traag",
-            "unreachable": "Onbereikbaar",
-            "never_seen": "Nooit verbonden",
-            "last_seen": "laatst gezien"
-        }
+        "confirm_delete_web": "Website '{name}' verwijderen?"
     },
     "routing": {
         "tab_title": "Routering en TLS",

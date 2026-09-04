@@ -397,6 +397,17 @@ export function deleteOSINTSource(source) {
     return ApiService.delete('/config/osint-sources/' + source.id)
 }
 
+export function collectOSINTSourceNow(source: { id: string }) {
+    // Answers as soon as the collector takes the work; a real run takes minutes.
+    return ApiService.post(`/config/osint-sources/${source.id}/collect`, {})
+}
+
+export function setOSINTSourceEnabled(source: { id: string }, enabled: boolean) {
+    // A dedicated endpoint, not the full-object PUT: that one also rewrites parameter values and
+    // reassigns groups from its payload, which a switch must never do.
+    return ApiService.put(`/config/osint-sources/${source.id}/enabled`, { enabled })
+}
+
 export function importOSINTSources(form_data) {
     return ApiService.upload('/config/import-osint-sources', form_data)
 }

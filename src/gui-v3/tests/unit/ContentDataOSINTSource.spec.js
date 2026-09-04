@@ -6,11 +6,12 @@ import AuthService from '@/services/auth_service'
 import OSINTSourcesView from '@/views/admin/OSINTSourcesView.vue'
 import { useOSINTSourceStore } from '@/stores/osint_source'
 
-const { importOSINTSources, exportOSINTSources, getAllOSINTSources, getAllCollectorsNodes } = vi.hoisted(() => ({
+const { importOSINTSources, exportOSINTSources, getAllOSINTSources, getAllCollectorsNodes, deleteOSINTSource } = vi.hoisted(() => ({
     importOSINTSources: vi.fn(),
     exportOSINTSources: vi.fn(),
     getAllOSINTSources: vi.fn(),
-    getAllCollectorsNodes: vi.fn()
+    getAllCollectorsNodes: vi.fn(),
+    deleteOSINTSource: vi.fn()
 }))
 
 vi.mock('@/api/config', async (importOriginal) => ({
@@ -18,7 +19,8 @@ vi.mock('@/api/config', async (importOriginal) => ({
     importOSINTSources,
     exportOSINTSources,
     getAllOSINTSources,
-    getAllCollectorsNodes
+    getAllCollectorsNodes,
+    deleteOSINTSource
 }))
 
 vi.mock('@/services/auth_service', () => ({
@@ -30,12 +32,13 @@ vi.mock('@/services/auth_service', () => ({
 const ToolbarFilterStub = {
     name: 'ToolbarFilter',
     props: ['selectedCount', 'showSelectedCount'],
-    template: '<div class="selected-count">{{ showSelectedCount ? selectedCount : 0 }} OSINT sources selected<slot name="addbutton" /></div>'
+    template:
+        '<div class="selected-count"><slot name="prepend" />{{ showSelectedCount ? selectedCount : 0 }} OSINT sources selected<slot name="addbutton" /></div>'
 }
 
 const ToolbarGroupStub = {
     name: 'ToolbarGroup',
-    emits: ['osint-import', 'osint-export', 'select-all'],
+    emits: ['osint-import', 'osint-export', 'osint-delete', 'select-all'],
     setup() {
         const osintSourceStore = useOSINTSourceStore()
         return {
@@ -50,8 +53,19 @@ const ToolbarGroupStub = {
             <button v-if="canImport" data-action="import" @click="$emit('osint-import')">Import</button>
             <button v-if="canExport" data-action="export" @click="$emit('osint-export')">Export</button>
             <button data-action="select-all" @click="$emit('select-all')">Select all</button>
+            <button data-action="delete" @click="$emit('osint-delete')">Delete selected</button>
         </div>
     `
+}
+
+// Standing in for the real dialog so a test can answer it; what is under test is what the view
+// does with the answer, not how the dialog asks.
+const ConfirmationDialogStub = {
+    name: 'ConfirmationDialog',
+    props: ['modelValue', 'message'],
+    emits: ['confirm'],
+    template:
+        '<div v-if="modelValue" class="confirm-delete"><span class="confirm-message">{{ message }}</span><button class="confirm-yes" @click="$emit(\'confirm\')">Yes</button></div>'
 }
 
 const ContentDataOSINTSourceStub = {
@@ -112,7 +126,8 @@ const mountScreen = (
                 VDialog: VDialogStub,
                 VForm: VFormStub,
                 VSelect: VSelectStub,
-                VFileInput: VFileInputStub
+                VFileInput: VFileInputStub,
+                ConfirmationDialog: ConfirmationDialogStub
             }
         }
     })
@@ -125,6 +140,7 @@ describe('OSINT source bulk actions on OSINTSourcesView', () => {
             (permission) => permission === 'CONFIG_OSINT_SOURCE_CREATE' || permission === 'CONFIG_OSINT_SOURCE_ACCESS'
         )
         importOSINTSources.mockResolvedValue({})
+        deleteOSINTSource.mockResolvedValue({})
         exportOSINTSources.mockResolvedValue({
             data: new Blob(['{}'], { type: 'application/json' }),
             headers: { 'content-disposition': 'attachment; filename="sources.json"' }
@@ -246,5 +262,80 @@ describe('OSINT source bulk actions on OSINTSourcesView', () => {
 
         expect(notifications.at(-1)).toMatchObject({ type: 'error', loc: 'collectors.sources.import_error' })
         expect(getAllOSINTSources).toHaveBeenCalledTimes(initialLoads)
+    })
+
+    describe('bulk delete', () => {
+        /**
+         * Deleting a selection is the one bulk action that cannot be undone, so it asks first and
+         * deletes only what was actually selected. The deletes run one at a time because each one
+         * has the owning collector node rebuild its schedule.
+         */
+        const selectTwoAndDelete = async (wrapper) => {
+            await wrapper.find('[data-action="select-source-1"]').trigger('click')
+            await wrapper.find('[data-action="select-source-3"]').trigger('click')
+            await wrapper.find('[data-action="delete"]').trigger('click')
+            await flushPromises()
+        }
+
+        it('asks before deleting anything', async () => {
+            const wrapper = await mountScreen()
+            await flushPromises()
+
+            await selectTwoAndDelete(wrapper)
+
+            expect(wrapper.find('.confirm-delete').exists()).toBe(true)
+            expect(deleteOSINTSource).not.toHaveBeenCalled()
+        })
+
+        it('deletes exactly the selected sources once confirmed, then reloads', async () => {
+            const wrapper = await mountScreen()
+            await flushPromises()
+            getAllOSINTSources.mockClear()
+
+            await selectTwoAndDelete(wrapper)
+            await wrapper.find('.confirm-yes').trigger('click')
+            await flushPromises()
+
+            expect(deleteOSINTSource).toHaveBeenCalledTimes(2)
+            expect(deleteOSINTSource.mock.calls.map(([source]) => source.id)).toEqual(['source-1', 'source-3'])
+            expect(getAllOSINTSources).toHaveBeenCalled()
+            expect(useOSINTSourceStore().getOSINTSourcesSelection).toEqual([])
+        })
+
+        it('does not open the dialog when nothing is selected', async () => {
+            const wrapper = await mountScreen()
+            await flushPromises()
+
+            await wrapper.find('[data-action="delete"]').trigger('click')
+            await flushPromises()
+
+            expect(wrapper.find('.confirm-delete').exists()).toBe(false)
+            expect(deleteOSINTSource).not.toHaveBeenCalled()
+        })
+
+        it('deletes the rest even when one source fails, and says so', async () => {
+            // The others were asked for just as explicitly; abandoning them would leave the
+            // operator to work out which half of their selection survived.
+            deleteOSINTSource.mockRejectedValueOnce(new Error('gone wrong'))
+            const notifications = []
+            const listener = (event) => notifications.push(event.detail)
+            window.addEventListener('notification', listener)
+
+            try {
+                const wrapper = await mountScreen()
+                await flushPromises()
+
+                await selectTwoAndDelete(wrapper)
+                await wrapper.find('.confirm-yes').trigger('click')
+                await flushPromises()
+
+                expect(deleteOSINTSource).toHaveBeenCalledTimes(2)
+                expect(notifications).toContainEqual(
+                    expect.objectContaining({ type: 'error', loc: 'collectors.sources.delete_selected_error' })
+                )
+            } finally {
+                window.removeEventListener('notification', listener)
+            }
+        })
     })
 })
