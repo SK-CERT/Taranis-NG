@@ -1280,6 +1280,7 @@
             "total_count": "{count} fonte OSINT | {count} fontes OSINT",
             "osint_source_groups": "Grupos de fontes OSINT",
             "tooltip": {
+                "toggle_selection": "Alternar modo de seleção de fontes OSINT",
                 "select_all": "Selecionar todos",
                 "unselect_all": "Desmarcar todos"
             },
@@ -1298,7 +1299,6 @@
             "file": "Arquivo de importação",
             "file_required": "Selecione um arquivo de importação",
             "node_required": "Selecione um nó coletor",
-            "export_all_hint": "Exportar todas as fontes",
             "export_selected_hint": "Exportar fontes selecionadas",
             "selected_count": "{count} fonte OSINT selecionada | {count} fontes OSINT selecionadas"
         },

@@ -1280,6 +1280,7 @@
             "total_count": "{count} nguồn OSINT | {count} nguồn OSINT",
             "osint_source_groups": "Nhóm nguồn OSINT",
             "tooltip": {
+                "toggle_selection": "Bật/tắt chế độ chọn nguồn OSINT",
                 "select_all": "Chọn tất cả",
                 "unselect_all": "Bỏ chọn tất cả"
             },
@@ -1298,7 +1299,6 @@
             "file": "Tệp nhập",
             "file_required": "Chọn tệp nhập",
             "node_required": "Chọn nút Collector",
-            "export_all_hint": "Xuất tất cả nguồn",
             "export_selected_hint": "Xuất nguồn đã chọn",
             "selected_count": "Đã chọn {count} nguồn OSINT | Đã chọn {count} nguồn OSINT"
         },

@@ -1280,6 +1280,7 @@
             "total_count": "لا توجد مصادر OSINT ({count}) | مصدر OSINT واحد ({count}) | مصدرا OSINT ({count}) | {count} مصادر OSINT | {count} مصدر OSINT | {count} مصدر OSINT",
             "osint_source_groups": "مجموعات مصادر OSINT",
             "tooltip": {
+                "toggle_selection": "تبديل وضع تحديد مصادر OSINT",
                 "select_all": "تحديد الكل",
                 "unselect_all": "إلغاء تحديد الكل"
             },
@@ -1298,7 +1299,6 @@
             "file": "ملف الاستيراد",
             "file_required": "اختر ملف استيراد",
             "node_required": "اختر عقدة مجمّعات",
-            "export_all_hint": "تصدير جميع المصادر",
             "export_selected_hint": "تصدير المصادر المحددة",
             "selected_count": "لم يُحدَّد أي مصدر OSINT ({count}) | حُدِّد مصدر OSINT واحد ({count}) | حُدِّد مصدران من مصادر OSINT ({count}) | حُدِّدت {count} مصادر OSINT | حُدِّد {count} مصدر OSINT | حُدِّد {count} مصدر OSINT"
         },

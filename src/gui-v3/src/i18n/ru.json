@@ -1280,6 +1280,7 @@
             "total_count": "Нет источников OSINT | {count} источник OSINT | {count} источника OSINT | {count} источников OSINT",
             "osint_source_groups": "Группы источников OSINT",
             "tooltip": {
+                "toggle_selection": "Переключить режим выбора источников OSINT",
                 "select_all": "Выбрать все",
                 "unselect_all": "Отменить выбор всех"
             },
@@ -1298,7 +1299,6 @@
             "file": "Файл импорта",
             "file_required": "Выберите файл импорта",
             "node_required": "Выберите узел Collector",
-            "export_all_hint": "Экспортировать все источники",
             "export_selected_hint": "Экспортировать выбранные источники",
             "selected_count": "Источники OSINT не выбраны | Выбран {count} источник OSINT | Выбрано {count} источника OSINT | Выбрано {count} источников OSINT"
         },

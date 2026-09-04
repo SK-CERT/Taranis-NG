@@ -1280,6 +1280,7 @@
             "total_count": "Brak źródeł OSINT | {count} źródło OSINT | {count} źródła OSINT | {count} źródeł OSINT",
             "osint_source_groups": "Grupy źródeł OSINT",
             "tooltip": {
+                "toggle_selection": "Przełącz tryb zaznaczania źródeł OSINT",
                 "select_all": "Zaznacz wszystkie",
                 "unselect_all": "Odznacz wszystkie"
             },
@@ -1298,7 +1299,6 @@
             "file": "Plik importu",
             "file_required": "Wybierz plik importu",
             "node_required": "Wybierz węzeł kolektora",
-            "export_all_hint": "Eksportuj wszystkie źródła",
             "export_selected_hint": "Eksportuj wybrane źródła",
             "selected_count": "Nie wybrano źródeł OSINT | Wybrano {count} źródło OSINT | Wybrano {count} źródła OSINT | Wybrano {count} źródeł OSINT"
         },

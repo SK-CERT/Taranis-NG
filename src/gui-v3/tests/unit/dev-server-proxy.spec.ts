@@ -18,7 +18,7 @@
  * login screen. The proxy is the origin as far as the backend is concerned, so it
  * has to present Host and Origin consistently.
  */
-import { spawn } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import type { ChildProcess } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { createServer as createHttpServer } from 'node:http'
@@ -31,6 +31,9 @@ type RecordedRequest = { url: string; headers: IncomingHttpHeaders }
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const STARTUP_TIMEOUT_MS = 60_000
+const npmCli = process.env['npm_execpath']
+const npmCommand = npmCli ? process.execPath : process.platform === 'win32' ? 'npm.cmd' : 'npm'
+const npmArgs = npmCli ? [npmCli, 'run', 'dev', '--', '--strictPort'] : ['run', 'dev', '--', '--strictPort']
 
 const received: RecordedRequest[] = []
 
@@ -107,7 +110,7 @@ beforeAll(async () => {
     const devPort = await reserveFreePort()
     devOrigin = `http://localhost:${devPort}`
 
-    dev = spawn('npm', ['run', 'dev', '--', '--strictPort'], {
+    dev = spawn(npmCommand, npmArgs, {
         cwd: root,
         // VITE_PORT keeps the test off 4444, where a developer's own dev server lives,
         // and off 5173. The three backend variables are pinned at the stub so that
@@ -122,8 +125,10 @@ beforeAll(async () => {
             VITE_APP_TARANIS_NG_CORE_SSE: `${backendOrigin}/sse`
         },
         stdio: ['ignore', 'pipe', 'pipe'],
+        shell: false,
+        windowsHide: true,
         // Own process group: npm forks vite, and killing npm alone would orphan it.
-        detached: true
+        detached: process.platform !== 'win32'
     })
     dev.stdout?.setEncoding('utf8')
     dev.stderr?.setEncoding('utf8')
@@ -136,7 +141,13 @@ beforeAll(async () => {
 afterAll(async () => {
     if (dev?.pid && dev.exitCode === null) {
         const exited = new Promise<void>((resolve) => dev.once('exit', () => resolve()))
-        process.kill(-dev.pid, 'SIGTERM')
+        if (process.platform === 'win32') {
+            await new Promise<void>((resolve) => {
+                execFile('taskkill', ['/pid', String(dev.pid), '/t', '/f'], () => resolve())
+            })
+        } else {
+            process.kill(-dev.pid, 'SIGTERM')
+        }
         await exited
     }
     await new Promise<void>((resolve) => backend.close(() => resolve()))

@@ -223,7 +223,7 @@ describe('configuration permission coverage matrix', () => {
         ['views/admin/PublisherPresetsView.vue', 'CONFIG_PUBLISHER_PRESET_DELETE'],
         ['views/admin/BotPresetsView.vue', 'CONFIG_BOT_PRESET_DELETE'],
         ['views/admin/ProductTypesView.vue', 'CONFIG_PRODUCT_TYPE_DELETE'],
-        ['components/config/collectors/OSINTSourceBulkList.vue', 'CONFIG_OSINT_SOURCE_DELETE']
+        ['components/config/collectors/ContentDataOSINTSource.vue', 'CONFIG_OSINT_SOURCE_DELETE']
     ]
 
     it.each(compactDeleteMatrix)('%s supplies its delete permission to compact rows', (relativePath, deletePermission) => {

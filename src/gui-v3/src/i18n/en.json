@@ -1280,6 +1280,7 @@
             "total_count": "{count} OSINT source | {count} OSINT sources",
             "osint_source_groups": "OSINT Source Groups",
             "tooltip": {
+                "toggle_selection": "Toggle OSINT sources selection mode",
                 "select_all": "Select All",
                 "unselect_all": "Unselect All"
             },
@@ -1298,7 +1299,6 @@
             "file": "Import file",
             "file_required": "Select an import file",
             "node_required": "Select a collectors node",
-            "export_all_hint": "Export all sources",
             "export_selected_hint": "Export selected sources",
             "selected_count": "{count} OSINT source selected | {count} OSINT sources selected"
         },

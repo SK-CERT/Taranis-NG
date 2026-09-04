@@ -1,7 +1,7 @@
 <template>
     <v-container
         fluid
-        class="pa-4"
+        class="pa-0"
     >
         <CardCompact
             v-for="item in items"
