@@ -11,7 +11,7 @@ python3 scripts/run_tests.py      # run every suite except e2e
 
 | Suite | What it covers | Where it lives |
 | --- | --- | --- |
-| `pytest` | Python unit tests | `src/core/tests`, `src/shared/tests` |
+| `pytest` | Python unit tests | `src/core/tests`, `src/shared/tests`, and one suite per service (see `PYTEST_SUITES`) |
 | `vitest` | GUI unit/component tests | `src/gui-v3/tests/unit` |
 | `ansible` | Playbook syntax check + `ansible-lint` | `ansible/playbooks`, `ansible/roles` |
 | `e2e` | Playwright end-to-end | `src/gui-v3/tests/e2e` |
@@ -136,9 +136,13 @@ point CI uses.
   `config` module before any application import — the same pattern `src/core/tests`
   uses. `tests/__init__.py` is deliberately absent (matching core) so pytest imports the
   test modules top-level instead of walking up to the service-root `__init__.py`.
-- **`src/bots`, `src/collectors` have no tests yet.** Add a `tests/` directory, then list
-  the project in `PYTEST_SUITES` in `scripts/run_tests.py` and in `testpaths` in the root
+- **`src/bots` has no tests yet.** Add a `tests/` directory, then list the project in
+  `PYTEST_SUITES` in `scripts/run_tests.py` and in `testpaths` in the root
   `pyproject.toml`.
+- **`src/collectors/tests` covers the email collector only.** It stubs `config` and
+  `TARANIS_NG_CORE_URL` the way presenters does, since `remote/core_api.py` reads both at
+  import time. The RSS, web, Slack and Twitter collectors all reach the network in
+  `collect()` and have no coverage.
 - **`src/publishers/tests` has to bind its own package before pytest does.** It stubs
   `config` like presenters, and works around a service-root/inner-package name clash on
   top of that: `src/publishers/__init__.py` makes the service root a package called

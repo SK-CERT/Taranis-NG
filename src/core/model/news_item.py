@@ -19,7 +19,7 @@ from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.osint_source import OSINTSource, OSINTSourceGroup
 from model.tag_cloud import TagCloud
-from shared.common import TZ, remove_empty_html_tags, simplify_html_text, smart_truncate, strip_html
+from shared.common import TZ, remove_empty_html_tags, resolve_relative_links, simplify_html_text, smart_truncate, strip_html
 from shared.schema.acl_entry import ItemType
 from shared.schema.news_item import NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemDataSchema, NewsItemRemoteSchema, NewsItemSchema
 from sqlalchemy import and_, func, or_, orm
@@ -1066,7 +1066,8 @@ class NewsItemAggregate(db.Model):
         # sanitize news item from user manual input
         news_item_data.title = smart_truncate(strip_html(news_item_data.title), 200)
         news_item_data.review = smart_truncate(strip_html(news_item_data.review))
-        news_item_data.content = remove_empty_html_tags(simplify_html_text(news_item_data.content))
+        content = simplify_html_text(news_item_data.content)
+        news_item_data.content = remove_empty_html_tags(resolve_relative_links(content, news_item_data.link))
         news_item_data.author = strip_html(news_item_data.author)
         db.session.add(news_item_data)
         cls.create_new_for_all_groups(news_item_data)

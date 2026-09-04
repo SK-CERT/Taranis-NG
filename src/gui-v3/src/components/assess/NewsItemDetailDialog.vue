@@ -621,6 +621,24 @@
         padding: 0 24px 24px;
     }
 
+    /* Collected content is injected by v-html, so it carries no scope attribute - :deep()
+       is the only way to reach it. Preformatted bodies (a plain text email, an article the
+       RSS collector could not parse as HTML) keep their line breaks and indentation, but
+       must wrap: unwrapped <pre> would scroll the whole dialog sideways. */
+    .source-body :deep(pre) {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        margin: 0;
+        /* Monospace (the <pre> default) is kept on purpose: it is what holds the columns of
+           an ASCII table or a signature block together. */
+        font-size: inherit;
+    }
+
+    /* Nothing in an article may push the dialog wider than the pane. */
+    .source-body :deep(*) {
+        max-width: 100%;
+    }
+
     /* ---- Misc ---- */
     .truncate {
         white-space: nowrap;

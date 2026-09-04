@@ -34,6 +34,15 @@ jobs:
           enable-cache: true
       - name: Install dev tools (ruff, djlint) from lockstepped dependency group
         run: uv sync --group dev --no-install-project
+      - name: Check tool version lockstep
+        # Same check as the tool-versions pre-commit hook. It has to run here too:
+        # Dependabot bumps the dev group (uv ecosystem) and .pre-commit-config.yaml
+        # (pre-commit ecosystem) in separate PRs and runs no local hooks, so neither
+        # updates [tool.ruff] required-version. Merging one of those left the installed
+        # ruff ahead of required-version, and every later PR failed with "Required
+        # version does not match the running version" - in the lint step, far from the
+        # commit that caused it. Failing on the bump PR itself points at the fix.
+        run: python3 scripts/check_tool_versions.py
       - name: Run djlint lint
         run: uv run --group dev djlint src/presenters/templates src/gui-v3/index.html --lint --ignore=H021
       - name: Run ruff lint check (changed files only)
