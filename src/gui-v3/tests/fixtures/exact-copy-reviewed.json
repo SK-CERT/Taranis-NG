@@ -15,6 +15,9 @@
         "public_web.webs.image_favicon",
         "publishers.nodes.url",
         "routing.hsts_title",
+        "themes.cesnet",
+        "themes.skcert",
+        "themes.taranis",
         "word_lists.link"
     ],
     "byLocale": {
@@ -331,7 +334,9 @@
             "routing.served_hostname",
             "routing.tls_title",
             "settings.dashboard_view",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "themes.retro",
+            "themes.vintage"
         ],
         "de": [
             "access_management.roles.name",
@@ -393,6 +398,8 @@
             "routing.tab_title",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "themes.retro",
+            "themes.vintage",
             "word_lists.name",
             "workflow.state_types.initial",
             "workflow.state_types.normal",
@@ -423,6 +430,8 @@
             "routing.served_days_left",
             "settings.language_name_with_code",
             "settings.tab_general",
+            "themes.retro",
+            "themes.vintage",
             "workflow.state_types.final",
             "workflow.state_types.normal",
             "workflow.states.color"
@@ -491,6 +500,7 @@
             "settings.configuration_view",
             "settings.description",
             "settings.language_name_with_code",
+            "themes.vintage",
             "word_lists.description",
             "workflow.state_types.final",
             "workflow.state_types.initial",
@@ -534,7 +544,8 @@
             "publishers.presets.publisher",
             "report_item.id_with_value",
             "settings.dashboard_view",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "themes.vintage"
         ],
         "ja": [
             "bots.nodes.api_url",
@@ -602,6 +613,9 @@
             "routing.served_days_left",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "themes.amber",
+            "themes.retro",
+            "themes.vintage",
             "workflow.entity_types.product",
             "workflow.states.type",
             "workflow.tags_tab"
@@ -627,7 +641,9 @@
             "publishers.nodes.api_url",
             "report_item.id_with_value",
             "routing.served_days_left",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "themes.retro",
+            "themes.vintage"
         ],
         "pt-BR": [
             "asset.total",
@@ -657,6 +673,7 @@
             "routing.served_days_left",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "themes.vintage",
             "workflow.state_types.final",
             "workflow.state_types.normal",
             "workflow.tags_tab"
@@ -993,6 +1010,8 @@
             "routing.tls_title",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "themes.retro",
+            "themes.vintage",
             "word_lists.import"
         ],
         "th": [
@@ -1022,6 +1041,8 @@
             "publishers.nodes.api_url",
             "report_item.id_with_value",
             "settings.language_name_with_code",
+            "themes.retro",
+            "themes.vintage",
             "workflow.state_types.normal"
         ],
         "uk": [
@@ -1055,7 +1076,10 @@
             "presenters.types.presenter",
             "publishers.presets.publisher",
             "report_item.id_with_value",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "themes.retro",
+            "themes.valentine",
+            "themes.vintage"
         ],
         "zh-CN": [
             "bots.nodes.api_url",

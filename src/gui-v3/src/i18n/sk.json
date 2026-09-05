@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Formát dátumu",
         "HOTKEYS": "Povoliť klávesové skratky",
         "UI_LANGUAGE": "Jazyk používateľského rozhrania",
+        "UI_THEME": "Motív používateľského rozhrania",
         "CONTENT_DEFAULT_LANGUAGE": "Predvolený jazyk pre analýzy/publikácie",
         "REPORT_SELECTOR_READ_ONLY": "Otvoriť výber analýz v režime iba na čítanie",
         "SPELLCHECK": "Kontrolovať pravopis",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Hodnota nesmie obsahovať koniec riadka",
         "last_updated": "Naposledy upravil {user} dňa {at}",
         "error": "Nastavenia smerovania a TLS sa nepodarilo uložiť"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Bridlicový",
+        "forest": "Lesný",
+        "amber": "Jantárový",
+        "contrast": "Vysoký kontrast",
+        "doll": "Bábika",
+        "bubblegum": "Žuvačka",
+        "autumn": "Jeseň",
+        "retro": "Retro",
+        "valentine": "Valentín",
+        "summer": "Leto",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Levanduľa"
     }
 }

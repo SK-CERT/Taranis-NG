@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Formato data",
         "HOTKEYS": "Abilita scorciatoie",
         "UI_LANGUAGE": "Lingua dell’interfaccia utente",
+        "UI_THEME": "Tema dell'interfaccia utente",
         "CONTENT_DEFAULT_LANGUAGE": "Lingua predefinita per rapporti/prodotti",
         "REPORT_SELECTOR_READ_ONLY": "Apri il selettore degli elementi del rapporto in modalità di sola lettura",
         "SPELLCHECK": "Controllo ortografico",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Un valore non deve contenere interruzioni di riga",
         "last_updated": "Ultimo aggiornamento da {user} il {at}",
         "error": "Non è stato possibile salvare le impostazioni di routing e TLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Ardesia",
+        "forest": "Foresta",
+        "amber": "Ambra",
+        "contrast": "Contrasto elevato",
+        "doll": "Bambola",
+        "bubblegum": "Chewing gum",
+        "autumn": "Autunno",
+        "retro": "Retrò",
+        "valentine": "San Valentino",
+        "summer": "Estate",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavanda"
     }
 }

@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Datumsformat",
         "HOTKEYS": "Tastenkürzel aktivieren",
         "UI_LANGUAGE": "Sprache der Benutzeroberfläche",
+        "UI_THEME": "Design der Benutzeroberfläche",
         "CONTENT_DEFAULT_LANGUAGE": "Standardsprache für Berichte/Produkte",
         "REPORT_SELECTOR_READ_ONLY": "Berichtselementauswahl im schreibgeschützten Modus öffnen",
         "SPELLCHECK": "Rechtschreibprüfung",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Ein Wert darf keinen Zeilenumbruch enthalten",
         "last_updated": "Zuletzt von {user} am {at} aktualisiert",
         "error": "Die Routing- und TLS-Einstellungen konnten nicht gespeichert werden"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Schiefer",
+        "forest": "Wald",
+        "amber": "Bernstein",
+        "contrast": "Hoher Kontrast",
+        "doll": "Puppe",
+        "bubblegum": "Kaugummi",
+        "autumn": "Herbst",
+        "retro": "Retro",
+        "valentine": "Valentinstag",
+        "summer": "Sommer",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavendel"
     }
 }

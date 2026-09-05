@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Datumnotatie",
         "HOTKEYS": "Sneltoetsen inschakelen",
         "UI_LANGUAGE": "Taal van gebruikersinterface",
+        "UI_THEME": "Thema van de gebruikersinterface",
         "CONTENT_DEFAULT_LANGUAGE": "Standaardtaal voor rapporten/producten",
         "REPORT_SELECTOR_READ_ONLY": "Rapportitemkiezer in alleen-lezenmodus openen",
         "SPELLCHECK": "Spellingcontrole",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Een waarde mag geen regeleinde bevatten",
         "last_updated": "Laatst bijgewerkt door {user} op {at}",
         "error": "De routerings- en TLS-instellingen konden niet worden opgeslagen"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Leisteen",
+        "forest": "Bos",
+        "amber": "Amber",
+        "contrast": "Hoog contrast",
+        "doll": "Pop",
+        "bubblegum": "Kauwgom",
+        "autumn": "Herfst",
+        "retro": "Retro",
+        "valentine": "Valentijn",
+        "summer": "Zomer",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavendel"
     }
 }

@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "날짜 형식",
         "HOTKEYS": "단축키 활성화",
         "UI_LANGUAGE": "사용자 인터페이스 언어",
+        "UI_THEME": "사용자 인터페이스 테마",
         "CONTENT_DEFAULT_LANGUAGE": "보고서/제품 기본 언어",
         "REPORT_SELECTOR_READ_ONLY": "보고서 항목 선택기를 읽기 전용 모드로 열기",
         "SPELLCHECK": "맞춤법 검사",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "값에는 줄 바꿈이 포함될 수 없습니다",
         "last_updated": "{user} 사용자가 {at}에 마지막으로 업데이트함",
         "error": "라우팅 및 TLS 설정을 저장하지 못했습니다"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "슬레이트",
+        "forest": "포레스트",
+        "amber": "앰버",
+        "contrast": "고대비",
+        "doll": "인형",
+        "bubblegum": "풍선껌",
+        "autumn": "가을",
+        "retro": "레트로",
+        "valentine": "발렌타인",
+        "summer": "여름",
+        "vintage": "빈티지",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "라벤더"
     }
 }

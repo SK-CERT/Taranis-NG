@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Tarih biçimi",
         "HOTKEYS": "Kısayol tuşlarını etkinleştir",
         "UI_LANGUAGE": "Kullanıcı arabirimi dili",
+        "UI_THEME": "Kullanıcı arayüzü teması",
         "CONTENT_DEFAULT_LANGUAGE": "Raporlar ve ürünler için varsayılan dil",
         "REPORT_SELECTOR_READ_ONLY": "Rapor öğesi seçicisini salt okunur modda aç",
         "SPELLCHECK": "Yazım denetimi",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Bir değer satır sonu içeremez",
         "last_updated": "Son güncelleme: {user}, {at}",
         "error": "Yönlendirme ve TLS ayarları kaydedilemedi"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Arduvaz",
+        "forest": "Orman",
+        "amber": "Kehribar",
+        "contrast": "Yüksek kontrast",
+        "doll": "Oyuncak bebek",
+        "bubblegum": "Balonlu sakız",
+        "autumn": "Sonbahar",
+        "retro": "Retro",
+        "valentine": "Sevgililer Günü",
+        "summer": "Yaz",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavanta"
     }
 }

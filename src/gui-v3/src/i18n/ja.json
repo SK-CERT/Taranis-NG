@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "日付形式",
         "HOTKEYS": "ホットキーを有効化",
         "UI_LANGUAGE": "ユーザーインターフェースの言語",
+        "UI_THEME": "ユーザーインターフェイスのテーマ",
         "CONTENT_DEFAULT_LANGUAGE": "レポート／プロダクトの既定言語",
         "REPORT_SELECTOR_READ_ONLY": "レポート項目セレクターを読み取り専用モードで開く",
         "SPELLCHECK": "スペルチェック",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "値に改行を含めることはできません",
         "last_updated": "{user} が {at} に最終更新",
         "error": "ルーティングと TLS の設定を保存できませんでした"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "スレート",
+        "forest": "フォレスト",
+        "amber": "アンバー",
+        "contrast": "ハイコントラスト",
+        "doll": "ドール",
+        "bubblegum": "バブルガム",
+        "autumn": "秋",
+        "retro": "レトロ",
+        "valentine": "バレンタイン",
+        "summer": "夏",
+        "vintage": "ヴィンテージ",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "ラベンダー"
     }
 }
