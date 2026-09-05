@@ -30,6 +30,7 @@ class AttributeType(Enum):
     CVE = auto()
     CVSS = auto()
     CWE = auto()
+    MULTI_CHOICE = auto()
 
 
 class AttributeValidator(Enum):
@@ -60,7 +61,7 @@ class AttributeEnumSchema(Schema):
     description = fields.Str()
 
     @post_load
-    def make_attribute_enum(self, data, **kwargs):
+    def make_attribute_enum(self, data: dict, **kwargs) -> "AttributeEnum":  # noqa: ANN003, ARG002
         """Create an AttributeEnum object from the loaded data."""
         return AttributeEnum(**data)
 
@@ -68,10 +69,13 @@ class AttributeEnumSchema(Schema):
 class AttributeEnum:
     """Class representing an attribute enum."""
 
-    def __init__(self, id, index, value, description):
+    # `id` shadows the builtin, but the name is the schema field marshmallow unpacks
+    # into this constructor, so renaming it would break deserialization.
+    def __init__(self, id: int, index: int, value: str, description: str) -> None:  # noqa: A002
         """Initialize an Attribute object.
 
         Args:
+            id (int): The ID of the attribute.
             index (int): The index of the attribute.
             value (str): The value of the attribute.
             description (str): The description of the attribute.
@@ -99,7 +103,7 @@ class AttributeBaseSchema(Schema):
     validator_parameter = fields.Str(allow_none=True)
 
     @post_load
-    def make_attribute(self, data, **kwargs):
+    def make_attribute(self, data: dict, **kwargs) -> "Attribute":  # noqa: ANN003, ARG002
         """Create an Attribute object from the loaded data."""
         return Attribute(**data)
 
@@ -119,7 +123,19 @@ class AttributePresentationSchema(AttributeSchema, PresentationSchema):
 class Attribute:
     """Class representing an attribute."""
 
-    def __init__(self, id, name, description, type, default_value, validator, validator_parameter, attribute_enums):
+    # `id` and `type` shadow builtins, but both are schema field names that marshmallow
+    # unpacks into this constructor, so renaming them would break deserialization.
+    def __init__(
+        self,
+        id: int,  # noqa: A002
+        name: str,
+        description: str | None,
+        type: AttributeType,  # noqa: A002
+        default_value: str | None,
+        validator: AttributeValidator | None,
+        validator_parameter: str | None,
+        attribute_enums: list[AttributeEnum],
+    ) -> None:
         """Initialize an Attribute object.
 
         Args:

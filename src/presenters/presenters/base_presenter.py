@@ -23,6 +23,7 @@ from cvss import CVSS2, CVSS3, CVSS4
 from jinja2.sandbox import SandboxedEnvironment
 from shared.common import TZ
 from shared.log_manager import logger
+from shared.schema.attribute import AttributeType
 from shared.schema.presenter import PresenterSchema
 from weasyprint import HTML
 
@@ -158,9 +159,19 @@ class BasePresenter:
             ) in attribute_group_items.items():
                 attr_type = attribute_map[attribute_group_item_id]
                 attr_key = attr_type.title.lower().replace(" ", "_")
+                # Not every caller supplies the attribute definition, so reach for it defensively:
+                # without the definition the group item still describes its values through
+                # max_occurrence below.
+                attr_definition = getattr(attr_type, "attribute", None)
 
                 if attr_key.startswith("cwe"):
                     value_to_add = {attribute.value: attribute.value_description for attribute in attribute_group_item}
+                elif getattr(attr_definition, "type", None) == AttributeType.MULTI_CHOICE:
+                    # A multiple choice field keeps its ticked values newline-joined in one value,
+                    # so templates get the list regardless of how max_occurrence is configured.
+                    value_to_add = [
+                        selected for attribute in attribute_group_item for selected in (attribute.value or "").split("\n") if selected
+                    ]
                 else:
                     max_occurrence = attr_type.max_occurrence
                     value_to_add = (
