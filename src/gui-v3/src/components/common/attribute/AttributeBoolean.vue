@@ -37,6 +37,7 @@
                         <v-switch
                             v-model="value.value"
                             :label="value.value ? $t('common.yes') : $t('common.no')"
+                            color="primary"
                             density="compact"
                             :disabled="value.locked || !canModify"
                             @focus="onFocus(index)"

@@ -31,7 +31,7 @@
                     <template #col_middle="{ delVisible, onDelete }">
                         <v-select
                             v-model="value.value"
-                            :items="attributeGroup.attribute?.enum_values || []"
+                            :items="enumItems"
                             density="compact"
                             variant="outlined"
                             hide-details="auto"
@@ -56,12 +56,13 @@
 </template>
 
 <script setup lang="ts">
-    import { onMounted } from 'vue'
+    import { computed, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
     import { useAttributes } from './useAttributes'
+    import { enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup } from './enumOptions'
 
     type AttributeValueItem = {
         index?: string | number
@@ -71,12 +72,8 @@
         [key: string]: unknown
     }
 
-    type AttributeGroup = {
+    type AttributeGroup = EnumAttributeGroup & {
         min_occurrence?: number
-        attribute?: {
-            enum_values?: Array<string | number>
-        }
-        [key: string]: unknown
     }
 
     const props = withDefaults(
@@ -98,6 +95,12 @@
     const { t } = useI18n()
 
     const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+
+    // The backend ships the constants as `{ id, index, value, description }` objects, so map
+    // them onto the `title`/`value` pair v-select reads by default.
+    const enumItems = computed(() =>
+        enumOptionsOf(props.attributeGroup).map((option) => ({ title: enumOptionLabel(option), value: enumOptionValue(option) }))
+    )
 
     onMounted(addInitialValues)
 </script>

@@ -357,7 +357,9 @@
         "not_available": "Não disponível",
         "aggregated_items_count": "Nenhuma notícia agregada | {count} notícia agregada | {count} notícias agregadas",
         "in_analyze_count": "Nenhuma análise em andamento | {count} análise em andamento | {count} análises em andamento",
-        "analyzed_count": "Nenhuma análise concluída | {count} análise concluída | {count} análises concluídas"
+        "analyzed_count": "Nenhuma análise concluída | {count} análise concluída | {count} análises concluídas",
+        "next_run": "Próxima execução",
+        "state": "Estado"
     },
     "attribute": {
         "add_constant": "Adicionar constante",
@@ -1237,7 +1239,15 @@
         "details": "Detalhes",
         "actions": "Ações",
         "close": "Fechar",
-        "use_suggested": "Usar valor sugerido"
+        "use_suggested": "Usar valor sugerido",
+        "collect_now": "Coletar agora",
+        "node_status": {
+            "alive": "Acessível",
+            "late": "Resposta lenta",
+            "unreachable": "Inacessível",
+            "never_seen": "Nunca conectado",
+            "last_seen": "visto pela última vez"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Selecione um arquivo de importação",
             "node_required": "Selecione um nó coletor",
             "export_selected_hint": "Exportar fontes selecionadas",
-            "selected_count": "{count} fonte OSINT selecionada | {count} fontes OSINT selecionadas"
+            "selected_count": "{count} fonte OSINT selecionada | {count} fontes OSINT selecionadas",
+            "collecting": "Coletando…",
+            "disabled": "Desativado",
+            "collect_started": "Coleta iniciada",
+            "collect_error": "Não foi possível iniciar a coleta",
+            "collect_conflict": "Esta fonte já está sendo coletada",
+            "enable_error": "Não foi possível alterar o estado da fonte",
+            "enabled": "Ativado",
+            "due": "Pendente",
+            "state_error": "Erro",
+            "state_stale": "Desatualizado",
+            "state_pending": "Pendente",
+            "none": "Nenhuma fonte OSINT neste nó",
+            "group_all": "Todos",
+            "group_uncategorized": "Sem categoria",
+            "delete_selected_hint": "Excluir as fontes selecionadas",
+            "delete_selected_confirm": "Excluir {count} fontes selecionadas? Esta ação não pode ser desfeita.",
+            "delete_selected_success": "Fontes selecionadas excluídas",
+            "delete_selected_error": "Não foi possível excluir algumas fontes selecionadas"
         },
         "nodes": {
             "tab_description": "Aqui você pode gerenciar nós coletores.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Nó coletor atualizado com sucesso",
             "removed": "Nó coletor excluído com sucesso",
             "removed_error": "Nó coletor está em uso e não pôde ser excluído",
-            "total_count": "{count} nó coletor | {count} nós coletores"
+            "total_count": "{count} nó coletor | {count} nós coletores",
+            "delete_error": "Não foi possível excluir o nó de coletores"
         }
     },
     "presenters": {
@@ -1556,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Não é possível remover campos que os itens de relatório ainda usam: {fields}",
+            "in_use": "Não é possível excluir o tipo de relatório: ele é usado por itens de relatório ({count})",
             "tab_description": "Aqui você pode gerenciar tipos de relatório.",
             "add_new": "Adicionar novo tipo de item de relatório",
             "edit": "Editar tipo de item de relatório",
@@ -1572,6 +1603,7 @@
             "total_count": "{count} tipo de relatório | {count} tipos de relatório"
         },
         "attributes": {
+            "in_use": "Não é possível excluir o atributo: ele é usado por {types}",
             "tab_description": "Aqui você pode gerenciar atributos.",
             "add_new": "Adicionar novo atributo",
             "edit": "Editar atributo",
@@ -2003,14 +2035,7 @@
         },
         "confirm_delete_title": "Confirmar exclusão",
         "confirm_delete_node": "Excluir o nó public-web '{name}' e todos os seus sites?",
-        "confirm_delete_web": "Excluir o site '{name}'?",
-        "status": {
-            "alive": "Acessível",
-            "late": "Resposta lenta",
-            "unreachable": "Inacessível",
-            "never_seen": "Nunca conectado",
-            "last_seen": "visto pela última vez"
-        }
+        "confirm_delete_web": "Excluir o site '{name}'?"
     },
     "routing": {
         "tab_title": "Roteamento e TLS",

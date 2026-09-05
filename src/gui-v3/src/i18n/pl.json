@@ -357,7 +357,9 @@
         "not_available": "Niedostępne",
         "aggregated_items_count": "Brak zagregowanych elementów wiadomości | {count} zagregowany element wiadomości | {count} zagregowane elementy wiadomości | {count} zagregowanych elementów wiadomości",
         "in_analyze_count": "Brak trwających analiz | {count} trwająca analiza | {count} trwające analizy | {count} trwających analiz",
-        "analyzed_count": "Brak zakończonych analiz | {count} zakończona analiza | {count} zakończone analizy | {count} zakończonych analiz"
+        "analyzed_count": "Brak zakończonych analiz | {count} zakończona analiza | {count} zakończone analizy | {count} zakończonych analiz",
+        "next_run": "Następne uruchomienie",
+        "state": "Stan"
     },
     "attribute": {
         "add_constant": "Dodaj stałą",
@@ -1237,7 +1239,15 @@
         "details": "Szczegóły",
         "actions": "Działania",
         "close": "Zamknij",
-        "use_suggested": "Użyj sugerowanej wartości"
+        "use_suggested": "Użyj sugerowanej wartości",
+        "collect_now": "Zbierz teraz",
+        "node_status": {
+            "alive": "Osiągalny",
+            "late": "Wolno odpowiada",
+            "unreachable": "Nieosiągalny",
+            "never_seen": "Nigdy nie połączono",
+            "last_seen": "ostatnio widziano"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Wybierz plik importu",
             "node_required": "Wybierz węzeł kolektora",
             "export_selected_hint": "Eksportuj wybrane źródła",
-            "selected_count": "Nie wybrano źródeł OSINT | Wybrano {count} źródło OSINT | Wybrano {count} źródła OSINT | Wybrano {count} źródeł OSINT"
+            "selected_count": "Nie wybrano źródeł OSINT | Wybrano {count} źródło OSINT | Wybrano {count} źródła OSINT | Wybrano {count} źródeł OSINT",
+            "collecting": "Zbieranie…",
+            "disabled": "Wyłączone",
+            "collect_started": "Rozpoczęto zbieranie",
+            "collect_error": "Nie udało się rozpocząć zbierania",
+            "collect_conflict": "To źródło jest już zbierane",
+            "enable_error": "Nie udało się zmienić stanu źródła",
+            "enabled": "Włączone",
+            "due": "Oczekuje",
+            "state_error": "Błąd",
+            "state_stale": "Nieaktualne",
+            "state_pending": "Oczekuje",
+            "none": "Brak źródeł OSINT w tym węźle",
+            "group_all": "Wszystkie",
+            "group_uncategorized": "Bez kategorii",
+            "delete_selected_hint": "Usuń wybrane źródła",
+            "delete_selected_confirm": "Usunąć {count} wybranych źródeł? Tej operacji nie można cofnąć.",
+            "delete_selected_success": "Wybrane źródła zostały usunięte",
+            "delete_selected_error": "Niektórych wybranych źródeł nie udało się usunąć"
         },
         "nodes": {
             "tab_description": "Tutaj możesz zarządzać węzłami kolektorów.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Zaktualizowano węzeł kolektora",
             "removed": "Usunięto węzeł kolektora",
             "removed_error": "Węzeł kolektora jest używany i nie może zostać usunięty",
-            "total_count": "Brak węzłów kolektorów | {count} węzeł kolektora | {count} węzły kolektorów | {count} węzłów kolektorów"
+            "total_count": "Brak węzłów kolektorów | {count} węzeł kolektora | {count} węzły kolektorów | {count} węzłów kolektorów",
+            "delete_error": "Nie udało się usunąć węzła kolektorów"
         }
     },
     "presenters": {
@@ -1556,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Nie można usunąć pól, których nadal używają elementy raportu: {fields}",
+            "in_use": "Nie można usunąć typu raportu: jest używany przez elementy raportu ({count})",
             "tab_description": "Tutaj możesz zarządzać typami raportów.",
             "add_new": "Dodaj typ elementu raportu",
             "edit": "Edytuj typ elementu raportu",
@@ -1572,6 +1603,7 @@
             "total_count": "Brak typów raportów | {count} typ raportu | {count} typy raportów | {count} typów raportów"
         },
         "attributes": {
+            "in_use": "Nie można usunąć atrybutu: jest używany przez {types}",
             "tab_description": "Tutaj możesz zarządzać atrybutami.",
             "add_new": "Dodaj atrybut",
             "edit": "Edytuj atrybut",
@@ -2003,14 +2035,7 @@
         },
         "confirm_delete_title": "Potwierdź usunięcie",
         "confirm_delete_node": "Usunąć węzeł public-web '{name}' i wszystkie jego witryny?",
-        "confirm_delete_web": "Usunąć witrynę '{name}'?",
-        "status": {
-            "alive": "Osiągalny",
-            "late": "Wolno odpowiada",
-            "unreachable": "Nieosiągalny",
-            "never_seen": "Nigdy nie połączono",
-            "last_seen": "ostatnio widziano"
-        }
+        "confirm_delete_web": "Usunąć witrynę '{name}'?"
     },
     "routing": {
         "tab_title": "Routing i TLS",

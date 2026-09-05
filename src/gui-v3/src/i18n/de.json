@@ -357,7 +357,9 @@
         "not_available": "Nicht verfügbar",
         "aggregated_items_count": "Keine aggregierten Nachrichteneinträge | {count} aggregierter Nachrichteneintrag | {count} aggregierte Nachrichteneinträge",
         "in_analyze_count": "Keine laufenden Analysen | {count} laufende Analyse | {count} laufende Analysen",
-        "analyzed_count": "Keine abgeschlossenen Analysen | {count} abgeschlossene Analyse | {count} abgeschlossene Analysen"
+        "analyzed_count": "Keine abgeschlossenen Analysen | {count} abgeschlossene Analyse | {count} abgeschlossene Analysen",
+        "next_run": "Nächster Lauf",
+        "state": "Status"
     },
     "attribute": {
         "add_constant": "Konstante hinzufügen",
@@ -1237,7 +1239,15 @@
         "details": "Details",
         "actions": "Aktionen",
         "close": "Schließen",
-        "use_suggested": "Vorgeschlagenen Wert verwenden"
+        "use_suggested": "Vorgeschlagenen Wert verwenden",
+        "collect_now": "Jetzt sammeln",
+        "node_status": {
+            "alive": "Erreichbar",
+            "late": "Antwortet langsam",
+            "unreachable": "Nicht erreichbar",
+            "never_seen": "Nie verbunden",
+            "last_seen": "zuletzt gesehen"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Importdatei auswählen",
             "node_required": "Collector-Knoten auswählen",
             "export_selected_hint": "Ausgewählte Quellen exportieren",
-            "selected_count": "{count} OSINT-Quelle ausgewählt | {count} OSINT-Quellen ausgewählt"
+            "selected_count": "{count} OSINT-Quelle ausgewählt | {count} OSINT-Quellen ausgewählt",
+            "collecting": "Wird gesammelt…",
+            "disabled": "Deaktiviert",
+            "collect_started": "Sammlung gestartet",
+            "collect_error": "Sammlung konnte nicht gestartet werden",
+            "collect_conflict": "Diese Quelle wird bereits gesammelt",
+            "enable_error": "Status der Quelle konnte nicht geändert werden",
+            "enabled": "Aktiviert",
+            "due": "Fällig",
+            "state_error": "Fehler",
+            "state_stale": "Veraltet",
+            "state_pending": "Ausstehend",
+            "none": "Keine OSINT-Quellen auf diesem Knoten",
+            "group_all": "Alle",
+            "group_uncategorized": "Nicht kategorisiert",
+            "delete_selected_hint": "Ausgewählte Quellen löschen",
+            "delete_selected_confirm": "{count} ausgewählte Quellen löschen? Dies kann nicht rückgängig gemacht werden.",
+            "delete_selected_success": "Ausgewählte Quellen gelöscht",
+            "delete_selected_error": "Einige ausgewählte Quellen konnten nicht gelöscht werden"
         },
         "nodes": {
             "tab_description": "Hier können Sie Collector-Knoten verwalten.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Der Collector-Knoten wurde erfolgreich aktualisiert",
             "removed": "Der Collector-Knoten wurde erfolgreich gelöscht",
             "removed_error": "Der Collector-Knoten wird verwendet und konnte nicht gelöscht werden",
-            "total_count": "{count} Collector-Knoten | {count} Collector-Knoten"
+            "total_count": "{count} Collector-Knoten | {count} Collector-Knoten",
+            "delete_error": "Kollektor-Knoten konnte nicht gelöscht werden"
         }
     },
     "presenters": {
@@ -1556,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Felder, die von Report-Elementen noch verwendet werden, können nicht entfernt werden: {fields}",
+            "in_use": "Report-Typ kann nicht gelöscht werden: Er wird von Report-Elementen verwendet ({count})",
             "tab_description": "Hier können Sie Berichtstypen verwalten.",
             "add_new": "Neuen Berichtselementtyp hinzufügen",
             "edit": "Berichtselementtyp bearbeiten",
@@ -1572,6 +1603,7 @@
             "total_count": "{count} Berichtstyp | {count} Berichtstypen"
         },
         "attributes": {
+            "in_use": "Attribut kann nicht gelöscht werden: Es wird von {types} verwendet",
             "tab_description": "Hier können Sie Attribute verwalten.",
             "add_new": "Neues Attribut hinzufügen",
             "edit": "Attribut bearbeiten",
@@ -2003,14 +2035,7 @@
         },
         "confirm_delete_title": "Löschen bestätigen",
         "confirm_delete_node": "Public-Web-Knoten '{name}' und alle zugehörigen Websites löschen?",
-        "confirm_delete_web": "Website '{name}' löschen?",
-        "status": {
-            "alive": "Erreichbar",
-            "late": "Antwortet langsam",
-            "unreachable": "Nicht erreichbar",
-            "never_seen": "Nie verbunden",
-            "last_seen": "zuletzt gesehen"
-        }
+        "confirm_delete_web": "Website '{name}' löschen?"
     },
     "routing": {
         "tab_title": "Routing & TLS",

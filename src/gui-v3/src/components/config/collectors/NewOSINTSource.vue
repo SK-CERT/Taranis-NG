@@ -6,7 +6,10 @@
         scrollable
         @keydown.esc="requestClose"
     >
-        <template #activator="{ props: activatorProps }">
+        <template
+            v-if="!hideActivator"
+            #activator="{ props: activatorProps }"
+        >
             <AddNewButton
                 :show="canCreate"
                 v-bind="activatorProps"
@@ -268,9 +271,18 @@
     const props = withDefaults(
         defineProps<{
             editItem?: Partial<OSINTSourceItem> | null
+            /** Node to preselect when creating, so a per-node Add new lands on the right one. */
+            preselectNodeId?: string | number | null
+            /**
+             * Render no Add button. The dialog then opens only when `editItem` is set, which is
+             * how one edit dialog serves a list whose Add buttons live elsewhere.
+             */
+            hideActivator?: boolean
         }>(),
         {
-            editItem: null
+            editItem: null,
+            preselectNodeId: null,
+            hideActivator: false
         }
     )
 
@@ -438,7 +450,10 @@
             if (isEdit.value) {
                 syncCollectorSelection(localItem.value.collector_id)
             } else if (!selectedNode.value && nodes.value.length > 0) {
-                selectedNode.value = nodes.value[0] ?? null
+                // A per-node Add new says which node it belongs to; otherwise fall back to the
+                // first, which is what a single Add new at the top of the page means.
+                const preselected = props.preselectNodeId ? nodes.value.find((node) => node.id === props.preselectNodeId) : null
+                selectedNode.value = preselected ?? nodes.value[0] ?? null
                 selectedCollector.value = selectedNode.value?.collectors?.[0] ?? null
             }
         } catch (error) {

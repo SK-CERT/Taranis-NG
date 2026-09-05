@@ -23,6 +23,11 @@ BROWSER_PATHS = (
     "/api/v1/config/public-web-nodes",
     "/api/v1/config/collectors-nodes",
     "/api/v1/config/bots-nodes",
+    # Per-source actions on the config API. These sit under /config/ deliberately: the same
+    # actions under /collectors/ would land on the satellite entrypoint, where the GUI cannot
+    # reach them.
+    "/api/v1/config/osint-sources/abc/collect",
+    "/api/v1/config/osint-sources/abc/enabled",
     "/api/v1/assess/news-items",
     "/api/v1/auth/login",
     "/api/v1/isalive",
@@ -112,31 +117,57 @@ def test_the_unscoped_provider_route_is_not_published(core_labels: dict) -> None
     assert _entrypoints_for(core_labels, "/traefik/dynamic") == set()
 
 
+#: A satellite port mapping in the traefik service, whether live or commented out.
+SATELLITE_MAPPING = re.compile(r'^\s*#?\s*-\s*"(?P<mapping>[^"]*:8443)"\s*$', re.MULTILINE)
+
+
 def _satellite_mappings() -> list[str]:
+    """Every satellite mapping the compose file carries, commented out or not.
+
+    Read from the raw text rather than the parsed document on purpose. The mappings ship
+    commented out (see the test below), and an opt-in that has quietly drifted is worse
+    than no opt-in at all: the operator who uncomments it gets a port their workers were
+    never told to dial, and finds out as timeouts.
+    """
+    return [m.group("mapping") for m in SATELLITE_MAPPING.finditer(COMPOSE.read_text(encoding="utf-8"))]
+
+
+def _published_satellite_mappings() -> list[str]:
+    """Only the mappings docker would actually publish."""
     compose = yaml.safe_load(COMPOSE.read_text(encoding="utf-8"))
     return [p for p in compose["services"]["traefik"]["ports"] if "8443" in p]
 
 
 def test_the_satellite_port_is_not_exposed_by_default() -> None:
-    """A single-host install never uses it, so it must not open a port to the world."""
-    published = _satellite_mappings()
-    assert published, "the satellite entrypoint is no longer published at all"
-    assert all("-127.0.0.1}" in p or "-::1}" in p for p in published), (
+    """A single-host install never uses it, so it must not open a port to the world.
+
+    It is not published at all now: binding the IPv6 loopback fails outright on a host
+    with IPv6 disabled, which broke `compose up` for everyone to serve the few installs
+    that split core from its workers. Those installs uncomment the two lines below.
+    """
+    assert _published_satellite_mappings() == [], (
+        "the satellite entrypoint is published by default again; a single-host install never dials it, "
+        "and binding [::1] fails outright where IPv6 loopback is off"
+    )
+    offered = _satellite_mappings()
+    assert offered, "the satellite mappings are gone entirely; a distributed deployment has nothing to uncomment"
+    assert all("-127.0.0.1}" in p or "-::1}" in p for p in offered), (
         "every satellite mapping must default to a loopback bind; a distributed deployment opts in explicitly"
     )
 
 
-def test_the_satellite_port_is_published_on_both_address_families() -> None:
+def test_the_satellite_port_covers_both_address_families_when_enabled() -> None:
     """Naming a host address pins a mapping to that family.
 
-    Publishing only "0.0.0.0:8443:8443" leaves the port unreachable for a worker that
+    Offering only "0.0.0.0:8443:8443" would leave the port unreachable for a worker that
     resolves core's AAAA record - and unreachable as a timeout rather than a refusal,
     because with nothing published on v6 the packets fall through to filter/INPUT and a
     default-deny host firewall drops them. The other ports name no address at all and
-    are dual-stack for free; these two have to ask for it.
+    are dual-stack for free; these two have to ask for it. Still pinned while they are
+    commented out, so whoever enables them gets both.
     """
-    published = _satellite_mappings()
-    assert any(p.startswith("${TARANIS_NG_SATELLITE_BIND:-") for p in published), "no IPv4 satellite mapping"
-    assert any(p.startswith("[${TARANIS_NG_SATELLITE_BIND6:-") for p in published), (
+    offered = _satellite_mappings()
+    assert any(p.startswith("${TARANIS_NG_SATELLITE_BIND:-") for p in offered), "no IPv4 satellite mapping"
+    assert any(p.startswith("[${TARANIS_NG_SATELLITE_BIND6:-") for p in offered), (
         "no IPv6 satellite mapping - a worker resolving an AAAA record cannot reach the port"
     )

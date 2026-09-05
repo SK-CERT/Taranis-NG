@@ -44,6 +44,14 @@ class ConfigPresenter(ConfigBase):
                 ParameterType.STRING,
                 "/app/templates/email_body_template.txt",
             ),
+            param_type(
+                "HEADERS_TEMPLATE_PATH",
+                "Path to Headers template",
+                "Optional. Path to a message headers template file. Each rendered 'X-Name: value' line becomes a "
+                "custom mail header; repeat a name to send several values. Leave empty to send no custom headers. "
+                "Example: /app/templates/email_headers_template.txt",
+                ParameterType.STRING,
+            ),
             param_type("ATTACHMENT_TEMPLATE_PATH", "Path to PDF attachment template", "Path to PDF template file", ParameterType.STRING),
             param_type(
                 "ATTACHMENT_FILE_NAME",
