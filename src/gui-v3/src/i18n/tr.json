@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Rapor öğelerinin hâlâ kullandığı alanlar kaldırılamaz: {fields}",
+            "in_use": "Rapor türü silinemiyor: rapor öğeleri tarafından kullanılıyor ({count})",
             "tab_description": "Rapor öğesi türleri buradan yönetilebilir.",
             "add_new": "Yeni rapor öğesi türü ekle",
             "edit": "Rapor öğesi türünü düzenle",
@@ -1601,6 +1603,7 @@
             "total_count": "Rapor türü yok | {count} rapor türü | {count} rapor türü"
         },
         "attributes": {
+            "in_use": "Öznitelik silinemiyor: {types} tarafından kullanılıyor",
             "tab_description": "Öznitelikler buradan yönetilebilir.",
             "add_new": "Yeni öznitelik ekle",
             "edit": "Özniteliği düzenle",

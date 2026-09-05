@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "No se pueden eliminar campos que los elementos de informe siguen usando: {fields}",
+            "in_use": "No se puede eliminar el tipo de informe: lo usan elementos de informe ({count})",
             "tab_description": "Aquí puede gestionar los tipos de informe.",
             "add_new": "Añadir tipo de elemento de informe",
             "edit": "Editar tipo de elemento de informe",
@@ -1601,6 +1603,7 @@
             "total_count": "{count} tipo de informe | {count} tipos de informe"
         },
         "attributes": {
+            "in_use": "No se puede eliminar el atributo: lo utiliza {types}",
             "tab_description": "Aquí puede gestionar los atributos.",
             "add_new": "Añadir atributo",
             "edit": "Editar atributo",

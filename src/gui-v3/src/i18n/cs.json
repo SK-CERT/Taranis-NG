@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Nelze odebrat pole, která stále používají reporty: {fields}",
+            "in_use": "Typ reportu nelze smazat: je použitý v reportech ({count})",
             "tab_description": "Zde můžete spravovat typy reportů.",
             "add_new": "Přidat nový typ analýzy",
             "edit": "Upravit typ analýzy",
@@ -1601,6 +1603,7 @@
             "total_count": "Žádné typy analýz | {count} typ analýzy | {count} typy analýz | {count} typů analýz"
         },
         "attributes": {
+            "in_use": "Atribut nelze smazat: je použitý v {types}",
             "tab_description": "Zde můžete spravovat atributy.",
             "add_new": "Přidat nový atribut",
             "edit": "Upravit atribut",

@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Nie można usunąć pól, których nadal używają elementy raportu: {fields}",
+            "in_use": "Nie można usunąć typu raportu: jest używany przez elementy raportu ({count})",
             "tab_description": "Tutaj możesz zarządzać typami raportów.",
             "add_new": "Dodaj typ elementu raportu",
             "edit": "Edytuj typ elementu raportu",
@@ -1601,6 +1603,7 @@
             "total_count": "Brak typów raportów | {count} typ raportu | {count} typy raportów | {count} typów raportów"
         },
         "attributes": {
+            "in_use": "Nie można usunąć atrybutu: jest używany przez {types}",
             "tab_description": "Tutaj możesz zarządzać atrybutami.",
             "add_new": "Dodaj atrybut",
             "edit": "Edytuj atrybut",

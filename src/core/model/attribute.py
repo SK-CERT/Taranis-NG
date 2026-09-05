@@ -15,11 +15,25 @@ from managers.log_manager import logger
 from marshmallow import fields, post_load
 from shared.schema.attribute import AttributeBaseSchema, AttributeEnumSchema, AttributePresentationSchema, AttributeType, AttributeValidator
 from sqlalchemy import and_, func, or_, orm
+from sqlalchemy.orm import noload
 from tqdm import tqdm
 
 # Dictionary imports run to hundreds of thousands of rows, so they are committed in
 # batches rather than in one transaction.
 IMPORT_COMMIT_BATCH = 1000
+
+
+class AttributeInUseError(Exception):
+    """Raised when an attribute cannot be deleted because report types still use it."""
+
+    def __init__(self, report_types: list[str]) -> None:
+        """Record the report types that block the deletion.
+
+        Args:
+            report_types (list[str]): Titles of the report types using the attribute.
+        """
+        self.report_types = report_types
+        super().__init__(f"Attribute is used by report types: {', '.join(report_types)}")
 
 
 class NewAttributeEnumSchema(AttributeEnumSchema):
@@ -89,18 +103,6 @@ class AttributeEnum(db.Model):
             int: Number of attribute enums.
         """
         return cls.query.filter_by(attribute_id=attribute_id).count()
-
-    @classmethod
-    def get_all_for_attribute(cls, attribute_id: int) -> list["AttributeEnum"]:
-        """Get all attribute enums for an attribute.
-
-        Args:
-            attribute_id (int): The ID of the attribute.
-
-        Returns:
-            list: A list of attribute enums for the specified attribute, ordered by index.
-        """
-        return cls.query.filter_by(attribute_id=attribute_id).order_by(db.asc(AttributeEnum.index)).all()
 
     @classmethod
     def get_for_attribute(cls, attribute_id: int, search: str | None, offset: int, limit: int) -> tuple[list["AttributeEnum"], int]:
@@ -262,7 +264,10 @@ class NewAttributeSchema(AttributeBaseSchema):
         An instance of the NewAttributeSchema class.
     """
 
-    attribute_enums = fields.Nested(NewAttributeEnumSchema, many=True)
+    # load_default: an update round-tripped from a configuration list row arrives without the
+    # constants, which that list no longer ships. Attribute.update ignores them; they are created
+    # and edited through /config/attributes/<id>/enums.
+    attribute_enums = fields.Nested(NewAttributeEnumSchema, many=True, load_default=list)
 
     @post_load
     def make_attribute(self, data: dict, **kwargs) -> "Attribute":  # noqa: ANN003, ARG002
@@ -409,7 +414,9 @@ class Attribute(db.Model):
         Returns:
             tuple: A tuple containing the list of attributes and the total count.
         """
-        query = cls.query
+        # noload overrides the relationship's lazy="subquery": get_all_json is the only caller and
+        # it does not serialise the constants, so loading them would be work for nothing.
+        query = cls.query.options(noload(cls.attribute_enums))
 
         if search is not None:
             search_string = f"%{search}%"
@@ -428,35 +435,14 @@ class Attribute(db.Model):
             dict: A dictionary containing the total count and the items in JSON format.
         """
         attributes, total_count = cls.get(search)
-        for attribute in attributes:
-            if attribute.type in (AttributeType.CPE, AttributeType.CVE):
-                attribute.attribute_enums = []
-            else:
-                attribute.attribute_enums = AttributeEnum.get_all_for_attribute(attribute.id)
 
-        attribute_schema = AttributePresentationSchema(many=True)
+        # Without the constants: the list shows name, type and description, and both GUIs load an
+        # attribute's constants from the paginated /enums endpoint when the edit dialog opens.
+        # Nesting them here shipped every constant of every attribute on every page load - CPE and
+        # CVE were already skipped for that reason, but a loaded CWE dictionary is just as large,
+        # and this also loaded each attribute's rows a second time on top of the relationship.
+        attribute_schema = AttributePresentationSchema(many=True, exclude=("attribute_enums",))
         return {"total_count": total_count, "items": attribute_schema.dump(attributes)}
-
-    @classmethod
-    def create_attribute(cls, attribute: "Attribute") -> None:
-        """Create a new attribute.
-
-        Args:
-            attribute (Attribute): The attribute object.
-
-        Returns:
-            None
-        """
-        db.session.add(attribute)
-        db.session.commit()
-
-        for attribute_enum in attribute.attribute_enums:
-            attribute_enum.attribute_id = attribute.id
-            db.session.add(attribute_enum)
-
-        attribute.attribute_enums = []
-
-        db.session.commit()
 
     @classmethod
     def add_attribute(cls, attribute_data: dict) -> None:
@@ -470,16 +456,15 @@ class Attribute(db.Model):
         """
         attribute_schema = NewAttributeSchema()
         attribute = attribute_schema.load(attribute_data)
-        db.session.add(attribute)
-        db.session.commit()
 
+        # The relationship cascade inserts the constants along with the attribute and fills in
+        # their attribute_id. Clearing the collection afterwards (as this used to do) would
+        # de-associate the rows it had just written and null that foreign key back out, so the
+        # constants of a freshly created RADIO/ENUM/MULTI_CHOICE attribute were lost.
         for count, attribute_enum in enumerate(attribute.attribute_enums):
-            attribute_enum.attribute_id = attribute.id
             attribute_enum.index = count
-            db.session.add(attribute_enum)
 
-        attribute.attribute_enums = []
-
+        db.session.add(attribute)
         db.session.commit()
 
     @classmethod
@@ -506,12 +491,48 @@ class Attribute(db.Model):
 
     @classmethod
     # `id` shadows the builtin; it is part of this classmethod's existing call signature.
+    def report_types_using(cls, id: int) -> list[str]:  # noqa: A002
+        """Titles of the report types whose fields are built on this attribute.
+
+        Args:
+            id (int): The ID of the attribute.
+
+        Returns:
+            list[str]: Report type titles, sorted, without duplicates.
+        """
+        # Imported here: report_item_type imports this module, so a module-level import
+        # of it would be circular.
+        from model.report_item_type import AttributeGroup, AttributeGroupItem, ReportItemType  # noqa: PLC0415
+
+        titles = (
+            db.session.query(ReportItemType.title)
+            .join(AttributeGroup, AttributeGroup.report_item_type_id == ReportItemType.id)
+            .join(AttributeGroupItem, AttributeGroupItem.attribute_group_id == AttributeGroup.id)
+            .filter(AttributeGroupItem.attribute_id == id)
+            .distinct()
+            .all()
+        )
+        return sorted(title for (title,) in titles)
+
+    @classmethod
+    # `id` shadows the builtin; it is part of this classmethod's existing call signature.
     def delete_attribute(cls, id: int) -> None:  # noqa: A002
         """Delete an attribute.
 
         Args:
             id (int): The ID of the attribute.
+
+        Raises:
+            AttributeInUseError: If a report type still builds a field on this attribute.
         """
+        # attribute_group_item.attribute_id cascades on delete, so removing an attribute that
+        # a report type uses would strip those fields from the report type - and fail outright
+        # with a foreign key violation once report items hold values for them. Refuse instead,
+        # and name the report types that have to be edited first.
+        report_types = cls.report_types_using(id)
+        if report_types:
+            raise AttributeInUseError(report_types)
+
         attribute = db.session.get(cls, id)
         AttributeEnum.delete_for_attribute(id)
         db.session.delete(attribute)

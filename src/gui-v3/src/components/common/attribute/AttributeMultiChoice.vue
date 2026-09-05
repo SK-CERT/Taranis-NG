@@ -45,6 +45,7 @@
                                 :key="`${index}-${optionIndex}`"
                                 :model-value="isChecked(value, option)"
                                 :label="getOptionLabel(option)"
+                                color="primary"
                                 density="compact"
                                 hide-details
                                 :disabled="value.locked || !canModify"
@@ -64,6 +65,7 @@
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import { useAttributes } from './useAttributes'
+    import { enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup, type EnumOption } from './enumOptions'
 
     type AttributeValueItem = {
         index?: string | number
@@ -73,24 +75,10 @@
         [key: string]: unknown
     }
 
-    type MultiChoiceOptionObject = {
-        value?: string | number
-        title?: string
-        name?: string
-        id?: string | number
-        [key: string]: unknown
-    }
+    type MultiChoiceOption = EnumOption
 
-    type MultiChoiceOption = string | number | MultiChoiceOptionObject
-
-    type AttributeGroup = {
+    type AttributeGroup = EnumAttributeGroup & {
         min_occurrence?: number
-        attribute?: {
-            attribute_enums?: MultiChoiceOption[]
-            enum_items?: MultiChoiceOption[]
-            enum_values?: MultiChoiceOption[]
-        }
-        [key: string]: unknown
     }
 
     const props = withDefaults(
@@ -117,28 +105,10 @@
     // single record: one lock, one version, one update per change.
     const SEPARATOR = '\n'
 
-    const choiceOptions = computed<MultiChoiceOption[]>(() => {
-        return (
-            props.attributeGroup?.attribute?.attribute_enums ||
-            props.attributeGroup?.attribute?.enum_items ||
-            props.attributeGroup?.attribute?.enum_values ||
-            []
-        )
-    })
+    const choiceOptions = computed<MultiChoiceOption[]>(() => enumOptionsOf(props.attributeGroup))
 
-    const getOptionLabel = (option: MultiChoiceOption): string => {
-        if (option && typeof option === 'object') {
-            return String(option.value ?? option.title ?? option.name ?? option.id ?? '')
-        }
-        return String(option ?? '')
-    }
-
-    const getOptionValue = (option: MultiChoiceOption): any => {
-        if (option && typeof option === 'object') {
-            return option.value ?? option.id ?? option.title ?? option.name
-        }
-        return option
-    }
+    const getOptionLabel = enumOptionLabel
+    const getOptionValue = enumOptionValue
 
     const parseSelection = (raw: unknown): string[] => {
         return typeof raw === 'string' && raw.length > 0 ? raw.split(SEPARATOR).filter((entry) => entry !== '') : []

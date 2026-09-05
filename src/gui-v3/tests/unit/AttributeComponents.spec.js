@@ -335,6 +335,36 @@ describe('AttributeEnum', () => {
         const wrapper = mountAttr(AttributeEnum, { ...baseProps({}, enumGroup), attributeGroup: enumGroup })
         expect(wrapper.findComponent({ name: 'VSelect' }).exists()).toBe(true)
     })
+
+    it('offers the constants the backend sends as attribute_enums', () => {
+        const backendEnumGroup = makeAttributeGroup({
+            attribute: {
+                type: 'ENUM',
+                attribute_enums: [
+                    { id: 1, index: 0, value: 'High', description: '' },
+                    { id: 2, index: 1, value: 'Medium', description: '' },
+                    { id: 3, index: 2, value: 'Low', description: '' }
+                ]
+            }
+        })
+
+        const wrapper = mountAttr(AttributeEnum, { ...baseProps({}, backendEnumGroup), attributeGroup: backendEnumGroup })
+        const select = wrapper.findComponent({ name: 'VSelect' })
+
+        expect(select.props('items')).toEqual([
+            { title: 'High', value: 'High' },
+            { title: 'Medium', value: 'Medium' },
+            { title: 'Low', value: 'Low' }
+        ])
+    })
+
+    it('falls back to the enum_items key', () => {
+        const wrapper = mountAttr(AttributeEnum, { ...baseProps({}, enumGroup), attributeGroup: enumGroup })
+        expect(wrapper.findComponent({ name: 'VSelect' }).props('items')).toEqual([
+            { title: 'option-a', value: 'option-a' },
+            { title: 'option-b', value: 'option-b' }
+        ])
+    })
 })
 
 // ── AttributeRadio ────────────────────────────────────────────────────────────
@@ -365,6 +395,11 @@ describe('AttributeRadio', () => {
     it('shows VRadioGroup in edit mode', () => {
         const wrapper = mountAttr(AttributeRadio, { ...baseProps(), attributeGroup: radioGroup })
         expect(wrapper.findComponent({ name: 'VRadioGroup' }).exists()).toBe(true)
+    })
+
+    it('colours the radio buttons so a selected option reads as selected', () => {
+        const wrapper = mountAttr(AttributeRadio, { ...baseProps(), attributeGroup: radioGroup })
+        expect(wrapper.findComponent({ name: 'VRadio' }).props('color')).toBe('primary')
     })
 
     it('renders selectable radio options from backend attribute_enums', () => {
@@ -408,6 +443,11 @@ describe('AttributeMultiChoice', () => {
 
     it('renders without error', () => {
         expect(mountAttr(AttributeMultiChoice, multiChoiceProps({ value: '' })).exists()).toBe(true)
+    })
+
+    it('colours the checkboxes so a ticked option reads as ticked', () => {
+        const wrapper = mountAttr(AttributeMultiChoice, multiChoiceProps({ value: '' }))
+        expect(wrapper.findComponent({ name: 'VCheckbox' }).props('color')).toBe('primary')
     })
 
     it('renders one checkbox per backend attribute_enum', () => {
@@ -491,6 +531,13 @@ describe('AttributeBoolean', () => {
     it('shows VSwitch in edit mode', () => {
         const wrapper = mountAttr(AttributeBoolean, baseProps({ value: true }))
         expect(wrapper.findComponent({ name: 'VSwitch' }).exists()).toBe(true)
+    })
+
+    it('colours the switch so the on state is visible', () => {
+        // Vuetify keeps the track in the default grey unless a colour is given, which made the
+        // toggle look identical whether it was on or off.
+        const wrapper = mountAttr(AttributeBoolean, baseProps({ value: true }))
+        expect(wrapper.findComponent({ name: 'VSwitch' }).props('color')).toBe('primary')
     })
 })
 

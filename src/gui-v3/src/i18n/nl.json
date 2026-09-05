@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Velden die rapportitems nog gebruiken kunnen niet worden verwijderd: {fields}",
+            "in_use": "Rapporttype kan niet worden verwijderd: het wordt gebruikt door rapportitems ({count})",
             "tab_description": "Hier kunt u report types beheren.",
             "add_new": "Nieuwe rapportitemtype toevoegen",
             "edit": "Rapportitemtype bewerken",
@@ -1601,6 +1603,7 @@
             "total_count": "{count} rapporttype | {count} rapporttypen"
         },
         "attributes": {
+            "in_use": "Attribuut kan niet worden verwijderd: het wordt gebruikt door {types}",
             "tab_description": "Hier kunt u kenmerken beheren.",
             "add_new": "Nieuwe kenmerk toevoegen",
             "edit": "Kenmerk bewerken",

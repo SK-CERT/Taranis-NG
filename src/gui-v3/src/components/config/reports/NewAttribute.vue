@@ -105,8 +105,14 @@
                             />
                         </v-col>
                     </v-row>
+                </v-form>
 
-                    <!-- Attribute constants (enums) -->
+                <!--
+                    Attribute constants (enums). Deliberately outside the form above: the form is
+                    reset on close, which would otherwise clear the constants search field, and its
+                    `disabled` binding would leak onto the table.
+                -->
+                <template v-if="supportsConstants">
                     <div
                         v-if="canImportConstants || canReloadDictionary"
                         class="constant-tools d-flex flex-wrap align-center ga-2 mt-2"
@@ -151,7 +157,6 @@
                     </v-alert>
 
                     <EditableEntityTable
-                        :key="tableKey"
                         v-model:dialog="constantDialog"
                         v-model:page="constantPage"
                         v-model:items-per-page="constantPageSize"
@@ -194,7 +199,7 @@
                             />
                         </template>
                     </EditableEntityTable>
-                </v-form>
+                </template>
 
                 <v-alert
                     v-if="showValidationError"
@@ -323,6 +328,8 @@
     const saving = ref(false)
     const dialog = ref(false)
 
+    // Listed in the order the backend enum declares them, then sorted for display: the list is
+    // long enough that alphabetical is the only way to find a type at a glance.
     const attributeTypes: SelectItem<AttributeType>[] = [
         { title: 'String', value: 'STRING' },
         { title: 'Number', value: 'NUMBER' },
@@ -343,6 +350,7 @@
         { title: 'CWE', value: 'CWE' },
         { title: 'Multiple Choice', value: 'MULTI_CHOICE' }
     ]
+    attributeTypes.sort((a, b) => a.title.localeCompare(b.title))
 
     const validators: SelectItem<AttributeValidator>[] = [
         { title: 'None', value: 'NONE' },
@@ -376,11 +384,8 @@
     const constantsLoading = ref(false)
     const constantSearch = ref('')
     const constantPage = ref(1)
-    const constantPageSize = ref(25)
-    // Bumped on every dialog open to force the server table to remount and re-fire
-    // @update:options. The dialog keeps its content mounted between opens, so without
-    // this the table would only load constants the first time it is shown.
-    const tableKey = ref(0)
+    const CONSTANT_PAGE_SIZE = 25
+    const constantPageSize = ref(CONSTANT_PAGE_SIZE)
     let searchTimeout: ReturnType<typeof setTimeout> | undefined
 
     const constantDialog = ref(false)
@@ -390,7 +395,15 @@
     const dictionaryReloading = ref(false)
     const constantOperationError = ref('')
     const dictionaryTypes: AttributeType[] = ['CPE', 'CVE', 'CWE']
-    const canImportConstants = computed(() => (isEdit.value ? canUpdate.value && canCreate.value : canCreate.value))
+    // Only these types own constants: the backend's `attribute_enums` relationship is restricted
+    // to RADIO/ENUM/MULTI_CHOICE, and CPE/CVE/CWE keep theirs as imported dictionaries. Constants
+    // saved on any other type (BOOLEAN above all, which renders a fixed yes/no switch) are never
+    // read back, so the table stays hidden for them.
+    const constantTypes: AttributeType[] = ['RADIO', 'ENUM', 'MULTI_CHOICE', ...dictionaryTypes]
+    const supportsConstants = computed(() => constantTypes.includes(localItem.value.type))
+    const canImportConstants = computed(
+        () => supportsConstants.value && (isEdit.value ? canUpdate.value && canCreate.value : canCreate.value)
+    )
     const canReloadDictionary = computed(() => isEdit.value && canUpdate.value && dictionaryTypes.includes(localItem.value.type))
     const constantOperationBusy = computed(() => constantImporting.value || dictionaryReloading.value)
     const dictionaryReloadLabel = computed(() => t(`attribute.reload_${localItem.value.type.toLocaleLowerCase()}`))
@@ -413,7 +426,7 @@
     }
 
     const loadConstants = async (): Promise<void> => {
-        if (!isEdit.value || localItem.value.id === null) {
+        if (!isEdit.value || localItem.value.id === null || !supportsConstants.value) {
             return
         }
         constantsLoading.value = true
@@ -433,15 +446,18 @@
         }
     }
 
-    // Fired by the data table on mount and whenever page/size change.
+    // Fired by the data table on mount and whenever page/size change. The mount emission carries
+    // the values already in effect, and opening the dialog loads on its own, so only a real
+    // paging change needs a fetch here.
     const onConstantsOptions = (options: { page: number; itemsPerPage: number }): void => {
+        const changed = options.page !== constantPage.value || options.itemsPerPage !== constantPageSize.value
         constantPage.value = options.page
         constantPageSize.value = options.itemsPerPage
-        if (isEdit.value) {
-            loadConstants()
-        } else {
+        if (!isEdit.value) {
             // Create mode: constants are kept in memory until the attribute is saved.
             constantsTotal.value = constants.value.length
+        } else if (changed) {
+            loadConstants()
         }
     }
 
@@ -582,11 +598,13 @@
                 await createNewAttribute({
                     ...localItem.value,
                     id: -1,
-                    attribute_enums: constants.value.map((c, index) => ({
-                        value: c.value,
-                        description: c.description,
-                        index
-                    }))
+                    attribute_enums: supportsConstants.value
+                        ? constants.value.map((c, index) => ({
+                              value: c.value,
+                              description: c.description,
+                              index
+                          }))
+                        : []
                 })
                 notify('success', 'common.created_successfully')
             }
@@ -606,6 +624,7 @@
         constantsTotal.value = 0
         constantSearch.value = ''
         constantPage.value = 1
+        constantPageSize.value = CONSTANT_PAGE_SIZE
         csvDialog.value = false
         constantImporting.value = false
         dictionaryReloading.value = false
@@ -634,17 +653,44 @@
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
                 const incoming = newItem as Partial<AttributeItem>
+                // This watcher is deep, so it can also fire for an in-place change to the row it
+                // already holds; only a different attribute warrants throwing the constants away.
+                const switchedAttribute = localItem.value.id !== (incoming.id ?? null)
                 localItem.value = { ...defaultItem, ...incoming }
-                resetConstants()
+                if (switchedAttribute) {
+                    resetConstants()
+                }
                 dialog.value = true
-                // Remount the table so it re-fires @update:options -> loadConstants for this attribute.
-                tableKey.value++
             } else {
                 localItem.value = { ...defaultItem }
+                resetConstants()
             }
         },
         { immediate: true, deep: true }
     )
+
+    // Fetch the constants whenever an existing attribute is on screen. Doing it here rather than
+    // leaving it to the table's @update:options is what makes a second open work: that event only
+    // fires when the table mounts, and Vuetify keeps the dialog's content booted when it is
+    // reopened before the leave transition finishes.
+    watch(
+        [dialog, () => localItem.value.id, supportsConstants],
+        ([open, id, hasConstants]) => {
+            if (open && id !== null && hasConstants) {
+                loadConstants()
+            }
+        },
+        { immediate: true }
+    )
+
+    // Switching to a type that has no constants in create mode must drop the in-memory list,
+    // otherwise it is posted with the attribute and orphaned server-side.
+    watch(supportsConstants, (hasConstants) => {
+        if (!hasConstants && !isEdit.value) {
+            constants.value = []
+            constantsTotal.value = 0
+        }
+    })
 
     watch(
         () => dialog.value,

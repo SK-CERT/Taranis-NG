@@ -126,6 +126,7 @@ def test_issued_access_token_keeps_vue2_user_claims(monkeypatch: pytest.MonkeyPa
         status="active",
         get_current_organization_name=lambda: "Example Org",
         get_permissions=lambda: ["ANALYZE_ACCESS"],
+        touch_login=lambda: None,
     )
     captured: dict = {}
 

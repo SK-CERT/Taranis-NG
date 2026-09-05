@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Impossible de supprimer des champs encore utilisés par des éléments de rapport : {fields}",
+            "in_use": "Impossible de supprimer le type de rapport : il est utilisé par des éléments de rapport ({count})",
             "tab_description": "Vous pouvez gérer ici les types de rapports.",
             "add_new": "Ajouter un type d’élément de rapport",
             "edit": "Modifier le type d’élément de rapport",
@@ -1601,6 +1603,7 @@
             "total_count": "{count} type de rapport | {count} types de rapport"
         },
         "attributes": {
+            "in_use": "Impossible de supprimer l'attribut : il est utilisé par {types}",
             "tab_description": "Vous pouvez gérer ici les attributs.",
             "add_new": "Ajouter un attribut",
             "edit": "Modifier l’attribut",
