@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Format daty",
         "HOTKEYS": "Włącz skróty klawiszowe",
         "UI_LANGUAGE": "Język interfejsu użytkownika",
+        "UI_THEME": "Motyw interfejsu użytkownika",
         "CONTENT_DEFAULT_LANGUAGE": "Domyślny język raportów i produktów",
         "REPORT_SELECTOR_READ_ONLY": "Otwórz selektor elementów raportu w trybie tylko do odczytu",
         "SPELLCHECK": "Sprawdzanie pisowni",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Wartość nie może zawierać znaku końca wiersza",
         "last_updated": "Ostatnia aktualizacja przez użytkownika {user} o {at}",
         "error": "Nie udało się zapisać ustawień routingu i TLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Łupkowy",
+        "forest": "Leśny",
+        "amber": "Bursztynowy",
+        "contrast": "Wysoki kontrast",
+        "doll": "Lalka",
+        "bubblegum": "Guma balonowa",
+        "autumn": "Jesień",
+        "retro": "Retro",
+        "valentine": "Walentynki",
+        "summer": "Lato",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lawenda"
     }
 }

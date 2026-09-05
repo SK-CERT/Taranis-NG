@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Format de date",
         "HOTKEYS": "Activer les raccourcis",
         "UI_LANGUAGE": "Langue de l’interface utilisateur",
+        "UI_THEME": "Thème de l'interface utilisateur",
         "CONTENT_DEFAULT_LANGUAGE": "Langue par défaut des rapports/produits",
         "REPORT_SELECTOR_READ_ONLY": "Ouvrir le sélecteur d’éléments de rapport en lecture seule",
         "SPELLCHECK": "Vérification orthographique",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Une valeur ne doit pas contenir de saut de ligne",
         "last_updated": "Dernière mise à jour par {user} le {at}",
         "error": "Les paramètres de routage et TLS n'ont pas pu être enregistrés"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Ardoise",
+        "forest": "Forêt",
+        "amber": "Ambre",
+        "contrast": "Contraste élevé",
+        "doll": "Poupée",
+        "bubblegum": "Bubble-gum",
+        "autumn": "Automne",
+        "retro": "Rétro",
+        "valentine": "Saint-Valentin",
+        "summer": "Été",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavande"
     }
 }

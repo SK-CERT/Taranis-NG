@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Формат дати",
         "HOTKEYS": "Увімкнути сполучення клавіш",
         "UI_LANGUAGE": "Мова інтерфейсу",
+        "UI_THEME": "Тема інтерфейсу",
         "CONTENT_DEFAULT_LANGUAGE": "Типова мова для звітів і продуктів",
         "REPORT_SELECTOR_READ_ONLY": "Відкривати засіб вибору елементів звіту в режимі лише для читання",
         "SPELLCHECK": "Перевірка орфографії",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Значення не повинно містити розрив рядка",
         "last_updated": "Востаннє оновлено користувачем {user} о {at}",
         "error": "Не вдалося зберегти налаштування маршрутизації та TLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Сланець",
+        "forest": "Ліс",
+        "amber": "Бурштин",
+        "contrast": "Високий контраст",
+        "doll": "Лялька",
+        "bubblegum": "Жуйка",
+        "autumn": "Осінь",
+        "retro": "Ретро",
+        "valentine": "Валентин",
+        "summer": "Літо",
+        "vintage": "Вінтаж",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Лаванда"
     }
 }

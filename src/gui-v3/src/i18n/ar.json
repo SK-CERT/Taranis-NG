@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "تنسيق التاريخ",
         "HOTKEYS": "تفعيل مفاتيح الاختصار",
         "UI_LANGUAGE": "لغة واجهة المستخدم",
+        "UI_THEME": "سمة واجهة المستخدم",
         "CONTENT_DEFAULT_LANGUAGE": "اللغة الافتراضية للتقارير والمنتجات",
         "REPORT_SELECTOR_READ_ONLY": "فتح محدّد عناصر التقارير في وضع القراءة فقط",
         "SPELLCHECK": "التدقيق الإملائي",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "يجب ألا تحتوي القيمة على فاصل أسطر",
         "last_updated": "آخر تحديث بواسطة {user} في {at}",
         "error": "تعذَّر حفظ إعدادات التوجيه وTLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "إردوازي",
+        "forest": "غابة",
+        "amber": "كهرماني",
+        "contrast": "تباين عالٍ",
+        "doll": "دمية",
+        "bubblegum": "علكة",
+        "autumn": "خريف",
+        "retro": "ريترو",
+        "valentine": "عيد الحب",
+        "summer": "صيف",
+        "vintage": "كلاسيكي",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "خزامى"
     }
 }

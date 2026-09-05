@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Formát data",
         "HOTKEYS": "Povolit klávesové zkratky",
         "UI_LANGUAGE": "Jazyk uživatelského rozhraní",
+        "UI_THEME": "Motiv uživatelského rozhraní",
         "CONTENT_DEFAULT_LANGUAGE": "Výchozí jazyk pro reporty/produkty",
         "REPORT_SELECTOR_READ_ONLY": "Otevřít výběr reportů v režimu pouze pro čtení",
         "SPELLCHECK": "Kontrolovat pravopis",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Hodnota nesmí obsahovat konec řádku",
         "last_updated": "Naposledy upravil {user} dne {at}",
         "error": "Nastavení směrování a TLS se nepodařilo uložit"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Břidlicový",
+        "forest": "Lesní",
+        "amber": "Jantarový",
+        "contrast": "Vysoký kontrast",
+        "doll": "Panenka",
+        "bubblegum": "Žvýkačka",
+        "autumn": "Podzim",
+        "retro": "Retro",
+        "valentine": "Valentýn",
+        "summer": "Léto",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Levandule"
     }
 }

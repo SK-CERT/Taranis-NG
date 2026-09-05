@@ -10,7 +10,8 @@ export const Settings = {
     HOTKEYS: 'HOTKEYS',
     SPELLCHECK: 'SPELLCHECK',
     TAG_COLOR: 'TAG_COLOR',
-    UI_LANGUAGE: 'UI_LANGUAGE'
+    UI_LANGUAGE: 'UI_LANGUAGE',
+    UI_THEME: 'UI_THEME'
 } as const
 
 export const HotkeyAction = {

@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Formato de data",
         "HOTKEYS": "Habilitar atalhos de teclado",
         "UI_LANGUAGE": "Idioma da interface do usuário",
+        "UI_THEME": "Tema da interface do usuário",
         "CONTENT_DEFAULT_LANGUAGE": "Idioma padrão para relatórios/produtos",
         "REPORT_SELECTOR_READ_ONLY": "Abrir o seletor de itens de relatório no modo somente leitura",
         "SPELLCHECK": "Verificação ortográfica",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Um valor não pode conter quebra de linha",
         "last_updated": "Última atualização por {user} em {at}",
         "error": "Não foi possível salvar as configurações de roteamento e TLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Ardósia",
+        "forest": "Floresta",
+        "amber": "Âmbar",
+        "contrast": "Alto contraste",
+        "doll": "Boneca",
+        "bubblegum": "Chiclete",
+        "autumn": "Outono",
+        "retro": "Retrô",
+        "valentine": "Dia dos Namorados",
+        "summer": "Verão",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavanda"
     }
 }

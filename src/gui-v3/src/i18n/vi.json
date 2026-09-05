@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Định dạng ngày",
         "HOTKEYS": "Bật phím tắt",
         "UI_LANGUAGE": "Ngôn ngữ giao diện người dùng",
+        "UI_THEME": "Chủ đề giao diện người dùng",
         "CONTENT_DEFAULT_LANGUAGE": "Ngôn ngữ mặc định cho báo cáo/sản phẩm",
         "REPORT_SELECTOR_READ_ONLY": "Mở trình chọn mục báo cáo ở chế độ chỉ đọc",
         "SPELLCHECK": "Kiểm tra chính tả",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Giá trị không được chứa ký tự xuống dòng",
         "last_updated": "Cập nhật lần cuối bởi {user} lúc {at}",
         "error": "Không thể lưu cài đặt định tuyến và TLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Đá phiến",
+        "forest": "Rừng",
+        "amber": "Hổ phách",
+        "contrast": "Tương phản cao",
+        "doll": "Búp bê",
+        "bubblegum": "Kẹo cao su",
+        "autumn": "Mùa thu",
+        "retro": "Retro",
+        "valentine": "Valentine",
+        "summer": "Mùa hè",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Oải hương"
     }
 }

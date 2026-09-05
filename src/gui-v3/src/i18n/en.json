@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Date format",
         "HOTKEYS": "Enable hotkeys",
         "UI_LANGUAGE": "User interface language",
+        "UI_THEME": "User interface theme",
         "CONTENT_DEFAULT_LANGUAGE": "Default language for reports/products",
         "REPORT_SELECTOR_READ_ONLY": "Open the report item selector in read-only mode",
         "SPELLCHECK": "Spellcheck",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "A value must not contain a line break",
         "last_updated": "Last updated by {user} at {at}",
         "error": "The routing and TLS settings could not be saved"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Slate",
+        "forest": "Forest",
+        "amber": "Amber",
+        "contrast": "High contrast",
+        "doll": "Doll",
+        "bubblegum": "Bubblegum",
+        "autumn": "Autumn",
+        "retro": "Retro",
+        "valentine": "Valentine",
+        "summer": "Summer",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavender"
     }
 }

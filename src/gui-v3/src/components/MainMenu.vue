@@ -171,10 +171,10 @@
 
 <style scoped>
     .main-menu {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.13) !important;
-        background: #071724 !important;
-        color: #eef6fc !important;
-        box-shadow: 0 2px 8px rgba(8, 26, 40, 0.22) !important;
+        border-bottom: var(--v-menu-border) !important;
+        background: rgb(var(--v-theme-menu-bg)) !important;
+        color: rgb(var(--v-theme-on-menu-bg)) !important;
+        box-shadow: 0 2px 8px rgba(var(--v-theme-menu-bg), 0.22) !important;
     }
 
     .main-menu :deep(.v-toolbar__content) {
@@ -184,7 +184,7 @@
 
     .menu-toggle {
         margin-inline-end: 0.25rem;
-        color: #b9ddf7 !important;
+        color: rgba(var(--v-theme-on-menu-bg), 0.82) !important;
     }
 
     .brand-link {
@@ -206,20 +206,20 @@
         min-height: 36px;
         padding-inline: 0.85rem;
         border-radius: 3px;
-        color: rgba(238, 246, 252, 0.76);
+        color: rgba(var(--v-theme-on-menu-bg), 0.76);
         font-weight: 600;
         letter-spacing: 0.015em;
         text-transform: none;
     }
 
     .primary-navigation__item:hover {
-        color: #ffffff;
-        background: rgba(255, 255, 255, 0.1);
+        color: rgb(var(--v-theme-on-menu-bg));
+        background: rgba(var(--v-theme-on-menu-bg), 0.1);
     }
 
     .primary-navigation__item--active {
-        color: #ffffff;
-        background: rgba(88, 167, 232, 0.18);
+        color: rgb(var(--v-theme-on-menu-bg));
+        background: var(--v-menu-item-active);
         box-shadow: none;
     }
 
