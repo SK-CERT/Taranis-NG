@@ -147,6 +147,12 @@ class AttributeResource(Resource):
         """
         try:
             return attribute.Attribute.delete_attribute(attribute_id)
+        except attribute.AttributeInUseError as ex:
+            # Not an error on the server's part: the admin has to detach the attribute from
+            # those report types first, so say which ones rather than a generic failure.
+            msg = f"Attribute is used by report types: {', '.join(ex.report_types)}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg)
+            return {"error": msg, "report_types": ex.report_types}, HTTPStatus.CONFLICT
         except Exception as ex:
             msg = "Could not delete attribute"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -665,6 +671,13 @@ class ReportItemTypeResource(Resource):
         """
         try:
             report_item_type.ReportItemType.update(type_id, request.json)
+        except report_item_type.ReportTypeFieldInUseError as ex:
+            # Removing these fields would destroy report content, so name them rather than
+            # failing the whole edit with a generic message.
+            detail = ", ".join(f"{title} ({count})" for title, count in sorted(ex.fields_in_use.items()))
+            msg = f"Fields still used by report items: {detail}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg)
+            return {"error": msg, "fields_in_use": ex.fields_in_use}, HTTPStatus.CONFLICT
         except Exception as ex:
             msg = "Could not update report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -681,6 +694,11 @@ class ReportItemTypeResource(Resource):
         """
         try:
             return report_item_type.ReportItemType.delete_report_item_type(type_id)
+        except report_item_type.ReportTypeInUseError as ex:
+            plural = "" if ex.report_item_count == 1 else "s"
+            msg = f"Report type is used by {ex.report_item_count} report item{plural}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg)
+            return {"error": msg, "report_item_count": ex.report_item_count}, HTTPStatus.CONFLICT
         except Exception as ex:
             msg = "Could not delete report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -1421,6 +1439,52 @@ class OSINTSourceResource(Resource):
             collectors_manager.delete_osint_source(source_id)
         except Exception as ex:
             msg = "Could not delete OSINT source"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class OSINTSourceCollectResource(Resource):
+    """Collecting one OSINT source on demand."""
+
+    @auth_required("CONFIG_OSINT_SOURCE_UPDATE")
+    def post(self, source_id: str) -> tuple[dict, HTTPStatus]:
+        """Collect an OSINT source now.
+
+        Returns as soon as the collector has taken the work, because a run can take minutes.
+
+        Args:
+            source_id (str): The OSINT source ID
+        Returns:
+            (dict, HTTPStatus): 202 when a run started, 409 when one was already in progress.
+        """
+        try:
+            return collectors_manager.collect_osint_source(source_id)
+        except Exception as ex:
+            msg = "Could not collect OSINT source"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class OSINTSourceEnabledResource(Resource):
+    """Switching one OSINT source on or off."""
+
+    @auth_required("CONFIG_OSINT_SOURCE_UPDATE")
+    def put(self, source_id: str) -> tuple[dict, HTTPStatus]:
+        """Enable or disable an OSINT source.
+
+        A dedicated endpoint rather than the full source update: that one reassigns groups and
+        rewrites parameter values from its payload, which a switch must never do.
+
+        Args:
+            source_id (str): The OSINT source ID
+        Returns:
+            (dict, HTTPStatus): Empty on success.
+        """
+        try:
+            enabled = bool((request.json or {}).get("enabled", True))
+            return collectors_manager.set_osint_source_enabled(source_id, enabled=enabled)
+        except Exception as ex:
+            msg = "Could not change the OSINT source state"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
@@ -2613,6 +2677,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(CollectorsNodeResource, "/api/v1/config/collectors-nodes/<string:node_id>")
     api.add_resource(OSINTSourcesResource, "/api/v1/config/osint-sources")
     api.add_resource(OSINTSourceResource, "/api/v1/config/osint-sources/<string:source_id>")
+    api.add_resource(OSINTSourceCollectResource, "/api/v1/config/osint-sources/<string:source_id>/collect")
+    api.add_resource(OSINTSourceEnabledResource, "/api/v1/config/osint-sources/<string:source_id>/enabled")
     api.add_resource(OSINTSourcesExportResource, "/api/v1/config/export-osint-sources")
     api.add_resource(OSINTSourcesImportResource, "/api/v1/config/import-osint-sources")
     api.add_resource(OSINTSourceGroupsResource, "/api/v1/config/osint-source-groups")

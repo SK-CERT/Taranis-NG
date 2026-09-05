@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 import uuid
 from datetime import datetime, timedelta
 
+from managers import run_state_cache
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
@@ -52,6 +53,7 @@ class OSINTSource(db.Model):
         state (int): State of the source.
         last_error_message (str): Last error message.
         last_data (JSON): Last collected data.
+        enabled (bool): Whether the collector should collect this source at all.
         status (str): Status of the source (not mapped to the database).
     """
 
@@ -72,6 +74,9 @@ class OSINTSource(db.Model):
     state = db.Column(db.SmallInteger, default=0)
     last_error_message = db.Column(db.String, default=None)
     last_data = db.Column(JSON, default=None)
+    enabled = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    collecting = None
+    next_run = None
     status = None
 
     def __init__(
@@ -83,6 +88,7 @@ class OSINTSource(db.Model):
         parameter_values: list[ParameterValue],
         word_lists: list[WordList],
         osint_source_groups: list[OSINTSourceGroup],
+        enabled: bool = True,
     ) -> None:
         """Initialize OSINT source object.
 
@@ -94,8 +100,11 @@ class OSINTSource(db.Model):
             parameter_values (list[ParameterValue]): List of parameter values.
             word_lists (list[WordList]): List of word lists.
             osint_source_groups (list[OSINTSourceGroup]): List of OSINT source groups.
+            enabled (bool): Whether the collector should collect this source. Last argument with a
+                default, because import_new() builds a source positionally.
         """
         self.id = str(uuid.uuid4())
+        self.enabled = enabled
         self.name = name
         self.description = description
         self.collector_id = collector_id
@@ -148,7 +157,12 @@ class OSINTSource(db.Model):
         Returns:
             List[OSINTSource]: List of manual OSINT sources.
         """
-        query = cls.query.join(Collector, OSINTSource.collector_id == Collector.id).filter(Collector.type == "MANUAL_COLLECTOR")
+        # A switched-off source must not be offered for manual entry either.
+        query = (
+            cls.query.join(Collector, OSINTSource.collector_id == Collector.id)
+            .filter(Collector.type == "MANUAL_COLLECTOR")
+            .filter(OSINTSource.enabled.is_(True))
+        )
 
         query = query.outerjoin(
             ACLEntry,
@@ -197,9 +211,18 @@ class OSINTSource(db.Model):
             dict: JSON response.
         """
         sources, count = cls.get(search)
+        # Only a running collector node knows when a source is next due, so it is cached rather
+        # than stored; a source with no cached value simply has no countdown.
+        source_ids = [source.id for source in sources]
+        next_runs = run_state_cache.get_next_runs(source_ids)
+        collecting = run_state_cache.get_collecting(source_ids)
         for source in sources:
+            source.next_run = next_runs.get(source.id)
+            source.collecting = source.id in collecting
             source.osint_source_groups = OSINTSourceGroup.get_for_osint_source(source.id)
             source.status = "green"
+            if not source.enabled:
+                source.status = "gray"  # switched off, nothing else about it matters
             for param in source.parameter_values:  # list, we can't access item by key
                 if param.parameter.key == "REFRESH_INTERVAL" and (param.value in {"", "0"}):
                     source.status = "gray"
@@ -333,6 +356,9 @@ class OSINTSource(db.Model):
         osint_source = db.session.get(cls, osint_source_id)
         osint_source.name = updated_osint_source.name
         osint_source.description = updated_osint_source.description
+        # `enabled` is deliberately not copied here. The edit payload does not carry it, so the
+        # schema would default it to True and saving any other field would switch a disabled
+        # source back on. set_enabled() is the only writer.
 
         # Reassign the source to a different collector (and possibly a different
         # collectors node) when the operator changed collector_id via the GUI.
@@ -395,6 +421,51 @@ class OSINTSource(db.Model):
         db.session.commit()
 
         return osint_source, default_group
+
+    @classmethod
+    def set_enabled(cls, osint_source_id: str, enabled: bool) -> None:
+        """Switch a source on or off.
+
+        A run already in progress is not interrupted; there is no way to cancel one.
+
+        Args:
+            osint_source_id (str): Osint source Id.
+            enabled (bool): Whether the collector should collect this source.
+        """
+        osint_source = db.session.get(cls, osint_source_id)
+        osint_source.enabled = enabled
+        db.session.commit()
+
+    @classmethod
+    def mark_collection_started(cls, osint_source_id: str) -> None:
+        """Record that a collector has begun collecting a source.
+
+        Called for every run, scheduled or on demand, from the callback the collector already
+        makes when it starts.
+
+        Args:
+            osint_source_id (str): Osint source Id.
+        """
+        osint_source = db.session.get(cls, osint_source_id)
+        osint_source.last_attempted = datetime.now(TZ)
+        db.session.commit()
+        run_state_cache.mark_collecting(osint_source_id)
+
+    @classmethod
+    def mark_collection_finished(cls, osint_source_id: str, error_message: str | None) -> None:
+        """Record that a collector has finished collecting a source.
+
+        Called for every run from the callback the collector makes at the end, which reports an
+        empty message when the run succeeded.
+
+        Args:
+            osint_source_id (str): Osint source Id.
+            error_message (str): What went wrong, empty or None when nothing did.
+        """
+        osint_source = db.session.get(cls, osint_source_id)
+        osint_source.last_error_message = error_message
+        db.session.commit()
+        run_state_cache.clear_collecting(osint_source_id)
 
     @classmethod
     def update_collected(cls, osint_source_id: str) -> None:

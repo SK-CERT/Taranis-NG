@@ -41,7 +41,6 @@
     import { useI18n } from 'vue-i18n'
     import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
-    import CollectorsNodesView from './CollectorsNodesView.vue'
     import OSINTSourcesView from './OSINTSourcesView.vue'
     import OSINTSourceGroupsView from './OSINTSourceGroupsView.vue'
 
@@ -62,14 +61,6 @@
             icon: ICONS.FOLDER_MULTIPLE,
             component: OSINTSourceGroupsView,
             permission: 'CONFIG_OSINT_SOURCE_GROUP_ACCESS'
-        },
-        {
-            value: 'nodes',
-            title: 'nav_menu.collectors_nodes',
-            description: 'collectors.nodes.tab_description',
-            icon: ICONS.SERVER_NETWORK,
-            component: CollectorsNodesView,
-            permission: 'CONFIG_COLLECTORS_NODE_ACCESS'
         }
     ] as const
 

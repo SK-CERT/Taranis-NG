@@ -80,6 +80,12 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting report type:', error)
+            // The backend refuses to delete a report type that report items are based on.
+            const count = (error as { response?: { data?: { report_item_count?: number } } })?.response?.data?.report_item_count
+            const detail = count
+                ? { type: 'error', loc: 'reports.types.in_use', params: { count } }
+                : { type: 'error', loc: 'common.error_deleting' }
+            window.dispatchEvent(new CustomEvent('notification', { detail }))
         }
     }
 

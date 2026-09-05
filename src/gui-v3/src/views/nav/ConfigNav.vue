@@ -31,13 +31,10 @@
 
 <script setup lang="ts">
     import { computed } from 'vue'
-    import { useTheme } from 'vuetify'
     import { useAuth } from '@/composables/useAuth'
     import { filterConfigLinks } from '@/config/config-nav-links'
 
     const { checkPermission } = useAuth()
-    const { global: themeGlobal } = useTheme()
-    const isDark = computed(() => themeGlobal.name.value === 'dark')
 
     // Filter links based on permissions and remove leading/trailing separators
     const filteredLinks = computed(() => filterConfigLinks(checkPermission))

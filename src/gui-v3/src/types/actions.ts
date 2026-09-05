@@ -13,7 +13,8 @@ export const Action = {
     UNGROUP: 'UNGROUP',
     UPDATE_AGGREGATE: 'UPDATE-AGGREGATE',
     OSINT_IMPORT: 'OSINT-IMPORT',
-    OSINT_EXPORT: 'OSINT-EXPORT'
+    OSINT_EXPORT: 'OSINT-EXPORT',
+    OSINT_DELETE: 'OSINT-DELETE'
 } as const
 
 export type ActionKey = (typeof Action)[keyof typeof Action]

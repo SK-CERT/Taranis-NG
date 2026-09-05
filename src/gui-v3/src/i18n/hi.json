@@ -357,7 +357,9 @@
         "not_available": "उपलब्ध नहीं",
         "aggregated_items_count": "कोई एकत्रित समाचार आइटम नहीं | {count} एकत्रित समाचार आइटम | {count} एकत्रित समाचार आइटम",
         "in_analyze_count": "कोई विश्लेषण प्रगति पर नहीं | {count} विश्लेषण प्रगति पर है | {count} विश्लेषण प्रगति पर हैं",
-        "analyzed_count": "कोई विश्लेषण पूरा नहीं हुआ | {count} विश्लेषण पूरा हुआ | {count} विश्लेषण पूरे हुए"
+        "analyzed_count": "कोई विश्लेषण पूरा नहीं हुआ | {count} विश्लेषण पूरा हुआ | {count} विश्लेषण पूरे हुए",
+        "next_run": "अगला रन",
+        "state": "स्थिति"
     },
     "attribute": {
         "add_constant": "स्थिरांक जोड़ें",
@@ -1079,6 +1081,7 @@
         "DATE_FORMAT": "तिथि प्रारूप",
         "HOTKEYS": "हॉटकी सक्षम करें",
         "UI_LANGUAGE": "उपयोगकर्ता इंटरफ़ेस भाषा",
+        "UI_THEME": "यूज़र इंटरफ़ेस थीम",
         "CONTENT_DEFAULT_LANGUAGE": "रिपोर्ट/उत्पाद की डिफ़ॉल्ट भाषा",
         "REPORT_SELECTOR_READ_ONLY": "रिपोर्ट आइटम चयनकर्ता केवल-पढ़ने के मोड में खोलें",
         "SPELLCHECK": "वर्तनी जाँच",
@@ -1237,7 +1240,15 @@
         "details": "विवरण",
         "actions": "कार्रवाइयाँ",
         "close": "बंद करें",
-        "use_suggested": "सुझाया गया मान उपयोग करें"
+        "use_suggested": "सुझाया गया मान उपयोग करें",
+        "collect_now": "अभी एकत्र करें",
+        "node_status": {
+            "alive": "पहुँच योग्य",
+            "late": "धीमी प्रतिक्रिया",
+            "unreachable": "पहुँच से बाहर",
+            "never_seen": "कभी कनेक्ट नहीं हुआ",
+            "last_seen": "अंतिम बार देखा गया"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1311,25 @@
             "file_required": "आयात फ़ाइल चुनें",
             "node_required": "संग्राहक नोड चुनें",
             "export_selected_hint": "चुने गए स्रोत निर्यात करें",
-            "selected_count": "{count} OSINT स्रोत चुना गया | {count} OSINT स्रोत चुने गए"
+            "selected_count": "{count} OSINT स्रोत चुना गया | {count} OSINT स्रोत चुने गए",
+            "collecting": "एकत्र किया जा रहा है…",
+            "disabled": "अक्षम",
+            "collect_started": "संग्रह शुरू हुआ",
+            "collect_error": "संग्रह शुरू नहीं किया जा सका",
+            "collect_conflict": "यह स्रोत पहले से एकत्र किया जा रहा है",
+            "enable_error": "स्रोत की स्थिति नहीं बदली जा सकी",
+            "enabled": "सक्षम",
+            "due": "देय",
+            "state_error": "त्रुटि",
+            "state_stale": "पुराना",
+            "state_pending": "लंबित",
+            "none": "इस नोड पर कोई OSINT स्रोत नहीं",
+            "group_all": "सभी",
+            "group_uncategorized": "अवर्गीकृत",
+            "delete_selected_hint": "चयनित स्रोत हटाएँ",
+            "delete_selected_confirm": "{count} चयनित स्रोत हटाएँ? इसे पूर्ववत नहीं किया जा सकता।",
+            "delete_selected_success": "चयनित स्रोत हटा दिए गए",
+            "delete_selected_error": "कुछ चयनित स्रोत नहीं हटाए जा सके"
         },
         "nodes": {
             "tab_description": "यहाँ आप संग्राहक नोड प्रबंधित कर सकते हैं।",
@@ -1315,7 +1344,8 @@
             "successful_edit": "संग्राहक नोड सफलतापूर्वक अपडेट किया गया",
             "removed": "संग्राहक नोड सफलतापूर्वक हटाया गया",
             "removed_error": "संग्राहक नोड उपयोग में है और हटाया नहीं जा सका",
-            "total_count": "{count} संग्राहक नोड | {count} संग्राहक नोड"
+            "total_count": "{count} संग्राहक नोड | {count} संग्राहक नोड",
+            "delete_error": "कलेक्टर नोड हटाया नहीं जा सका"
         }
     },
     "presenters": {
@@ -1556,6 +1586,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "ऐसे फ़ील्ड नहीं हटाए जा सकते जिनका उपयोग रिपोर्ट आइटम अब भी करते हैं: {fields}",
+            "in_use": "रिपोर्ट प्रकार हटाया नहीं जा सकता: इसका उपयोग रिपोर्ट आइटम द्वारा किया जाता है ({count})",
             "tab_description": "यहाँ आप रिपोर्ट प्रकार प्रबंधित कर सकते हैं।",
             "add_new": "नया रिपोर्ट आइटम प्रकार जोड़ें",
             "edit": "रिपोर्ट आइटम प्रकार संपादित करें",
@@ -1572,6 +1604,7 @@
             "total_count": "{count} रिपोर्ट प्रकार | {count} रिपोर्ट प्रकार"
         },
         "attributes": {
+            "in_use": "विशेषता हटाई नहीं जा सकती: इसका उपयोग {types} द्वारा किया जाता है",
             "tab_description": "यहाँ आप विशेषताएँ प्रबंधित कर सकते हैं।",
             "add_new": "नया विशेषता जोड़ें",
             "edit": "विशेषता संपादित करें",
@@ -2003,14 +2036,7 @@
         },
         "confirm_delete_title": "हटाने की पुष्टि करें",
         "confirm_delete_node": "क्या public-web नोड '{name}' और उसकी सभी वेबसाइटें हटाएँ?",
-        "confirm_delete_web": "क्या वेबसाइट '{name}' हटाएँ?",
-        "status": {
-            "alive": "पहुँच योग्य",
-            "late": "धीमी प्रतिक्रिया",
-            "unreachable": "पहुँच से बाहर",
-            "never_seen": "कभी कनेक्ट नहीं हुआ",
-            "last_seen": "अंतिम बार देखा गया"
-        }
+        "confirm_delete_web": "क्या वेबसाइट '{name}' हटाएँ?"
     },
     "routing": {
         "tab_title": "रूटिंग और TLS",
@@ -2074,5 +2100,22 @@
         "header_value_invalid": "मान में पंक्ति विराम नहीं होना चाहिए",
         "last_updated": "अंतिम अपडेट {user} ने {at} को किया",
         "error": "रूटिंग और TLS सेटिंग्स सहेजी नहीं जा सकीं"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "स्लेट",
+        "forest": "वन",
+        "amber": "अंबर",
+        "contrast": "उच्च कंट्रास्ट",
+        "doll": "गुड़िया",
+        "bubblegum": "बबलगम",
+        "autumn": "पतझड़",
+        "retro": "रेट्रो",
+        "valentine": "वैलेंटाइन",
+        "summer": "ग्रीष्म",
+        "vintage": "विंटेज",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "लैवेंडर"
     }
 }

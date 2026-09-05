@@ -1,7 +1,8 @@
 <template>
     <v-app
         class="taranis"
-        :data-theme="theme.global.name.value"
+        :data-theme="isDarkTheme ? 'dark' : 'light'"
+        :data-theme-family="themeFamily"
     >
         <!-- Main Menu (top bar) - only shown when authenticated -->
         <MainMenu
@@ -14,7 +15,7 @@
             v-if="showNavigation"
             v-model="navVisible"
             width="160"
-            color="cx-drawer-bg"
+            color="drawer-bg"
             class="app-navigation"
         >
             <router-view name="nav" />
@@ -39,6 +40,7 @@
     import { useUserStore } from '@/stores/user'
     import { useSettingsStore } from '@/stores/settings'
     import { Settings } from '@/types/settings'
+    import { useAppTheme } from '@/composables/useAppTheme'
     import { useAuth } from '@/composables/useAuth'
     import { useSSE } from '@/composables/useSSE'
     import MainMenu from '@/components/MainMenu.vue'
@@ -54,6 +56,11 @@
     const userStore = useUserStore()
     const settingsStore = useSettingsStore()
     const { isAuthenticated, needTokenRefresh } = useAuth()
+    const { family: themeFamily, applyFromSettings, applyBrowserVariant } = useAppTheme()
+
+    // Vuetify resolves this per theme definition, so it stays correct for every
+    // family. Comparing the theme *name* against 'dark' would not.
+    const isDarkTheme = computed(() => theme.current.value.dark)
 
     const navVisible = ref(true)
     const isAuth = computed(() => authStore.isAuthenticated)
@@ -75,16 +82,10 @@
     // Watch theme changes and apply dark-mode/light-mode classes to HTML element.
     // These override the prefers-color-scheme CSS fallback once the user's preference is known.
     watch(
-        () => theme.global.name.value,
-        (newTheme) => {
-            if (newTheme === 'dark') {
-                document.documentElement.classList.add('dark-mode')
-                document.documentElement.classList.remove('light-mode')
-            } else {
-                document.documentElement.classList.remove('dark-mode')
-                document.documentElement.classList.add('light-mode')
-            }
-            console.log('[App] Theme changed to:', newTheme, 'HTML classes:', document.documentElement.className)
+        isDarkTheme,
+        (dark) => {
+            document.documentElement.classList.toggle('dark-mode', dark)
+            document.documentElement.classList.toggle('light-mode', !dark)
         },
         { immediate: true }
     )
@@ -99,27 +100,19 @@
         window.dispatchEvent(new CustomEvent('sse-resync'))
     })
 
-    const applyTheme = (themeName: string): void => {
-        if (typeof theme.change === 'function') {
-            theme.change(themeName)
-        } else {
-            theme.global.name.value = themeName
-        }
-    }
-
-    // On startup, before the user's saved DARK_THEME preference is loaded (which
+    // On startup, before the user's saved theme preference is loaded (which
     // happens in initUserSettings after login), follow the browser's
     // prefers-color-scheme so the pre-login Login page renders in the OS theme.
-    // Once initUserSettings runs, the saved preference overrides this. The
-    // listener keeps the Login page in sync if the user changes the OS theme
-    // while sitting on it.
+    // The family stays whatever this device last used. Once initUserSettings
+    // runs, the saved preference overrides this. The listener keeps the Login
+    // page in sync if the user changes the OS theme while sitting on it.
     const browserDarkMedia = window.matchMedia('(prefers-color-scheme: dark)')
     const applyBrowserTheme = (): void => {
         // Only follow the browser if the user hasn't already pinned a preference
         // this session (authStore.isAuthenticated becomes true after login, at
         // which point initUserSettings owns the theme).
         if (!authStore.isAuthenticated) {
-            applyTheme(browserDarkMedia.matches ? 'dark' : 'light')
+            applyBrowserVariant()
         }
     }
     browserDarkMedia.addEventListener('change', applyBrowserTheme)
@@ -150,9 +143,8 @@
             requestAnimationFrame(async () => {
                 await nextTick()
 
-                // Apply dark theme setting
-                const darkThemeSetting = settingsStore.getSettingBoolean(Settings.DARK_THEME, false)
-                applyTheme(darkThemeSetting ? 'dark' : 'light')
+                // Apply the saved theme family and its light/dark variant
+                applyFromSettings(settingsStore)
 
                 // Apply spellcheck setting
                 const spellcheckSetting = settingsStore.getSettingBoolean(Settings.SPELLCHECK, true)
@@ -344,10 +336,6 @@
         display: flex;
         flex-direction: column;
         min-height: 0;
-    }
-
-    .cx-drawer-bg {
-        background-color: var(--color-drawer-bg) !important;
     }
 
     .app-navigation {

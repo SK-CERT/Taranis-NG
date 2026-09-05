@@ -43,8 +43,13 @@
         </template>
     </ViewLayout>
 
-    <!-- New Report Item Dialog -->
-    <NewReportItem ref="newReportItem" />
+    <!-- New Report Item Dialog. Opened from the news-item selection (handleNewReport), never by
+         a button of its own: Assess already has its "Add New" in the toolbar above, and the
+         component renders one by default. -->
+    <NewReportItem
+        ref="newReportItem"
+        :show-button="false"
+    />
 </template>
 
 <script setup lang="ts">

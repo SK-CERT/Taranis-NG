@@ -32,25 +32,18 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted, computed } from 'vue'
+    import { ref, onMounted } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
-    import { useTheme } from 'vuetify'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { type GroupNavItem } from '@/types/routing'
     import { createRemoteAnalyzePath } from '@/utils/analyze-routing'
 
     const router = useRouter()
     const route = useRoute()
-    const { global: themeGlobal } = useTheme()
     const analyzeStore = useAnalyzeStore()
 
     const groups = ref<Array<string | number>>([])
     const links = ref<GroupNavItem[]>([])
-
-    const isDark = computed(() => themeGlobal.name.value === 'dark')
-    const textColor = computed(() => (isDark.value ? '#ffffff' : '#000000'))
-    const iconColor = computed(() => (isDark.value ? '#ffffff' : 'rgba(0, 0, 0, 0.54)'))
-    const dividerColor = computed(() => (isDark.value ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.12)'))
 
     onMounted(async () => {
         try {

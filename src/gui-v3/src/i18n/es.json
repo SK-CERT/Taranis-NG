@@ -357,7 +357,9 @@
         "not_available": "No disponible",
         "aggregated_items_count": "No hay noticias agregadas | {count} noticia agregada | {count} noticias agregadas",
         "in_analyze_count": "No hay análisis en curso | {count} análisis en curso | {count} análisis en curso",
-        "analyzed_count": "No hay análisis completados | {count} análisis completado | {count} análisis completados"
+        "analyzed_count": "No hay análisis completados | {count} análisis completado | {count} análisis completados",
+        "next_run": "Próxima ejecución",
+        "state": "Estado"
     },
     "attribute": {
         "add_constant": "Añadir constante",
@@ -1079,6 +1081,7 @@
         "DATE_FORMAT": "Formato de fecha",
         "HOTKEYS": "Activar atajos",
         "UI_LANGUAGE": "Idioma de la interfaz de usuario",
+        "UI_THEME": "Tema de la interfaz de usuario",
         "CONTENT_DEFAULT_LANGUAGE": "Idioma predeterminado para informes/productos",
         "REPORT_SELECTOR_READ_ONLY": "Abrir el selector de elementos de informe en modo de solo lectura",
         "SPELLCHECK": "Corrector ortográfico",
@@ -1237,7 +1240,15 @@
         "details": "Detalles",
         "actions": "Acciones",
         "close": "Cerrar",
-        "use_suggested": "Usar el valor sugerido"
+        "use_suggested": "Usar el valor sugerido",
+        "collect_now": "Recopilar ahora",
+        "node_status": {
+            "alive": "Accesible",
+            "late": "Responde con lentitud",
+            "unreachable": "Inaccesible",
+            "never_seen": "Nunca conectado",
+            "last_seen": "visto por última vez"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1311,25 @@
             "file_required": "Seleccione un archivo de importación",
             "node_required": "Seleccione un nodo Collector",
             "export_selected_hint": "Exportar las fuentes seleccionadas",
-            "selected_count": "{count} fuente OSINT seleccionada | {count} fuentes OSINT seleccionadas"
+            "selected_count": "{count} fuente OSINT seleccionada | {count} fuentes OSINT seleccionadas",
+            "collecting": "Recopilando…",
+            "disabled": "Desactivado",
+            "collect_started": "Recopilación iniciada",
+            "collect_error": "No se pudo iniciar la recopilación",
+            "collect_conflict": "Esta fuente ya se está recopilando",
+            "enable_error": "No se pudo cambiar el estado de la fuente",
+            "enabled": "Activado",
+            "due": "Pendiente",
+            "state_error": "Error",
+            "state_stale": "Obsoleto",
+            "state_pending": "Pendiente",
+            "none": "No hay fuentes OSINT en este nodo",
+            "group_all": "Todos",
+            "group_uncategorized": "Sin categoría",
+            "delete_selected_hint": "Eliminar las fuentes seleccionadas",
+            "delete_selected_confirm": "¿Eliminar {count} fuentes seleccionadas? Esta acción no se puede deshacer.",
+            "delete_selected_success": "Fuentes seleccionadas eliminadas",
+            "delete_selected_error": "Algunas fuentes seleccionadas no se pudieron eliminar"
         },
         "nodes": {
             "tab_description": "Aquí puede gestionar los nodos Collector.",
@@ -1315,7 +1344,8 @@
             "successful_edit": "El nodo Collector se actualizó correctamente",
             "removed": "El nodo Collector se eliminó correctamente",
             "removed_error": "El nodo Collector está en uso y no se pudo eliminar",
-            "total_count": "{count} nodo recopilador | {count} nodos recopiladores"
+            "total_count": "{count} nodo recopilador | {count} nodos recopiladores",
+            "delete_error": "No se pudo eliminar el nodo de recolectores"
         }
     },
     "presenters": {
@@ -1556,6 +1586,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "No se pueden eliminar campos que los elementos de informe siguen usando: {fields}",
+            "in_use": "No se puede eliminar el tipo de informe: lo usan elementos de informe ({count})",
             "tab_description": "Aquí puede gestionar los tipos de informe.",
             "add_new": "Añadir tipo de elemento de informe",
             "edit": "Editar tipo de elemento de informe",
@@ -1572,6 +1604,7 @@
             "total_count": "{count} tipo de informe | {count} tipos de informe"
         },
         "attributes": {
+            "in_use": "No se puede eliminar el atributo: lo utiliza {types}",
             "tab_description": "Aquí puede gestionar los atributos.",
             "add_new": "Añadir atributo",
             "edit": "Editar atributo",
@@ -2003,14 +2036,7 @@
         },
         "confirm_delete_title": "Confirmar la eliminación",
         "confirm_delete_node": "¿Eliminar el nodo public-web '{name}' y todos sus sitios?",
-        "confirm_delete_web": "¿Eliminar el sitio '{name}'?",
-        "status": {
-            "alive": "Accesible",
-            "late": "Responde con lentitud",
-            "unreachable": "Inaccesible",
-            "never_seen": "Nunca conectado",
-            "last_seen": "visto por última vez"
-        }
+        "confirm_delete_web": "¿Eliminar el sitio '{name}'?"
     },
     "routing": {
         "tab_title": "Enrutamiento y TLS",
@@ -2074,5 +2100,22 @@
         "header_value_invalid": "Un valor no debe contener un salto de línea",
         "last_updated": "Última actualización por {user} el {at}",
         "error": "No se pudieron guardar los ajustes de enrutamiento y TLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Pizarra",
+        "forest": "Bosque",
+        "amber": "Ámbar",
+        "contrast": "Alto contraste",
+        "doll": "Muñeca",
+        "bubblegum": "Chicle",
+        "autumn": "Otoño",
+        "retro": "Retro",
+        "valentine": "San Valentín",
+        "summer": "Verano",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavanda"
     }
 }

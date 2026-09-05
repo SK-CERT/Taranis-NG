@@ -357,7 +357,9 @@
         "not_available": "Non disponible",
         "aggregated_items_count": "Aucune actualité agrégée | {count} actualité agrégée | {count} actualités agrégées",
         "in_analyze_count": "Aucune analyse en cours | {count} analyse en cours | {count} analyses en cours",
-        "analyzed_count": "Aucune analyse terminée | {count} analyse terminée | {count} analyses terminées"
+        "analyzed_count": "Aucune analyse terminée | {count} analyse terminée | {count} analyses terminées",
+        "next_run": "Prochaine exécution",
+        "state": "État"
     },
     "attribute": {
         "add_constant": "Ajouter une constante",
@@ -1079,6 +1081,7 @@
         "DATE_FORMAT": "Format de date",
         "HOTKEYS": "Activer les raccourcis",
         "UI_LANGUAGE": "Langue de l’interface utilisateur",
+        "UI_THEME": "Thème de l'interface utilisateur",
         "CONTENT_DEFAULT_LANGUAGE": "Langue par défaut des rapports/produits",
         "REPORT_SELECTOR_READ_ONLY": "Ouvrir le sélecteur d’éléments de rapport en lecture seule",
         "SPELLCHECK": "Vérification orthographique",
@@ -1237,7 +1240,15 @@
         "details": "Détails",
         "actions": "Actions",
         "close": "Fermer",
-        "use_suggested": "Utiliser la valeur suggérée"
+        "use_suggested": "Utiliser la valeur suggérée",
+        "collect_now": "Collecter maintenant",
+        "node_status": {
+            "alive": "Joignable",
+            "late": "Réponse lente",
+            "unreachable": "Injoignable",
+            "never_seen": "Jamais connecté",
+            "last_seen": "vu pour la dernière fois"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1311,25 @@
             "file_required": "Sélectionnez un fichier d’importation",
             "node_required": "Sélectionnez un nœud Collector",
             "export_selected_hint": "Exporter les sources sélectionnées",
-            "selected_count": "{count} source OSINT sélectionnée | {count} sources OSINT sélectionnées"
+            "selected_count": "{count} source OSINT sélectionnée | {count} sources OSINT sélectionnées",
+            "collecting": "Collecte en cours…",
+            "disabled": "Désactivé",
+            "collect_started": "Collecte démarrée",
+            "collect_error": "Impossible de démarrer la collecte",
+            "collect_conflict": "Cette source est déjà en cours de collecte",
+            "enable_error": "Impossible de modifier l'état de la source",
+            "enabled": "Activé",
+            "due": "Attendu",
+            "state_error": "Erreur",
+            "state_stale": "Obsolète",
+            "state_pending": "En attente",
+            "none": "Aucune source OSINT sur ce nœud",
+            "group_all": "Tous",
+            "group_uncategorized": "Non classé",
+            "delete_selected_hint": "Supprimer les sources sélectionnées",
+            "delete_selected_confirm": "Supprimer {count} sources sélectionnées ? Cette action est irréversible.",
+            "delete_selected_success": "Sources sélectionnées supprimées",
+            "delete_selected_error": "Certaines sources sélectionnées n'ont pas pu être supprimées"
         },
         "nodes": {
             "tab_description": "Vous pouvez gérer ici les nœuds Collector.",
@@ -1315,7 +1344,8 @@
             "successful_edit": "Le nœud Collector a été mis à jour",
             "removed": "Le nœud Collector a été supprimé",
             "removed_error": "Le nœud Collector est utilisé et n’a pas pu être supprimé",
-            "total_count": "{count} nœud de collecte | {count} nœuds de collecte"
+            "total_count": "{count} nœud de collecte | {count} nœuds de collecte",
+            "delete_error": "Impossible de supprimer le nœud de collecteurs"
         }
     },
     "presenters": {
@@ -1556,6 +1586,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Impossible de supprimer des champs encore utilisés par des éléments de rapport : {fields}",
+            "in_use": "Impossible de supprimer le type de rapport : il est utilisé par des éléments de rapport ({count})",
             "tab_description": "Vous pouvez gérer ici les types de rapports.",
             "add_new": "Ajouter un type d’élément de rapport",
             "edit": "Modifier le type d’élément de rapport",
@@ -1572,6 +1604,7 @@
             "total_count": "{count} type de rapport | {count} types de rapport"
         },
         "attributes": {
+            "in_use": "Impossible de supprimer l'attribut : il est utilisé par {types}",
             "tab_description": "Vous pouvez gérer ici les attributs.",
             "add_new": "Ajouter un attribut",
             "edit": "Modifier l’attribut",
@@ -2003,14 +2036,7 @@
         },
         "confirm_delete_title": "Confirmer la suppression",
         "confirm_delete_node": "Supprimer le nœud public-web '{name}' et tous ses sites ?",
-        "confirm_delete_web": "Supprimer le site '{name}' ?",
-        "status": {
-            "alive": "Joignable",
-            "late": "Réponse lente",
-            "unreachable": "Injoignable",
-            "never_seen": "Jamais connecté",
-            "last_seen": "vu pour la dernière fois"
-        }
+        "confirm_delete_web": "Supprimer le site '{name}' ?"
     },
     "routing": {
         "tab_title": "Routage et TLS",
@@ -2074,5 +2100,22 @@
         "header_value_invalid": "Une valeur ne doit pas contenir de saut de ligne",
         "last_updated": "Dernière mise à jour par {user} le {at}",
         "error": "Les paramètres de routage et TLS n'ont pas pu être enregistrés"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Ardoise",
+        "forest": "Forêt",
+        "amber": "Ambre",
+        "contrast": "Contraste élevé",
+        "doll": "Poupée",
+        "bubblegum": "Bubble-gum",
+        "autumn": "Automne",
+        "retro": "Rétro",
+        "valentine": "Saint-Valentin",
+        "summer": "Été",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavande"
     }
 }

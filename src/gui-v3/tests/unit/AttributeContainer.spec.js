@@ -9,6 +9,7 @@ const typeToComponentName = {
     BOOLEAN: 'AttributeBoolean',
     ENUM: 'AttributeEnum',
     RADIO: 'AttributeRadio',
+    MULTI_CHOICE: 'AttributeMultiChoice',
     TEXT: 'AttributeText',
     DATE: 'AttributeDate',
     TIME: 'AttributeTime',

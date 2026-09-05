@@ -357,7 +357,9 @@
         "not_available": "غير متاح",
         "aggregated_items_count": "لا توجد عناصر إخبارية مجمّعة | {count} عنصر إخباري مجمّع واحد | عنصران إخباريان مجمّعان ({count}) | {count} عناصر إخبارية مجمّعة | {count} عنصراً إخبارياً مجمّعاً | {count} عنصر إخباري مجمّع",
         "in_analyze_count": "لا توجد تحليلات قيد التنفيذ | {count} تحليل واحد قيد التنفيذ | تحليلان قيد التنفيذ ({count}) | {count} تحليلات قيد التنفيذ | {count} تحليلاً قيد التنفيذ | {count} تحليل قيد التنفيذ",
-        "analyzed_count": "لا توجد تحليلات مكتملة | {count} تحليل مكتمل واحد | تحليلان مكتملان ({count}) | {count} تحليلات مكتملة | {count} تحليلاً مكتملاً | {count} تحليل مكتمل"
+        "analyzed_count": "لا توجد تحليلات مكتملة | {count} تحليل مكتمل واحد | تحليلان مكتملان ({count}) | {count} تحليلات مكتملة | {count} تحليلاً مكتملاً | {count} تحليل مكتمل",
+        "next_run": "التشغيل التالي",
+        "state": "الحالة"
     },
     "attribute": {
         "add_constant": "إضافة ثابت",
@@ -1079,6 +1081,7 @@
         "DATE_FORMAT": "تنسيق التاريخ",
         "HOTKEYS": "تفعيل مفاتيح الاختصار",
         "UI_LANGUAGE": "لغة واجهة المستخدم",
+        "UI_THEME": "سمة واجهة المستخدم",
         "CONTENT_DEFAULT_LANGUAGE": "اللغة الافتراضية للتقارير والمنتجات",
         "REPORT_SELECTOR_READ_ONLY": "فتح محدّد عناصر التقارير في وضع القراءة فقط",
         "SPELLCHECK": "التدقيق الإملائي",
@@ -1237,7 +1240,15 @@
         "details": "التفاصيل",
         "actions": "الإجراءات",
         "close": "إغلاق",
-        "use_suggested": "استخدام القيمة المقترحة"
+        "use_suggested": "استخدام القيمة المقترحة",
+        "collect_now": "اجمع الآن",
+        "node_status": {
+            "alive": "يمكن الوصول إليه",
+            "late": "بطيء الاستجابة",
+            "unreachable": "يتعذَّر الوصول إليه",
+            "never_seen": "لم يتصل قط",
+            "last_seen": "آخر ظهور"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1311,25 @@
             "file_required": "اختر ملف استيراد",
             "node_required": "اختر عقدة مجمّعات",
             "export_selected_hint": "تصدير المصادر المحددة",
-            "selected_count": "لم يُحدَّد أي مصدر OSINT ({count}) | حُدِّد مصدر OSINT واحد ({count}) | حُدِّد مصدران من مصادر OSINT ({count}) | حُدِّدت {count} مصادر OSINT | حُدِّد {count} مصدر OSINT | حُدِّد {count} مصدر OSINT"
+            "selected_count": "لم يُحدَّد أي مصدر OSINT ({count}) | حُدِّد مصدر OSINT واحد ({count}) | حُدِّد مصدران من مصادر OSINT ({count}) | حُدِّدت {count} مصادر OSINT | حُدِّد {count} مصدر OSINT | حُدِّد {count} مصدر OSINT",
+            "collecting": "جارٍ الجمع…",
+            "disabled": "معطّل",
+            "collect_started": "بدأ الجمع",
+            "collect_error": "تعذّر بدء الجمع",
+            "collect_conflict": "يجري جمع هذا المصدر بالفعل",
+            "enable_error": "تعذّر تغيير حالة المصدر",
+            "enabled": "مفعّل",
+            "due": "مستحق",
+            "state_error": "خطأ",
+            "state_stale": "قديم",
+            "state_pending": "قيد الانتظار",
+            "none": "لا توجد مصادر OSINT على هذه العقدة",
+            "group_all": "الكل",
+            "group_uncategorized": "غير مصنّف",
+            "delete_selected_hint": "حذف المصادر المحددة",
+            "delete_selected_confirm": "حذف {count} من المصادر المحددة؟ لا يمكن التراجع عن هذا الإجراء.",
+            "delete_selected_success": "تم حذف المصادر المحددة",
+            "delete_selected_error": "تعذر حذف بعض المصادر المحددة"
         },
         "nodes": {
             "tab_description": "يمكنك هنا إدارة عقد المجمّعات.",
@@ -1315,7 +1344,8 @@
             "successful_edit": "تم تحديث عقدة المجمّعات بنجاح",
             "removed": "تم حذف عقدة المجمّعات بنجاح",
             "removed_error": "عقدة المجمّعات قيد الاستخدام وتعذر حذفها",
-            "total_count": "لا توجد عقد مجمّعات ({count}) | عقدة مجمّعات واحدة ({count}) | عقدتا مجمّعات ({count}) | {count} عقد مجمّعات | {count} عقدة مجمّعات | {count} عقدة مجمّعات"
+            "total_count": "لا توجد عقد مجمّعات ({count}) | عقدة مجمّعات واحدة ({count}) | عقدتا مجمّعات ({count}) | {count} عقد مجمّعات | {count} عقدة مجمّعات | {count} عقدة مجمّعات",
+            "delete_error": "تعذّر حذف عقدة المجمّعات"
         }
     },
     "presenters": {
@@ -1556,6 +1586,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "لا يمكن إزالة الحقول التي لا تزال عناصر التقارير تستخدمها: {fields}",
+            "in_use": "لا يمكن حذف نوع التقرير: يتم استخدامه بواسطة عناصر التقارير ({count})",
             "tab_description": "يمكنك هنا إدارة أنواع التقارير.",
             "add_new": "إضافة نوع عنصر تقرير جديد",
             "edit": "تعديل نوع عنصر التقرير",
@@ -1572,6 +1604,7 @@
             "total_count": "لا توجد أنواع تقارير ({count}) | نوع تقرير واحد ({count}) | نوعا تقرير ({count}) | {count} أنواع تقارير | {count} نوع تقرير | {count} نوع تقرير"
         },
         "attributes": {
+            "in_use": "لا يمكن حذف السمة: يتم استخدامها بواسطة {types}",
             "tab_description": "يمكنك هنا إدارة السمات.",
             "add_new": "إضافة سمة جديدة",
             "edit": "تعديل السمة",
@@ -2003,14 +2036,7 @@
         },
         "confirm_delete_title": "تأكيد الحذف",
         "confirm_delete_node": "هل تريد حذف عقدة public-web '{name}' وجميع مواقعها؟",
-        "confirm_delete_web": "هل تريد حذف الموقع '{name}'؟",
-        "status": {
-            "alive": "يمكن الوصول إليه",
-            "late": "بطيء الاستجابة",
-            "unreachable": "يتعذَّر الوصول إليه",
-            "never_seen": "لم يتصل قط",
-            "last_seen": "آخر ظهور"
-        }
+        "confirm_delete_web": "هل تريد حذف الموقع '{name}'؟"
     },
     "routing": {
         "tab_title": "التوجيه وTLS",
@@ -2074,5 +2100,22 @@
         "header_value_invalid": "يجب ألا تحتوي القيمة على فاصل أسطر",
         "last_updated": "آخر تحديث بواسطة {user} في {at}",
         "error": "تعذَّر حفظ إعدادات التوجيه وTLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "إردوازي",
+        "forest": "غابة",
+        "amber": "كهرماني",
+        "contrast": "تباين عالٍ",
+        "doll": "دمية",
+        "bubblegum": "علكة",
+        "autumn": "خريف",
+        "retro": "ريترو",
+        "valentine": "عيد الحب",
+        "summer": "صيف",
+        "vintage": "كلاسيكي",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "خزامى"
     }
 }

@@ -36,6 +36,7 @@
     import AttributeCVE from './AttributeCVE.vue'
     import AttributeCWE from './AttributeCWE.vue'
     import AttributeCVSS from './AttributeCVSS.vue'
+    import AttributeMultiChoice from './AttributeMultiChoice.vue'
 
     type AttributeItem = {
         attribute_group_item?: {
@@ -71,6 +72,7 @@
         BOOLEAN: AttributeBoolean,
         ENUM: AttributeEnum,
         RADIO: AttributeRadio,
+        MULTI_CHOICE: AttributeMultiChoice,
         TEXT: AttributeText,
         DATE: AttributeDate,
 
