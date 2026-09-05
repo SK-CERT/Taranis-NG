@@ -82,6 +82,7 @@
         RICH_TEXT: 'mdi-text-box-outline',
         ENUM: 'mdi-format-list-bulleted',
         RADIO: 'mdi-radiobox-marked',
+        MULTI_CHOICE: 'mdi-checkbox-multiple-marked-outline',
         CVSS: 'mdi-calculator',
         CPE: 'mdi-laptop',
         CVE: 'mdi-bug-outline',

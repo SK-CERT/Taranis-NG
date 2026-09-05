@@ -30,11 +30,18 @@ def _clean_scheduler() -> Iterator[None]:
     BaseCollector._running_sources.clear()
 
 
-def make_source(source_id: str, name: str = "a source", interval: str = "5") -> types.SimpleNamespace:
+def make_source(
+    source_id: str,
+    name: str = "a source",
+    interval: str = "5",
+    *,
+    enabled: bool = True,
+) -> types.SimpleNamespace:
     """Build the minimal source object the scheduling and run paths read."""
     return types.SimpleNamespace(
         id=source_id,
         name=name,
+        enabled=enabled,
         param_key_values={"REFRESH_INTERVAL": interval},
         word_lists=[],
     )
@@ -160,3 +167,24 @@ def test_the_claim_is_released_when_a_run_raises() -> None:
         ExplodingCollector().run_collector(make_source("s1"))
 
     assert BaseCollector.is_running("s1") is False
+
+
+def test_next_run_is_read_from_the_scheduler() -> None:
+    # Only the scheduler knows this: an interval may be minutes, a daily time or a weekday.
+    collector = FakeCollector()
+    source = make_source("s1")
+    collector.osint_sources = [source]
+    collector._schedule_source(source, "5")
+
+    due = collector.next_run_by_source()
+
+    assert list(due) == ["s1"]
+    assert due["s1"].startswith("20")  # an ISO timestamp
+
+
+def test_an_unscheduled_source_reports_no_next_run() -> None:
+    # A switched-off source has no job, so there is nothing to count down to.
+    collector = FakeCollector()
+    collector.osint_sources = [make_source("s1", enabled=False)]
+
+    assert collector.next_run_by_source() == {}
