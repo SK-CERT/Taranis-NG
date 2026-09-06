@@ -244,12 +244,20 @@ class BaseCollector:
         """Scheduler tag owning every job this collector registers."""
         return f"collector:{self.collector_type}"
 
-    def refresh(self) -> None:
-        """Reload the OSINT sources for the collector and rebuild their schedule."""
-        with self._refresh_guard:
-            self._refresh()
+    def refresh(self, *, collect_now: bool = True) -> None:
+        """Reload the OSINT sources for the collector and rebuild their schedule.
 
-    def _refresh(self) -> None:
+        Args:
+            collect_now (bool): Whether to collect every source straight away, as well as
+                scheduling it. True on startup, so a fresh collector fills up. False when the
+                refresh only exists to apply a configuration change: core asks for one on every
+                source edit, and collecting every source of the type each time is a lot of work
+                for a change that may affect one of them.
+        """
+        with self._refresh_guard:
+            self._refresh(collect_now=collect_now)
+
+    def _refresh(self, *, collect_now: bool) -> None:
         logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 
         response, code = CoreApi.get_osint_sources(self.collector_type)
@@ -270,11 +278,18 @@ class BaseCollector:
             SchedulerManager.cancel_jobs_by_tag(self._collector_tag)
 
             for source in self.osint_sources:
+                # Two separate reasons a source is not collected, reported separately so the log
+                # says which one applies. Switched off is a deliberate choice by an operator; no
+                # interval is a configuration gap.
+                if not getattr(source, "enabled", True):
+                    logger.info(f"{self.name} '{getattr(source, 'name', '')}': Switched off")
+                    continue
                 interval = source.param_key_values["REFRESH_INTERVAL"]
                 if interval in ["", "0"]:
                     logger.info(f"{self.name} '{getattr(source, 'name', '')}': Disabled")
                     continue
-                self.run_collector(source)
+                if collect_now:
+                    self.run_collector(source)
                 self._schedule_source(source, interval)
         except Exception as error:
             logger.exception(f"Refreshing of sources failed: {error}")
@@ -407,6 +422,69 @@ class BaseCollector:
             self._do_run(source)
         finally:
             self._end_run(source.id)
+
+    def collect_source_now(self, source_id: str) -> tuple[dict, HTTPStatus]:
+        """Collect a single source on demand, without waiting for its schedule.
+
+        Returns as soon as the run has been handed to a thread, because a run can take minutes.
+        The claim is taken here rather than in the thread, so the answer says truthfully whether
+        this call started a run.
+
+        Args:
+            source_id (str): The id of the source to collect.
+
+        Returns:
+            (dict, HTTPStatus): 202 when a run was started, 404 when the source is unknown to
+                this collector, 409 when it is already being collected.
+        """
+        source = next((s for s in self.osint_sources if s.id == source_id), None)
+        if source is None:
+            # The source may have been created since the last refresh.
+            self._reload_sources()
+            source = next((s for s in self.osint_sources if s.id == source_id), None)
+        if source is None:
+            return {"error": "OSINT source not found"}, HTTPStatus.NOT_FOUND
+
+        if not getattr(source, "enabled", True):
+            return {"error": "OSINT source is switched off"}, HTTPStatus.CONFLICT
+
+        if not self._try_begin_run(source_id):
+            return {"error": "already collecting"}, HTTPStatus.CONFLICT
+
+        def run() -> None:
+            try:
+                self._do_run(source)
+            finally:
+                self._end_run(source_id)
+
+        threading.Thread(target=run, daemon=True).start()
+        return {"started": True}, HTTPStatus.ACCEPTED
+
+    def next_run_by_source(self) -> dict[str, str]:
+        """When each of this collector's sources is next due, as ISO timestamps.
+
+        Read from the scheduler rather than recomputed: an interval can be a number of minutes, a
+        daily time or a weekday and time, and the scheduler is also the only thing that knows how
+        far behind it is running.
+
+        Returns:
+            (dict): Source id to ISO 8601 timestamp, for sources that are actually scheduled.
+        """
+        due = {}
+        for source in self.osint_sources:
+            jobs = SchedulerManager.get_jobs_by_tag(f"source:{source.id}")
+            next_run = min((job.next_run for job in jobs if job.next_run), default=None)
+            if next_run is not None:
+                due[source.id] = next_run.isoformat()
+        return due
+
+    def _reload_sources(self) -> None:
+        """Re-read the sources from core without collecting or rescheduling anything."""
+        response, code = CoreApi.get_osint_sources(self.collector_type)
+        if code != HTTPStatus.OK or response is None:
+            logger.error(f"{self.name}: OSINT sources not received, Code: {code}")
+            return
+        self.osint_sources = osint_source.OSINTSourceSchema(many=True).load(response)
 
     def initialize(self) -> None:
         """Initialize the collector."""

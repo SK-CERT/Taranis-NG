@@ -357,7 +357,9 @@
         "not_available": "Không có sẵn",
         "aggregated_items_count": "Không có tin tổng hợp nào | {count} tin tổng hợp | {count} tin tổng hợp",
         "in_analyze_count": "Không có phân tích nào đang chạy | {count} phân tích đang chạy | {count} phân tích đang chạy",
-        "analyzed_count": "Không có phân tích nào hoàn tất | {count} phân tích đã hoàn tất | {count} phân tích đã hoàn tất"
+        "analyzed_count": "Không có phân tích nào hoàn tất | {count} phân tích đã hoàn tất | {count} phân tích đã hoàn tất",
+        "next_run": "Lần chạy tiếp theo",
+        "state": "Trạng thái"
     },
     "attribute": {
         "add_constant": "Thêm hằng số",
@@ -1237,7 +1239,15 @@
         "details": "Chi tiết",
         "actions": "Hành động",
         "close": "Đóng",
-        "use_suggested": "Dùng giá trị đề xuất"
+        "use_suggested": "Dùng giá trị đề xuất",
+        "collect_now": "Thu thập ngay",
+        "node_status": {
+            "alive": "Có thể kết nối",
+            "late": "Phản hồi chậm",
+            "unreachable": "Không thể kết nối",
+            "never_seen": "Chưa từng kết nối",
+            "last_seen": "lần cuối thấy"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Chọn tệp nhập",
             "node_required": "Chọn nút Collector",
             "export_selected_hint": "Xuất nguồn đã chọn",
-            "selected_count": "Đã chọn {count} nguồn OSINT | Đã chọn {count} nguồn OSINT"
+            "selected_count": "Đã chọn {count} nguồn OSINT | Đã chọn {count} nguồn OSINT",
+            "collecting": "Đang thu thập…",
+            "disabled": "Đã tắt",
+            "collect_started": "Đã bắt đầu thu thập",
+            "collect_error": "Không thể bắt đầu thu thập",
+            "collect_conflict": "Nguồn này đang được thu thập",
+            "enable_error": "Không thể thay đổi trạng thái nguồn",
+            "enabled": "Đã bật",
+            "due": "Đến hạn",
+            "state_error": "Lỗi",
+            "state_stale": "Cũ",
+            "state_pending": "Đang chờ",
+            "none": "Không có nguồn OSINT trên nút này",
+            "group_all": "Tất cả",
+            "group_uncategorized": "Chưa phân loại",
+            "delete_selected_hint": "Xóa các nguồn đã chọn",
+            "delete_selected_confirm": "Xóa {count} nguồn đã chọn? Hành động này không thể hoàn tác.",
+            "delete_selected_success": "Đã xóa các nguồn đã chọn",
+            "delete_selected_error": "Không thể xóa một số nguồn đã chọn"
         },
         "nodes": {
             "tab_description": "Tại đây, bạn có thể quản lý nút Collector.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Đã cập nhật nút Collector thành công",
             "removed": "Đã xóa nút Collector thành công",
             "removed_error": "Nút Collector đang được sử dụng và không thể xóa",
-            "total_count": "{count} nút thu thập | {count} nút thu thập"
+            "total_count": "{count} nút thu thập | {count} nút thu thập",
+            "delete_error": "Không thể xóa nút bộ thu thập"
         }
     },
     "presenters": {
@@ -2003,14 +2032,7 @@
         },
         "confirm_delete_title": "Xác nhận xóa",
         "confirm_delete_node": "Xóa nút public-web '{name}' và toàn bộ trang web của nó?",
-        "confirm_delete_web": "Xóa trang web '{name}'?",
-        "status": {
-            "alive": "Có thể kết nối",
-            "late": "Phản hồi chậm",
-            "unreachable": "Không thể kết nối",
-            "never_seen": "Chưa từng kết nối",
-            "last_seen": "lần cuối thấy"
-        }
+        "confirm_delete_web": "Xóa trang web '{name}'?"
     },
     "routing": {
         "tab_title": "Định tuyến và TLS",

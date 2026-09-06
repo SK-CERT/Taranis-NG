@@ -27,6 +27,13 @@ run("npx", ["lint-staged"]);
 // here to keep a bare `npm run test:coverage` (and this hook) working.
 run("node", ["scripts/update-version.cjs"]);
 
+// vue-tsc, before the tests: CI gates on `npm run typecheck` and nothing local did, so a
+// type error - a prop shape that drifted, an index that can be undefined - passed every hook
+// and failed the build instead. ~18s, and it catches what neither eslint nor vitest can:
+// vitest transpiles without checking types, and eslint is not type-aware here.
+// update-version.cjs above already wrote git-info.json, which pretypecheck would regenerate.
+run("npx", ["vue-tsc", "--noEmit", "-p", "tsconfig.json"]);
+
 // test:unit, not test:coverage: the V8 coverage pass adds time on every commit and
 // nothing local consumes the report. CI still runs test:coverage and uploads it.
 run("npm", ["run", "test:unit"]);

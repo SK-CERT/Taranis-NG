@@ -13,6 +13,7 @@
                 md="9"
             >
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap">
+                    <slot name="prepend" />
                     <SearchField
                         v-model="filter.search"
                         clearable

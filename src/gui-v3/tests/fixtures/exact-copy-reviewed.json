@@ -404,6 +404,7 @@
             "bots.presets.bot",
             "card_item.source_with_type",
             "collectors.sources.collector",
+            "collectors.sources.state_error",
             "common.no",
             "cvss_calculator.local",
             "cvss_calculator.no",

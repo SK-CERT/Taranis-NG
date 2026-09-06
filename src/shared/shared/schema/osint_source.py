@@ -170,6 +170,7 @@ class OSINTSource:
         last_attempted: datetime,
         last_collected: datetime,
         last_error_message: str | None = None,
+        enabled: bool = True,
     ) -> None:
         """Initialize an instance of the class.
 
@@ -183,6 +184,8 @@ class OSINTSource:
             last_attempted (datetime): The date and time when the OSINT source was last attempted to be collected.
             last_collected (datetime): The date and time when the OSINT source was last collected.
             last_error_message (str, optional): The error message from the last collection attempt.
+            enabled (bool, optional): Whether the collector should collect this source. Defaults to
+                True so that a node talking to an older core keeps collecting.
         """
         self.id = id
         self.name = name
@@ -197,6 +200,7 @@ class OSINTSource:
         self.last_attempted = last_attempted
         self.last_collected = last_collected
         self.last_error_message = last_error_message
+        self.enabled = enabled
 
 
 class OSINTSourceSchema(Schema):
@@ -212,6 +216,9 @@ class OSINTSourceSchema(Schema):
         last_attempted (fields.DateTime): The date and time when the OSINT source was last attempted to be collected.
         last_collected (fields.DateTime): The date and time when the OSINT source was last collected
         last_error_message (fields.Str): The error message from the last collection attempt.
+        enabled (fields.Bool): Whether the collector should collect this source.
+        collecting (fields.Bool): Whether a run is in progress right now.
+        next_run (fields.Str): When the collector plans to collect the source next, ISO 8601.
         status (fields.Str): The status of the OSINT source (e.g., "green", "gray").
     """
 
@@ -234,6 +241,15 @@ class OSINTSourceSchema(Schema):
     last_attempted = fields.DateTime("%d.%m.%Y - %H:%M:%S", allow_none=True)
     last_collected = fields.DateTime("%d.%m.%Y - %H:%M:%S", allow_none=True)
     last_error_message = fields.Str(allow_none=True)
+    # Loaded as well as dumped: the collector node needs to know whether to collect the source.
+    # Defaulted so that a node reading from an older core keeps collecting everything.
+    enabled = fields.Bool(load_default=True)
+    # Dump-only, like status: derived state the node reports, never something it sends back.
+    collecting = fields.Bool(dump_only=True)
+    # A string, not a DateTime: the value is an ISO 8601 timestamp cached from the collector
+    # node, never a datetime object, and the browser counts down from it with Date.parse - which
+    # understands ISO 8601 and not this schema's usual dd.mm.yyyy display format.
+    next_run = fields.Str(dump_only=True, allow_none=True)
     status = fields.Str(dump_only=True)  # skip this field during deserialization
 
     @post_load

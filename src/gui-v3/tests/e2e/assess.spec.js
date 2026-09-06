@@ -18,12 +18,11 @@ test.describe('Assess', () => {
     })
 
     test('should load the Assess view with the News Items toolbar', async ({ page }) => {
-        await expect(
-            page
-                .locator('.text-h6')
-                .filter({ hasText: /news items/i })
-                .first()
-        ).toBeVisible()
+        // The toolbar itself, not the empty-state heading. That heading reads "No news items
+        // found", so matching /news items/i on it asserted the opposite of what this test is
+        // named for: it passed only while the instance held no news at all, and any spec that
+        // collected something - creating a source now collects it at once - broke this one.
+        await expect(page.locator('.toolbar-filter__search input').first()).toBeVisible()
     })
 
     test('should accept input in the search field', async ({ page }) => {
@@ -65,12 +64,17 @@ test.describe('Assess', () => {
     })
 
     test('should reveal selection actions after entering multi-select mode', async ({ page }) => {
-        // Select-all only exists once multi-select is enabled.
-        await expect(page.getByTitle('Select All')).toHaveCount(0)
+        const selectAll = page.getByTitle('Select All')
+        // Select All keeps its place in the toolbar at all times so the row does not change
+        // shape, but stays inactive until selection mode is on. The actions that need an actual
+        // selection are the ones that appear.
+        await expect(selectAll).toBeDisabled()
+        await expect(page.getByTitle('Mark news items as read')).toHaveCount(0)
 
         await page.getByTitle('Toggle news items selection mode').click()
 
-        await expect(page.getByTitle('Select All')).toBeVisible()
+        await expect(selectAll).toBeEnabled()
+        await expect(page.getByTitle('Mark news items as read')).toBeVisible()
     })
 
     test('should toggle compact mode without errors', async ({ page }) => {

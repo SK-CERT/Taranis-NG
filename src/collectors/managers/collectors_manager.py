@@ -33,7 +33,25 @@ def report_status() -> None:
                 f"Core status update response failed, Code: {status_code}{', response: ' + str(response) if response is not None else ''}",
             )
 
+        report_schedule()
         time.sleep(55)
+
+
+def report_schedule() -> None:
+    """Tell core when each source is next due, so the GUI can count down to it.
+
+    Piggybacks on the status heartbeat rather than adding a timer: the schedule only changes on a
+    refresh or when a job runs, so a value up to a minute old is fine for a countdown measured in
+    minutes or hours.
+    """
+    due = {}
+    for collector in collectors.values():
+        due.update(collector.next_run_by_source())
+    if not due:
+        return
+    response, status_code = CoreApi.update_sources_schedule(due)
+    if status_code != HTTPStatus.OK:
+        logger.error(f"Core schedule update failed, Code: {status_code}, response: {response}")
 
 
 def initialize() -> None:
@@ -80,11 +98,12 @@ def register_collector(collector: object) -> None:
     initialize_thread.start()
 
 
-def refresh_collector(collector_type: str) -> HTTPStatus:
+def refresh_collector(collector_type: str, *, collect_now: bool = True) -> HTTPStatus:
     """Refresh the specified collector.
 
     Parameters:
         collector_type (str): The type of the collector to refresh.
+        collect_now (bool): Whether the refresh should also collect every source straight away.
 
     Returns:
         (int): The HTTP status code indicating the result of the refresh operation. Returns 200 if the collector was refreshed successfully,
@@ -102,13 +121,28 @@ def refresh_collector(collector_type: str) -> HTTPStatus:
                 Parameters:
                     cls: The class object.
                 """
-                collectors[collector_type].refresh()
+                collectors[collector_type].refresh(collect_now=collect_now)
 
         refresh_thread = RefreshThread()
         refresh_thread.start()
         return HTTPStatus.OK
 
     return HTTPStatus.FORBIDDEN
+
+
+def collect_source_now(collector_type: str, source_id: str) -> tuple[dict, HTTPStatus]:
+    """Collect one OSINT source straight away.
+
+    Parameters:
+        collector_type (str): The type of the collector owning the source.
+        source_id (str): The id of the source to collect.
+
+    Returns:
+        (dict, HTTPStatus): The collector's answer, or 403 when the type is not registered here.
+    """
+    if collector_type not in collectors:
+        return {"error": "unknown collector type"}, HTTPStatus.FORBIDDEN
+    return collectors[collector_type].collect_source_now(source_id)
 
 
 def get_registered_collectors_info(collector_id: str) -> list:

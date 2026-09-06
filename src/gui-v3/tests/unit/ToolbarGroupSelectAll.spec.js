@@ -244,3 +244,39 @@ describe('ToolbarGroup notification contracts', () => {
         }
     })
 })
+
+describe('ToolbarGroup select all availability', () => {
+    /**
+     * The button keeps its place in the toolbar at all times so the row does not change shape when
+     * selection mode goes on, but it stays inactive until then - the same way export and delete
+     * stay inactive until there is a selection. Selecting everything while the per-row checkboxes
+     * were still hidden would leave a count nobody can inspect or narrow down.
+     */
+    it('is present but inactive before selection mode is turned on', async () => {
+        const wrapper = mountWithPlugins(ToolbarGroup, { props: { view: 'assess' } })
+        await flushPromises()
+
+        expect(useAssessStore().getMultiSelect).toBe(false)
+
+        const button = selectAllButton(wrapper)
+        expect(button).toBeDefined()
+        expect(button.attributes('disabled')).toBeDefined()
+    })
+
+    it('becomes usable once selection mode is on', async () => {
+        const assessApi = await import('@/api/assess')
+        vi.mocked(assessApi.selectAllNewsItems).mockResolvedValue({ data: { items: [{ id: 1 }] } })
+
+        const wrapper = mountWithPlugins(ToolbarGroup, { props: { view: 'assess' } })
+        const store = useAssessStore()
+        store.multiSelect(true)
+        await flushPromises()
+
+        expect(selectAllButton(wrapper).attributes('disabled')).toBeUndefined()
+
+        await selectAllButton(wrapper).trigger('click')
+        await flushPromises()
+
+        expect(store.getSelection.map((item) => item.id)).toEqual([1])
+    })
+})

@@ -85,6 +85,34 @@ class CoreApi:
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @classmethod
+    def update_sources_schedule(cls, next_run_by_source: dict) -> tuple[dict, HTTPStatus]:
+        """Report when each source is next due to be collected.
+
+        Args:
+            next_run_by_source (dict): Source id to ISO 8601 timestamp.
+
+        Returns:
+            tuple: A tuple containing the JSON response and the HTTP status code.
+        """
+        result = cls.read_collector_config_id()
+        if "error" in result:
+            return result, HTTPStatus.INTERNAL_SERVER_ERROR
+        collector_id = result["id"]
+
+        try:
+            response = requests.post(
+                f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}/schedule",
+                json=next_run_by_source,
+                headers=cls.headers,
+                timeout=10,
+            )
+            return response.json(), response.status_code
+        except Exception as ex:
+            msg = "Update sources schedule failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+    @classmethod
     def update_source_last_attempt(cls, source_id: str) -> tuple[dict, HTTPStatus]:
         """Update OSINT source's "last attempted" record with current datetime.
 

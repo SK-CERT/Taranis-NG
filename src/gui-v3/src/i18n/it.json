@@ -357,7 +357,9 @@
         "not_available": "Non disponibile",
         "aggregated_items_count": "Nessuna notizia aggregata | {count} notizia aggregata | {count} notizie aggregate",
         "in_analyze_count": "Nessuna analisi in corso | {count} analisi in corso | {count} analisi in corso",
-        "analyzed_count": "Nessuna analisi completata | {count} analisi completata | {count} analisi completate"
+        "analyzed_count": "Nessuna analisi completata | {count} analisi completata | {count} analisi completate",
+        "next_run": "Prossima esecuzione",
+        "state": "Stato"
     },
     "attribute": {
         "add_constant": "Aggiungi costante",
@@ -1237,7 +1239,15 @@
         "details": "Dettagli",
         "actions": "Azioni",
         "close": "Chiudi",
-        "use_suggested": "Usa il valore suggerito"
+        "use_suggested": "Usa il valore suggerito",
+        "collect_now": "Raccogli ora",
+        "node_status": {
+            "alive": "Raggiungibile",
+            "late": "Risponde lentamente",
+            "unreachable": "Non raggiungibile",
+            "never_seen": "Mai connesso",
+            "last_seen": "visto l'ultima volta"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Selezionare un file di importazione",
             "node_required": "Selezionare un nodo Collector",
             "export_selected_hint": "Esporta le fonti selezionate",
-            "selected_count": "{count} fonte OSINT selezionata | {count} fonti OSINT selezionate"
+            "selected_count": "{count} fonte OSINT selezionata | {count} fonti OSINT selezionate",
+            "collecting": "Raccolta in corso…",
+            "disabled": "Disattivato",
+            "collect_started": "Raccolta avviata",
+            "collect_error": "Impossibile avviare la raccolta",
+            "collect_conflict": "Questa fonte è già in fase di raccolta",
+            "enable_error": "Impossibile modificare lo stato della fonte",
+            "enabled": "Attivato",
+            "due": "In attesa",
+            "state_error": "Errore",
+            "state_stale": "Obsoleto",
+            "state_pending": "In attesa",
+            "none": "Nessuna fonte OSINT su questo nodo",
+            "group_all": "Tutti",
+            "group_uncategorized": "Senza categoria",
+            "delete_selected_hint": "Elimina le fonti selezionate",
+            "delete_selected_confirm": "Eliminare {count} fonti selezionate? L'operazione non può essere annullata.",
+            "delete_selected_success": "Fonti selezionate eliminate",
+            "delete_selected_error": "Alcune fonti selezionate non sono state eliminate"
         },
         "nodes": {
             "tab_description": "Qui è possibile gestire i nodi Collector.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Il nodo Collector è stato aggiornato correttamente",
             "removed": "Il nodo Collector è stato eliminato correttamente",
             "removed_error": "Il nodo Collector è in uso e non può essere eliminato",
-            "total_count": "{count} nodo di raccolta | {count} nodi di raccolta"
+            "total_count": "{count} nodo di raccolta | {count} nodi di raccolta",
+            "delete_error": "Impossibile eliminare il nodo dei collettori"
         }
     },
     "presenters": {
@@ -2003,14 +2032,7 @@
         },
         "confirm_delete_title": "Conferma eliminazione",
         "confirm_delete_node": "Eliminare il nodo public-web '{name}' e tutti i suoi siti?",
-        "confirm_delete_web": "Eliminare il sito '{name}'?",
-        "status": {
-            "alive": "Raggiungibile",
-            "late": "Risponde lentamente",
-            "unreachable": "Non raggiungibile",
-            "never_seen": "Mai connesso",
-            "last_seen": "visto l'ultima volta"
-        }
+        "confirm_delete_web": "Eliminare il sito '{name}'?"
     },
     "routing": {
         "tab_title": "Routing e TLS",

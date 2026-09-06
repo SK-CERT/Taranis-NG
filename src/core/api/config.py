@@ -1425,6 +1425,52 @@ class OSINTSourceResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
+class OSINTSourceCollectResource(Resource):
+    """Collecting one OSINT source on demand."""
+
+    @auth_required("CONFIG_OSINT_SOURCE_UPDATE")
+    def post(self, source_id: str) -> tuple[dict, HTTPStatus]:
+        """Collect an OSINT source now.
+
+        Returns as soon as the collector has taken the work, because a run can take minutes.
+
+        Args:
+            source_id (str): The OSINT source ID
+        Returns:
+            (dict, HTTPStatus): 202 when a run started, 409 when one was already in progress.
+        """
+        try:
+            return collectors_manager.collect_osint_source(source_id)
+        except Exception as ex:
+            msg = "Could not collect OSINT source"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class OSINTSourceEnabledResource(Resource):
+    """Switching one OSINT source on or off."""
+
+    @auth_required("CONFIG_OSINT_SOURCE_UPDATE")
+    def put(self, source_id: str) -> tuple[dict, HTTPStatus]:
+        """Enable or disable an OSINT source.
+
+        A dedicated endpoint rather than the full source update: that one reassigns groups and
+        rewrites parameter values from its payload, which a switch must never do.
+
+        Args:
+            source_id (str): The OSINT source ID
+        Returns:
+            (dict, HTTPStatus): Empty on success.
+        """
+        try:
+            enabled = bool((request.json or {}).get("enabled", True))
+            return collectors_manager.set_osint_source_enabled(source_id, enabled=enabled)
+        except Exception as ex:
+            msg = "Could not change the OSINT source state"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
 class OSINTSourcesExportResource(Resource):
     """OSINT sources export API endpoint."""
 
@@ -2613,6 +2659,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(CollectorsNodeResource, "/api/v1/config/collectors-nodes/<string:node_id>")
     api.add_resource(OSINTSourcesResource, "/api/v1/config/osint-sources")
     api.add_resource(OSINTSourceResource, "/api/v1/config/osint-sources/<string:source_id>")
+    api.add_resource(OSINTSourceCollectResource, "/api/v1/config/osint-sources/<string:source_id>/collect")
+    api.add_resource(OSINTSourceEnabledResource, "/api/v1/config/osint-sources/<string:source_id>/enabled")
     api.add_resource(OSINTSourcesExportResource, "/api/v1/config/export-osint-sources")
     api.add_resource(OSINTSourcesImportResource, "/api/v1/config/import-osint-sources")
     api.add_resource(OSINTSourceGroupsResource, "/api/v1/config/osint-source-groups")

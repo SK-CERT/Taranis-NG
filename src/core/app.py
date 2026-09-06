@@ -10,6 +10,7 @@ from managers import (
     cache_manager,
     db_manager,
     remote_manager,
+    run_state_cache,
     sse_manager,
     tagcloud_manager,
 )
@@ -58,6 +59,10 @@ def create_app() -> Flask:
         db_manager.create_tables()
 
         cache_manager.initialize(app)
+        # The cached run state describes collector nodes as they were before this restart. A
+        # compose restart takes them down with core, so nothing would ever report those runs
+        # finishing; the nodes re-report their schedule on their next heartbeat.
+        run_state_cache.clear_all()
         auth_manager.initialize(app)
         api_manager.initialize(app)
         sse_manager.initialize(app)

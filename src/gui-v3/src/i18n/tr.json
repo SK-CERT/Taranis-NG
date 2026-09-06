@@ -357,7 +357,9 @@
         "not_available": "Kullanılamıyor",
         "aggregated_items_count": "Birleştirilmiş haber öğesi yok | {count} birleştirilmiş haber öğesi | {count} birleştirilmiş haber öğesi",
         "in_analyze_count": "Devam eden analiz yok | Devam eden {count} analiz | Devam eden {count} analiz",
-        "analyzed_count": "Tamamlanmış analiz yok | {count} tamamlanmış analiz | {count} tamamlanmış analiz"
+        "analyzed_count": "Tamamlanmış analiz yok | {count} tamamlanmış analiz | {count} tamamlanmış analiz",
+        "next_run": "Sonraki çalışma",
+        "state": "Durum"
     },
     "attribute": {
         "add_constant": "Sabit ekle",
@@ -1237,7 +1239,15 @@
         "details": "Ayrıntılar",
         "actions": "İşlemler",
         "close": "Kapat",
-        "use_suggested": "Önerilen değeri kullan"
+        "use_suggested": "Önerilen değeri kullan",
+        "collect_now": "Şimdi topla",
+        "node_status": {
+            "alive": "Erişilebilir",
+            "late": "Yavaş yanıt veriyor",
+            "unreachable": "Erişilemiyor",
+            "never_seen": "Hiç bağlanmadı",
+            "last_seen": "son görülme"
+        }
     },
     "collectors": {
         "groups": {
@@ -1300,7 +1310,25 @@
             "file_required": "Bir içe aktarma dosyası seçin",
             "node_required": "Bir toplayıcı düğümü seçin",
             "export_selected_hint": "Seçili kaynakları dışa aktar",
-            "selected_count": "OSINT kaynağı seçilmedi | {count} OSINT kaynağı seçildi | {count} OSINT kaynağı seçildi"
+            "selected_count": "OSINT kaynağı seçilmedi | {count} OSINT kaynağı seçildi | {count} OSINT kaynağı seçildi",
+            "collecting": "Toplanıyor…",
+            "disabled": "Devre dışı",
+            "collect_started": "Toplama başlatıldı",
+            "collect_error": "Toplama başlatılamadı",
+            "collect_conflict": "Bu kaynak zaten toplanıyor",
+            "enable_error": "Kaynağın durumu değiştirilemedi",
+            "enabled": "Etkin",
+            "due": "Bekliyor",
+            "state_error": "Hata",
+            "state_stale": "Eskimiş",
+            "state_pending": "Beklemede",
+            "none": "Bu düğümde OSINT kaynağı yok",
+            "group_all": "Tümü",
+            "group_uncategorized": "Kategorisiz",
+            "delete_selected_hint": "Seçili kaynakları sil",
+            "delete_selected_confirm": "Seçili {count} kaynak silinsin mi? Bu işlem geri alınamaz.",
+            "delete_selected_success": "Seçili kaynaklar silindi",
+            "delete_selected_error": "Bazı seçili kaynaklar silinemedi"
         },
         "nodes": {
             "tab_description": "Toplayıcı düğümleri buradan yönetilebilir.",
@@ -1315,7 +1343,8 @@
             "successful_edit": "Toplayıcı düğümü başarıyla güncellendi",
             "removed": "Toplayıcı düğümü başarıyla silindi",
             "removed_error": "Toplayıcı düğümü kullanımda olduğundan silinemedi",
-            "total_count": "Toplayıcı düğümü yok | {count} toplayıcı düğümü | {count} toplayıcı düğümü"
+            "total_count": "Toplayıcı düğümü yok | {count} toplayıcı düğümü | {count} toplayıcı düğümü",
+            "delete_error": "Toplayıcı düğümü silinemedi"
         }
     },
     "presenters": {
@@ -2003,14 +2032,7 @@
         },
         "confirm_delete_title": "Silmeyi onayla",
         "confirm_delete_node": "'{name}' public-web düğümü ve tüm siteleri silinsin mi?",
-        "confirm_delete_web": "'{name}' sitesi silinsin mi?",
-        "status": {
-            "alive": "Erişilebilir",
-            "late": "Yavaş yanıt veriyor",
-            "unreachable": "Erişilemiyor",
-            "never_seen": "Hiç bağlanmadı",
-            "last_seen": "son görülme"
-        }
+        "confirm_delete_web": "'{name}' sitesi silinsin mi?"
     },
     "routing": {
         "tab_title": "Yönlendirme ve TLS",

@@ -1,15 +1,12 @@
 <template>
     <div class="toolbar-group">
         <!-- Multi-select toggle button -->
-        <v-btn
-            icon
-            size="small"
-            :color="multiSelectActive ? 'primary' : 'default'"
+        <ActionButton
+            :icon="ICONS.MULTISELECT"
+            :color="multiSelectActive ? 'primary' : 'medium-emphasis'"
             :title="t(`${view}.tooltip.toggle_selection`)"
             @click="toggleMultiSelect"
-        >
-            <v-icon>{{ ICONS.MULTISELECT }}</v-icon>
-        </v-btn>
+        />
 
         <!-- Divider -->
         <v-divider
@@ -17,44 +14,44 @@
             class="mx-2"
         />
 
-        <!-- Select All / Unselect All (visible only when multi-select, display always first!) -->
-        <template v-if="multiSelectActive">
-            <v-btn
-                icon
-                size="small"
-                :disabled="false"
-                :title="allSelected ? t(`${view}.tooltip.unselect_all`) : t(`${view}.tooltip.select_all`)"
-                @click="allSelected ? unselectAll() : selectAll()"
-            >
-                <v-icon>{{ allSelected ? ICONS.CHECKBOX_BLANK_OUTLINE : ICONS.SELECT_ALL }}</v-icon>
-            </v-btn>
-        </template>
+        <!-- Select All / Unselect All (display always first!). Always present so the toolbar keeps
+             its shape, but inactive until selection mode is on - the same way export and delete
+             stay inactive until there is a selection to act on. -->
+        <ActionButton
+            :icon="allSelected ? ICONS.CHECKBOX_BLANK_OUTLINE : ICONS.SELECT_ALL"
+            color="primary"
+            :disabled="!multiSelectActive"
+            :title="allSelected ? t(`${view}.tooltip.unselect_all`) : t(`${view}.tooltip.select_all`)"
+            @click="allSelected ? unselectAll() : selectAll()"
+        />
 
         <!-- Action Buttons (visible always) -->
         <template v-if="view === 'collectors.sources'">
             <!-- Import -->
-            <v-btn
+            <ActionButton
                 v-if="canImport"
-                icon
-                size="small"
+                icon="mdi-import"
                 color="primary"
                 :title="t('collectors.sources.import')"
                 @click="handleActionEvent(Action.OSINT_IMPORT)"
-            >
-                <v-icon>mdi-import</v-icon>
-            </v-btn>
+            />
             <!-- Export -->
-            <v-btn
+            <ActionButton
                 v-if="canExport"
-                icon
-                size="small"
+                icon="mdi-export"
                 color="primary"
                 :disabled="selectedCount === 0"
                 :title="t('collectors.sources.export_selected_hint')"
                 @click="handleActionEvent(Action.OSINT_EXPORT)"
-            >
-                <v-icon>mdi-export</v-icon>
-            </v-btn>
+            />
+            <!-- Delete selected. Destructive and unbounded in size, so the view confirms first. -->
+            <ActionButton
+                v-if="canDeleteSources"
+                action="delete"
+                :disabled="selectedCount === 0"
+                :title="t('collectors.sources.delete_selected_hint')"
+                @click="handleActionEvent(Action.OSINT_DELETE)"
+            />
         </template>
 
         <!-- Action Buttons (visible only when multi-select is active) -->
@@ -212,6 +209,7 @@
     import { ICONS } from '@/config/ui-constants'
     import { useRoute, useRouter } from 'vue-router'
     import { useI18n } from 'vue-i18n'
+    import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import { useAssessStore } from '@/stores/assess'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { usePublishStore } from '@/stores/publish'
@@ -268,6 +266,7 @@
         (e: 'clear-selection'): void
         (e: 'osint-import'): void
         (e: 'osint-export'): void
+        (e: 'osint-delete'): void
     }>()
 
     const route = useRoute()
@@ -352,6 +351,7 @@
 
     const canImport = computed(() => checkPermission('CONFIG_OSINT_SOURCE_CREATE'))
     const canExport = computed(() => checkPermission('CONFIG_OSINT_SOURCE_ACCESS'))
+    const canDeleteSources = computed(() => checkPermission('CONFIG_OSINT_SOURCE_DELETE'))
 
     const normalizeSelectionType = (rawType: unknown): 'AGGREGATE' | 'ITEM' => {
         // console.log('[ToolbarGroup] Normalizing selection type:', rawType)
@@ -393,8 +393,7 @@
     })
 
     // Toggle multi-select
-    const toggleMultiSelect = (): void => {
-        const newState = !multiSelectActive.value
+    const setMultiSelect = (newState: boolean): void => {
         switch (props.view) {
             case 'assess':
                 assessStore.multiSelect(newState)
@@ -422,6 +421,8 @@
 
         window.dispatchEvent(new CustomEvent('multiselect-toggled'))
     }
+
+    const toggleMultiSelect = (): void => setMultiSelect(!multiSelectActive.value)
 
     // Select all
     const selectAll = async (): Promise<void> => {
@@ -750,6 +751,9 @@
                 break
             case Action.OSINT_EXPORT:
                 emit('osint-export')
+                break
+            case Action.OSINT_DELETE:
+                emit('osint-delete')
                 break
             default:
                 console.warn('[ToolbarGroup] Unhandled action event type:', type)

@@ -26,34 +26,22 @@
                 :key="node.id"
                 :value="node.id"
             >
-                <v-expansion-panel-title>
-                    <v-icon
-                        :color="statusColor(node.status)"
-                        :icon="node.status === 'green' ? 'mdi-circle' : 'mdi-circle-outline'"
-                        size="x-small"
-                        class="me-2"
-                        :title="statusTitle(node)"
-                    />
-                    <span class="font-weight-medium">{{ node.name }}</span>
-                    <span class="text-medium-emphasis ms-2">{{ node.description }}</span>
-                    <v-spacer />
-                    <v-btn
-                        v-if="canUpdate"
-                        icon="mdi-pencil"
-                        size="small"
-                        variant="text"
-                        class="me-1"
-                        @click.stop="editNode(node)"
-                    />
-                    <v-btn
-                        v-if="canDelete"
-                        icon="mdi-delete"
-                        size="small"
-                        variant="text"
-                        color="error"
-                        @click.stop="askDeleteNode(node)"
-                    />
-                </v-expansion-panel-title>
+                <NodePanelTitle
+                    :node="node"
+                    :count="(websByNode[node.id] || []).length"
+                    :can-update="canUpdate"
+                    :can-delete="canDelete"
+                    @edit="editNode(node)"
+                    @delete="askDeleteNode(node)"
+                >
+                    <template #add>
+                        <NewPublicWeb
+                            :node-id="node.id"
+                            :edit-item="webEditItems[node.id] || null"
+                            @saved="handleWebSaved(node.id)"
+                        />
+                    </template>
+                </NodePanelTitle>
 
                 <v-expansion-panel-text>
                     <v-table density="compact">
@@ -114,14 +102,6 @@
                             </tr>
                         </tbody>
                     </v-table>
-
-                    <div class="d-flex justify-end mt-2">
-                        <NewPublicWeb
-                            :node-id="node.id"
-                            :edit-item="webEditItems[node.id] || null"
-                            @saved="handleWebSaved(node.id)"
-                        />
-                    </div>
                 </v-expansion-panel-text>
             </v-expansion-panel>
         </v-expansion-panels>
@@ -164,6 +144,8 @@
     import { getPublicWebs, deletePublicWebNode, deletePublicWeb, updatePublicWeb } from '@/api/config'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import NewPublicWebNode from '@/components/config/public-web/NewPublicWebNode.vue'
+    import NodePanelTitle from '@/components/common/nodes/NodePanelTitle.vue'
+    import { useOptimisticToggle } from '@/composables/useOptimisticToggle'
     import NewPublicWeb from '@/components/config/public-web/NewPublicWeb.vue'
 
     type NodeItem = {
@@ -194,23 +176,13 @@
     const nodeEditItem = ref<NodeItem | null>(null)
     const webEditItems = ref<Record<number, any>>({})
 
+    // The busy row while a switch is saving; the composable owns it.
+    const { busyId: togglingWeb, toggle } = useOptimisticToggle()
+
     const canUpdate = computed(() => checkPermission('CONFIG_PUBLIC_WEB_NODE_UPDATE'))
     const canDelete = computed(() => checkPermission('CONFIG_PUBLIC_WEB_NODE_DELETE'))
 
     const nodes = computed<NodeItem[]>(() => (configStore.publicWebNodes.items as NodeItem[]) || [])
-
-    // Health status dot: green (reachable) / orange (late) / red (unreachable).
-    // Driven by the node's last_seen via the core periodic ping; a node that has
-    // never answered is red, never green.
-    function statusColor(status?: string): string {
-        return status === 'green' ? 'success' : status === 'orange' ? 'warning' : 'error'
-    }
-
-    function statusTitle(node: NodeItem): string {
-        if (!node.last_seen) return t('public_web.status.never_seen')
-        const key = node.status === 'green' ? 'alive' : node.status === 'orange' ? 'late' : 'unreachable'
-        return `${t(`public_web.status.${key}`)} (${t('public_web.status.last_seen')}: ${node.last_seen})`
-    }
 
     async function loadNodes(): Promise<void> {
         try {
@@ -257,23 +229,13 @@
     // Quick enable/disable from the list. Persists via the normal update (which
     // also pushes a cache reset to the node). The switch is moved locally first
     // so it follows the click immediately, and moved back if the save fails.
-    const togglingWeb = ref<number | null>(null)
 
     async function toggleWebEnabled(nodeId: number, web: WebItem, value: boolean | null): Promise<void> {
-        const desired = value !== false
-        const previous = web.enabled !== false
-        if (desired === previous) return
-        web.enabled = desired
-        togglingWeb.value = web.id
-        try {
-            await updatePublicWeb(nodeId, { ...web, enabled: desired })
-            await loadWebs(nodeId)
-        } catch (error) {
-            console.error('Error toggling web:', error)
-            web.enabled = previous
-        } finally {
-            togglingWeb.value = null
-        }
+        await toggle(web, value !== false, {
+            save: (enabled) => updatePublicWeb(nodeId, { ...web, enabled }),
+            reload: () => loadWebs(nodeId),
+            onError: (error) => console.error('Error toggling web:', error)
+        })
     }
 
     function handleWebSaved(nodeId: number): void {
