@@ -80,6 +80,8 @@ def publish(preset: PublisherPreset, data: dict, message_title: str, message_bod
     att_file_name = None
     # None when publishing without a presenter (e.g. asset notifications) — publishers treat that as plain text.
     message_body_mime_type = None
+    # Likewise: no presenter means no headers template, so no custom mail headers.
+    message_headers = None
     if data is not None:
         data_data = data["data"]
         data_mime = data["mime_type"]
@@ -87,6 +89,7 @@ def publish(preset: PublisherPreset, data: dict, message_title: str, message_bod
         message_body = data.get("message_body")
         att_file_name = data.get("att_file_name")
         message_body_mime_type = data.get("message_body_mime_type")
+        message_headers = data.get("message_headers")
 
     input_data = PublisherInput(
         preset.name,
@@ -99,6 +102,7 @@ def publish(preset: PublisherPreset, data: dict, message_title: str, message_bod
         recipients,
         att_file_name,
         message_body_mime_type,
+        message_headers,
     )
     input_schema = PublisherInputSchema()
 

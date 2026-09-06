@@ -131,6 +131,7 @@ def publisher_input() -> Callable[..., types.SimpleNamespace]:
             message_title=None,
             message_body=None,
             message_body_mime_type=None,
+            message_headers=[],
             recipients=[],
             att_file_name=None,
             param_key_values=param_key_values,
