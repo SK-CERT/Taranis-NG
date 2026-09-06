@@ -263,8 +263,8 @@
     const canCreate = computed(() => checkPermission('CONFIG_REPORT_TYPE_CREATE'))
     const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_REPORT_TYPE_UPDATE' : 'CONFIG_REPORT_TYPE_CREATE'))
 
-    const notify = (type: 'success' | 'error', loc: string): void => {
-        window.dispatchEvent(new CustomEvent('notification', { detail: { type, loc } }))
+    const notify = (type: 'success' | 'error', loc: string, params?: Record<string, unknown>): void => {
+        window.dispatchEvent(new CustomEvent('notification', { detail: { type, loc, params } }))
     }
 
     const addGroup = (): void => {
@@ -386,7 +386,17 @@
             emit('saved')
             return true
         } catch (error) {
-            notify('error', 'common.error_saving')
+            // Removing a field that report items hold values for is refused server-side; name
+            // the fields so the user knows what to put back rather than "could not save".
+            const fieldsInUse = (error as { response?: { data?: { fields_in_use?: Record<string, number> } } })?.response?.data?.fields_in_use
+            if (fieldsInUse && Object.keys(fieldsInUse).length > 0) {
+                const fields = Object.entries(fieldsInUse)
+                    .map(([title, count]) => `${title} (${count})`)
+                    .join(', ')
+                notify('error', 'reports.types.fields_in_use', { fields })
+            } else {
+                notify('error', 'common.error_saving')
+            }
             showError.value = true
             return false
         } finally {

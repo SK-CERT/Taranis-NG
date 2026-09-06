@@ -47,6 +47,8 @@ class UserSchemaBase(Schema):
     email = fields.Str(allow_none=True)
     status = fields.Str(validate=lambda s: s in USER_STATUSES)
     require_mfa = fields.Bool(load_default=False)
+    # Dump-only: written when a sign-in completes, never accepted from a client.
+    last_login_at = fields.DateTime(dump_only=True, allow_none=True)
 
 
 class UserIdentitySchema(Schema):

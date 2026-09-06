@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Felder, die von Report-Elementen noch verwendet werden, können nicht entfernt werden: {fields}",
+            "in_use": "Report-Typ kann nicht gelöscht werden: Er wird von Report-Elementen verwendet ({count})",
             "tab_description": "Hier können Sie Berichtstypen verwalten.",
             "add_new": "Neuen Berichtselementtyp hinzufügen",
             "edit": "Berichtselementtyp bearbeiten",
@@ -1601,6 +1603,7 @@
             "total_count": "{count} Berichtstyp | {count} Berichtstypen"
         },
         "attributes": {
+            "in_use": "Attribut kann nicht gelöscht werden: Es wird von {types} verwendet",
             "tab_description": "Hier können Sie Attribute verwalten.",
             "add_new": "Neues Attribut hinzufügen",
             "edit": "Attribut bearbeiten",

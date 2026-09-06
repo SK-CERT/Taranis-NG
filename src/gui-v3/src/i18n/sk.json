@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Nie je možné odstrániť polia, ktoré stále používajú reporty: {fields}",
+            "in_use": "Typ reportu nie je možné odstrániť: používajú ho reporty ({count})",
             "tab_description": "Tu môžete spravovať typy reportov.",
             "add_new": "Pridať nový typ analýzy",
             "edit": "Upraviť typ analýzy",
@@ -1601,6 +1603,7 @@
             "total_count": "Žiadne typy analýz | {count} typ analýzy | {count} typy analýz | {count} typov analýz"
         },
         "attributes": {
+            "in_use": "Atribút nie je možné odstrániť: používa sa v {types}",
             "tab_description": "Tu môžete spravovať atribúty.",
             "add_new": "Pridať nový atribút",
             "edit": "Upraviť atribút",

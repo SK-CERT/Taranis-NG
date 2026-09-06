@@ -928,7 +928,11 @@ class ReportItem(db.Model):
             if "add" in data:
                 if "attribute_id" in data:
                     modified = True
-                    new_attribute = ReportItemAttribute(None, "", "", None, 0, None, data["attribute_group_item_id"], None)
+                    # Start the new value at the attribute's configured default instead of blank,
+                    # so "Default Value" in the attribute configuration actually reaches the form.
+                    group_item = AttributeGroupItem.find(data["attribute_group_item_id"])
+                    default_value = (group_item.attribute.default_value if group_item and group_item.attribute else None) or ""
+                    new_attribute = ReportItemAttribute(None, default_value, "", None, 0, None, data["attribute_group_item_id"], None)
                     new_attribute.user = user
                     report_item.attributes.append(new_attribute)
 

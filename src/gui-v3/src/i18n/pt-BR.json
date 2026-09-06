@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Não é possível remover campos que os itens de relatório ainda usam: {fields}",
+            "in_use": "Não é possível excluir o tipo de relatório: ele é usado por itens de relatório ({count})",
             "tab_description": "Aqui você pode gerenciar tipos de relatório.",
             "add_new": "Adicionar novo tipo de item de relatório",
             "edit": "Editar tipo de item de relatório",
@@ -1601,6 +1603,7 @@
             "total_count": "{count} tipo de relatório | {count} tipos de relatório"
         },
         "attributes": {
+            "in_use": "Não é possível excluir o atributo: ele é usado por {types}",
             "tab_description": "Aqui você pode gerenciar atributos.",
             "add_new": "Adicionar novo atributo",
             "edit": "Editar atributo",

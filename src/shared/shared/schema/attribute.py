@@ -111,7 +111,10 @@ class AttributeBaseSchema(Schema):
 class AttributeSchema(AttributeBaseSchema):
     """Schema class for attributes."""
 
-    attribute_enums = fields.Nested(AttributeEnumSchema, many=True)
+    # load_default: the configuration list no longer ships the constants (they are fetched from
+    # the paginated /enums endpoint), so an update round-tripped from a list row arrives without
+    # them. Attribute.update ignores the field anyway; the constants have their own endpoints.
+    attribute_enums = fields.Nested(AttributeEnumSchema, many=True, load_default=list)
 
 
 class AttributePresentationSchema(AttributeSchema, PresentationSchema):

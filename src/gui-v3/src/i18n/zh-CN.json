@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "无法移除报告条目仍在使用的字段：{fields}",
+            "in_use": "无法删除报告类型：报告条目正在使用它（{count}）",
             "tab_description": "您可以在此管理报告类型。",
             "add_new": "添加新报告条目类型",
             "edit": "编辑报告条目类型",
@@ -1601,6 +1603,7 @@
             "total_count": "{count} 个报告类型 | {count} 个报告类型"
         },
         "attributes": {
+            "in_use": "无法删除属性：{types} 正在使用它",
             "tab_description": "您可以在此管理属性。",
             "add_new": "添加新属性",
             "edit": "编辑属性",

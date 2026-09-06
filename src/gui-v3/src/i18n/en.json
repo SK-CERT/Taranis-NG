@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Cannot remove fields that report items still use: {fields}",
+            "in_use": "Report type cannot be deleted: it is used by report items ({count})",
             "tab_description": "Here you can manage report types.",
             "add_new": "Add new report item type",
             "edit": "Edit report item type",
@@ -1601,6 +1603,7 @@
             "total_count": "{count} report type | {count} report types"
         },
         "attributes": {
+            "in_use": "Attribute cannot be deleted: it is used by {types}",
             "tab_description": "Here you can manage attributes.",
             "add_new": "Add new attribute",
             "edit": "Edit attribute",

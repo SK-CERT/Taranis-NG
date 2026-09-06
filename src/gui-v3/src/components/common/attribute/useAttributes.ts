@@ -40,6 +40,7 @@ type AttributeGroup = {
     max_occurrence?: number | null
     attribute?: {
         type?: string
+        default_value?: string | null
         enum_values?: unknown[]
         enum_items?: unknown[]
         attribute_enums?: unknown[]
@@ -178,7 +179,9 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 props.values.push({
                     id: Number(itemData.attribute_id),
                     index: props.values.length,
-                    value: '',
+                    // The server seeds a new value from the attribute's default_value, so take
+                    // what it stored rather than blanking the field the user is about to see.
+                    value: toLocalValue(itemData.attribute_value ?? ''),
                     last_updated: itemData.attribute_last_updated,
                     user: { name: String(itemData.attribute_user ?? '') },
                     version: Number(itemData.attribute_version ?? 1)
@@ -187,10 +190,12 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 console.error('Failed to add attribute value:', error)
             }
         } else {
+            // Nothing is persisted while a report item is being created, so apply the
+            // attribute's default here instead.
             props.values.push({
                 id: -1,
                 index: props.values.length,
-                value: '',
+                value: toLocalValue(props.attributeGroup?.attribute?.default_value ?? ''),
                 user: null
             })
         }

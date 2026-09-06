@@ -24,12 +24,14 @@
 
             <!-- Data Table -->
             <v-data-table
+                ref="tableRef"
+                v-model:items-per-page="itemsPerPage"
                 :headers="headers"
                 :items="configStore.attributes.items"
                 :search="search"
                 :loading="loading"
                 item-key="id"
-                class="elevation-1"
+                class="elevation-1 auto-paged"
             >
                 <template #item.name="{ item }">
                     <v-icon
@@ -69,6 +71,7 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import SearchField from '@/components/common/SearchField.vue'
     import { useAuth } from '@/composables/useAuth'
+    import { useAutoItemsPerPage } from '@/composables/useAutoItemsPerPage'
 
     // Representative icon per attribute type.
     const TYPE_ICONS: Record<string, string> = {
@@ -124,6 +127,11 @@
 
     const asAttributeItem = (item: unknown): AttributeItem => item as AttributeItem
 
+    // The page holds as many rows as the viewport fits, so the footer's page-size select is
+    // hidden (see the scoped style below) - there is nothing left for it to choose.
+    const tableRef = ref<{ $el?: HTMLElement } | null>(null)
+    const { itemsPerPage, recalculate } = useAutoItemsPerPage(tableRef)
+
     const loadData = async (): Promise<void> => {
         loading.value = true
         try {
@@ -133,6 +141,9 @@
         } finally {
             loading.value = false
         }
+        // Rows only exist to measure once the data has rendered.
+        await nextTick()
+        recalculate()
     }
 
     const handleEdit = async (item: AttributeItem): Promise<void> => {
@@ -149,6 +160,13 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting attribute:', error)
+            // The backend refuses to delete an attribute that report types still build fields
+            // on, and names them. Say so instead of leaving the row silently undeleted.
+            const data = (error as { response?: { data?: { report_types?: string[]; error?: string } } })?.response?.data
+            const detail = data?.report_types?.length
+                ? { type: 'error', loc: 'reports.attributes.in_use', params: { types: data.report_types.join(', ') } }
+                : { type: 'error', loc: 'common.error_deleting' }
+            window.dispatchEvent(new CustomEvent('notification', { detail }))
         }
     }
 
@@ -159,3 +177,10 @@
 
     onMounted(loadData)
 </script>
+
+<style scoped>
+    /* The page size is computed from the viewport, so the footer's selector is redundant. */
+    .auto-paged :deep(.v-data-table-footer__items-per-page) {
+        display: none;
+    }
+</style>

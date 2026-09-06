@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,6 +16,7 @@ from model.permission import Permission
 from model.role import Role
 from model.webauthn_credential import WebauthnCredential
 from model.word_list import WordList
+from shared.common import TZ
 from shared.schema.organization import OrganizationIdSchema
 from shared.schema.role import PermissionIdSchema, RoleIdSchema
 from shared.schema.user import USER_STATUSES, HotkeySchema, UserIdentitySchema, UserPresentationSchema, UserSchemaBase
@@ -124,6 +126,10 @@ class User(db.Model):
     require_mfa = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
     totp_secret = db.Column(db.String(), nullable=True)
     totp_last_used_step = db.Column(db.BigInteger, nullable=True)
+    # When this account last completed a sign-in, whatever the method. UserAuthIdentity has its
+    # own last_login_at, but that only covers external providers - a local password login writes
+    # no identity row, so it would leave most accounts looking as if they had never signed in.
+    last_login_at = db.Column(db.DateTime, nullable=True)
 
     organizations = db.relationship("Organization", secondary="user_organization")
     roles = db.relationship(Role, secondary="user_role")
@@ -206,6 +212,11 @@ class User(db.Model):
         self.title = self.name
         self.subtitle = self.username
         self.tag = "mdi-account"
+
+    def touch_login(self) -> None:
+        """Record that this account has just signed in."""
+        self.last_login_at = datetime.now(TZ)
+        db.session.commit()
 
     @classmethod
     def find(cls, username: str) -> User | None:

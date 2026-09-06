@@ -14,6 +14,8 @@ const { USERS } = vi.hoisted(() => ({
             username: 'admin',
             name: 'Admin',
             status: 'active',
+            roles: [{ id: 1, name: 'Admin' }],
+            last_login_at: '2026-09-05T08:30:00',
             organizations: [{ id: 1, name: 'CERT' }],
             identities: [],
             has_password: true,
@@ -24,6 +26,8 @@ const { USERS } = vi.hoisted(() => ({
             username: 'newcomer',
             name: 'New Comer',
             status: 'pending',
+            roles: [{ id: 2, name: 'Analyst' }],
+            last_login_at: null,
             organizations: [],
             identities: [{ id: 9, provider_name: 'Corp SAML', external_username: 'newcomer@idp' }],
             has_password: false,
@@ -34,6 +38,8 @@ const { USERS } = vi.hoisted(() => ({
             username: 'gone',
             name: 'Gone Away',
             status: 'disabled',
+            roles: [],
+            last_login_at: '2026-09-01T12:00:00',
             organizations: [],
             identities: [],
             has_password: true,
@@ -77,22 +83,32 @@ describe('UsersTab - status and login methods', () => {
         vi.clearAllMocks()
     })
 
-    it('renders a status chip per user', async () => {
+    it('dims a disabled account instead of labelling it', async () => {
+        const { wrapper } = await mountTab()
+
+        expect(wrapper.vm.rowProps({ item: USERS[2] })).toEqual({ class: 'user-disabled' })
+        expect(wrapper.vm.rowProps({ item: USERS[0] })).toEqual({ class: '' })
+        // Pending is an action, not a state to fade out: it keeps its Approve button at full
+        // contrast rather than being pushed into the background.
+        expect(wrapper.vm.rowProps({ item: USERS[1] })).toEqual({ class: '' })
+    })
+
+    it('shows the roles of each user', async () => {
         const { wrapper } = await mountTab()
         const text = wrapper.text()
 
-        expect(text).toContain('Active')
-        expect(text).toContain('Pending approval')
-        expect(text).toContain('Disabled')
+        expect(text).toContain('Admin')
+        expect(text).toContain('Analyst')
     })
 
-    it('maps statuses to colours', async () => {
+    it('shows the last login, and a dash for an account that never signed in', async () => {
         const { wrapper } = await mountTab()
-        expect(wrapper.vm.statusColor('pending')).toBe('warning')
-        expect(wrapper.vm.statusColor('disabled')).toBe('grey')
-        expect(wrapper.vm.statusColor('active')).toBe('success')
-        // users predating the status column render as active
-        expect(wrapper.vm.statusColor(undefined)).toBe('success')
+        const rows = wrapper.findAll('tbody tr')
+
+        // Formatted for the locale rather than the raw timestamp.
+        expect(rows[0].text()).not.toContain('2026-09-05T08:30:00')
+        expect(rows[0].text()).toMatch(/2026/)
+        expect(rows[1].text()).toContain('\u2013')
     })
 
     it('lists the login methods of each user (local password and linked providers)', async () => {

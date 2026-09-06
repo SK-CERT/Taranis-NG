@@ -41,6 +41,7 @@
                             <v-radio
                                 v-for="(option, optionIndex) in radioOptions"
                                 :key="`${index}-${optionIndex}`"
+                                color="primary"
                                 :label="getOptionLabel(option)"
                                 :value="getOptionValue(option)"
                             />
@@ -58,6 +59,7 @@
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import { useAttributes } from './useAttributes'
+    import { enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup, type EnumOption } from './enumOptions'
 
     type AttributeValueItem = {
         index?: string | number
@@ -67,24 +69,8 @@
         [key: string]: unknown
     }
 
-    type RadioOptionObject = {
-        value?: string | number
-        title?: string
-        name?: string
-        id?: string | number
-        [key: string]: unknown
-    }
-
-    type RadioOption = string | number | RadioOptionObject
-
-    type AttributeGroup = {
+    type AttributeGroup = EnumAttributeGroup & {
         min_occurrence?: number
-        attribute?: {
-            attribute_enums?: RadioOption[]
-            enum_items?: RadioOption[]
-            enum_values?: RadioOption[]
-        }
-        [key: string]: unknown
     }
 
     const props = withDefaults(
@@ -107,28 +93,10 @@
 
     const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
 
-    const radioOptions = computed<RadioOption[]>(() => {
-        return (
-            props.attributeGroup?.attribute?.attribute_enums ||
-            props.attributeGroup?.attribute?.enum_items ||
-            props.attributeGroup?.attribute?.enum_values ||
-            []
-        )
-    })
+    const radioOptions = computed<EnumOption[]>(() => enumOptionsOf(props.attributeGroup))
 
-    const getOptionLabel = (option: RadioOption): string => {
-        if (option && typeof option === 'object') {
-            return String(option.value ?? option.title ?? option.name ?? option.id ?? '')
-        }
-        return String(option ?? '')
-    }
-
-    const getOptionValue = (option: RadioOption): any => {
-        if (option && typeof option === 'object') {
-            return option.value ?? option.id ?? option.title ?? option.name
-        }
-        return option
-    }
+    const getOptionLabel = enumOptionLabel
+    const getOptionValue = enumOptionValue
 
     onMounted(addInitialValues)
 </script>

@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "보고서 항목이 아직 사용 중인 필드는 제거할 수 없습니다: {fields}",
+            "in_use": "보고서 유형을 삭제할 수 없습니다: 보고서 항목이 사용 중입니다 ({count})",
             "tab_description": "여기에서 보고서 유형을(를) 관리할 수 있습니다.",
             "add_new": "새 보고서 항목 유형 추가",
             "edit": "보고서 항목 유형 편집",
@@ -1601,6 +1603,7 @@
             "total_count": "보고서 유형 {count}개 | 보고서 유형 {count}개"
         },
         "attributes": {
+            "in_use": "속성을 삭제할 수 없습니다: {types}에서 사용 중입니다",
             "tab_description": "여기에서 속성을(를) 관리할 수 있습니다.",
             "add_new": "새 속성 추가",
             "edit": "속성 편집",

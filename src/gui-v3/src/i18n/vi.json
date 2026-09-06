@@ -1585,6 +1585,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Không thể xóa các trường mà mục báo cáo vẫn đang dùng: {fields}",
+            "in_use": "Không thể xóa loại báo cáo: các mục báo cáo đang dùng nó ({count})",
             "tab_description": "Tại đây, bạn có thể quản lý loại báo cáo.",
             "add_new": "Thêm loại mục báo cáo mới",
             "edit": "Chỉnh sửa loại mục báo cáo",
@@ -1601,6 +1603,7 @@
             "total_count": "{count} loại báo cáo | {count} loại báo cáo"
         },
         "attributes": {
+            "in_use": "Không thể xóa thuộc tính: thuộc tính đang được dùng bởi {types}",
             "tab_description": "Tại đây, bạn có thể quản lý thuộc tính.",
             "add_new": "Thêm thuộc tính mới",
             "edit": "Chỉnh sửa thuộc tính",
