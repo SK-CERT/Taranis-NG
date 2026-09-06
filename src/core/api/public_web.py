@@ -20,6 +20,7 @@ from managers.log_manager import logger
 from model.product import Product, ProductPublicWeb
 from model.public_web import PublicWeb
 from model.state import StateDefinition, StateEnum
+from shared.schema.attribute import AttributeType
 
 
 def _serialize_web(web: PublicWeb) -> dict:
@@ -34,20 +35,33 @@ def _serialize_web(web: PublicWeb) -> dict:
     }
 
 
-def _serialize_attribute(attribute) -> dict:  # noqa: ANN001
-    """Serialize one report item attribute.
+def _serialize_attribute(attribute) -> list[dict]:  # noqa: ANN001
+    """Serialize one report item attribute into one or more entries.
 
     The key is derived from the attribute group item title ("Affected systems"
     -> "affected_systems"). Repeated keys mean multiple values of the same
-    attribute; consumers group them as needed.
+    attribute; consumers group them as needed. A multiple choice attribute keeps
+    its ticked values newline-joined in a single row, so it fans out into one
+    entry per ticked value rather than exposing the joined string.
     """
     group_item = attribute.attribute_group_item
     key = group_item.title.lower().replace(" ", "_") if group_item and group_item.title else ""
-    return {
-        "key": key,
-        "value": attribute.value,
-        "description": attribute.value_description,
-    }
+    definition = getattr(group_item, "attribute", None)
+
+    if getattr(definition, "type", None) == AttributeType.MULTI_CHOICE:
+        return [
+            {"key": key, "value": selected, "description": attribute.value_description}
+            for selected in (attribute.value or "").split("\n")
+            if selected
+        ]
+
+    return [
+        {
+            "key": key,
+            "value": attribute.value,
+            "description": attribute.value_description,
+        },
+    ]
 
 
 def _serialize_product(product: Product) -> dict:
@@ -64,7 +78,7 @@ def _serialize_product(product: Product) -> dict:
                 "last_updated": report_item.last_updated.isoformat() if report_item.last_updated else None,
                 "type": report_type.title if report_type else None,
                 "type_description": report_type.description if report_type else None,
-                "attributes": [_serialize_attribute(attribute) for attribute in report_item.attributes],
+                "attributes": [entry for attribute in report_item.attributes for entry in _serialize_attribute(attribute)],
             },
         )
 

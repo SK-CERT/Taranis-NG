@@ -269,6 +269,7 @@
         | 'CVE'
         | 'CVSS'
         | 'CWE'
+        | 'MULTI_CHOICE'
 
     type AttributeValidator = 'NONE' | 'EMAIL' | 'NUMBER' | 'RANGE' | 'REGEXP'
 
@@ -339,7 +340,8 @@
         { title: 'CPE', value: 'CPE' },
         { title: 'CVE', value: 'CVE' },
         { title: 'CVSS', value: 'CVSS' },
-        { title: 'CWE', value: 'CWE' }
+        { title: 'CWE', value: 'CWE' },
+        { title: 'Multiple Choice', value: 'MULTI_CHOICE' }
     ]
 
     const validators: SelectItem<AttributeValidator>[] = [

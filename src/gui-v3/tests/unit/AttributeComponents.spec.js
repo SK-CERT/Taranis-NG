@@ -8,6 +8,7 @@ import AttributeNumber from '@/components/common/attribute/AttributeNumber.vue'
 import AttributeText from '@/components/common/attribute/AttributeText.vue'
 import AttributeEnum from '@/components/common/attribute/AttributeEnum.vue'
 import AttributeRadio from '@/components/common/attribute/AttributeRadio.vue'
+import AttributeMultiChoice from '@/components/common/attribute/AttributeMultiChoice.vue'
 import AttributeBoolean from '@/components/common/attribute/AttributeBoolean.vue'
 import AttributeDate from '@/components/common/attribute/AttributeDate.vue'
 import AttributeTime from '@/components/common/attribute/AttributeTime.vue'
@@ -20,7 +21,7 @@ import AttributeCVSS from '@/components/common/attribute/AttributeCVSS.vue'
 import AttributeRichText from '@/components/common/attribute/AttributeRichText.vue'
 import AttributeAttachment from '@/components/common/attribute/AttributeAttachment.vue'
 import AuthService from '@/services/auth_service'
-import { removeAttachment, updateAttachmentDescription, uploadAttachment } from '@/api/analyze'
+import { removeAttachment, updateAttachmentDescription, uploadAttachment, updateReportItem } from '@/api/analyze'
 
 // ── API mocks (prevent network calls from useAttributes) ─────────────────────
 vi.mock('@/api/analyze', () => ({
@@ -381,6 +382,89 @@ describe('AttributeRadio', () => {
         const radios = wrapper.findAllComponents({ name: 'VRadio' })
 
         expect(radios.length).toBe(2)
+    })
+})
+
+// ── AttributeMultiChoice ──────────────────────────────────────────────────────
+
+describe('AttributeMultiChoice', () => {
+    beforeEach(() => setActivePinia(createPinia()))
+
+    const multiChoiceGroup = makeAttributeGroup({
+        attribute: {
+            type: 'MULTI_CHOICE',
+            attribute_enums: [
+                { id: 1, index: 0, value: 'Option A' },
+                { id: 2, index: 1, value: 'Option B' },
+                { id: 3, index: 2, value: 'Option C' }
+            ]
+        }
+    })
+
+    const multiChoiceProps = (valueOverrides = {}) => ({
+        ...baseProps(valueOverrides),
+        attributeGroup: multiChoiceGroup
+    })
+
+    it('renders without error', () => {
+        expect(mountAttr(AttributeMultiChoice, multiChoiceProps({ value: '' })).exists()).toBe(true)
+    })
+
+    it('renders one checkbox per backend attribute_enum', () => {
+        const wrapper = mountAttr(AttributeMultiChoice, multiChoiceProps({ value: '' }))
+        expect(wrapper.findAllComponents({ name: 'VCheckbox' }).length).toBe(3)
+    })
+
+    it('shows the selected values as chips when read-only', () => {
+        const wrapper = mountAttr(AttributeMultiChoice, {
+            ...readOnlyProps({ value: 'Option A\nOption C' }),
+            attributeGroup: multiChoiceGroup
+        })
+
+        expect(wrapper.find('.multi-choice-value').exists()).toBe(true)
+        expect(wrapper.text()).toContain('Option A')
+        expect(wrapper.text()).toContain('Option C')
+        expect(wrapper.text()).not.toContain('Option B')
+    })
+
+    it('ticks the checkboxes matching the stored value', () => {
+        const wrapper = mountAttr(AttributeMultiChoice, multiChoiceProps({ value: 'Option A\nOption C' }))
+        const checked = wrapper.findAllComponents({ name: 'VCheckbox' }).map((box) => box.props('modelValue'))
+
+        expect(checked).toEqual([true, false, true])
+    })
+
+    it('joins ticked values in constant order, not click order', async () => {
+        const props = multiChoiceProps({ value: '' })
+        const wrapper = mountAttr(AttributeMultiChoice, props)
+        const boxes = wrapper.findAllComponents({ name: 'VCheckbox' })
+
+        await boxes[2].vm.$emit('update:modelValue', true)
+        await boxes[0].vm.$emit('update:modelValue', true)
+        await flushPromises()
+
+        expect(props.values[0].value).toBe('Option A\nOption C')
+    })
+
+    it('removes only the unticked value', async () => {
+        const props = multiChoiceProps({ value: 'Option A\nOption B\nOption C' })
+        const wrapper = mountAttr(AttributeMultiChoice, props)
+
+        await wrapper.findAllComponents({ name: 'VCheckbox' })[1].vm.$emit('update:modelValue', false)
+        await flushPromises()
+
+        expect(props.values[0].value).toBe('Option A\nOption C')
+    })
+
+    it('persists an empty value when the last box is unticked', async () => {
+        const props = multiChoiceProps({ value: 'Option B' })
+        const wrapper = mountAttr(AttributeMultiChoice, props)
+
+        await wrapper.findAllComponents({ name: 'VCheckbox' })[1].vm.$emit('update:modelValue', false)
+        await flushPromises()
+
+        expect(props.values[0].value).toBe('')
+        expect(updateReportItem).toHaveBeenCalled()
     })
 })
 
@@ -860,6 +944,7 @@ describe('min_occurrence seeding on mount', () => {
         ['AttributeText', AttributeText],
         ['AttributeEnum', AttributeEnum],
         ['AttributeRadio', AttributeRadio],
+        ['AttributeMultiChoice', AttributeMultiChoice],
         ['AttributeBoolean', AttributeBoolean],
         ['AttributeNumber', AttributeNumber],
         ['AttributeDate', AttributeDate],
