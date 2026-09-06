@@ -60,6 +60,12 @@ export interface VariantSpec {
     /** Full `border-bottom` shorthand for the top bar, not just a colour, so a
      *  theme can give it weight as well as hue (SK-CERT's red rule under the
      *  blue nav). Defaults to a hairline in the bar's own text colour. */
+    /** Optional `background-image` layered over the matching base colour. The
+     *  colour stays required, so on-* contrast still resolves against a real
+     *  colour and the contrast contract keeps working. Defaults to `none`. */
+    menuGradient?: string
+    drawerGradient?: string
+    workspaceGradient?: string
     menuBorder?: string
     menuItemActive?: string
     listRowSelected?: string

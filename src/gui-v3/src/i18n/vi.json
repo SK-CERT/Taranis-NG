@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Cài đặt người dùng",
         "tab_general": "Chung",
+        "tab_theme": "Giao diện",
         "tab_security": "Bảo mật",
         "tab_wordlists": "Danh sách từ",
         "tab_hotkeys": "Phím tắt",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Oải hương"
+        "lavender": "Oải hương",
+        "parklake": "Hồ công viên",
+        "bedroom": "Phòng ngủ",
+        "aurora": "Cực quang",
+        "ember": "Than hồng",
+        "custom": "Tùy chỉnh"
+    },
+    "theme_editor": {
+        "light": "Sáng",
+        "dark": "Tối",
+        "reset": "Đặt lại",
+        "not_active": "Chọn Tùy chỉnh ở thẻ Chung để dùng giao diện này.",
+        "low_contrast": "Độ tương phản {ratio}:1, dưới {min}:1",
+        "groups": {
+            "brand": "Thương hiệu",
+            "status": "Trạng thái",
+            "surfaces": "Bề mặt",
+            "chrome": "Khung ứng dụng",
+            "details": "Chi tiết"
+        },
+        "tokens": {
+            "primary": "Chính",
+            "secondary": "Phụ",
+            "tertiary": "Cấp ba",
+            "accent": "Nhấn",
+            "error": "Lỗi",
+            "info": "Thông tin",
+            "success": "Thành công",
+            "warning": "Cảnh báo",
+            "background": "Nền",
+            "surface": "Bề mặt thẻ",
+            "surfaceVariant": "Tiêu đề bảng",
+            "onSurface": "Chữ",
+            "outline": "Đường viền",
+            "menuBg": "Thanh trên cùng",
+            "drawerBg": "Thanh bên",
+            "workspace": "Vùng làm việc",
+            "listRow": "Hàng danh sách",
+            "listRowSelected": "Hàng được chọn",
+            "listBorder": "Viền hàng",
+            "panelBorder": "Viền bảng",
+            "filterControlsBg": "Thanh bộ lọc",
+            "menuItemActive": "Mục menu đang chọn"
+        }
     }
 }

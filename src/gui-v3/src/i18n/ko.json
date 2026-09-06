@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "사용자 설정",
         "tab_general": "일반",
+        "tab_theme": "테마",
         "tab_security": "보안",
         "tab_wordlists": "단어 목록",
         "tab_hotkeys": "단축키",
@@ -2116,6 +2117,49 @@
         "vintage": "빈티지",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "라벤더"
+        "lavender": "라벤더",
+        "parklake": "공원 호수",
+        "bedroom": "침실",
+        "aurora": "오로라",
+        "ember": "잉걸불",
+        "custom": "사용자 지정"
+    },
+    "theme_editor": {
+        "light": "라이트",
+        "dark": "다크",
+        "reset": "초기화",
+        "not_active": "이 테마를 사용하려면 일반 탭에서 사용자 지정을 선택하세요.",
+        "low_contrast": "대비 {ratio}:1, {min}:1 미만",
+        "groups": {
+            "brand": "브랜드",
+            "status": "상태",
+            "surfaces": "표면",
+            "chrome": "앱 프레임",
+            "details": "세부"
+        },
+        "tokens": {
+            "primary": "기본",
+            "secondary": "보조",
+            "tertiary": "3차",
+            "accent": "강조",
+            "error": "오류",
+            "info": "정보",
+            "success": "성공",
+            "warning": "경고",
+            "background": "배경",
+            "surface": "카드 표면",
+            "surfaceVariant": "표 머리글",
+            "onSurface": "텍스트",
+            "outline": "윤곽선",
+            "menuBg": "상단 바",
+            "drawerBg": "사이드바",
+            "workspace": "작업 영역",
+            "listRow": "목록 행",
+            "listRowSelected": "선택된 행",
+            "listBorder": "행 테두리",
+            "panelBorder": "패널 테두리",
+            "filterControlsBg": "필터 바",
+            "menuItemActive": "활성 메뉴 항목"
+        }
     }
 }

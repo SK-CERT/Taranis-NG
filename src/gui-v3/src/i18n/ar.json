@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "إعدادات المستخدم",
         "tab_general": "عام",
+        "tab_theme": "السمة",
         "tab_security": "الأمان",
         "tab_wordlists": "قوائم الكلمات",
         "tab_hotkeys": "اختصارات لوحة المفاتيح",
@@ -2116,6 +2117,49 @@
         "vintage": "كلاسيكي",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "خزامى"
+        "lavender": "خزامى",
+        "parklake": "بحيرة الحديقة",
+        "bedroom": "غرفة النوم",
+        "aurora": "الشفق القطبي",
+        "ember": "جمر",
+        "custom": "مخصص"
+    },
+    "theme_editor": {
+        "light": "فاتح",
+        "dark": "داكن",
+        "reset": "إعادة تعيين",
+        "not_active": "اختر «مخصص» في تبويب عام لاستخدام هذه السمة.",
+        "low_contrast": "التباين {ratio}:1، أقل من {min}:1",
+        "groups": {
+            "brand": "الهوية",
+            "status": "الحالة",
+            "surfaces": "الأسطح",
+            "chrome": "واجهة التطبيق",
+            "details": "تفاصيل"
+        },
+        "tokens": {
+            "primary": "أساسي",
+            "secondary": "ثانوي",
+            "tertiary": "ثالثي",
+            "accent": "لون مميز",
+            "error": "خطأ",
+            "info": "معلومات",
+            "success": "نجاح",
+            "warning": "تحذير",
+            "background": "الخلفية",
+            "surface": "سطح البطاقة",
+            "surfaceVariant": "رأس الجدول",
+            "onSurface": "النص",
+            "outline": "الحد",
+            "menuBg": "الشريط العلوي",
+            "drawerBg": "الشريط الجانبي",
+            "workspace": "مساحة العمل",
+            "listRow": "صف القائمة",
+            "listRowSelected": "الصف المحدد",
+            "listBorder": "حد الصف",
+            "panelBorder": "حد اللوحة",
+            "filterControlsBg": "شريط التصفية",
+            "menuItemActive": "عنصر التنقل النشط"
+        }
     }
 }

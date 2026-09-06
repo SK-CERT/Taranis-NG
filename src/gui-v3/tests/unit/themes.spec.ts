@@ -1,6 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { buildVuetifyThemes, DEFAULT_THEME_FAMILY, getFamily, isKnownFamily, resolveFamily, themeFamilies, themeName } from '@/themes'
+import {
+    buildVariant,
+    buildVuetifyThemes,
+    DEFAULT_THEME_FAMILY,
+    getFamily,
+    isKnownFamily,
+    resolveFamily,
+    themeFamilies,
+    themeName
+} from '@/themes'
 import { messages } from '@/i18n'
+import { contrastRatio as contrast, AAA_BODY_TEXT, AA_TEXT } from '@/themes/wcag'
 
 // Every token the app reads through styles/colors.css or directly via
 // --v-theme-*. A family missing one of these would fall back to a Vuetify
@@ -27,6 +37,9 @@ const requiredColors = [
 ]
 
 const requiredVariables = [
+    'menu-gradient',
+    'drawer-gradient',
+    'workspace-gradient',
     'menu-border',
     'menu-item-active',
     'review-list-row-selected',
@@ -37,22 +50,6 @@ const requiredVariables = [
     'drawer-icon',
     'drawer-divider'
 ]
-
-// WCAG relative luminance / contrast, so a new family cannot ship an
-// unreadable pairing. Body text is held to AAA (7) because this app is read
-// for long stretches; chrome and primary-as-text to AA (4.5), which is what
-// the standard actually requires for short bold labels and UI accents.
-const luminance = (hex: string): number => {
-    const digits = hex.replace('#', '')
-    const channels = [0, 2, 4].map((offset) => parseInt(digits.slice(offset, offset + 2), 16) / 255)
-    const linear = channels.map((channel) => (channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4))
-    return 0.2126 * (linear[0] ?? 0) + 0.7152 * (linear[1] ?? 0) + 0.0722 * (linear[2] ?? 0)
-}
-
-const contrast = (a: string, b: string): number => {
-    const [lighter, darker] = [luminance(a), luminance(b)].sort((x, y) => y - x)
-    return ((lighter ?? 0) + 0.05) / ((darker ?? 0) + 0.05)
-}
 
 describe('theme registry', () => {
     const themes = buildVuetifyThemes()
@@ -108,7 +105,7 @@ describe('theme registry', () => {
 
         // Body text, on every ground it actually gets painted on (AAA).
         for (const ground of ['surface', 'background', 'list-row', 'workspace']) {
-            expect(contrast(colors['on-surface'] ?? '', colors[ground] ?? ''), `on-surface / ${ground}`).toBeGreaterThanOrEqual(7)
+            expect(contrast(colors['on-surface'] ?? '', colors[ground] ?? ''), `on-surface / ${ground}`).toBeGreaterThanOrEqual(AAA_BODY_TEXT)
         }
 
         // Chrome that carries its own text colour, held to AA rather than AAA.
@@ -116,11 +113,50 @@ describe('theme registry', () => {
         // long-form reading, so 4.5 is the applicable WCAG threshold; AAA here
         // was a ratchet off the original palettes, and it rejected brand colours
         // that are comfortably readable (Retro's #AD2800 bar is 6.82).
-        expect(contrast(colors['on-menu-bg'] ?? '', colors['menu-bg'] ?? ''), 'menu').toBeGreaterThanOrEqual(4.5)
-        expect(contrast(colors['on-drawer-bg'] ?? '', colors['drawer-bg'] ?? ''), 'drawer').toBeGreaterThanOrEqual(4.5)
+        expect(contrast(colors['on-menu-bg'] ?? '', colors['menu-bg'] ?? ''), 'menu').toBeGreaterThanOrEqual(AA_TEXT)
+        expect(contrast(colors['on-drawer-bg'] ?? '', colors['drawer-bg'] ?? ''), 'drawer').toBeGreaterThanOrEqual(AA_TEXT)
 
         // primary is used as a text/icon colour on surfaces, not only as a fill (AA).
-        expect(contrast(colors['primary'] ?? '', colors['surface'] ?? ''), 'primary on surface').toBeGreaterThanOrEqual(4.5)
+        expect(contrast(colors['primary'] ?? '', colors['surface'] ?? ''), 'primary on surface').toBeGreaterThanOrEqual(AA_TEXT)
+    })
+
+    // Gradients are opt-in: a family that declares none must still resolve to
+    // `none`, which is what guarantees adding the capability changed nothing.
+    it('leaves the optional gradients off unless a family asks for them', () => {
+        const plain = buildVariant(getFamily('taranis').light, false)
+
+        for (const key of ['menu-gradient', 'drawer-gradient', 'workspace-gradient']) {
+            expect(plain.variables[key], key).toBe('none')
+        }
+    })
+
+    it.each(Object.keys(buildVuetifyThemes()))('%s declares only well-formed gradients', (name) => {
+        for (const key of ['menu-gradient', 'drawer-gradient', 'workspace-gradient']) {
+            const value = String(themes[name]?.variables?.[key] ?? '')
+            if (value === 'none') continue
+            expect(value, `${key} must be a CSS gradient`).toMatch(/^(linear|radial|conic)-gradient\(/)
+        }
+    })
+
+    // A gradient sits on top of the base colour, but the contrast contract above
+    // measures text against that base. So an opaque stop that strays far from it
+    // would make the guarantee a lie: check the stops themselves.
+    it.each(Object.keys(buildVuetifyThemes()))('%s keeps chrome gradients readable at every stop', (name) => {
+        const colors = (themes[name]?.colors ?? {}) as Record<string, string>
+        const variables = (themes[name]?.variables ?? {}) as Record<string, string>
+
+        for (const [key, ink] of [
+            ['menu-gradient', colors['on-menu-bg']],
+            ['drawer-gradient', colors['on-drawer-bg']]
+        ] as const) {
+            const value = String(variables[key] ?? '')
+            if (value === 'none' || !ink) continue
+
+            // Only opaque stops can be judged; translucent ones composite over the base.
+            for (const stop of value.match(/#[\da-f]{6}\b/gi) ?? []) {
+                expect(contrast(stop, ink), `${key} stop ${stop}`).toBeGreaterThanOrEqual(AA_TEXT)
+            }
+        }
     })
 
     it('falls back to the default family for unknown or missing ids', () => {

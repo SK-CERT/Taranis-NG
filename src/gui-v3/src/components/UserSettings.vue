@@ -1,8 +1,9 @@
 <template>
     <v-dialog
         v-model="visible"
+        class="user-settings-overlay"
         max-width="980"
-        max-height="90vh"
+        max-height="88vh"
         scrollable
         @keydown.esc="close"
     >
@@ -43,6 +44,12 @@
                     {{ t('settings.tab_general') }}
                 </v-tab>
 
+                <!-- Theme Tab -->
+                <v-tab value="theme">
+                    <v-icon start>mdi-palette-outline</v-icon>
+                    {{ t('settings.tab_theme') }}
+                </v-tab>
+
                 <!-- Security Tab -->
                 <v-tab value="security">
                     <v-icon
@@ -70,6 +77,14 @@
                     <!-- General Settings -->
                     <v-window-item value="general">
                         <SettingsTable :global-setting="false" />
+                    </v-window-item>
+
+                    <!-- Custom theme editor -->
+                    <v-window-item value="theme">
+                        <ThemeEditor
+                            v-if="activeTab === 'theme'"
+                            :load-trigger="themeLoadTrigger"
+                        />
                     </v-window-item>
 
                     <!-- Security (TOTP, passkeys) -->
@@ -213,6 +228,7 @@
     import { useSettingsStore } from '@/stores/settings'
     import { ICONS } from '@/config/ui-constants'
     import SettingsTable from './config/SettingsTable.vue'
+    import ThemeEditor from './config/ThemeEditor.vue'
     import SecuritySettings from './SecuritySettings.vue'
 
     type HotkeyItem = {
@@ -245,12 +261,14 @@
     const { t } = useI18n()
     const settingsStore = useSettingsStore()
 
-    const activeTab = ref<'general' | 'security' | 'wordlists' | 'hotkeys'>('general')
+    const activeTab = ref<'general' | 'theme' | 'security' | 'wordlists' | 'hotkeys'>('general')
     const keyDialogVisible = ref<boolean>(false)
     const currentHotkeyAlias = ref<string>('')
     // Bumped whenever the Security tab becomes visible so SecuritySettings
     // reloads its TOTP/passkey state (mirrors the old dialog-open behavior).
     const securityLoadTrigger = ref<number>(0)
+    // Same mechanism for the theme editor, so it re-reads the saved palette.
+    const themeLoadTrigger = ref<number>(0)
 
     // Word lists
     const wordListHeaders = computed(() => [
@@ -353,10 +371,15 @@
         if (tab === 'security') {
             securityLoadTrigger.value++
         }
+        if (tab === 'theme') {
+            themeLoadTrigger.value++
+        }
     })
 </script>
 
 <style scoped>
+    @import '../styles/settings-pane.css';
+
     .user-settings-dialog {
         border: 1px solid var(--review-panel-border);
         border-radius: 6px;
@@ -390,62 +413,8 @@
         max-height: 70vh;
         padding: 1.25rem 1.4rem 1.5rem;
         overflow-y: auto;
-        background: var(--review-workspace);
-    }
-
-    .settings-pane {
-        overflow: hidden;
-        border: 1px solid var(--review-panel-border);
-        border-radius: 5px;
-        background: rgb(var(--v-theme-surface));
-        box-shadow: 0 4px 14px rgba(16, 43, 67, 0.1);
-    }
-
-    .settings-pane__header {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        min-height: 72px;
-        padding: 0.8rem 1rem;
-        border-bottom: 1px solid var(--review-panel-border);
-        background: rgba(var(--v-theme-surface-variant), 0.32);
-    }
-
-    .settings-pane__header--actions {
-        justify-content: space-between;
-    }
-
-    .settings-pane__heading {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-    }
-
-    .settings-pane__icon {
-        display: grid;
-        width: 38px;
-        height: 38px;
-        flex: 0 0 38px;
-        place-items: center;
-        border: 1px solid rgba(var(--v-theme-primary), 0.22);
-        border-radius: 4px;
-        background: rgba(var(--v-theme-primary), 0.09);
-        color: rgb(var(--v-theme-primary));
-    }
-
-    .settings-pane h2,
-    .settings-pane p {
-        margin: 0;
-    }
-
-    .settings-pane h2 {
-        font-size: 1rem;
-    }
-
-    .settings-pane p {
-        margin-top: 0.15rem;
-        color: rgba(var(--v-theme-on-surface), 0.62);
-        font-size: 0.78rem;
+        background-color: var(--review-workspace);
+        background-image: var(--v-workspace-gradient, none);
     }
 
     .settings-subtable :deep(thead) {
@@ -538,5 +507,18 @@
             min-width: 0;
             padding-inline: 0.6rem;
         }
+    }
+</style>
+
+<style>
+    /* The overlay flex-centres its content, so every tab's height change moved
+       the dialog's top edge (89px on Hotkeys vs 292px on Security). Anchor the
+       top instead and let only the bottom move. */
+    .user-settings-overlay {
+        align-items: flex-start !important;
+    }
+
+    .user-settings-overlay > .v-overlay__content {
+        margin-top: 6vh !important;
     }
 </style>

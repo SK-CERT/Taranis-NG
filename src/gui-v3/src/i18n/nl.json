@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Gebruikersinstellingen",
         "tab_general": "Algemeen",
+        "tab_theme": "Thema",
         "tab_security": "Beveiliging",
         "tab_wordlists": "Woordenlijsten",
         "tab_hotkeys": "Sneltoetsen",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Lavendel"
+        "lavender": "Lavendel",
+        "parklake": "Parkvijver",
+        "bedroom": "Slaapkamer",
+        "aurora": "Poollicht",
+        "ember": "Sintel",
+        "custom": "Aangepast"
+    },
+    "theme_editor": {
+        "light": "Licht",
+        "dark": "Donker",
+        "reset": "Herstellen",
+        "not_active": "Kies Aangepast op het tabblad Algemeen om dit thema te gebruiken.",
+        "low_contrast": "Contrast {ratio}:1, onder {min}:1",
+        "groups": {
+            "brand": "Merk",
+            "status": "Status",
+            "surfaces": "Vlakken",
+            "chrome": "App-kader",
+            "details": "Details"
+        },
+        "tokens": {
+            "primary": "Primair",
+            "secondary": "Secundair",
+            "tertiary": "Tertiair",
+            "accent": "Accent",
+            "error": "Fout",
+            "info": "Info",
+            "success": "Geslaagd",
+            "warning": "Waarschuwing",
+            "background": "Achtergrond",
+            "surface": "Kaartvlak",
+            "surfaceVariant": "Tabelkop",
+            "onSurface": "Tekst",
+            "outline": "Omtrek",
+            "menuBg": "Bovenbalk",
+            "drawerBg": "Zijbalk",
+            "workspace": "Werkgebied",
+            "listRow": "Lijstrij",
+            "listRowSelected": "Geselecteerde rij",
+            "listBorder": "Rijrand",
+            "panelBorder": "Paneelrand",
+            "filterControlsBg": "Filterbalk",
+            "menuItemActive": "Actief menu-item"
+        }
     }
 }

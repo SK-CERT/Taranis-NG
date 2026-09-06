@@ -1,5 +1,6 @@
 import type { ThemeDefinition } from 'vuetify'
 import type { ThemeFamily, VariantSpec } from './types'
+import { effectiveVariables, VARIABLE_TOKENS, type VariableTokenKey } from './variables'
 import { taranis } from './taranis'
 import { slate } from './slate'
 import { forest } from './forest'
@@ -15,8 +16,14 @@ import { vintage } from './vintage'
 import { cesnet } from './cesnet'
 import { skcert } from './skcert'
 import { lavender } from './lavender'
+import { parklake } from './parklake'
+import { bedroom } from './bedroom'
+import { aurora } from './aurora'
+import { ember } from './ember'
+import { custom } from './custom'
 
 export type { ThemeFamily, VariantSpec } from './types'
+export { effectiveVariables, VARIABLE_TOKENS, type VariableTokenKey } from './variables'
 
 /**
  * Every selectable theme family. Registering a new one is this list plus the
@@ -37,7 +44,12 @@ export const themeFamilies: ThemeFamily[] = [
     vintage,
     cesnet,
     skcert,
-    lavender
+    lavender,
+    parklake,
+    bedroom,
+    aurora,
+    ember,
+    custom
 ]
 
 export const DEFAULT_THEME_FAMILY = taranis.id
@@ -60,12 +72,18 @@ export const getFamily = (id?: string | null): ThemeFamily => themeFamilies.find
  * families can still be written in hex.
  */
 const asCssColor = (value: string): string => {
-    const hex = /^#([\da-f]{3}|[\da-f]{6})$/i.exec(value.trim())
+    const hex = /^#([\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i.exec(value.trim())
     if (!hex) return value
 
     const digits = hex[1] ?? ''
     const full = digits.length === 3 ? [...digits].map((digit) => digit + digit).join('') : digits
     const [r, g, b] = [0, 2, 4].map((offset) => parseInt(full.slice(offset, offset + 2), 16))
+
+    // The custom-theme editor writes #RRGGBBAA for the alpha-capable tokens.
+    if (full.length === 8) {
+        const alpha = Math.round((parseInt(full.slice(6, 8), 16) / 255) * 100) / 100
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`
+    }
 
     return `rgb(${r}, ${g}, ${b})`
 }
@@ -76,7 +94,18 @@ const optional = (key: string, value?: string): Record<string, string> => (value
 const mapValues = (source: Record<string, string>, transform: (value: string) => string): Record<string, string> =>
     Object.fromEntries(Object.entries(source).map(([key, value]) => [key, transform(value)]))
 
-const buildVariant = (spec: VariantSpec, dark: boolean): ThemeDefinition => ({
+/**
+ * What buildVariant produces. Vuetify's runtime theme map requires all three
+ * keys, and every value we emit is a plain CSS string, which is narrower than
+ * the public ThemeDefinition's union.
+ */
+export type BuiltVariant = {
+    dark: boolean
+    colors: Record<string, string>
+    variables: Record<string, string>
+}
+
+export const buildVariant = (spec: VariantSpec, dark: boolean): BuiltVariant => ({
     dark,
     colors: {
         'background': spec.background,
@@ -111,22 +140,10 @@ const buildVariant = (spec: VariantSpec, dark: boolean): ThemeDefinition => ({
         ...optional('on-menu-bg', spec.onMenuBg),
         ...optional('on-drawer-bg', spec.onDrawerBg)
     },
-    // Values carrying alpha cannot be Vuetify colors (a color must decompose
-    // into an opaque "r, g, b" triplet), so they ride along as theme variables.
-    // The keys match the legacy custom-property names consumed across the app;
-    // styles/colors.css maps --v-<key> back onto --<key> in one place.
     variables: mapValues(
-        {
-            'menu-border': spec.menuBorder ?? '1px solid rgba(var(--v-theme-on-menu-bg), 0.13)',
-            'menu-item-active': spec.menuItemActive ?? 'rgba(var(--v-theme-accent), 0.22)',
-            'review-list-row-selected': spec.listRowSelected ?? (dark ? 'rgba(var(--v-theme-primary), 0.22)' : '#FFF3CD'),
-            'review-list-row-hover': spec.listRowHover ?? `rgba(var(--v-theme-primary), ${dark ? 0.14 : 0.07})`,
-            'review-list-border': spec.listBorder ?? 'rgba(var(--v-theme-outline), 0.34)',
-            'review-panel-border': spec.panelBorder ?? 'rgba(var(--v-theme-outline), 0.58)',
-            'filter-controls-bg': spec.filterControlsBg ?? spec.surfaceVariant,
-            'drawer-icon': spec.drawerIcon ?? 'rgb(var(--v-theme-on-drawer-bg))',
-            'drawer-divider': spec.drawerDivider ?? 'rgba(var(--v-theme-on-drawer-bg), 0.2)'
-        },
+        Object.fromEntries(
+            Object.entries(effectiveVariables(spec, dark)).map(([key, value]) => [VARIABLE_TOKENS[key as VariableTokenKey], value])
+        ),
         asCssColor
     )
 })

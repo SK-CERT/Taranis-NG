@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "用户设置",
         "tab_general": "常规",
+        "tab_theme": "主题",
         "tab_security": "安全",
         "tab_wordlists": "词表",
         "tab_hotkeys": "快捷键",
@@ -2116,6 +2117,49 @@
         "vintage": "怀旧",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "薰衣草"
+        "lavender": "薰衣草",
+        "parklake": "公园湖",
+        "bedroom": "卧室",
+        "aurora": "极光",
+        "ember": "余烬",
+        "custom": "自定义"
+    },
+    "theme_editor": {
+        "light": "浅色",
+        "dark": "深色",
+        "reset": "重置",
+        "not_active": "要使用此主题，请在“常规”标签中选择“自定义”。",
+        "low_contrast": "对比度 {ratio}:1，低于 {min}:1",
+        "groups": {
+            "brand": "品牌",
+            "status": "状态",
+            "surfaces": "表面",
+            "chrome": "应用框架",
+            "details": "细节"
+        },
+        "tokens": {
+            "primary": "主色",
+            "secondary": "辅色",
+            "tertiary": "第三色",
+            "accent": "强调色",
+            "error": "错误",
+            "info": "信息",
+            "success": "成功",
+            "warning": "警告",
+            "background": "背景",
+            "surface": "卡片表面",
+            "surfaceVariant": "表头",
+            "onSurface": "文字",
+            "outline": "轮廓",
+            "menuBg": "顶栏",
+            "drawerBg": "侧边栏",
+            "workspace": "工作区",
+            "listRow": "列表行",
+            "listRowSelected": "选中行",
+            "listBorder": "行边框",
+            "panelBorder": "面板边框",
+            "filterControlsBg": "筛选栏",
+            "menuItemActive": "当前菜单项"
+        }
     }
 }

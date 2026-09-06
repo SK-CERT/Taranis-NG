@@ -416,6 +416,7 @@
     }
 
     :deep(.v-dialog .v-card) {
-        background: var(--review-workspace);
+        background-color: var(--review-workspace);
+        background-image: var(--v-workspace-gradient, none);
     }
 </style>

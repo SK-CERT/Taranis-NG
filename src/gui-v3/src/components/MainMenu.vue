@@ -172,7 +172,8 @@
 <style scoped>
     .main-menu {
         border-bottom: var(--v-menu-border) !important;
-        background: rgb(var(--v-theme-menu-bg)) !important;
+        background-color: rgb(var(--v-theme-menu-bg)) !important;
+        background-image: var(--v-menu-gradient, none) !important;
         color: rgb(var(--v-theme-on-menu-bg)) !important;
         box-shadow: 0 2px 8px rgba(var(--v-theme-menu-bg), 0.22) !important;
     }

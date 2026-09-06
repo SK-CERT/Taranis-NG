@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Nastavenie používateľa",
         "tab_general": "Všeobecné",
+        "tab_theme": "Motív",
         "tab_security": "Zabezpečenie",
         "tab_wordlists": "Slovníky",
         "tab_hotkeys": "Klávesové skratky",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Levanduľa"
+        "lavender": "Levanduľa",
+        "parklake": "Jazero v parku",
+        "bedroom": "Spálňa",
+        "aurora": "Polárna žiara",
+        "ember": "Žeravé uhlíky",
+        "custom": "Vlastný"
+    },
+    "theme_editor": {
+        "light": "Svetlý",
+        "dark": "Tmavý",
+        "reset": "Obnoviť",
+        "not_active": "Ak chcete použiť tento motív, vyberte na karte Všeobecné možnosť Vlastný.",
+        "low_contrast": "Kontrast {ratio}:1, menej než {min}:1",
+        "groups": {
+            "brand": "Značka",
+            "status": "Stavy",
+            "surfaces": "Plochy",
+            "chrome": "Rámec aplikácie",
+            "details": "Detaily"
+        },
+        "tokens": {
+            "primary": "Primárny",
+            "secondary": "Sekundárny",
+            "tertiary": "Terciárny",
+            "accent": "Zvýraznenie",
+            "error": "Chyba",
+            "info": "Informácia",
+            "success": "Úspech",
+            "warning": "Varovanie",
+            "background": "Pozadie",
+            "surface": "Plocha karty",
+            "surfaceVariant": "Hlavička tabuľky",
+            "onSurface": "Text",
+            "outline": "Obrys",
+            "menuBg": "Horná lišta",
+            "drawerBg": "Bočný panel",
+            "workspace": "Pracovná plocha",
+            "listRow": "Riadok zoznamu",
+            "listRowSelected": "Vybraný riadok",
+            "listBorder": "Ohraničenie riadka",
+            "panelBorder": "Ohraničenie panela",
+            "filterControlsBg": "Lišta filtrov",
+            "menuItemActive": "Aktívna položka ponuky"
+        }
     }
 }

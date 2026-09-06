@@ -42,3 +42,32 @@ html.light-mode {
 html.dark-mode {
     color-scheme: dark;
 }
+
+/* Windows High Contrast Mode replaces system colours but leaves custom properties
+   alone, so without this the seam above keeps painting its authored colours while
+   everything around it changes. Map it onto the system palette instead, and give
+   the borders that rely on alpha a solid colour so panel and row structure
+   survives. */
+@media (forced-colors: active) {
+    [class*='v-theme--'] {
+        --color-drawer-bg: Canvas;
+        --color-drawer-text: CanvasText;
+        --color-drawer-icon: CanvasText;
+        --color-drawer-divider: CanvasText;
+
+        --review-workspace: Canvas;
+        --review-list-row: Canvas;
+        --review-list-row-selected: Highlight;
+        --review-list-row-hover: Highlight;
+        --review-list-border: CanvasText;
+        --review-panel-border: CanvasText;
+        --filter-controls-bg: Canvas;
+    }
+
+    /* Alpha-composited borders collapse to invisible under forced colours. */
+    .settings-pane,
+    .token,
+    .theme-editor__group-title::after {
+        border-color: CanvasText !important;
+    }
+}

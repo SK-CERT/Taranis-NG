@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "User settings",
         "tab_general": "General",
+        "tab_theme": "Theme",
         "tab_security": "Security",
         "tab_wordlists": "Word Lists",
         "tab_hotkeys": "Hotkeys",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Lavender"
+        "lavender": "Lavender",
+        "parklake": "Park Lake",
+        "bedroom": "Bedroom",
+        "aurora": "Aurora",
+        "ember": "Ember",
+        "custom": "Custom"
+    },
+    "theme_editor": {
+        "light": "Light",
+        "dark": "Dark",
+        "reset": "Reset",
+        "not_active": "Select Custom in the General tab to use this theme.",
+        "low_contrast": "Contrast {ratio}:1, below {min}:1",
+        "groups": {
+            "brand": "Brand",
+            "status": "Status",
+            "surfaces": "Surfaces",
+            "chrome": "App chrome",
+            "details": "Details"
+        },
+        "tokens": {
+            "primary": "Primary",
+            "secondary": "Secondary",
+            "tertiary": "Tertiary",
+            "accent": "Accent",
+            "error": "Error",
+            "info": "Info",
+            "success": "Success",
+            "warning": "Warning",
+            "background": "Background",
+            "surface": "Card surface",
+            "surfaceVariant": "Table header",
+            "onSurface": "Text",
+            "outline": "Outline",
+            "menuBg": "Top bar",
+            "drawerBg": "Sidebar",
+            "workspace": "Workspace",
+            "listRow": "List row",
+            "listRowSelected": "Selected row",
+            "listBorder": "Row border",
+            "panelBorder": "Panel border",
+            "filterControlsBg": "Filter bar",
+            "menuItemActive": "Active nav item"
+        }
     }
 }

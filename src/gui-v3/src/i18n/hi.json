@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "उपयोगकर्ता सेटिंग्स",
         "tab_general": "सामान्य",
+        "tab_theme": "थीम",
         "tab_security": "सुरक्षा",
         "tab_wordlists": "शब्द सूचियाँ",
         "tab_hotkeys": "हॉटकी",
@@ -2116,6 +2117,49 @@
         "vintage": "विंटेज",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "लैवेंडर"
+        "lavender": "लैवेंडर",
+        "parklake": "पार्क झील",
+        "bedroom": "शयनकक्ष",
+        "aurora": "अरोरा",
+        "ember": "अंगारा",
+        "custom": "कस्टम"
+    },
+    "theme_editor": {
+        "light": "हल्का",
+        "dark": "गहरा",
+        "reset": "रीसेट करें",
+        "not_active": "इस थीम का उपयोग करने के लिए सामान्य टैब में कस्टम चुनें।",
+        "low_contrast": "कंट्रास्ट {ratio}:1, {min}:1 से कम",
+        "groups": {
+            "brand": "ब्रांड",
+            "status": "स्थिति",
+            "surfaces": "सतहें",
+            "chrome": "ऐप ढाँचा",
+            "details": "विवरण"
+        },
+        "tokens": {
+            "primary": "प्राथमिक",
+            "secondary": "द्वितीयक",
+            "tertiary": "तृतीयक",
+            "accent": "उच्चारण",
+            "error": "त्रुटि",
+            "info": "सूचना",
+            "success": "सफलता",
+            "warning": "चेतावनी",
+            "background": "पृष्ठभूमि",
+            "surface": "कार्ड सतह",
+            "surfaceVariant": "तालिका शीर्ष",
+            "onSurface": "पाठ",
+            "outline": "रूपरेखा",
+            "menuBg": "शीर्ष पट्टी",
+            "drawerBg": "साइडबार",
+            "workspace": "कार्यक्षेत्र",
+            "listRow": "सूची पंक्ति",
+            "listRowSelected": "चयनित पंक्ति",
+            "listBorder": "पंक्ति सीमा",
+            "panelBorder": "पैनल सीमा",
+            "filterControlsBg": "फ़िल्टर पट्टी",
+            "menuItemActive": "सक्रिय मेनू आइटम"
+        }
     }
 }

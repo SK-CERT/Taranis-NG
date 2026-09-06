@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Configuración del usuario",
         "tab_general": "General",
+        "tab_theme": "Tema",
         "tab_security": "Seguridad",
         "tab_wordlists": "Listas de palabras",
         "tab_hotkeys": "Atajos de teclado",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Lavanda"
+        "lavender": "Lavanda",
+        "parklake": "Lago del parque",
+        "bedroom": "Dormitorio",
+        "aurora": "Aurora",
+        "ember": "Brasa",
+        "custom": "Personalizado"
+    },
+    "theme_editor": {
+        "light": "Claro",
+        "dark": "Oscuro",
+        "reset": "Restablecer",
+        "not_active": "Seleccione Personalizado en la pestaña General para usar este tema.",
+        "low_contrast": "Contraste {ratio}:1, por debajo de {min}:1",
+        "groups": {
+            "brand": "Marca",
+            "status": "Estado",
+            "surfaces": "Superficies",
+            "chrome": "Interfaz",
+            "details": "Detalles"
+        },
+        "tokens": {
+            "primary": "Primario",
+            "secondary": "Secundario",
+            "tertiary": "Terciario",
+            "accent": "Acento",
+            "error": "Error",
+            "info": "Información",
+            "success": "Éxito",
+            "warning": "Advertencia",
+            "background": "Fondo",
+            "surface": "Superficie de tarjeta",
+            "surfaceVariant": "Encabezado de tabla",
+            "onSurface": "Texto",
+            "outline": "Contorno",
+            "menuBg": "Barra superior",
+            "drawerBg": "Barra lateral",
+            "workspace": "Área de trabajo",
+            "listRow": "Fila de lista",
+            "listRowSelected": "Fila seleccionada",
+            "listBorder": "Borde de fila",
+            "panelBorder": "Borde del panel",
+            "filterControlsBg": "Barra de filtros",
+            "menuItemActive": "Elemento de menú activo"
+        }
     }
 }

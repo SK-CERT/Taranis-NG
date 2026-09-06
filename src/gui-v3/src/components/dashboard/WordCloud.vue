@@ -89,7 +89,9 @@
             data: () => [],
             minFontSize: 14,
             maxFontSize: 50,
-            colorScheme: () => ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef'],
+            // Empty by default: the host supplies theme colours (useTagPalette).
+            // getColor falls back to the theme's primary when none are given.
+            colorScheme: () => [],
             viewportFit: false
         }
     )

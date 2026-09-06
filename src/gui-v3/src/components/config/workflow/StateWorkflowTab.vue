@@ -316,6 +316,7 @@
 
     function getEntityTypeColor(entityType: EntityType): string {
         const colors = {
+            // Data defaults for user-created entities, deliberately theme-independent.
             report_item: '#2196F3',
             product: '#4CAF50'
         }
