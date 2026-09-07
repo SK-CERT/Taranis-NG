@@ -206,7 +206,7 @@
                 const allItems = this.$store.getters.getSettings;
                 // UI_THEME is a gui-v3 setting; this GUI has no theme families to offer,
                 // and with empty options it would render as a free-text field.
-                this.records = allItems.filter(item => item.is_global === this.glob_setting && item.key !== "UI_THEME");
+                this.records = allItems.filter(item => item.is_global === this.glob_setting && item.key !== "UI_THEME" && item.key !== "CUSTOM_THEME");
             },
 
             save() {

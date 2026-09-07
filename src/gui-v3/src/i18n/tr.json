@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Kullanıcı ayarları",
         "tab_general": "Genel",
+        "tab_theme": "Tema",
         "tab_security": "Güvenlik",
         "tab_wordlists": "Sözcük listeleri",
         "tab_hotkeys": "Kısayol tuşları",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Lavanta"
+        "lavender": "Lavanta",
+        "parklake": "Park gölü",
+        "bedroom": "Yatak odası",
+        "aurora": "Kutup ışığı",
+        "ember": "Kor",
+        "custom": "Özel"
+    },
+    "theme_editor": {
+        "light": "Açık",
+        "dark": "Koyu",
+        "reset": "Sıfırla",
+        "not_active": "Bu temayı kullanmak için Genel sekmesinde Özel’i seçin.",
+        "low_contrast": "Kontrast {ratio}:1, {min}:1 altında",
+        "groups": {
+            "brand": "Marka",
+            "status": "Durum",
+            "surfaces": "Yüzeyler",
+            "chrome": "Uygulama çerçevesi",
+            "details": "Ayrıntılar"
+        },
+        "tokens": {
+            "primary": "Birincil",
+            "secondary": "İkincil",
+            "tertiary": "Üçüncül",
+            "accent": "Vurgu",
+            "error": "Hata",
+            "info": "Bilgi",
+            "success": "Başarılı",
+            "warning": "Uyarı",
+            "background": "Arka plan",
+            "surface": "Kart yüzeyi",
+            "surfaceVariant": "Tablo başlığı",
+            "onSurface": "Metin",
+            "outline": "Dış çizgi",
+            "menuBg": "Üst çubuk",
+            "drawerBg": "Kenar çubuğu",
+            "workspace": "Çalışma alanı",
+            "listRow": "Liste satırı",
+            "listRowSelected": "Seçili satır",
+            "listBorder": "Satır kenarlığı",
+            "panelBorder": "Panel kenarlığı",
+            "filterControlsBg": "Filtre çubuğu",
+            "menuItemActive": "Etkin menü öğesi"
+        }
     }
 }

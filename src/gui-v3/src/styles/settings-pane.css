@@ -1,0 +1,66 @@
+/* ============================================================= */
+/* SETTINGS PANE - shared shell for the User settings tabs       */
+/* ============================================================= */
+
+/*
+ * Word lists, Hotkeys and the theme editor all use this shell. It lives in its
+ * own file because scoped styles reach only a child component's root element,
+ * so a tab rendered by its own component (ThemeEditor) would otherwise get the
+ * outer .settings-pane box and none of the header rules. Import it into the
+ * scoped block of every component that uses these classes.
+ */
+
+.settings-pane {
+    overflow: hidden;
+    border: 1px solid var(--review-panel-border);
+    border-radius: 5px;
+    background: rgb(var(--v-theme-surface));
+    box-shadow: 0 4px 14px rgba(16, 43, 67, 0.1);
+}
+
+.settings-pane__header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-height: 72px;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--review-panel-border);
+    background: rgba(var(--v-theme-surface-variant), 0.32);
+}
+
+.settings-pane__header--actions {
+    justify-content: space-between;
+}
+
+.settings-pane__heading {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.settings-pane__icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border: 1px solid rgba(var(--v-theme-primary), 0.22);
+    border-radius: 4px;
+    background: rgba(var(--v-theme-primary), 0.09);
+    color: rgb(var(--v-theme-primary));
+}
+
+.settings-pane h2,
+.settings-pane p {
+    margin: 0;
+}
+
+.settings-pane h2 {
+    font-size: 1rem;
+}
+
+.settings-pane p {
+    margin-top: 0.15rem;
+    color: rgba(var(--v-theme-on-surface), 0.62);
+    font-size: 0.78rem;
+}

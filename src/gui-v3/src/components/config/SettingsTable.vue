@@ -243,7 +243,8 @@
         [Settings.SPELLCHECK]: 'mdi-spellcheck',
         [Settings.TAG_COLOR]: 'mdi-palette-outline',
         [Settings.UI_LANGUAGE]: 'mdi-web',
-        [Settings.UI_THEME]: 'mdi-palette'
+        [Settings.UI_THEME]: 'mdi-palette',
+        [Settings.CUSTOM_THEME]: 'mdi-palette-swatch'
     }
 
     const getSettingIcon = (key: SettingKey): string => settingIcons[key] || 'mdi-tune-variant'
@@ -332,7 +333,8 @@
         const settingsRecords = allSettings as SettingsRecord[]
         const filtered = settingsRecords.filter((item) => {
             const settingsItem = item as SettingsRecord
-            if (!props.globalSetting && settingsItem.key === Settings.TAG_COLOR) return false
+            // Edited in the Theme tab; its value is a JSON blob, useless as a text row.
+            if (settingsItem.key === Settings.CUSTOM_THEME) return false
             return settingsItem.is_global === props.globalSetting
         })
 

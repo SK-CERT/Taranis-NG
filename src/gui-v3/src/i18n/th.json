@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "การตั้งค่าผู้ใช้",
         "tab_general": "ทั่วไป",
+        "tab_theme": "ธีม",
         "tab_security": "ความปลอดภัย",
         "tab_wordlists": "รายการคำ",
         "tab_hotkeys": "ปุ่มลัด",
@@ -2116,6 +2117,49 @@
         "vintage": "วินเทจ",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "ลาเวนเดอร์"
+        "lavender": "ลาเวนเดอร์",
+        "parklake": "ทะเลสาบในสวน",
+        "bedroom": "ห้องนอน",
+        "aurora": "แสงเหนือ",
+        "ember": "ถ่านไฟ",
+        "custom": "กำหนดเอง"
+    },
+    "theme_editor": {
+        "light": "สว่าง",
+        "dark": "มืด",
+        "reset": "รีเซ็ต",
+        "not_active": "เลือกกำหนดเองในแท็บทั่วไปเพื่อใช้ธีมนี้",
+        "low_contrast": "คอนทราสต์ {ratio}:1 ต่ำกว่า {min}:1",
+        "groups": {
+            "brand": "แบรนด์",
+            "status": "สถานะ",
+            "surfaces": "พื้นผิว",
+            "chrome": "โครงแอป",
+            "details": "รายละเอียด"
+        },
+        "tokens": {
+            "primary": "หลัก",
+            "secondary": "รอง",
+            "tertiary": "ลำดับสาม",
+            "accent": "สีเน้น",
+            "error": "ข้อผิดพลาด",
+            "info": "ข้อมูล",
+            "success": "สำเร็จ",
+            "warning": "คำเตือน",
+            "background": "พื้นหลัง",
+            "surface": "พื้นผิวการ์ด",
+            "surfaceVariant": "หัวตาราง",
+            "onSurface": "ข้อความ",
+            "outline": "เส้นขอบ",
+            "menuBg": "แถบด้านบน",
+            "drawerBg": "แถบด้านข้าง",
+            "workspace": "พื้นที่ทำงาน",
+            "listRow": "แถวรายการ",
+            "listRowSelected": "แถวที่เลือก",
+            "listBorder": "เส้นขอบแถว",
+            "panelBorder": "เส้นขอบแผง",
+            "filterControlsBg": "แถบตัวกรอง",
+            "menuItemActive": "เมนูที่ใช้งานอยู่"
+        }
     }
 }

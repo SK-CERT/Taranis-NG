@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "ユーザー設定",
         "tab_general": "一般",
+        "tab_theme": "テーマ",
         "tab_security": "セキュリティ",
         "tab_wordlists": "単語リスト",
         "tab_hotkeys": "ホットキー",
@@ -2116,6 +2117,49 @@
         "vintage": "ヴィンテージ",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "ラベンダー"
+        "lavender": "ラベンダー",
+        "parklake": "公園の池",
+        "bedroom": "ベッドルーム",
+        "aurora": "オーロラ",
+        "ember": "残り火",
+        "custom": "カスタム"
+    },
+    "theme_editor": {
+        "light": "ライト",
+        "dark": "ダーク",
+        "reset": "リセット",
+        "not_active": "このテーマを使うには、一般タブでカスタムを選択してください。",
+        "low_contrast": "コントラスト {ratio}:1（{min}:1 未満）",
+        "groups": {
+            "brand": "ブランド",
+            "status": "ステータス",
+            "surfaces": "サーフェス",
+            "chrome": "アプリ外枠",
+            "details": "詳細"
+        },
+        "tokens": {
+            "primary": "プライマリ",
+            "secondary": "セカンダリ",
+            "tertiary": "ターシャリ",
+            "accent": "アクセント",
+            "error": "エラー",
+            "info": "情報",
+            "success": "成功",
+            "warning": "警告",
+            "background": "背景",
+            "surface": "カード面",
+            "surfaceVariant": "テーブル見出し",
+            "onSurface": "テキスト",
+            "outline": "輪郭",
+            "menuBg": "トップバー",
+            "drawerBg": "サイドバー",
+            "workspace": "ワークスペース",
+            "listRow": "リスト行",
+            "listRowSelected": "選択行",
+            "listBorder": "行の境界線",
+            "panelBorder": "パネルの境界線",
+            "filterControlsBg": "フィルターバー",
+            "menuItemActive": "選択中のメニュー項目"
+        }
     }
 }

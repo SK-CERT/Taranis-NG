@@ -340,7 +340,8 @@
 
     .app-navigation {
         border-inline-end: 1px solid rgba(var(--v-theme-outline), 0.5) !important;
-        background: var(--color-drawer-bg) !important;
+        background-color: var(--color-drawer-bg) !important;
+        background-image: var(--v-drawer-gradient, none) !important;
         box-shadow: 2px 0 7px rgba(20, 42, 68, 0.08);
 
         &:dir(rtl) {

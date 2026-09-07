@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Paramètres utilisateur",
         "tab_general": "Général",
+        "tab_theme": "Thème",
         "tab_security": "Sécurité",
         "tab_wordlists": "Listes de mots",
         "tab_hotkeys": "Raccourcis clavier",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Lavande"
+        "lavender": "Lavande",
+        "parklake": "Lac du parc",
+        "bedroom": "Chambre",
+        "aurora": "Aurore",
+        "ember": "Braise",
+        "custom": "Personnalisé"
+    },
+    "theme_editor": {
+        "light": "Clair",
+        "dark": "Sombre",
+        "reset": "Réinitialiser",
+        "not_active": "Sélectionnez Personnalisé dans l’onglet Général pour utiliser ce thème.",
+        "low_contrast": "Contraste {ratio}:1, inférieur à {min}:1",
+        "groups": {
+            "brand": "Marque",
+            "status": "Statut",
+            "surfaces": "Surfaces",
+            "chrome": "Interface",
+            "details": "Détails"
+        },
+        "tokens": {
+            "primary": "Primaire",
+            "secondary": "Secondaire",
+            "tertiary": "Tertiaire",
+            "accent": "Accent",
+            "error": "Erreur",
+            "info": "Info",
+            "success": "Succès",
+            "warning": "Avertissement",
+            "background": "Arrière-plan",
+            "surface": "Surface de carte",
+            "surfaceVariant": "En-tête de tableau",
+            "onSurface": "Texte",
+            "outline": "Contour",
+            "menuBg": "Barre supérieure",
+            "drawerBg": "Barre latérale",
+            "workspace": "Espace de travail",
+            "listRow": "Ligne de liste",
+            "listRowSelected": "Ligne sélectionnée",
+            "listBorder": "Bordure de ligne",
+            "panelBorder": "Bordure du panneau",
+            "filterControlsBg": "Barre de filtres",
+            "menuItemActive": "Élément de menu actif"
+        }
     }
 }

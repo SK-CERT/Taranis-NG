@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Ustawienia użytkownika",
         "tab_general": "Ogólne",
+        "tab_theme": "Motyw",
         "tab_security": "Bezpieczeństwo",
         "tab_wordlists": "Listy słów",
         "tab_hotkeys": "Skróty klawiszowe",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Lawenda"
+        "lavender": "Lawenda",
+        "parklake": "Jezioro w parku",
+        "bedroom": "Sypialnia",
+        "aurora": "Zorza polarna",
+        "ember": "Żar",
+        "custom": "Własny"
+    },
+    "theme_editor": {
+        "light": "Jasny",
+        "dark": "Ciemny",
+        "reset": "Przywróć",
+        "not_active": "Aby użyć tego motywu, wybierz Własny na karcie Ogólne.",
+        "low_contrast": "Kontrast {ratio}:1, poniżej {min}:1",
+        "groups": {
+            "brand": "Marka",
+            "status": "Stany",
+            "surfaces": "Powierzchnie",
+            "chrome": "Rama aplikacji",
+            "details": "Szczegóły"
+        },
+        "tokens": {
+            "primary": "Podstawowy",
+            "secondary": "Drugorzędny",
+            "tertiary": "Trzeciorzędny",
+            "accent": "Akcent",
+            "error": "Błąd",
+            "info": "Informacja",
+            "success": "Sukces",
+            "warning": "Ostrzeżenie",
+            "background": "Tło",
+            "surface": "Powierzchnia karty",
+            "surfaceVariant": "Nagłówek tabeli",
+            "onSurface": "Tekst",
+            "outline": "Obrys",
+            "menuBg": "Górny pasek",
+            "drawerBg": "Panel boczny",
+            "workspace": "Obszar roboczy",
+            "listRow": "Wiersz listy",
+            "listRowSelected": "Zaznaczony wiersz",
+            "listBorder": "Obramowanie wiersza",
+            "panelBorder": "Obramowanie panelu",
+            "filterControlsBg": "Pasek filtrów",
+            "menuItemActive": "Aktywna pozycja menu"
+        }
     }
 }

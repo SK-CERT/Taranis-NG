@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Настройки пользователя",
         "tab_general": "Общие",
+        "tab_theme": "Тема",
         "tab_security": "Безопасность",
         "tab_wordlists": "Списки слов",
         "tab_hotkeys": "Сочетания клавиш",
@@ -2116,6 +2117,49 @@
         "vintage": "Винтаж",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Лаванда"
+        "lavender": "Лаванда",
+        "parklake": "Озеро в парке",
+        "bedroom": "Спальня",
+        "aurora": "Северное сияние",
+        "ember": "Тлеющие угли",
+        "custom": "Своя"
+    },
+    "theme_editor": {
+        "light": "Светлая",
+        "dark": "Тёмная",
+        "reset": "Сбросить",
+        "not_active": "Чтобы использовать эту тему, выберите «Своя» на вкладке «Общие».",
+        "low_contrast": "Контраст {ratio}:1, ниже {min}:1",
+        "groups": {
+            "brand": "Бренд",
+            "status": "Статусы",
+            "surfaces": "Поверхности",
+            "chrome": "Каркас приложения",
+            "details": "Детали"
+        },
+        "tokens": {
+            "primary": "Основной",
+            "secondary": "Вторичный",
+            "tertiary": "Третичный",
+            "accent": "Акцент",
+            "error": "Ошибка",
+            "info": "Информация",
+            "success": "Успех",
+            "warning": "Предупреждение",
+            "background": "Фон",
+            "surface": "Поверхность карточки",
+            "surfaceVariant": "Заголовок таблицы",
+            "onSurface": "Текст",
+            "outline": "Контур",
+            "menuBg": "Верхняя панель",
+            "drawerBg": "Боковая панель",
+            "workspace": "Рабочая область",
+            "listRow": "Строка списка",
+            "listRowSelected": "Выбранная строка",
+            "listBorder": "Граница строки",
+            "panelBorder": "Граница панели",
+            "filterControlsBg": "Панель фильтров",
+            "menuItemActive": "Активный пункт меню"
+        }
     }
 }

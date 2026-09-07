@@ -635,7 +635,8 @@
         grid-template-rows: auto minmax(0, 1fr);
         gap: 0.7rem;
         padding: 0.65rem;
-        background: var(--review-workspace);
+        background-color: var(--review-workspace);
+        background-image: var(--v-workspace-gradient, none);
         overflow: hidden;
     }
 

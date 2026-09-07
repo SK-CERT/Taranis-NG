@@ -215,7 +215,7 @@
 
                 <WordCloud
                     :data="tagCloud"
-                    :color-scheme="getColorScheme()"
+                    :color-scheme="tagColors"
                     :min-font-size="15"
                     :max-font-size="46"
                     :empty-message="t('common.no_data')"
@@ -382,11 +382,14 @@
     import packageJson from '../../../package.json'
     import { useSseResync } from '@/composables/useSseResync'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { useTagPalette } from '@/composables/useTagPalette'
     import { useRtl } from 'vuetify'
 
     const dashboardStore = useDashboardStore()
     const { t, te, locale } = useI18n()
     const { formatDateTime, formatNumber } = useLocaleFormatters()
+    // Tag colours follow the active theme; see themes/tagPalette.ts.
+    const tagColors = useTagPalette()
     const { isRtl } = useRtl()
     const router = useRouter()
     const forwardIcon = computed(() => (isRtl.value ? 'mdi-arrow-left' : 'mdi-arrow-right'))
@@ -566,13 +569,6 @@
     }
 
     /**
-     * Get color scheme based on settings
-     */
-    const getColorScheme = (): string[] => {
-        return ['#2f86c1', '#1e9f9a', '#6b9f3a', '#dc8b21', '#d1606b', '#8a6bb8', '#238f70', '#5577b9']
-    }
-
-    /**
      * Refresh dashboard data
      */
     const refreshDashboard = (): Promise<void> => {
@@ -665,7 +661,8 @@
         height: 100%;
         padding: clamp(0.65rem, 1.2vw, 1rem);
         overflow-y: auto;
-        background: var(--review-workspace);
+        background-color: var(--review-workspace);
+        background-image: var(--v-workspace-gradient, none);
         color: rgb(var(--v-theme-on-surface));
     }
 
@@ -803,17 +800,17 @@
 
     .metric-card__icon--blue {
         background: rgba(30, 117, 190, 0.13);
-        color: #287bb9;
+        color: rgb(var(--v-theme-primary));
     }
 
     .metric-card__icon--cyan {
         background: rgba(23, 150, 165, 0.13);
-        color: #158393;
+        color: rgb(var(--v-theme-secondary));
     }
 
     .metric-card__icon--amber {
         background: rgba(220, 140, 25, 0.14);
-        color: #c47a12;
+        color: rgb(var(--v-theme-warning));
     }
 
     .metric-card__icon--slate {
@@ -1129,12 +1126,12 @@
 
     .workflow-heading__icon--analyze {
         background: rgba(23, 150, 165, 0.1);
-        color: #158393;
+        color: rgb(var(--v-theme-secondary));
     }
 
     .workflow-heading__icon--publish {
         background: rgba(220, 140, 25, 0.11);
-        color: #c47a12;
+        color: rgb(var(--v-theme-warning));
     }
 
     .state-list {

@@ -220,6 +220,8 @@
         id: -1,
         display_name: '',
         description: '',
+        // A data default stored on the new state, not theme paint - it must not
+        // shift when the user switches theme.
         color: '#2196F3',
         icon: 'mdi-circle',
         editable: true

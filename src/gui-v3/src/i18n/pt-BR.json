@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Configurações do usuário",
         "tab_general": "Geral",
+        "tab_theme": "Tema",
         "tab_security": "Segurança",
         "tab_wordlists": "Listas de palavras",
         "tab_hotkeys": "Atalhos de teclado",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Lavanda"
+        "lavender": "Lavanda",
+        "parklake": "Lago do parque",
+        "bedroom": "Quarto",
+        "aurora": "Aurora",
+        "ember": "Brasa",
+        "custom": "Personalizado"
+    },
+    "theme_editor": {
+        "light": "Claro",
+        "dark": "Escuro",
+        "reset": "Redefinir",
+        "not_active": "Selecione Personalizado na aba Geral para usar este tema.",
+        "low_contrast": "Contraste {ratio}:1, abaixo de {min}:1",
+        "groups": {
+            "brand": "Marca",
+            "status": "Status",
+            "surfaces": "Superfícies",
+            "chrome": "Interface",
+            "details": "Detalhes"
+        },
+        "tokens": {
+            "primary": "Primário",
+            "secondary": "Secundário",
+            "tertiary": "Terciário",
+            "accent": "Destaque",
+            "error": "Erro",
+            "info": "Informação",
+            "success": "Sucesso",
+            "warning": "Aviso",
+            "background": "Plano de fundo",
+            "surface": "Superfície do cartão",
+            "surfaceVariant": "Cabeçalho da tabela",
+            "onSurface": "Texto",
+            "outline": "Contorno",
+            "menuBg": "Barra superior",
+            "drawerBg": "Barra lateral",
+            "workspace": "Área de trabalho",
+            "listRow": "Linha da lista",
+            "listRowSelected": "Linha selecionada",
+            "listBorder": "Borda da linha",
+            "panelBorder": "Borda do painel",
+            "filterControlsBg": "Barra de filtros",
+            "menuItemActive": "Item de menu ativo"
+        }
     }
 }

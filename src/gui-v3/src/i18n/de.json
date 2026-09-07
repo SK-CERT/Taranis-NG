@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Benutzereinstellungen",
         "tab_general": "Allgemein",
+        "tab_theme": "Design",
         "tab_security": "Sicherheit",
         "tab_wordlists": "Wortlisten",
         "tab_hotkeys": "Tastenkürzel",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Lavendel"
+        "lavender": "Lavendel",
+        "parklake": "Parksee",
+        "bedroom": "Schlafzimmer",
+        "aurora": "Polarlicht",
+        "ember": "Glut",
+        "custom": "Benutzerdefiniert"
+    },
+    "theme_editor": {
+        "light": "Hell",
+        "dark": "Dunkel",
+        "reset": "Zurücksetzen",
+        "not_active": "Wählen Sie im Reiter Allgemein „Benutzerdefiniert“, um dieses Design zu verwenden.",
+        "low_contrast": "Kontrast {ratio}:1, unter {min}:1",
+        "groups": {
+            "brand": "Marke",
+            "status": "Status",
+            "surfaces": "Flächen",
+            "chrome": "App-Rahmen",
+            "details": "Details"
+        },
+        "tokens": {
+            "primary": "Primär",
+            "secondary": "Sekundär",
+            "tertiary": "Tertiär",
+            "accent": "Akzent",
+            "error": "Fehler",
+            "info": "Info",
+            "success": "Erfolg",
+            "warning": "Warnung",
+            "background": "Hintergrund",
+            "surface": "Kartenfläche",
+            "surfaceVariant": "Tabellenkopf",
+            "onSurface": "Text",
+            "outline": "Kontur",
+            "menuBg": "Obere Leiste",
+            "drawerBg": "Seitenleiste",
+            "workspace": "Arbeitsbereich",
+            "listRow": "Listenzeile",
+            "listRowSelected": "Ausgewählte Zeile",
+            "listBorder": "Zeilenrahmen",
+            "panelBorder": "Panelrahmen",
+            "filterControlsBg": "Filterleiste",
+            "menuItemActive": "Aktiver Menüpunkt"
+        }
     }
 }

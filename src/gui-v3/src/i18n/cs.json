@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Nastavení uživatele",
         "tab_general": "Obecné",
+        "tab_theme": "Motiv",
         "tab_security": "Zabezpečení",
         "tab_wordlists": "Seznamy slov",
         "tab_hotkeys": "Zkratky",
@@ -2116,6 +2117,49 @@
         "vintage": "Vintage",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Levandule"
+        "lavender": "Levandule",
+        "parklake": "Jezero v parku",
+        "bedroom": "Ložnice",
+        "aurora": "Polární záře",
+        "ember": "Žhavé uhlíky",
+        "custom": "Vlastní"
+    },
+    "theme_editor": {
+        "light": "Světlý",
+        "dark": "Tmavý",
+        "reset": "Obnovit",
+        "not_active": "Pro použití tohoto motivu vyberte v záložce Obecné možnost Vlastní.",
+        "low_contrast": "Kontrast {ratio}:1, méně než {min}:1",
+        "groups": {
+            "brand": "Značka",
+            "status": "Stavy",
+            "surfaces": "Plochy",
+            "chrome": "Rámec aplikace",
+            "details": "Detaily"
+        },
+        "tokens": {
+            "primary": "Primární",
+            "secondary": "Sekundární",
+            "tertiary": "Terciární",
+            "accent": "Zvýraznění",
+            "error": "Chyba",
+            "info": "Informace",
+            "success": "Úspěch",
+            "warning": "Varování",
+            "background": "Pozadí",
+            "surface": "Plocha karty",
+            "surfaceVariant": "Záhlaví tabulky",
+            "onSurface": "Text",
+            "outline": "Obrys",
+            "menuBg": "Horní lišta",
+            "drawerBg": "Postranní panel",
+            "workspace": "Pracovní plocha",
+            "listRow": "Řádek seznamu",
+            "listRowSelected": "Vybraný řádek",
+            "listBorder": "Ohraničení řádku",
+            "panelBorder": "Ohraničení panelu",
+            "filterControlsBg": "Lišta filtrů",
+            "menuItemActive": "Aktivní položka nabídky"
+        }
     }
 }

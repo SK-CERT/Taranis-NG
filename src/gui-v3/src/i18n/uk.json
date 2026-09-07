@@ -1019,6 +1019,7 @@
     "settings": {
         "user_settings": "Налаштування користувача",
         "tab_general": "Загальні",
+        "tab_theme": "Тема",
         "tab_security": "Безпека",
         "tab_wordlists": "Списки слів",
         "tab_hotkeys": "Сполучення клавіш",
@@ -2116,6 +2117,49 @@
         "vintage": "Вінтаж",
         "cesnet": "CESNET",
         "skcert": "SK-CERT",
-        "lavender": "Лаванда"
+        "lavender": "Лаванда",
+        "parklake": "Озеро в парку",
+        "bedroom": "Спальня",
+        "aurora": "Полярне сяйво",
+        "ember": "Жар",
+        "custom": "Власна"
+    },
+    "theme_editor": {
+        "light": "Світла",
+        "dark": "Темна",
+        "reset": "Скинути",
+        "not_active": "Щоб скористатися цією темою, виберіть «Власна» на вкладці «Загальні».",
+        "low_contrast": "Контраст {ratio}:1, менше ніж {min}:1",
+        "groups": {
+            "brand": "Бренд",
+            "status": "Статуси",
+            "surfaces": "Поверхні",
+            "chrome": "Каркас застосунку",
+            "details": "Деталі"
+        },
+        "tokens": {
+            "primary": "Основний",
+            "secondary": "Вторинний",
+            "tertiary": "Третинний",
+            "accent": "Акцент",
+            "error": "Помилка",
+            "info": "Інформація",
+            "success": "Успіх",
+            "warning": "Попередження",
+            "background": "Тло",
+            "surface": "Поверхня картки",
+            "surfaceVariant": "Заголовок таблиці",
+            "onSurface": "Текст",
+            "outline": "Контур",
+            "menuBg": "Верхня панель",
+            "drawerBg": "Бічна панель",
+            "workspace": "Робоча область",
+            "listRow": "Рядок списку",
+            "listRowSelected": "Вибраний рядок",
+            "listBorder": "Межа рядка",
+            "panelBorder": "Межа панелі",
+            "filterControlsBg": "Панель фільтрів",
+            "menuItemActive": "Активний пункт меню"
+        }
     }
 }
