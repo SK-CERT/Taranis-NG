@@ -15,6 +15,7 @@ import router from './router'
 import ApiService from './services/api_service'
 import { messages, pluralRules, resolveLocale, synchronizeLocalePresentation, vuetifyMessages, vuetifyRtlLocales } from './i18n'
 import { bootstrapTestingToken } from './services/testing_auth'
+import { buildVuetifyThemes, DEFAULT_THEME_FAMILY, themeName } from './themes'
 
 // Wait for stylesheets to be applied before mounting.
 // This prevents "Layout was forced before page fully loaded" warnings.
@@ -85,53 +86,10 @@ const vuetify = createVuetify({
         rtl: vuetifyRtlLocales
     },
     theme: {
-        defaultTheme: 'light',
-        themes: {
-            light: {
-                colors: {
-                    'background': '#F2F5F9',
-                    'surface': '#FFFFFF',
-                    'surface-variant': '#EAF0F6',
-                    'on-surface': '#172333',
-                    'outline': '#B8C5D2',
-                    'primary': '#176FB5',
-                    'on-primary': '#FFFFFF',
-                    'secondary': '#00677F',
-                    'on-secondary': '#FFFFFF',
-                    'tertiary': '#4E55B0',
-                    'on-tertiary': '#FFFFFF',
-                    'error': '#FF5252',
-                    'on-error': '#FFFFFF',
-                    'info': '#2196F3',
-                    'on-info': '#FFFFFF',
-                    'success': '#4CAF50',
-                    'on-success': '#FFFFFF',
-                    'warning': '#FB8C00',
-                    'on-warning': '#FFFFFF',
-                    'accent': '#82B1FF'
-                }
-            },
-            dark: {
-                colors: {
-                    'background': '#0D1621',
-                    'surface': '#152230',
-                    'surface-variant': '#203040',
-                    'on-surface': '#E8EEF5',
-                    'outline': '#526273',
-                    'primary': '#58A7E8',
-                    'on-primary': '#FFFFFF',
-                    'secondary': '#64D4F8',
-                    'on-secondary': '#003543',
-                    'tertiary': '#BEC2FF',
-                    'on-tertiary': '#1D2380',
-                    'error': '#CF6679',
-                    'on-error': '#690005',
-                    'info': '#2196F3',
-                    'success': '#4CAF50',
-                    'warning': '#FB8C00'
-                }
-            }
-        }
+        // Vuetify 4 defaults to 'system', which can only resolve to the built-in
+        // light/dark themes - it cannot pick a family variant - so pin the default.
+        defaultTheme: themeName(DEFAULT_THEME_FAMILY, false),
+        themes: buildVuetifyThemes()
     },
     icons: {
         defaultSet: 'mdi'

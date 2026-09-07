@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "รูปแบบวันที่",
         "HOTKEYS": "เปิดใช้งานปุ่มลัด",
         "UI_LANGUAGE": "ภาษาส่วนติดต่อผู้ใช้",
+        "UI_THEME": "ธีมส่วนติดต่อผู้ใช้",
         "CONTENT_DEFAULT_LANGUAGE": "ภาษาเริ่มต้นสำหรับรายงาน/ผลิตภัณฑ์",
         "REPORT_SELECTOR_READ_ONLY": "เปิดตัวเลือกรายการรายงานในโหมดอ่านอย่างเดียว",
         "SPELLCHECK": "ตรวจการสะกด",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "ค่าต้องไม่มีการขึ้นบรรทัดใหม่",
         "last_updated": "อัปเดตล่าสุดโดย {user} เมื่อ {at}",
         "error": "ไม่สามารถบันทึกการตั้งค่าการกำหนดเส้นทางและ TLS ได้"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "สเลต",
+        "forest": "ป่า",
+        "amber": "อำพัน",
+        "contrast": "คอนทราสต์สูง",
+        "doll": "ตุ๊กตา",
+        "bubblegum": "หมากฝรั่ง",
+        "autumn": "ฤดูใบไม้ร่วง",
+        "retro": "เรโทร",
+        "valentine": "วาเลนไทน์",
+        "summer": "ฤดูร้อน",
+        "vintage": "วินเทจ",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "ลาเวนเดอร์"
     }
 }

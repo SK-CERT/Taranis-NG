@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "日期格式",
         "HOTKEYS": "启用快捷键",
         "UI_LANGUAGE": "用户界面语言",
+        "UI_THEME": "用户界面主题",
         "CONTENT_DEFAULT_LANGUAGE": "报告/产品的默认语言",
         "REPORT_SELECTOR_READ_ONLY": "以只读模式打开报告条目选择器",
         "SPELLCHECK": "拼写检查",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "值不能包含换行符",
         "last_updated": "{user} 于 {at} 最后更新",
         "error": "无法保存路由与 TLS 设置"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "石板灰",
+        "forest": "森林",
+        "amber": "琥珀",
+        "contrast": "高对比度",
+        "doll": "玩偶",
+        "bubblegum": "泡泡糖",
+        "autumn": "秋日",
+        "retro": "复古",
+        "valentine": "情人节",
+        "summer": "夏日",
+        "vintage": "怀旧",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "薰衣草"
     }
 }

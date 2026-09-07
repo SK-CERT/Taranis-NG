@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "तिथि प्रारूप",
         "HOTKEYS": "हॉटकी सक्षम करें",
         "UI_LANGUAGE": "उपयोगकर्ता इंटरफ़ेस भाषा",
+        "UI_THEME": "यूज़र इंटरफ़ेस थीम",
         "CONTENT_DEFAULT_LANGUAGE": "रिपोर्ट/उत्पाद की डिफ़ॉल्ट भाषा",
         "REPORT_SELECTOR_READ_ONLY": "रिपोर्ट आइटम चयनकर्ता केवल-पढ़ने के मोड में खोलें",
         "SPELLCHECK": "वर्तनी जाँच",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "मान में पंक्ति विराम नहीं होना चाहिए",
         "last_updated": "अंतिम अपडेट {user} ने {at} को किया",
         "error": "रूटिंग और TLS सेटिंग्स सहेजी नहीं जा सकीं"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "स्लेट",
+        "forest": "वन",
+        "amber": "अंबर",
+        "contrast": "उच्च कंट्रास्ट",
+        "doll": "गुड़िया",
+        "bubblegum": "बबलगम",
+        "autumn": "पतझड़",
+        "retro": "रेट्रो",
+        "valentine": "वैलेंटाइन",
+        "summer": "ग्रीष्म",
+        "vintage": "विंटेज",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "लैवेंडर"
     }
 }

@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Formato de fecha",
         "HOTKEYS": "Activar atajos",
         "UI_LANGUAGE": "Idioma de la interfaz de usuario",
+        "UI_THEME": "Tema de la interfaz de usuario",
         "CONTENT_DEFAULT_LANGUAGE": "Idioma predeterminado para informes/productos",
         "REPORT_SELECTOR_READ_ONLY": "Abrir el selector de elementos de informe en modo de solo lectura",
         "SPELLCHECK": "Corrector ortográfico",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Un valor no debe contener un salto de línea",
         "last_updated": "Última actualización por {user} el {at}",
         "error": "No se pudieron guardar los ajustes de enrutamiento y TLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Pizarra",
+        "forest": "Bosque",
+        "amber": "Ámbar",
+        "contrast": "Alto contraste",
+        "doll": "Muñeca",
+        "bubblegum": "Chicle",
+        "autumn": "Otoño",
+        "retro": "Retro",
+        "valentine": "San Valentín",
+        "summer": "Verano",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavanda"
     }
 }

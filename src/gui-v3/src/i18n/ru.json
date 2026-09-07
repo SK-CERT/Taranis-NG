@@ -1081,6 +1081,7 @@
         "DATE_FORMAT": "Формат даты",
         "HOTKEYS": "Включить сочетания клавиш",
         "UI_LANGUAGE": "Язык интерфейса",
+        "UI_THEME": "Тема интерфейса",
         "CONTENT_DEFAULT_LANGUAGE": "Язык по умолчанию для отчетов и продуктов",
         "REPORT_SELECTOR_READ_ONLY": "Открывать средство выбора элементов отчета в режиме только для чтения",
         "SPELLCHECK": "Проверка орфографии",
@@ -2099,5 +2100,22 @@
         "header_value_invalid": "Значение не должно содержать перенос строки",
         "last_updated": "Последнее изменение: {user}, {at}",
         "error": "Не удалось сохранить настройки маршрутизации и TLS"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Сланец",
+        "forest": "Лес",
+        "amber": "Янтарь",
+        "contrast": "Высокий контраст",
+        "doll": "Кукла",
+        "bubblegum": "Жвачка",
+        "autumn": "Осень",
+        "retro": "Ретро",
+        "valentine": "Валентин",
+        "summer": "Лето",
+        "vintage": "Винтаж",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Лаванда"
     }
 }
