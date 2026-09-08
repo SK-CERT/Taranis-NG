@@ -393,17 +393,16 @@ wheels = [
 
 [[package]]
 name = "envelope"
-version = "2.3.1"
+version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jsonpickle" },
     { name = "py3-validate-email" },
     { name = "python-gnupg" },
     { name = "python-magic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/4d/49bb507c19d06a642a1c349187a23404728bb17de96f4963939bed70c351/envelope-2.3.1.tar.gz", hash = "sha256:c1118ad331387c1f2fb7c113ed6b66c265ae702fd9a8ba361ccc995ebd6acb5c", size = 67570, upload-time = "2026-03-04T15:49:05.068Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/fe/7c3b2a7377cb3741563fa4b891b9bc788578f4986f5426a28b2292f19116/envelope-2.4.0.tar.gz", hash = "sha256:55ad855f3ab31f659c4a978692ddd202fee3b3775bb8e07f0a5d50b0d484e4c1", size = 41984, upload-time = "2026-09-04T15:19:22.413Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/e6/4f68d05cd5dbb1606b19eb6a58a8b5160b279f858272de279e14caf6fcf3/envelope-2.3.1-py3-none-any.whl", hash = "sha256:145f3a2b76d886869dcbb24d1c949aa71bae761cc91cf0bf0f170808c3cfd2c4", size = 58711, upload-time = "2026-03-04T15:49:04.028Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/3b/713ac1ad3f9de208227b1183c3cd96390a032328e3f5d218ed66a7934ec7/envelope-2.4.0-py3-none-any.whl", hash = "sha256:e48d1aeb79496bf91bf02c94fa341680c253f411bdee26d07f085a53142abc7f", size = 46017, upload-time = "2026-09-04T15:19:21.365Z" },
 ]
 
 [[package]]
@@ -641,15 +640,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c72f3e33cef02e048281fec7ecec5f032d4aac52226b/jinja2-3.1.6.tar.gz", hash = "sha256:0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d", size = 245115, upload-time = "2025-03-05T20:05:02.478Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67", size = 134899, upload-time = "2025-03-05T20:05:00.369Z" },
-]
-
-[[package]]
-name = "jsonpickle"
-version = "4.1.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8d/c0/dde9b4b42cc415b9579573f967f12efbb034e427a2a37e93ad5139891d87/jsonpickle-4.1.2.tar.gz", hash = "sha256:8afed18aa189fd81e2e833b426bb4af485594921f0b1d36c2001fc5637a2f210", size = 319120, upload-time = "2026-05-28T03:50:11.892Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/7b/fd3c7a09649aea9da1d3587aea624d8f9b29963dfd84a1bdb2aa93b36dac/jsonpickle-4.1.2-py3-none-any.whl", hash = "sha256:7ffe34426bc797684dbf1dc84185558bd864cd25b1ff5fb01b7405e392d0a937", size = 47203, upload-time = "2026-05-28T03:50:10.605Z" },
 ]
 
 [[package]]
@@ -974,7 +964,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = "==4.15.0" },
-    { name = "envelope", specifier = "==2.3.1" },
+    { name = "envelope", specifier = "==2.4.0" },
     { name = "flask", specifier = "==3.1.3" },
     { name = "flask-cors", specifier = "==6.0.5" },
     { name = "flask-restful", specifier = "==0.3.10" },
