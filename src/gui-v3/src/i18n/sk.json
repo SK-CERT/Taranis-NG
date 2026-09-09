@@ -1313,7 +1313,7 @@
             "node_required": "Vyberte uzol kolektora",
             "export_selected_hint": "Exportovať vybrané zdroje",
             "selected_count": "Nie sú vybrané žiadne zdroje OSINT | Vybraný {count} zdroj OSINT | Vybrané {count} zdroje OSINT | Vybraných {count} zdrojov OSINT",
-            "collecting": "Prebieha zber…",
+            "collecting": "Prebieha…",
             "disabled": "Vypnuté",
             "collect_started": "Zber bol spustený",
             "collect_error": "Zber sa nepodarilo spustiť",

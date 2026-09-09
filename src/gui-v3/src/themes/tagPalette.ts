@@ -34,6 +34,7 @@ const MIN_CONTRAST = 4.5
 const DUPLICATE_DISTANCE = 24
 
 export const TAG_PALETTE_SOURCES = ['primary', 'secondary', 'tertiary', 'accent'] as const
+export const TAG_FIXED_COLORS = ['#2f86c1', '#1e9f9a', '#6b9f3a', '#dc8b21', '#d1606b', '#8a6bb8', '#238f70', '#5577b9'] as const
 
 const HEX = /^#([\da-f]{3}|[\da-f]{6})$/i
 
@@ -84,10 +85,12 @@ const correct = (hex: string, ground: string, dark: boolean): string | null => {
  * setting has always meant.
  */
 export const tagPalette = (colors: Record<string, string | undefined>, ground: string, dark: boolean, colorful = true): string[] => {
-    const sources = colorful ? TAG_PALETTE_SOURCES : (['primary'] as const)
-    const palette: string[] = []
+    if (colorful) {
+        return [...TAG_FIXED_COLORS]
+    }
 
-    for (const key of sources) {
+    const palette: string[] = []
+    for (const key of TAG_PALETTE_SOURCES) {
         const corrected = correct(colors[key] ?? '', ground, dark)
         if (!corrected) continue
         if (palette.some((existing) => colourDistance(existing, corrected) < DUPLICATE_DISTANCE)) continue

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildVuetifyThemes, themeFamilies, themeName } from '@/themes'
-import { tagPalette, TAG_PALETTE_SOURCES } from '@/themes/tagPalette'
+import { tagPalette, TAG_FIXED_COLORS, TAG_PALETTE_SOURCES } from '@/themes/tagPalette'
 import { contrastRatio } from '@/themes/wcag'
 
 const variants = themeFamilies.flatMap((family) =>
@@ -17,7 +17,7 @@ describe('tag cloud palette', () => {
     // 1.15:1. Every entry must be readable in every theme.
     it.each(variants.map((v) => [v.name, v] as const))('%s is legible on its own surface', (_name, variant) => {
         const ground = variant.colors['surface'] ?? ''
-        const palette = tagPalette(variant.colors, ground, variant.dark)
+        const palette = tagPalette(variant.colors, ground, variant.dark, false)
 
         expect(palette.length).toBeGreaterThan(0)
         for (const colour of palette) {
@@ -34,22 +34,20 @@ describe('tag cloud palette', () => {
 
     it('keeps a fixed order rather than cycling', () => {
         const colors = { primary: '#123456', secondary: '#654321', tertiary: '#2E7D32', accent: '#8A2BE2' }
-        const first = tagPalette(colors, '#FFFFFF', false)
-        const second = tagPalette(colors, '#FFFFFF', false)
+        const first = tagPalette(colors, '#FFFFFF', false, false)
+        const second = tagPalette(colors, '#FFFFFF', false, false)
 
         expect(first).toEqual(second)
         expect(first[0]).toBe('#123456')
     })
 
-    it('collapses to a single hue when colourful tags are off', () => {
-        const colors = { primary: '#123456', secondary: '#654321', tertiary: '#2E7D32', accent: '#8A2BE2' }
-
-        expect(tagPalette(colors, '#FFFFFF', false, false)).toHaveLength(1)
+    it('uses fixed colours without checking theme contrast when colourful tags are on', () => {
+        expect(tagPalette({ primary: '#B0F9FA' }, '#FFFFFF', false, true)).toEqual([...TAG_FIXED_COLORS])
     })
 
     it('corrects an unreadable colour rather than dropping it', () => {
         // Bubblegum light's accent against white: 1.15:1
-        const palette = tagPalette({ primary: '#B0F9FA' }, '#FFFFFF', false)
+        const palette = tagPalette({ primary: '#B0F9FA' }, '#FFFFFF', false, false)
 
         expect(palette).toHaveLength(1)
         expect(palette[0]).not.toBe('#B0F9FA')
@@ -57,7 +55,7 @@ describe('tag cloud palette', () => {
     })
 
     it('always returns something legible, even for a theme with no usable colours', () => {
-        const palette = tagPalette({}, '#FFFFFF', false)
+        const palette = tagPalette({}, '#FFFFFF', false, false)
 
         expect(palette).toHaveLength(1)
         expect(contrastRatio(palette[0] ?? '', '#FFFFFF')).toBeGreaterThanOrEqual(4.5)
