@@ -51,8 +51,15 @@
                 density="compact"
                 class="flex-fixed"
             >
-                <!-- Single Item Tabs: Source, Attributes, Comments -->
-                <template v-if="!isAggregate">
+                <!-- Aggregate Tabs: Info -->
+                <template v-if="isAggregate">
+                    <v-tab value="info">
+                        {{ t('assess.aggregate_info') }}
+                    </v-tab>
+                </template>
+
+                <!-- Single Item Tabs: Source, Attributes -->
+                <template v-else>
                     <v-tab value="source">
                         {{ t('assess.source') }}
                     </v-tab>
@@ -60,16 +67,13 @@
                         {{ t('assess.attributes') }}
                     </v-tab>
                 </template>
-
-                <!-- Aggregate Tabs: Info, Comments -->
-                <template v-else>
-                    <v-tab value="info">
-                        {{ t('assess.aggregate_info') }}
-                    </v-tab>
-                    <v-tab value="comments">
-                        {{ t('assess.comments') }}
-                    </v-tab>
-                </template>
+                <!-- Disable comments for child items -->
+                <v-tab
+                    v-if="!isChild"
+                    value="comments"
+                >
+                    {{ t('assess.comments') }}
+                </v-tab>
             </v-tabs>
 
             <!-- Tab Content: every pane of the current mode is stacked in one grid cell, so
@@ -263,7 +267,7 @@
 
                 <!-- Comments Tab -->
                 <div
-                    v-if="isAggregate"
+                    v-if="!isChild"
                     class="pane tab-pane"
                     :class="{ 'pane--active': activeTab === 'comments' }"
                 >
@@ -272,7 +276,7 @@
                         :pt="editorPassThrough"
                         editor-style="height: 250px; font-size: 16px;"
                         :readonly="!canModifyItem"
-                        @text-change="debounceAutoSave"
+                        @text-change="autoSaveComment"
                     />
                     <div class="text-caption text-grey mt-2">{{ t('assess.auto_save_changes') }}</div>
                 </div>
@@ -412,8 +416,13 @@
 
     const newsItem = computed<NewsItemModel>(() => props.newsItem || {})
 
+    // checks if multiple items (> 1) are grouped into one record, not if it's aggregate type record (master)
     const isAggregate = computed(() => {
         return (newsItem.value.news_items?.length || 0) > 1
+    })
+
+    const isChild = computed(() => {
+        return newsItem.value.entityType === 'news_item'
     })
 
     const title = computed(() => {
@@ -495,34 +504,23 @@
         emit('delete', newsItem.value)
     }
 
-    // Debounce timeout for auto-save
+    // timeout for auto-save
     let saveTimeout: ReturnType<typeof setTimeout> | null = null
 
-    const debounceAutoSave = (): void => {
-        if (!canModifyItem.value || !isAggregate.value) {
+    const autoSaveComment = (): void => {
+        if (!canModifyItem.value || isChild.value) {
             return
         }
         if (saveTimeout) {
             clearTimeout(saveTimeout)
         }
         saveTimeout = setTimeout(() => {
-            saveComment()
+            emit('action', {
+                action: Action.COMMENT,
+                newsItem: newsItem.value,
+                comment: commentText.value
+            })
         }, 1000) // Save 1 second after the user stops typing
-    }
-
-    const saveComment = (): void => {
-        if (!canModifyItem.value || !isAggregate.value) {
-            return
-        }
-        emit('action', {
-            action: Action.COMMENT,
-            newsItem: newsItem.value,
-            comment: commentText.value
-        })
-    }
-
-    const autoSaveComment = (): void => {
-        saveComment()
     }
 
     const autoSaveAggregateInfo = (): void => {
@@ -531,22 +529,13 @@
         }
         // Only save if content has changed
         if (editTitle.value !== newsItem.value.title || editDescription.value !== newsItem.value.description) {
-            saveAggregateInfo()
+            emit('action', {
+                action: Action.UPDATE_AGGREGATE,
+                newsItem: newsItem.value,
+                title: editTitle.value,
+                description: editDescription.value
+            })
         }
-    }
-
-    const saveAggregateInfo = (): void => {
-        emit('action', {
-            action: Action.UPDATE_AGGREGATE,
-            newsItem: newsItem.value,
-            title: editTitle.value,
-            description: editDescription.value
-        })
-    }
-
-    const resetAggregateInfo = (): void => {
-        editTitle.value = newsItem.value.title || ''
-        editDescription.value = newsItem.value.description || ''
     }
 </script>
 
