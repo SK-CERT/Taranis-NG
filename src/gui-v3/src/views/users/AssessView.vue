@@ -38,6 +38,7 @@
                 :selection="assessStore.getSelection"
                 @new-data-loaded="newDataLoaded"
                 @card-items-reindex="handleCardItemsReindex"
+                @show-detail="handleShowDetail"
                 @update-showing-count="updateShowingCount"
             />
         </template>
@@ -142,6 +143,10 @@
         if (newReportItem.value) {
             newReportItem.value.openDialog(event.detail)
         }
+    }
+
+    const handleShowDetail = (newsItem: { id: string | number }): void => {
+        keyboard.setCurrentCard(newsItem.id)
     }
 
     // Handle route changes

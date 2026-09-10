@@ -2,6 +2,7 @@
     <BaseCard
         :multi-select-active="false"
         :show-selection-checkbox="false"
+        :card-id="newsItem.id"
         card-class="aggregate-child-card"
         @card-click="showDetail"
     >
