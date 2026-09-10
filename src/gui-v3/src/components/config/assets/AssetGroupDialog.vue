@@ -3,6 +3,7 @@
         v-model="open"
         max-width="900"
         persistent
+        @keydown.esc.stop="close"
         scrollable
     >
         <v-card>
