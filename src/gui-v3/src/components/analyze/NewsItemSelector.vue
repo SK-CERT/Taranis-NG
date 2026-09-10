@@ -9,6 +9,7 @@
             v-model="selectorOpen"
             fullscreen
             persistent
+            @keydown.esc.stop="handleClose"
         >
             <v-card
                 flat
