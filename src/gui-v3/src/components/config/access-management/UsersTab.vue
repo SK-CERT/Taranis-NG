@@ -37,13 +37,13 @@
             <!-- Data Table -->
             <v-data-table
                 ref="tableRef"
-                v-model:items-per-page="itemsPerPage"
                 :headers="headers"
                 :items="filteredUsers"
+                :items-per-page="-1"
                 :search="search"
                 :row-props="rowProps"
                 item-key="id"
-                class="elevation-1 auto-paged"
+                class="elevation-1"
             >
                 <template #item.username="{ item }">
                     <strong>{{ asUserItem(item).username }}</strong>
@@ -172,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref, onMounted, nextTick } from 'vue'
+    import { computed, ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteUser, updateUserStatus } from '@/api/config'
@@ -182,7 +182,6 @@
     import SearchField from '@/components/common/SearchField.vue'
     import { useAuth } from '@/composables/useAuth'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
-    import { useAutoItemsPerPage } from '@/composables/useAutoItemsPerPage'
 
     type HeaderEntry = {
         title: string
@@ -270,20 +269,12 @@
 
     const hasMfa = (user: UserItem): boolean => !!(user.mfa?.totp || (user.mfa?.passkeys ?? 0) > 0)
 
-    // The page holds as many rows as the viewport fits, so the footer's page-size select is
-    // hidden (see the scoped style below) - there is nothing left for it to choose.
-    const tableRef = ref<{ $el?: HTMLElement } | null>(null)
-    const { itemsPerPage, recalculate } = useAutoItemsPerPage(tableRef)
-
     const loadData = async (): Promise<void> => {
         try {
             await configStore.loadUsers({ search: search.value })
         } catch (error) {
             console.error('Error loading users:', error)
         }
-        // Rows only exist to measure once the data has rendered.
-        await nextTick()
-        recalculate()
     }
 
     const setStatus = async (item: UserItem, status: string): Promise<void> => {
@@ -341,11 +332,6 @@
 </script>
 
 <style scoped>
-    /* The page size is computed from the viewport, so the footer's selector is redundant. */
-    .auto-paged :deep(.v-data-table-footer__items-per-page) {
-        display: none;
-    }
-
     /* Matches the disabled OSINT source rows: dimmed at rest, full contrast under the pointer
        so a disabled account can still be read and acted on. */
     :deep(.user-disabled) {

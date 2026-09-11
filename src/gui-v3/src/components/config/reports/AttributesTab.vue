@@ -25,13 +25,13 @@
             <!-- Data Table -->
             <v-data-table
                 ref="tableRef"
-                v-model:items-per-page="itemsPerPage"
                 :headers="headers"
                 :items="configStore.attributes.items"
+                :items-per-page="-1"
                 :search="search"
                 :loading="loading"
                 item-key="id"
-                class="elevation-1 auto-paged"
+                class="elevation-1"
             >
                 <template #item.name="{ item }">
                     <v-icon
@@ -71,7 +71,6 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import SearchField from '@/components/common/SearchField.vue'
     import { useAuth } from '@/composables/useAuth'
-    import { useAutoItemsPerPage } from '@/composables/useAutoItemsPerPage'
 
     // Representative icon per attribute type.
     const TYPE_ICONS: Record<string, string> = {
@@ -127,11 +126,6 @@
 
     const asAttributeItem = (item: unknown): AttributeItem => item as AttributeItem
 
-    // The page holds as many rows as the viewport fits, so the footer's page-size select is
-    // hidden (see the scoped style below) - there is nothing left for it to choose.
-    const tableRef = ref<{ $el?: HTMLElement } | null>(null)
-    const { itemsPerPage, recalculate } = useAutoItemsPerPage(tableRef)
-
     const loadData = async (): Promise<void> => {
         loading.value = true
         try {
@@ -141,9 +135,6 @@
         } finally {
             loading.value = false
         }
-        // Rows only exist to measure once the data has rendered.
-        await nextTick()
-        recalculate()
     }
 
     const handleEdit = async (item: AttributeItem): Promise<void> => {
@@ -178,9 +169,3 @@
     onMounted(loadData)
 </script>
 
-<style scoped>
-    /* The page size is computed from the viewport, so the footer's selector is redundant. */
-    .auto-paged :deep(.v-data-table-footer__items-per-page) {
-        display: none;
-    }
-</style>

@@ -31,6 +31,7 @@
             <v-data-table
                 :headers="headers"
                 :items="filteredRecords"
+                :items-per-page="-1"                            
                 item-key="id"
                 class="elevation-1"
             >
