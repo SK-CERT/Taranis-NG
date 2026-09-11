@@ -804,6 +804,33 @@ describe('AttributeCVSS', () => {
         expect(wrapper.get('input').attributes('dir')).toBe('ltr')
         expect(wrapper.findComponent({ name: 'CalculatorCVSS' }).exists()).toBe(true)
     })
+
+    // The field is not focused while the calculator is open, so nothing blurs afterwards
+    // to save what it built — the vector has to be persisted from here.
+    it('saves the vector the calculator hands back', async () => {
+        const props = baseProps({ value: '' })
+        const wrapper = mountAttr(AttributeCVSS, props)
+        await flushPromises()
+        updateReportItem.mockClear()
+
+        await wrapper.findComponent({ name: 'CalculatorCVSS' }).vm.$emit('update:modelValue', cvssVector)
+        await flushPromises()
+
+        expect(props.values[0].value).toBe(cvssVector)
+        expect(updateReportItem).toHaveBeenCalledWith(42, expect.objectContaining({ update: true, attribute_value: cvssVector }))
+    })
+
+    it('does not re-send a vector the calculator left unchanged', async () => {
+        const props = baseProps({ value: cvssVector })
+        const wrapper = mountAttr(AttributeCVSS, props)
+        await flushPromises()
+        updateReportItem.mockClear()
+
+        await wrapper.findComponent({ name: 'CalculatorCVSS' }).vm.$emit('update:modelValue', cvssVector)
+        await flushPromises()
+
+        expect(updateReportItem).not.toHaveBeenCalled()
+    })
 })
 
 // ── AttributeRichText ─────────────────────────────────────────────────────────

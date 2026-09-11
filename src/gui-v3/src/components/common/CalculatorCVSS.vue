@@ -184,6 +184,7 @@
         getSeverityRating,
         buildScoreItems,
         calculateScoreItems,
+        hasSelectedMetrics,
         SEVERITY_COLORS
     } from './cvss-utils'
 
@@ -257,6 +258,10 @@
     const showTooltips = ref<boolean>(false)
     const cvssInstance = ref<any>(null)
     const vectorInput = ref<string>('')
+    // Whether the user changed anything since the dialog was opened. Without it, merely
+    // opening the calculator and closing it again would push this component's
+    // re-serialised vector back over a value nobody touched.
+    const touched = ref<boolean>(false)
 
     // Name-to-i18n-key mapping for metric names
     const NAME_TO_I18N: Record<string, string> = {
@@ -534,6 +539,7 @@
             cvssInstance.value.applyComponent(metric.component, val.value)
             triggerRef(cvssInstance)
             syncVectorInput()
+            touched.value = true
         }
     }
 
@@ -552,6 +558,7 @@
                 }
                 cvssInstance.value = newInstance
                 syncVectorInput()
+                touched.value = true
             } catch {
                 // invalid vector, ignore
             }
@@ -561,6 +568,7 @@
                 cvssInstance.value.applyVector(cleaned)
                 triggerRef(cvssInstance)
                 syncVectorInput()
+                touched.value = true
             } catch {
                 // invalid vector, ignore
             }
@@ -580,6 +588,7 @@
     })
 
     function openDialog(): void {
+        touched.value = false
         const value = stripParentheses(props.modelValue) ?? ''
         const detected = detectVersion(value)
 
@@ -602,8 +611,27 @@
         visible.value = true
     }
 
+    /**
+     * Hand the built vector to the parent. Skipped when the user changed nothing, and when
+     * the result carries no metric at all (a version was picked but nothing under it), so
+     * closing the calculator never clears or rewrites a value on its own.
+     */
+    function emitVector(): void {
+        if (!touched.value) return
+        const vector = vectorString.value
+        if (!hasSelectedMetrics(vector)) return
+        emit('update:modelValue', vector)
+    }
+
+    // ESC and a click on the backdrop close the dialog without going through cancel(), and
+    // used to drop the user's selections on the floor. Emit from the close itself instead.
+    watch(visible, (isOpen: boolean, wasOpen: boolean) => {
+        if (wasOpen && !isOpen) {
+            emitVector()
+        }
+    })
+
     function cancel(): void {
-        emit('update:modelValue', vectorString.value)
         visible.value = false
     }
 </script>

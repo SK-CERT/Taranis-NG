@@ -201,13 +201,16 @@ describe('CalculatorCVSS', () => {
 
     // ── Cancel / Emit ─────────────────────────────
     describe('cancel and emit', () => {
-        it('should emit update:modelValue with vector string on cancel', async () => {
-            const wrapper = mountCalculator({
-                modelValue: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H'
-            })
-
+        async function openAndEdit(wrapper, vector) {
             await wrapper.findComponent({ name: 'VBtn' }).trigger('click')
             await wrapper.vm.$nextTick()
+            wrapper.vm.onVectorInput(vector)
+            await wrapper.vm.$nextTick()
+        }
+
+        it('should emit update:modelValue with vector string on cancel', async () => {
+            const wrapper = mountCalculator()
+            await openAndEdit(wrapper, 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H')
 
             wrapper.vm.cancel()
             await wrapper.vm.$nextTick()
@@ -225,6 +228,52 @@ describe('CalculatorCVSS', () => {
             wrapper.vm.cancel()
             await wrapper.vm.$nextTick()
             expect(wrapper.vm.visible).toBe(false)
+        })
+
+        // ESC and a click on the backdrop bypass cancel(); they used to drop the
+        // user's selections silently.
+        it('should emit when the dialog is dismissed without the close button', async () => {
+            const wrapper = mountCalculator()
+            await openAndEdit(wrapper, 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H')
+
+            wrapper.vm.visible = false
+            await wrapper.vm.$nextTick()
+
+            const emitted = wrapper.emitted('update:modelValue')
+            expect(emitted).toBeDefined()
+            expect(emitted[emitted.length - 1][0]).toContain('CVSS:3.1')
+        })
+
+        it('should not emit when the user changed nothing', async () => {
+            const wrapper = mountCalculator({
+                modelValue: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H'
+            })
+
+            await wrapper.findComponent({ name: 'VBtn' }).trigger('click')
+            await wrapper.vm.$nextTick()
+
+            wrapper.vm.cancel()
+            await wrapper.vm.$nextTick()
+
+            expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+        })
+
+        // A fresh instance serialises to nothing but its version marker ("CVSS:3.1/");
+        // writing that into the field would be worse than writing nothing.
+        it('should not emit a vector that carries no metric', async () => {
+            const wrapper = mountCalculator()
+            await wrapper.findComponent({ name: 'VBtn' }).trigger('click')
+            await wrapper.vm.$nextTick()
+
+            wrapper.vm.selectedVersion = '4.0'
+            await wrapper.vm.$nextTick()
+            await wrapper.vm.$nextTick()
+            expect(wrapper.vm.vectorInput).toBe('CVSS:4.0/')
+
+            wrapper.vm.cancel()
+            await wrapper.vm.$nextTick()
+
+            expect(wrapper.emitted('update:modelValue')).toBeUndefined()
         })
     })
 

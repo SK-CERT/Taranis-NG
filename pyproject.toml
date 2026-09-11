@@ -251,4 +251,12 @@ max_line_length=142
 use_gitignore=true
 files=["src/presenters/templates/**/*.{html,jinja,j2}", "src/gui-v3/index.html"]
 extend_exclude="src/gui/"
-ignore="H021"
+# H021 (inline styles) and H036 (<br> for spacing) are unavoidable in the presenter
+# templates: they render in e-mail clients and PDF engines that strip or ignore
+# stylesheets, so the portable markup is the one djlint flags.
+# H024 fires only on pdf_template_legacy.html, whose bytes are frozen: its sha256 is
+# the entry in KNOWN_LEGACY_HASHES that lets promote_default_vulnerability.py
+# recognise an untouched legacy install. Tidying the markup there silently stops
+# those installs from being migrated, so the rule is ignored instead.
+# Keep in lockstep with .github/workflows/linting.yaml and .pre-commit-config.yaml.
+ignore="H021,H024,H036"

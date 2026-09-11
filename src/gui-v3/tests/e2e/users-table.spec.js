@@ -80,12 +80,28 @@ async function roleForProbes(playwright) {
     }
 }
 
+/**
+ * The users table. AccessManagementView mounts exactly one tab panel at a time, so the page
+ * holds a single data table once the Users tab is open. Located by Vuetify's own structural
+ * class, never by an app class: the hook this used to rely on existed only to hide the
+ * footer's page-size select, and vanished the day that selector came back.
+ */
+function usersTable(page) {
+    return page.locator('.v-data-table')
+}
+
 /** The row for one username, located by its bolded username cell. */
 function rowFor(page, username) {
-    return page
-        .locator('.auto-paged tbody tr')
+    return usersTable(page)
+        .locator('tbody tr')
         .filter({ has: page.locator('td strong').filter({ hasText: new RegExp(`^${username}$`) }) })
         .first()
+}
+
+/** Open the Users tab and wait for the list to have rendered its rows. */
+async function openUsersTab(page) {
+    await page.getByRole('tab', { name: 'Users' }).click()
+    await expect(usersTable(page).locator('tbody tr td strong').first()).toBeVisible()
 }
 
 test.describe('Access management - user list', () => {
@@ -100,8 +116,7 @@ test.describe('Access management - user list', () => {
     test.beforeEach(async ({ page }) => {
         await login(page)
         await page.goto(USERS_URL)
-        await page.getByRole('tab', { name: 'Users' }).click()
-        await page.waitForSelector('.auto-paged tbody tr td strong')
+        await openUsersTab(page)
     })
 
     test('shows roles and last login, and no status column', async ({ page, playwright }) => {
@@ -112,10 +127,9 @@ test.describe('Access management - user list', () => {
         await createUser(ctx.request, ctx.token, never)
         await ctx.request.dispose()
         await page.reload()
-        await page.getByRole('tab', { name: 'Users' }).click()
-        await page.waitForSelector('.auto-paged tbody tr td strong')
+        await openUsersTab(page)
 
-        const columns = (await page.locator('.auto-paged thead th').allInnerTexts()).map((t) => t.trim())
+        const columns = (await usersTable(page).locator('thead th').allInnerTexts()).map((t) => t.trim())
         expect(columns).toContain('Roles')
         expect(columns).toContain('Last login')
         expect(columns).not.toContain('Status')
@@ -138,8 +152,7 @@ test.describe('Access management - user list', () => {
         await createUser(ctx.request, ctx.token, active)
         await ctx.request.dispose()
         await page.reload()
-        await page.getByRole('tab', { name: 'Users' }).click()
-        await page.waitForSelector('.auto-paged tbody tr td strong')
+        await openUsersTab(page)
 
         const disabledRow = rowFor(page, disabled)
         await expect(disabledRow).toHaveClass(/user-disabled/)
