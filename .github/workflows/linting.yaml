@@ -44,7 +44,9 @@ jobs:
         # commit that caused it. Failing on the bump PR itself points at the fix.
         run: python3 scripts/check_tool_versions.py
       - name: Run djlint lint
-        run: uv run --group dev djlint src/presenters/templates src/gui-v3/index.html --lint --ignore=H021
+        # Keep --ignore in lockstep with [tool.djlint] in pyproject.toml and the djlint
+        # hook in .pre-commit-config.yaml; the CLI flag overrides the pyproject setting.
+        run: uv run --group dev djlint src/presenters/templates src/gui-v3/index.html --lint --ignore=H021,H024,H036
       - name: Run ruff lint check (changed files only)
         if: github.event_name == 'pull_request'
         # The legacy codebase is not yet clean under select = ["ALL"], so lint

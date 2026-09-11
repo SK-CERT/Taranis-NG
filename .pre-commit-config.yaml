@@ -16,7 +16,7 @@ repos:
     hooks:
       - id: djlint
         files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui-v3/index\\.html)$"
-        args: ["--ignore=H021"]
+        args: ["--ignore=H021,H024,H036"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
