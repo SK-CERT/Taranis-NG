@@ -4,7 +4,8 @@
         max-width="800"
         persistent
         scrollable
-        @keydown.esc="requestClose"
+        @keydown.esc.stop="requestClose"
+        @after-leave="resetForm"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton
@@ -28,6 +29,7 @@
                 <v-form
                     ref="formRef"
                     :disabled="!canSave"
+                    validate-on="submit"
                     @submit.prevent="saveAndClose"
                 >
                     <v-select
@@ -302,9 +304,7 @@
 
     // Watch dialog state
     watch(dialog, (newVal) => {
-        if (!newVal) {
-            resetForm()
-        } else {
+        if (newVal) {
             // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
             capture()
         }
@@ -348,9 +348,7 @@
         showValidationError.value = false
         showError.value = false
 
-        // Re-select the first node/publisher on every open. resetForm() (called on close) nulls
-        // these, so without re-seeding here the second+ open shows ONLY the Publishers Node field
-        // (the publisher select / parameter fields are gated behind v-if="selectedNode/selectedPublisher").
+        // Re-select the first node/publisher on every create open so the form starts fresh.
         selectedNode.value = nodes.value[0] ?? null
         selectedPublisher.value = selectedNode.value?.publishers?.[0] ?? null
         // Initialize parameter values synchronously from the freshly-selected publisher's defaults

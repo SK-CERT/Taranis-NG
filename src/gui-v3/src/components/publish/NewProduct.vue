@@ -3,7 +3,8 @@
         v-model="visible"
         fullscreen
         persistent
-        @keydown.esc="handleCancel"
+        @keydown.esc.stop="handleCancel"
+        @after-leave="resetForm"
     >
         <!-- Confirmation dialogs -->
         <v-dialog
@@ -162,6 +163,7 @@
             <v-card-text class="pa-4 overflow-y-auto bg-background">
                 <v-form
                     ref="formRef"
+                    validate-on="submit"
                     @submit.prevent="handleSave"
                 >
                     <v-row>
@@ -705,7 +707,6 @@
 
     function closeDialog(): void {
         visible.value = false
-        resetForm()
     }
 
     function handlePublishConfirmation(): void {

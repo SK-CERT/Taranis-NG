@@ -5,7 +5,7 @@
         max-width="980"
         max-height="88vh"
         scrollable
-        @keydown.esc="close"
+        @keydown.esc.stop="close"
     >
         <v-card class="user-settings-dialog">
             <v-toolbar

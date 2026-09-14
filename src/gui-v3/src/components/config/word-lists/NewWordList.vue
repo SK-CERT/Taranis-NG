@@ -4,7 +4,8 @@
         max-width="1200"
         persistent
         scrollable
-        @keydown.esc="requestClose"
+        @keydown.esc.stop="requestClose"
+        @after-leave="resetForm"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton
@@ -26,6 +27,7 @@
                 <v-form
                     ref="formRef"
                     :disabled="!canSave"
+                    validate-on="submit"
                     @submit.prevent="saveAndClose"
                 >
                     <v-row>
@@ -307,9 +309,7 @@
 
     // Watch dialog state
     watch(dialog, (newVal) => {
-        if (!newVal) {
-            resetForm()
-        } else {
+        if (newVal) {
             // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
             capture()
         }
