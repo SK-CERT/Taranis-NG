@@ -38,9 +38,14 @@ class AddNewsItem(Resource):
     @auth_required("ASSESS_CREATE")
     def post(self) -> None:
         """Add a news item."""
-        osint_source_ids = NewsItemAggregate.add_news_item(request.json)
-        sse_manager.news_items_updated()
-        sse_manager.remote_access_news_items_updated(osint_source_ids)
+        try:
+            osint_source_ids = NewsItemAggregate.add_news_item(request.json)
+            sse_manager.news_items_updated()
+            sse_manager.remote_access_news_items_updated(osint_source_ids)
+        except Exception as ex:
+            msg = "Post AddNewsItem failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 class NewsItemsByGroup(Resource):

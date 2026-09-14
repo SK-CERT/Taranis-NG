@@ -3,7 +3,7 @@
         v-model="visible"
         fullscreen
         persistent
-        @keydown.esc="handleClose"
+        @keydown.esc.stop="handleClose"
     >
         <v-card class="remote-report">
             <v-toolbar color="primary">

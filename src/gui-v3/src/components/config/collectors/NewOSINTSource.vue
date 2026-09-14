@@ -4,7 +4,8 @@
         max-width="1000"
         persistent
         scrollable
-        @keydown.esc="requestClose"
+        @keydown.esc.stop="requestClose"
+        @after-leave="resetFormState"
     >
         <template
             v-if="!hideActivator"
@@ -31,6 +32,7 @@
                 <v-form
                     ref="formRef"
                     :disabled="!canSave"
+                    validate-on="submit"
                     @submit.prevent="saveAndClose"
                 >
                     <v-select
@@ -672,9 +674,7 @@
     })
 
     watch(dialog, (newValue) => {
-        if (!newValue) {
-            resetFormState()
-        } else {
+        if (newValue) {
             // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
             capture()
         }

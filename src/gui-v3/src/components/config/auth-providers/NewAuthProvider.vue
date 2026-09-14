@@ -5,7 +5,8 @@
         persistent
         scrollable
         :aria-label="dialogTitle"
-        @keydown.esc="requestClose"
+        @keydown.esc.stop="requestClose"
+        @after-leave="resetForm"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton
@@ -25,6 +26,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    validate-on="submit"
                     @submit.prevent="saveAndClose"
                 >
                     <v-alert
@@ -758,9 +760,7 @@
     )
 
     watch(dialog, (newVal) => {
-        if (!newVal) {
-            resetForm()
-        } else {
+        if (newVal) {
             capture()
         }
         emit('update:modelValue', newVal)
