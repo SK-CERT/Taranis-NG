@@ -12,7 +12,7 @@ repos:
       - id: ty
 
   - repo: https://github.com/djlint/djLint
-    rev: v1.45.2
+    rev: v1.46.1
     hooks:
       - id: djlint
         files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui-v3/index\\.html)$"
