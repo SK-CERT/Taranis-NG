@@ -3,6 +3,11 @@
 A preset that names a key file is asking for the report to be protected. The
 question these ask is what happens when that file cannot be read: the answer
 has to be a failed publish, never a message that goes out unprotected.
+
+They work against the ``FakeEnvelope`` in conftest, which records the key material the
+publisher applied. Whether the library then produces a correctly signed message is not
+covered anywhere: ``M2Crypto`` is installed in neither the test environment nor the
+publishers image, so S/MIME cannot actually run here.
 """
 
 from __future__ import annotations
@@ -16,84 +21,10 @@ from typing import TYPE_CHECKING
 import pytest
 from publishers.email_publisher import EMAILPublisher
 
-from publishers import email_publisher
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-
-class FakeEnvelope:
-    """Stand-in for ``envelope.Envelope``, recording what protection was applied."""
-
-    last: FakeEnvelope | None = None
-
-    def __init__(self) -> None:
-        """Register this instance and start with nothing applied."""
-        self.signed_with: str | None = None
-        self.signed_passphrase: str | None = None
-        self.encrypted_with: str | None = None
-        self.sent = False
-        FakeEnvelope.last = self
-
-    def signature(self, key: str | None = None, passphrase: str | None = None) -> FakeEnvelope:
-        """Record the signing key and its passphrase."""
-        self.signed_with = key
-        self.signed_passphrase = passphrase
-        return self
-
-    def encryption(self, key: str | None = None) -> FakeEnvelope:
-        """Record the encryption key."""
-        self.encrypted_with = key
-        return self
-
-    def send(self) -> bool:
-        """Pretend the message went out."""
-        self.sent = True
-        return True
-
-    def __getattr__(self, name: str) -> Callable[..., FakeEnvelope]:
-        """Accept every other envelope call (message, subject, attach, smtp...)."""
-        return lambda *_args, **_kwargs: self
-
-    @staticmethod
-    def smtp_quit() -> None:
-        """Close the SMTP session."""
-
-    def __str__(self) -> str:
-        """Render the composed message for the publisher's debug log."""
-        return "<envelope>"
-
-
-@pytest.fixture
-def envelope(monkeypatch: pytest.MonkeyPatch) -> type[FakeEnvelope]:
-    """Replace the envelope the publisher builds."""
-    FakeEnvelope.last = None
-    monkeypatch.setattr(email_publisher, "Envelope", FakeEnvelope)
-    return FakeEnvelope
-
-
-@pytest.fixture
-def email_preset(publisher_input: Callable[..., object]) -> Callable[..., object]:
-    """Build an email preset, overriding only what a test cares about."""
-
-    def _build(**overrides: str) -> object:
-        values = {
-            "SMTP_SERVER": "smtp.example.org",
-            "SMTP_SERVER_PORT": "587",
-            "EMAIL_USERNAME": "taranis",
-            "EMAIL_PASSWORD": "hunter2",
-            "EMAIL_SENDER": "taranis@example.org",
-            "EMAIL_RECIPIENT": "constituency@example.org",
-            "EMAIL_SUBJECT": "Security Warning",
-            "EMAIL_MESSAGE": "See attached.",
-            "EMAIL_SIGN": "",
-            "EMAIL_SIGN_PASSWORD": "",
-            "EMAIL_ENCRYPT": "",
-        }
-        values.update(overrides)
-        return publisher_input(**values)
-
-    return _build
+    from conftest import FakeEnvelope
 
 
 @pytest.fixture

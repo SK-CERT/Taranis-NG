@@ -79,6 +79,15 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
+    ignore:
+      # envelope 2.4.0 reports a delivered e-mail as failed: its new _send_now()
+      # treats the empty "nobody was refused" result of smtplib.send_message() as a
+      # failure, so the EMAIL publisher logs "Email sending failed" on every send.
+      # Upstream issue: https://github.com/CZ-NIC/envelope/issues/57. Only that
+      # release is blocked - a later fixed one may be bumped in.
+      # src/public_web pins envelope too and shares the pattern; it has no entry here.
+      - dependency-name: "envelope"
+        versions: ["2.4.0"]
   - package-ecosystem: "npm"
     directory: "/src/gui"
     schedule:
