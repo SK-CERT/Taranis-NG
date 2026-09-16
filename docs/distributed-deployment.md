@@ -745,10 +745,7 @@ be fixed.
   that every satellite-generated connection lands on one restrictable port.
   Long-lived connection — intermediate proxies must allow keep-alive and not
   buffer.
-- **"Cannot move source to collector of type ... (source is bound to type
-  ...)"**: you tried to move a work item between workers of different types.
-  Move only works within the same `type` — re-create the source on the new
-  collector instead.
+
 
 ## Relevant files
 

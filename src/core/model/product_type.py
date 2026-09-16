@@ -15,7 +15,8 @@ import sqlalchemy
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
-from model.parameter_value import NewParameterValueSchema
+from model.parameter import Parameter
+from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.presenter import Presenter
 from model.product import Product
 from shared.schema.acl_entry import ItemType
@@ -225,33 +226,32 @@ class ProductType(db.Model):
         product_type.title = updated_product_type.title
         product_type.description = updated_product_type.description
 
-        # Reassign the product type to a different presenter (and possibly a
-        # different presenters node) when the operator changed presenter_id
-        # via the GUI. The target presenter must already exist and be of the
-        # same type as the current presenter so that the parameter set is
-        # compatible. Parameter values are re-mapped by parameter.key.
         if updated_product_type.presenter_id and updated_product_type.presenter_id != product_type.presenter_id:
             target_presenter = db.session.get(Presenter, updated_product_type.presenter_id)
             if target_presenter is None:
                 msg = f"Target presenter {updated_product_type.presenter_id} not found"
                 raise ValueError(msg)
-            if target_presenter.type != product_type.presenter.type:
-                msg = (
-                    f"Cannot move product type to presenter of type '{target_presenter.type}' "
-                    f"(product type is bound to type '{product_type.presenter.type}')"
-                )
-                raise ValueError(msg)
             product_type.presenter_id = target_presenter.id
-            for pv in product_type.parameter_values:
-                for target_param in target_presenter.parameters:
-                    if pv.parameter.key == target_param.key:
-                        pv.parameter_id = target_param.id
-                        break
 
+        # existing parameters are updated
         for value in product_type.parameter_values:
             for updated_value in updated_product_type.parameter_values:
                 if value.parameter_id == updated_value.parameter_id:
                     value.value = updated_value.value
+        # create missing parameters (re-save old version, re-assigning no new type)
+        id_param_lookup = {param.parameter.id: param for param in product_type.parameter_values}
+        for par in updated_product_type.parameter_values:
+            if par.parameter_id not in id_param_lookup:
+                param = Parameter.find(par.parameter_id)
+                new_parameter_value = ParameterValue(par.value, param)
+                product_type.parameter_values.append(new_parameter_value)
+        # delete removed parameters
+        for value in product_type.parameter_values:
+            for updated_value in updated_product_type.parameter_values:
+                if value.parameter_id == updated_value.parameter_id:
+                    break
+            else:
+                db.session.delete(value)
 
         db.session.commit()
 
