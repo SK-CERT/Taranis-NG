@@ -117,7 +117,7 @@ testpaths = [
 pythonpath = ["src/core", "src/shared"]
 
 [tool.ruff]
-required-version = "0.16.6"
+required-version = "0.16.7"
 line-length = 142
 target-version = "py313"
 fix = true
