@@ -195,7 +195,15 @@ class Product(db.Model):
             dict: Product detail
         """
         product = db.session.get(cls, product_id)
-        product.public_web_ids = [web.id for web in product.public_webs] if product else []
+        if product:
+            product.public_web_ids = [web.id for web in product.public_webs]
+            # get_json() marks every report item of a product the user may see as
+            # accessible; the GUI's report cards only open the detail dialog when
+            # card.access is true, so the detail payload must carry the same flags.
+            for report_item in product.report_items:
+                report_item.see = True
+                report_item.access = True
+                report_item.modify = True
         products_schema = ProductPresentationSchema()
         return products_schema.dump(product)
 
