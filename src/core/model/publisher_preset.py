@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 
 from managers.db_manager import db
 from marshmallow import fields, post_load
-from model.parameter_value import NewParameterValueSchema
+from model.parameter import Parameter
+from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.publisher import Publisher
 from shared.schema.publisher_preset import PublisherPresetPresentationSchema, PublisherPresetSchema
 from sqlalchemy import or_, orm
 
 if TYPE_CHECKING:
-    from model.parameter_value import ParameterValue
     from model.publishers_node import PublishersNode
 
 
@@ -204,31 +204,32 @@ class PublisherPreset(db.Model):
         preset.name = updated_preset.name
         preset.description = updated_preset.description
 
-        # Reassign the preset to a different publisher (and possibly a different
-        # publishers node) when the operator changed publisher_id via the GUI.
-        # The target publisher must already exist and be of the same type as
-        # the current publisher so that the parameter set is compatible.
-        # Parameter values are re-mapped by parameter.key.
         if updated_preset.publisher_id and updated_preset.publisher_id != preset.publisher_id:
             target_publisher = db.session.get(Publisher, updated_preset.publisher_id)
             if target_publisher is None:
                 msg = f"Target publisher {updated_preset.publisher_id} not found"
                 raise ValueError(msg)
-            if target_publisher.type != preset.publisher.type:
-                msg = f"Cannot move preset to publisher of type '{target_publisher.type}' (preset is bound to type '{preset.publisher.type}')"
-                raise ValueError(msg)
             preset.publisher_id = target_publisher.id
-            for pv in preset.parameter_values:
-                for target_param in target_publisher.parameters:
-                    if pv.parameter.key == target_param.key:
-                        pv.parameter_id = target_param.id
-                        break
 
+        # existing parameters are updated
         for value in preset.parameter_values:
             for updated_value in updated_preset.parameter_values:
                 if value.parameter_id == updated_value.parameter_id:
                     value.value = updated_value.value
-
+        # create missing parameters (re-save old version, re-assigning no new type)
+        id_param_lookup = {param.parameter.id: param for param in preset.parameter_values}
+        for par in updated_preset.parameter_values:
+            if par.parameter_id not in id_param_lookup:
+                param = Parameter.find(par.parameter_id)
+                new_parameter_value = ParameterValue(par.value, param)
+                preset.parameter_values.append(new_parameter_value)
+        # delete removed parameters
+        for value in preset.parameter_values:
+            for updated_value in updated_preset.parameter_values:
+                if value.parameter_id == updated_value.parameter_id:
+                    break
+            else:
+                db.session.delete(value)
         db.session.commit()
 
 
