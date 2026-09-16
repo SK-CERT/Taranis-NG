@@ -1,5 +1,6 @@
 """Publisher for publishing by email."""
 
+import binascii
 import mimetypes
 from base64 import b64decode
 from datetime import datetime
@@ -15,6 +16,31 @@ from shared.log_manager import logger
 from shared import mail_headers
 
 from .base_publisher import BasePublisher
+
+
+def decode_message_text(value: str) -> str:
+    r"""Return a presenter's base64 title or body, or a notification template's text unchanged.
+
+    The two callers encode differently. A product publish goes through a presenter, and
+    ``BasePresenter.render_jinja`` base64-encodes every render. An asset notification has no
+    presenter: core hands over the ``notification_template`` columns verbatim, and decoding
+    those raised ``binascii.Error`` out of ``publish()`` as an unexplained 500.
+
+    ``validate=True`` rejects the spaces and punctuation of ordinary prose, and the UTF-8 check
+    rejects a short word that happens to be valid base64 ("Test" decodes to b'M\xeb-'). A plain
+    title that survives both - a lone base64-looking word such as "dGVzdA==" - is genuinely
+    ambiguous and is read as base64.
+
+    Args:
+        value (str): The title or body as it arrived from core.
+
+    Returns:
+        str: The decoded text, or the original when it was never base64.
+    """
+    try:
+        return b64decode(value, validate=True).decode("UTF-8")
+    except (binascii.Error, UnicodeDecodeError):
+        return value
 
 
 class EMAILPublisher(BasePublisher):
@@ -104,12 +130,12 @@ class EMAILPublisher(BasePublisher):
             # it is possible to attach multiple files
             envelope.attach(attachment_list)
 
-        # when title available from presenter
+        # when title available from presenter (or from a notification template, unencoded)
         if publisher_input.message_title:
-            subject = b64decode(publisher_input.message_title).decode("UTF-8")
-        # when body available from presenter
+            subject = decode_message_text(publisher_input.message_title)
+        # when body available from presenter (or from a notification template, unencoded)
         if publisher_input.message_body:
-            message = b64decode(publisher_input.message_body).decode("UTF-8")
+            message = decode_message_text(publisher_input.message_body)
 
         if not message:
             envelope.message(" ")

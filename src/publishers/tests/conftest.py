@@ -30,6 +30,7 @@ from cryptography.hazmat.primitives.asymmetric import ec, ed25519, rsa
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from typing import ClassVar
 
 # Make the service importable when the suite runs from the repo root (the
 # aggregate testpaths config) as well as from src/publishers. This one goes to
@@ -138,3 +139,124 @@ def publisher_input() -> Callable[..., types.SimpleNamespace]:
         )
 
     return _build
+
+
+# What an operator fills in for a working email preset. A test overrides the one or two
+# values it is about, so the rest of the preset stays out of the way of what it asserts.
+EMAIL_PRESET_VALUES = {
+    "SMTP_SERVER": "smtp.example.org",
+    "SMTP_SERVER_PORT": "587",
+    "EMAIL_USERNAME": "taranis",
+    "EMAIL_PASSWORD": "hunter2",
+    "EMAIL_SENDER": "taranis@example.org",
+    "EMAIL_RECIPIENT": "constituency@example.org",
+    "EMAIL_SUBJECT": "Security Warning",
+    "EMAIL_MESSAGE": "See attached.",
+    "EMAIL_SIGN": "",
+    "EMAIL_SIGN_PASSWORD": "",
+    "EMAIL_ENCRYPT": "",
+}
+
+
+@pytest.fixture
+def email_preset(publisher_input: Callable[..., types.SimpleNamespace]) -> Callable[..., types.SimpleNamespace]:
+    """Build an email preset, overriding only what a test cares about.
+
+    Preset parameters and payload fields are told apart by case, the way they are named in
+    the product: ``EMAIL_SUBJECT`` is what the operator configured, ``message_title`` is what
+    core sent for this one publication.
+
+    Returns:
+        Callable: Takes ``UPPERCASE`` preset parameters and lowercase ``PublisherInput``
+            payload fields as keyword arguments, and returns the input object.
+    """
+
+    def _build(**overrides: object) -> types.SimpleNamespace:
+        values = dict(EMAIL_PRESET_VALUES)
+        payload = {}
+        for key, value in overrides.items():
+            if key.isupper():
+                values[key] = value
+            else:
+                payload[key] = value
+
+        preset = publisher_input(**values)
+        for field, value in payload.items():
+            # SimpleNamespace takes any attribute, so a typo would just sit there unread.
+            if not hasattr(preset, field):
+                msg = f"{field!r} is not a PublisherInput payload field"
+                raise AttributeError(msg)
+            setattr(preset, field, value)
+        return preset
+
+    return _build
+
+
+class FakeEnvelope:
+    """Stand-in for ``envelope.Envelope``, recording what the publisher asked of it.
+
+    For the tests that are about the publisher's own decisions: which headers it passes on,
+    which key material it applies, whether it sent at all. The tests about the message that
+    actually goes out drive the real envelope over a stub SMTP server instead, in
+    ``test_email_publisher_delivery.py`` - a fake cannot tell you what the library produced.
+    """
+
+    last: FakeEnvelope | None = None
+    # Set on the class before publishing to make the next envelope's header() raise; the
+    # publisher builds its own envelope, so a test cannot reach the instance in time.
+    header_error: ClassVar[Exception | None] = None
+
+    def __init__(self) -> None:
+        """Register this instance and start with nothing applied."""
+        self.headers: list[tuple[str, str]] = []
+        self.signed_with: str | None = None
+        self.signed_passphrase: str | None = None
+        self.encrypted_with: str | None = None
+        self.sent = False
+        FakeEnvelope.last = self
+
+    def header(self, key: str, val: str | None = None) -> FakeEnvelope:
+        """Record a header. Overrides the catch-all below, which would swallow the call."""
+        if FakeEnvelope.header_error is not None:
+            raise FakeEnvelope.header_error
+        self.headers.append((key, val))
+        return self
+
+    def signature(self, key: str | None = None, passphrase: str | None = None) -> FakeEnvelope:
+        """Record the signing key and its passphrase."""
+        self.signed_with = key
+        self.signed_passphrase = passphrase
+        return self
+
+    def encryption(self, key: str | None = None) -> FakeEnvelope:
+        """Record the encryption key."""
+        self.encrypted_with = key
+        return self
+
+    def send(self) -> bool:
+        """Pretend the message went out."""
+        self.sent = True
+        return True
+
+    def __getattr__(self, name: str) -> Callable[..., FakeEnvelope]:
+        """Accept every other envelope call (message, subject, attach, smtp...)."""
+        return lambda *_args, **_kwargs: self
+
+    @staticmethod
+    def smtp_quit() -> None:
+        """Close the SMTP session."""
+
+    def __str__(self) -> str:
+        """Render the composed message for the publisher's debug log."""
+        return "<envelope>"
+
+
+@pytest.fixture
+def envelope(monkeypatch: pytest.MonkeyPatch) -> type[FakeEnvelope]:
+    """Replace the envelope the publisher builds."""
+    FakeEnvelope.last = None
+    # By name, so conftest needs no import of the service module before the config stub
+    # above is in place. The knob goes through monkeypatch to be restored after the test.
+    monkeypatch.setattr("publishers.email_publisher.Envelope", FakeEnvelope)
+    monkeypatch.setattr(FakeEnvelope, "header_error", None)
+    return FakeEnvelope
