@@ -18,7 +18,8 @@ collections:
   # selfsigned.
   - name: community.crypto
     version: ">=2.0.0"
-  # ufw, for opening 80/443 on Debian-family worker hosts.
+  # ufw, used by taranis-ng-worker to open the worker's ports and by
+  # taranis-ng-firewall for the whole host policy, on Debian-family hosts.
   - name: community.general
     version: ">=7.0.0"
   # firewalld, for the same on the RedHat family.

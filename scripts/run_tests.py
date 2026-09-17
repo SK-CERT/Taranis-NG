@@ -33,19 +33,20 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-VENV_BIN = REPO_ROOT / ".venv" / "bin"
+VENV_BIN = REPO_ROOT / ".venv" / ("Scripts" if os.name == "nt" else "bin")
 GUI_DIR = REPO_ROOT / "src" / "gui-v3"
 
 # Projects with a pytest suite, as directories under src/. Keep in sync with `testpaths`
 # in the root pyproject.toml, which is what editors use. The other services have no
 # tests yet - see "Known gaps" in docs/testing.md.
-PYTEST_SUITES: tuple[str, ...] = ("core", "shared", "presenters", "public_web")
+PYTEST_SUITES: tuple[str, ...] = ("core", "shared", "collectors", "presenters", "public_web", "publishers")
 
 DEFAULT_SUITES: tuple[str, ...] = ("pytest", "vitest", "ansible")
 ALL_SUITES: tuple[str, ...] = (*DEFAULT_SUITES, "e2e")

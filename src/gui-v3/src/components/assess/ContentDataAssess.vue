@@ -191,7 +191,7 @@
         }
     )
 
-    const emit = defineEmits(['new-data-loaded', 'card-items-reindex', 'update-showing-count'])
+    const emit = defineEmits(['new-data-loaded', 'card-items-reindex', 'update-showing-count', 'show-detail'])
 
     const { t } = useI18n()
     const { formatNumber } = useLocaleFormatters()
@@ -312,6 +312,7 @@
     }
 
     const showDetail = (news_item: NewsItem): void => {
+        emit('show-detail', news_item)
         selectedItem.value = news_item
         detailDialog.value = true
     }

@@ -24,6 +24,22 @@ export default defineConfig(({ mode }) => {
         }
     }
 
+    const apiProxyTarget = getProxyTarget(apiBaseUrl)
+
+    // `changeOrigin` rewrites the Host header to the backend, but leaves the browser's
+    // Origin (http://localhost:4444) untouched. Core's redirect-login redemption endpoint
+    // refuses a request whose Origin does not match its own host, so that mismatch made
+    // every visit to /login answer 403 and raise a login error banner. As far as the
+    // backend is concerned the proxy *is* the origin, so present the Host and the Origin
+    // consistently. Only rewrite a header the browser actually sent.
+    const alignOriginWithHost = (target) => (proxy) => {
+        proxy.on('proxyReq', (proxyReq) => {
+            if (proxyReq.getHeader('origin')) {
+                proxyReq.setHeader('origin', target)
+            }
+        })
+    }
+
     return {
         plugins: [
             vue(),
@@ -47,10 +63,11 @@ export default defineConfig(({ mode }) => {
             proxy: {
                 // Proxy API calls during development
                 '/api': {
-                    target: getProxyTarget(apiBaseUrl),
+                    target: apiProxyTarget,
                     rewrite: (path) => path,
                     changeOrigin: true,
-                    secure: false
+                    secure: false,
+                    configure: alignOriginWithHost(apiProxyTarget)
                 },
                 '/sse': {
                     target: getProxyTarget(sseBaseUrl),

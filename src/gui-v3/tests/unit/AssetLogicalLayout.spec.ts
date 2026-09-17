@@ -155,9 +155,14 @@ describe('asset dialog logical layout', () => {
             global: { stubs: { ...layoutStubs, VCombobox: false, VTextField: false } }
         })
 
-        const inputs = wrapper.findAll('input')
-        expect(inputs[0]!.attributes('dir')).toBe('ltr')
-        expect(inputs[1]!.attributes('dir')).toBe('auto')
+        // Select by the attribute under test, never by position. CpeEditor renders an input
+        // per dialog (CPE combobox, description, CSV file) plus whatever the table draws, and
+        // which of those exist depends on which Vuetify components this test leaves stubbed -
+        // so an ordinal index silently points at a different field when any of that shifts.
+        const ltrInputs = wrapper.findAll('input[dir="ltr"]')
+        const autoInputs = wrapper.findAll('input[dir="auto"]')
+        expect(ltrInputs).toHaveLength(1)
+        expect(autoInputs).toHaveLength(1)
         expect(wrapper.get('bdi[dir="ltr"]').text()).toBe(row.value)
         expect(wrapper.get('bdi[dir="auto"]').text()).toBe(row.description)
         expect(wrapper.props('modelValue')).toEqual([row])

@@ -23,7 +23,7 @@ from model.osint_source import OSINTSource, OSINTSourceGroup
 from model.setting import Setting
 from model.tag_cloud import TagCloud
 from shared.attribute_extraction import ExtractionRule, extract_attributes
-from shared.common import TZ, remove_empty_html_tags, simplify_html_text, smart_truncate, strip_html
+from shared.common import TZ, remove_empty_html_tags, resolve_relative_links, simplify_html_text, smart_truncate, strip_html
 from shared.schema.acl_entry import ItemType
 from shared.schema.news_item import NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemDataSchema, NewsItemRemoteSchema, NewsItemSchema
 from sqlalchemy import and_, func, or_, orm
@@ -1117,7 +1117,8 @@ class NewsItemAggregate(db.Model):
         # sanitize news item from user manual input
         news_item_data.title = smart_truncate(strip_html(news_item_data.title), 200)
         news_item_data.review = smart_truncate(strip_html(news_item_data.review))
-        news_item_data.content = remove_empty_html_tags(simplify_html_text(news_item_data.content))
+        content = simplify_html_text(news_item_data.content)
+        news_item_data.content = remove_empty_html_tags(resolve_relative_links(content, news_item_data.link))
         news_item_data.author = strip_html(news_item_data.author)
         # Manually entered items never pass through a collector, so extraction is applied
         # here instead. This is the single place a manual item is created, and the text has

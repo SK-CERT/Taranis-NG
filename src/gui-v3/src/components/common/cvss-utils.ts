@@ -60,6 +60,24 @@ export function stripParentheses(vector: string | null | undefined): string | nu
     return vector.replace(/^\(/, '').replace(/\)$/, '')
 }
 
+/**
+ * True when the vector names at least one metric the user actually picked.
+ *
+ * A freshly created calculator instance stringifies to nothing but its version marker
+ * ("CVSS:3.1/", and "" for 2.0), and one whose metrics were all reset reads as
+ * "CVSS:3.1/AV:X/AC:X/...". Neither says anything, so neither may be written over a
+ * stored vector just because somebody opened the calculator and closed it again.
+ */
+export function hasSelectedMetrics(vector: string | null | undefined): boolean {
+    const cleaned = stripParentheses(vector)?.trim()
+    if (!cleaned) return false
+    return cleaned.split('/').some((segment) => {
+        const [name, value] = segment.split(':')
+        // "CVSS:3.1" is the version marker, not a metric; "X" means "not defined".
+        return Boolean(name) && name !== 'CVSS' && Boolean(value) && value !== 'X'
+    })
+}
+
 export function detectVersion(vector: string | null | undefined): CvssVersion | null {
     if (!vector) return null
     const v = stripParentheses(vector)

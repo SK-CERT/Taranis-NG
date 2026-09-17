@@ -4,6 +4,7 @@
         max-width="760"
         persistent
         scrollable
+        @keydown.esc.stop="close"
     >
         <v-card>
             <DialogToolbar

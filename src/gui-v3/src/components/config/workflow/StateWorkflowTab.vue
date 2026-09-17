@@ -31,6 +31,7 @@
             <v-data-table
                 :headers="headers"
                 :items="filteredRecords"
+                :items-per-page="-1"
                 item-key="id"
                 class="elevation-1"
             >
@@ -114,7 +115,7 @@
 
         <!-- Edit Dialog - Simplified -->
         <!-- `persistent`: blocks Vuetify's native close-on-Escape so Escape routes only
-             through @keydown.esc="requestClose" (the unsaved-changes guard). Without it,
+             through @keydown.esc.stop="requestClose" (the unsaved-changes guard). Without it,
              Escape both opens the prompt AND closes this dialog — the prompt (rendered
              inside this dialog) unmounts mid-click, so "Close without saving" detaches. -->
         <v-dialog
@@ -122,7 +123,7 @@
             max-width="700"
             persistent
             scrollable
-            @keydown.esc="requestClose"
+            @keydown.esc.stop="requestClose"
         >
             <v-card>
                 <DialogToolbar
@@ -316,6 +317,7 @@
 
     function getEntityTypeColor(entityType: EntityType): string {
         const colors = {
+            // Data defaults for user-created entities, deliberately theme-independent.
             report_item: '#2196F3',
             product: '#4CAF50'
         }

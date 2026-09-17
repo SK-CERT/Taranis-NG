@@ -357,7 +357,9 @@
         "not_available": "Kullanılamıyor",
         "aggregated_items_count": "Birleştirilmiş haber öğesi yok | {count} birleştirilmiş haber öğesi | {count} birleştirilmiş haber öğesi",
         "in_analyze_count": "Devam eden analiz yok | Devam eden {count} analiz | Devam eden {count} analiz",
-        "analyzed_count": "Tamamlanmış analiz yok | {count} tamamlanmış analiz | {count} tamamlanmış analiz"
+        "analyzed_count": "Tamamlanmış analiz yok | {count} tamamlanmış analiz | {count} tamamlanmış analiz",
+        "next_run": "Sonraki çalışma",
+        "state": "Durum"
     },
     "attribute": {
         "add_constant": "Sabit ekle",
@@ -1017,6 +1019,7 @@
     "settings": {
         "user_settings": "Kullanıcı ayarları",
         "tab_general": "Genel",
+        "tab_theme": "Tema",
         "tab_security": "Güvenlik",
         "tab_wordlists": "Sözcük listeleri",
         "tab_hotkeys": "Kısayol tuşları",
@@ -1079,6 +1082,7 @@
         "DATE_FORMAT": "Tarih biçimi",
         "HOTKEYS": "Kısayol tuşlarını etkinleştir",
         "UI_LANGUAGE": "Kullanıcı arabirimi dili",
+        "UI_THEME": "Kullanıcı arayüzü teması",
         "CONTENT_DEFAULT_LANGUAGE": "Raporlar ve ürünler için varsayılan dil",
         "REPORT_SELECTOR_READ_ONLY": "Rapor öğesi seçicisini salt okunur modda aç",
         "SPELLCHECK": "Yazım denetimi",
@@ -1237,7 +1241,15 @@
         "details": "Ayrıntılar",
         "actions": "İşlemler",
         "close": "Kapat",
-        "use_suggested": "Önerilen değeri kullan"
+        "use_suggested": "Önerilen değeri kullan",
+        "collect_now": "Şimdi topla",
+        "node_status": {
+            "alive": "Erişilebilir",
+            "late": "Yavaş yanıt veriyor",
+            "unreachable": "Erişilemiyor",
+            "never_seen": "Hiç bağlanmadı",
+            "last_seen": "son görülme"
+        }
     },
     "collectors": {
         "groups": {
@@ -1280,6 +1292,7 @@
             "total_count": "OSINT kaynağı yok | {count} OSINT kaynağı | {count} OSINT kaynağı",
             "osint_source_groups": "OSINT kaynak grupları",
             "tooltip": {
+                "toggle_selection": "OSINT kaynakları seçim modunu aç/kapat",
                 "select_all": "Tümünü seç",
                 "unselect_all": "Tüm seçimleri kaldır"
             },
@@ -1298,9 +1311,26 @@
             "file": "İçe aktarma dosyası",
             "file_required": "Bir içe aktarma dosyası seçin",
             "node_required": "Bir toplayıcı düğümü seçin",
-            "export_all_hint": "Tüm kaynakları dışa aktar",
             "export_selected_hint": "Seçili kaynakları dışa aktar",
-            "selected_count": "OSINT kaynağı seçilmedi | {count} OSINT kaynağı seçildi | {count} OSINT kaynağı seçildi"
+            "selected_count": "OSINT kaynağı seçilmedi | {count} OSINT kaynağı seçildi | {count} OSINT kaynağı seçildi",
+            "collecting": "Toplanıyor…",
+            "disabled": "Devre dışı",
+            "collect_started": "Toplama başlatıldı",
+            "collect_error": "Toplama başlatılamadı",
+            "collect_conflict": "Bu kaynak zaten toplanıyor",
+            "enable_error": "Kaynağın durumu değiştirilemedi",
+            "enabled": "Etkin",
+            "due": "Bekliyor",
+            "state_error": "Hata",
+            "state_stale": "Eskimiş",
+            "state_pending": "Beklemede",
+            "none": "Bu düğümde OSINT kaynağı yok",
+            "group_all": "Tümü",
+            "group_uncategorized": "Kategorisiz",
+            "delete_selected_hint": "Seçili kaynakları sil",
+            "delete_selected_confirm": "Seçili {count} kaynak silinsin mi? Bu işlem geri alınamaz.",
+            "delete_selected_success": "Seçili kaynaklar silindi",
+            "delete_selected_error": "Bazı seçili kaynaklar silinemedi"
         },
         "nodes": {
             "tab_description": "Toplayıcı düğümleri buradan yönetilebilir.",
@@ -1315,7 +1345,8 @@
             "successful_edit": "Toplayıcı düğümü başarıyla güncellendi",
             "removed": "Toplayıcı düğümü başarıyla silindi",
             "removed_error": "Toplayıcı düğümü kullanımda olduğundan silinemedi",
-            "total_count": "Toplayıcı düğümü yok | {count} toplayıcı düğümü | {count} toplayıcı düğümü"
+            "total_count": "Toplayıcı düğümü yok | {count} toplayıcı düğümü | {count} toplayıcı düğümü",
+            "delete_error": "Toplayıcı düğümü silinemedi"
         }
     },
     "presenters": {
@@ -1556,6 +1587,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Rapor öğelerinin hâlâ kullandığı alanlar kaldırılamaz: {fields}",
+            "in_use": "Rapor türü silinemiyor: rapor öğeleri tarafından kullanılıyor ({count})",
             "tab_description": "Rapor öğesi türleri buradan yönetilebilir.",
             "add_new": "Yeni rapor öğesi türü ekle",
             "edit": "Rapor öğesi türünü düzenle",
@@ -1572,6 +1605,7 @@
             "total_count": "Rapor türü yok | {count} rapor türü | {count} rapor türü"
         },
         "attributes": {
+            "in_use": "Öznitelik silinemiyor: {types} tarafından kullanılıyor",
             "tab_description": "Öznitelikler buradan yönetilebilir.",
             "add_new": "Yeni öznitelik ekle",
             "edit": "Özniteliği düzenle",
@@ -2003,14 +2037,7 @@
         },
         "confirm_delete_title": "Silmeyi onayla",
         "confirm_delete_node": "'{name}' public-web düğümü ve tüm siteleri silinsin mi?",
-        "confirm_delete_web": "'{name}' sitesi silinsin mi?",
-        "status": {
-            "alive": "Erişilebilir",
-            "late": "Yavaş yanıt veriyor",
-            "unreachable": "Erişilemiyor",
-            "never_seen": "Hiç bağlanmadı",
-            "last_seen": "son görülme"
-        }
+        "confirm_delete_web": "'{name}' sitesi silinsin mi?"
     },
     "routing": {
         "tab_title": "Yönlendirme ve TLS",
@@ -2098,5 +2125,65 @@
         "required": "Bu alan zorunludur",
         "invalid_pattern": "Geçersiz düzenli ifade: {error}",
         "disabled_hint": "Öznitelik çıkarma genel olarak kapalı. Kurallar kaydedilir ancak uygulanmaz. Ayarlar'dan ATTRIBUTE_EXTRACTION_ENABLED seçeneğini etkinleştirin."
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Arduvaz",
+        "forest": "Orman",
+        "amber": "Kehribar",
+        "contrast": "Yüksek kontrast",
+        "doll": "Oyuncak bebek",
+        "bubblegum": "Balonlu sakız",
+        "autumn": "Sonbahar",
+        "retro": "Retro",
+        "valentine": "Sevgililer Günü",
+        "summer": "Yaz",
+        "vintage": "Vintage",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Lavanta",
+        "parklake": "Park gölü",
+        "bedroom": "Yatak odası",
+        "aurora": "Kutup ışığı",
+        "ember": "Kor",
+        "custom": "Özel"
+    },
+    "theme_editor": {
+        "light": "Açık",
+        "dark": "Koyu",
+        "reset": "Sıfırla",
+        "not_active": "Bu temayı kullanmak için Genel sekmesinde Özel’i seçin.",
+        "low_contrast": "Kontrast {ratio}:1, {min}:1 altında",
+        "groups": {
+            "brand": "Marka",
+            "status": "Durum",
+            "surfaces": "Yüzeyler",
+            "chrome": "Uygulama çerçevesi",
+            "details": "Ayrıntılar"
+        },
+        "tokens": {
+            "primary": "Birincil",
+            "secondary": "İkincil",
+            "tertiary": "Üçüncül",
+            "accent": "Vurgu",
+            "error": "Hata",
+            "info": "Bilgi",
+            "success": "Başarılı",
+            "warning": "Uyarı",
+            "background": "Arka plan",
+            "surface": "Kart yüzeyi",
+            "surfaceVariant": "Tablo başlığı",
+            "onSurface": "Metin",
+            "outline": "Dış çizgi",
+            "menuBg": "Üst çubuk",
+            "drawerBg": "Kenar çubuğu",
+            "workspace": "Çalışma alanı",
+            "listRow": "Liste satırı",
+            "listRowSelected": "Seçili satır",
+            "listBorder": "Satır kenarlığı",
+            "panelBorder": "Panel kenarlığı",
+            "filterControlsBg": "Filtre çubuğu",
+            "menuItemActive": "Etkin menü öğesi"
+        }
     }
 }

@@ -11,18 +11,17 @@
 #
 #     cp host_vars/worker.example.yml host_vars/collector-01.yml
 #
-# Per-host vars OVERFLOW into group_vars/all.yml (which holds the
+# Anything not set here falls back to group_vars/all.yml (which holds the
 # shared shape: core_url, admin creds, ACME/EAB), so this file only sets the
 # things that genuinely vary per-host: which worker_types run here, the
-# host's public DNS base, and (if you don't want fail-closed behaviour) the
-# per-worker_type API keys.
+# host's public DNS base, and optionally the per-worker_type API keys.
 
 # ---------------------------------------------------------------------------
 # REQUIRED: which Taranis-NG worker containers run on this host.
 # ---------------------------------------------------------------------------
-# A list. Each entry must be one of: collectors, bots, presenters, publishers.
-# The play brings up ONE Traefik on this host fronting ALL the worker_types
-# listed here, with per-type subdomain routing
+# A list. Each entry must be one of: collectors, bots, presenters, publishers,
+# public-web. The play brings up ONE Traefik on this host fronting ALL the
+# worker_types listed here, with per-type subdomain routing
 # (<type>.<worker_base_hostname>) — so Core reaches each worker_type at its
 # own FQDN and (in ACME mode) each gets its own cert via the router's Host().
 #
@@ -33,6 +32,11 @@
 #                  "bots",
 #                  "presenters",
 #                  "publishers"]                                  # full worker stack on one host
+#   worker_types: ["public-web"]                                  # a public report feed
+#
+# public-web is the odd one out: the other types are private endpoints only Core
+# calls, while a public web serves the internet on its own hostnames, so that
+# host publishes 443 to the world as well as the Core-only API port.
 worker_types: ["collectors"]
 
 # ---------------------------------------------------------------------------
@@ -43,55 +47,34 @@ worker_types: ["collectors"]
 # e.g. worker_base_hostname: "taranis1.example.org"
 #      → collectors.taranis1.example.org, bots.taranis1.example.org, ...
 #
+# Core dials those names on worker_api_port (8443), not 443, so the registered
+# api_url is https://<type>.<worker_base_hostname>:8443. The name still has to
+# resolve publicly for ACME to validate it — DNS records carry no port.
+#
 # This is DECOUPLED from where Ansible SSH's into (`ansible_host` in your
-# distributed.local.yml inventory). Two common patterns:
+# distributed.local.yml inventory), so it is whatever public DNS name you have
+# configured — set it to the PARENT domain of the per-type subdomains:
 #
-# ----------
-# Pattern A — VM hostname == public API hostname
-#   The VM IS the public FQDN; no extra prefix.
+#   inventory key `collectors.example.org` (the VM is already the public FQDN)
+#     → worker_base_hostname: "example.org"
+#     → collectors API at https://collectors.example.org:8443
 #
-#   # distributed.local.yml
-#   worker_hosts:
-#     hosts:
-#       collectors.example.org:
-#         ansible_host: collectors.example.org   # SSH target == public FQDN
-#         ansible_user: ops
+#   inventory key `taranis1` (a short VM name, ansible_host taranis1.example.org)
+#     → worker_base_hostname: "taranis1.example.org"
+#     → collectors API at https://collectors.taranis1.example.org:8443
+#     → bots API at       https://bots.taranis1.example.org:8443
 #
-#   # host_vars/collectors.example.org.yml
-#   worker_types: ["collectors"]
-#   worker_base_hostname: "example.org"
-#   # → collectors API at https://collectors.example.org   ✓ exact match
+# ⚠ SET THIS. The role's default is `{{ inventory_hostname }}`, so an inventory
+# key that is already a worker's public FQDN yields
+# `collectors.collectors.example.org`: DNS won't resolve it, the certificate
+# won't match it, and Core registers a node it can never reach. The role asserts
+# on this, but set the parent domain here and be done with it.
 #
-# ----------
-# Pattern B — VM hostname ≠ public API hostname
-#   The VM is named "taranis1", but the API is exposed under a subdomain.
+# docs/distributed-deployment.md has both patterns spelled out in full.
 #
-#   # distributed.local.yml
-#   worker_hosts:
-#     hosts:
-#       taranis1:                                       # inventory key — any string
-#         ansible_host: taranis1.example.org             # SSH target (the VM)
-#         ansible_user: ops
-#
-#   # host_vars/taranis1.yml   (filename matches inventory key "taranis1")
-#   worker_types: ["collectors", "bots"]
-#   worker_base_hostname: "taranis1.example.org"
-#   # → collectors API at https://collectors.taranis1.example.org   ✓
-#   # → bots API at       https://bots.taranis1.example.org         ✓
-#   # (Cert SANs match these — Traefik requests them via the Host() labels.)
-# ----------
-#
-# ⚠ SET THIS. The role's default is `{{ inventory_hostname }}`, and the FQDN is
-# built as <type>.<worker_base_hostname>. So if your inventory key is already a
-# worker's public FQDN — the Pattern A case above, `collectors.example.org`
-# — leaving the default in place produces
-# `collectors.collectors.example.org`: DNS won't resolve it, the
-# certificate won't match it, and Core registers a node it can never reach.
-# The role asserts on this, but set the parent domain here and be done with it.
-#
-# Pattern A (inventory key is the worker FQDN)  → the PARENT domain:
+# Inventory key is already the worker FQDN → the PARENT domain:
 worker_base_hostname: "example.org"
-# Pattern B (inventory key is a short VM name)  → the VM's own domain:
+# Inventory key is a short VM name → that VM's own domain:
 # worker_base_hostname: "taranis1.example.org"
 
 # ---------------------------------------------------------------------------
@@ -148,44 +131,105 @@ worker_api_keys: {}
 # OPTIONAL: host firewall (taranis-ng-firewall, via playbooks/firewall.yml).
 # ---------------------------------------------------------------------------
 # Set these HERE, per host, rather than editing the role defaults - a role
-# default is the whole fleet's default, so changing it there to suit one worker
-# changes every worker.
+# default is the whole fleet's.
 #
-# READ THIS FIRST, because the answer differs per address family and the usual
-# "Docker bypasses your firewall" is only half of it:
+# What a rule here can actually do to a Docker-published port depends on the
+# address family. Over IPv4 it does nothing: Docker DNATs in nat/PREROUTING and
+# filters in filter/FORWARD, which never traverses the filter/INPUT chain ufw and
+# firewalld write to. Over IPv6 it does everything: Docker leaves ip6tables
+# management off, so docker-proxy takes that traffic through INPUT like any host
+# service, and a published port missing from these lists is dropped - reachable
+# over v4, timing out over v6. Giving such a port a source of "::/0" opens it for
+# v6 only, which is exactly what is in this role's power to grant. Narrowing a
+# port over IPv4 needs a DOCKER-USER rule or worker_api_bind (bottom of file).
 #
-#   IPv4 - bypasses these rules. Docker writes DNAT into nat/PREROUTING and filter
-#          rules into its own chain in filter/FORWARD; ufw and firewalld write to
-#          filter/INPUT, which that traffic never traverses. Listing a published
-#          port here buys nothing on v4.
-#   IPv6 - does NOT bypass them. Docker ships with ip6tables management off, so
-#          there is no v6 DNAT: the userland docker-proxy listens in the HOST
-#          namespace and the traffic goes through INPUT like any host service. A
-#          published port missing from this list is therefore reachable over v4
-#          and dropped over v6 - and dropped, not refused, so it times out and
-#          looks like a routing fault.
+# Two things that surprise people:
 #
-# The worker role already opens 80, 443 and worker_api_port itself for that
-# reason, so you do not need them here. What this list governs is traffic
-# terminating on the host - sshd above all.
+# 1. The role only ADDS rules. ufw and firewalld take the first matching rule, so
+#    a blanket "allow 8443" from an earlier run sits in front of a source-
+#    restricted 8443 written here and silently cancels it. Set firewall_reset:
+#    true on a host whose policy this role owns end to end; ufw is disabled while
+#    it resets, so nothing is filtered until the allow rules are back.
 #
-# To restrict a published port over IPv4, bind it to one address
-# (worker_api_bind below) or add rules to Docker's DOCKER-USER chain, which is
-# traversed before Docker's own and which Docker never flushes. Over IPv6, a
-# source restriction in this role is effective on its own.
+# 2. taranis-ng-worker opens 80, 443 and worker_api_port itself - unrestricted,
+#    on both families - but only `when` ufw is ALREADY active. So on the first
+#    firewall.yml run those ports are closed on IPv6 until the next
+#    distribute-worker.yml, and after that every worker deploy re-adds the
+#    blanket rules over anything narrower set here. Set worker_open_firewall:
+#    false and list the ports below, so one role owns the policy.
 #
-# firewall_allowed_tcp_ports: [22]        # host services only; 22 must stay
+# -- The variables ----------------------------------------------------------
+#
+# Ports opened to everyone, on both families. A port listed here must NOT also
+# appear in a restricted list below: both emit ALLOW rules, the blanket one wins,
+# and the restriction becomes inert.
+# firewall_allowed_tcp_ports: [22]
 # firewall_allowed_udp_ports: []
 #
-# Source-restricted host ports. Same caveat: effective for host services,
-# NOT for Docker-published ones.
+# Ports opened only to named sources. ONE ADDRESS PER LIST ENTRY: the role
+# expands these with subelements() into a rule per (port, source) pair, because
+# ufw takes a single address per rule and rejects a comma-joined string as a bad
+# address, failing the play before any policy is applied.
 # firewall_restricted_tcp_ports:
-#   - port: 9100                         # e.g. a node_exporter run on the host
+#   - port: 9100                          # e.g. a node_exporter on the host
 #     sources: ["198.51.100.10"]
+# firewall_restricted_udp_ports:
+#   - port: 443
+#     sources: ["::/0"]
 #
-# Address the worker API port is published on. The default binds every
-# interface, which leaves the API reachable from anywhere - authentication is
-# then its only protection. Set the host's private/VPN address when Core
-# reaches it that way, and the port stops being world-visible without needing
-# any firewall rule at all.
+# Discard the existing ruleset first, so this file is the whole policy and not a
+# delta on whatever the host already had. See point 1 above.
+# firewall_reset: true
+#
+# Leave the ufw rules to taranis-ng-firewall alone. See point 2 above.
+# worker_open_firewall: false
+#
+# The role refuses to run unless the SSH port is in firewall_allowed_tcp_ports,
+# so a deny-by-default policy cannot end the session applying it. Source-
+# restricting SSH means dropping 22 from that list, which needs the guard off.
+# Do that only with console access, and only once the host you run Ansible from
+# is among the port 22 sources: ufw permits established connections, so the run
+# itself always succeeds and the lockout appears at the NEXT login.
+# firewall_guard_ssh: false
+#
+# -- A worked example -------------------------------------------------------
+#
+# A worker running public-web, with SSH restricted to a management range and the
+# API restricted to Core. Everything is v6-only except SSH, which is a real host
+# service rather than a container and so binds on both families:
+#
+# firewall_reset: true
+# worker_open_firewall: false
+# firewall_guard_ssh: false
+# firewall_allowed_tcp_ports: []
+# firewall_allowed_udp_ports: []
+# firewall_restricted_tcp_ports:
+#   - port: 80                            # ACME HTTP-01, for every hostname on
+#     sources: ["::/0"]                   #   this host - see the note below
+#   - port: 443                           # public-web serves the internet
+#     sources: ["::/0"]
+#   - port: 8443                          # worker_api_port: Core is its only
+#     sources: ["2001:db8:1::10"]         #   legitimate caller
+#   - port: 22
+#     sources:
+#       - "198.51.100.10"
+#       - "2001:db8:2::/64"
+# firewall_restricted_udp_ports:
+#   - port: 443                           # HTTP/3; Traefik advertises h3
+#     sources: ["::/0"]
+#
+# 80 is load-bearing and must stay reachable: the CA validates every hostname
+# there, INCLUDING hostnames whose router lives on the API port, so a closed 80
+# breaks renewal about thirty days later rather than immediately.
+#
+# ---------------------------------------------------------------------------
+# OPTIONAL: where the worker API port is published.
+# ---------------------------------------------------------------------------
+# The default binds every interface, which leaves the API reachable from
+# anywhere - the ApiKey on every endpoint is then its only protection. Set the
+# host's private or VPN address when Core reaches it that way and the listener
+# exists only there, which Docker does honour and which needs no firewall rule.
+#
+# It cannot help when Core reaches the worker across the public internet: there
+# is no private address to bind to. Use DOCKER-USER there instead.
 # worker_api_bind: "10.0.0.5"

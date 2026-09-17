@@ -4,8 +4,10 @@
 #
 #     cd ansible && ansible-lint --offline playbooks/ roles/
 #
-# CI runs exactly that; see the `ansible-checks` job in
-# .github/workflows/linting.yaml.
+# That exact command is what `scripts/run_tests.py --suite ansible` runs, after
+# populating the offline collections cache — and that entry point is what both
+# the ansible-tests pre-commit hook and the `ansible-checks` job in
+# .github/workflows/linting.yaml invoke, so local and CI runs cannot drift.
 
 profile: basic
 

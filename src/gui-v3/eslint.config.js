@@ -26,6 +26,7 @@ const sharedGlobals = {
     MouseEvent: 'readonly',
     KeyboardEvent: 'readonly',
     DragEvent: 'readonly',
+    FocusEvent: 'readonly',
     IntersectionObserver: 'readonly',
     IntersectionObserverEntry: 'readonly',
     AbortSignal: 'readonly',

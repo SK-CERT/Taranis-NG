@@ -11,11 +11,11 @@ dependencies = [
     "Flask-RESTful==0.3.10",
     "packaging==26.3",
     "gevent==26.8.0",
-    "gunicorn==26.1.0",
+    "gunicorn==26.2.0",
     "Jinja2==3.1.6",
     "marshmallow==4.3.1",
     "python-dotenv==1.2.3",
-    "weasyprint==69.0",
+    "weasyprint==70.0",
     "taranis-ng-shared==26.05.1",
 ]
 

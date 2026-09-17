@@ -10,6 +10,7 @@ from managers import (
     cache_manager,
     db_manager,
     remote_manager,
+    run_state_cache,
     sse_manager,
     tagcloud_manager,
 )
@@ -48,7 +49,9 @@ def create_app() -> Flask:
         # deployment serves the GUI and the API from the same origin. A
         # development GUI on another port opts in explicitly:
         #   TARANIS_NG_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-        cors_origins = [origin for origin in (os.getenv("TARANIS_NG_CORS_ORIGINS") or "").split(",") if origin.strip()]
+        # The list is parsed once in config.Config so that this grant and the
+        # same-origin check on /auth/redeem always agree on who is trusted.
+        cors_origins = app.config.get("CORS_ORIGINS") or []
         if cors_origins:
             CORS(app, supports_credentials=True, origins=cors_origins)
 
@@ -56,6 +59,10 @@ def create_app() -> Flask:
         db_manager.create_tables()
 
         cache_manager.initialize(app)
+        # The cached run state describes collector nodes as they were before this restart. A
+        # compose restart takes them down with core, so nothing would ever report those runs
+        # finishing; the nodes re-report their schedule on their next heartbeat.
+        run_state_cache.clear_all()
         auth_manager.initialize(app)
         api_manager.initialize(app)
         sse_manager.initialize(app)

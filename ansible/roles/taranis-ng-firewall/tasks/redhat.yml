@@ -33,6 +33,38 @@
         state: "{{ 'started' if firewall_enable | bool else 'stopped' }}"
         enabled: "{{ firewall_enable | bool }}"
 
+    # See the equivalent note in debian.yml. firewalld has no single reset, so
+    # the zone's existing ports and rich rules are enumerated and removed. The
+    # service entries are stripped further down for every run, reset or not.
+    - name: "List the ports and rich rules already in the zone"
+      ansible.builtin.command: "firewall-cmd --permanent --zone={{ firewall_zone }} --list-{{ item }}"
+      register: firewall_zone_existing
+      changed_when: false
+      loop:
+        - ports
+        - rich-rules
+      when: firewall_reset | bool
+
+    - name: "Discard the existing ports"
+      ansible.posix.firewalld:
+        zone: "{{ firewall_zone }}"
+        port: "{{ item }}"
+        permanent: true
+        immediate: "{{ firewall_enable | bool }}"
+        state: disabled
+      loop: "{{ firewall_zone_existing.results[0].stdout.split() | default([], true) }}"
+      when: firewall_reset | bool
+
+    - name: "Discard the existing rich rules"
+      ansible.posix.firewalld:
+        zone: "{{ firewall_zone }}"
+        rich_rule: "{{ item }}"
+        permanent: true
+        immediate: "{{ firewall_enable | bool }}"
+        state: disabled
+      loop: "{{ firewall_zone_existing.results[1].stdout_lines | default([], true) }}"
+      when: firewall_reset | bool
+
     - name: "Allow inbound TCP ports"
       ansible.posix.firewalld:
         zone: "{{ firewall_zone }}"
@@ -53,14 +85,36 @@
 
     # A rich rule rather than a plain port: firewalld's `port:` has no source, so
     # it would open the port to the whole zone. One rule per (port, source) pair.
+    #
+    # `family` is derived from the address rather than fixed: firewalld rejects a
+    # rich rule whose family does not match its source, so a hardcoded ipv4 makes
+    # every IPv6 source a hard failure. A colon appears in every IPv6 literal and
+    # in no IPv4 one, so the test is exact.
     - name: "Allow restricted inbound TCP ports from their permitted sources only"
       ansible.posix.firewalld:
         zone: "{{ firewall_zone }}"
-        rich_rule: "rule family='ipv4' source address='{{ item.1 }}' port port='{{ item.0.port }}' protocol='tcp' accept"
+        rich_rule: >-
+          rule family='{{ 'ipv6' if ':' in item.1 else 'ipv4' }}'
+          source address='{{ item.1 }}'
+          port port='{{ item.0.port }}' protocol='tcp' accept
         permanent: true
         immediate: "{{ firewall_enable | bool }}"
         state: enabled
       loop: "{{ firewall_restricted_tcp_ports | subelements('sources') }}"
+      loop_control:
+        label: "{{ item.0.port }} from {{ item.1 }}"
+
+    - name: "Allow restricted inbound UDP ports from their permitted sources only"
+      ansible.posix.firewalld:
+        zone: "{{ firewall_zone }}"
+        rich_rule: >-
+          rule family='{{ 'ipv6' if ':' in item.1 else 'ipv4' }}'
+          source address='{{ item.1 }}'
+          port port='{{ item.0.port }}' protocol='udp' accept
+        permanent: true
+        immediate: "{{ firewall_enable | bool }}"
+        state: enabled
+      loop: "{{ firewall_restricted_udp_ports | subelements('sources') }}"
       loop_control:
         label: "{{ item.0.port }} from {{ item.1 }}"
 

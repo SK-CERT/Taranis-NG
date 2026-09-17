@@ -143,7 +143,7 @@
         }
     )
 
-    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, onEdit } = useAttributes(props)
 
     onMounted(addInitialValues)
 
@@ -192,11 +192,19 @@
         }
     }
 
-    function updateFromCalculator(index: number, vectorValue: string): void {
+    /**
+     * Persist what the calculator built. The field is not focused while the calculator is
+     * open, so no blur follows to save it — without this the vector would show up in the
+     * field and then be gone on the next load.
+     */
+    async function updateFromCalculator(index: number, vectorValue: string): Promise<void> {
         const item = props.values[index]
         if (!item) return
+        // Never re-send an unchanged value: that would push this tab's copy over whatever
+        // somebody else stored in the meantime.
+        if ((stripParentheses(item.value) ?? '') === vectorValue) return
         item.value = vectorValue
-        onKeyUp(index)
+        await onEdit(index)
     }
 
     function getVectorScores(value: string | null | undefined): ScoreItem[] | null {

@@ -1,5 +1,6 @@
 """Publisher for publishing by email."""
 
+import binascii
 import mimetypes
 from base64 import b64decode
 from datetime import datetime
@@ -7,11 +8,39 @@ from http import HTTPStatus
 from pathlib import Path
 
 from envelope import Envelope
+from managers.key_files import unreadable_key_error
 from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
 
+from shared import mail_headers
+
 from .base_publisher import BasePublisher
+
+
+def decode_message_text(value: str) -> str:
+    r"""Return a presenter's base64 title or body, or a notification template's text unchanged.
+
+    The two callers encode differently. A product publish goes through a presenter, and
+    ``BasePresenter.render_jinja`` base64-encodes every render. An asset notification has no
+    presenter: core hands over the ``notification_template`` columns verbatim, and decoding
+    those raised ``binascii.Error`` out of ``publish()`` as an unexplained 500.
+
+    ``validate=True`` rejects the spaces and punctuation of ordinary prose, and the UTF-8 check
+    rejects a short word that happens to be valid base64 ("Test" decodes to b'M\xeb-'). A plain
+    title that survives both - a lone base64-looking word such as "dGVzdA==" - is genuinely
+    ambiguous and is read as base64.
+
+    Args:
+        value (str): The title or body as it arrived from core.
+
+    Returns:
+        str: The decoded text, or the original when it was never base64.
+    """
+    try:
+        return b64decode(value, validate=True).decode("UTF-8")
+    except (binascii.Error, UnicodeDecodeError):
+        return value
 
 
 class EMAILPublisher(BasePublisher):
@@ -58,6 +87,24 @@ class EMAILPublisher(BasePublisher):
 
         smtp = {"host": smtp_server, "port": smtp_server_port, "user": user, "password": password}
 
+        def _read_key(key_path: str, description: str) -> str:
+            """Read the signing or encryption key the preset points at.
+
+            Args:
+                key_path (str): The configured path to the key file.
+                description (str): What the file is, for the error message.
+
+            Returns:
+                str: The key material.
+
+            Raises:
+                OSError: The key file cannot be read.
+            """
+            try:
+                return Path(key_path).read_text()
+            except OSError as error:
+                raise unreadable_key_error(key_path, description, error) from error
+
         envelope = Envelope()
 
         # if attachment data available from presenter
@@ -83,12 +130,12 @@ class EMAILPublisher(BasePublisher):
             # it is possible to attach multiple files
             envelope.attach(attachment_list)
 
-        # when title available from presenter
+        # when title available from presenter (or from a notification template, unencoded)
         if publisher_input.message_title:
-            subject = b64decode(publisher_input.message_title).decode("UTF-8")
-        # when body available from presenter
+            subject = decode_message_text(publisher_input.message_title)
+        # when body available from presenter (or from a notification template, unencoded)
         if publisher_input.message_body:
-            message = b64decode(publisher_input.message_body).decode("UTF-8")
+            message = decode_message_text(publisher_input.message_body)
 
         if not message:
             envelope.message(" ")
@@ -104,18 +151,32 @@ class EMAILPublisher(BasePublisher):
         envelope.from_(sender)
         envelope.to(recipients)
 
-        if sign == "auto":
-            envelope.signature(key=sign)
-        elif Path(sign).is_file():
-            self.logger.info(f"Signing email with file {sign}")
-            with Path(sign).open("r") as sign_file:
-                envelope.signature(key=sign_file.read(), passphrase=sign_password)
-        if encrypt == "auto":
-            envelope.encryption(key=encrypt)
-        elif Path(encrypt).is_file():
-            self.logger.info(f"Encrypting email with file {encrypt}")
-            with Path(encrypt).open("r") as encrypt_file:
-                envelope.encryption(key=encrypt_file.read())
+        # The presenter already sanitized these, but it is a separate node reached over the
+        # network, so re-check rather than trust the wire: envelope.header() reroutes `bcc`
+        # (and `to`/`cc`) into the real SMTP recipient list, so an unchecked header could add
+        # a recipient. Note these headers sit outside any S/MIME or PGP signature.
+        # envelope.header() only catches TypeError, and the try below starts after this point,
+        # so guard here too - a decorative header must never cost the send.
+        try:
+            for custom_header in mail_headers.sanitize_headers(publisher_input.message_headers or []):
+                envelope.header(custom_header["name"], custom_header["value"])
+        except Exception as error:
+            self.logger.warning(f"Custom headers skipped: {error}")
+
+        try:
+            if sign == "auto":
+                envelope.signature(key=sign)
+            elif sign:
+                self.logger.info(f"Signing email with file {sign}")
+                envelope.signature(key=_read_key(sign, "email signing key"), passphrase=sign_password)
+            if encrypt == "auto":
+                envelope.encryption(key=encrypt)
+            elif encrypt:
+                self.logger.info(f"Encrypting email with file {encrypt}")
+                envelope.encryption(key=_read_key(encrypt, "email encryption key"))
+        except OSError as error:
+            self.logger.exception(f"Error: {error}")
+            return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR
 
         email_string = str(envelope)
         max_length = 3000

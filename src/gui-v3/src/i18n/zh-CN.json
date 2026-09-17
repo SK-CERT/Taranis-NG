@@ -357,7 +357,9 @@
         "not_available": "不可用",
         "aggregated_items_count": "没有聚合的新闻条目 | {count} 个聚合的新闻条目 | {count} 个聚合的新闻条目",
         "in_analyze_count": "没有正在进行的分析 | {count} 项正在进行的分析 | {count} 项正在进行的分析",
-        "analyzed_count": "没有已完成的分析 | {count} 项已完成的分析 | {count} 项已完成的分析"
+        "analyzed_count": "没有已完成的分析 | {count} 项已完成的分析 | {count} 项已完成的分析",
+        "next_run": "下次采集",
+        "state": "状态"
     },
     "attribute": {
         "add_constant": "添加常量",
@@ -1017,6 +1019,7 @@
     "settings": {
         "user_settings": "用户设置",
         "tab_general": "常规",
+        "tab_theme": "主题",
         "tab_security": "安全",
         "tab_wordlists": "词表",
         "tab_hotkeys": "快捷键",
@@ -1079,6 +1082,7 @@
         "DATE_FORMAT": "日期格式",
         "HOTKEYS": "启用快捷键",
         "UI_LANGUAGE": "用户界面语言",
+        "UI_THEME": "用户界面主题",
         "CONTENT_DEFAULT_LANGUAGE": "报告/产品的默认语言",
         "REPORT_SELECTOR_READ_ONLY": "以只读模式打开报告条目选择器",
         "SPELLCHECK": "拼写检查",
@@ -1237,7 +1241,15 @@
         "details": "详细信息",
         "actions": "操作",
         "close": "关闭",
-        "use_suggested": "使用建议值"
+        "use_suggested": "使用建议值",
+        "collect_now": "立即采集",
+        "node_status": {
+            "alive": "可访问",
+            "late": "响应缓慢",
+            "unreachable": "无法访问",
+            "never_seen": "从未连接",
+            "last_seen": "最后在线"
+        }
     },
     "collectors": {
         "groups": {
@@ -1280,6 +1292,7 @@
             "total_count": "{count} 个 OSINT 来源 | {count} 个 OSINT 来源",
             "osint_source_groups": "OSINT 来源组",
             "tooltip": {
+                "toggle_selection": "切换 OSINT 来源选择模式",
                 "select_all": "选择全部",
                 "unselect_all": "取消全选"
             },
@@ -1298,9 +1311,26 @@
             "file": "导入文件",
             "file_required": "选择导入文件",
             "node_required": "选择采集器节点",
-            "export_all_hint": "导出所有来源",
             "export_selected_hint": "导出所选来源",
-            "selected_count": "已选择 {count} 个 OSINT 来源 | 已选择 {count} 个 OSINT 来源"
+            "selected_count": "已选择 {count} 个 OSINT 来源 | 已选择 {count} 个 OSINT 来源",
+            "collecting": "正在采集…",
+            "disabled": "已禁用",
+            "collect_started": "已开始采集",
+            "collect_error": "无法开始采集",
+            "collect_conflict": "该源正在采集中",
+            "enable_error": "无法更改源的状态",
+            "enabled": "已启用",
+            "due": "待执行",
+            "state_error": "错误",
+            "state_stale": "已过时",
+            "state_pending": "等待中",
+            "none": "此节点上没有 OSINT 源",
+            "group_all": "全部",
+            "group_uncategorized": "未分类",
+            "delete_selected_hint": "删除所选来源",
+            "delete_selected_confirm": "确定删除所选的 {count} 个来源吗？此操作无法撤销。",
+            "delete_selected_success": "已删除所选来源",
+            "delete_selected_error": "部分所选来源无法删除"
         },
         "nodes": {
             "tab_description": "您可以在此管理采集器节点。",
@@ -1315,7 +1345,8 @@
             "successful_edit": "已成功更新采集器节点",
             "removed": "已成功删除采集器节点",
             "removed_error": "采集器节点正在使用，无法删除",
-            "total_count": "{count} 个采集器节点 | {count} 个采集器节点"
+            "total_count": "{count} 个采集器节点 | {count} 个采集器节点",
+            "delete_error": "无法删除采集器节点"
         }
     },
     "presenters": {
@@ -1556,6 +1587,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "无法移除报告条目仍在使用的字段：{fields}",
+            "in_use": "无法删除报告类型：报告条目正在使用它（{count}）",
             "tab_description": "您可以在此管理报告类型。",
             "add_new": "添加新报告条目类型",
             "edit": "编辑报告条目类型",
@@ -1572,6 +1605,7 @@
             "total_count": "{count} 个报告类型 | {count} 个报告类型"
         },
         "attributes": {
+            "in_use": "无法删除属性：{types} 正在使用它",
             "tab_description": "您可以在此管理属性。",
             "add_new": "添加新属性",
             "edit": "编辑属性",
@@ -2003,14 +2037,7 @@
         },
         "confirm_delete_title": "确认删除",
         "confirm_delete_node": "删除 public-web 节点“{name}”及其所有站点？",
-        "confirm_delete_web": "删除站点“{name}”？",
-        "status": {
-            "alive": "可访问",
-            "late": "响应缓慢",
-            "unreachable": "无法访问",
-            "never_seen": "从未连接",
-            "last_seen": "最后在线"
-        }
+        "confirm_delete_web": "删除站点“{name}”？"
     },
     "routing": {
         "tab_title": "路由与 TLS",
@@ -2098,5 +2125,65 @@
         "required": "此字段为必填项",
         "invalid_pattern": "正则表达式无效：{error}",
         "disabled_hint": "属性提取已全局关闭。以下规则会被保存但不会应用。请在设置中启用 ATTRIBUTE_EXTRACTION_ENABLED。"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "石板灰",
+        "forest": "森林",
+        "amber": "琥珀",
+        "contrast": "高对比度",
+        "doll": "玩偶",
+        "bubblegum": "泡泡糖",
+        "autumn": "秋日",
+        "retro": "复古",
+        "valentine": "情人节",
+        "summer": "夏日",
+        "vintage": "怀旧",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "薰衣草",
+        "parklake": "公园湖",
+        "bedroom": "卧室",
+        "aurora": "极光",
+        "ember": "余烬",
+        "custom": "自定义"
+    },
+    "theme_editor": {
+        "light": "浅色",
+        "dark": "深色",
+        "reset": "重置",
+        "not_active": "要使用此主题，请在“常规”标签中选择“自定义”。",
+        "low_contrast": "对比度 {ratio}:1，低于 {min}:1",
+        "groups": {
+            "brand": "品牌",
+            "status": "状态",
+            "surfaces": "表面",
+            "chrome": "应用框架",
+            "details": "细节"
+        },
+        "tokens": {
+            "primary": "主色",
+            "secondary": "辅色",
+            "tertiary": "第三色",
+            "accent": "强调色",
+            "error": "错误",
+            "info": "信息",
+            "success": "成功",
+            "warning": "警告",
+            "background": "背景",
+            "surface": "卡片表面",
+            "surfaceVariant": "表头",
+            "onSurface": "文字",
+            "outline": "轮廓",
+            "menuBg": "顶栏",
+            "drawerBg": "侧边栏",
+            "workspace": "工作区",
+            "listRow": "列表行",
+            "listRowSelected": "选中行",
+            "listBorder": "行边框",
+            "panelBorder": "面板边框",
+            "filterControlsBg": "筛选栏",
+            "menuItemActive": "当前菜单项"
+        }
     }
 }

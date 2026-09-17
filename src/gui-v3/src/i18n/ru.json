@@ -357,7 +357,9 @@
         "not_available": "Недоступно",
         "aggregated_items_count": "Нет объединённых новостных материалов | {count} объединённый новостной материал | {count} объединённых новостных материала | {count} объединённых новостных материалов",
         "in_analyze_count": "Нет выполняемых анализов | Выполняется {count} анализ | Выполняются {count} анализа | Выполняется {count} анализов",
-        "analyzed_count": "Нет завершённых анализов | Завершён {count} анализ | Завершено {count} анализа | Завершено {count} анализов"
+        "analyzed_count": "Нет завершённых анализов | Завершён {count} анализ | Завершено {count} анализа | Завершено {count} анализов",
+        "next_run": "Следующий запуск",
+        "state": "Состояние"
     },
     "attribute": {
         "add_constant": "Добавить константу",
@@ -1017,6 +1019,7 @@
     "settings": {
         "user_settings": "Настройки пользователя",
         "tab_general": "Общие",
+        "tab_theme": "Тема",
         "tab_security": "Безопасность",
         "tab_wordlists": "Списки слов",
         "tab_hotkeys": "Сочетания клавиш",
@@ -1079,6 +1082,7 @@
         "DATE_FORMAT": "Формат даты",
         "HOTKEYS": "Включить сочетания клавиш",
         "UI_LANGUAGE": "Язык интерфейса",
+        "UI_THEME": "Тема интерфейса",
         "CONTENT_DEFAULT_LANGUAGE": "Язык по умолчанию для отчетов и продуктов",
         "REPORT_SELECTOR_READ_ONLY": "Открывать средство выбора элементов отчета в режиме только для чтения",
         "SPELLCHECK": "Проверка орфографии",
@@ -1237,7 +1241,15 @@
         "details": "Сведения",
         "actions": "Действия",
         "close": "Закрыть",
-        "use_suggested": "Использовать предложенное значение"
+        "use_suggested": "Использовать предложенное значение",
+        "collect_now": "Собрать сейчас",
+        "node_status": {
+            "alive": "Доступен",
+            "late": "Медленно отвечает",
+            "unreachable": "Недоступен",
+            "never_seen": "Подключения не было",
+            "last_seen": "последняя активность"
+        }
     },
     "collectors": {
         "groups": {
@@ -1280,6 +1292,7 @@
             "total_count": "Нет источников OSINT | {count} источник OSINT | {count} источника OSINT | {count} источников OSINT",
             "osint_source_groups": "Группы источников OSINT",
             "tooltip": {
+                "toggle_selection": "Переключить режим выбора источников OSINT",
                 "select_all": "Выбрать все",
                 "unselect_all": "Отменить выбор всех"
             },
@@ -1298,9 +1311,26 @@
             "file": "Файл импорта",
             "file_required": "Выберите файл импорта",
             "node_required": "Выберите узел Collector",
-            "export_all_hint": "Экспортировать все источники",
             "export_selected_hint": "Экспортировать выбранные источники",
-            "selected_count": "Источники OSINT не выбраны | Выбран {count} источник OSINT | Выбрано {count} источника OSINT | Выбрано {count} источников OSINT"
+            "selected_count": "Источники OSINT не выбраны | Выбран {count} источник OSINT | Выбрано {count} источника OSINT | Выбрано {count} источников OSINT",
+            "collecting": "Идёт сбор…",
+            "disabled": "Отключено",
+            "collect_started": "Сбор запущен",
+            "collect_error": "Не удалось запустить сбор",
+            "collect_conflict": "Этот источник уже собирается",
+            "enable_error": "Не удалось изменить состояние источника",
+            "enabled": "Включено",
+            "due": "Ожидает",
+            "state_error": "Ошибка",
+            "state_stale": "Устарело",
+            "state_pending": "Ожидание",
+            "none": "На этом узле нет источников OSINT",
+            "group_all": "Все",
+            "group_uncategorized": "Без категории",
+            "delete_selected_hint": "Удалить выбранные источники",
+            "delete_selected_confirm": "Удалить выбранные источники ({count})? Это действие нельзя отменить.",
+            "delete_selected_success": "Выбранные источники удалены",
+            "delete_selected_error": "Некоторые выбранные источники не удалось удалить"
         },
         "nodes": {
             "tab_description": "Здесь можно управлять узлами Collector.",
@@ -1315,7 +1345,8 @@
             "successful_edit": "Узел Collector успешно обновлен",
             "removed": "Узел Collector успешно удален",
             "removed_error": "Узел Collector используется и не может быть удален",
-            "total_count": "Нет узлов коллекторов | {count} узел коллектора | {count} узла коллектора | {count} узлов коллекторов"
+            "total_count": "Нет узлов коллекторов | {count} узел коллектора | {count} узла коллектора | {count} узлов коллекторов",
+            "delete_error": "Не удалось удалить узел сборщиков"
         }
     },
     "presenters": {
@@ -1556,6 +1587,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Невозможно удалить поля, которые всё ещё используются элементами отчёта: {fields}",
+            "in_use": "Невозможно удалить тип отчёта: он используется элементами отчёта ({count})",
             "tab_description": "Здесь можно управлять типами отчетов.",
             "add_new": "Добавить тип элемента отчета",
             "edit": "Изменить тип элемента отчета",
@@ -1572,6 +1605,7 @@
             "total_count": "Нет типов отчётов | {count} тип отчёта | {count} типа отчёта | {count} типов отчётов"
         },
         "attributes": {
+            "in_use": "Невозможно удалить атрибут: он используется в {types}",
             "tab_description": "Здесь можно управлять атрибутами.",
             "add_new": "Добавить атрибут",
             "edit": "Изменить атрибут",
@@ -2003,14 +2037,7 @@
         },
         "confirm_delete_title": "Подтвердите удаление",
         "confirm_delete_node": "Удалить узел public-web «{name}» и все его сайты?",
-        "confirm_delete_web": "Удалить сайт «{name}»?",
-        "status": {
-            "alive": "Доступен",
-            "late": "Медленно отвечает",
-            "unreachable": "Недоступен",
-            "never_seen": "Подключения не было",
-            "last_seen": "последняя активность"
-        }
+        "confirm_delete_web": "Удалить сайт «{name}»?"
     },
     "routing": {
         "tab_title": "Маршрутизация и TLS",
@@ -2098,5 +2125,65 @@
         "required": "Это поле обязательно",
         "invalid_pattern": "Недопустимое регулярное выражение: {error}",
         "disabled_hint": "Извлечение атрибутов отключено глобально. Правила сохраняются, но не применяются. Включите ATTRIBUTE_EXTRACTION_ENABLED в настройках."
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Сланец",
+        "forest": "Лес",
+        "amber": "Янтарь",
+        "contrast": "Высокий контраст",
+        "doll": "Кукла",
+        "bubblegum": "Жвачка",
+        "autumn": "Осень",
+        "retro": "Ретро",
+        "valentine": "Валентин",
+        "summer": "Лето",
+        "vintage": "Винтаж",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Лаванда",
+        "parklake": "Озеро в парке",
+        "bedroom": "Спальня",
+        "aurora": "Северное сияние",
+        "ember": "Тлеющие угли",
+        "custom": "Своя"
+    },
+    "theme_editor": {
+        "light": "Светлая",
+        "dark": "Тёмная",
+        "reset": "Сбросить",
+        "not_active": "Чтобы использовать эту тему, выберите «Своя» на вкладке «Общие».",
+        "low_contrast": "Контраст {ratio}:1, ниже {min}:1",
+        "groups": {
+            "brand": "Бренд",
+            "status": "Статусы",
+            "surfaces": "Поверхности",
+            "chrome": "Каркас приложения",
+            "details": "Детали"
+        },
+        "tokens": {
+            "primary": "Основной",
+            "secondary": "Вторичный",
+            "tertiary": "Третичный",
+            "accent": "Акцент",
+            "error": "Ошибка",
+            "info": "Информация",
+            "success": "Успех",
+            "warning": "Предупреждение",
+            "background": "Фон",
+            "surface": "Поверхность карточки",
+            "surfaceVariant": "Заголовок таблицы",
+            "onSurface": "Текст",
+            "outline": "Контур",
+            "menuBg": "Верхняя панель",
+            "drawerBg": "Боковая панель",
+            "workspace": "Рабочая область",
+            "listRow": "Строка списка",
+            "listRowSelected": "Выбранная строка",
+            "listBorder": "Граница строки",
+            "panelBorder": "Граница панели",
+            "filterControlsBg": "Панель фильтров",
+            "menuItemActive": "Активный пункт меню"
+        }
     }
 }

@@ -1,7 +1,7 @@
 <template>
     <v-container
         fluid
-        class="config-list-toolbar"
+        class="config-list-toolbar pa-2"
     >
         <!-- Search and Counts -->
         <v-row
@@ -13,6 +13,7 @@
                 md="9"
             >
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap">
+                    <slot name="prepend" />
                     <SearchField
                         v-model="filter.search"
                         clearable
@@ -24,8 +25,7 @@
                         :keypath="totalCountTitle"
                         :plural="totalCount"
                         tag="div"
-                        class="text-caption text-grey"
-                        style="white-space: nowrap; flex-shrink: 0"
+                        class="toolbar-filter__metric"
                     >
                         <template #count>
                             <strong>{{ n(totalCount) }}</strong>
@@ -37,8 +37,7 @@
                         :keypath="selectedCountTitle"
                         :plural="selectedCount"
                         tag="div"
-                        class="text-caption text-grey"
-                        style="white-space: nowrap; flex-shrink: 0"
+                        class="toolbar-filter__metric toolbar-filter__metric--selected"
                     >
                         <template #count>
                             <strong>{{ n(selectedCount) }}</strong>
@@ -115,8 +114,6 @@
 <style scoped>
     .config-list-toolbar {
         width: auto;
-        margin: 0.7rem 0.7rem 0;
-        padding: 0.45rem 0.6rem;
         background: rgb(var(--v-theme-surface));
     }
 
@@ -126,5 +123,31 @@
 
     .config-list-toolbar :deep(.v-col) {
         padding: 0.25rem;
+    }
+
+    .toolbar-filter__metric {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: rgba(var(--v-theme-on-surface), 0.62);
+        font-size: 0.75rem;
+    }
+
+    .toolbar-filter__metric + .toolbar-filter__metric::before {
+        width: 3px;
+        height: 3px;
+        margin-inline-end: 0.25rem;
+        border-radius: 50%;
+        background: rgba(var(--v-theme-on-surface), 0.35);
+        content: '';
+    }
+
+    .toolbar-filter__metric strong {
+        color: rgb(var(--v-theme-on-surface));
+        font-size: 0.82rem;
+    }
+
+    .toolbar-filter__metric--selected strong {
+        color: rgb(var(--v-theme-primary));
     }
 </style>

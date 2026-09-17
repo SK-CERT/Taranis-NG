@@ -4,17 +4,121 @@ import os
 import re
 from collections.abc import Callable
 from functools import wraps
+from html import escape
+from urllib.parse import urljoin
 from zoneinfo import ZoneInfo
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
 from shared.log_manager import logger
 
 TZ = ZoneInfo(os.getenv("TZ", "UTC"))
 
+# Tags kept as-is. Same list as the GUI's DOMPurify allowlist
+# (src/gui-v3/src/utils/sanitizeNewsItemHtml.ts), so what is stored is also what renders.
+ALLOWED_HTML_TAGS = {
+    "p",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "ul",
+    "ol",
+    "li",
+    "b",
+    "strong",
+    "i",
+    "em",
+    "a",
+    "pre",
+    "code",
+    "br",
+    "div",
+    "span",
+    "blockquote",
+    "mark",
+    "small",
+    "del",
+    "ins",
+    "sup",
+    "sub",
+    "u",
+    "s",
+}
+ALLOWED_HTML_ATTRS = {"a": ["href"]}
+
+# Tags dropped together with everything inside them: their content is styling, scripting
+# or metadata, never body text. This mirrors DOMPurify's FORBID_CONTENTS handling.
+DISCARDED_HTML_TAGS = {
+    "applet",
+    "base",
+    "button",
+    "embed",
+    "form",
+    "frame",
+    "frameset",
+    "head",
+    "iframe",
+    "input",
+    "link",
+    "math",
+    "meta",
+    "noscript",
+    "object",
+    "option",
+    "script",
+    "select",
+    "style",
+    "svg",
+    "template",
+    "textarea",
+    "title",
+}
+
+# Everything else is unwrapped, keeping its text. For block-level tags that would glue
+# two lines together, so they become a plain <div> instead - nested <div>s still render
+# as a single line break. Table rows are the reason this matters: HTML mail is usually
+# laid out in tables, and <td>/<th> are unwrapped so a row stays on one line.
+BLOCK_HTML_TAGS = {
+    "address",
+    "article",
+    "aside",
+    "caption",
+    "center",
+    "colgroup",
+    "dd",
+    "dl",
+    "dt",
+    "fieldset",
+    "figcaption",
+    "figure",
+    "footer",
+    "h5",
+    "h6",
+    "header",
+    "hr",
+    "legend",
+    "main",
+    "nav",
+    "section",
+    "table",
+    "tbody",
+    "tfoot",
+    "thead",
+    "tr",
+}
+
+# Unwrapped inline tags that need a separator, or their text runs into the next cell.
+SEPARATED_HTML_TAGS = {"td", "th"}
+
 
 def simplify_html_text(html_string: str) -> str:
-    """Return text with only allowed tags preserved, stripping others and their content.
+    """Return text with only allowed tags preserved.
+
+    Tags carrying no body text (``<script>``, ``<style>``, ``<head>``...) are dropped with
+    their content; every other unsupported tag is unwrapped, so its text survives. That
+    matters for anything wrapped in markup this application does not render itself - a
+    full ``<html>`` document or a table-based HTML email would otherwise come out empty.
 
     Args:
         html_string (string): The HTML string.
@@ -22,42 +126,49 @@ def simplify_html_text(html_string: str) -> str:
     Returns:
         string: The simplified string with only allowed tags.
     """
-    allowed_tags = {
-        "p",
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "ul",
-        "ol",
-        "li",
-        "b",
-        "strong",
-        "i",
-        "em",
-        "a",
-        "pre",
-        "code",
-        "br",
-        "div",
-        "span",
-        "blockquote",
-        "mark",
-        "small",
-        "del",
-        "ins",
-        "sup",
-        "sub",
-        "u",
-        "s",
-    }
-    allowed_attrs = {"a": ["href"]}
     soup = BeautifulSoup(html_string, "html.parser")
+    for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+        comment.extract()
+    for tag in soup.find_all(list(DISCARDED_HTML_TAGS)):
+        tag.decompose()
     for tag in soup.find_all(name=True):
-        if tag.name not in allowed_tags:
-            tag.decompose()
+        if tag.name in ALLOWED_HTML_TAGS:
+            tag.attrs = {k: v for k, v in tag.attrs.items() if k in ALLOWED_HTML_ATTRS.get(tag.name, [])}
+        elif tag.name in BLOCK_HTML_TAGS:
+            tag.name = "div"
+            tag.attrs = {}
         else:
-            tag.attrs = {k: v for k, v in tag.attrs.items() if k in allowed_attrs.get(tag.name, [])}
+            if tag.name in SEPARATED_HTML_TAGS:
+                tag.append(" ")
+            tag.unwrap()
+    return str(soup)
+
+
+def resolve_relative_links(html_string: str, base_url: str) -> str:
+    """Rewrite relative ``<a href>`` targets against the page the markup was collected from.
+
+    Collected content keeps whatever the source site wrote, and sites routinely link
+    root-relatively (``/security/advisory-1``). Selenium hands back the literal markup for
+    ``innerHTML``, so those hrefs stay relative even though the item's own link is absolute.
+    Stored that way, the browser rendering a news item resolves them against the Taranis
+    origin and the link points back at this instance instead of the source. Resolving them
+    once, at collection time, keeps the GUI, presenters and publishers consistent.
+
+    Absolute URLs and non-network schemes (``mailto:``, and anything else ``urljoin`` treats
+    as non-relative) pass through untouched.
+
+    Args:
+        html_string (string): The HTML string.
+        base_url (string): The URL the markup was collected from. Falsy leaves the HTML as is.
+
+    Returns:
+        string: The HTML with every ``<a href>`` resolved against base_url.
+    """
+    if not base_url or not html_string:
+        return html_string
+    soup = BeautifulSoup(html_string, "html.parser")
+    for tag in soup.find_all("a", href=True):
+        tag["href"] = urljoin(base_url, tag["href"])
     return str(soup)
 
 
@@ -115,7 +226,10 @@ def text_to_simple_html(text: str, preformatted_text: bool) -> str:
     if not text:
         return ""
     if preformatted_text:
-        return f"<pre>{text}</pre>"
+        # Escaped, not stripped: <pre> is used where the line breaks and indentation are
+        # the point, and an unescaped '<' would be parsed as a tag and dropped by
+        # simplify_html_text - taking things like <https://example.com/> with it.
+        return f"<pre>{escape(text)}</pre>"
     escaped = strip_html(text)
     normalized = escaped.replace("\r\n", "\n").replace("\r", "\n")
     with_br = normalized.replace("\n", "<br>")

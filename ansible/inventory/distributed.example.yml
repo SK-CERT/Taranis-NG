@@ -8,11 +8,12 @@
 # Then run with `-i inventory/distributed.local.yml`.
 #
 # Each remote host in the [worker_hosts] group can run ONE OR MORE worker
-# types — set `worker_types` in that host's host_vars/<host>.yml.
-# Example host_vars entries:
+# types — set `worker_types` in that host's host_vars/<host>.yml, choosing from
+# collectors, bots, presenters, publishers and public-web. Example entries:
 #   worker_types: ["collectors"]                              # just collectors
 #   worker_types: ["collectors", "bots"]                      # collectors + bots on one host
 #   worker_types: ["collectors", "bots", "presenters", "publishers"]
+#   worker_types: ["public-web"]                              # a public report feed
 #
 # The [core] group is the machine running the all-in-one docker-compose stack.
 
@@ -28,7 +29,8 @@ all:
           # ansible_become_password: CHANGEME_SUDO_PASSWORD  # or use --ask-become-pass
 
     # Remote worker hosts — every host that should run one or more Taranis-NG
-    # worker containers (collectors / bots / presenters / publishers).
+    # worker containers (collectors / bots / presenters / publishers /
+    # public-web).
     # `worker_types` for each host is declared in its host_vars/<host>.yml.
     worker_hosts:
       hosts:

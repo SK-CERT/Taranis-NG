@@ -26,6 +26,7 @@
             <v-data-table
                 :headers="headers"
                 :items="filteredRecords"
+                :items-per-page="-1"
                 :search="search"
                 item-key="id"
                 class="elevation-1"
@@ -85,7 +86,7 @@
 
         <!-- Edit Dialog - Simplified for now -->
         <!-- `persistent`: blocks Vuetify's native close-on-Escape so Escape routes only
-             through @keydown.esc="requestClose" (the unsaved-changes guard). Without it,
+             through @keydown.esc.stop="requestClose" (the unsaved-changes guard). Without it,
              Escape both opens the prompt AND closes this dialog — the prompt (rendered
              inside this dialog) unmounts mid-click, so "Close without saving" detaches. -->
         <v-dialog
@@ -93,7 +94,7 @@
             max-width="700"
             persistent
             scrollable
-            @keydown.esc="requestClose"
+            @keydown.esc.stop="requestClose"
         >
             <v-card>
                 <DialogToolbar
@@ -220,6 +221,8 @@
         id: -1,
         display_name: '',
         description: '',
+        // A data default stored on the new state, not theme paint - it must not
+        // shift when the user switches theme.
         color: '#2196F3',
         icon: 'mdi-circle',
         editable: true

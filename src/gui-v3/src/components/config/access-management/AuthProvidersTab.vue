@@ -27,6 +27,7 @@
             <v-data-table
                 :headers="headers"
                 :items="configStore.authProviders.items as AuthProviderItem[]"
+                :items-per-page="-1"
                 :search="search"
                 :loading="loading"
                 item-key="id"

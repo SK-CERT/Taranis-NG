@@ -1,0 +1,67 @@
+import type { ThemeFamily } from './types'
+
+/** The red seeds are ordered by depth: #840909 the top bar, #B91B1B the
+ *  primary, #DA3131 the error so it still reads as an alarm inside a red
+ *  theme, and #FBF2CA the cream ground (and the text colour when dark). */
+export const valentine: ThemeFamily = {
+    id: 'valentine',
+    label: 'Valentine',
+    light: {
+        background: '#FBF2CA',
+        surface: '#FFFFFF',
+        surfaceBright: '#FFFFFF',
+        surfaceLight: '#FDF7E2',
+        surfaceVariant: '#F7E9C0',
+        onSurface: '#2E0A0A',
+        onSurfaceVariant: '#2E0A0A',
+        outline: '#DCC48F',
+        primary: '#B91B1B',
+        secondary: '#840909',
+        tertiary: '#8A6D1F',
+        error: '#DA3131',
+        info: '#2A6099',
+        success: '#3F7D53',
+        warning: '#B26B00',
+        accent: '#BE2525',
+        menuBg: '#840909',
+        onMenuBg: '#FBF2CA',
+        drawerBg: '#F7E7C3',
+        onDrawerBg: '#2E0A0A',
+        workspace: '#F4E4BE',
+        listRow: '#FFFFFF',
+        listRowSelected: '#FADADA',
+        listBorder: 'rgba(132, 9, 9, 0.30)',
+        panelBorder: 'rgba(132, 9, 9, 0.52)',
+        filterControlsBg: '#F5E6C1',
+        menuItemActive: 'rgba(251, 242, 202, 0.26)'
+    },
+    dark: {
+        background: '#1A0808',
+        surface: '#241010',
+        surfaceBright: '#3C1E1E',
+        surfaceLight: '#2C1616',
+        surfaceVariant: '#331919',
+        onSurface: '#FBF2CA',
+        onSurfaceVariant: '#FBF2CA',
+        outline: '#6E4444',
+        primary: '#EF6B6B',
+        secondary: '#FBF2CA',
+        tertiary: '#D9B45A',
+        error: '#FF3B3B',
+        info: '#8FB6DD',
+        success: '#7FC796',
+        warning: '#E8B15C',
+        accent: '#DA3131',
+        menuBg: '#5A0606',
+        onMenuBg: '#FBF2CA',
+        drawerBg: '#2C1616',
+        onDrawerBg: '#FFFFFF',
+        workspace: '#150606',
+        listRow: '#220F0F',
+        listRowSelected: 'rgba(218, 49, 49, 0.28)',
+        listBorder: 'rgba(251, 242, 202, 0.26)',
+        panelBorder: 'rgba(251, 242, 202, 0.44)',
+        filterControlsBg: '#1A0A0A',
+        menuItemActive: 'rgba(251, 242, 202, 0.24)'
+    }
+}

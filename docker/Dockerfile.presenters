@@ -91,17 +91,23 @@ ENV VARIABLE_NAME="app"
 ENV GUNICORN_CMD_ARGS="--timeout 120"
 
 
-VOLUME ["/app/templates"]
-
-
-# SK-CERT#723: run the service as an unprivileged user. su-exec lets
-# docker/entrypoint.sh fix volume/secret ownership as root and then drop to this
-# user before exec'ing gunicorn, so no application process runs as uid 0.
+# Run the service as an unprivileged user; docker/entrypoint.sh drops to it via
+# su-exec. /app stays root-owned so the runtime user cannot rewrite its own code;
+# the bytecode is precompiled instead.
+# Must precede VOLUME: a build's changes to an already-declared volume path are
+# discarded.
 RUN apk add --no-cache su-exec \
     && adduser -D -u 10001 taranis \
-    && chown -R taranis:taranis /var/cache/fontconfig
+    && python -m compileall -q /app \
+    && chown -R taranis /var/cache/fontconfig \
+    && mkdir -p /app/templates/user_templates \
+    && chown -R taranis /app/templates
+ENV PYTHONDONTWRITEBYTECODE="1"
 ENV TARANIS_USER="taranis"
 ENV TARANIS_WRITABLE_PATHS="/app/templates"
+
+VOLUME ["/app/templates"]
+
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]

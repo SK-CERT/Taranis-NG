@@ -28,6 +28,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    validate-on="submit"
                     @submit.prevent="handleSubmit"
                 >
                     <!-- Manual OSINT Source Select -->
@@ -327,6 +328,11 @@
         try {
             // Set content from editor
             newsItem.value.content = editorContent.value
+
+            // v-text-field change '' -> null, normalize it otherwise the backend will fail
+            newsItem.value.source ??= ''
+            newsItem.value.link ??= ''
+            newsItem.value.review ??= ''
 
             // Set osint_source_id from selected source
             newsItem.value.osint_source_id = selectedSourceId.value

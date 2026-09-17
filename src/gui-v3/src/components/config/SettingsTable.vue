@@ -48,7 +48,7 @@
                     </template>
 
                     <!-- Select with options -->
-                    <template v-else-if="item.key === Settings.UI_LANGUAGE || item.options">
+                    <template v-else-if="item.key === Settings.UI_LANGUAGE || item.key === Settings.UI_THEME || item.options">
                         <v-select
                             :model-value="item.value"
                             :items="getDisplayOptions(item)"
@@ -143,10 +143,11 @@
 <script setup lang="ts">
     import { ref, computed, onMounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
-    import { useTheme } from 'vuetify'
     import { useAuth } from '@/composables/useAuth'
+    import { useAppTheme } from '@/composables/useAppTheme'
     import { useSettingsStore } from '@/stores/settings'
     import { supportedLocales } from '@/i18n'
+    import { resolveFamily, themeFamilies } from '@/themes'
     import { Settings, type SettingKey } from '@/types/settings'
     import SearchField from '@/components/common/SearchField.vue'
     import { format } from 'date-fns'
@@ -184,17 +185,9 @@
     }>()
 
     const { t, te, locale } = useI18n()
-    const theme = useTheme()
     const { checkPermission } = useAuth()
+    const { applyVariant, applyFamily } = useAppTheme()
     const settingsStore = useSettingsStore()
-
-    const applyTheme = (themeName: string): void => {
-        if (typeof theme.change === 'function') {
-            theme.change(themeName)
-        } else {
-            theme.global.name.value = themeName
-        }
-    }
 
     const search = ref('')
     let date_format: string
@@ -250,7 +243,9 @@
         [Settings.HOTKEYS]: 'mdi-keyboard-outline',
         [Settings.SPELLCHECK]: 'mdi-spellcheck',
         [Settings.TAG_COLOR]: 'mdi-palette-outline',
-        [Settings.UI_LANGUAGE]: 'mdi-web'
+        [Settings.UI_LANGUAGE]: 'mdi-web',
+        [Settings.UI_THEME]: 'mdi-palette',
+        [Settings.CUSTOM_THEME]: 'mdi-palette-swatch'
     }
 
     const getSettingIcon = (key: SettingKey): string => settingIcons[key] || 'mdi-tune-variant'
@@ -258,6 +253,7 @@
     const getSelectIcon = (item: SettingsRecord): string | undefined => {
         if (item.key === Settings.UI_LANGUAGE) return 'mdi-web'
         if (item.key === Settings.CONTENT_DEFAULT_LANGUAGE) return 'mdi-translate'
+        if (item.key === Settings.UI_THEME) return 'mdi-palette'
         return undefined
     }
 
@@ -279,6 +275,13 @@
                     name: isolateAuto(getLanguageName(code, undefined, true)),
                     code: isolateLtr(code)
                 })
+            }))
+        }
+
+        if (item.key === Settings.UI_THEME) {
+            return themeFamilies.map((family) => ({
+                id: family.id,
+                txt: te('themes.' + family.id) ? t('themes.' + family.id) : family.label
             }))
         }
 
@@ -331,7 +334,8 @@
         const settingsRecords = allSettings as SettingsRecord[]
         const filtered = settingsRecords.filter((item) => {
             const settingsItem = item as SettingsRecord
-            if (!props.globalSetting && settingsItem.key === Settings.TAG_COLOR) return false
+            // Edited in the Theme tab; its value is a JSON blob, useless as a text row.
+            if (settingsItem.key === Settings.CUSTOM_THEME) return false
             return settingsItem.is_global === props.globalSetting
         })
 
@@ -342,7 +346,9 @@
 
         const personalSettingOrder: Partial<Record<SettingKey, number>> = {
             [Settings.UI_LANGUAGE]: 0,
-            [Settings.CONTENT_DEFAULT_LANGUAGE]: 1
+            [Settings.CONTENT_DEFAULT_LANGUAGE]: 1,
+            [Settings.UI_THEME]: 2,
+            [Settings.DARK_THEME]: 3
         }
 
         records.value = [...filtered].sort((left, right) => {
@@ -392,7 +398,9 @@
 
             // Apply special settings immediately
             if (item.key === Settings.DARK_THEME) {
-                applyTheme(validatedValue === 'true' ? 'dark' : 'light')
+                applyVariant(validatedValue === 'true')
+            } else if (item.key === Settings.UI_THEME) {
+                applyFamily(resolveFamily(validatedValue))
             } else if (item.key === Settings.UI_LANGUAGE) {
                 locale.value = validatedValue
             } else if (item.key === Settings.SPELLCHECK) {

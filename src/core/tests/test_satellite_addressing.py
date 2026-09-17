@@ -43,9 +43,14 @@ def _core_satellite_port() -> int:
     address: a satellite reaches core from outside the compose network, so the left
     side of the port mapping is the one it has to dial.
     """
-    compose = yaml.safe_load(COMPOSE.read_text(encoding="utf-8"))
-    mappings = [p for p in compose["services"]["traefik"]["ports"] if p.endswith(":8443")]
-    assert mappings, "the satellite entrypoint is no longer published"
+    # Read from the raw text, not the parsed document: the mappings ship commented out
+    # (a single-host install never dials the port, and binding [::1] fails where IPv6
+    # loopback is off), and a distributed deployment uncomments them. The number still
+    # has to agree with the one ansible hands the workers - an opt-in aimed at a port
+    # nothing serves fails as timeouts, which is the whole subject of this module.
+    text = COMPOSE.read_text(encoding="utf-8")
+    mappings = [m.group("mapping") for m in re.finditer(r'^\s*#?\s*-\s*"(?P<mapping>[^"]*:8443)"\s*$', text, re.MULTILINE)]
+    assert mappings, "the satellite entrypoint is neither published nor offered to uncomment"
     # One mapping per address family - naming a host address pins a mapping to that
     # family - so there is more than one, and they must all name the same port.
     # e.g. "${TARANIS_NG_SATELLITE_BIND:-127.0.0.1}:${TARANIS_NG_SATELLITE_PORT:-8443}:8443"

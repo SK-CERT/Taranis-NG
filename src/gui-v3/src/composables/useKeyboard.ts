@@ -149,6 +149,17 @@ export function useKeyboard(targetId: string, router: Router) {
         scrollToCard()
     }
 
+    function setCurrentCard(id: string | number): void {
+        const position = state.value.cardItems.findIndex((card) => card.element.getAttribute('data-id') === String(id))
+        if (position === -1) {
+            console.warn('[Keyboard] setCurrentCard: Card with ID %s not found', id)
+            return
+        }
+        // console.log('[Keyboard] setCurrentCard: %s', id)
+        state.value.pos = position
+        state.value.use_focus = true
+    }
+
     function moveUp(): void {
         if (state.value.pos > 0) {
             setPosition(state.value.pos - 1)
@@ -274,7 +285,7 @@ export function useKeyboard(targetId: string, router: Router) {
         // Don't process if hotkeys are disabled
         if (!state.value.keyActionEnabled) return
 
-        // console.debug("Key:", event.key, ", type:", document.activeElement.type, ", class:", document.activeElement.className, ", activeElement:", document.activeElement);
+        // console.debug("Key:", event.key, ", class:", document.activeElement?.className, ", activeElement:", document.activeElement);
 
         const searchField = document.getElementById('search') as HTMLInputElement | null
         // Don't process if input is focused
@@ -292,7 +303,7 @@ export function useKeyboard(targetId: string, router: Router) {
         const keyAlias = getKeyAlias(event)
         if (!keyAlias) return
 
-        // console.info(`[Keyboard] keyAction: ${keyAlias}`)
+        //console.info(`[Keyboard] keyAction: ${keyAlias}`)
 
         // just initialize focus on first keypress, ignore for source_group keys
         if (
@@ -460,7 +471,8 @@ export function useKeyboard(targetId: string, router: Router) {
         keyAction,
         setDetailDialogCloseCallback,
         setReloadCallback,
-        reindexCardItems
+        reindexCardItems,
+        setCurrentCard
     }
 }
 

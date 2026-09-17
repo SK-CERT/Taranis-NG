@@ -153,6 +153,10 @@ describe('Arabic production catalog contracts', () => {
 
     it('contains no unchanged English fallback outside reviewed machine labels', () => {
         const machineOnlyPaths = new Set([
+            // Product and organisation names; the other theme names are translated.
+            'themes.taranis',
+            'themes.cesnet',
+            'themes.skcert',
             'access_management.organizations.zip',
             'nav_menu.acls',
             'card_item.source_with_type',

@@ -42,7 +42,16 @@ export async function login(page, username = 'admin', password = 'admin') {
     await page.goto('/v2/login')
     await page.locator('[data-test="login-username"] input').fill(username)
     await page.locator('[data-test="login-password"] input').fill(password)
-    await page.locator('[data-test="login-submit"]').click()
+    // Pair the click with the request it has to produce. Waiting only on the URL turns a login
+    // that was refused, or lost to a dev-server reload, into an opaque 30s "waiting for
+    // navigation" with the form still filled on screen and the status code never seen.
+    const [response] = await Promise.all([
+        page.waitForResponse((res) => res.url().includes('/auth/login') && res.request().method() === 'POST'),
+        page.locator('[data-test="login-submit"]').click()
+    ])
+    if (!response.ok()) {
+        throw new Error(`Login for ${username} returned HTTP ${response.status()}`)
+    }
 
     // Wait for navigation to complete — allow extra time for the initial login
     // (first test after webServer boot may be slower due to cold backend caches).

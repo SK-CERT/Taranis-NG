@@ -357,7 +357,9 @@
         "not_available": "Недоступно",
         "aggregated_items_count": "Немає об’єднаних новинних матеріалів | {count} об’єднаний новинний матеріал | {count} об’єднані новинні матеріали | {count} об’єднаних новинних матеріалів",
         "in_analyze_count": "Немає аналізів, що виконуються | Виконується {count} аналіз | Виконуються {count} аналізи | Виконується {count} аналізів",
-        "analyzed_count": "Немає завершених аналізів | Завершено {count} аналіз | Завершено {count} аналізи | Завершено {count} аналізів"
+        "analyzed_count": "Немає завершених аналізів | Завершено {count} аналіз | Завершено {count} аналізи | Завершено {count} аналізів",
+        "next_run": "Наступний запуск",
+        "state": "Стан"
     },
     "attribute": {
         "add_constant": "Додати константу",
@@ -1017,6 +1019,7 @@
     "settings": {
         "user_settings": "Налаштування користувача",
         "tab_general": "Загальні",
+        "tab_theme": "Тема",
         "tab_security": "Безпека",
         "tab_wordlists": "Списки слів",
         "tab_hotkeys": "Сполучення клавіш",
@@ -1079,6 +1082,7 @@
         "DATE_FORMAT": "Формат дати",
         "HOTKEYS": "Увімкнути сполучення клавіш",
         "UI_LANGUAGE": "Мова інтерфейсу",
+        "UI_THEME": "Тема інтерфейсу",
         "CONTENT_DEFAULT_LANGUAGE": "Типова мова для звітів і продуктів",
         "REPORT_SELECTOR_READ_ONLY": "Відкривати засіб вибору елементів звіту в режимі лише для читання",
         "SPELLCHECK": "Перевірка орфографії",
@@ -1237,7 +1241,15 @@
         "details": "Відомості",
         "actions": "Дії",
         "close": "Закрити",
-        "use_suggested": "Використати запропоноване значення"
+        "use_suggested": "Використати запропоноване значення",
+        "collect_now": "Зібрати зараз",
+        "node_status": {
+            "alive": "Доступний",
+            "late": "Повільно відповідає",
+            "unreachable": "Недоступний",
+            "never_seen": "З'єднання не було",
+            "last_seen": "востаннє на зв'язку"
+        }
     },
     "collectors": {
         "groups": {
@@ -1280,6 +1292,7 @@
             "total_count": "Немає джерел OSINT | {count} джерело OSINT | {count} джерела OSINT | {count} джерел OSINT",
             "osint_source_groups": "Групи джерел OSINT",
             "tooltip": {
+                "toggle_selection": "Перемкнути режим вибору джерел OSINT",
                 "select_all": "Вибрати все",
                 "unselect_all": "Скасувати вибір усіх"
             },
@@ -1298,9 +1311,26 @@
             "file": "Файл імпорту",
             "file_required": "Виберіть файл імпорту",
             "node_required": "Виберіть вузол Collector",
-            "export_all_hint": "Експортувати всі джерела",
             "export_selected_hint": "Експортувати вибрані джерела",
-            "selected_count": "Джерела OSINT не вибрано | Вибрано {count} джерело OSINT | Вибрано {count} джерела OSINT | Вибрано {count} джерел OSINT"
+            "selected_count": "Джерела OSINT не вибрано | Вибрано {count} джерело OSINT | Вибрано {count} джерела OSINT | Вибрано {count} джерел OSINT",
+            "collecting": "Триває збір…",
+            "disabled": "Вимкнено",
+            "collect_started": "Збір розпочато",
+            "collect_error": "Не вдалося розпочати збір",
+            "collect_conflict": "Це джерело вже збирається",
+            "enable_error": "Не вдалося змінити стан джерела",
+            "enabled": "Увімкнено",
+            "due": "Очікує",
+            "state_error": "Помилка",
+            "state_stale": "Застаріле",
+            "state_pending": "Очікування",
+            "none": "На цьому вузлі немає джерел OSINT",
+            "group_all": "Усі",
+            "group_uncategorized": "Без категорії",
+            "delete_selected_hint": "Видалити вибрані джерела",
+            "delete_selected_confirm": "Видалити вибрані джерела ({count})? Цю дію не можна скасувати.",
+            "delete_selected_success": "Вибрані джерела видалено",
+            "delete_selected_error": "Деякі вибрані джерела не вдалося видалити"
         },
         "nodes": {
             "tab_description": "Тут можна керувати вузлами Collector.",
@@ -1315,7 +1345,8 @@
             "successful_edit": "Вузол Collector успішно оновлено",
             "removed": "Вузол Collector успішно видалено",
             "removed_error": "Вузол Collector використовується, тому його неможливо видалити",
-            "total_count": "Немає вузлів колекторів | {count} вузол колектора | {count} вузли колектора | {count} вузлів колекторів"
+            "total_count": "Немає вузлів колекторів | {count} вузол колектора | {count} вузли колектора | {count} вузлів колекторів",
+            "delete_error": "Не вдалося видалити вузол збирачів"
         }
     },
     "presenters": {
@@ -1556,6 +1587,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "Неможливо видалити поля, які досі використовуються елементами звіту: {fields}",
+            "in_use": "Неможливо видалити тип звіту: він використовується елементами звіту ({count})",
             "tab_description": "Тут можна керувати типами звітів.",
             "add_new": "Додати тип елемента звіту",
             "edit": "Редагувати тип елемента звіту",
@@ -1572,6 +1605,7 @@
             "total_count": "Немає типів звітів | {count} тип звіту | {count} типи звіту | {count} типів звітів"
         },
         "attributes": {
+            "in_use": "Неможливо видалити атрибут: він використовується в {types}",
             "tab_description": "Тут можна керувати атрибутами.",
             "add_new": "Додати атрибут",
             "edit": "Редагувати атрибут",
@@ -2003,14 +2037,7 @@
         },
         "confirm_delete_title": "Підтвердьте видалення",
         "confirm_delete_node": "Видалити вузол public-web «{name}» і всі його сайти?",
-        "confirm_delete_web": "Видалити сайт «{name}»?",
-        "status": {
-            "alive": "Доступний",
-            "late": "Повільно відповідає",
-            "unreachable": "Недоступний",
-            "never_seen": "З'єднання не було",
-            "last_seen": "востаннє на зв'язку"
-        }
+        "confirm_delete_web": "Видалити сайт «{name}»?"
     },
     "routing": {
         "tab_title": "Маршрутизація та TLS",
@@ -2098,5 +2125,65 @@
         "required": "Це поле обов'язкове",
         "invalid_pattern": "Некоректний регулярний вираз: {error}",
         "disabled_hint": "Вилучення атрибутів вимкнено глобально. Правила зберігаються, але не застосовуються. Увімкніть ATTRIBUTE_EXTRACTION_ENABLED у налаштуваннях."
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "Сланець",
+        "forest": "Ліс",
+        "amber": "Бурштин",
+        "contrast": "Високий контраст",
+        "doll": "Лялька",
+        "bubblegum": "Жуйка",
+        "autumn": "Осінь",
+        "retro": "Ретро",
+        "valentine": "Валентин",
+        "summer": "Літо",
+        "vintage": "Вінтаж",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "Лаванда",
+        "parklake": "Озеро в парку",
+        "bedroom": "Спальня",
+        "aurora": "Полярне сяйво",
+        "ember": "Жар",
+        "custom": "Власна"
+    },
+    "theme_editor": {
+        "light": "Світла",
+        "dark": "Темна",
+        "reset": "Скинути",
+        "not_active": "Щоб скористатися цією темою, виберіть «Власна» на вкладці «Загальні».",
+        "low_contrast": "Контраст {ratio}:1, менше ніж {min}:1",
+        "groups": {
+            "brand": "Бренд",
+            "status": "Статуси",
+            "surfaces": "Поверхні",
+            "chrome": "Каркас застосунку",
+            "details": "Деталі"
+        },
+        "tokens": {
+            "primary": "Основний",
+            "secondary": "Вторинний",
+            "tertiary": "Третинний",
+            "accent": "Акцент",
+            "error": "Помилка",
+            "info": "Інформація",
+            "success": "Успіх",
+            "warning": "Попередження",
+            "background": "Тло",
+            "surface": "Поверхня картки",
+            "surfaceVariant": "Заголовок таблиці",
+            "onSurface": "Текст",
+            "outline": "Контур",
+            "menuBg": "Верхня панель",
+            "drawerBg": "Бічна панель",
+            "workspace": "Робоча область",
+            "listRow": "Рядок списку",
+            "listRowSelected": "Вибраний рядок",
+            "listBorder": "Межа рядка",
+            "panelBorder": "Межа панелі",
+            "filterControlsBg": "Панель фільтрів",
+            "menuItemActive": "Активний пункт меню"
+        }
     }
 }

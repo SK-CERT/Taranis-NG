@@ -81,7 +81,7 @@
         :max-width="dialogMaxWidth"
         persistent
         scrollable
-        @keydown.esc="requestClose"
+        @keydown.esc.stop="requestClose"
     >
         <v-card>
             <DialogToolbar

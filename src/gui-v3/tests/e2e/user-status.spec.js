@@ -81,10 +81,13 @@ test.describe('User status and approval', () => {
         await activePanel(page).getByRole('textbox', { name: 'Search' }).fill(username)
         const row = activePanel(page).locator('tbody tr').filter({ hasText: username })
         await expect(row).toBeVisible()
-        await expect(row).toContainText('Pending approval')
+        // The list no longer carries a status column; an account awaiting approval is the one
+        // offering the Approve action, and approving it is what takes the action away.
+        const approve = row.getByRole('button', { name: 'Approve' })
+        await expect(approve).toBeVisible()
 
-        await row.getByRole('button', { name: 'Approve' }).click()
-        await expect(row).toContainText('Active')
+        await approve.click()
+        await expect(approve).toBeHidden()
 
         // The approved account can now authenticate
         const loginResponse = await request.post(`${CORE_API}/auth/login`, { data: { username, password: 'Passw0rd!' } })

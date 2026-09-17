@@ -1,15 +1,12 @@
 <template>
     <div class="toolbar-group">
         <!-- Multi-select toggle button -->
-        <v-btn
-            icon
-            size="small"
-            :color="multiSelectActive ? 'primary' : 'default'"
+        <ActionButton
+            :icon="ICONS.MULTISELECT"
+            :color="multiSelectActive ? 'primary' : 'medium-emphasis'"
             :title="t(`${view}.tooltip.toggle_selection`)"
             @click="toggleMultiSelect"
-        >
-            <v-icon>{{ ICONS.MULTISELECT }}</v-icon>
-        </v-btn>
+        />
 
         <!-- Divider -->
         <v-divider
@@ -17,20 +14,48 @@
             class="mx-2"
         />
 
-        <!-- Action Buttons (only visible when multi-select is active) -->
-        <template v-if="multiSelectActive">
-            <!-- Select All / Unselect All -->
-            <v-btn
-                icon
-                size="small"
-                :disabled="false"
-                :title="allSelected ? t(`${view}.tooltip.unselect_all`) : t(`${view}.tooltip.select_all`)"
-                @click="allSelected ? unselectAll() : selectAll()"
-            >
-                <v-icon>{{ allSelected ? ICONS.CHECKBOX_BLANK_OUTLINE : ICONS.SELECT_ALL }}</v-icon>
-            </v-btn>
+        <!-- Select All / Unselect All (display always first!). Always present so the toolbar keeps
+             its shape, but inactive until selection mode is on - the same way export and delete
+             stay inactive until there is a selection to act on. -->
+        <ActionButton
+            :icon="allSelected ? ICONS.CHECKBOX_BLANK_OUTLINE : ICONS.SELECT_ALL"
+            color="primary"
+            :disabled="!multiSelectActive"
+            :title="allSelected ? t(`${view}.tooltip.unselect_all`) : t(`${view}.tooltip.select_all`)"
+            @click="allSelected ? unselectAll() : selectAll()"
+        />
 
-            <!-- View-specific action buttons -->
+        <!-- Action Buttons (visible always) -->
+        <template v-if="view === 'collectors.sources'">
+            <!-- Import -->
+            <ActionButton
+                v-if="canImport"
+                icon="mdi-import"
+                color="primary"
+                :title="t('collectors.sources.import')"
+                @click="handleActionEvent(Action.OSINT_IMPORT)"
+            />
+            <!-- Export -->
+            <ActionButton
+                v-if="canExport"
+                icon="mdi-export"
+                color="primary"
+                :disabled="selectedCount === 0"
+                :title="t('collectors.sources.export_selected_hint')"
+                @click="handleActionEvent(Action.OSINT_EXPORT)"
+            />
+            <!-- Delete selected. Destructive and unbounded in size, so the view confirms first. -->
+            <ActionButton
+                v-if="canDeleteSources"
+                action="delete"
+                :disabled="selectedCount === 0"
+                :title="t('collectors.sources.delete_selected_hint')"
+                @click="handleActionEvent(Action.OSINT_DELETE)"
+            />
+        </template>
+
+        <!-- Action Buttons (visible only when multi-select is active) -->
+        <template v-if="multiSelectActive">
             <template v-if="view === 'assess'">
                 <!-- Group -->
                 <v-btn
@@ -184,9 +209,11 @@
     import { ICONS } from '@/config/ui-constants'
     import { useRoute, useRouter } from 'vue-router'
     import { useI18n } from 'vue-i18n'
+    import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import { useAssessStore } from '@/stores/assess'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { usePublishStore } from '@/stores/publish'
+    import { useOSINTSourceStore } from '@/stores/osint_source'
     import { useAuth } from '@/composables/useAuth'
     import { PERMISSIONS } from '@/services/auth/permissions'
     import { groupAction, selectAllNewsItems } from '@/api/assess'
@@ -195,7 +222,7 @@
     import { Action, type ActionKey } from '@/types/actions'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
-    type ViewMode = 'assess' | 'analyze' | 'publish'
+    type ViewMode = 'assess' | 'analyze' | 'publish' | 'collectors.sources'
     type GenericFilter = Record<string, unknown>
     type SelectionItem = {
         type?: string
@@ -235,6 +262,11 @@
 
     const emit = defineEmits<{
         (e: 'update-data'): void
+        (e: 'select-all'): void
+        (e: 'clear-selection'): void
+        (e: 'osint-import'): void
+        (e: 'osint-export'): void
+        (e: 'osint-delete'): void
     }>()
 
     const route = useRoute()
@@ -251,20 +283,39 @@
     const assessStore = useAssessStore()
     const analyzeStore = useAnalyzeStore()
     const publishStore = usePublishStore()
+    const osintSourceStore = useOSINTSourceStore()
 
     const allSelected = ref<boolean>(false)
 
     // Computed properties based on view
     const multiSelectActive = computed(() => {
-        if (props.view === 'assess') return assessStore.getMultiSelect
-        if (props.view === 'analyze') return analyzeStore.getMultiSelectReport
-        return publishStore.getMultiSelect
+        switch (props.view) {
+            case 'assess':
+                return assessStore.getMultiSelect
+            case 'analyze':
+                return analyzeStore.getMultiSelectReport
+            case 'publish':
+                return publishStore.getMultiSelect
+            case 'collectors.sources':
+                return osintSourceStore.getOSINTSourcesMultiSelect
+            default:
+                return false
+        }
     })
 
     const selectedCount = computed(() => {
-        if (props.view === 'assess') return assessStore.getSelection.length
-        if (props.view === 'analyze') return analyzeStore.getSelectionReport.length
-        return publishStore.getSelection.length
+        switch (props.view) {
+            case 'assess':
+                return assessStore.getSelection.length
+            case 'analyze':
+                return analyzeStore.getSelectionReport.length
+            case 'publish':
+                return publishStore.getSelection.length
+            case 'collectors.sources':
+                return osintSourceStore.getOSINTSourcesSelection.length
+            default:
+                return 0
+        }
     })
 
     // The selection is also emptied from outside this toolbar - switching group tabs, leaving the
@@ -297,6 +348,10 @@
         if (props.view === 'analyze') return checkPermission(PERMISSIONS.PUBLISH_CREATE)
         return false
     })
+
+    const canImport = computed(() => checkPermission('CONFIG_OSINT_SOURCE_CREATE'))
+    const canExport = computed(() => checkPermission('CONFIG_OSINT_SOURCE_ACCESS'))
+    const canDeleteSources = computed(() => checkPermission('CONFIG_OSINT_SOURCE_DELETE'))
 
     const normalizeSelectionType = (rawType: unknown): 'AGGREGATE' | 'ITEM' => {
         // console.log('[ToolbarGroup] Normalizing selection type:', rawType)
@@ -338,33 +393,55 @@
     })
 
     // Toggle multi-select
-    const toggleMultiSelect = (): void => {
-        const newState = !multiSelectActive.value
-
-        if (props.view === 'assess') {
-            assessStore.multiSelect(newState)
-        } else if (props.view === 'analyze') {
-            analyzeStore.multiSelectReport(newState)
-        } else {
-            publishStore.multiSelect(newState)
+    const setMultiSelect = (newState: boolean): void => {
+        switch (props.view) {
+            case 'assess':
+                assessStore.multiSelect(newState)
+                break
+            case 'analyze':
+                analyzeStore.multiSelectReport(newState)
+                break
+            case 'publish':
+                publishStore.multiSelect(newState)
+                break
+            case 'collectors.sources':
+                osintSourceStore.multiSelectOSINTSource(newState)
+                break
+            default:
+                break
         }
 
         // Clear allSelected flag when turning off multi-select
         if (!newState) {
             allSelected.value = false
+            if (props.view === 'collectors.sources') {
+                emit('clear-selection')
+            }
         }
 
         window.dispatchEvent(new CustomEvent('multiselect-toggled'))
     }
 
+    const toggleMultiSelect = (): void => setMultiSelect(!multiSelectActive.value)
+
     // Select all
     const selectAll = async (): Promise<void> => {
-        if (props.view === 'assess') {
-            await selectAllAssess()
-        } else if (props.view === 'analyze') {
-            await selectAllAnalyze()
-        } else {
-            await selectAllPublish()
+        switch (props.view) {
+            case 'assess':
+                await selectAllAssess()
+                break
+            case 'analyze':
+                await selectAllAnalyze()
+                break
+            case 'publish':
+                await selectAllPublish()
+                break
+            case 'collectors.sources':
+                emit('select-all')
+                allSelected.value = true
+                break
+            default:
+                break
         }
     }
 
@@ -561,16 +638,24 @@
     // Unselect all
     const unselectAll = (): void => {
         allSelected.value = false
-
-        if (props.view === 'assess') {
-            assessStore.selection = []
-            window.dispatchEvent(new CustomEvent('sync-assess-selection'))
-        } else if (props.view === 'analyze') {
-            analyzeStore.selection_report = []
-            window.dispatchEvent(new CustomEvent('sync-analyze-selection'))
-        } else {
-            publishStore.selection = []
-            window.dispatchEvent(new CustomEvent('sync-publish-selection'))
+        switch (props.view) {
+            case 'assess':
+                assessStore.selection = []
+                window.dispatchEvent(new CustomEvent('sync-assess-selection'))
+                break
+            case 'analyze':
+                analyzeStore.selection_report = []
+                window.dispatchEvent(new CustomEvent('sync-analyze-selection'))
+                break
+            case 'publish':
+                publishStore.selection = []
+                window.dispatchEvent(new CustomEvent('sync-publish-selection'))
+                break
+            case 'collectors.sources':
+                emit('clear-selection')
+                break
+            default:
+                break
         }
     }
 
@@ -655,6 +740,24 @@
                 console.error('Error performing action:', error)
                 notify({ type: 'error', loc: `error.${getErrorKey(error)}` })
             }
+        }
+    }
+
+    const handleActionEvent = async (type: ActionKey): Promise<void> => {
+        console.log(type)
+        switch (type) {
+            case Action.OSINT_IMPORT:
+                emit('osint-import')
+                break
+            case Action.OSINT_EXPORT:
+                emit('osint-export')
+                break
+            case Action.OSINT_DELETE:
+                emit('osint-delete')
+                break
+            default:
+                console.warn('[ToolbarGroup] Unhandled action event type:', type)
+                break
         }
     }
 

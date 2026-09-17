@@ -1,0 +1,38 @@
+{# Custom mail headers for the MESSAGE presenter.
+
+   Every rendered "X-Name: value" line becomes a header on the published e-mail. Blank
+   lines and lines without a colon are ignored, so you do not have to fight Jinja
+   whitespace control to keep this readable.
+
+   The values come from ordinary report item attributes. Give the report item type an
+   attribute titled e.g. "Report Category" (set max_occurrence above 1 to let an analyst
+   enter several values), then read it here by its title, lowercased with spaces replaced
+   by underscores. `collect_attrs` gathers that attribute from every report item in the
+   product, drops empties and repeats, and scrubs anything that could break a header line.
+
+   A header whose value renders empty is dropped, so nothing is sent for an attribute no
+   report item filled in.
+
+   Names the publisher owns are refused with a warning in the presenters log: To, Cc, Bcc,
+   From, Subject, Reply-To, Content-*, MIME-Version, Date, Message-ID and the other
+   trace headers. These headers are NOT covered by S/MIME or PGP signing or encryption, so
+   do not put anything sensitive in one.
+
+   Alternative styles:
+
+     One header per value instead of one comma-joined header - envelope appends on repeat:
+       {% raw %}{% for c in categories %}X-Report-Category: {{ c }}
+       {% endfor %}{% endraw %}
+
+     A single report item's attribute, interpolated raw. `header_value` is mandatory here:
+     it is what `collect_attrs` applies for you, and without it an analyst's newline can
+     start a header line of their own.
+       {% raw %}X-Report-Type: {{ data.report_items[0].attrs.report_type | header_value }}{% endraw %}
+#}
+{% set categories = data.report_items | collect_attrs('report_category') %}
+{% if categories %}X-Report-Category: {{ categories | join(', ') }}{% endif %}
+{% set types = data.report_items | collect_attrs('report_type') %}
+{% if types %}X-Report-Type: {{ types | join(', ') }}{% endif %}
+{# max_cvss is only set for products containing a Vulnerability Report, and is None when
+   none of those carries a CVSS score - without both guards this renders "None". #}
+{% if data.product.max_cvss is defined and data.product.max_cvss is not none %}X-Report-Max-CVSS: {{ data.product.max_cvss }}{% endif %}

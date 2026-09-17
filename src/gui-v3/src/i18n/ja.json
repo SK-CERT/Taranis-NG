@@ -357,7 +357,9 @@
         "not_available": "利用不可",
         "aggregated_items_count": "集約されたニュース項目はありません | 集約されたニュース項目: {count} 件 | 集約されたニュース項目: {count} 件",
         "in_analyze_count": "進行中の分析はありません | 進行中の分析: {count} 件 | 進行中の分析: {count} 件",
-        "analyzed_count": "完了した分析はありません | 完了した分析: {count} 件 | 完了した分析: {count} 件"
+        "analyzed_count": "完了した分析はありません | 完了した分析: {count} 件 | 完了した分析: {count} 件",
+        "next_run": "次回実行",
+        "state": "状態"
     },
     "attribute": {
         "add_constant": "定数を追加",
@@ -1017,6 +1019,7 @@
     "settings": {
         "user_settings": "ユーザー設定",
         "tab_general": "一般",
+        "tab_theme": "テーマ",
         "tab_security": "セキュリティ",
         "tab_wordlists": "単語リスト",
         "tab_hotkeys": "ホットキー",
@@ -1079,6 +1082,7 @@
         "DATE_FORMAT": "日付形式",
         "HOTKEYS": "ホットキーを有効化",
         "UI_LANGUAGE": "ユーザーインターフェースの言語",
+        "UI_THEME": "ユーザーインターフェイスのテーマ",
         "CONTENT_DEFAULT_LANGUAGE": "レポート／プロダクトの既定言語",
         "REPORT_SELECTOR_READ_ONLY": "レポート項目セレクターを読み取り専用モードで開く",
         "SPELLCHECK": "スペルチェック",
@@ -1237,7 +1241,15 @@
         "details": "詳細",
         "actions": "操作",
         "close": "閉じる",
-        "use_suggested": "推奨値を使用"
+        "use_suggested": "推奨値を使用",
+        "collect_now": "今すぐ収集",
+        "node_status": {
+            "alive": "到達可能",
+            "late": "応答が遅い",
+            "unreachable": "到達不能",
+            "never_seen": "未接続",
+            "last_seen": "最終確認"
+        }
     },
     "collectors": {
         "groups": {
@@ -1280,6 +1292,7 @@
             "total_count": "OSINTソース {count} 件 | OSINTソース {count} 件",
             "osint_source_groups": "OSINTソースグループ",
             "tooltip": {
+                "toggle_selection": "OSINTソースの選択モードを切り替え",
                 "select_all": "すべてを選択",
                 "unselect_all": "すべて選択解除"
             },
@@ -1298,9 +1311,26 @@
             "file": "インポートファイル",
             "file_required": "インポートファイルを選択",
             "node_required": "コレクターノードを選択",
-            "export_all_hint": "すべてのソースをエクスポート",
             "export_selected_hint": "選択したソースをエクスポート",
-            "selected_count": "OSINTソースを {count} 件選択 | OSINTソースを {count} 件選択"
+            "selected_count": "OSINTソースを {count} 件選択 | OSINTソースを {count} 件選択",
+            "collecting": "収集中…",
+            "disabled": "無効",
+            "collect_started": "収集を開始しました",
+            "collect_error": "収集を開始できませんでした",
+            "collect_conflict": "このソースは既に収集中です",
+            "enable_error": "ソースの状態を変更できませんでした",
+            "enabled": "有効",
+            "due": "実行待ち",
+            "state_error": "エラー",
+            "state_stale": "更新なし",
+            "state_pending": "待機中",
+            "none": "このノードに OSINT ソースはありません",
+            "group_all": "すべて",
+            "group_uncategorized": "未分類",
+            "delete_selected_hint": "選択したソースを削除",
+            "delete_selected_confirm": "選択した {count} 件のソースを削除しますか？この操作は取り消せません。",
+            "delete_selected_success": "選択したソースを削除しました",
+            "delete_selected_error": "一部の選択したソースを削除できませんでした"
         },
         "nodes": {
             "tab_description": "ここではコレクターノードを管理できます。",
@@ -1315,7 +1345,8 @@
             "successful_edit": "コレクターノードを更新しました",
             "removed": "コレクターノードを削除しました",
             "removed_error": "コレクターノードは使用中のため削除できませんでした",
-            "total_count": "コレクターノード {count} 件 | コレクターノード {count} 件"
+            "total_count": "コレクターノード {count} 件 | コレクターノード {count} 件",
+            "delete_error": "コレクターノードを削除できませんでした"
         }
     },
     "presenters": {
@@ -1556,6 +1587,8 @@
     },
     "reports": {
         "types": {
+            "fields_in_use": "レポートアイテムがまだ使用しているフィールドは削除できません: {fields}",
+            "in_use": "レポートタイプを削除できません: レポートアイテムが使用しています ({count})",
             "tab_description": "ここではレポート種別を管理できます。",
             "add_new": "新規レポート項目種別を追加",
             "edit": "レポート項目種別を編集",
@@ -1572,6 +1605,7 @@
             "total_count": "レポートタイプ {count} 件 | レポートタイプ {count} 件"
         },
         "attributes": {
+            "in_use": "属性を削除できません: {types} で使用されています",
             "tab_description": "ここでは属性を管理できます。",
             "add_new": "新規属性を追加",
             "edit": "属性を編集",
@@ -2003,14 +2037,7 @@
         },
         "confirm_delete_title": "削除の確認",
         "confirm_delete_node": "public-web ノード「{name}」とそのすべてのサイトを削除しますか？",
-        "confirm_delete_web": "サイト「{name}」を削除しますか？",
-        "status": {
-            "alive": "到達可能",
-            "late": "応答が遅い",
-            "unreachable": "到達不能",
-            "never_seen": "未接続",
-            "last_seen": "最終確認"
-        }
+        "confirm_delete_web": "サイト「{name}」を削除しますか？"
     },
     "routing": {
         "tab_title": "ルーティングと TLS",
@@ -2098,5 +2125,65 @@
         "required": "この項目は必須です",
         "invalid_pattern": "正規表現が不正です: {error}",
         "disabled_hint": "属性抽出は全体で無効になっています。以下のルールは保存されますが適用されません。設定で ATTRIBUTE_EXTRACTION_ENABLED を有効にしてください。"
+    },
+    "themes": {
+        "taranis": "Taranis-NG",
+        "slate": "スレート",
+        "forest": "フォレスト",
+        "amber": "アンバー",
+        "contrast": "ハイコントラスト",
+        "doll": "ドール",
+        "bubblegum": "バブルガム",
+        "autumn": "秋",
+        "retro": "レトロ",
+        "valentine": "バレンタイン",
+        "summer": "夏",
+        "vintage": "ヴィンテージ",
+        "cesnet": "CESNET",
+        "skcert": "SK-CERT",
+        "lavender": "ラベンダー",
+        "parklake": "公園の池",
+        "bedroom": "ベッドルーム",
+        "aurora": "オーロラ",
+        "ember": "残り火",
+        "custom": "カスタム"
+    },
+    "theme_editor": {
+        "light": "ライト",
+        "dark": "ダーク",
+        "reset": "リセット",
+        "not_active": "このテーマを使うには、一般タブでカスタムを選択してください。",
+        "low_contrast": "コントラスト {ratio}:1（{min}:1 未満）",
+        "groups": {
+            "brand": "ブランド",
+            "status": "ステータス",
+            "surfaces": "サーフェス",
+            "chrome": "アプリ外枠",
+            "details": "詳細"
+        },
+        "tokens": {
+            "primary": "プライマリ",
+            "secondary": "セカンダリ",
+            "tertiary": "ターシャリ",
+            "accent": "アクセント",
+            "error": "エラー",
+            "info": "情報",
+            "success": "成功",
+            "warning": "警告",
+            "background": "背景",
+            "surface": "カード面",
+            "surfaceVariant": "テーブル見出し",
+            "onSurface": "テキスト",
+            "outline": "輪郭",
+            "menuBg": "トップバー",
+            "drawerBg": "サイドバー",
+            "workspace": "ワークスペース",
+            "listRow": "リスト行",
+            "listRowSelected": "選択行",
+            "listBorder": "行の境界線",
+            "panelBorder": "パネルの境界線",
+            "filterControlsBg": "フィルターバー",
+            "menuItemActive": "選択中のメニュー項目"
+        }
     }
 }

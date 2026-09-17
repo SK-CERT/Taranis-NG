@@ -89,6 +89,17 @@ class ConfigCollector(ConfigBase):
                     ParameterType.BOOLEAN,
                     "false",
                 ),
+                param_type(
+                    "CHECK_IF_MODIFIED",
+                    "Check if modified",
+                    (
+                        "OPTIONAL: Ask the server whether the content changed since the last collection "
+                        "(If-Modified-Since) and skip the run when it reports no change. Turn off for sites "
+                        "that refuse the request or answer it wrongly. Default: true"
+                    ),
+                    ParameterType.BOOLEAN,
+                    "true",
+                ),
             ],
         )
         self.modules.append(mod)
@@ -147,6 +158,17 @@ class ConfigCollector(ConfigBase):
                 # TODO (Ján): implement ENUM for the keys?
                 param_type("WEBDRIVER", "Name of Webdriver", "Name of webdriver for Selenium (chrome | firefox)", ParameterType.STRING),
                 param_type("TOR", "Route traffic through Tor", "Using Tor service (true | false)", ParameterType.BOOLEAN, "false"),
+                param_type(
+                    "CHECK_IF_MODIFIED",
+                    "Check if modified",
+                    (
+                        "OPTIONAL: Ask the server whether the content changed since the last collection "
+                        "(If-Modified-Since) and skip the run when it reports no change. Turn off for sites "
+                        "that refuse the request or answer it wrongly. Default: true"
+                    ),
+                    ParameterType.BOOLEAN,
+                    "true",
+                ),
                 param_type(
                     "USER_AGENT",
                     "User agent",

@@ -95,13 +95,10 @@ test.describe('Navigation', () => {
         await page.locator('.primary-navigation').getByRole('link', { name: 'Assess' }).click()
         await expect(page).toHaveURL(/\/assess/)
 
-        // Should show assess content
-        await expect(
-            page
-                .locator('.text-h6')
-                .filter({ hasText: /news items/i })
-                .first()
-        ).toBeVisible()
+        // Assess content rendered. Asserted through the toolbar rather than the empty-state
+        // heading ("No news items found"), which only appears while the instance holds no news
+        // and so made this test depend on what every other spec had collected.
+        await expect(page.locator('.toolbar-filter__search input').first()).toBeVisible()
     })
 
     test('should navigate to analyze view', async ({ page }) => {

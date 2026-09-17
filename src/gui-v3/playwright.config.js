@@ -106,7 +106,15 @@ export default defineConfig({
             // Vite dev server proxies /api and /sse to the E2E core. Use E2E_CORE_PORT
             // (default 8090, see docker/.env.e2e) so the test stack doesn't collide with a
             // production stack's published ports. Override via the real env if needed.
-            command: `VITE_DEV_BACKEND_ORIGIN=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'} VITE_APP_TARANIS_NG_CORE_API=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1 VITE_APP_TARANIS_NG_CORE_SSE=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/sse npm run dev:remote`,
+            //
+            // VITE_DEV_BACKEND_ORIGIN is the only variable needed: vite.config.js derives the
+            // proxy target from it, and the app falls back to the same-origin '/api/v1' and
+            // '/sse' (src/main.ts, src/composables/useSSE.ts) that the proxy serves. Setting
+            // VITE_APP_TARANIS_NG_CORE_API/_SSE to absolute URLs as well pointed the browser
+            // straight at the core instead, making every call cross-origin - which only
+            // survives because core's CORS happens to allow this one port. Run the suite
+            // against any other BASE_URL and login died on an opaque axios "Network Error".
+            command: `VITE_DEV_BACKEND_ORIGIN=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'} npm run dev:remote`,
             url: 'http://localhost:4444',
             reuseExistingServer: false,
             timeout: 120 * 1000

@@ -7,7 +7,8 @@ import {
     detectVersion,
     getSeverityRating,
     calculateScoreItems,
-    buildScoreItems
+    buildScoreItems,
+    hasSelectedMetrics
 } from '@/components/common/cvss-utils'
 
 // Minimal i18n helpers used by score-building functions
@@ -332,5 +333,24 @@ describe('buildScoreItems', () => {
         const items = buildScoreItems(scores, '3.1', t, te)
         // t returns the key itself, te returns true, so severityLabel = t('cvss_calculator.critical')
         expect(items[0].severityLabel).toBe('cvss_calculator.critical')
+    })
+})
+
+describe('hasSelectedMetrics', () => {
+    it.each([
+        ['CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H', true],
+        ['CVSS:3.1/AV:N/AC:X/PR:X/UI:X/S:X/C:X/I:X/A:X', true],
+        ['(CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)', true],
+        ['AV:N/AC:L/Au:N/C:P/I:P/A:P', true],
+        // A fresh calculator instance: a version was picked, nothing under it.
+        ['CVSS:3.1/', false],
+        ['CVSS:4.0/', false],
+        // Every metric explicitly reset to "not defined".
+        ['CVSS:3.1/AV:X/AC:X/PR:X/UI:X/S:X/C:X/I:X/A:X', false],
+        ['', false],
+        [null, false],
+        [undefined, false]
+    ])('%s → %s', (vector, expected) => {
+        expect(hasSelectedMetrics(vector)).toBe(expected)
     })
 })

@@ -32,7 +32,8 @@
         min-width: 0;
         padding: clamp(0.4rem, 0.8vw, 0.75rem);
         gap: 0.7rem;
-        background: var(--review-workspace);
+        background-color: var(--review-workspace);
+        background-image: var(--v-workspace-gradient, none);
     }
 
     .view-panel {

@@ -36,9 +36,12 @@
 
             <!-- Data Table -->
             <v-data-table
+                ref="tableRef"
                 :headers="headers"
                 :items="filteredUsers"
+                :items-per-page="-1"
                 :search="search"
+                :row-props="rowProps"
                 item-key="id"
                 class="elevation-1"
             >
@@ -50,14 +53,30 @@
                     {{ asUserItem(item).name }}
                 </template>
 
-                <template #item.status="{ item }">
+                <template #item.roles="{ item }">
                     <v-chip
+                        v-for="role in asUserItem(item).roles || []"
+                        :key="role.id"
                         size="small"
-                        :color="statusColor(asUserItem(item).status)"
+                        class="me-1"
                         variant="tonal"
                     >
-                        {{ t(`access_management.users.statuses.${asUserItem(item).status || 'active'}`) }}
+                        {{ role.name }}
                     </v-chip>
+                </template>
+
+                <template #item.last_login_at="{ item }">
+                    <span
+                        v-if="asUserItem(item).last_login_at"
+                        :title="asUserItem(item).last_login_at || ''"
+                    >
+                        {{ formatDateTime(asUserItem(item).last_login_at as string) }}
+                    </span>
+                    <span
+                        v-else
+                        class="text-medium-emphasis"
+                        >&ndash;</span
+                    >
                 </template>
 
                 <template #item.organizations="{ item }">
@@ -162,6 +181,7 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import SearchField from '@/components/common/SearchField.vue'
     import { useAuth } from '@/composables/useAuth'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type HeaderEntry = {
         title: string
@@ -184,11 +204,18 @@
         last_login_at?: string | null
     }
 
+    type RoleItem = {
+        id: string | number
+        name?: string
+    }
+
     type UserItem = {
         id: string | number
         username?: string
         name?: string
         status?: string
+        roles?: RoleItem[]
+        last_login_at?: string | null
         organizations?: OrganizationItem[]
         identities?: UserIdentity[]
         has_password?: boolean
@@ -199,6 +226,7 @@
     const { t } = useI18n()
     const configStore = useConfigStore()
     const { checkPermission } = useAuth()
+    const { formatDateTime } = useLocaleFormatters()
     const canDelete = computed(() => checkPermission('CONFIG_USER_DELETE'))
 
     const search = ref('')
@@ -210,8 +238,9 @@
     const headers: HeaderEntry[] = [
         { title: t('access_management.users.username'), key: 'username' },
         { title: t('access_management.users.name'), key: 'name' },
-        { title: t('access_management.users.status'), key: 'status' },
+        { title: t('access_management.users.roles'), key: 'roles', sortable: false },
         { title: t('access_management.users.organizations'), key: 'organizations' },
+        { title: t('access_management.users.last_login'), key: 'last_login_at' },
         { title: t('access_management.users.login_methods'), key: 'login_methods', sortable: false },
         { title: t('settings.actions'), key: 'actions', sortable: false, align: 'end' }
     ]
@@ -232,15 +261,11 @@
         return items.filter((user) => (user.status || 'active') === statusFilter.value)
     })
 
-    const statusColor = (status?: string): string => {
-        if (status === 'pending') {
-            return 'warning'
-        }
-        if (status === 'disabled') {
-            return 'grey'
-        }
-        return 'success'
-    }
+    // A disabled account is dimmed rather than labelled, the same treatment disabled OSINT
+    // sources get: the row stays readable on hover, and the enable action is still in reach.
+    const rowProps = ({ item }: { item: unknown }): Record<string, unknown> => ({
+        class: (item as UserItem).status === 'disabled' ? 'user-disabled' : ''
+    })
 
     const hasMfa = (user: UserItem): boolean => !!(user.mfa?.totp || (user.mfa?.passkeys ?? 0) > 0)
 
@@ -305,3 +330,15 @@
         loadData()
     })
 </script>
+
+<style scoped>
+    /* Matches the disabled OSINT source rows: dimmed at rest, full contrast under the pointer
+       so a disabled account can still be read and acted on. */
+    :deep(.user-disabled) {
+        opacity: 0.55;
+    }
+
+    :deep(.user-disabled:hover) {
+        opacity: 1;
+    }
+</style>

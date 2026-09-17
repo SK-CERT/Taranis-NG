@@ -24,8 +24,10 @@
 
             <!-- Data Table -->
             <v-data-table
+                ref="tableRef"
                 :headers="headers"
                 :items="configStore.attributes.items"
+                :items-per-page="-1"
                 :search="search"
                 :loading="loading"
                 item-key="id"
@@ -82,6 +84,7 @@
         RICH_TEXT: 'mdi-text-box-outline',
         ENUM: 'mdi-format-list-bulleted',
         RADIO: 'mdi-radiobox-marked',
+        MULTI_CHOICE: 'mdi-checkbox-multiple-marked-outline',
         CVSS: 'mdi-calculator',
         CPE: 'mdi-laptop',
         CVE: 'mdi-bug-outline',
@@ -148,6 +151,13 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting attribute:', error)
+            // The backend refuses to delete an attribute that report types still build fields
+            // on, and names them. Say so instead of leaving the row silently undeleted.
+            const data = (error as { response?: { data?: { report_types?: string[]; error?: string } } })?.response?.data
+            const detail = data?.report_types?.length
+                ? { type: 'error', loc: 'reports.attributes.in_use', params: { types: data.report_types.join(', ') } }
+                : { type: 'error', loc: 'common.error_deleting' }
+            window.dispatchEvent(new CustomEvent('notification', { detail }))
         }
     }
 
@@ -158,3 +168,4 @@
 
     onMounted(loadData)
 </script>
+

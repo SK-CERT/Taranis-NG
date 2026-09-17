@@ -222,7 +222,7 @@ def refresh(user: User) -> tuple[dict, HTTPStatus]:
     """
     if current_authenticator:
         return current_authenticator.refresh(user)
-    return BaseAuthenticator.generate_jwt(user)
+    return BaseAuthenticator.generate_jwt(user, record_login=False)
 
 
 def logout(jwt_id: str) -> None:

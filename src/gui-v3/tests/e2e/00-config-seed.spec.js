@@ -104,10 +104,13 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
 
     test('should add a collectors node via the GUI', async ({ page }) => {
         await login(page)
-        await page.goto('/v2/config/collectors?tab=nodes')
-        await page.getByRole('tab', { name: 'Collector Nodes' }).waitFor({ state: 'visible', timeout: 10000 })
+        // Collectors nodes no longer have a tab of their own: they are managed from the OSINT
+        // Sources tab, where the toolbar's Add New adds a node and each node's own panel has an
+        // Add New for a source. Scope to the toolbar so those two never resolve together.
+        await page.goto('/v2/config/collectors')
+        await page.getByRole('tab', { name: 'OSINT Sources' }).waitFor({ state: 'visible', timeout: 10000 })
 
-        await page.getByRole('button', { name: 'Add New' }).click()
+        await page.locator('.config-list-toolbar').getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await expect(dialog).toBeVisible({ timeout: 5000 })
 
@@ -126,17 +129,18 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         await page.goto('/v2/config/collectors?tab=sources')
         await page.getByRole('tab', { name: 'OSINT Sources' }).waitFor({ state: 'visible', timeout: 10000 })
 
-        await page.getByRole('button', { name: 'Add New' }).click()
+        // A source is added from the panel of the node that will collect it.
+        const panel = page.locator('.v-expansion-panel').filter({ hasText: 'E2E Collectors Node' })
+        await panel.locator('.v-expansion-panel-title').getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await expect(dialog).toBeVisible({ timeout: 5000 })
 
         const sourceName = generateTestName('E2E Manual Source')
 
-        // Select the first collectors node from the dropdown.
-        const nodeSelect = dialog.locator('.v-select').first()
-        await nodeSelect.click()
-        const nodeItems = page.locator('.v-overlay__content:visible .v-list-item')
-        await nodeItems.first().click()
+        // Opening from a node's panel preselects that node, so the source cannot silently land
+        // on another one. Asserted rather than re-picked: re-picking "the first node" would hide
+        // a broken preselection and put the source somewhere the later specs do not look.
+        await expect(dialog.locator('.v-select').first()).toContainText('E2E Collectors Node')
 
         // Select the MANUAL_COLLECTOR from the second dropdown.
         const collectorSelect = dialog.locator('.v-select').nth(1)

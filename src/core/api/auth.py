@@ -205,16 +205,49 @@ def _login_cookie_kwargs() -> dict:
     }
 
 
+def _normalized_origin(value: str | None) -> str | None:
+    """Reduce an origin to a comparable ``scheme://host[:port]``, or None if unusable.
+
+    Args:
+        value (str | None): An Origin header value or a configured origin.
+
+    Returns:
+        str | None: The normalized origin, or None when it is not a usable http(s) origin.
+    """
+    if not value:
+        return None
+    parsed = urllib.parse.urlparse(value.strip())
+    if parsed.scheme not in ("http", "https") or not parsed.netloc or parsed.path not in ("", "/"):
+        return None
+    return f"{parsed.scheme}://{parsed.netloc}".lower()
+
+
 def _is_same_origin_request() -> bool:
-    """Reject browser redemption requests originating outside this exact origin."""
+    """Reject browser redemption requests originating outside this exact origin.
+
+    An origin the deployment explicitly allow-listed in TARANIS_NG_CORS_ORIGINS is
+    accepted as well, and that branch is checked first: such a GUI (a Vite dev server
+    on another port, the E2E stack) is genuinely cross-site, so ``Sec-Fetch-Site``
+    below would otherwise reject it before its Origin is ever compared. Those origins
+    already hold a credentialed CORS grant over the whole API (see ``create_app``), so
+    this only stops redemption from being the one endpoint that ignores the opt-in. The
+    list is empty in production, where GUI and API share an origin, and this reduces to
+    the exact-origin comparison it has always been.
+
+    Returns:
+        bool: True when the request may redeem a redirect-login handle.
+    """
+    header = request.headers.get("Origin")
+    origin = _normalized_origin(header)
+    allowed = {normalized for normalized in (_normalized_origin(entry) for entry in Config.CORS_ORIGINS) if normalized}
+    if origin and origin in allowed:
+        return True
     fetch_site = request.headers.get("Sec-Fetch-Site")
     if fetch_site and fetch_site not in ("same-origin", "none"):
         return False
-    origin = request.headers.get("Origin")
-    if not origin:
+    if not header:
         return True
-    parsed = urllib.parse.urlparse(origin)
-    return parsed.scheme == request.scheme and parsed.netloc == request.host and parsed.path in ("", "/")
+    return bool(origin) and origin == _normalized_origin(f"{request.scheme}://{request.host}")
 
 
 def _oauth_redirect_uri(provider_slug: str, config: dict) -> str:

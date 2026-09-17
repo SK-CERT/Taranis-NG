@@ -4,7 +4,7 @@
         max-width="900"
         persistent
         scrollable
-        @keydown.esc="requestClose"
+        @keydown.esc.stop="requestClose"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton

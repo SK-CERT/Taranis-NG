@@ -20,11 +20,17 @@ taranis_ng_tag: "latest"
 # ---------------------------------------------------------------------------
 
 # Core's HTTPS Traefik URL, as reachable from the worker hosts. Required.
+# Port-less: node registration uses the config API on Core's 443.
 core_url: "https://CHANGEME_CORE_FQDN"
 
-# (bots only) Core SSE URL. Defaults to <core_url>/sse. Override only if your
-# Traefik routes /sse differently.
-core_sse_url: "{{ core_url }}/sse"
+# The port on the Core host serving the satellite traffic — /api/v1/{collectors,
+# bots,public-web}, /sse and /traefik/dynamic/node. Those prefixes are carved out
+# of Core's 443 router so this port can be restricted to worker hosts, and the
+# workers are pointed at <core_url>:<core_satellite_port> for them. Must match
+# TARANIS_NG_SATELLITE_PORT in the Core host's docker/.env, and Core only
+# publishes it once TARANIS_NG_SATELLITE_BIND / _BIND6 are widened there — they
+# are 127.0.0.1 and ::1 by default, so from off-host there is no listener.
+core_satellite_port: 8443
 
 # ---------------------------------------------------------------------------
 # Default worker TLS settings — can be overridden per-group or per-host.
@@ -44,21 +50,11 @@ worker_tls_mode: "selfsigned"
 # ---------------------------------------------------------------------------
 # ACME (used when worker_tls_mode == "acme")
 # ---------------------------------------------------------------------------
-# These are the SHARED DEFAULTS for every worker host — every var set here is
-# inherited by every host unless overridden in that host's
-# host_vars/<host>.yml (which wins via Ansible's precedence).
-#
-# Recommended pattern (DRY):
-#   - Put the ACME shape that's identical for every worker here (email,
-#     keytype, challenge type, caserver if using the same CA everywhere).
-#   - Per-host vars live in host_vars/<host>.yml and only override what
-#     actually differs (typically the EAB creds if each host uses a separate
-#     ACME account, or the caserver if a host uses a different CA).
-#
-# Alternative pattern (explicit per host):
-#   - Comment out every ACME var here and declare them all in every host's
-#     host_vars/<host>.yml. More verbose but each host is fully
-#   self-describing.
+# Shared defaults for every worker host: put the ACME shape that is identical
+# fleet-wide here (email, keytype, challenge, and the caserver when every host
+# uses the same CA), and override only what actually differs in that host's
+# host_vars/<host>.yml, which wins by Ansible's precedence. The usual per-host
+# difference is the EAB credential, when each host has its own ACME account.
 #
 # All values below are secrets/operator-specific — put real values only in
 # gitignored `group_vars/<group>.yml` or `host_vars/<host>.yml`, NEVER in

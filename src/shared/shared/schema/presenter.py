@@ -6,6 +6,7 @@ Returns:
 
 from marshmallow import Schema, fields, post_load
 
+from shared.schema.message_header import MessageHeaderSchema
 from shared.schema.parameter import ParameterSchema
 from shared.schema.parameter_value import ParameterValueSchema
 from shared.schema.report_item import ReportItemSchema
@@ -195,6 +196,7 @@ class PresenterOutput:
         message_title: str,
         att_file_name: str,
         message_body_mime_type: str = "text/plain",
+        message_headers: list | None = None,
     ) -> None:
         """Initialize the "presenter output".
 
@@ -205,6 +207,8 @@ class PresenterOutput:
             message_title (str): Title of the message.
             att_file_name (str): Attached file name.
             message_body_mime_type (str): MIME type of the message body itself. Defaults to "text/plain".
+            message_headers (list | None): Custom mail headers as {name, value} pairs, already
+                sanitized by the presenter. Empty when no headers template is configured.
         """
         self.mime_type = mime_type
         self.data = data
@@ -212,6 +216,7 @@ class PresenterOutput:
         self.message_title = message_title
         self.att_file_name = att_file_name
         self.message_body_mime_type = message_body_mime_type
+        self.message_headers = message_headers or []
 
 
 class PresenterOutputSchema(Schema):
@@ -227,6 +232,7 @@ class PresenterOutputSchema(Schema):
     message_title = fields.Str()
     att_file_name = fields.Str()
     message_body_mime_type = fields.Str(allow_none=True)
+    message_headers = fields.List(fields.Nested(MessageHeaderSchema), allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> PresenterOutput:  # noqa: ANN003, ARG002

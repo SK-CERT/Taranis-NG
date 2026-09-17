@@ -5,7 +5,7 @@ import ftplib
 import mimetypes
 from base64 import b64decode
 from http import HTTPStatus
-from pathlib import Path
+from io import BytesIO
 from urllib.parse import urlsplit
 
 from shared.common import TZ
@@ -49,10 +49,10 @@ class FTPPublisher(BasePublisher):
             filename = f"file_{datetime.datetime.now(TZ).strftime('%d-%m-%Y_%H:%M')}{file_extension}"
             data = publisher_input.data[:]
             bytes_data = b64decode(data, validate=True)
-
-            with Path(filename).open("wb") as f:
-                f.write(bytes_data)
-                f.close()
+            # Kept in memory rather than staged on disk: the working directory belongs
+            # to root so the unprivileged service cannot write there, and a temporary
+            # file left behind on a failed upload is one more thing to clean up.
+            file_object = BytesIO(bytes_data)
 
             ftp_data = urlsplit(ftp_url)
 
@@ -68,8 +68,7 @@ class FTPPublisher(BasePublisher):
                 self.logger.debug(f"Connecting FTP: {ftp_hostname}, port {ftp_port}")
                 ftp.connect(host=ftp_hostname, port=ftp_port)
                 ftp.login(ftp_username, ftp_password)
-                with Path(filename).open("rb") as f:
-                    ftp.storbinary("STOR " + remote_path, f)
+                ftp.storbinary("STOR " + remote_path, file_object)
                 ftp.quit()
                 return {}, HTTPStatus.OK
 
@@ -80,6 +79,3 @@ class FTPPublisher(BasePublisher):
         except Exception as error:
             self.logger.exception(f"Error: {error}")
             return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR
-
-        finally:
-            Path(filename).unlink()

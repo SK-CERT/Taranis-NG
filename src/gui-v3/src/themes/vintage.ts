@@ -1,0 +1,67 @@
+import type { ThemeFamily } from './types'
+
+/** #540502 anchors the top bar, #FFDFBA the parchment surfaces and the dark
+ *  variant's text, #2E7670 takes `primary` so it separates from the reds, and
+ *  #FD5F21 / #FF9001 / #CB4843 supply the accents. */
+export const vintage: ThemeFamily = {
+    id: 'vintage',
+    label: 'Vintage',
+    light: {
+        background: '#FFF6EC',
+        surface: '#FFFFFF',
+        surfaceBright: '#FFFFFF',
+        surfaceLight: '#FEF2E4',
+        surfaceVariant: '#FFDFBA',
+        onSurface: '#2C1109',
+        onSurfaceVariant: '#2C1109',
+        outline: '#E0BC96',
+        primary: '#2E7670',
+        secondary: '#B03A31',
+        tertiary: '#C25A0E',
+        error: '#B3261E',
+        info: '#2E7670',
+        success: '#3F7D53',
+        warning: '#FF9001',
+        accent: '#FD5F21',
+        menuBg: '#540502',
+        onMenuBg: '#FFDFBA',
+        drawerBg: '#FBE6CD',
+        onDrawerBg: '#2C1109',
+        workspace: '#F7E3CA',
+        listRow: '#FFFFFF',
+        listRowSelected: '#FFDFBA',
+        listBorder: 'rgba(84, 5, 2, 0.28)',
+        panelBorder: 'rgba(84, 5, 2, 0.50)',
+        filterControlsBg: '#F8E5CC',
+        menuItemActive: 'rgba(255, 144, 1, 0.32)'
+    },
+    dark: {
+        background: '#170B07',
+        surface: '#21120C',
+        surfaceBright: '#3A2117',
+        surfaceLight: '#2A1810',
+        surfaceVariant: '#301B12',
+        onSurface: '#FFDFBA',
+        onSurfaceVariant: '#FFDFBA',
+        outline: '#705441',
+        primary: '#FF9001',
+        secondary: '#4FA39B',
+        tertiary: '#FD5F21',
+        error: '#F0736B',
+        info: '#4FA39B',
+        success: '#7FC796',
+        warning: '#FFB74D',
+        accent: '#FD5F21',
+        menuBg: '#3A0301',
+        onMenuBg: '#FFDFBA',
+        drawerBg: '#2A1810',
+        onDrawerBg: '#FFFFFF',
+        workspace: '#130906',
+        listRow: '#1F1109',
+        listRowSelected: 'rgba(253, 95, 33, 0.24)',
+        listBorder: 'rgba(255, 223, 186, 0.26)',
+        panelBorder: 'rgba(255, 223, 186, 0.44)',
+        filterControlsBg: '#180C08',
+        menuItemActive: 'rgba(255, 144, 1, 0.30)'
+    }
+}

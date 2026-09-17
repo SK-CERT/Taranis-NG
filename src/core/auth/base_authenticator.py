@@ -76,7 +76,7 @@ class BaseAuthenticator:
         Returns:
             str: A new JWT token generated for the user's username.
         """
-        return BaseAuthenticator.generate_jwt(user)
+        return BaseAuthenticator.generate_jwt(user, record_login=False)
 
     @staticmethod
     def logout(jwt_id: str) -> None:
@@ -137,12 +137,15 @@ class BaseAuthenticator:
         return None
 
     @staticmethod
-    def generate_jwt(user: User | str) -> tuple[dict, HTTPStatus]:
+    def generate_jwt(user: User | str, *, record_login: bool = True) -> tuple[dict, HTTPStatus]:
         """Generate a JSON Web Token (JWT) for a given user.
 
         Args:
             user (User | str): The user (or their username, for the deprecated
                 env-based authenticators) for whom the JWT is to be generated.
+            record_login (bool): Whether this counts as a sign-in. Refreshing a token
+                converges here too, and stamping it would turn the account's last login
+                into the time of the GUI's last background refresh.
 
         Returns:
             tuple: A tuple containing a dictionary with the access token and an HTTP status code.
@@ -158,6 +161,8 @@ class BaseAuthenticator:
         if status_error:
             return status_error
         log_manager.store_user_activity(user, "LOGIN", "Successful")
+        if record_login:
+            user.touch_login()
         access_token = create_access_token(
             identity=user.username,
             additional_claims={

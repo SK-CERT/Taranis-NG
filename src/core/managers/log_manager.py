@@ -280,29 +280,72 @@ def store_activity(activity_type: str, activity_detail: str, request_data: dict 
     store_record(None, None, None, None, None, None, activity_type, activity_detail, request_data)
 
 
-def store_user_activity(user: User, activity_type: str, activity_detail: str, request_data: dict | None = None) -> None:
+def _recover_user() -> User | None:
+    """Re-resolve the requesting user once the session is usable again.
+
+    Callers pass ``get_user_from_jwt()``, which Python evaluates before this module gets to
+    roll back. On the error paths that matter, that lookup runs against a session poisoned by
+    the caller's own failed flush, hands back None, and the activity record loses its
+    attribution. Retrying after the rollback recovers it.
+
+    Returns:
+        User | None: The requesting user, or None if there is genuinely no session.
+    """
+    try:
+        # Imported here: auth_manager imports this module, so a module-level import is circular.
+        from managers.auth_manager import get_user_from_jwt  # noqa: PLC0415
+
+        return get_user_from_jwt()
+    except Exception:
+        # Logging must never be the thing that fails a request.
+        return None
+
+
+def _identify(user: User | None) -> tuple[int | None, str | None]:
+    """Return (id, name) for an activity record, tolerating a user that could not be resolved.
+
+    The callers pass `get_user_from_jwt()`, which returns None whenever the lookup fails -
+    most notably when a failed flush has left the session unusable, which is exactly when
+    the surrounding endpoint is trying to report its error. Dereferencing the user there
+    replaced the intended error response with an AttributeError, so the caller's 400 turned
+    into an opaque 500 and the real cause never reached the client.
+
+    Args:
+        user (User | None): The user associated with the activity, if one could be resolved.
+
+    Returns:
+        tuple[int | None, str | None]: The user's id and name, or (None, None).
+    """
+    if user is None:
+        return None, None
+    return user.id, user.name
+
+
+def store_user_activity(user: User | None, activity_type: str, activity_detail: str, request_data: dict | None = None) -> None:
     """Store a user activity record in the log.
 
     Args:
-        user (User): The user associated with the activity.
+        user (User | None): The user associated with the activity, if one could be resolved.
         activity_type (str): The type of activity.
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
-    store_record(None, user.id, user.name, None, None, None, activity_type, activity_detail, request_data)
+    user_id, user_name = _identify(user)
+    store_record(None, user_id, user_name, None, None, None, activity_type, activity_detail, request_data)
 
 
-def store_access_error_activity(user: User, activity_detail: str, request_data: dict | None = None) -> None:
+def store_access_error_activity(user: User | None, activity_detail: str, request_data: dict | None = None) -> None:
     """Store an access error activity record in the log.
 
     Args:
-        user (User): The user associated with the activity.
+        user (User | None): The user associated with the activity, if one could be resolved.
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
+    user_id, user_name = _identify(user)
     ip = resolve_ip_address()
     log_text = (
-        f"TARANIS NG Access Error (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()},"
+        f"TARANIS NG Access Error (IP: {ip}, User ID: {user_id}, User Name: {user_name}, Method: {resolve_method()},"
         f"Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
     )
     if sys_logger is not None:
@@ -312,14 +355,19 @@ def store_access_error_activity(user: User, activity_detail: str, request_data: 
             logger.exception(f"Storing access error failed: {ex}")
 
     db.session.rollback()
-    store_record(ip, user.id, user.name, None, None, None, "ACCESS_ERROR", activity_detail, request_data)
+    store_record(ip, user_id, user_name, None, None, None, "ACCESS_ERROR", activity_detail, request_data)
 
 
-def store_data_error_activity(user: User, activity_detail: str, exception: Exception | None = None, request_data: dict | None = None) -> None:
+def store_data_error_activity(
+    user: User | None,
+    activity_detail: str,
+    exception: Exception | None = None,
+    request_data: dict | None = None,
+) -> None:
     """Store a data error activity record in the log.
 
     Args:
-        user (User): The user associated with the activity.
+        user (User | None): The user associated with the activity, if one could be resolved.
         activity_detail (str): The details of the activity.
         exception (Exception): Exception object.
         request_data (dict, optional): The data associated with the request.
@@ -329,9 +377,10 @@ def store_data_error_activity(user: User, activity_detail: str, exception: Excep
         # exception, so .exception() would append a bogus "NoneType: None" traceback.
         logger.error(f"{activity_detail}: {exception}")
     db.session.rollback()
+    user_id, user_name = _identify(user if user is not None else _recover_user())
     ip = resolve_ip_address()
     log_text = (
-        f"TARANIS NG Data Error (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()}, "
+        f"TARANIS NG Data Error (IP: {ip}, User ID: {user_id}, User Name: {user_name}, Method: {resolve_method()}, "
         f"Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
     )
     if sys_logger is not None:
@@ -340,7 +389,7 @@ def store_data_error_activity(user: User, activity_detail: str, exception: Excep
         except Exception as ex:
             logger.exception(f"Storing data error failed: {ex}")
 
-    store_record(ip, user.id, user.name, None, None, None, "DATA_ERROR", activity_detail, request_data)
+    store_record(ip, user_id, user_name, None, None, None, "DATA_ERROR", activity_detail, request_data)
 
 
 def store_data_error_activity_no_user(activity_detail: str, exception: Exception | None = None, request_data: dict | None = None) -> None:
@@ -434,18 +483,19 @@ def store_auth_warning_activity(activity_detail: str, exception: Exception | Non
     store_record(None, None, None, None, None, None, "AUTH_WARNING", activity_detail, request_data)
 
 
-def store_user_auth_error_activity(user: User, activity_detail: str, request_data: dict | None = None) -> None:
+def store_user_auth_error_activity(user: User | None, activity_detail: str, request_data: dict | None = None) -> None:
     """Store a user authentication error activity record in the log.
 
     Args:
-        user (User): The user associated with the activity.
+        user (User | None): The user associated with the activity, if one could be resolved.
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
     db.session.rollback()
+    user_id, user_name = _identify(user if user is not None else _recover_user())
     ip = resolve_ip_address()
     log_text = (
-        f"TARANIS NG Auth Critical (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()},"
+        f"TARANIS NG Auth Critical (IP: {ip}, User ID: {user_id}, User Name: {user_name}, Method: {resolve_method()},"
         f"Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
     )
     if sys_logger is not None:
@@ -454,7 +504,7 @@ def store_user_auth_error_activity(user: User, activity_detail: str, request_dat
         except Exception as ex:
             logger.exception(f"Storing user authentication error failed: {ex}")
 
-    store_record(ip, user.id, user.name, None, None, None, "AUTH_ERROR", activity_detail, request_data)
+    store_record(ip, user_id, user_name, None, None, None, "AUTH_ERROR", activity_detail, request_data)
 
 
 def store_system_activity(

@@ -1,0 +1,75 @@
+import type { ThemeFamily } from './types'
+
+/**
+ * High contrast. Pure black/white grounds, saturated accents and fully opaque
+ * borders. Doubles as the stress test for the token contract: if a surface is
+ * still hardcoded somewhere in the app, it shows up immediately here.
+ */
+export const contrast: ThemeFamily = {
+    id: 'contrast',
+    label: 'High contrast',
+    light: {
+        background: '#FFFFFF',
+        surface: '#FFFFFF',
+        surfaceBright: '#FFFFFF',
+        surfaceLight: '#F2F2F2',
+        surfaceVariant: '#E8E8E8',
+        onSurface: '#000000',
+        onSurfaceVariant: '#000000',
+        outline: '#000000',
+        primary: '#0033CC',
+        secondary: '#6A0DAD',
+        tertiary: '#005F5F',
+        error: '#B00020',
+        info: '#0033CC',
+        success: '#006400',
+        warning: '#8A4B00',
+        accent: '#0033CC',
+        menuBg: '#000000',
+        onMenuBg: '#FFFFFF',
+        drawerBg: '#F0F0F0',
+        onDrawerBg: '#000000',
+        workspace: '#FFFFFF',
+        listRow: '#FFFFFF',
+        menuItemActive: 'rgba(255, 255, 255, 0.35)',
+        listRowSelected: '#FFE600',
+        listRowHover: 'rgba(0, 0, 0, 0.1)',
+        listBorder: '#000000',
+        panelBorder: '#000000',
+        filterControlsBg: '#EDEDED',
+        drawerIcon: '#000000',
+        drawerDivider: 'rgba(0, 0, 0, 0.6)'
+    },
+    dark: {
+        background: '#000000',
+        surface: '#000000',
+        surfaceBright: '#242424',
+        surfaceLight: '#141414',
+        surfaceVariant: '#1A1A1A',
+        onSurface: '#FFFFFF',
+        onSurfaceVariant: '#FFFFFF',
+        outline: '#FFFFFF',
+        primary: '#66B2FF',
+        secondary: '#E0A3FF',
+        tertiary: '#66E0E0',
+        error: '#FF6E6E',
+        info: '#66B2FF',
+        success: '#7CFF7C',
+        warning: '#FFC24D',
+        accent: '#66B2FF',
+        menuBg: '#000000',
+        onMenuBg: '#FFFFFF',
+        drawerBg: '#0D0D0D',
+        onDrawerBg: '#FFFFFF',
+        workspace: '#000000',
+        listRow: '#0A0A0A',
+        menuItemActive: 'rgba(255, 255, 255, 0.35)',
+        listRowSelected: '#4D3B00',
+        listRowHover: 'rgba(255, 255, 255, 0.14)',
+        listBorder: '#FFFFFF',
+        panelBorder: '#FFFFFF',
+        filterControlsBg: '#111111',
+        drawerIcon: '#FFFFFF',
+        drawerDivider: 'rgba(255, 255, 255, 0.6)'
+    }
+}
