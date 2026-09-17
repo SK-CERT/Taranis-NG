@@ -3,8 +3,8 @@
         v-model="open"
         max-width="760"
         persistent
-        @keydown.esc.stop="close"
         scrollable
+        @keydown.esc.stop="close"
     >
         <v-card>
             <DialogToolbar
