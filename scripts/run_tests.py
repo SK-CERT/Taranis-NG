@@ -33,13 +33,14 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-VENV_BIN = REPO_ROOT / ".venv" / "bin"
+VENV_BIN = REPO_ROOT / ".venv" / ("Scripts" if os.name == "nt" else "bin")
 GUI_DIR = REPO_ROOT / "src" / "gui-v3"
 
 # Projects with a pytest suite, as directories under src/. Keep in sync with `testpaths`
