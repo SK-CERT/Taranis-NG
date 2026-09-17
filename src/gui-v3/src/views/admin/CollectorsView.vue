@@ -43,6 +43,7 @@
     import { ICONS } from '@/config/ui-constants'
     import OSINTSourcesView from './OSINTSourcesView.vue'
     import OSINTSourceGroupsView from './OSINTSourceGroupsView.vue'
+    import AttributeExtractionTab from '@/components/config/attribute-extraction/AttributeExtractionTab.vue'
 
     const { t } = useI18n()
     const tabs = [
@@ -61,6 +62,14 @@
             icon: ICONS.FOLDER_MULTIPLE,
             component: OSINTSourceGroupsView,
             permission: 'CONFIG_OSINT_SOURCE_GROUP_ACCESS'
+        },
+        {
+            value: 'extraction',
+            title: 'attribute_extraction.title',
+            description: 'attribute_extraction.tab_description',
+            icon: ICONS.REGEX,
+            component: AttributeExtractionTab,
+            permission: 'CONFIG_ATTRIBUTE_EXTRACTION_ACCESS'
         }
     ] as const
 

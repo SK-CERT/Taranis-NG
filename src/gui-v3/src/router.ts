@@ -288,6 +288,7 @@ const routes: RouteRecordRaw[] = [
     { path: '/config/collectors/sources', redirect: { path: '/config/collectors', query: { tab: 'sources' } } },
     { path: '/config/collectors/groups', redirect: { path: '/config/collectors', query: { tab: 'groups' } } },
     { path: '/config/collectors/nodes', redirect: { path: '/config/collectors', query: { tab: 'nodes' } } },
+    { path: '/config/collectors/extraction', redirect: { path: '/config/collectors', query: { tab: 'extraction' } } },
     { path: '/config/presenters/nodes', redirect: { path: '/config/presenters', query: { tab: 'nodes' } } },
     { path: '/config/product/types', redirect: { path: '/config/presenters', query: { tab: 'types' } } },
     { path: '/config/publishers/nodes', redirect: { path: '/config/publishers', query: { tab: 'nodes' } } },
