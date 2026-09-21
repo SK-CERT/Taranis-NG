@@ -305,11 +305,14 @@ class ProductGetPreview(Resource):
             # Single use: consume the ticket right away, so a URL that leaked
             # (proxy logs, browser history, shared links) cannot serve the
             # report a second time.
-            redis_client.delete(cache_key)
+
+            # 2026-09-21: Chrome started requiring the preview resource twice (preview, save).
+            # The single-use Redis entry prevented users from downloading an opened PDF.
+            # redis_client.delete(cache_key)
             cached_data = json.loads(cached_bytes)
             preview_data = base64.b64decode(cached_data["data"])
             preview_mime = cached_data["mime"]
-            preview_filename = cached_data.get("filename")
+            preview_filename = cached_data.get("filename").replace('"', "")
 
             logger.info(f"Preview token processed: {token}")
             response = Response(preview_data, mimetype=preview_mime)
@@ -319,7 +322,7 @@ class ProductGetPreview(Resource):
             disposition = "inline" if any(preview_mime.startswith(itype) for itype in inline_types) else "attachment"
 
             # RFC 5987 encoding for non-ASCII filenames
-            encoded_filename = quote(preview_filename.replace('"', ""), safe="")
+            encoded_filename = quote(preview_filename, safe="")
             response.headers["Content-Disposition"] = f"{disposition}; filename*=UTF-8''{encoded_filename}"
             return response
 
