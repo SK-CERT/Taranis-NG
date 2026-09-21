@@ -30,7 +30,7 @@ def initialize() -> None:
                             "Authorization": f"ApiKey {Config.API_KEY}",
                         },
                         stream=True,
-                        timeout=10,
+                        timeout=30,
                     )
                     if response.status_code != HTTPStatus.OK:
                         response_text = ""

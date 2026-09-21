@@ -28,7 +28,7 @@ class RemoteApi:
             tuple: A tuple containing the response JSON and status code.
         """
         try:
-            response = requests.get(self.api_url + "/api/v1/remote/connect", headers=self.headers, timeout=10)
+            response = requests.get(self.api_url + "/api/v1/remote/connect", headers=self.headers, timeout=30)
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Connect to the remote node failed"
@@ -42,7 +42,7 @@ class RemoteApi:
             tuple: A tuple containing an empty dictionary and status code.
         """
         try:
-            response = requests.get(self.api_url + "/api/v1/remote/disconnect", headers=self.headers, timeout=10)
+            response = requests.get(self.api_url + "/api/v1/remote/disconnect", headers=self.headers, timeout=30)
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Disconnect from the remote node failed"

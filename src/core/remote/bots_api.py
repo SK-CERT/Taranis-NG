@@ -26,5 +26,5 @@ class BotsApi:
         Returns:
             tuple[dict, HTTPStatus]: Parsed JSON response and HTTP status code.
         """
-        response = requests.get(self.api_url + "/api/v1/bots", headers=self.headers, timeout=10)
+        response = requests.get(self.api_url + "/api/v1/bots", headers=self.headers, timeout=30)
         return response.json(), response.status_code

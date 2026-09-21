@@ -35,7 +35,7 @@ class CoreApi:
             response = requests.post(
                 f"{cls.api_url}/api/v1/bots/bots-presets?bot_type={urllib.parse.quote(bot_type)}",
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return response.json(), response.status_code
         except Exception as ex:
@@ -105,7 +105,7 @@ class CoreApi:
             response = requests.delete(
                 cls.api_url + "/api/v1/bots/word-list-categories/" + category_id + "/entries/" + name,
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return {}, response.status_code
         except Exception as ex:
@@ -130,7 +130,7 @@ class CoreApi:
                 cls.api_url + "/api/v1/bots/word-list-categories/" + category_id + "/entries/" + name,
                 json=entries,
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return {}, response.status_code
         except Exception as ex:
@@ -153,7 +153,7 @@ class CoreApi:
 
         """
         try:
-            response = requests.get(cls.api_url + "/api/v1/bots/word-list-categories/" + category_id, headers=cls.headers, timeout=10)
+            response = requests.get(cls.api_url + "/api/v1/bots/word-list-categories/" + category_id, headers=cls.headers, timeout=30)
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Get the categories for a bot failed"
@@ -182,7 +182,7 @@ class CoreApi:
                 cls.api_url + "/api/v1/bots/word-list-categories/" + category_id,
                 json=category,
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return {}, response.status_code
         except Exception as ex:

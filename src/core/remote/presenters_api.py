@@ -26,7 +26,7 @@ class PresentersApi:
         Returns:
             tuple: A tuple containing the response JSON and status code.
         """
-        response = requests.get(self.api_url + "/api/v1/presenters", headers=self.headers, timeout=10)
+        response = requests.get(self.api_url + "/api/v1/presenters", headers=self.headers, timeout=30)
         return response.json(), response.status_code
 
     def generate(self, data: dict) -> tuple[dict, HTTPStatus]:
