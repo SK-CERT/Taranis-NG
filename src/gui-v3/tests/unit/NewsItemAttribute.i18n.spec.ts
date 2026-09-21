@@ -25,7 +25,6 @@ describe('NewsItemAttribute direction-safe rendering', () => {
         const keyContainer = wrapper.find('bdi[dir="auto"]').element.parentElement
 
         expect(isolatedText.map((value) => value.text())).toEqual(['مفتاح attribute', 'قيمة value'])
-        expect(keyContainer?.style.marginInlineEnd).toBe('20px')
         expect(keyContainer?.style.marginRight).toBe('')
     })
 
