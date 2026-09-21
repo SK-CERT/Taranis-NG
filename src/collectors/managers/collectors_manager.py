@@ -23,8 +23,6 @@ status_report_thread = None
 
 def report_status() -> None:
     """Continuously send status updates to the Core API."""
-    logger.debug("Report status: Awaiting initialization of CORE (timeout: 20s)")
-    time.sleep(20)  # wait for the CORE
     while True:
         logger.debug("Sending status update...")
         response, status_code = CoreApi.update_collector_status()
@@ -56,7 +54,14 @@ def report_schedule() -> None:
 
 def initialize() -> None:
     """Initialize the collectors."""
-    logger.info("Initializing collectors...")
+    attempt = 0
+    while True:
+        attempt += 1
+        logger.debug(f"Awaiting initialization of CORE (timeout: 20s, attempt {attempt})")
+        _, status_code = CoreApi.update_collector_status(show_error=False)
+        if status_code == HTTPStatus.OK:
+            break
+        time.sleep(20)
 
     # inform core that this collector node is alive
     status_report_thread = threading.Thread(target=report_status)
@@ -70,8 +75,6 @@ def initialize() -> None:
     register_collector(SlackCollector())
     register_collector(ManualCollector())
     register_collector(ScheduledTasksCollector())
-
-    logger.info("Collectors initialized.")
 
 
 def register_collector(collector: object) -> None:
