@@ -40,7 +40,7 @@ class CollectorsApi:
             json={
                 "id": collector_id,
             },
-            timeout=10,
+            timeout=30,
         )
         return response.json(), response.status_code
 
@@ -58,7 +58,7 @@ class CollectorsApi:
         """
         url = self.api_url + "/api/v1/collectors/" + collector_type
         params = None if collect_now else {"collect_now": "false"}
-        response = requests.put(url, headers=self.headers, params=params, timeout=10)
+        response = requests.put(url, headers=self.headers, params=params, timeout=30)
         return response.status_code
 
     def collect_source(self, collector_type: str, source_id: str) -> tuple[dict, HTTPStatus]:
@@ -73,7 +73,7 @@ class CollectorsApi:
                 started, 409 means one was already in progress.
         """
         url = f"{self.api_url}/api/v1/collectors/{collector_type}/osint-sources/{source_id}/collect"
-        response = requests.post(url, headers=self.headers, timeout=10)
+        response = requests.post(url, headers=self.headers, timeout=30)
         try:
             body = response.json()
         except ValueError:

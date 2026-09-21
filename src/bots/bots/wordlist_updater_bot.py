@@ -41,7 +41,7 @@ class WordlistUpdaterBot(BaseBot):
             list: A list of words loaded from the specified source.
         """
         if "http" in source and word_list_format == "txt":
-            response = requests.get(source, timeout=10)
+            response = requests.get(source, timeout=30)
             content = response.text.strip().splitlines()
         else:
             with Path(source).open() as file:

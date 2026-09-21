@@ -52,7 +52,7 @@ class EventThread(threading.Thread):
                         "Authorization": f"ApiKey {self.remote_node.api_key}",
                     },
                     stream=True,
-                    timeout=10,
+                    timeout=30,
                 )
                 if response.status_code != HTTPStatus.OK:
                     response_text = ""

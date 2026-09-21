@@ -52,7 +52,7 @@ class CoreApi:
                 f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}/osint-sources"
                 f"?collector_type={urllib.parse.quote(collector_type)}",
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return response.json(), response.status_code
         except Exception as ex:
@@ -77,7 +77,7 @@ class CoreApi:
         collector_id = result["id"]
 
         try:
-            response = requests.get(f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}", headers=cls.headers, timeout=10)
+            response = requests.get(f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}", headers=cls.headers, timeout=30)
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Update collector status failed"
@@ -104,7 +104,7 @@ class CoreApi:
                 f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}/schedule",
                 json=next_run_by_source,
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return response.json(), response.status_code
         except Exception as ex:
@@ -126,7 +126,7 @@ class CoreApi:
             response = requests.get(
                 f"{cls.api_url}/api/v1/collectors/osint-sources/{urllib.parse.quote(source_id)}/attempt",
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return response.json(), response.status_code
         except Exception as ex:
@@ -148,7 +148,7 @@ class CoreApi:
         try:
             encoded_message = f"?message={urllib.parse.quote(error_message)}" if error_message else ""
             url = f"{cls.api_url}/api/v1/collectors/osint-sources/{urllib.parse.quote(source_id)}/error_message{encoded_message}"
-            response = requests.get(url, headers=cls.headers, timeout=10)
+            response = requests.get(url, headers=cls.headers, timeout=30)
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Update collector last error message failed"
@@ -168,7 +168,7 @@ class CoreApi:
             int: The HTTP status code of the response.
         """
         try:
-            response = requests.post(f"{cls.api_url}/api/v1/collectors/news-items", json=news_items, headers=cls.headers, timeout=10)
+            response = requests.post(f"{cls.api_url}/api/v1/collectors/news-items", json=news_items, headers=cls.headers, timeout=30)
             return response.status_code
         except Exception as ex:
             msg = "Add news items failed"
