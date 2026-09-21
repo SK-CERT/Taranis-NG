@@ -3,7 +3,6 @@
 import datetime
 import hashlib
 import threading
-import time
 import urllib.request
 import uuid
 from http import HTTPStatus
@@ -488,8 +487,6 @@ class BaseCollector:
 
     def initialize(self) -> None:
         """Initialize the collector."""
-        logger.debug(f"{self.name}: Awaiting initialization of CORE (timeout: 20s)")
-        time.sleep(20)  # wait for the CORE
         self.refresh()
 
 
