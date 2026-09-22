@@ -104,7 +104,7 @@ declare -A SERVICE_PORT=( ["collectors"]="${E2E_COLLECTORS_PORT}" ["presenters"]
 for service in collectors presenters publishers; do
   port="${SERVICE_PORT[$service]}"
   ready=0
-  for i in {1..60}; do
+  for i in {1..90}; do
     # 1) The service's own HTTP must be serving on its host port-forward.
     if curl -sf -H "$E2E_AUTH_HEADER" "http://127.0.0.1:${port}/api/v1/isalive" > /dev/null 2>&1; then
       ready=1
@@ -123,8 +123,9 @@ for service in collectors presenters publishers; do
       # Service serves on its own port, but core can't resolve it yet — keep waiting.
       ready=0
     fi
-    if [ $i -eq 60 ]; then
-      echo "✗ $service not fully ready within 60s (isalive on :${port} or core DNS resolution failed)"
+    if [ $i -eq 90 ]; then
+      echo "✗ $service not fully ready within 90s (isalive on :${port} or core DNS resolution failed)"
+      docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e logs --no-color --tail=200 "$service" || true
       exit 1
     fi
     sleep 1
