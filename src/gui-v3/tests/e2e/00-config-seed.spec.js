@@ -129,6 +129,28 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         await page.goto('/v2/config/collectors?tab=sources')
         await page.getByRole('tab', { name: 'OSINT Sources' }).waitFor({ state: 'visible', timeout: 10000 })
 
+        // Collector /isalive can respond before collectors_manager.initialize() has
+        // registered the collector modules. Probe the capability endpoint as well so
+        // the first GUI node registration cannot persist an empty collector list.
+        await page.waitForFunction(
+            async () => {
+                const token = localStorage.getItem('ACCESS_TOKEN')
+                const response = await fetch('/api/v1/config/collectors-nodes?search=', {
+                    headers: { Authorization: `Bearer ${token || ''}` }
+                })
+                if (!response.ok) return false
+                const body = await response.json()
+                return body.items?.some(
+                    (node) =>
+                        node.name === 'E2E Collectors Node' && node.collectors?.some((collector) => collector.type === 'MANUAL_COLLECTOR')
+                )
+            },
+            undefined,
+            { timeout: 30000 }
+        )
+        await page.reload()
+        await page.getByRole('tab', { name: 'OSINT Sources' }).waitFor({ state: 'visible', timeout: 10000 })
+
         // A source is added from the panel of the node that will collect it.
         const panel = page.locator('.v-expansion-panel').filter({ hasText: 'E2E Collectors Node' })
         await panel.locator('.v-expansion-panel-title').getByRole('button', { name: 'Add New' }).click()

@@ -116,16 +116,6 @@ for service in collectors presenters publishers; do
     #    seed test fires before DNS resolves, the node-add 500s with the misleading
     #    "Could not connect to <x> node." alert. Exec-ing a curl from core closes that gap.
     if [ "$ready" = "1" ]; then
-      # Collector /isalive can respond before collectors_manager.initialize() has
-      # registered the collector modules. Probe the capability endpoint as well so
-      # the first GUI node registration cannot persist an empty collector list.
-      if [ "$service" = "collectors" ]; then
-        collector_info=$(curl -sf -X POST -H "$E2E_AUTH_HEADER" -H "Content-Type: application/json" \
-          -d '{"id":""}' "http://127.0.0.1:${port}/api/v1/collectors" 2>/dev/null || true)
-        if ! echo "$collector_info" | grep -q 'MANUAL_COLLECTOR'; then
-          ready=0
-        fi
-      fi
     fi
     if [ "$ready" = "1" ]; then
       if docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core curl -sf -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" > /dev/null 2>&1; then
