@@ -89,6 +89,7 @@ for i in {1..120}; do
   fi
   if echo "$bootstrap_status" | grep -Eq '^exited [1-9][0-9]*$'; then
     echo "✗ Core bootstrap failed"
+    docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e logs --no-color --tail=200 bootstrap || true
     exit 1
   fi
   if [ $i -eq 120 ]; then
