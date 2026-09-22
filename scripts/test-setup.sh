@@ -116,8 +116,6 @@ for service in collectors presenters publishers; do
     #    seed test fires before DNS resolves, the node-add 500s with the misleading
     #    "Could not connect to <x> node." alert. Exec-ing a curl from core closes that gap.
     if [ "$ready" = "1" ]; then
-    fi
-    if [ "$ready" = "1" ]; then
       if docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core curl -sf -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" > /dev/null 2>&1; then
         echo "✓ $service is ready (isalive on :${port} AND core resolves http://${service})"
         break
