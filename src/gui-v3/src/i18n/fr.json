@@ -2123,10 +2123,9 @@
         "description": "Description",
         "enabled": "Activé",
         "required": "Ce champ est obligatoire",
-        "invalid_pattern": "Expression régulière invalide : {error}",
-        "disabled_hint": "L'extraction d'attributs est désactivée globalement. Les règles sont enregistrées mais non appliquées. Activez ATTRIBUTE_EXTRACTION_ENABLED dans les Paramètres."
-  },
-  "themes": {
+        "invalid_pattern": "Expression régulière invalide : {error}"
+    },
+    "themes": {
         "taranis": "Taranis-NG",
         "slate": "Ardoise",
         "forest": "Forêt",

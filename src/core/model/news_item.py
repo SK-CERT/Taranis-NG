@@ -20,7 +20,6 @@ from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.attribute_extraction_rule import AttributeExtractionRule
 from model.osint_source import OSINTSource, OSINTSourceGroup
-from model.setting import Setting
 from model.tag_cloud import TagCloud
 from shared.attribute_extraction import ExtractionRule, extract_attributes
 from shared.common import TZ, remove_empty_html_tags, resolve_relative_links, simplify_html_text, smart_truncate, strip_html
@@ -1067,9 +1066,9 @@ class NewsItemAggregate(db.Model):
             news_item_data (NewsItemData): The sanitized item, before it is persisted.
         """
         try:
-            if not Setting.get_setting_bool(None, "ATTRIBUTE_EXTRACTION_ENABLED", default_value=True):
-                return
             rules = AttributeExtractionRule.get_all_enabled()
+            if not bool(rules):
+                return
             source = OSINTSource.find(news_item_data.osint_source_id) if news_item_data.osint_source_id else None
             applicable = [
                 ExtractionRule(

@@ -2123,8 +2123,7 @@
         "description": "説明",
         "enabled": "有効",
         "required": "この項目は必須です",
-        "invalid_pattern": "正規表現が不正です: {error}",
-        "disabled_hint": "属性抽出は全体で無効になっています。以下のルールは保存されますが適用されません。設定で ATTRIBUTE_EXTRACTION_ENABLED を有効にしてください。"
+        "invalid_pattern": "正規表現が不正です: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

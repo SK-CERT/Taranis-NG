@@ -19,7 +19,6 @@ from managers.sse_manager import sse_manager
 from model.attribute_extraction_rule import AttributeExtractionRule
 from model.news_item import NewsItemAggregate
 from model.osint_source import OSINTSource
-from model.setting import Setting
 from shared.schema.attribute_extraction_rule import AttributeExtractionRuleSchema
 
 
@@ -47,13 +46,14 @@ class AttributeExtractionRulesForCollectors(Resource):
 
         collectors_node.update_last_seen()
 
-        # No user here: this is an api-key call from a collector, and the switch is global.
-        enabled = Setting.get_setting_bool(None, "ATTRIBUTE_EXTRACTION_ENABLED", default_value=True)
-        if not enabled:
-            return {"enabled": False, "items": []}, HTTPStatus.OK
-
+        # No user here: this is an api-key call from a collector.
         schema = AttributeExtractionRuleSchema(many=True)
-        return {"enabled": True, "items": schema.dump(AttributeExtractionRule.get_all_enabled())}, HTTPStatus.OK
+        rules = schema.dump(AttributeExtractionRule.get_all_enabled())
+
+        return {
+            "enabled": bool(rules),
+            "items": rules,
+        }, HTTPStatus.OK
 
 
 class OSINTSourcesForCollectors(Resource):

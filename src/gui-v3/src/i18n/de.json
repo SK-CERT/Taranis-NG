@@ -2123,8 +2123,7 @@
         "description": "Beschreibung",
         "enabled": "Aktiviert",
         "required": "Dieses Feld ist erforderlich",
-        "invalid_pattern": "Ungültiger regulärer Ausdruck: {error}",
-        "disabled_hint": "Die Attributerkennung ist global deaktiviert. Regeln werden gespeichert, aber nicht angewendet. Aktivieren Sie ATTRIBUTE_EXTRACTION_ENABLED in den Einstellungen."
+        "invalid_pattern": "Ungültiger regulärer Ausdruck: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

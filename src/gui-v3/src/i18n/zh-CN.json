@@ -2123,8 +2123,7 @@
         "description": "描述",
         "enabled": "启用",
         "required": "此字段为必填项",
-        "invalid_pattern": "正则表达式无效：{error}",
-        "disabled_hint": "属性提取已全局关闭。以下规则会被保存但不会应用。请在设置中启用 ATTRIBUTE_EXTRACTION_ENABLED。"
+        "invalid_pattern": "正则表达式无效：{error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

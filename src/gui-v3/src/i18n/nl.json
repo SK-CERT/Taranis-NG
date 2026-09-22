@@ -2123,8 +2123,7 @@
         "description": "Beschrijving",
         "enabled": "Ingeschakeld",
         "required": "Dit veld is verplicht",
-        "invalid_pattern": "Ongeldige reguliere expressie: {error}",
-        "disabled_hint": "Attribuutextractie is globaal uitgeschakeld. Regels worden opgeslagen maar niet toegepast. Schakel ATTRIBUTE_EXTRACTION_ENABLED in bij Instellingen."
+        "invalid_pattern": "Ongeldige reguliere expressie: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

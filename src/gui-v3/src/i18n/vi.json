@@ -2123,8 +2123,7 @@
         "description": "Mô tả",
         "enabled": "Bật",
         "required": "Trường này là bắt buộc",
-        "invalid_pattern": "Biểu thức chính quy không hợp lệ: {error}",
-        "disabled_hint": "Trích xuất thuộc tính đang tắt trên toàn hệ thống. Các quy tắc vẫn được lưu nhưng không áp dụng. Hãy bật ATTRIBUTE_EXTRACTION_ENABLED trong Cài đặt."
+        "invalid_pattern": "Biểu thức chính quy không hợp lệ: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

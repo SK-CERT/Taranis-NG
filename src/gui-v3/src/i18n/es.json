@@ -2123,8 +2123,7 @@
         "description": "Descripción",
         "enabled": "Activado",
         "required": "Este campo es obligatorio",
-        "invalid_pattern": "Expresión regular no válida: {error}",
-        "disabled_hint": "La extracción de atributos está desactivada globalmente. Las reglas se guardan pero no se aplican. Active ATTRIBUTE_EXTRACTION_ENABLED en Configuración."
+        "invalid_pattern": "Expresión regular no válida: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

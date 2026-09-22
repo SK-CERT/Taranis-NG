@@ -2123,8 +2123,7 @@
         "description": "คำอธิบาย",
         "enabled": "เปิดใช้งาน",
         "required": "จำเป็นต้องกรอกช่องนี้",
-        "invalid_pattern": "นิพจน์ทั่วไปไม่ถูกต้อง: {error}",
-        "disabled_hint": "การแยกแอตทริบิวต์ถูกปิดทั้งระบบ กฎด้านล่างจะถูกบันทึกแต่ไม่ถูกใช้งาน เปิด ATTRIBUTE_EXTRACTION_ENABLED ในการตั้งค่า"
+        "invalid_pattern": "นิพจน์ทั่วไปไม่ถูกต้อง: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

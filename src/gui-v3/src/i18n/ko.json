@@ -2123,8 +2123,7 @@
         "description": "설명",
         "enabled": "사용",
         "required": "이 필드는 필수입니다",
-        "invalid_pattern": "잘못된 정규식: {error}",
-        "disabled_hint": "속성 추출이 전역으로 꺼져 있습니다. 아래 규칙은 저장되지만 적용되지 않습니다. 설정에서 ATTRIBUTE_EXTRACTION_ENABLED를 켜십시오."
+        "invalid_pattern": "잘못된 정규식: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

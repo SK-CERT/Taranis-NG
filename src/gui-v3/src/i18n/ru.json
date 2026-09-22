@@ -2123,8 +2123,7 @@
         "description": "Описание",
         "enabled": "Включено",
         "required": "Это поле обязательно",
-        "invalid_pattern": "Недопустимое регулярное выражение: {error}",
-        "disabled_hint": "Извлечение атрибутов отключено глобально. Правила сохраняются, но не применяются. Включите ATTRIBUTE_EXTRACTION_ENABLED в настройках."
+        "invalid_pattern": "Недопустимое регулярное выражение: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

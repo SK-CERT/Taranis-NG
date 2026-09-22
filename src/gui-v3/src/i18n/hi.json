@@ -2123,8 +2123,7 @@
         "description": "विवरण",
         "enabled": "सक्षम",
         "required": "यह फ़ील्ड आवश्यक है",
-        "invalid_pattern": "अमान्य नियमित अभिव्यक्ति: {error}",
-        "disabled_hint": "विशेषता निष्कर्षण विश्व स्तर पर बंद है। नियम सहेजे जाते हैं लेकिन लागू नहीं होते। सेटिंग्स में ATTRIBUTE_EXTRACTION_ENABLED सक्षम करें।"
+        "invalid_pattern": "अमान्य नियमित अभिव्यक्ति: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

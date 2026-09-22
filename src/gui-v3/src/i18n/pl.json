@@ -2123,8 +2123,7 @@
         "description": "Opis",
         "enabled": "Włączone",
         "required": "To pole jest wymagane",
-        "invalid_pattern": "Nieprawidłowe wyrażenie regularne: {error}",
-        "disabled_hint": "Wyodrębnianie atrybutów jest globalnie wyłączone. Reguły są zapisywane, ale nie stosowane. Włącz ATTRIBUTE_EXTRACTION_ENABLED w Ustawieniach."
+        "invalid_pattern": "Nieprawidłowe wyrażenie regularne: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

@@ -1,15 +1,5 @@
 <template>
     <v-container fluid>
-        <v-alert
-            v-if="!extractionEnabled"
-            type="info"
-            variant="tonal"
-            density="compact"
-            class="mb-4"
-        >
-            {{ t('attribute_extraction.disabled_hint') }}
-        </v-alert>
-
         <EditableEntityTable
             v-model="rows"
             v-model:dialog="dialog"
@@ -225,9 +215,6 @@
     )
 
     const groupName = (id: string): string => groupOptions.value.find((option) => option.value === id)?.title ?? id
-
-    // The global switch lives in Settings; surfaced here so it is visible where the rules are.
-    const extractionEnabled = computed(() => settingsStore.getSetting(Settings.ATTRIBUTE_EXTRACTION_ENABLED, 'true') !== 'false')
 
     const requiredRule = (value: unknown): boolean | string => (value ? true : t('attribute_extraction.required'))
 

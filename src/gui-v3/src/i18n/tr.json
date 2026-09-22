@@ -2123,8 +2123,7 @@
         "description": "Açıklama",
         "enabled": "Etkin",
         "required": "Bu alan zorunludur",
-        "invalid_pattern": "Geçersiz düzenli ifade: {error}",
-        "disabled_hint": "Öznitelik çıkarma genel olarak kapalı. Kurallar kaydedilir ancak uygulanmaz. Ayarlar'dan ATTRIBUTE_EXTRACTION_ENABLED seçeneğini etkinleştirin."
+        "invalid_pattern": "Geçersiz düzenli ifade: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

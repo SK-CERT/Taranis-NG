@@ -2123,8 +2123,7 @@
         "description": "Popis",
         "enabled": "Zapnuto",
         "required": "Toto pole je povinné",
-        "invalid_pattern": "Neplatný regulární výraz: {error}",
-        "disabled_hint": "Extrakce atributů je globálně vypnutá. Pravidla níže se ukládají, ale nepoužijí. Zapněte ATTRIBUTE_EXTRACTION_ENABLED v Nastavení."
+        "invalid_pattern": "Neplatný regulární výraz: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

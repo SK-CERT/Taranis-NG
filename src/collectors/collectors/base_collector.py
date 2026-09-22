@@ -273,8 +273,10 @@ class BaseCollector:
             item.get("name"): {group.get("id") for group in item.get("osint_source_groups") or []} for item in response.get("items") or []
         }
         BaseCollector.attribute_extraction_rules = rules
-        state = "enabled" if response.get("enabled", True) else "disabled"
-        logger.debug(f"{self.name}: {len(rules)} attribute extraction rules loaded ({state})")
+        if response.get("enabled", True):
+            logger.debug(f"{self.name}: {len(rules)} attribute extraction rules loaded")
+        else:
+            logger.debug(f"{self.name}: attribute extraction disabled")
 
     def extract_attributes(self, news_items: list, source: object) -> list:
         """Attach attributes found in each item's text.

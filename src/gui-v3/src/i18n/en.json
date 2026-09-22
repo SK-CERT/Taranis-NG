@@ -2123,8 +2123,7 @@
         "description": "Description",
         "enabled": "Enabled",
         "required": "This field is required",
-        "invalid_pattern": "Invalid regular expression: {error}",
-        "disabled_hint": "Attribute extraction is switched off globally. Rules below are saved but not applied. Enable ATTRIBUTE_EXTRACTION_ENABLED in Settings."
+        "invalid_pattern": "Invalid regular expression: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

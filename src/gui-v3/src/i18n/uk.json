@@ -2123,8 +2123,7 @@
         "description": "Опис",
         "enabled": "Увімкнено",
         "required": "Це поле обов'язкове",
-        "invalid_pattern": "Некоректний регулярний вираз: {error}",
-        "disabled_hint": "Вилучення атрибутів вимкнено глобально. Правила зберігаються, але не застосовуються. Увімкніть ATTRIBUTE_EXTRACTION_ENABLED у налаштуваннях."
+        "invalid_pattern": "Некоректний регулярний вираз: {error}"
     },
     "themes": {
         "taranis": "Taranis-NG",

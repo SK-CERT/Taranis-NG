@@ -68,12 +68,6 @@ SEEDED_RULES = [
     ),
 ]
 
-SETTING_KEY = "ATTRIBUTE_EXTRACTION_ENABLED"
-SETTING_DESCRIPTION = (
-    "Detect configured values in news item text during collection and store them as attributes. "
-    "Collectors re-read the rules when they refresh, so switching this off takes effect at the next refresh."
-)
-
 
 class PermissionAER(Base):
     """Minimal permission mapping for seeding."""
@@ -118,20 +112,6 @@ class RolePermissionAER(Base):
     __tablename__ = "role_permission"
     role_id = sa.Column(sa.Integer, sa.ForeignKey("role.id"), primary_key=True)
     permission_id = sa.Column(sa.String, sa.ForeignKey("permission.id"), primary_key=True)
-
-
-class SettingAER(Base):
-    """Minimal settings mapping for the global switch."""
-
-    __tablename__ = "settings"
-    id = sa.Column(sa.Integer, primary_key=True)
-    key = sa.Column(sa.String(40), unique=True, nullable=False)
-    type = sa.Column(sa.String(1), nullable=False)
-    value = sa.Column(sa.String(), nullable=False)
-    default_val = sa.Column(sa.String(), nullable=False)
-    description = sa.Column(sa.String(), nullable=False)
-    is_global = sa.Column(sa.Boolean(), nullable=False, default=True)
-    options = sa.Column(sa.String())
 
 
 def upgrade() -> None:
@@ -187,27 +167,10 @@ def upgrade() -> None:
         session.add(role)
         session.commit()
 
-    if not session.query(SettingAER).filter_by(key=SETTING_KEY).first():
-        session.add(
-            SettingAER(
-                key=SETTING_KEY,
-                type="B",
-                value="true",
-                default_val="true",
-                description=SETTING_DESCRIPTION,
-                is_global=True,
-            ),
-        )
-        session.commit()
-
 
 def downgrade() -> None:
     """Drop the tables and remove the seeded switch and permissions."""
     session = Session(bind=op.get_bind())
-
-    setting = session.query(SettingAER).filter_by(key=SETTING_KEY).first()
-    if setting:
-        session.delete(setting)
 
     for permission_id, _name, _description in PERMISSIONS:
         PermissionAER.delete(session, permission_id)
