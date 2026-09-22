@@ -54,16 +54,23 @@ def report_schedule() -> None:
 
 def initialize() -> None:
     """Initialize the collectors."""
+    # Don't block Gunicorn startup while waiting for Core, so the collector never exposed /isalive.
+    initialization_thread = threading.Thread(target=initialize_after_core_is_ready)
+    initialization_thread.daemon = True
+    initialization_thread.start()
+
+
+def initialize_after_core_is_ready() -> None:
+    """Wait for Core, then start reporting and initialize the collectors."""
     attempt = 0
     while True:
         attempt += 1
-        logger.debug(f"Awaiting initialization of CORE (timeout: 20s, attempt {attempt})")
-        _, status_code = CoreApi.update_collector_status(show_error=False)
+        logger.debug(f"Awaiting initialization of CORE (timeout: 10s, attempt {attempt})")
+        _, status_code = CoreApi.is_live(show_error=False)
         if status_code == HTTPStatus.OK:
             break
-        time.sleep(20)
+        time.sleep(10)
 
-    # inform core that this collector node is alive
     status_report_thread = threading.Thread(target=report_status)
     status_report_thread.daemon = True
     status_report_thread.start()
