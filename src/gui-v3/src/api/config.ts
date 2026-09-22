@@ -54,6 +54,22 @@ export function deleteAiProvider(ai_provider) {
     return ApiService.delete('/config/aiprovider/' + ai_provider.id)
 }
 
+export function getAllAttributeExtractionRules(filter) {
+    return ApiService.get('/config/attribute-extraction-rules?search=' + filter.search)
+}
+
+export function createNewAttributeExtractionRule(rule) {
+    return ApiService.post('/config/attribute-extraction-rules', rule)
+}
+
+export function updateAttributeExtractionRule(rule) {
+    return ApiService.put('/config/attribute-extraction-rules/' + rule.id, rule)
+}
+
+export function deleteAttributeExtractionRule(rule) {
+    return ApiService.delete('/config/attribute-extraction-rules/' + rule.id)
+}
+
 export function getAllAuthProviders(filter) {
     return ApiService.get('/config/auth-providers?search=' + filter.search)
 }

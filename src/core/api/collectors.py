@@ -16,8 +16,44 @@ from managers import run_state_cache
 from managers.auth_manager import api_key_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
+from model.attribute_extraction_rule import AttributeExtractionRule
 from model.news_item import NewsItemAggregate
 from model.osint_source import OSINTSource
+from shared.schema.attribute_extraction_rule import AttributeExtractionRuleSchema
+
+
+class AttributeExtractionRulesForCollectors(Resource):
+    """Attribute extraction rules for collectors API endpoint."""
+
+    @api_key_required("collectors")
+    def get(self, collector_id: str, collectors_node: CollectorsNode = None) -> tuple[dict, HTTPStatus]:
+        """Get the enabled attribute extraction rules.
+
+        Collectors apply these to the text of every item they collect, before publishing it.
+        The global switch is honoured here rather than in the collector, so turning the
+        feature off needs no collector-side logic - an empty rule list simply does nothing.
+
+        Args:
+            collector_id (str): The collector ID
+            collectors_node (CollectorsNode): The collectors node
+        Returns:
+            (dict): Whether extraction is enabled, and the rules to apply
+        """
+        if collectors_node.id != collector_id:
+            msg = "Forbidden: Collector ID does not match"
+            logger.warning(msg)
+            return {"error": msg}, HTTPStatus.FORBIDDEN
+
+        collectors_node.update_last_seen()
+
+        # No user here: this is an api-key call from a collector.
+        schema = AttributeExtractionRuleSchema(many=True)
+        rules = schema.dump(AttributeExtractionRule.get_all_enabled())
+
+        return {
+            "enabled": bool(rules),
+            "items": rules,
+        }, HTTPStatus.OK
 
 
 class OSINTSourcesForCollectors(Resource):
@@ -184,6 +220,10 @@ class CollectorStatusUpdate(Resource):
 def initialize(api: Api) -> None:
     """Initialize the API with the collectors endpoints."""
     api.add_resource(OSINTSourcesForCollectors, "/api/v1/collectors/<string:collector_id>/osint-sources")
+    api.add_resource(
+        AttributeExtractionRulesForCollectors,
+        "/api/v1/collectors/<string:collector_id>/attribute-extraction-rules",
+    )
     api.add_resource(OSINTSourceLastAttempt, "/api/v1/collectors/osint-sources/<string:osint_source_id>/attempt")
     api.add_resource(OSINTSourceLastErrorMessage, "/api/v1/collectors/osint-sources/<string:osint_source_id>/error_message")
     api.add_resource(CollectorSourcesSchedule, "/api/v1/collectors/<string:collector_id>/schedule")

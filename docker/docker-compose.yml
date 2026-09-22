@@ -368,8 +368,8 @@ services:
         HTTPS_PROXY: "${HTTPS_PROXY}"
         http_proxy: "${HTTP_PROXY}"
         https_proxy: "${HTTPS_PROXY}"
-#    ports:
-#      - "8080:80"
+    # ports:
+    #   - "8080:80"
     environment:
       NGINX_WORKERS: "4"
       NGINX_CONNECTIONS: "16"
@@ -421,8 +421,8 @@ services:
         HTTPS_PROXY: "${HTTPS_PROXY}"
         http_proxy: "${HTTP_PROXY}"
         https_proxy: "${HTTPS_PROXY}"
-#    ports:
-#      - "8081:80"
+    # ports:
+    #   - "8081:80"
     environment:
       NGINX_WORKERS: "4"
       NGINX_CONNECTIONS: "16"
