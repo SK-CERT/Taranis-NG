@@ -101,7 +101,7 @@ done
 # shape silently never matches on the other and the probe hangs. The isalive response
 # is the source of truth and is portable.
 declare -A SERVICE_PORT=( ["collectors"]="${E2E_COLLECTORS_PORT}" ["presenters"]="${E2E_PRESENTERS_PORT}" ["publishers"]="${E2E_PUBLISHERS_PORT}" )
-for service in presenters publishers collectors; do
+for service in collectors presenters publishers; do
   port="${SERVICE_PORT[$service]}"
   echo "Waiting for $service (host port :${port} and core DNS)..."
   for i in {1..60}; do
