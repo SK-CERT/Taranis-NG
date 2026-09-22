@@ -126,7 +126,7 @@ class CoreApi:
             )
             return response.json(), response.status_code
         except Exception as ex:
-            msg = "Is alive failed"
+            msg = "Is CORE alive failed"
             if show_error:
                 logger.exception(f"{msg}: {ex}")
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
