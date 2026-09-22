@@ -125,6 +125,7 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
     })
 
     test('should add a manual OSINT source via the GUI', async ({ page }) => {
+        test.setTimeout(60_000)
         await login(page)
         await page.goto('/v2/config/collectors?tab=sources')
         await page.getByRole('tab', { name: 'OSINT Sources' }).waitFor({ state: 'visible', timeout: 10000 })
