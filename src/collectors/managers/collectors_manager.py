@@ -54,11 +54,10 @@ def report_schedule() -> None:
 
 def initialize() -> None:
     """Initialize the collectors."""
-    # tests need access collectors before core is ready, don't block initialize()
-    # initialization_thread = threading.Thread(target=initialize_after_core_is_ready)
-    # initialization_thread.daemon = True
-    # initialization_thread.start()
-    initialize_after_core_is_ready()
+    # Don't block Gunicorn startup while waiting for Core, so the collector never exposed /isalive.
+    initialization_thread = threading.Thread(target=initialize_after_core_is_ready)
+    initialization_thread.daemon = True
+    initialization_thread.start()
 
 
 def initialize_after_core_is_ready() -> None:

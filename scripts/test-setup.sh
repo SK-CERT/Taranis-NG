@@ -104,7 +104,7 @@ declare -A SERVICE_PORT=( ["collectors"]="${E2E_COLLECTORS_PORT}" ["presenters"]
 for service in presenters publishers collectors; do
   port="${SERVICE_PORT[$service]}"
   echo "Waiting for $service (host port :${port} and core DNS)..."
-  for i in {1..90}; do
+  for i in {1..60}; do
     host_ready=0
     core_ready=0
     # 1) The service's own HTTP must be serving on its host port-forward.
@@ -127,8 +127,8 @@ for service in presenters publishers collectors; do
       echo "✓ $service is ready (isalive on :${port} AND core resolves http://${service})"
       break
     fi
-    if [ $i -eq 90 ]; then
-      echo "✗ $service not fully ready within 90s (host isalive=${host_ready}, core isalive=${core_ready})"
+    if [ $i -eq 60 ]; then
+      echo "✗ $service not fully ready within 60s (host isalive=${host_ready}, core isalive=${core_ready})"
       echo "Host probe: curl -sf -H \"$E2E_AUTH_HEADER\" http://127.0.0.1:${port}/api/v1/isalive"
       echo "Core probe result: ${core_probe:-<not run>}"
       echo "Core DNS:"
