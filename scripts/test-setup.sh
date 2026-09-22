@@ -118,7 +118,7 @@ for service in presenters publishers collectors; do
     #    seed test fires before DNS resolves, the node-add 500s with the misleading
     #    "Could not connect to <x> node." alert. Exec-ing a curl from core closes that gap.
     if [ "$host_ready" = "1" ]; then
-      core_probe=$(docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T --timeout 5 core curl -sS -o /dev/null -w '%{http_code}' -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" 2>&1 || true)
+      core_probe=$(docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core curl --connect-timeout 2 --max-time 5 -sS -o /dev/null -w '%{http_code}' -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" 2>&1 || true)
       if [ "$core_probe" = "200" ]; then
         core_ready=1
       fi
@@ -132,7 +132,7 @@ for service in presenters publishers collectors; do
       echo "Host probe: curl -sf -H \"$E2E_AUTH_HEADER\" http://127.0.0.1:${port}/api/v1/isalive"
       echo "Core probe result: ${core_probe:-<not run>}"
       echo "Core DNS:"
-      docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T --timeout 5 core getent hosts "$service" || true
+      docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core getent hosts "$service" || true
       echo "Core probe: docker compose exec core curl -sS -i -H \"$E2E_AUTH_HEADER\" http://${service}/api/v1/isalive"
       docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e logs --no-color --tail=50 "$service" || true
       exit 1
