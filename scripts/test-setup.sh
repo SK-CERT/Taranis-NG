@@ -129,11 +129,6 @@ for service in presenters publishers collectors; do
     fi
     if [ $i -eq 60 ]; then
       echo "✗ $service not fully ready within 60s (host isalive=${host_ready}, core isalive=${core_ready})"
-      echo "Host probe: curl -sf -H \"$E2E_AUTH_HEADER\" http://127.0.0.1:${port}/api/v1/isalive"
-      echo "Core probe result: ${core_probe:-<not run>}"
-      echo "Core DNS:"
-      docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core getent hosts "$service" || true
-      echo "Core probe: docker compose exec core curl -sS -i -H \"$E2E_AUTH_HEADER\" http://${service}/api/v1/isalive"
       docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e logs --no-color --tail=50 "$service" || true
       exit 1
     fi
