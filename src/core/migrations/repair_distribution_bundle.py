@@ -48,6 +48,14 @@ NAME_QUERIES = {
 }
 EXPECTED_GROUP_COUNT = 24
 EXPECTED_GROUP_ITEM_COUNT = 93
+REQUIRED_ATTRIBUTE_NAMES = {
+    "Text",
+    "Text Area",
+    "TLP",
+    "Date",
+    "Number",
+    "MISP Event Threat Level",
+}
 
 
 def _matching_names(connection: Connection, table: str, column: str, expected: set[str]) -> set[str]:
@@ -165,6 +173,15 @@ def repair_distribution_bundle(
         present_products = _matching_names(connection, "product_type", "title", set(PRODUCT_PATHS))
         present_reports = _matching_names(connection, "report_item_type", "title", REPORT_TYPES)
         present_attributes = _matching_names(connection, "attribute", "name", ATTRIBUTES)
+        required_attributes = _matching_names(connection, "attribute", "name", REQUIRED_ATTRIBUTE_NAMES)
+
+        missing_required_attributes = REQUIRED_ATTRIBUTE_NAMES - required_attributes
+        if missing_required_attributes:
+            message = "Distribution bundle repair skipped; required default attributes are missing: " + ", ".join(
+                sorted(missing_required_attributes),
+            )
+            print(message, flush=True)  # noqa: T201
+            return
 
         if present_products == set(PRODUCT_PATHS) and present_reports == REPORT_TYPES and present_attributes == ATTRIBUTES:
             print("Distribution bundle is already complete; no changes made.", flush=True)  # noqa: T201
