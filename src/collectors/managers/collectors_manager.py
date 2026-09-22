@@ -54,6 +54,14 @@ def report_schedule() -> None:
 
 def initialize() -> None:
     """Initialize the collectors."""
+    # tests need access collectors before core is ready, don't block initialize()
+    initialization_thread = threading.Thread(target=initialize_after_core_is_ready)
+    initialization_thread.daemon = True
+    initialization_thread.start()
+
+
+def initialize_after_core_is_ready() -> None:
+    """Wait for Core, then start reporting and initialize the collectors."""
     attempt = 0
     while True:
         attempt += 1
@@ -63,7 +71,6 @@ def initialize() -> None:
             break
         time.sleep(20)
 
-    # inform core that this collector node is alive
     status_report_thread = threading.Thread(target=report_status)
     status_report_thread.daemon = True
     status_report_thread.start()
