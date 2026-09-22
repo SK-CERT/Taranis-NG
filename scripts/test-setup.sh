@@ -45,10 +45,9 @@ E2E_API_KEY="$(cat "$COMPOSE_DIR/secrets/api_key.txt" 2>/dev/null || true)"
 E2E_AUTH_HEADER="Authorization: ApiKey ${E2E_API_KEY}"
 docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e down -v --remove-orphans >/dev/null 2>&1 || true
 
-# Start core, postgres, redis, and the one-shot bootstrap with localhost port exposure
-# for the frontend dev server. Build the core image from the current workspace so new
-# backend routes are available in E2E runs.
-docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e up -d --build postgres redis core collectors presenters publishers bootstrap
+# Start core, postgres, redis with localhost port exposure for the frontend dev server.
+# Build the core image from the current workspace so new backend routes are available in E2E runs.
+docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e up -d --build postgres redis core collectors presenters publishers
 
 echo "Waiting for services to be ready..."
 
@@ -74,26 +73,6 @@ for i in {1..30}; do
   fi
   if [ $i -eq 30 ]; then
     echo "✗ Core container failed to become healthy"
-    exit 1
-  fi
-  sleep 1
-done
-
-# The core healthcheck only proves that Flask is serving. Wait for bootstrap as well,
-# because it creates the default admin/login configuration used by the first E2E test.
-for i in {1..120}; do
-  bootstrap_status=$(docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e ps -a --format '{{.State}} {{.ExitCode}}' bootstrap 2>/dev/null)
-  if echo "$bootstrap_status" | grep -q '^exited 0$'; then
-    echo "✓ Core bootstrap completed"
-    break
-  fi
-  if echo "$bootstrap_status" | grep -Eq '^exited [1-9][0-9]*$'; then
-    echo "✗ Core bootstrap failed"
-    docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e logs --no-color --tail=200 bootstrap || true
-    exit 1
-  fi
-  if [ $i -eq 120 ]; then
-    echo "✗ Core bootstrap did not complete within 120s"
     exit 1
   fi
   sleep 1
