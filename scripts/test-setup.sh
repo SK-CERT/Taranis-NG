@@ -103,11 +103,13 @@ done
 declare -A SERVICE_PORT=( ["collectors"]="${E2E_COLLECTORS_PORT}" ["presenters"]="${E2E_PRESENTERS_PORT}" ["publishers"]="${E2E_PUBLISHERS_PORT}" )
 for service in collectors presenters publishers; do
   port="${SERVICE_PORT[$service]}"
-  ready=0
+  echo "Waiting for $service (host port :${port} and core DNS)..."
   for i in {1..60}; do
+    host_ready=0
+    core_ready=0
     # 1) The service's own HTTP must be serving on its host port-forward.
     if curl -sf -H "$E2E_AUTH_HEADER" "http://127.0.0.1:${port}/api/v1/isalive" > /dev/null 2>&1; then
-      ready=1
+      host_ready=1
     fi
     # 2) The CORE container must be able to resolve the service via Docker DNS and reach
     #    its isalive — this is the exact path add_presenters_node / add_collectors_node /
@@ -115,16 +117,19 @@ for service in collectors presenters publishers; do
     #    Docker's embedded DNS resolver can lag service start by a few seconds; if the
     #    seed test fires before DNS resolves, the node-add 500s with the misleading
     #    "Could not connect to <x> node." alert. Exec-ing a curl from core closes that gap.
-    if [ "$ready" = "1" ]; then
-      if docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core curl -sf -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" > /dev/null 2>&1; then
-        echo "✓ $service is ready (isalive on :${port} AND core resolves http://${service})"
-        break
+    if [ "$host_ready" = "1" ]; then
+      core_probe=$(docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core curl --connect-timeout 2 --max-time 5 -sS -o /dev/null -w '%{http_code}' -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" 2>&1 || true)
+      if [ "$core_probe" = "200" ]; then
+        core_ready=1
       fi
-      # Service serves on its own port, but core can't resolve it yet — keep waiting.
-      ready=0
+    fi
+    if [ "$host_ready" = "1" ] && [ "$core_ready" = "1" ]; then
+      echo "✓ $service is ready (isalive on :${port} AND core resolves http://${service})"
+      break
     fi
     if [ $i -eq 60 ]; then
-      echo "✗ $service not fully ready within 60s (isalive on :${port} or core DNS resolution failed)"
+      echo "✗ $service not fully ready within 60s (host isalive=${host_ready}, core isalive=${core_ready})"
+      docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e logs --no-color --tail=50 "$service" || true
       exit 1
     fi
     sleep 1
