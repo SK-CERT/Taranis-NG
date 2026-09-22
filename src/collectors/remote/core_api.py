@@ -88,7 +88,7 @@ class CoreApi:
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @classmethod
-    def update_collector_status(cls, show_error: bool = True) -> tuple[dict, HTTPStatus]:
+    def update_collector_status(cls) -> tuple[dict, HTTPStatus]:
         """Update the status of the collector.
 
         This method retrieves the collector ID from the environment variable COLLECTOR_CONFIG_FILE,
@@ -108,6 +108,25 @@ class CoreApi:
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Update collector status failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+    @classmethod
+    def is_live(cls, show_error: bool = True) -> tuple[dict, HTTPStatus]:
+        """Is alive.
+
+        Returns:
+            tuple: A tuple containing the JSON response and the HTTP status code.
+        """
+        try:
+            response = requests.get(
+                f"{cls.api_url}/api/v1/isalive",
+                headers=cls.headers,
+                timeout=10,
+            )
+            return response.json(), response.status_code
+        except Exception as ex:
+            msg = "Is alive failed"
             if show_error:
                 logger.exception(f"{msg}: {ex}")
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR

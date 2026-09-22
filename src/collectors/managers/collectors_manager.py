@@ -66,7 +66,7 @@ def initialize_after_core_is_ready() -> None:
     while True:
         attempt += 1
         logger.debug(f"Awaiting initialization of CORE (timeout: 10s, attempt {attempt})")
-        _, status_code = CoreApi.update_collector_status(show_error=False)
+        _, status_code = CoreApi.is_live(show_error=False)
         if status_code == HTTPStatus.OK:
             break
         time.sleep(10)
