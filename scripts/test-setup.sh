@@ -101,8 +101,9 @@ done
 # shape silently never matches on the other and the probe hangs. The isalive response
 # is the source of truth and is portable.
 declare -A SERVICE_PORT=( ["collectors"]="${E2E_COLLECTORS_PORT}" ["presenters"]="${E2E_PRESENTERS_PORT}" ["publishers"]="${E2E_PUBLISHERS_PORT}" )
-for service in collectors presenters publishers; do
+for service in presenters publishers collectors; do
   port="${SERVICE_PORT[$service]}"
+  echo "Waiting for $service (host port :${port} and core DNS)..."
   ready=0
   for i in {1..90}; do
     # 1) The service's own HTTP must be serving on its host port-forward.
@@ -116,7 +117,7 @@ for service in collectors presenters publishers; do
     #    seed test fires before DNS resolves, the node-add 500s with the misleading
     #    "Could not connect to <x> node." alert. Exec-ing a curl from core closes that gap.
     if [ "$ready" = "1" ]; then
-      if docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T core curl -sf -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" > /dev/null 2>&1; then
+      if docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -p taranis-e2e exec -T --timeout 5 core curl -sf -H "$E2E_AUTH_HEADER" "http://${service}/api/v1/isalive" > /dev/null 2>&1; then
         echo "✓ $service is ready (isalive on :${port} AND core resolves http://${service})"
         break
       fi
