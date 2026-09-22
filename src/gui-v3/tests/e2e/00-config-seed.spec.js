@@ -124,51 +124,6 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         await expect(page.getByText('E2E Collectors Node')).toBeVisible({ timeout: 5000 })
     })
 
-    test('should add a manual OSINT source via the GUI', async ({ page }) => {
-        await login(page)
-        await page.goto('/v2/config/collectors?tab=sources')
-        await page.getByRole('tab', { name: 'OSINT Sources' }).waitFor({ state: 'visible', timeout: 10000 })
-
-        // A source is added from the panel of the node that will collect it.
-        const panel = page.locator('.v-expansion-panel').filter({ hasText: 'E2E Collectors Node' })
-        await panel.locator('.v-expansion-panel-title').getByRole('button', { name: 'Add New' }).click()
-        const dialog = page.locator('.v-dialog.v-overlay--active')
-        await expect(dialog).toBeVisible({ timeout: 5000 })
-
-        const sourceName = generateTestName('E2E Manual Source')
-
-        // Opening from a node's panel preselects that node, so the source cannot silently land
-        // on another one. Asserted rather than re-picked: re-picking "the first node" would hide
-        // a broken preselection and put the source somewhere the later specs do not look.
-        await expect(dialog.locator('.v-select').first()).toContainText('E2E Collectors Node')
-
-        // Select the MANUAL_COLLECTOR from the second dropdown.
-        const collectorSelect = dialog.locator('.v-select').nth(1)
-        await collectorSelect.click()
-        const collectorItems = page.locator('.v-overlay__content:visible .v-list-item')
-        // Find the "Manual" collector option.
-        const manualItem = collectorItems.filter({ hasText: /manual/i }).first()
-        await manualItem.click()
-
-        // Fill in name and description by label. Positional input.first() resolves to the
-        // Collectors Node v-select's internal <input> (rendered before the Name text-field),
-        // where the value is dropped — so the Name field stayed empty and client-side
-        // validation kept the dialog open (Save never reached the backend).
-        await dialog.getByLabel('Name', { exact: true }).fill(sourceName)
-        await dialog.getByLabel('Description', { exact: true }).fill('Manual OSINT source for E2E testing')
-
-        // Every collector parameter is required (PROXY_SERVER ships without a default),
-        // so Save stays blocked until the empty ones carry a value.
-        await fillRequiredParameters(dialog)
-
-        // Save.
-        await dialog.getByRole('button', { name: 'Save' }).click()
-        await expect(dialog).toHaveCount(0, { timeout: 10000 })
-
-        // Verify the source appears in the list.
-        await expect(page.getByText(sourceName)).toBeVisible({ timeout: 5000 })
-    })
-
     test('should add a product type via the GUI', async ({ page }) => {
         await login(page)
         await page.goto('/v2/config/presenters?tab=types')
@@ -229,5 +184,50 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
 
         // Verify the preset appears in the list.
         await expect(page.getByText(presetName)).toBeVisible({ timeout: 5000 })
+    })
+
+    test('should add a manual OSINT source via the GUI', async ({ page }) => {
+        await login(page)
+        await page.goto('/v2/config/collectors?tab=sources')
+        await page.getByRole('tab', { name: 'OSINT Sources' }).waitFor({ state: 'visible', timeout: 10000 })
+
+        // A source is added from the panel of the node that will collect it.
+        const panel = page.locator('.v-expansion-panel').filter({ hasText: 'E2E Collectors Node' })
+        await panel.locator('.v-expansion-panel-title').getByRole('button', { name: 'Add New' }).click()
+        const dialog = page.locator('.v-dialog.v-overlay--active')
+        await expect(dialog).toBeVisible({ timeout: 5000 })
+
+        const sourceName = generateTestName('E2E Manual Source')
+
+        // Opening from a node's panel preselects that node, so the source cannot silently land
+        // on another one. Asserted rather than re-picked: re-picking "the first node" would hide
+        // a broken preselection and put the source somewhere the later specs do not look.
+        await expect(dialog.locator('.v-select').first()).toContainText('E2E Collectors Node')
+
+        // Select the MANUAL_COLLECTOR from the second dropdown.
+        const collectorSelect = dialog.locator('.v-select').nth(1)
+        await collectorSelect.click()
+        const collectorItems = page.locator('.v-overlay__content:visible .v-list-item')
+        // Find the "Manual" collector option.
+        const manualItem = collectorItems.filter({ hasText: /manual/i }).first()
+        await manualItem.click()
+
+        // Fill in name and description by label. Positional input.first() resolves to the
+        // Collectors Node v-select's internal <input> (rendered before the Name text-field),
+        // where the value is dropped — so the Name field stayed empty and client-side
+        // validation kept the dialog open (Save never reached the backend).
+        await dialog.getByLabel('Name', { exact: true }).fill(sourceName)
+        await dialog.getByLabel('Description', { exact: true }).fill('Manual OSINT source for E2E testing')
+
+        // Every collector parameter is required (PROXY_SERVER ships without a default),
+        // so Save stays blocked until the empty ones carry a value.
+        await fillRequiredParameters(dialog)
+
+        // Save.
+        await dialog.getByRole('button', { name: 'Save' }).click()
+        await expect(dialog).toHaveCount(0, { timeout: 10000 })
+
+        // Verify the source appears in the list.
+        await expect(page.getByText(sourceName)).toBeVisible({ timeout: 5000 })
     })
 })
