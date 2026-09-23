@@ -24,14 +24,17 @@ status_report_thread = None
 def report_status() -> None:
     """Continuously send status updates to the Core API."""
     while True:
-        logger.debug("Sending status update...")
-        response, status_code = CoreApi.update_collector_status()
-        if status_code != HTTPStatus.OK:
-            logger.error(
-                f"Core status update response failed, Code: {status_code}{', response: ' + str(response) if response is not None else ''}",
-            )
+        # One failed beat must not end the heartbeat: core would show the node offline for good.
+        try:
+            logger.debug("Sending status update...")
+            response, status_code = CoreApi.update_collector_status()
+            if status_code != HTTPStatus.OK:
+                detail = f", response: {response}" if response is not None else ""
+                logger.error(f"Core status update response failed, Code: {status_code}{detail}")
 
-        report_schedule()
+            report_schedule()
+        except Exception as error:
+            logger.exception(f"Status report failed: {error}")
         time.sleep(55)
 
 
@@ -43,7 +46,8 @@ def report_schedule() -> None:
     minutes or hours.
     """
     due = {}
-    for collector in collectors.values():
+    # A copy: registration may still be adding collectors from another thread.
+    for collector in list(collectors.values()):
         due.update(collector.next_run_by_source())
     if not due:
         return
@@ -71,10 +75,6 @@ def initialize_after_core_is_ready() -> None:
             break
         time.sleep(10)
 
-    status_report_thread = threading.Thread(target=report_status)
-    status_report_thread.daemon = True
-    status_report_thread.start()
-
     register_collector(RSSCollector())
     register_collector(WebCollector())
     register_collector(TwitterCollector())
@@ -82,6 +82,11 @@ def initialize_after_core_is_ready() -> None:
     register_collector(SlackCollector())
     register_collector(ManualCollector())
     register_collector(ScheduledTasksCollector())
+
+    # Started after registration, so the first beat already reports every collector.
+    status_report_thread = threading.Thread(target=report_status)
+    status_report_thread.daemon = True
+    status_report_thread.start()
 
 
 def register_collector(collector: object) -> None:

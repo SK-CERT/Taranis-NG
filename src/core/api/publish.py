@@ -29,6 +29,14 @@ from model.report_item import ReportItem
 from remote.presenters_api import PresentersApi
 from shared.schema.presenter import PresenterInput, PresenterInputSchema
 
+# How long a preview ticket stays valid.
+PREVIEW_TICKET_TTL_SECONDS = 600
+# How many times one ticket may be redeemed. Not 1: Chrome fetches the resource once to render a
+# PDF and again to save it (seen 2026-09-21), so a strictly single-use ticket broke saving an
+# opened preview. Still capped, so a URL that leaks (proxy logs, browser history, a shared link)
+# can serve the report at most a couple more times, and only until the ticket expires.
+PREVIEW_TICKET_MAX_REDEMPTIONS = 3
+
 
 class ProductsResource(Resource):
     """A class representing the API endpoint for products.
@@ -292,7 +300,7 @@ class ProductGetPreview(Resource):
 
         # Chrome does not process the Content-Disposition filename on POST requests -> therefore, GET is used.
         # No need to re-check JWT here — it was already validated during preview generation.
-        # The token is temporary, will expire, and is single-use.
+        # The token is temporary, will expire, and may be redeemed PREVIEW_TICKET_MAX_REDEMPTIONS times.
 
         cache_key = f"preview:{token}"
         try:
@@ -302,13 +310,19 @@ class ProductGetPreview(Resource):
                 log_manager.store_auth_error_activity(err_msg)
                 return Response(err_msg, HTTPStatus.NOT_FOUND, mimetype="text/plain")
 
-            # Single use: consume the ticket right away, so a URL that leaked
-            # (proxy logs, browser history, shared links) cannot serve the
-            # report a second time.
+            # Count the redemption before serving. INCR is atomic, so concurrent requests cannot
+            # slip past the cap between the read above and the check below.
+            uses_key = f"{cache_key}:uses"
+            uses = redis_client.incr(uses_key)
+            if uses == 1:
+                redis_client.expire(uses_key, PREVIEW_TICKET_TTL_SECONDS)
+            if uses >= PREVIEW_TICKET_MAX_REDEMPTIONS:
+                redis_client.delete(cache_key, uses_key)
+            if uses > PREVIEW_TICKET_MAX_REDEMPTIONS:
+                err_msg = "Preview token not found, expired, or already processed."
+                log_manager.store_auth_error_activity(err_msg)
+                return Response(err_msg, HTTPStatus.NOT_FOUND, mimetype="text/plain")
 
-            # 2026-09-21: Chrome started requiring the preview resource twice (preview, save).
-            # The single-use Redis entry prevented users from downloading an opened PDF.
-            # redis_client.delete(cache_key)
             cached_data = json.loads(cached_bytes)
             preview_data = base64.b64decode(cached_data["data"])
             preview_mime = cached_data["mime"]
@@ -351,7 +365,6 @@ class ProductSetPreview(Resource):
         """
         err_msg = None
         user = None
-        cache_ttl = 600  # 10 minutes: the ticket is single-use; this bounds how long an unused one stays valid
 
         jwt = request.json.get("jwt")
         if not jwt:
@@ -399,7 +412,7 @@ class ProductSetPreview(Resource):
             cache_value = json.dumps(
                 {"data": base64.b64encode(preview_data).decode("utf-8"), "mime": preview_mime, "filename": file_name},
             )
-            redis_client.set(cache_key, cache_value, ex=cache_ttl)
+            redis_client.set(cache_key, cache_value, ex=PREVIEW_TICKET_TTL_SECONDS)
 
             logger.debug(f"Preview token generated: {token}")
             return {"token": token}, HTTPStatus.OK

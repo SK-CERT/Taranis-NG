@@ -7,7 +7,7 @@
                 </span>
                 <!-- add space to allow copy formatted -->
                 <span>&nbsp;</span>
-                <span v-if="attribute.binary_mime_type === ''">
+                <span v-if="!attribute.binary_mime_type">
                     <bdi dir="auto">{{ attribute.value }}</bdi>
                 </span>
                 <span

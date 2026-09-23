@@ -7,13 +7,14 @@ those groups only.
 
 from __future__ import annotations
 
-import re
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 from managers.db_manager import db
+from managers.log_manager import logger
 from marshmallow import post_load
 from model.osint_source import OSINTSourceGroup
+from shared.attribute_extraction import pattern_error
 from shared.common import TZ
 from shared.schema.attribute_extraction_rule import (
     AttributeExtractionRulePresentationSchema,
@@ -42,10 +43,18 @@ class NewAttributeExtractionRuleSchema(AttributeExtractionRuleSchema):
 
 
 class AttributeExtractionRuleOSINTSourceGroup(db.Model):
-    """Association between a rule and the OSINT source groups it is limited to."""
+    """Association between a rule and the OSINT source groups it is limited to.
 
-    attribute_extraction_rule_id = db.Column(db.Integer, db.ForeignKey("attribute_extraction_rule.id"), primary_key=True)
-    osint_source_group_id = db.Column(db.String, db.ForeignKey("osint_source_group.id"), primary_key=True)
+    The cascades match migration d4f1c8a70b62: `create_app()` runs `db.create_all()`, so a core that
+    starts before the migration builds this table from the model, and the two must not differ.
+    """
+
+    attribute_extraction_rule_id = db.Column(
+        db.Integer,
+        db.ForeignKey("attribute_extraction_rule.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    osint_source_group_id = db.Column(db.String, db.ForeignKey("osint_source_group.id", ondelete="CASCADE"), primary_key=True)
 
 
 class AttributeExtractionRule(db.Model):
@@ -84,7 +93,6 @@ class AttributeExtractionRule(db.Model):
 
     def __init__(
         self,
-        id: int,  # noqa: A002, ARG002
         name: str,
         attribute_key: str,
         pattern: str,
@@ -93,6 +101,7 @@ class AttributeExtractionRule(db.Model):
         capture_group: int = 0,
         max_matches: int = 100,
         osint_source_groups: list | None = None,
+        id: int | None = None,  # noqa: A002, ARG002
     ) -> None:
         """Create a new rule."""
         self.name = name
@@ -123,20 +132,43 @@ class AttributeExtractionRule(db.Model):
         return resolved
 
     @staticmethod
-    def validate_pattern(pattern: str) -> str | None:
+    def validate_pattern(pattern: str | None, capture_group: int = 0) -> str | None:
         """Compile a pattern so a typo fails here rather than silently in a collector.
 
+        Uses the shared matcher's own check, so a pattern is judged by the engine that runs it.
+
         Args:
-            pattern (str): The regular expression to check.
+            pattern (str | None): The regular expression to check.
+            capture_group (int): The group the rule stores; it must exist in the pattern.
 
         Returns:
-            str | None: The compile error, or None when the pattern is valid.
+            str | None: Why the pattern cannot be used, or None when it is valid.
         """
-        try:
-            re.compile(pattern or "")
-        except re.error as error:
-            return str(error)
-        return None
+        return pattern_error(pattern, capture_group)
+
+    @classmethod
+    def name_taken(cls, name: str | None, exclude_id: int | None = None) -> bool:
+        """Tell whether another rule already uses a name.
+
+        Args:
+            name (str | None): The name to check.
+            exclude_id (int | None): The rule being updated, which may keep its own name.
+
+        Returns:
+            bool: True when a different rule has this name.
+        """
+        query = cls.query.filter(cls.name == name)
+        if exclude_id is not None:
+            query = query.filter(cls.id != exclude_id)
+        return db.session.query(query.exists()).scalar()
+
+    def osint_source_ids(self) -> set[str]:
+        """Resolve the rule's groups to the sources currently in them.
+
+        Returns:
+            set[str]: Ids of the sources the rule covers; empty for an unscoped rule.
+        """
+        return {source.id for group in self.osint_source_groups for source in group.osint_sources}
 
     def applies_to_source(self, osint_source: OSINTSource | None) -> bool:
         """Tell whether this rule should run for a given source.
@@ -205,6 +237,47 @@ class AttributeExtractionRule(db.Model):
                 ),
             )
         return query.order_by(db.asc(AttributeExtractionRule.name)).all(), query.count()
+
+    @classmethod
+    def get_enabled_for_collectors_json(cls) -> list[dict]:
+        """Get the enabled rules in the shape collectors apply them.
+
+        A collector knows its sources but not their groups, so each scoped rule also carries the
+        ids of the sources it covers, resolved here from the current group membership.
+
+        Returns:
+            list[dict]: The enabled rules, each with ``osint_source_ids``.
+        """
+        rules = cls.get_all_enabled()
+        items = AttributeExtractionRuleSchema(many=True).dump(rules)
+        for item, rule in zip(items, rules, strict=True):
+            item["osint_source_ids"] = sorted(rule.osint_source_ids())
+        return items
+
+    @classmethod
+    def disable_rules_scoped_only_to(cls, osint_source_group_id: str) -> list[str]:
+        """Detach a group that is being deleted, disabling the rules it was the only scope of.
+
+        A rule with no groups applies to every source, so without this the database cascade
+        would silently widen a rule limited to the deleted group to everything. The caller
+        commits.
+
+        Args:
+            osint_source_group_id (str): The group being deleted.
+
+        Returns:
+            list[str]: Names of the rules that were disabled.
+        """
+        disabled = []
+        for rule in cls.query.filter(cls.osint_source_groups.any(OSINTSourceGroup.id == osint_source_group_id)).all():
+            rule.osint_source_groups = [group for group in rule.osint_source_groups if group.id != osint_source_group_id]
+            if not rule.osint_source_groups and rule.enabled:
+                rule.enabled = False
+                rule.updated_at = datetime.now(TZ)
+                disabled.append(rule.name)
+        if disabled:
+            logger.warning(f"Disabled attribute extraction rules whose only source group was deleted: {', '.join(disabled)}")
+        return disabled
 
     @classmethod
     def get_all_json(cls, search: str | None) -> dict:

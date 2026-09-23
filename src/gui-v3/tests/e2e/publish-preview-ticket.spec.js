@@ -8,9 +8,10 @@ import { createApiContext } from '../helpers/api-seed'
  * report from a GET with no re-authentication. Two properties matter and neither
  * can be checked without a real backend:
  *
- *  - the ticket is single use, so a URL that leaks (proxy logs, browser history,
- *    a shared link) cannot serve the report again. The code claimed this in a
- *    comment long before it did it.
+ *  - the ticket may be redeemed only a few times (PREVIEW_TICKET_MAX_REDEMPTIONS
+ *    in core's api/publish.py), so a URL that leaks (proxy logs, browser history,
+ *    a shared link) cannot keep serving the report. Not once: Chrome fetches the
+ *    resource again to save an opened PDF.
  *  - an HTML preview must be able to run the inline script its own template
  *    ships (template_osint.html inlines Chart.js), while still being denied
  *    everything it does not need.
@@ -47,19 +48,21 @@ test.describe('Product preview ticket', () => {
         await request?.dispose()
     })
 
-    test('a preview ticket may be redeemed exactly once', async () => {
+    test('a preview ticket may be redeemed a bounded number of times', async () => {
         const ticket = await mintTicket(request, token)
         test.skip(!ticket, 'no product type available to preview in this environment')
 
-        const first = await request.get(`${CORE_API}/publish/products/preview/${ticket}`)
-        expect(first.status(), 'the first redemption serves the report').toBe(200)
+        // Keep in step with PREVIEW_TICKET_MAX_REDEMPTIONS in src/core/api/publish.py.
+        const maxRedemptions = 3
+        for (let redemption = 1; redemption <= maxRedemptions; redemption++) {
+            const response = await request.get(`${CORE_API}/publish/products/preview/${ticket}`)
+            // Chrome renders an opened PDF and then fetches it again to save it.
+            expect(response.status(), `redemption ${redemption} serves the report`).toBe(200)
+        }
 
-        // Before the fix this returned the report again, for an hour.
-
-        // 2026-09-21: Chrome started requiring the preview resource twice (preview, save).
-        // The single-use Redis entry prevented users from downloading an opened PDF.
-        // const second = await request.get(`${CORE_API}/publish/products/preview/${ticket}`)
-        // expect(second.status(), 'a redeemed ticket must be spent').toBe(404)
+        // Before the cap this returned the report again, for the ticket's whole lifetime.
+        const spent = await request.get(`${CORE_API}/publish/products/preview/${ticket}`)
+        expect(spent.status(), 'a ticket past its redemption cap must be spent').toBe(404)
     })
 
     test('an unknown ticket is not found', async () => {

@@ -31,6 +31,8 @@ dependencies = [
     "python-keycloak==7.1.1",
     "webauthn==3.0.0",
     "redis==8.1.0",
+    # Bounds admin-supplied attribute extraction patterns with a timeout (shared.attribute_extraction).
+    "regex==2026.9.10",
     "requests==2.34.2",
     "schedule==1.2.2",
     "sseclient-py==1.9.0",

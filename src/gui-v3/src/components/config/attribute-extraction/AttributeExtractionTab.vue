@@ -47,6 +47,14 @@
             </template>
 
             <template #form="{ item }">
+                <v-alert
+                    v-if="dialogError"
+                    type="error"
+                    density="compact"
+                    class="mb-4"
+                >
+                    {{ dialogError }}
+                </v-alert>
                 <v-text-field
                     v-model="asRule(item).name"
                     :label="t('attribute_extraction.name')"
@@ -72,7 +80,7 @@
                     variant="outlined"
                     density="comfortable"
                     class="mb-3 pattern-field"
-                    :rules="[requiredRule, patternRule]"
+                    :rules="[requiredRule]"
                 />
                 <v-row>
                     <v-col cols="6">
@@ -142,17 +150,25 @@
         >
             {{ errorMessage }}
         </v-alert>
+
+        <ConfirmationDialog
+            v-model="deleteDialog"
+            :message="isolateAuto(ruleToDelete?.name)"
+            max-width="600px"
+            @confirm="confirmDelete"
+        />
     </v-container>
 </template>
 
 <script setup lang="ts">
-    import { computed, onMounted, ref } from 'vue'
+    import { computed, onMounted, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { useSettingsStore } from '@/stores/settings'
     import { Settings } from '@/types/settings'
     import { createNewAttributeExtractionRule, deleteAttributeExtractionRule, updateAttributeExtractionRule } from '@/api/config'
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { useAuth } from '@/composables/useAuth'
 
     type GroupRef = { id: string }
@@ -184,6 +200,30 @@
     const saving = ref(false)
     const dialog = ref(false)
     const errorMessage = ref('')
+    // Shown inside the dialog: a failed save keeps it open, and an alert on the page behind the
+    // modal would go unseen.
+    const dialogError = ref('')
+    // The table deletes on a single click, and a rule is live configuration every collector runs.
+    const deleteDialog = ref(false)
+    const ruleToDelete = ref<ExtractionRule | null>(null)
+
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
+    const isolateAuto = (value: unknown): string =>
+        value == null || value === '' ? '' : `${FIRST_STRONG_ISOLATE}${String(value)}${POP_DIRECTIONAL_ISOLATE}`
+
+    watch(dialog, (open) => {
+        if (open) dialogError.value = ''
+    })
+
+    // The API explains a rejection in `error`, e.g. which part of a pattern does not compile.
+    // An invalid pattern also comes back as the bare engine message in `pattern_error`, which is
+    // placed in a translated sentence; the engine's own wording has no translation.
+    const apiErrorMessage = (error: unknown): string => {
+        const data = (error as { response?: { data?: { error?: string; pattern_error?: string } } })?.response?.data
+        if (data?.pattern_error) return t('attribute_extraction.invalid_pattern', { error: data.pattern_error })
+        return data?.error || String(error)
+    }
 
     const headers = [
         { title: t('attribute_extraction.enabled'), key: 'enabled', sortable: false, width: '90px' },
@@ -218,17 +258,8 @@
 
     const requiredRule = (value: unknown): boolean | string => (value ? true : t('attribute_extraction.required'))
 
-    // Validated in the browser as well as on the server: catching a typo before the round
-    // trip is the difference between an inline error and a 400.
-    const patternRule = (value: unknown): boolean | string => {
-        if (!value) return true
-        try {
-            new RegExp(String(value))
-            return true
-        } catch (error) {
-            return t('attribute_extraction.invalid_pattern', { error: (error as Error).message })
-        }
-    }
+    // Patterns are validated by the server only: they are Python regular expressions, and a
+    // browser RegExp rejects valid Python syntax such as (?P<name>...) and inline flags (?i).
 
     const loadData = async (): Promise<void> => {
         loading.value = true
@@ -238,7 +269,7 @@
             rows.value = ((configStore.attributeExtractionRules?.items ?? []) as Record<string, unknown>[]).map(fromApi)
             await configStore.loadOSINTSourceGroups({ search: '' })
         } catch (error) {
-            errorMessage.value = String(error)
+            errorMessage.value = apiErrorMessage(error)
         } finally {
             loading.value = false
         }
@@ -257,7 +288,7 @@
 
     const onSave = async (item: ExtractionRule, { isNew }: { isNew: boolean }): Promise<void> => {
         saving.value = true
-        errorMessage.value = ''
+        dialogError.value = ''
         try {
             const payload = toPayload(item)
             if (isNew) {
@@ -268,19 +299,27 @@
             await loadData()
             dialog.value = false
         } catch (error) {
-            errorMessage.value = String(error)
+            dialogError.value = apiErrorMessage(error)
         } finally {
             saving.value = false
         }
     }
 
-    const onDelete = async (item: ExtractionRule): Promise<void> => {
+    const onDelete = (item: ExtractionRule): void => {
+        ruleToDelete.value = item
+        deleteDialog.value = true
+    }
+
+    const confirmDelete = async (): Promise<void> => {
+        if (!ruleToDelete.value) return
         errorMessage.value = ''
         try {
-            await deleteAttributeExtractionRule(item)
+            await deleteAttributeExtractionRule(ruleToDelete.value)
             await loadData()
         } catch (error) {
-            errorMessage.value = String(error)
+            errorMessage.value = apiErrorMessage(error)
+        } finally {
+            ruleToDelete.value = null
         }
     }
 

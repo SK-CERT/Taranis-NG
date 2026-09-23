@@ -739,10 +739,12 @@ class OSINTSourceGroup(db.Model):
         Returns:
             Tuple[str, int]: Message and status code.
         """
+        from model.attribute_extraction_rule import AttributeExtractionRule  # noqa: PLC0415 Must be here, because circular import error
         from model.news_item import NewsItemAggregate  # noqa: PLC0415 Must be here, because circular import error
 
         osint_source_group = db.session.get(cls, osint_source_group_id)
         if osint_source_group.default is False:
+            AttributeExtractionRule.disable_rules_scoped_only_to(osint_source_group_id)
             db.session.delete(osint_source_group)
             db.session.commit()
             # Checking multiple source group assignments is problematic due to the existence of more NewsItemsAggregate records
