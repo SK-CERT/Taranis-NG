@@ -13,7 +13,6 @@ dependencies = [
     "Flask-Cors==6.0.5",
     "Flask-JWT-Extended==4.7.4",
     "Flask-Migrate==4.1.0",
-    "flask-oidc==2.4.0",
     "Flask-RESTful==0.3.10",
     "Flask-SQLAlchemy==3.1.1",
     "gevent==26.9.0",
@@ -28,7 +27,6 @@ dependencies = [
     "PyJWT==2.13.0",
     "pyotp==2.10.0",
     "python-dotenv==1.2.3",
-    "python-keycloak==7.1.1",
     "webauthn==3.0.0",
     "redis==8.1.0",
     # Bounds admin-supplied attribute extraction patterns with a timeout (shared.attribute_extraction).

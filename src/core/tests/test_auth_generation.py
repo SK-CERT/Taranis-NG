@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+from types import SimpleNamespace
 
 import pytest
 from flask import Flask, jsonify
@@ -63,17 +64,31 @@ def test_auth_manager_initialize_registers_generation_callbacks(monkeypatch: pyt
     monkeypatch.delenv("TARANIS_NG_AUTHENTICATOR", raising=False)
     monkeypatch.setattr(auth_manager, "JWTManager", RecordingJWTManager)
 
-    previous_authenticator = auth_manager.current_authenticator
-    try:
-        auth_manager.initialize(app)
-    finally:
-        auth_manager.current_authenticator = previous_authenticator
+    auth_manager.initialize(app)
 
     assert registered == {
         "app": app,
         "verify": auth_manager._auth_generation_is_current,
         "rejected": auth_manager._auth_generation_rejected,
     }
+
+
+@pytest.mark.parametrize(("value", "warned"), [(None, False), ("password", False), ("LDAP", True), ("keycloak", True), ("openid", True)])
+def test_removed_env_authenticator_is_reported_not_honored(monkeypatch: pytest.MonkeyPatch, value: str | None, warned: bool) -> None:
+    warnings: list[str] = []
+    if value is None:
+        monkeypatch.delenv("TARANIS_NG_AUTHENTICATOR", raising=False)
+    else:
+        monkeypatch.setenv("TARANIS_NG_AUTHENTICATOR", value)
+    monkeypatch.setattr(auth_manager, "JWTManager", lambda _app: SimpleNamespace())
+    monkeypatch.setattr(auth_manager, "_configure_auth_generation_verification", lambda _manager: None)
+    monkeypatch.setattr(auth_manager.log_manager, "logger", SimpleNamespace(warning=warnings.append))
+
+    auth_manager.initialize(Flask(__name__))
+
+    assert bool(warnings) is warned
+    if warned:
+        assert f"TARANIS_NG_AUTHENTICATOR={value.lower()}" in warnings[0]
 
 
 @pytest.mark.parametrize("claim", [None, 1, "2", 2.0, True, False, 0, -1])

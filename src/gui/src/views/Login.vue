@@ -1,5 +1,5 @@
 <template>
-    <v-container class="login-screen pa-0 ma-0" fluid fill-height align-center justify-center v-if="!$store.getters.hasExternalLoginUrl">
+    <v-container class="login-screen pa-0 ma-0" fluid fill-height align-center justify-center>
         <v-container style="background-color: #c7c7c7; text-align: center; position: relative;" fluid>
             <img src="@/assets/taranis-logo-login.svg" alt="">
             <v-form @submit.prevent="authenticate" id="form" ref="form">
@@ -61,20 +61,15 @@
         mixins: [AuthMixin],
         methods: {
             authenticate() {
-                if (this.$store.getters.hasExternalLoginUrl) {
-                    let req = this.$store.dispatch('login', {params: { code: this.$route.query.code, session_state: this.$route.query.session_state }, method: 'get'});
-                    this.validate_authentication(req);
-                } else {
-                    this.$validator.validateAll().then(() => {
+                this.$validator.validateAll().then(() => {
 
-                        if (!this.$validator.errors.any()) {
-                            let req = this.$store.dispatch('login', {username: this.username, password: this.password, method: 'post'});
-                            this.validate_authentication(req);
-                        } else {
-                            this.show_login_error = false;
-                        }
-                    });
-                }
+                    if (!this.$validator.errors.any()) {
+                        let req = this.$store.dispatch('login', {username: this.username, password: this.password});
+                        this.validate_authentication(req);
+                    } else {
+                        this.show_login_error = false;
+                    }
+                });
             },
 
             validate_authentication(req) {
@@ -90,26 +85,14 @@
             },
 
             validation_failed() {
-                if (this.$store.getters.hasExternalLogoutUrl) {
-                    window.location = this.$store.getters.getLogoutURL; // plain redirect without gotoUrl
-                } else {
-                    this.show_login_error = true;
-                    this.$refs.form.reset();
-                    this.$validator.reset();
-                }
+                this.show_login_error = true;
+                this.$refs.form.reset();
+                this.$validator.reset();
             },
         },
         mounted() {
             if (this.isAuthenticated()) {
                 this.$router.push('/dashboard');
-                return;
-            }
-            if (this.$store.getters.hasExternalLoginUrl) {
-                if (this.$route.query.code !== undefined && this.$route.query.session_state !== undefined) {
-                    this.authenticate();
-                } else {
-                    window.location = this.$store.getters.getLoginURL; // plain redirect without gotoUrl
-                }
             }
         }
     }

@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import ApiService from '@/services/api_service'
 import { getLoginMethods, login as loginApi, logout as logoutApi, refresh } from '@/api/auth'
 import { parseJwtClaims } from '@/services/jwt'
-import { getExternalAuthCallbackUrl, getExternalAuthUrl, resolveExternalAuthUrl } from '@/services/auth/runtime_urls'
 import { useUserStore } from './user'
 import type { AuthTokenResponse, JwtClaims, LoginMethod, LoginMethodsResponse, LoginPayload, UserClaims } from '@/types/auth'
 
@@ -55,26 +54,6 @@ export const useAuthStore = defineStore('auth', () => {
         return data?.sub ?? ''
     })
 
-    const hasExternalLoginUrl = computed(() => {
-        return getExternalAuthUrl(import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL) !== null
-    })
-
-    const getLoginURL = computed(() => {
-        const configured = getExternalAuthUrl(import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL)
-        return configured ? resolveExternalAuthUrl(configured) : '/login'
-    })
-
-    const hasExternalLogoutUrl = computed(() => {
-        return getExternalAuthUrl(import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL) !== null
-    })
-
-    const getLogoutURL = computed(() => {
-        const configured = getExternalAuthUrl(import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL)
-        return configured ? resolveExternalAuthUrl(configured) : '/logout'
-    })
-
-    const getExternalCallbackURL = computed(() => getExternalAuthCallbackUrl())
-
     const getJWT = computed(() => jwt.value)
 
     const isAuthenticated = computed(() => {
@@ -111,7 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function login(userData: LoginPayload): Promise<ApiResponse<AuthTokenResponse>> {
         try {
-            const response = (await loginApi(userData, userData.method)) as ApiResponse<AuthTokenResponse>
+            const response = (await loginApi(userData)) as ApiResponse<AuthTokenResponse>
             setJwtToken(response.data.access_token)
 
             const userStore = useUserStore()
@@ -200,11 +179,6 @@ export const useAuthStore = defineStore('auth', () => {
         // Getters
         getUserData,
         getSubjectName,
-        hasExternalLoginUrl,
-        getLoginURL,
-        hasExternalLogoutUrl,
-        getLogoutURL,
-        getExternalCallbackURL,
         getJWT,
         isAuthenticated,
 

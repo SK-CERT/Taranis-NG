@@ -42,14 +42,6 @@ class LDAPAuthenticator(BaseAuthenticator):
         self.provider = provider
         self.config = provider.config or {}
 
-    def get_required_credentials(self) -> list:
-        """Get the username and the password.
-
-        Returns:
-            list: The list of required credentials.
-        """
-        return ["username", "password"]
-
     def _build_server(self) -> Server:
         """Build the ldap3 Server from the provider configuration."""
         use_tls = bool(self.config.get("use_tls", True))

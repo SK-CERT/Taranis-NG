@@ -64,10 +64,6 @@ services:
       DB_POOL_SIZE: 100
       DB_POOL_RECYCLE: 300
       DB_POOL_TIMEOUT: 30
-      TARANIS_NG_AUTHENTICATOR: "${TARANIS_NG_AUTHENTICATOR}"
-      LDAP_SERVER: "${LDAP_SERVER}"
-      LDAP_BASE_DN: "${LDAP_BASE_DN}"
-      LDAP_CA_CERT_PATH:
       SQLALCHEMY_WARN_20: "1"
       PYTHONWARNINGS: "default"
       # Cross-origin API access, off unless an origin list is given. A normal
@@ -77,7 +73,6 @@ services:
       # cross-origin. docker/.env.e2e sets this for the E2E stack.
       TARANIS_NG_CORS_ORIGINS: "${TARANIS_NG_CORS_ORIGINS:-}"
 
-      OPENID_LOGOUT_URL: ""
       GUNICORN_WORKERS: "AUTO"
 
       CVE_UPDATE_FILE: "${CVE_UPDATE_FILE}"
@@ -430,8 +425,6 @@ services:
       VITE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
       VITE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
       VITE_APP_TARANIS_NG_LOCALE: "${VUE_APP_TARANIS_NG_LOCALE}"
-      VITE_APP_TARANIS_NG_LOGIN_URL: "${VITE_APP_TARANIS_NG_LOGIN_URL:-}"
-      VITE_APP_TARANIS_NG_LOGOUT_URL: "${VITE_APP_TARANIS_NG_LOGOUT_URL:-}"
       VITE_APP_VERSION: "3.0.0-beta"
       TZ: "${TZ}"
       NGINX_LOG_LEVEL: "warn"

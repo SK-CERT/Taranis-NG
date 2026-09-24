@@ -197,7 +197,6 @@
         "mfa_session_expired": "Uw aanmeldsessie is verlopen. Meld u opnieuw aan.",
         "passkey_sign_in": "Aanmelden met een passkey",
         "sign_in_with": "Aanmelden met {name}",
-        "external_provider": "Extern aanmelden",
         "methods_error": "De inlogmethoden konden niet worden geladen. Probeer het opnieuw.",
         "mfa_title": "Tweefactorauthenticatie",
         "mfa_code": "Authenticatiecode",

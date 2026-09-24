@@ -197,7 +197,6 @@
         "mfa_session_expired": "Platnost přihlašovací relace vypršela. Přihlaste se prosím znovu.",
         "passkey_sign_in": "Přihlásit se pomocí passkey",
         "sign_in_with": "Přihlásit se přes {name}",
-        "external_provider": "Externí přihlášení",
         "methods_error": "Způsoby přihlášení se nepodařilo načíst. Zkuste to znovu.",
         "mfa_title": "Dvoufaktorové ověření",
         "mfa_code": "Ověřovací kód",

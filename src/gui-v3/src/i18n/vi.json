@@ -197,7 +197,6 @@
         "mfa_session_expired": "Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại.",
         "passkey_sign_in": "Đăng nhập bằng khóa truy cập",
         "sign_in_with": "Đăng nhập bằng {name}",
-        "external_provider": "Đăng nhập bên ngoài",
         "methods_error": "Không thể tải các phương thức đăng nhập. Vui lòng thử lại.",
         "mfa_title": "Xác thực hai yếu tố",
         "mfa_code": "Mã xác thực",

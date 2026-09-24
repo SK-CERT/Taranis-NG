@@ -19,15 +19,11 @@ from datetime import datetime, timedelta
 from enum import Enum, auto
 from functools import wraps
 from http import HTTPStatus
-from pathlib import Path
-from types import SimpleNamespace
 
 import jwt
 from auth.base_authenticator import BaseAuthenticator
-from auth.keycloak_authenticator import KeycloakAuthenticator
 from auth.ldap_authenticator import LDAPAuthenticator
 from auth.oauth2_authenticator import OAuth2Authenticator
-from auth.openid_authenticator import OpenIDAuthenticator
 from auth.password_authenticator import PasswordAuthenticator
 from auth.saml_authenticator import SamlAuthenticator
 from config import Config
@@ -52,8 +48,6 @@ from model.security_settings import SecuritySettings
 from model.token_blacklist import TokenBlacklist
 from model.user import User
 from shared.common import TZ
-
-current_authenticator = None
 
 SCOPED_TOKEN_MINUTES = 5
 OAUTH_STATE_MINUTES = 10
@@ -83,56 +77,6 @@ def _configure_auth_generation_verification(jwt_manager: JWTManager) -> None:
     jwt_manager.token_verification_failed_loader(_auth_generation_rejected)
 
 
-class LegacyEnvironmentLDAPAuthenticator(BaseAuthenticator):
-    """Compatibility adapter for one explicitly selected environment LDAP server."""
-
-    def __init__(self) -> None:
-        """Translate the legacy LDAP environment variables into one provider adapter."""
-        ca_path = os.getenv("LDAP_CA_CERT_PATH")
-        if not ca_path:
-            default_ca = Path(__file__).resolve().parents[1] / "auth" / "ldap_ca.pem"
-            ca_path = str(default_ca) if default_ca.is_file() else None
-
-        ca_cert = None
-        if ca_path:
-            try:
-                ca_cert = Path(ca_path).read_text()
-            except OSError as ex:
-                msg = f"Configured LDAP CA certificate could not be read: {ca_path}"
-                raise RuntimeError(msg) from ex
-        else:
-            log_manager.store_auth_error_activity("No LDAP CA certificate found; the legacy LDAP adapter will use system trust")
-
-        base_dn = os.getenv("LDAP_BASE_DN") or ""
-        config = {
-            "server_url": os.getenv("LDAP_SERVER"),
-            "use_tls": True,
-            "ca_cert": ca_cert,
-            "user_dn_template": f"uid={{username}},{base_dn}",
-            "username_attr": "uid",
-            "name_attr": "cn",
-        }
-        self._provider = SimpleNamespace(
-            name="Legacy environment LDAP",
-            config=config,
-            get_secret_plaintext=lambda: None,
-        )
-
-    def get_required_credentials(self) -> list:
-        """Return the legacy Vue 2 environment-LDAP form fields."""
-        return ["username", "password"]
-
-    def authenticate(self, credentials: dict) -> tuple[dict, HTTPStatus]:
-        """Authenticate against exactly the LDAP server selected by the environment.
-
-        As in the removed environment-backed LDAP authenticator, a successful
-        directory bind identifies an already-existing local ``User`` by username;
-        this compatibility path does not provision or link database accounts.
-        """
-        identity = LDAPAuthenticator(self._provider).verify(credentials or {})
-        return BaseAuthenticator.generate_jwt(identity.username) if identity else BaseAuthenticator.generate_error()
-
-
 def cleanup_token_blacklist(app: Flask) -> None:
     """Clean up the token blacklist by deleting tokens older than one day.
 
@@ -146,32 +90,23 @@ def cleanup_token_blacklist(app: Flask) -> None:
 def initialize(app: Flask) -> None:
     """Initialize the authentication manager.
 
-    This function sets up the authentication manager based on the configured authenticator.
+    Login methods are configured as database auth providers; see ``AuthProvider``.
 
     Args:
         app: The Flask application object.
     """
-    global current_authenticator  # noqa: PLW0603
-
     jwt_manager = JWTManager(app)
     _configure_auth_generation_verification(jwt_manager)
 
-    # DEPRECATED: retain the explicitly selected legacy adapters for deployments
-    # that have not yet converted their environment configuration to providers.
-    which = os.getenv("TARANIS_NG_AUTHENTICATOR")
-    if which is not None:
-        which = which.lower()
-    if which == "openid":
-        current_authenticator = OpenIDAuthenticator()
-    elif which == "keycloak":
-        current_authenticator = KeycloakAuthenticator()
-    elif which == "ldap":
-        current_authenticator = LegacyEnvironmentLDAPAuthenticator()
-    else:
-        current_authenticator = None
-
-    if current_authenticator:
-        current_authenticator.initialize(app)
+    # The environment-selected authenticators (Keycloak, OpenID, LDAP) were removed.
+    # Say so loudly: a deployment still configured that way would otherwise just
+    # see the local login form and have no idea why its directory stopped working.
+    legacy_authenticator = (os.getenv("TARANIS_NG_AUTHENTICATOR") or "").strip().lower()
+    if legacy_authenticator not in ("", "password"):
+        log_manager.logger.warning(
+            f"TARANIS_NG_AUTHENTICATOR={legacy_authenticator} is no longer supported and is ignored; "
+            "configure login methods in Access Management > Login methods",
+        )
 
 
 def schedule(manager: SchedulerManager, app: Flask) -> None:
@@ -187,13 +122,9 @@ def schedule(manager: SchedulerManager, app: Flask) -> None:
 def get_required_credentials() -> list:
     """Get the required credentials.
 
-    This function returns the required credentials for the current authenticator.
-
     Returns:
-        The required credentials for the current authenticator.
+        The credential fields accepted by the login form.
     """
-    if current_authenticator:
-        return current_authenticator.get_required_credentials()
     return ["username", "password", "provider_id"]
 
 
@@ -206,8 +137,6 @@ def authenticate(credentials: dict) -> tuple[dict, HTTPStatus]:
     Returns:
         The result of the authentication process.
     """
-    if current_authenticator:
-        return current_authenticator.authenticate(credentials)
     return authenticate_with_provider((credentials or {}).get("provider_id"), credentials)
 
 
@@ -220,15 +149,13 @@ def refresh(user: User) -> tuple[dict, HTTPStatus]:
     Returns:
         The refreshed authentication token.
     """
-    if current_authenticator:
-        return current_authenticator.refresh(user)
     return BaseAuthenticator.generate_jwt(user, record_login=False)
 
 
 def logout(jwt_id: str) -> None:
     """Logout the user.
 
-    This function logs out the user by calling the `logout` method of the current authenticator.
+    This function logs out the user by blacklisting their token.
 
     Args:
         jwt_id (str): The authentication token of the user.
@@ -237,10 +164,7 @@ def logout(jwt_id: str) -> None:
         None: This function does not return any value.
     """
     if jwt_id is not None:
-        if current_authenticator:
-            current_authenticator.logout(jwt_id)
-        else:
-            BaseAuthenticator.logout(jwt_id)
+        BaseAuthenticator.logout(jwt_id)
 
 
 def get_login_methods() -> dict:
@@ -566,8 +490,7 @@ def authenticate_with_provider(provider_id: object, credentials: dict) -> tuple[
 
     Without a provider ID, legacy clients use local login only. Database LDAP
     providers require explicit selection so a local password is never fanned out
-    to every configured directory. The separate environment LDAP compatibility
-    adapter is selected during :func:`initialize` and does not enter this path.
+    to every configured directory.
 
     Args:
         provider_id: The chosen provider ID (may be None or a string).

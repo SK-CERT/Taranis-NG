@@ -266,8 +266,7 @@
         console.log('[App] API:', import.meta.env.VITE_APP_TARANIS_NG_CORE_API)
         console.log('[App] SSE:', import.meta.env.VITE_APP_TARANIS_NG_CORE_SSE)
 
-        // Initialize from the stored token, which main.ts has already seeded from the
-        // "jwt" cookie when we arrived here from a redirect login.
+        // Initialize from the stored token.
         if (authStore.jwt && !userStore.user.id) {
             // Token exists but user data not loaded - restore from JWT
             const userData = authStore.getUserData

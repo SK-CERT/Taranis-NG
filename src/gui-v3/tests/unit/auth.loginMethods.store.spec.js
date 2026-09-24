@@ -113,7 +113,7 @@ describe('Auth store - login methods', () => {
 
         await store.login({ username: 'admin', password: 'admin', provider_id: 2 })
 
-        expect(authApi.login).toHaveBeenCalledWith({ username: 'admin', password: 'admin', provider_id: 2 }, undefined)
+        expect(authApi.login).toHaveBeenCalledWith({ username: 'admin', password: 'admin', provider_id: 2 })
     })
 
     it('finishLogin stores the token from a multi-step (MFA/passkey) login and hydrates the user', () => {

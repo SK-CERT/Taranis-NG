@@ -94,13 +94,6 @@
             this.$root.$emit('app-updated');
         },
         mounted() {
-            if (this.$cookies.isKey('jwt')) {
-                this.$store.dispatch('setToken', this.$cookies.get('jwt')).then(() => {
-                    this.$cookies.remove("jwt")
-                    this.connectSSE()
-                });
-            }
-
             if (localStorage.ACCESS_TOKEN) {
                 if (this.isAuthenticated()) {
                     this.initUserSettings();

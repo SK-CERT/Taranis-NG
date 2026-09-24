@@ -197,7 +197,6 @@
         "mfa_session_expired": "Votre session de connexion a expiré. Veuillez vous reconnecter.",
         "passkey_sign_in": "Se connecter avec une clé d’accès",
         "sign_in_with": "Se connecter avec {name}",
-        "external_provider": "Connexion externe",
         "methods_error": "Impossible de charger les méthodes de connexion. Veuillez réessayer.",
         "mfa_title": "Authentification à deux facteurs",
         "mfa_code": "Code d’authentification",

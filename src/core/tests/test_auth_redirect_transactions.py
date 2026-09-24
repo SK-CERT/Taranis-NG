@@ -109,30 +109,6 @@ def test_oauth_state_keeps_pkce_verifier_server_side(monkeypatch) -> None:  # no
     assert ttl == auth_manager.OAUTH_STATE_MINUTES * 60
 
 
-def test_legacy_environment_get_callback_accepts_tuple_response(monkeypatch) -> None:  # noqa: ANN001
-    _stored, created = _transaction_store(monkeypatch)
-    monkeypatch.setattr(
-        auth_manager,
-        "authenticate",
-        lambda _credentials: ({"access_token": "legacy-environment-jwt"}, HTTPStatus.OK),
-    )
-
-    with app.test_request_context(
-        "/api/v1/auth/login?gotoUrl=/dashboard&code=callback-code",
-        base_url="https://taranis.example",
-    ):
-        response = auth.Login.get.__wrapped__(auth.Login())
-
-    assert response.status_code == HTTPStatus.FOUND
-    assert response.location == "/dashboard"
-    assert created[0][:3] == (
-        AuthTransactionKind.REDIRECT_REDEMPTION,
-        {"response": {"access_token": "legacy-environment-jwt"}},
-        auth.REDIRECT_REDEMPTION_SECONDS,
-    )
-    assert "legacy-environment-jwt" not in response.headers["Set-Cookie"]
-
-
 def test_oauth_callback_and_redirect_result_are_each_redeemable_once(monkeypatch) -> None:  # noqa: ANN001
     authenticator = FakeOAuthAuthenticator()
     stored, _created = _transaction_store(monkeypatch)

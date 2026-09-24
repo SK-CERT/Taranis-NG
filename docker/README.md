@@ -76,7 +76,7 @@ frontend evaluation; do not expect `/v2/` to work in an unmodified deployment.
 Open [https://localhost:4443/](https://localhost:4443/) unless you changed the
 hostname or port.
 
-The current password-authenticator database starts with `admin` / `admin` and
+The local accounts login method starts with `admin` / `admin` and
 `user` / `user`. Sign in locally, change **both** passwords immediately, then
 verify that the old passwords no longer work. Use `user` for normal work and
 reserve `admin` for configuration.
@@ -277,7 +277,6 @@ Check it worked in the GUI, under *Configuration → Application Settings → Ro
 | `DB_POOL_SIZE`       | Maximum active pooled connections      | `100`                 |
 | `DB_POOL_RECYCLE`    | Maximum pooled-connection age          | `300`                 |
 | `DB_POOL_TIMEOUT`    | Pool connection timeout                | `30`                  |
-| `OPENID_LOGOUT_URL`  | OpenID/Keycloak logout URL             | provider-specific URL |
 | `GUNICORN_WORKERS`   | Gunicorn worker count                  | `AUTO`                |
 
 | Secret file             | Description                                                                           |

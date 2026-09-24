@@ -197,7 +197,6 @@
         "mfa_session_expired": "La sessione di accesso è scaduta. Effettua di nuovo l’accesso.",
         "passkey_sign_in": "Accedi con una passkey",
         "sign_in_with": "Accedi con {name}",
-        "external_provider": "Accesso esterno",
         "methods_error": "Impossibile caricare i metodi di accesso. Riprova.",
         "mfa_title": "Autenticazione a due fattori",
         "mfa_code": "Codice di autenticazione",

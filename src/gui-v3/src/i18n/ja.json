@@ -197,7 +197,6 @@
         "mfa_session_expired": "サインインセッションの有効期限が切れました。もう一度サインインしてください。",
         "passkey_sign_in": "パスキーでサインイン",
         "sign_in_with": "{name} でサインイン",
-        "external_provider": "外部ログイン",
         "methods_error": "ログイン方法を読み込めませんでした。もう一度お試しください。",
         "mfa_title": "二要素認証",
         "mfa_code": "認証コード",

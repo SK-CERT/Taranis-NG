@@ -33,15 +33,15 @@ configuration reference. Never use example values such as `12345`,
 
 For account, role, node, API-key, and dictionary management, see the
 [management command reference](../../docs/howto.md#_toc5). For authentication
-configuration, inspect the current configuration classes and Compose examples;
-the short files under `auth/` only describe certificate placement.
+configuration, see [`auth/README.md`](auth/README.md).
 
 ## Authentication development
 
-Password, LDAP, OpenID Connect, and Keycloak-related behavior changes over
-time. Verify environment-variable names against the current source and Compose
-files before testing. Changing Docker secret files does not rotate passwords
-already stored for application users in PostgreSQL.
+Login methods (local accounts, LDAP, OpenID Connect, OAuth 2.0, SAML) are
+database auth providers configured in the Vue 3 GUI under *Access Management →
+Login Methods*; no environment variable selects them. Changing Docker secret
+files does not rotate passwords already stored for application users in
+PostgreSQL.
 
 The tracked deployment serves the Vue 2 GUI. The optional Vue 3 application has
 separate instructions in [`src/gui-v3/README.md`](../gui-v3/README.md); Core

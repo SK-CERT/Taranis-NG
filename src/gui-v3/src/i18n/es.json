@@ -197,7 +197,6 @@
         "mfa_session_expired": "Su sesión de inicio de sesión ha caducado. Vuelva a iniciar sesión.",
         "passkey_sign_in": "Iniciar sesión con una passkey",
         "sign_in_with": "Iniciar sesión con {name}",
-        "external_provider": "Inicio de sesión externo",
         "methods_error": "No se pudieron cargar los métodos de inicio de sesión. Inténtelo de nuevo.",
         "mfa_title": "Autenticación de dos factores",
         "mfa_code": "Código de autenticación",
