@@ -3,6 +3,7 @@
 import datetime
 import hashlib
 import threading
+import time
 import urllib.request
 import uuid
 from http import HTTPStatus
@@ -41,10 +42,17 @@ class BaseCollector:
     # object that actually publishes. They are global configuration shared by every
     # collector, so one cache for all of them is also the honest model.
     #
-    # A failed fetch keeps the previous set rather than silently dropping extraction
-    # until the next refresh succeeds.
-    attribute_extraction_rules: ClassVar[list] = []
-    attribute_extraction_rule_groups: ClassVar[dict] = {}
+    # Each entry pairs a rule with the ids of the sources it is limited to, or None when it
+    # applies everywhere. One list, swapped in a single assignment, so a reader never pairs a
+    # rule with a scope from another fetch. A failed fetch keeps the previous set rather than
+    # silently dropping extraction until the next one succeeds.
+    #
+    # Core does not push rule edits, so the set is re-read once it is older than
+    # ATTRIBUTE_EXTRACTION_RULES_MAX_AGE seconds, as well as on every refresh.
+    ATTRIBUTE_EXTRACTION_RULES_MAX_AGE = 60
+    attribute_extraction_rules: ClassVar[list[tuple[ExtractionRule, frozenset[str] | None]]] = []
+    _attribute_extraction_rules_fetched_at: ClassVar[float | None] = None
+    _attribute_extraction_rules_guard: ClassVar[threading.Lock] = threading.Lock()
     # Ids of the sources being collected right now, shared by every collector type: source ids are
     # unique, and one registry means a scheduled run and an on-demand run cannot both start the
     # same source. This is the guarantee that a source is never collected twice at once - two
@@ -253,30 +261,40 @@ class BaseCollector:
     def refresh_attribute_extraction_rules(self) -> None:
         """Re-read the attribute extraction rules from core.
 
-        Core applies the global on/off switch, so an empty list here means the feature is
-        off or nothing is configured. A failed fetch leaves the previous rules in place:
-        losing extraction is better than stopping collection, and a transient error should
-        not silently change behaviour.
+        Core leaves disabled rules out, so an empty list means nothing is extracted. A failed
+        fetch leaves the previous rules in place: losing extraction is better than stopping
+        collection, and a transient error should not silently change behaviour.
         """
+        # Stamped before the fetch, success or not, so a core outage costs one attempt per
+        # max age rather than one per published batch.
+        BaseCollector._attribute_extraction_rules_fetched_at = time.monotonic()
         response, code = CoreApi.get_attribute_extraction_rules()
         if code != HTTPStatus.OK or not isinstance(response, dict):
             logger.warning(f"{self.name}: attribute extraction rules not received (code {code}); keeping the previous set")
             return
 
-        rules = [ExtractionRule.from_dict(item) for item in response.get("items") or []]
-        # Group scoping is resolved here rather than in core, so one payload serves every
-        # source this collector runs.
+        items = response.get("items") or []
+        # A scoped rule arrives with the ids of the sources it covers, resolved by core from
+        # group membership: the sources a collector receives do not say which groups they are in.
         # Assigned on BaseCollector rather than on self: `self.x = ...` would create an
         # instance attribute shadowing the class one, and the throwaway runner in
         # `run_collector` would never see it.
-        BaseCollector.attribute_extraction_rule_groups = {
-            item.get("name"): {group.get("id") for group in item.get("osint_source_groups") or []} for item in response.get("items") or []
-        }
-        BaseCollector.attribute_extraction_rules = rules
-        if response.get("enabled", True):
-            logger.debug(f"{self.name}: {len(rules)} attribute extraction rules loaded")
-        else:
-            logger.debug(f"{self.name}: attribute extraction disabled")
+        BaseCollector.attribute_extraction_rules = [
+            (ExtractionRule.from_dict(item), frozenset(item.get("osint_source_ids") or []) if item.get("osint_source_groups") else None)
+            for item in items
+        ]
+        logger.debug(f"{self.name}: {len(items)} attribute extraction rules loaded")
+
+    def _refresh_stale_attribute_extraction_rules(self) -> None:
+        """Re-read the rules when the cached set is older than the max age.
+
+        The guard makes concurrent publishers share one fetch: the first one re-reads, the
+        others find a fresh stamp once they get the lock.
+        """
+        with BaseCollector._attribute_extraction_rules_guard:
+            fetched_at = BaseCollector._attribute_extraction_rules_fetched_at
+            if fetched_at is None or time.monotonic() - fetched_at >= self.ATTRIBUTE_EXTRACTION_RULES_MAX_AGE:
+                self.refresh_attribute_extraction_rules()
 
     def extract_attributes(self, news_items: list, source: object) -> list:
         """Attach attributes found in each item's text.
@@ -291,7 +309,9 @@ class BaseCollector:
         Returns:
             list: The same items, with any found attributes appended.
         """
-        rules = [rule for rule in self.attribute_extraction_rules if self._rule_applies(rule, source)]
+        self._refresh_stale_attribute_extraction_rules()
+        source_id = getattr(source, "id", None)
+        rules = [rule for rule, source_ids in self.attribute_extraction_rules if source_ids is None or source_id in source_ids]
         if not rules:
             return news_items
 
@@ -318,21 +338,6 @@ class BaseCollector:
         if total:
             source_logger.debug(f"Attribute extraction added {total} attribute(s) across {len(news_items)} item(s)")
         return news_items
-
-    def _rule_applies(self, rule: ExtractionRule, source: object) -> bool:
-        """Tell whether a rule is in scope for the source being collected.
-
-        A rule with no groups applies everywhere; otherwise the source must belong to one of
-        them.
-        """
-        groups = self.attribute_extraction_rule_groups.get(rule.name) or set()
-        if not groups:
-            return True
-        source_groups = {
-            getattr(group, "id", None) or (group.get("id") if isinstance(group, dict) else None)
-            for group in getattr(source, "osint_source_groups", None) or []
-        }
-        return bool(groups & source_groups)
 
     @property
     def _collector_tag(self) -> str:

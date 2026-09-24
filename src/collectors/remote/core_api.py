@@ -64,8 +64,7 @@ class CoreApi:
     def get_attribute_extraction_rules(cls) -> tuple[dict, HTTPStatus]:
         """Retrieve the enabled attribute extraction rules.
 
-        Core decides what is enabled, including the global switch, so an empty list here
-        simply means nothing is extracted.
+        Core leaves disabled rules out, so an empty list here simply means nothing is extracted.
 
         Returns:
             tuple: The JSON response and the HTTP status code.
@@ -79,7 +78,7 @@ class CoreApi:
             response = requests.get(
                 f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}/attribute-extraction-rules",
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return response.json(), response.status_code
         except Exception as ex:

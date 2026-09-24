@@ -25,7 +25,17 @@ describe('NewsItemAttribute direction-safe rendering', () => {
         const keyContainer = wrapper.find('bdi[dir="auto"]').element.parentElement
 
         expect(isolatedText.map((value) => value.text())).toEqual(['مفتاح attribute', 'قيمة value'])
+        // pe-* is padding-inline-end, so the gap follows the reading direction.
+        expect(keyContainer?.classList.contains('pe-6')).toBe(true)
         expect(keyContainer?.style.marginRight).toBe('')
+    })
+
+    it('renders an attribute without a mime type as text, not as a file to download', () => {
+        // Older manually extracted attributes were stored with a null mime type.
+        const wrapper = mountAttribute({ binary_mime_type: null })
+
+        expect(wrapper.findAll('bdi[dir="auto"]').map((value) => value.text())).toEqual(['مفتاح attribute', 'قيمة value'])
+        expect(wrapper.find('button').exists()).toBe(false)
     })
 
     it('preserves the binary download target and isolates its displayed value', async () => {

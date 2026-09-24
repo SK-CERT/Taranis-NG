@@ -1094,7 +1094,9 @@ class NewsItemAggregate(db.Model):
             ):
                 if (key, value) not in existing:
                     existing.add((key, value))
-                    news_item_data.attributes.append(NewsItemAttribute(key, value, None, None))
+                    # "" rather than None: the GUI shows an attribute as text only when its mime type
+                    # is empty, and treats anything else as a file to download. Collectors do the same.
+                    news_item_data.attributes.append(NewsItemAttribute(key, value, "", None))
         except Exception as error:
             logger.exception(f"Attribute extraction failed for a manually added news item: {error}")
 

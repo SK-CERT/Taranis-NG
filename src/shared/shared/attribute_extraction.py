@@ -9,8 +9,9 @@ the collectors call it, which is the point: the collectors run it as text arrive
 web or e-mail, and core runs it for manually entered items, which never pass through a
 collector at all. One implementation, one behaviour, and it is unit-testable on its own.
 
-The matching is the same shape the ANALYST_BOT used (``re.finditer``, group 1 when the
-pattern defines one, else group 0), so rules written for that bot keep working.
+The matching is ``finditer`` over the text. ``capture_group`` picks what is stored: 0 is the
+whole match, N is group N. Unlike ANALYST_BOT, a pattern that happens to contain a group does
+not switch to group 1 on its own - the rule says which part it wants.
 
 Safety
 ------
@@ -97,6 +98,26 @@ class ExtractionRule(NamedTuple):
             capture_group=int(data.get("capture_group") or 0),
             max_matches=int(data.get("max_matches") or DEFAULT_MAX_MATCHES),
         )
+
+
+def pattern_error(pattern: str | None, capture_group: int = 0) -> str | None:
+    """Check a rule before it is saved, with the same engine that will run it.
+
+    Args:
+        pattern (str | None): The regular expression.
+        capture_group (int): The group the rule stores; it must exist in the pattern.
+
+    Returns:
+        str | None: Why the rule cannot run, or None when it can.
+    """
+    engine = _regex if _regex is not None else re
+    try:
+        compiled = engine.compile(pattern or "")
+    except engine.error as error:
+        return str(error)
+    if capture_group > compiled.groups:
+        return f"capture group {capture_group} does not exist, the pattern has {compiled.groups} group(s)"
+    return None
 
 
 def build_text(title: str | None, review: str | None, content: str | None, *, max_text: int = DEFAULT_MAX_TEXT) -> str:
@@ -202,15 +223,13 @@ def _finditer(pattern: str, text: str, *, timeout: float) -> Iterator[re.Match[s
 
 
 def _value_of(match: re.Match[str], capture_group: int) -> str:
-    """Take the configured group, falling back to group 1 then the whole match.
+    """Take the configured group; 0, or a group the pattern does not have, is the whole match.
 
-    Mirrors ANALYST_BOT, which used group 1 whenever the pattern defined one.
+    Saving rejects a missing group (see ``pattern_error``), so the fallback only covers a rule
+    stored before that check existed.
     """
-    if capture_group and match.re.groups >= capture_group:
-        return (match.group(capture_group) or "").strip()
-    if match.re.groups:
-        return (match.group(1) or "").strip()
-    return (match.group(0) or "").strip()
+    group = capture_group if 0 < capture_group <= match.re.groups else 0
+    return (match.group(group) or "").strip()
 
 
 def _log(logger: _Logger | None, level: str, message: str) -> None:

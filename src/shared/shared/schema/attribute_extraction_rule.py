@@ -4,7 +4,7 @@ Shared because the payload crosses two boundaries: the GUI edits these through c
 API, and the collectors fetch them to run against the text they have just collected.
 """
 
-from marshmallow import EXCLUDE, Schema, fields, post_load
+from marshmallow import EXCLUDE, Schema, fields, post_load, validate
 
 from shared.schema.osint_source import OSINTSourceGroupIdSchema
 from shared.schema.presentation import PresentationSchema
@@ -15,7 +15,6 @@ class AttributeExtractionRule:
 
     def __init__(
         self,
-        id: int,  # noqa: A002
         name: str,
         attribute_key: str,
         pattern: str,
@@ -24,11 +23,11 @@ class AttributeExtractionRule:
         capture_group: int = 0,
         max_matches: int = 100,
         osint_source_groups: list | None = None,
+        id: int | None = None,  # noqa: A002
     ) -> None:
         """Initialize an AttributeExtractionRule instance.
 
         Args:
-            id (int): Unique identifier.
             name (str): Display name.
             attribute_key (str): Key of the news item attribute written on a hit.
             pattern (str): The regular expression.
@@ -37,6 +36,7 @@ class AttributeExtractionRule:
             capture_group (int): Group to take; 0 means the whole match.
             max_matches (int): Upper bound on values this rule may contribute to one item.
             osint_source_groups (list | None): Groups the rule is limited to; empty means all.
+            id (int | None): Unique identifier; absent on a rule that is being created.
         """
         self.id = id
         self.name = name
@@ -57,14 +57,14 @@ class AttributeExtractionRuleSchema(Schema):
 
         unknown = EXCLUDE
 
-    id = fields.Int()
-    name = fields.Str()
-    attribute_key = fields.Str()
-    pattern = fields.Str()
+    id = fields.Int(allow_none=True)
+    name = fields.Str(required=True, validate=validate.Length(min=1))
+    attribute_key = fields.Str(required=True, validate=validate.Length(min=1))
+    pattern = fields.Str(required=True, validate=validate.Length(min=1))
     description = fields.Str(load_default="")
     enabled = fields.Bool(load_default=True)
-    capture_group = fields.Int(load_default=0)
-    max_matches = fields.Int(load_default=100)
+    capture_group = fields.Int(load_default=0, validate=validate.Range(min=0))
+    max_matches = fields.Int(load_default=100, validate=validate.Range(min=1))
     osint_source_groups = fields.List(fields.Nested(OSINTSourceGroupIdSchema), load_default=list)
 
     updated_by = fields.Str(dump_only=True)

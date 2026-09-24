@@ -264,6 +264,35 @@ class AiProvidersResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
+def _attribute_extraction_rule_rejection(data: dict | None, rule_id: int | None = None) -> tuple[dict, HTTPStatus] | None:
+    """Explain why a rule cannot be saved, or return None when it can.
+
+    Checked before touching the database, so the GUI gets a message it can show instead of the
+    generic failure a schema or constraint error would turn into - and so a typo in a pattern
+    surfaces here rather than silently inside a collector.
+
+    Args:
+        data (dict | None): The rule as posted.
+        rule_id (int | None): The rule being updated, which may keep its own name.
+
+    Returns:
+        tuple[dict, HTTPStatus] | None: The error response, or None.
+    """
+    data = data or {}
+    if errors := AttributeExtractionRuleSchema().validate(data):
+        details = "; ".join(
+            f"{field}: {' '.join(map(str, messages)) if isinstance(messages, list) else messages}" for field, messages in errors.items()
+        )
+        return {"error": f"Invalid attribute extraction rule: {details}"}, HTTPStatus.BAD_REQUEST
+    rule_model = attribute_extraction_rule.AttributeExtractionRule
+    if error := rule_model.validate_pattern(data.get("pattern"), int(data.get("capture_group") or 0)):
+        # `pattern_error` is the bare engine message, so the GUI can place it in a translated sentence.
+        return {"error": f"Invalid regular expression: {error}", "pattern_error": error}, HTTPStatus.BAD_REQUEST
+    if rule_model.name_taken(data.get("name"), exclude_id=rule_id):
+        return {"error": f"An attribute extraction rule named '{data.get('name')}' already exists"}, HTTPStatus.CONFLICT
+    return None
+
+
 class AttributeExtractionRulesResource(Resource):
     """Attribute extraction rules API endpoint."""
 
@@ -284,11 +313,8 @@ class AttributeExtractionRulesResource(Resource):
         Returns:
             (dict, int): The created rule, or the reason it was rejected
         """
-        error = attribute_extraction_rule.AttributeExtractionRule.validate_pattern((request.json or {}).get("pattern"))
-        if error:
-            # Reject here so a typo surfaces in the GUI rather than silently failing
-            # inside a collector at the next refresh.
-            return {"error": f"Invalid regular expression: {error}"}, HTTPStatus.BAD_REQUEST
+        if rejection := _attribute_extraction_rule_rejection(request.json):
+            return rejection
         try:
             user = auth_manager.get_user_from_jwt()
             record = attribute_extraction_rule.AttributeExtractionRule.add_new(request.json, user.name)
@@ -311,9 +337,10 @@ class AttributeExtractionRuleResource(Resource):
         Returns:
             (dict, int): The updated rule, or the reason it was rejected
         """
-        error = attribute_extraction_rule.AttributeExtractionRule.validate_pattern((request.json or {}).get("pattern"))
-        if error:
-            return {"error": f"Invalid regular expression: {error}"}, HTTPStatus.BAD_REQUEST
+        if attribute_extraction_rule.AttributeExtractionRule.find(rule_id) is None:
+            return {"error": "Attribute extraction rule not found"}, HTTPStatus.NOT_FOUND
+        if rejection := _attribute_extraction_rule_rejection(request.json, rule_id):
+            return rejection
         try:
             user = auth_manager.get_user_from_jwt()
             record = attribute_extraction_rule.AttributeExtractionRule.update(rule_id, request.json, user.name)
@@ -332,6 +359,8 @@ class AttributeExtractionRuleResource(Resource):
         Returns:
             (str, int): The result of the delete
         """
+        if attribute_extraction_rule.AttributeExtractionRule.find(rule_id) is None:
+            return {"error": "Attribute extraction rule not found"}, HTTPStatus.NOT_FOUND
         try:
             attribute_extraction_rule.AttributeExtractionRule.delete(rule_id)
         except Exception as ex:
