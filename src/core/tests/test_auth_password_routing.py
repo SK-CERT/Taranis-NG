@@ -1,11 +1,6 @@
-"""Vue 2 login compatibility and explicit LDAP routing contracts."""
+"""Vue 2 login compatibility and local-only routing contracts."""
 
 from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 from http import HTTPStatus
 from types import SimpleNamespace
@@ -20,13 +15,6 @@ from managers import auth_manager
 app = Flask(__name__)
 
 
-@pytest.fixture(autouse=True)
-def restore_current_authenticator():  # noqa: ANN201
-    previous = auth_manager.current_authenticator
-    yield
-    auth_manager.current_authenticator = previous
-
-
 def test_vue2_shaped_login_post_keeps_access_token_response(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict = {}
 
@@ -34,7 +22,6 @@ def test_vue2_shaped_login_post_keeps_access_token_response(monkeypatch: pytest.
         captured.update(credentials)
         return {"access_token": "local-access-token"}, HTTPStatus.OK
 
-    auth_manager.current_authenticator = None
     monkeypatch.setattr(auth_manager, "authenticate", authenticate)
 
     with app.test_request_context(
@@ -72,40 +59,8 @@ def test_no_provider_id_tries_local_only_and_never_database_ldap(monkeypatch: py
     assert provider_queries == [("local",)]
 
 
-def test_explicit_legacy_environment_ldap_selects_one_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
-    selected = SimpleNamespace(
-        initialize=lambda _app: None,
-        get_required_credentials=lambda: ["username", "password"],
-        authenticate=lambda _credentials: ({"access_token": "legacy-ldap-token"}, HTTPStatus.OK),
-    )
-    creations = 0
-
-    def make_adapter() -> object:
-        nonlocal creations
-        creations += 1
-        return selected
-
-    monkeypatch.setenv("TARANIS_NG_AUTHENTICATOR", "ldap")
-    monkeypatch.setattr(auth_manager, "JWTManager", lambda _app: None)
-    monkeypatch.setattr(auth_manager, "_configure_auth_generation_verification", lambda _manager: None)
-    monkeypatch.setattr(auth_manager, "LegacyEnvironmentLDAPAuthenticator", make_adapter)
-    monkeypatch.setattr(
-        auth_manager.AuthProvider,
-        "get_enabled_by_kind",
-        lambda _kinds: pytest.fail("Environment LDAP must not query database LDAP providers"),
-    )
-
-    auth_manager.initialize(app)
-    response = auth_manager.authenticate({"username": "alice", "password": "directory-password"})
-
-    assert creations == 1
-    assert auth_manager.current_authenticator is selected
-    assert response == ({"access_token": "legacy-ldap-token"}, HTTPStatus.OK)
-
-
 def test_refresh_keeps_access_token_response_shape(monkeypatch: pytest.MonkeyPatch) -> None:
     user = SimpleNamespace(username="alice")
-    auth_manager.current_authenticator = None
     monkeypatch.setattr(auth_manager, "get_user_from_jwt", lambda: user)
     monkeypatch.setattr(
         auth_manager,
@@ -152,45 +107,4 @@ def test_issued_access_token_keeps_vue2_user_claims(monkeypatch: pytest.MonkeyPa
                 "permissions": ["ANALYZE_ACCESS"],
             },
         },
-    }
-
-
-def test_legacy_environment_ldap_translates_old_settings_once(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    ca_path = tmp_path / "ldap-ca.pem"
-    ca_path.write_text("test-ca-certificate")
-    providers: list[object] = []
-
-    class LDAPBackend:
-        def __init__(self, provider: object) -> None:
-            providers.append(provider)
-
-        @staticmethod
-        def verify(credentials: dict) -> object:
-            assert credentials == {"username": "alice", "password": "directory-password"}
-            return SimpleNamespace(username="alice")
-
-    monkeypatch.setenv("LDAP_SERVER", "ldap.internal.example")
-    monkeypatch.setenv("LDAP_BASE_DN", "ou=people,dc=example,dc=org")
-    monkeypatch.setenv("LDAP_CA_CERT_PATH", str(ca_path))
-    monkeypatch.setattr(auth_manager, "LDAPAuthenticator", LDAPBackend)
-    monkeypatch.setattr(
-        auth_manager.BaseAuthenticator,
-        "generate_jwt",
-        lambda username: ({"access_token": f"token-for-{username}"}, HTTPStatus.OK),
-    )
-
-    adapter = auth_manager.LegacyEnvironmentLDAPAuthenticator()
-    response = adapter.authenticate({"username": "alice", "password": "directory-password"})
-
-    assert response == ({"access_token": "token-for-alice"}, HTTPStatus.OK)
-    assert adapter.get_required_credentials() == ["username", "password"]
-    assert len(providers) == 1
-    provider = providers[0]
-    assert provider.config == {
-        "server_url": "ldap.internal.example",
-        "use_tls": True,
-        "ca_cert": "test-ca-certificate",
-        "user_dn_template": "uid={username},ou=people,dc=example,dc=org",
-        "username_attr": "uid",
-        "name_attr": "cn",
     }

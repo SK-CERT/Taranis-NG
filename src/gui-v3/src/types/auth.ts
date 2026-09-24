@@ -26,7 +26,6 @@ export interface LoginPayload {
     username?: string
     password?: string
     provider_id?: number | null
-    method?: string
     [key: string]: unknown
 }
 

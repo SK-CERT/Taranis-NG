@@ -66,8 +66,6 @@ export function useAuth() {
         // Computed
         user: computed(() => userStore.user),
         isAuth: computed(() => authStore.isAuthenticated),
-        hasExternalLogin: computed(() => authStore.hasExternalLoginUrl),
-        hasExternalLogout: computed(() => authStore.hasExternalLogoutUrl),
 
         // Methods
         logout,

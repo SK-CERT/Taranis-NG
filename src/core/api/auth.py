@@ -9,7 +9,7 @@ from auth.base_authenticator import ProviderConfigurationError
 from config import Config
 from flask import Response, make_response, redirect
 from flask_jwt_extended import get_jwt
-from flask_restful import Api, Resource, ResponseBase, reqparse, request
+from flask_restful import Api, Resource, reqparse, request
 from managers import auth_manager, auth_transaction_manager
 from managers.auth_manager import jwt_token_required, no_auth
 from managers.auth_transaction_manager import AuthTransactionKind
@@ -22,25 +22,6 @@ REDIRECT_REDEMPTION_SECONDS = 60
 
 class Login(Resource):
     """A resource for handling user login."""
-
-    @no_auth
-    def get(self) -> Response:
-        """Handle GET requests for authentication.
-
-        This method attempts to authenticate a user using the `auth_manager`.
-        If the authentication response contains an access token, redirect the
-        user to ``gotoUrl`` with an HttpOnly one-time redemption handle.
-
-        Returns:
-            response: A redirect response with a redemption cookie if authentication is successful,
-                      otherwise the original response from `auth_manager.authenticate`.
-        """
-        response = auth_manager.authenticate(None)
-        payload = response[0] if isinstance(response, tuple) and response and isinstance(response[0], dict) else response
-        if isinstance(payload, dict) and "gotoUrl" in request.args and "access_token" in payload:
-            return _finish_redirect_login(_safe_goto_url(request.args["gotoUrl"]), payload)
-
-        return response
 
     def post(self) -> Response:
         """Handle POST requests for authentication.
@@ -82,13 +63,10 @@ class Logout(Resource):
     def post(self) -> Response:
         """Handle the POST request for logging out a user.
 
-        If a "gotoUrl" is provided in the request arguments,
-        it redirects the user to the specified URL. If an OpenID logout URL is configured,
-        it replaces "GOTO_URL" in the OpenID logout URL with the encoded "gotoUrl" and redirects to it.
+        Blacklists the current token and clears the SSE cookie.
 
         Returns:
-            ResponseBase: The response from the auth_manager.logout method.
-            Redirect: A redirect response to the specified "gotoUrl" or OpenID logout URL if applicable.
+            Response: An empty 200 response.
         """
         try:
             jwt_data = get_jwt()
@@ -100,19 +78,11 @@ class Logout(Resource):
                 else:
                     logger.warning(f"JWT token {jwt_id} not found in Redis")
 
-            response = auth_manager.logout(jwt_id)
+            auth_manager.logout(jwt_id)
 
-            if not isinstance(response, ResponseBase) and "gotoUrl" in request.args:
-                goto_url = _safe_goto_url(request.args["gotoUrl"])
-                url = Config.OPENID_LOGOUT_URL.replace("GOTO_URL", urllib.parse.quote(goto_url)) if Config.OPENID_LOGOUT_URL else goto_url
-                resp = redirect(url)
-            else:
-                resp = make_response({}, HTTPStatus.OK) if response is None else response
-
-            # Delete cookie if resp is a Response object
-            if hasattr(resp, "delete_cookie"):
-                resp.delete_cookie("jwt_id", path="/sse")
-                logger.debug("JWT cookie deleted")
+            resp = make_response({}, HTTPStatus.OK)
+            resp.delete_cookie("jwt_id", path="/sse")
+            logger.debug("JWT cookie deleted")
 
             return resp
 
@@ -138,9 +108,9 @@ class LoginMethods(Resource):
 def _is_safe_goto_url(goto_url: str) -> bool:
     r"""Tell whether a gotoUrl is a same-origin destination we may redirect to.
 
-    The login flows redirect the browser to ``gotoUrl`` and, on the legacy path,
-    plant the JWT cookie right before doing so. Without this check that turns the
-    endpoint into an open redirect (phishing, and the bearer cookie landing on an
+    The login flows redirect the browser to ``gotoUrl`` and plant the one-time
+    redemption cookie right before doing so. Without this check that turns the
+    endpoint into an open redirect (phishing, and the handle landing on an
     attacker's host). Only two shapes are accepted:
 
     - a relative path (``/dashboard``), rejecting protocol-relative (``//host``)

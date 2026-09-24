@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
-import { store } from '@/store/store'
 import AuthService from "@/services/auth/auth_service";
 import Permissions from "@/services/auth/permissions";
 
@@ -342,16 +341,10 @@ router.beforeEach((to, from, next) => {
 
         if (!AuthService.isAuthenticated()) {
 
-            if (!store.getters.hasExternalLoginUrl) {
-
-                next({
-                    path: store.getters.getLoginURL,
-                    query: { redirect: to.path }
-                })
-            } else {
-
-                window.location = store.getters.getLoginURL;
-            }
+            next({
+                path: '/login',
+                query: { redirect: to.path }
+            })
         } else if (to.path === "/") {
             if (AuthService.hasPermission(Permissions.ASSESS_ACCESS)) {
                 next({ path: "/dashboard" })

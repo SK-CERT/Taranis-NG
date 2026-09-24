@@ -12,9 +12,7 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/stores/auth', () => ({
     useAuthStore: () => ({
-        logout: mockLogout,
-        hasExternalLogoutUrl: false,
-        getLogoutURL: '/logout'
+        logout: mockLogout
     })
 }))
 

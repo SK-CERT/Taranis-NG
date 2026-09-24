@@ -65,12 +65,6 @@ describe('useAuth composable', () => {
             authStore.setJwtToken(makeJwt())
             expect(auth.isAuth.value).toBe(true)
         })
-
-        it('should expose hasExternalLogin/hasExternalLogout', () => {
-            const auth = useAuth()
-            expect(auth.hasExternalLogin.value).toBe(false)
-            expect(auth.hasExternalLogout.value).toBe(false)
-        })
     })
 
     // ── Permission Methods ────────────────────────

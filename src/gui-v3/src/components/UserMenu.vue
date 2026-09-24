@@ -87,11 +87,7 @@
 
         // Leave the protected route immediately; reporting a server-side
         // logout failure must not keep cached application content visible.
-        if (authStore.hasExternalLogoutUrl) {
-            window.location.href = authStore.getLogoutURL
-        } else {
-            await router.replace('/login')
-        }
+        await router.replace('/login')
 
         await logoutRequest
     }

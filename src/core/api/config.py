@@ -22,7 +22,6 @@ from managers import (
     bots_manager,
     certificate_manager,
     collectors_manager,
-    external_auth_manager,
     log_manager,
     presenters_manager,
     publishers_manager,
@@ -1119,13 +1118,6 @@ class UsersResource(Resource):
             (str, int): The result of the create
         """
         try:
-            external_auth_manager.create_user(request.json)
-        except Exception as ex:
-            msg = "Could not create user in external auth system"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
-
-        try:
             user.User.add_new(request.json)
         except ValueError as ex:
             # a rejected identity link or status change: the message names what to fix
@@ -1145,16 +1137,6 @@ class UserResource(Resource):
         Returns:
             (str, int): The result of the update
         """
-        original_user = user.User.find_by_id(user_id)
-        original_username = original_user.username
-
-        try:
-            external_auth_manager.update_user(request.json, original_username)
-        except Exception as ex:
-            msg = "Could not update user in external auth system"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
-
         try:
             user.User.update(user_id, request.json)
         except ValueError as ex:
@@ -1171,17 +1153,7 @@ class UserResource(Resource):
         Returns:
             (str, int): The result of the delete
         """
-        original_user = user.User.find_by_id(user_id)
-        original_username = original_user.username
-
         user.User.delete(user_id)
-
-        try:
-            external_auth_manager.delete_user(original_username)
-        except Exception as ex:
-            msg = "Could not delete user in external auth system"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class UserStatusResource(Resource):

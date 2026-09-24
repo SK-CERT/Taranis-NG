@@ -144,7 +144,6 @@ packages = [
     ("requests", "requests"),
     ("bs4", "beautifulsoup4"),
     ("dotenv", "python-dotenv"),
-    ("keycloak", "python-keycloak"),
     ("Cryptodome", "pycryptodomex"),
     ("langchain", "langchain"),
     ("langchain_openai", "langchain-openai"),

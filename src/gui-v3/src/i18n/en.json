@@ -197,7 +197,6 @@
         "mfa_session_expired": "Your sign-in session expired. Please sign in again.",
         "passkey_sign_in": "Sign in with a passkey",
         "sign_in_with": "Sign in with {name}",
-        "external_provider": "External login",
         "methods_error": "Login methods could not be loaded. Please try again.",
         "mfa_title": "Two-factor authentication",
         "mfa_code": "Authentication code",

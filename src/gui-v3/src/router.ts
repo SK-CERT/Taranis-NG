@@ -341,8 +341,7 @@ router.beforeEach((to) => {
     const requiresAuth = to.matched.some((record) => Boolean((record.meta as RouteMetaAuth).requiresAuth))
     if (requiresAuth) {
         if (!AuthService.isAuthenticated()) {
-            // Always show the chooser. Environment-configured external auth is
-            // represented there as one method alongside database-backed methods.
+            // Always show the chooser of the database-configured login methods.
             const loginError = to.query['login_error']
             return {
                 path: '/login',

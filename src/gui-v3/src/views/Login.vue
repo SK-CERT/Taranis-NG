@@ -88,7 +88,7 @@
             </div>
 
             <!-- Alternative sign-in methods -->
-            <template v-if="passkeyLoginEnabled || redirectMethods.length > 0 || authStore.hasExternalLoginUrl">
+            <template v-if="passkeyLoginEnabled || redirectMethods.length > 0">
                 <v-divider v-if="hasFormMethods" />
 
                 <div class="form-actions flex-column">
@@ -115,18 +115,6 @@
                         @click="handleRedirectLogin(method)"
                     >
                         {{ t('login.sign_in_with', { name: method.name }) }}
-                    </v-btn>
-
-                    <v-btn
-                        v-if="authStore.hasExternalLoginUrl"
-                        data-test="login-sso-legacy"
-                        prepend-icon="mdi-open-in-new"
-                        size="large"
-                        variant="outlined"
-                        block
-                        @click="handleLegacyRedirectLogin"
-                    >
-                        {{ t('login.sign_in_with', { name: t('login.external_provider') }) }}
                     </v-btn>
                 </div>
             </template>
@@ -555,28 +543,6 @@
         }
     }
 
-    const completeLegacyCallback = async (): Promise<void> => {
-        showLoginError.value = false
-        try {
-            await authStore.login({
-                params: {
-                    code: route.query['code'],
-                    session_state: route.query['session_state'],
-                    redirect_uri: authStore.getExternalCallbackURL
-                },
-                method: 'get'
-            })
-            if (isAuthenticated()) {
-                redirectAfterLogin()
-            } else {
-                validationFailed()
-            }
-        } catch (error) {
-            console.error('[Login] Legacy external authentication error:', error)
-            validationFailed()
-        }
-    }
-
     /**
      * Handle validation failure
      */
@@ -710,10 +676,6 @@
         window.location.href = providerUrl.toString()
     }
 
-    const handleLegacyRedirectLogin = (): void => {
-        window.location.href = authStore.getLoginURL
-    }
-
     /**
      * Redeem the opaque, HttpOnly handle left after an OIDC/OAuth2/SAML login.
      * The returned verdict uses the same access-token/MFA/enrollment payloads as
@@ -750,19 +712,6 @@
         if (isAuthenticated()) {
             router.push('/dashboard')
             return
-        }
-
-        // A legacy env-configured provider returns directly to /v2/login. Complete
-        // that callback before loading the chooser; otherwise the chooser itself is
-        // always shown and the provider redirects only after the user selects it.
-        if (authStore.hasExternalLoginUrl) {
-            const code = route.query['code']
-            if (code !== undefined) {
-                await completeLegacyCallback()
-                if (isAuthenticated()) {
-                    return
-                }
-            }
         }
 
         // Error passed back from an OAuth redirect flow

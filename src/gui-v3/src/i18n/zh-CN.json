@@ -197,7 +197,6 @@
         "mfa_session_expired": "登录会话已过期，请重新登录。",
         "passkey_sign_in": "使用通行密钥登录",
         "sign_in_with": "使用 {name} 登录",
-        "external_provider": "外部登录",
         "methods_error": "无法加载登录方式。请重试。",
         "mfa_title": "双重身份验证",
         "mfa_code": "身份验证代码",

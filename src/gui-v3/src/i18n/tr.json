@@ -197,7 +197,6 @@
         "mfa_session_expired": "Oturum açma oturumunuzun süresi doldu. Lütfen tekrar oturum açın.",
         "passkey_sign_in": "Geçiş anahtarıyla giriş yap",
         "sign_in_with": "{name} ile giriş yap",
-        "external_provider": "Harici giriş",
         "methods_error": "Giriş yöntemleri yüklenemedi. Lütfen yeniden deneyin.",
         "mfa_title": "İki faktörlü kimlik doğrulama",
         "mfa_code": "Kimlik doğrulama kodu",

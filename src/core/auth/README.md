@@ -17,17 +17,11 @@ user-owned credentials, switched on in *Access Management → Security*.
 | `oauth2`  | browser redirect | generic authorization-code flow + userinfo endpoint |
 | `saml`    | browser redirect | SAML 2.0 web browser SSO (HTTP-Redirect request, HTTP-POST response) |
 
-### LDAP CA certificate placement
+### LDAP CA certificate
 
-Place the CA certificate used to validate the LDAP server in this directory and
-name it `ldap_ca.pem`, or configure the current Core/Compose certificate path
-explicitly. Keep private credentials out of this directory and out of version
-control.
-
-This is certificate placement only, not complete LDAP configuration. See the
-current configuration source and Compose environment for the LDAP server and
-base-DN settings. Placing the certificate does not configure user mapping,
-rotate application passwords, or establish that LDAP login is working.
+Paste the PEM CA certificate that validates the LDAP server into the LDAP
+provider's *CA certificate* field. When the field is empty, the system trust
+store is used.
 
 Provider secrets (OIDC/OAuth2 client secret, LDAP bind password) and TOTP
 seeds are encrypted at rest with the `secrets_encryption_key` Docker secret
@@ -456,15 +450,25 @@ existing sessions on their next request.
   public `/auth/methods` endpoint reports it as a `passkey_enabled` flag rather
   than as a login method.
 
-## Deprecated environment-based configuration
+## Removed environment-based configuration
 
-`TARANIS_NG_AUTHENTICATOR=keycloak|openid` (with the related `KEYCLOAK_*`/
-`OIDC_*` variables) and the gui env variables
-`VITE_APP_TARANIS_NG_LOGIN_URL`/`VITE_APP_TARANIS_NG_LOGOUT_URL` keep working
-but are **deprecated** - prefer creating an OIDC provider in the GUI.
-`TARANIS_NG_AUTHENTICATOR=password|ldap` is superseded by database providers:
-the migration seeds an enabled "Local accounts" provider, and an LDAP provider
-from `LDAP_SERVER`/`LDAP_BASE_DN` when `TARANIS_NG_AUTHENTICATOR=ldap` was set
-(place the CA certificate for LDAP in this folder as `ldap_ca.pem` before the
-migration, configure the current Core/Compose certificate path explicitly, or
-paste it into the provider's *CA certificate* field afterwards).
+The environment-selected authenticators are gone. Core ignores
+`TARANIS_NG_AUTHENTICATOR` (and logs a warning at startup when it is set to
+anything but `password`), as well as `LDAP_SERVER`, `LDAP_BASE_DN`,
+`LDAP_CA_CERT_PATH`, `OPENID_LOGOUT_URL`, the `KEYCLOAK_*` variables, the
+`keycloak_*` Docker secrets and the GUI variables
+`VUE_APP_`/`VITE_APP_TARANIS_NG_LOGIN_URL` and `..._LOGOUT_URL`. Nothing
+converts them automatically. Before upgrading a deployment that used them:
+
+1. Sign in with a local account that holds `CONFIG_USER_UPDATE` (the seeded
+   `admin`, for example).
+2. Create the matching provider under *Access Management → Login Methods*:
+   an `ldap` provider for the former `LDAP_SERVER`/`LDAP_BASE_DN` pair (the old
+   behaviour is a direct bind with `uid={username},<base DN>`; paste the CA
+   certificate into the *CA certificate* field), or an `oidc` provider pointing
+   at the Keycloak realm (`https://<keycloak>/realms/<realm>`).
+3. Link the existing users to the new provider in their user dialog. An
+   unlinked login whose username already belongs to an account is refused
+   (`USERNAME_COLLISION`), never merged; only accounts with no password,
+   identity or passkey are adopted on first login, and not at all when the
+   provider's provisioning mode is `manual`.

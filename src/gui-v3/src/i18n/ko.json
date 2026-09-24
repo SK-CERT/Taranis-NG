@@ -197,7 +197,6 @@
         "mfa_session_expired": "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.",
         "passkey_sign_in": "패스키로 로그인",
         "sign_in_with": "{name}(으)로 로그인",
-        "external_provider": "외부 로그인",
         "methods_error": "로그인 방법을 불러올 수 없습니다. 다시 시도하세요.",
         "mfa_title": "2단계 인증",
         "mfa_code": "인증 코드",

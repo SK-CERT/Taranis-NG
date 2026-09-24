@@ -197,7 +197,6 @@
         "mfa_session_expired": "Sua sessão de login expirou. Entre novamente.",
         "passkey_sign_in": "Entrar com uma chave de acesso",
         "sign_in_with": "Entrar com {name}",
-        "external_provider": "Login externo",
         "methods_error": "Não foi possível carregar os métodos de login. Tente novamente.",
         "mfa_title": "Autenticação de dois fatores",
         "mfa_code": "Código de autenticação",

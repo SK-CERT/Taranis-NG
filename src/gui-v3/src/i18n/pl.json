@@ -197,7 +197,6 @@
         "mfa_session_expired": "Sesja logowania wygasła. Zaloguj się ponownie.",
         "passkey_sign_in": "Zaloguj się za pomocą klucza dostępu",
         "sign_in_with": "Zaloguj się za pomocą {name}",
-        "external_provider": "Logowanie zewnętrzne",
         "methods_error": "Nie udało się załadować metod logowania. Spróbuj ponownie.",
         "mfa_title": "Uwierzytelnianie dwuskładnikowe",
         "mfa_code": "Kod uwierzytelniający",

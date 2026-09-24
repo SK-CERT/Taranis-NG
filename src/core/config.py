@@ -32,17 +32,6 @@ class Config:
         JWT_ACCESS_TOKEN_EXPIRES (int): The expiration time in seconds for JWT access tokens.
         DEBUG (bool): Whether to enable debug mode.
         SECRET_KEY (str): The secret key for the application.
-        OIDC_CLIENT_SECRETS (str): The path to the OIDC client secrets file.
-        OIDC_ID_TOKEN_COOKIE_SECURE (bool): Whether to secure the OIDC ID token cookie.
-        OIDC_REQUIRE_VERIFIED_EMAIL (bool): Whether to require verified email for OIDC.
-        OIDC_USER_INFO_ENABLED (bool): Whether to enable OIDC user info endpoint.
-        OIDC_OPENID_REALM (str): The OIDC realm.
-        OIDC_SCOPES (list): The list of OIDC scopes.
-        OIDC_INTROSPECTION_AUTH_METHOD (str): The OIDC introspection authentication method.
-        OIDC_TOKEN_TYPE_HINT (str): The OIDC token type hint.
-        OIDC_RESOURCE_CHECK_AUD (bool): Whether to check the audience of OIDC resource.
-        OIDC_CLOCK_SKEW (int): The clock skew in seconds for OIDC.
-        OPENID_LOGOUT_URL (str): The URL for OIDC logout.
         CORS_ORIGINS (list): The origins allowed to call the API cross-origin with credentials.
 
     """
@@ -109,17 +98,6 @@ class Config:
         SECRETS_ENCRYPTION_KEY_IS_FALLBACK = True
 
     SECRET_KEY = ""
-    OIDC_CLIENT_SECRETS = "client_secrets.json"
-    OIDC_ID_TOKEN_COOKIE_SECURE = False
-    OIDC_REQUIRE_VERIFIED_EMAIL = False
-    OIDC_USER_INFO_ENABLED = True
-    OIDC_SCOPES: ClassVar[list] = ["openid"]
-    OIDC_INTROSPECTION_AUTH_METHOD = "client_secret_post"
-    OIDC_TOKEN_TYPE_HINT = ""
-    OIDC_RESOURCE_CHECK_AUD = True
-    OIDC_CLOCK_SKEW = 560
-
-    OPENID_LOGOUT_URL = os.getenv("OPENID_LOGOUT_URL")
 
     # Origins allowed to drive the GUI cross-origin with credentials. Empty by
     # default: the production deployment serves the GUI and the API from one
