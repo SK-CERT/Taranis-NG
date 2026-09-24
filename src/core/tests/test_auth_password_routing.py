@@ -1,4 +1,4 @@
-"""Vue 2 login compatibility and local-only routing contracts."""
+"""Provider-less password login compatibility and local-only routing contracts."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from managers import auth_manager
 app = Flask(__name__)
 
 
-def test_vue2_shaped_login_post_keeps_access_token_response(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_login_post_without_provider_keeps_access_token_response(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict = {}
 
     def authenticate(credentials: dict) -> tuple[dict, HTTPStatus]:
@@ -49,7 +49,7 @@ def test_no_provider_id_tries_local_only_and_never_database_ldap(monkeypatch: py
     monkeypatch.setattr(
         auth_manager,
         "LDAPAuthenticator",
-        lambda _provider: pytest.fail("A Vue 2 local password must never be sent to a database LDAP provider"),
+        lambda _provider: pytest.fail("A password sent without provider_id must never reach a database LDAP provider"),
     )
 
     with app.test_request_context("/api/v1/auth/login", method="POST", json={"username": "alice", "password": "secret"}):
@@ -73,7 +73,7 @@ def test_refresh_keeps_access_token_response_shape(monkeypatch: pytest.MonkeyPat
     assert response == ({"access_token": "refreshed-token-for-alice"}, HTTPStatus.OK)
 
 
-def test_issued_access_token_keeps_vue2_user_claims(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_issued_access_token_keeps_user_claims(monkeypatch: pytest.MonkeyPatch) -> None:
     user = SimpleNamespace(
         username="alice",
         id=7,

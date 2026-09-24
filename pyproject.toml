@@ -249,8 +249,7 @@ format_js=false
 format_css=false
 max_line_length=142
 use_gitignore=true
-files=["src/presenters/templates/**/*.{html,jinja,j2}", "src/gui-v3/index.html"]
-extend_exclude="src/gui/"
+files=["src/presenters/templates/**/*.{html,jinja,j2}", "src/gui/index.html"]
 # H021 (inline styles) and H036 (<br> for spacing) are unavoidable in the presenter
 # templates: they render in e-mail clients and PDF engines that strip or ignore
 # stylesheets, so the portable markup is the one djlint flags.

@@ -441,7 +441,7 @@ existing sessions on their next request.
   frames: the browser then throws `NotAllowedError` and no passkey can be used,
   to sign in or as a second factor, while registration keeps working (a missing
   `publickey-credentials-create` falls back to its `(self)` default). Both are
-  spelled out as `(self)` in `src/gui-v3/extras/security-headers.inc`. A
+  spelled out as `(self)` in `src/gui/extras/security-headers.inc`. A
   deployment that terminates TLS behind its own reverse proxy must not overwrite
   that header with a stricter one.
 - Passkeys are **not** an identity provider: they are credentials owned by

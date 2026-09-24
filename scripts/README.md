@@ -21,7 +21,7 @@ setup and where each tool version is pinned. `--help` lists the flags.
 
 - root, shared, and service `pyproject.toml` project versions;
 - each service's `taranis-ng-shared` dependency pin;
-- Vue 2 and Vue 3 `package.json` and `package-lock.json` versions;
+- the GUI `package.json` and `package-lock.json` versions;
 - `TARANIS_NG_TAG` in `docker/.env.example` and `docker/.env.e2e`; and
 - root and service `uv.lock` files.
 
@@ -39,8 +39,8 @@ python3 scripts/bump_version.py --check
 ```
 
 The `--no-lock` form requires a later `uv lock` in the root project and every
-backend service before lockfile checks can pass. Vue 3 build metadata reads
-`VERSION.md` through `src/gui-v3/scripts/update-version.cjs`.
+backend service before lockfile checks can pass. GUI build metadata reads
+`VERSION.md` through `src/gui/scripts/update-version.cjs`.
 
 The `check-version-lockstep` pre-commit hook runs the verification command.
 

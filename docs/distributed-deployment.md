@@ -584,8 +584,8 @@ and `-e '{"firewall_allowed_tcp_ports": [22, 80, 443]}'` to open more.
 
 Once multiple nodes of a given type exist (e.g. two collectors nodes), you can
 move individual work items (OSINT sources, bot presets, product types,
-publisher presets) between them from the admin dialogs in the **Vue 3 GUI**
-(`src/gui-v3/`, served at `/`):
+publisher presets) between them from the admin dialogs in the **GUI**
+(`src/gui/`, served at `/`):
 
 1. Open the work item's edit dialog (e.g. *Configuration → OSINT Sources →
    Edit*).
@@ -597,9 +597,6 @@ publisher presets) between them from the admin dialogs in the **Vue 3 GUI**
    the current one, so you can move an RSS source between two collectors nodes
    hosting `RSS_COLLECTOR`, but not from `RSS_COLLECTOR` to
    `PLAYWRIGHT_COLLECTOR`.
-
-> **Note:** the Vue 2 GUI (`src/gui/`) does not offer this; move work items via
-> the Vue 3 UI or the admin REST API.
 
 ## Operator-supplied values never dirty the repo
 

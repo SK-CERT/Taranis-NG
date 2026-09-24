@@ -2,7 +2,7 @@
 """Install everything needed to run this repository's test suites.
 
 Run from the repository root. Builds one root ``.venv`` (dev tooling, pytest, and every
-service's runtime dependencies) plus ``src/gui-v3/node_modules``. See ``docs/testing.md``
+service's runtime dependencies) plus ``src/gui/node_modules``. See ``docs/testing.md``
 for why one environment rather than one per service.
 
 Service dependencies go in with ``uv pip install`` rather than ``uv sync``: the services
@@ -35,7 +35,7 @@ from typing import NoReturn
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VENV = REPO_ROOT / ".venv"
 VENV_BIN = VENV / "bin"
-GUI_DIR = REPO_ROOT / "src" / "gui-v3"
+GUI_DIR = REPO_ROOT / "src" / "gui"
 
 # Backend services with their own pyproject + uv.lock. Their runtime dependencies are
 # merged into the root .venv so the test suites can import them.
@@ -210,7 +210,7 @@ def setup_gui() -> None:
     """Install the GUI's node_modules (Vitest + Playwright live there)."""
     if shutil.which("npm") is None:
         die("npm not found on PATH. Install Node.js (see .nvmrc for the version) and re-run.")
-    print("dev_setup: installing src/gui-v3 node_modules...")
+    print("dev_setup: installing src/gui node_modules...")
     run(["npm", "ci"], cwd=GUI_DIR)
 
 

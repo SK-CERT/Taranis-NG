@@ -1,118 +1,357 @@
 <template>
-    <v-container v-bind="UI.CARD.CONTAINER">
-        <v-row>
-            <v-col :class="UI.CLASS.card_offset">
-                <v-hover v-slot="{ hover }">
-                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="cardItemToolbar">
-                        <!--CONTENT-->
-                        <v-layout v-bind="UI.CARD.LAYOUT" class="status">
-                            <v-row v-bind="UI.CARD.ROW.CONTENT">
-                                <v-col :style="UI.STYLE.card_tag">
-                                    <v-icon center>{{ card.tag }}</v-icon>
-                                </v-col>
-                                <v-col>
-                                    <div class="grey--text">{{ card.product_type_name }}</div>
-                                    <span>{{ card.title }}</span>
-                                    <span v-if="card.report_items_count">&nbsp;&nbsp;({{ card.report_items_count }})</span>
-                                </v-col>
-                                <v-col>
-                                    <div v-if="card.state" class="d-flex align-center">
-                                        <v-icon :color="card.state.color" class="mr-2">
-                                            {{ card.state.icon }}
-                                        </v-icon>
-                                        <span>
-                                            {{ $te('workflow.states.' + card.state.display_name) ?
-                                               $t('workflow.states.' +
-                                               card.state.display_name) : card.state.display_name }}
-                                        </span>
-                                    </div>
-                                </v-col>
-                                <v-col>
-                                    <div class="grey--text">{{ $t('card_item.description') }}</div>
-                                    <span>{{ card.subtitle }}</span>
-                                </v-col>
-                                <v-col>
-                                    <div class="grey--text">{{ $t('card_item.updated') }}</div>
-                                    <span>{{ card.updated_at }}</span>
-                                    <span v-if="card.updated_by">&nbsp;&nbsp;&nbsp;&nbsp;{{ card.updated_by }}</span>
-                                </v-col>
+    <div>
+        <BaseCard
+            :multi-select-active="multiSelectActive"
+            :show-selection-checkbox="true"
+            :preselected="preselected"
+            card-class="review-list__row"
+            :card-id="card.id"
+            @card-click="cardItemClick"
+            @selection-change="selectionChanged"
+        >
+            <!-- Content Slot -->
+            <template #content>
+                <article class="product-card">
+                    <div class="product-card__icon">
+                        <v-icon
+                            :icon="productIcon"
+                            size="22"
+                        />
+                    </div>
 
-                                <!--TOOLBAR-->
-                                <v-col :style="UI.STYLE.card_hover_toolbar">
-                                    <v-row v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
-                                        <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <v-btn v-if="canDelete" icon @click.stop="showMsgBox"
-                                                   :title="$t('publish.tooltip.delete_item')">
-                                                <v-icon color="error">{{ UI.ICON.DELETE }}</v-icon>
-                                            </v-btn>
-                                        </v-col>
-                                    </v-row>
-                                </v-col>
-                            </v-row>
-                        </v-layout>
-                    </v-card>
-                </v-hover>
-            </v-col>
-        </v-row>
-        <v-row>
-            <MessageBox v-model="msgbox_visible"
-                        @yes="handleMsgBox"
-                        @cancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.delete')"
-                        :message="card.title">
-            </MessageBox>
-        </v-row>
-    </v-container>
+                    <div class="product-card__content">
+                        <div class="product-card__meta-row">
+                            <span class="product-card__type"
+                                ><bdi dir="auto">{{ card.product_type_name }}</bdi></span
+                            >
+                            <span class="product-card__updated">
+                                <v-icon
+                                    size="14"
+                                    aria-hidden="true"
+                                    >mdi-clock-outline</v-icon
+                                >
+                                <i18n-t
+                                    scope="global"
+                                    :keypath="card.updated_by ? 'publish.updated_at_by' : 'publish.updated_at'"
+                                >
+                                    <template #date>
+                                        <bdi :dir="updatedAtDisplay.direction">{{ updatedAtDisplay.text }}</bdi>
+                                    </template>
+                                    <template #user>
+                                        <bdi dir="auto">{{ card.updated_by }}</bdi>
+                                    </template>
+                                </i18n-t>
+                            </span>
+                        </div>
+
+                        <h2 class="product-card__title">
+                            <bdi dir="auto">{{ card.title }}</bdi>
+                        </h2>
+
+                        <div class="product-card__details">
+                            <v-chip
+                                v-if="card.state"
+                                :color="card.state.color"
+                                variant="tonal"
+                                size="small"
+                                :title="isolateBidi(card.state.description)"
+                                class="product-card__state"
+                            >
+                                <v-icon
+                                    v-if="card.state.icon"
+                                    start
+                                    size="15"
+                                >
+                                    {{ card.state.icon }}
+                                </v-icon>
+                                <bdi dir="auto">
+                                    {{
+                                        $te('workflow.states.' + card.state.display_name)
+                                            ? $t('workflow.states.' + card.state.display_name)
+                                            : card.state.display_name
+                                    }}
+                                </bdi>
+                            </v-chip>
+
+                            <span
+                                v-if="card.report_items_count"
+                                class="product-card__report-count"
+                                :title="reportItemsCountMessage"
+                            >
+                                <span class="d-sr-only">{{ reportItemsCountMessage }}</span>
+                                <v-icon
+                                    size="15"
+                                    aria-hidden="true"
+                                    >mdi-file-document-multiple-outline</v-icon
+                                >
+                                <span aria-hidden="true">{{ formatNumber(reportItemsCount) }}</span>
+                            </span>
+
+                            <span
+                                v-if="card.subtitle"
+                                class="product-card__subtitle"
+                            >
+                                <bdi dir="auto">{{ card.subtitle }}</bdi>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="canDelete"
+                        class="product-card__actions"
+                    >
+                        <!-- Delete -->
+                        <ActionButton
+                            action="delete"
+                            :title="t('publish.tooltip.delete_item')"
+                            @click.stop="showDeleteDialog = true"
+                        />
+                    </div>
+                </article>
+            </template>
+        </BaseCard>
+
+        <!-- Delete Confirmation Dialog -->
+        <ConfirmationDialog
+            v-model="showDeleteDialog"
+            max-width="500px"
+            @confirm="handleDelete"
+        >
+            <bdi dir="auto">{{ card.title || '' }}</bdi>
+        </ConfirmationDialog>
+    </div>
 </template>
 
-<script>
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
-    import MessageBox from "@/components/common/MessageBox.vue";
+<script setup lang="ts">
+    import { ref, computed } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { usePublishStore } from '@/stores/publish'
+    import { useAuth } from '@/composables/useAuth'
+    import { PERMISSIONS } from '@/services/auth/permissions'
+    import { deleteProduct } from '@/api/publish'
+    import BaseCard from '@/components/common/BaseCard.vue'
+    import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
-    export default {
-        name: "CardProduct",
-        components: { MessageBox },
-        props: ['card'],
-        data: () => ({
-            toolbar: false,
-            msgbox_visible: false,
-        }),
-        mixins: [AuthMixin],
-        computed: {
-            canDelete() {
-                return this.checkPermission(Permissions.PUBLISH_DELETE) && this.card.modify === true
-            },
-        },
-        methods: {
-            itemClicked(data) {
-                this.$root.$emit('show-product-edit', data)
-            },
-            deleteClicked(data) {
-                this.$root.$emit('delete-product', data)
-            },
-            cardItemToolbar(action) {
-                switch (action) {
-                    case "edit":
-                        break;
+    type ProductCard = {
+        id: number | string
+        title?: string
+        subtitle?: string
+        tag?: string
+        product_type_name?: string
+        product_type_id?: number | string
+        report_items_count?: number
+        report_items?: unknown[]
+        updated_at?: string
+        updated_by?: string
+        modify?: boolean
+        access?: boolean
+        state?: {
+            id?: number | string | null
+            color?: string
+            icon?: string
+            display_name?: string
+            description?: string
+        } | null
+        [key: string]: any
+    }
 
-                    case "delete":
-                        this.deleteClicked(this.card);
-                        break;
+    const props = withDefaults(
+        defineProps<{
+            card: ProductCard
+            preselected?: boolean
+        }>(),
+        {
+            preselected: false
+        }
+    )
 
-                    default:
-                        this.toolbar = false;
-                        this.itemClicked(this.card);
-                        break;
-                }
-            },
-            showMsgBox() {
-                this.msgbox_visible = true;
-            },
-            handleMsgBox() {
-                this.msgbox_visible = false;
-                this.cardItemToolbar('delete')
-            },
-        },
+    const { t } = useI18n()
+    const { formatDateTime, formatNumber } = useLocaleFormatters()
+    const publishStore = usePublishStore()
+    const { checkPermission } = useAuth()
+    const isolateBidi = (value?: string): string => (value ? `\u2068${value}\u2069` : '')
+
+    const showDeleteDialog = ref<boolean>(false)
+    const reportItemsCount = computed(() => Number(props.card.report_items_count ?? 0))
+    const reportItemsCountMessage = computed(() =>
+        t('publish.report_items_count', { count: formatNumber(reportItemsCount.value) }, reportItemsCount.value)
+    )
+    const updatedAtDisplay = computed<{ text: string; direction: 'ltr' | 'auto' }>(() => {
+        const rawValue = props.card.updated_at == null ? '' : String(props.card.updated_at)
+        if (!rawValue) return { text: '', direction: 'auto' }
+
+        const formattedValue = formatDateTime(rawValue)
+        return formattedValue ? { text: formattedValue, direction: 'auto' } : { text: rawValue, direction: 'auto' }
+    })
+
+    const multiSelectActive = computed(() => publishStore.getMultiSelect)
+
+    const canDelete = computed(() => {
+        // Check permission - modify check may not be needed or property may be named differently
+        return checkPermission(PERMISSIONS.PUBLISH_DELETE)
+    })
+
+    const productIcon = computed(() => {
+        return props.card.tag === 'mdi-file-pdf-outline' ? 'mdi-file-pdf-box' : props.card.tag || 'mdi-send'
+    })
+
+    const selectionChanged = (isSelected: boolean): void => {
+        if (isSelected) {
+            publishStore.select({ id: props.card.id, item: props.card })
+        } else {
+            publishStore.deselect({ id: props.card.id })
+        }
+    }
+
+    const cardItemClick = (): void => {
+        // Emit event to open edit dialog
+        const editData = {
+            id: props.card.id,
+            title: props.card.title,
+            description: props.card.subtitle || '',
+            product_type_id: props.card.product_type_id,
+            state_id: props.card.state?.id || null,
+            report_items: props.card.report_items || [],
+            modify: props.card.modify === true,
+            access: props.card.access === true
+        }
+        window.dispatchEvent(new CustomEvent('show-product-edit', { detail: editData }))
+    }
+
+    const handleDelete = async (): Promise<void> => {
+        showDeleteDialog.value = false
+        try {
+            await deleteProduct(props.card)
+
+            // Show success notification
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: 'common.deleted_successfully' }
+                })
+            )
+
+            // Emit event to refresh the list
+            window.dispatchEvent(new CustomEvent('product-updated'))
+        } catch (error: unknown) {
+            console.error('Error deleting product:', error)
+
+            // Show error notification
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'common.error_deleting' }
+                })
+            )
+        }
     }
 </script>
+
+<style scoped>
+    .product-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.65rem;
+        min-width: 0;
+    }
+
+    .product-card__icon {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 4px;
+        color: rgb(var(--v-theme-primary));
+        background: rgba(var(--v-theme-primary), 0.1);
+        box-shadow: inset 0 0 0 1px rgba(var(--v-theme-primary), 0.14);
+    }
+
+    .product-card__content {
+        min-width: 0;
+    }
+
+    .product-card__meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .product-card__type {
+        overflow: hidden;
+        color: rgb(var(--v-theme-primary));
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .product-card__updated {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: rgba(var(--v-theme-on-surface), 0.55);
+        font-size: 0.72rem;
+        white-space: nowrap;
+    }
+
+    .product-card__title {
+        margin: 0.15rem 0 0.3rem;
+        color: rgb(var(--v-theme-on-surface));
+        font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+        font-weight: 650;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .product-card__details {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-height: 22px;
+        min-width: 0;
+    }
+
+    .product-card__state {
+        border-radius: 3px;
+        font-weight: 650;
+    }
+
+    .product-card__report-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: rgba(var(--v-theme-on-surface), 0.62);
+        font-size: 0.76rem;
+        font-weight: 650;
+    }
+
+    .product-card__subtitle {
+        overflow: hidden;
+        min-width: 0;
+        color: rgba(var(--v-theme-on-surface), 0.62);
+        font-size: 0.78rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .product-card__actions {
+        padding-inline-start: 0.5rem;
+        border-inline-start: 1px solid rgba(var(--v-theme-outline), 0.24);
+    }
+
+    .product-card__actions :deep(.v-btn) {
+        border-radius: 3px;
+    }
+
+    @media (max-width: 760px) {
+        .product-card__updated,
+        .product-card__subtitle {
+            display: none;
+        }
+    }
+</style>

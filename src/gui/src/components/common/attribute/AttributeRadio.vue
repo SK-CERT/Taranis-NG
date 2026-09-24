@@ -1,58 +1,120 @@
 <template>
     <AttributeItemLayout
-            :add_button="addButtonVisible"
-            @add-value="add()"
-            :values="values"
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
     >
-        <template v-slot:content>
-            <v-row v-for="(value, index) in values" :key="value.index"
-                   class="valueHolder"
+        <template #content>
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
             >
-                <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                <AttributeValueLayout
-                        v-if="!read_only && canModify && !values[index].remote"
-                        :del_button="delButtonVisible"
-                        @del-value="del(index)"
-                        :occurrence="attribute_group.min_occurrence"
-                        :values="values"
-                        :val_index="index"
+                <!-- Read-only or remote -->
+                <span
+                    v-if="readOnly || value.remote"
+                    class="radio-value"
                 >
-                    <template v-slot:col_middle>
-                        <v-radio-group
-                                v-if="!read_only && !values[index].remote"
-                                :disabled="!canModify"
-                                row
-                                v-model="values[index].value"
-                                @change="onEdit(index)"
-                        >
-                            <v-radio v-for="attr_enum in attribute_group.attribute.attribute_enums" :key="attr_enum.id"
-                                     :label="attr_enum.value"
-                                     :value="attr_enum.value"
-                            ></v-radio>
-                        </v-radio-group>
+                    {{ value.value }}
+                </span>
 
+                <!-- Editable -->
+                <AttributeValueLayout
+                    v-if="!readOnly && canModify && !value.remote"
+                    :del-button="true"
+                    :occurrence="attributeGroup.min_occurrence"
+                    :values="values"
+                    :val-index="index"
+                    @del-value="del(index)"
+                >
+                    <template #col_middle>
+                        <v-radio-group
+                            v-model="value.value"
+                            inline
+                            density="compact"
+                            class="radio-single-row"
+                            :disabled="value.locked || !canModify"
+                            @focus="onFocus(index)"
+                            @blur="onBlur(index)"
+                            @update:model-value="onEdit(index)"
+                        >
+                            <v-radio
+                                v-for="(option, optionIndex) in radioOptions"
+                                :key="`${index}-${optionIndex}`"
+                                color="primary"
+                                :label="getOptionLabel(option)"
+                                :value="getOptionValue(option)"
+                            />
+                        </v-radio-group>
                     </template>
                 </AttributeValueLayout>
-            </v-row>
+            </div>
         </template>
-
     </AttributeItemLayout>
 </template>
 
-<script>
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
-    import AttributeItemLayout from "../../layouts/AttributeItemLayout";
-    import AttributeValueLayout from "../../layouts/AttributeValueLayout";
+<script setup lang="ts">
+    import { computed, onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import AttributeValueLayout from './AttributeValueLayout.vue'
+    import { useAttributes } from './useAttributes'
+    import { enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup, type EnumOption } from './enumOptions'
 
-    export default {
-        name: "AttributeRadio",
-        props: {
-            attribute_group: Object
-        },
-        components: {
-            AttributeItemLayout,
-            AttributeValueLayout
-        },
-        mixins: [AttributesMixin]
+    type AttributeValueItem = {
+        index?: string | number
+        value: string | number | null
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
     }
+
+    type AttributeGroup = EnumAttributeGroup & {
+        min_occurrence?: number
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
+
+    const { t } = useI18n()
+
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+
+    const radioOptions = computed<EnumOption[]>(() => enumOptionsOf(props.attributeGroup))
+
+    const getOptionLabel = enumOptionLabel
+    const getOptionValue = enumOptionValue
+
+    onMounted(addInitialValues)
 </script>
+
+<style scoped>
+    .radio-value {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .value-holder {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+
+    .radio-single-row :deep(.v-selection-control-group) {
+        flex-wrap: nowrap;
+        gap: 12px;
+    }
+</style>

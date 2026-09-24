@@ -12,10 +12,9 @@ build/
 .*/
 !.github/
 src/gui/git-info.json
-src/gui-v3/coverage/
-src/gui-v3/playwright-report/
-src/gui-v3/test-results/
-src/gui-v3/git-info.json
+src/gui/coverage/
+src/gui/playwright-report/
+src/gui/test-results/
 # public_web is a Python service with its own venv
 src/public_web/.venv
 

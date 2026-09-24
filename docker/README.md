@@ -66,10 +66,8 @@ Always run Compose from the `docker/` directory. Compose automatically loads
 
 ### Web interfaces
 
-The tracked Compose stack serves the Vue 2 interface at `/`. The Vue 3 source
-is built for the `/v2/` base path, but its service is not enabled in the
-tracked Compose definition. Use the Vue 3 development instructions for
-frontend evaluation; do not expect `/v2/` to work in an unmodified deployment.
+The Compose stack serves the GUI (service `gui`) at `/`. Traefik routes
+`/api/` and `/sse` to Core and everything else to the GUI.
 
 ### 3. Open the application and secure the accounts
 
@@ -290,31 +288,26 @@ Check it worked in the GUI, under *Configuration → Application Settings → Ro
 Collectors, bots, presenters, and publishers use `TARANIS_NG_CORE_URL` for the
 Core endpoint and `api_key.txt` for shared authentication.
 
-### Vue 2 GUI
+### GUI
 
-| Environment variable          | Description            |
-| ----------------------------- | ---------------------- |
-| `VUE_APP_TARANIS_NG_CORE_API` | Core API URL           |
-| `VUE_APP_TARANIS_NG_CORE_SSE` | Core SSE URL           |
-| `VUE_APP_TARANIS_NG_URL`      | Public frontend URL    |
-| `VUE_APP_TARANIS_NG_LOCALE`   | Default locale         |
-| `NGINX_WORKERS`               | Nginx worker count     |
-| `NGINX_CONNECTIONS`           | Connections per worker |
+| Environment variable           | Description            |
+| ------------------------------ | ---------------------- |
+| `VITE_APP_TARANIS_NG_CORE_API` | Core API URL           |
+| `VITE_APP_TARANIS_NG_CORE_SSE` | Core SSE URL           |
+| `VITE_APP_TARANIS_NG_URL`      | Public frontend URL    |
+| `VITE_APP_TARANIS_NG_LOCALE`   | Default locale         |
+| `NGINX_WORKERS`                | Nginx worker count     |
+| `NGINX_CONNECTIONS`            | Connections per worker |
 
-### Vue 3 GUI
+`VITE_APP_TARANIS_NG_LOCALE` is read from `.env`; the other `VITE_APP_*` values
+are derived from `TARANIS_NG_HTTPS_URI` in `docker-compose.yml`.
 
-The optional Vue 3 container uses `VITE_APP_TARANIS_NG_URL`,
-`VITE_APP_TARANIS_NG_CORE_API`, `VITE_APP_TARANIS_NG_CORE_SSE`,
-`VITE_APP_TARANIS_NG_LOCALE`, and `VITE_APP_VERSION`. Its public base path is
-`/v2/`.
-
-Locale availability differs between the interfaces. Vue 2 supports Czech
-(`cs`), English (`en`), and Slovak (`sk`). Vue 3 supports Brazilian Portuguese
-(`pt-BR`), Czech (`cs`), Dutch (`nl`), English (`en`), French (`fr`), German
-(`de`), Hindi (`hi`), Italian (`it`), Japanese (`ja`), Korean (`ko`), Polish
-(`pl`), Russian (`ru`), Simplified Chinese (`zh-CN`), Slovak (`sk`), Spanish
-(`es`), Thai (`th`), Turkish (`tr`), Ukrainian (`uk`), and Vietnamese (`vi`).
-English is the fallback for both interfaces.
+The GUI supports Arabic (`ar`), Brazilian Portuguese (`pt-BR`), Czech (`cs`),
+Dutch (`nl`), English (`en`), French (`fr`), German (`de`), Hindi (`hi`),
+Italian (`it`), Japanese (`ja`), Korean (`ko`), Polish (`pl`),
+Russian (`ru`), Simplified Chinese (`zh-CN`), Slovak (`sk`), Spanish (`es`),
+Thai (`th`), Turkish (`tr`), Ukrainian (`uk`), and Vietnamese (`vi`). English is
+the fallback.
 
 ### Redis and PostgreSQL
 
@@ -329,6 +322,11 @@ Preserve `.env`, all secret files, PostgreSQL data, `core_data`, presenter user
 templates, and collector storage. The repository does not provide a fully
 validated upgrade-and-rollback procedure, so test restoration and review
 release-specific migration notes before upgrading a production instance.
+
+The GUI is now the Vue 3 application served at `/`; the former `/v2/` path and
+the separate `gui-v3` service are gone. An existing `.env` that sets
+`VUE_APP_TARANIS_NG_LOCALE` must rename it to `VITE_APP_TARANIS_NG_LOCALE`,
+otherwise the forced locale is ignored.
 
 ## MCP companion
 

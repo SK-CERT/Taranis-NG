@@ -15,7 +15,7 @@ repos:
     rev: v1.46.1
     hooks:
       - id: djlint
-        files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui-v3/index\\.html)$"
+        files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui/index\\.html)$"
         args: ["--ignore=H021,H024,H036"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -65,12 +65,12 @@ repos:
         pass_filenames: false
         files: ^src/(core|shared|bots|collectors|presenters|publishers)/.*\.py$
         always_run: false
-      - id: gui3-precommit
+      - id: gui-precommit
         name: GUI lint-staged and unit tests (Vitest)
-        entry: node src/gui-v3/scripts/precommit.cjs
+        entry: node src/gui/scripts/precommit.cjs
         language: system
         pass_filenames: false
         # Was always_run: true, which ran the whole Vitest suite with coverage on every
         # commit — including Python-only, ansible-only and docs-only ones.
-        files: ^src/gui-v3/
+        files: ^src/gui/
         always_run: false

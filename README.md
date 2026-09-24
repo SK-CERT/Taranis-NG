@@ -72,11 +72,10 @@ images from source.
 
 ## Languages
 
-The Vue 3 GUI includes translations for Brazilian Portuguese, Czech, Dutch,
-English, French, German, Hindi, Italian, Japanese, Korean, Polish, Russian,
-Simplified Chinese, Slovak, Spanish, Thai, Turkish, Ukrainian, and Vietnamese.
-The legacy Vue 2 GUI includes Czech, English, and Slovak. English is the
-fallback language in both interfaces.
+The GUI includes translations for Arabic, Brazilian Portuguese, Czech, Dutch,
+English, French, German, Hindi, Italian, Japanese, Korean, Polish,
+Russian, Simplified Chinese, Slovak, Spanish, Thai, Turkish, Ukrainian, and
+Vietnamese. English is the fallback language.
 
 ## Documentation
 

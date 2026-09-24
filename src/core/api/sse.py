@@ -83,7 +83,8 @@ class SseResource(Resource):
     def get(self) -> tuple[str, HTTPStatus]:
         """Get Response."""
         try:
-            # SSE-VUE component can transfer JWT info only by cookie. We don't want send it as url parameter due of security reasons
+            # EventSource cannot send an Authorization header, so JWT info can only travel by cookie.
+            # We don't want to send it as a URL parameter for security reasons.
             # JWT token is also big to fit in cookie, so we use JWT guid.
             jwt_id = request.cookies.get("jwt_id")
             api_key = request.headers.get("Authorization", "").replace("ApiKey ", "")

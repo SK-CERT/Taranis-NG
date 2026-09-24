@@ -253,7 +253,7 @@ def _ensure_public_web(api_key: str) -> None:
     """Seed the default public-web node once its service answers.
 
     Deliberately best-effort: unlike the four mandatory satellites this one is an
-    optional profile, and `gui`/`gui-v3` wait on this whole script completing
+    optional profile, and `gui` waits on this whole script completing
     successfully. Raising here would take the entire stack down over a feed the
     deployment can live without, so a node that never answers is reported and
     skipped.

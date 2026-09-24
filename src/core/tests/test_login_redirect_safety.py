@@ -32,9 +32,9 @@ def test_error_redirect_refuses_a_foreign_host(app: Flask) -> None:
 
 def test_error_redirect_keeps_a_same_origin_target(app: Flask) -> None:
     with app.test_request_context("/", base_url="https://taranis.example"):
-        assert _location(auth._login_error_redirect("/v2/login", "auth_failed")) == "/v2/login?login_error=auth_failed"
-        absolute = _location(auth._login_error_redirect("https://taranis.example/v2/", "auth_failed"))
-        assert absolute.startswith("https://taranis.example/v2/?login_error=")
+        assert _location(auth._login_error_redirect("/login", "auth_failed")) == "/login?login_error=auth_failed"
+        absolute = _location(auth._login_error_redirect("https://taranis.example/", "auth_failed"))
+        assert absolute.startswith("https://taranis.example/?login_error=")
 
 
 @pytest.mark.parametrize("candidate", ["//evil.example/x", "/\\evil.example/x", "https://evil.example"])

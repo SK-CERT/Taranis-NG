@@ -1,66 +1,138 @@
-# Taranis NG GUI
+# Taranis NG - GUI
 
-**Audience:** developers of the Vue 2 frontend.
+This directory contains the Taranis NG graphical user interface, a Vue 3
+application.
 
-**Release status:** this is the GUI enabled by the current default Docker
-Compose stack. It is distinct from the Vue 3 application under `src/gui-v3`.
+**Audience:** frontend developers.
 
-The GUI is written in [Vue.js](https://vuejs.org/) with [Vuetify](https://vuetifyjs.com/en/).
+The Docker stack serves this application at `/` (Compose service `gui`). The
+commands below are for frontend development. Use the
+[Docker deployment guide](../../docker/README.md) for the complete application
+stack.
 
-Use the [Docker deployment guide](../../docker/README.md) for a complete
-deployment. The remainder of this file covers development of this component
-only.
+## Tech Stack
 
-## Project setup
+- **Vue** - Composition API application framework
+- **Vite** - Development and production build tooling
+- **Vuetify** - Material Design component framework
+- **Pinia** - Application state management
+- **Vue Router** - Client-side routing
+- **Vue I18n** - Internationalization and locale fallback
+- **Axios** - HTTP client
 
-Install the dependencies
+Exact dependency versions are defined in `package.json` and
+`package-lock.json`.
+
+## Development Setup
+
+### Prerequisites
+
+- Node.js 22 and npm
+
+### Install Dependencies
 
 ```bash
 npm ci
 ```
 
-## Development server
-
-Set the public frontend, API, SSE, and locale values for the backend instance
-used during development. The default Docker example is available through
-Traefik at `https://localhost:4443`.
+### Development Server
 
 ```bash
-export VUE_APP_TARANIS_NG_CORE_API="https://localhost:4443/api/v1"
-export VUE_APP_TARANIS_NG_CORE_SSE="https://localhost:4443/sse"
-export VUE_APP_TARANIS_NG_URL="https://localhost:4443"
-export VUE_APP_TARANIS_NG_LOCALE="en"
-
-npm run serve
+npm run dev
 ```
 
-## Languages
+The development server starts at `http://localhost:4444/` by default. Use a
+different port when Docker or another service already owns port 4444.
 
-The Vue 2 interface is available in Czech (`cs`), English (`en`), and Slovak
-(`sk`). English is the fallback locale. The Vue 3 interface has a larger set of
-translations documented in the [Vue 3 GUI README](../gui-v3/README.md#languages).
+You can override the port if needed:
 
-Vue 2 locale catalogs are discovered automatically from
-`src/i18n/<locale>/messages.js` at build time, so they do not require database
-option entries.
+```bash
+VITE_PORT=8082 npm run dev
+```
 
-## Production build
-
-When you are ready to generate the final static version of the GUI, run
+### Build for Production
 
 ```bash
 npm run build
 ```
 
-The static html/js/css files will be stored under the `dist/` subdirectory.
+The production build will be output to the `dist/` directory.
 
-## Testing and linting
+### Verification
 
 ```bash
-npm run test
-npm run lint
+npm run format:check
+npm run lint:check
+npm run typecheck
+npm run test:unit
+npm run build
 ```
 
-## Configuration reference
+## Environment Variables
 
-See [Configuration Reference](https://cli.vuejs.org/config/).
+The following environment variables are used (configured at Docker runtime):
+
+- `VITE_APP_TARANIS_NG_URL` - Public application URL
+- `VITE_APP_TARANIS_NG_CORE_API` - Backend API endpoint
+- `VITE_APP_TARANIS_NG_CORE_SSE` - Server-Sent Events endpoint
+- `VITE_APP_TARANIS_NG_LOCALE` - Default locale code
+- `VITE_DEV_BACKEND_ORIGIN` - Development proxy target origin
+
+## Languages
+
+The interface is translated into the following languages:
+
+- Arabic (`ar`), rendered right-to-left
+- Asian languages: Hindi (`hi`), Japanese (`ja`), Korean
+  (`ko`), Simplified Chinese (`zh-CN`), Thai (`th`), and Vietnamese (`vi`)
+- Central and Eastern European languages: Czech (`cs`), Polish (`pl`), Russian
+  (`ru`), Slovak (`sk`), and Ukrainian (`uk`)
+- Western European languages: Dutch (`nl`), English (`en`), French (`fr`),
+  German (`de`), Italian (`it`), Brazilian Portuguese (`pt-BR`), and Spanish
+  (`es`)
+- Turkish (`tr`)
+
+English is the fallback locale.
+
+Locale catalogs are discovered automatically from `src/i18n/*.json` at build
+time, so adding a catalog does not require a source-code registry or database
+option entry.
+
+### Env Precedence in Dev (`npm run dev`)
+
+Vite loads env files from two places, in this order:
+
+1. `docker/.env*`
+2. `src/gui/.env*` (overrides same keys from `docker/.env*`)
+
+For backend proxying in `vite.config.js`, values are resolved as follows:
+
+- Backend origin: `VITE_DEV_BACKEND_ORIGIN` -> `TARANIS_NG_HTTPS_URI` -> `http://127.0.0.1:8082`
+- API URL: `VITE_APP_TARANIS_NG_CORE_API` -> `${backendOrigin}/api/v1`
+- SSE URL: `VITE_APP_TARANIS_NG_CORE_SSE` -> `${backendOrigin}/sse`
+
+Dev server default port is `4444` (override with `VITE_PORT` or `PORT`).
+
+## Project Structure
+
+```
+src/
+├── api/          # API endpoint wrappers
+├── assets/       # Static assets and styles
+├── components/   # Reusable Vue components
+├── composables/  # Composition API composables
+├── i18n/         # Internationalization files
+├── services/     # Business logic services
+├── stores/       # Pinia stores
+├── views/        # Route view components
+├── App.vue       # Root component
+├── main.ts       # Application entry point
+└── router.ts     # Vue Router configuration
+```
+
+## Runtime paths
+
+The application is served at `/`. Vue Router uses HTML5 history mode, and the
+production Nginx configuration (`extras/default.conf`) falls back to
+`index.html` so direct navigation to any client route works. `/api` and `/sse`
+belong to core: Traefik routes them in Docker, the Vite proxy in development.

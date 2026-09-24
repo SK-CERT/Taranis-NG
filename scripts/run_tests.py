@@ -8,7 +8,7 @@ Suites:
 
 ======================================================================================
 ``pytest``          Python unit tests, one pytest run per project (see ``PYTEST_SUITES``)
-``vitest``          GUI unit/component tests (``npm run test:unit`` in src/gui-v3)
+``vitest``          GUI unit/component tests (``npm run test:unit`` in src/gui)
 ``ansible``         Playbook syntax check + ansible-lint
 ``e2e``             Playwright end-to-end tests. NOT in the default set: it builds and
                     boots a Docker stack and takes minutes.
@@ -41,7 +41,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VENV_BIN = REPO_ROOT / ".venv" / ("Scripts" if os.name == "nt" else "bin")
-GUI_DIR = REPO_ROOT / "src" / "gui-v3"
+GUI_DIR = REPO_ROOT / "src" / "gui"
 
 # Projects with a pytest suite, as directories under src/. Keep in sync with `testpaths`
 # in the root pyproject.toml, which is what editors use. The other services have no
@@ -107,9 +107,9 @@ def run_pytest(extra: list[str], *, require: bool) -> bool | None:
 def run_vitest(extra: list[str], *, require: bool) -> bool | None:
     """Run the GUI unit/component suite."""
     if not (GUI_DIR / "node_modules").is_dir():
-        return missing("vitest", "src/gui-v3/node_modules", "python3 scripts/dev_setup.py", require=require)
+        return missing("vitest", "src/gui/node_modules", "python3 scripts/dev_setup.py", require=require)
 
-    heading("vitest: src/gui-v3")
+    heading("vitest: src/gui")
     # update-version.cjs writes git-info.json, which DashboardView.vue and its specs
     # import; a bare test run without it fails on a fresh checkout.
     subprocess.run(["node", "scripts/update-version.cjs"], cwd=GUI_DIR, check=False, capture_output=True)  # noqa: S607
@@ -120,11 +120,11 @@ def run_vitest(extra: list[str], *, require: bool) -> bool | None:
 def run_e2e(extra: list[str], *, require: bool) -> bool | None:
     """Run the Playwright end-to-end suite (boots a Docker stack)."""
     if not (GUI_DIR / "node_modules").is_dir():
-        return missing("e2e", "src/gui-v3/node_modules", "python3 scripts/dev_setup.py --all", require=require)
+        return missing("e2e", "src/gui/node_modules", "python3 scripts/dev_setup.py --all", require=require)
     if shutil.which("docker") is None:
         return missing("e2e", "docker", "install Docker; the e2e stack needs it", require=require)
 
-    heading("playwright e2e: src/gui-v3")
+    heading("playwright e2e: src/gui")
     result = subprocess.run(["npm", "run", "test:e2e", "--", *extra], cwd=GUI_DIR, check=False)  # noqa: S607
     return result.returncode == 0
 

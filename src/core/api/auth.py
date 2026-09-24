@@ -137,25 +137,23 @@ def _safe_goto_url(goto_url: str | None) -> str:
 
 
 def _redirect_provider_goto_url(goto_url: str | None) -> str | None:
-    """Accept only the Vue 3 mount as a database redirect-provider target.
+    """Accept only a same-origin target for a database redirect-provider login.
 
-    Vue 3, mounted at ``/v2``, can redeem the opaque redirect-login handle.
-    Legacy Vue 2 is mounted at root paths and has no redemption client, so
-    sending an OAuth/SAML round trip there could authenticate successfully but
-    leave the user unable to establish the GUI session.
+    Stricter than ``_safe_goto_url``: instead of falling back to the site root,
+    an unusable target is rejected up front, and an absolute URL must also match
+    the request scheme so an HTTPS login never lands the redemption on plain HTTP.
     """
     if not goto_url or not _is_safe_goto_url(goto_url):
         return None
     parsed = urllib.parse.urlparse(goto_url)
     if parsed.scheme and (parsed.scheme != request.scheme or parsed.netloc != request.host):
         return None
-    path = parsed.path
-    return goto_url if path == "/v2" or path.startswith("/v2/") else None
+    return goto_url
 
 
 def _invalid_redirect_provider_target() -> tuple[dict, HTTPStatus]:
-    """Return a clear compatibility error for a non-Vue-3 redirect target."""
-    return {"error": "Redirect login requires a same-origin /v2 target"}, HTTPStatus.BAD_REQUEST
+    """Return a clear error for a redirect-login target that is not same-origin."""
+    return {"error": "Redirect login requires a same-origin target"}, HTTPStatus.BAD_REQUEST
 
 
 def _login_cookie_kwargs() -> dict:

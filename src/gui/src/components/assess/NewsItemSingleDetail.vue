@@ -1,313 +1,76 @@
 <template>
-    <v-container>
-        <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-            <v-dialog v-bind="verticalView ? UI.DIALOG.WINDOW : UI.DIALOG.FULLSCREEN"
-                      :content-class="verticalView ? 'side-dialog' : ''" v-model="visible"
-                      @keydown.esc="close($event)" :attach="attach">
-                <v-card>
-                    <v-toolbar v-bind="UI.DIALOG.TOOLBAR" data-dialog="single-detail">
-                        <v-btn icon dark @click="close()" data-btn="close">
-                            <v-icon>mdi-close-circle</v-icon>
-                        </v-btn>
-                        <v-toolbar-title class="title-limit">{{ news_item.title }}</v-toolbar-title>
-                        <v-spacer></v-spacer>
-
-                        <div v-if="!multiSelectActive && !analyze_selector">
-                            <a :href="news_item.news_items[0].news_item_data.link" rel="noreferrer"
-                               target="_blank" :title="$t('assess.tooltip.open_source')">
-                                <v-btn small icon>
-                                    <v-icon small color="white">mdi-open-in-app</v-icon>
-                                </v-btn>
-                            </a>
-                            <v-btn v-if="canCreateReport" small icon @click.stop="cardItemToolbar('new')" data-btn="new"
-                                   :title="$t('assess.tooltip.analyze_item')">
-                                <v-icon small color="white">mdi-file-outline</v-icon>
-                            </v-btn>
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('read')"
-                                   :title="$t('assess.tooltip.read_item')">
-                                <v-icon small :color="buttonStatus(news_item.read)">mdi-eye</v-icon>
-                            </v-btn>
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('important')"
-                                   :title="$t('assess.tooltip.important_item')">
-                                <v-icon small :color="buttonStatus(news_item.important)">mdi-star</v-icon>
-                            </v-btn>
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('like')"
-                                   :title="$t('assess.tooltip.like_item')">
-                                <v-icon small :color="buttonStatus(news_item.me_like)">mdi-thumb-up</v-icon>
-                            </v-btn>
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('unlike')"
-                                   :title="$t('assess.tooltip.dislike_item')">
-                                <v-icon small :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
-                            </v-btn>
-                            <v-btn v-if="canDelete" small icon @click.stop="showMsgBox()"
-                                   :title="$t('assess.tooltip.delete_item')">
-                                <v-icon small color="white">mdi-delete</v-icon>
-                            </v-btn>
-                        </div>
-
-                    </v-toolbar>
-
-                    <v-tabs dark centered grow>
-                        <!-- TABS -->
-                        <v-tab href="#tab-1">
-                            <span>{{ $t('assess.source') }}</span>
-                        </v-tab>
-                        <v-tab href="#tab-2">
-                            <span>{{ $t('assess.attributes') }}</span>
-                        </v-tab>
-                        <v-tab href="#tab-3" @click="onTabClick(3)">
-                            <span>{{ $t('assess.comments') }}</span>
-                        </v-tab>
-
-                        <!-- TABS CONTENT -->
-                        <v-tab-item value="tab-1" class="px-5">
-                            <v-row justify="center" class="px-8">
-                                <v-row justify="center" class="subtitle-2 info--text pt-0 ma-0">
-                                    <v-flex>
-                                        <v-row class="text-center">
-                                            <v-col>
-                                                <span class="overline font-weight-bold">
-                                                    {{ $t('assess.collected') }}
-                                                </span><br>
-                                                <span class="caption">
-                                                    {{ news_item.news_items[0].news_item_data.collected }}
-                                                </span>
-                                            </v-col>
-                                            <v-col>
-                                                <span class="overline font-weight-bold">
-                                                    {{ $t('assess.published') }}
-                                                </span><br>
-                                                <span class="caption">
-                                                    {{ news_item.news_items[0].news_item_data.published }}
-                                                </span>
-                                            </v-col>
-                                            <v-col>
-                                                <span class="overline font-weight-bold">
-                                                    {{ $t('assess.source') }}
-                                                </span><br>
-                                                <span class="caption">
-                                                    {{ news_item.news_items[0].news_item_data.source }}
-                                                </span>
-                                            </v-col>
-                                            <v-col>
-                                                <span class="overline font-weight-bold">
-                                                    {{ $t('assess.author') }}
-                                                </span><br>
-                                                <span class="caption">
-                                                    {{ news_item.news_items[0].news_item_data.author }}
-                                                </span>
-                                            </v-col>
-                                        </v-row>
-                                    </v-flex>
-                                </v-row>
-                                <hr style="width: calc(100%); border: 0px;">
-                                <v-col>
-                                    <v-row class="headline">
-                                        <span class="display-1 font-weight-light py-4">
-                                            {{ news_item.news_items[0].news_item_data.title }}
-                                        </span>
-                                    </v-row>
-                                    <v-row class="py-4">
-                                        <span class="body-2 grey--text text--darken-1" v-html="news_item.news_items[0].news_item_data.content"></span>
-                                    </v-row>
-                                </v-col>
-
-                                <!-- LINKS -->
-                                <v-container fluid>
-                                    <v-row>
-                                        <a :href="news_item.news_items[0].news_item_data.link" target="_blank"
-                                           rel="noreferrer">
-                                            <span>{{ news_item.news_items[0].news_item_data.link }}</span>
-                                        </a>
-                                    </v-row>
-                                </v-container>
-
-                            </v-row>
-
-                        </v-tab-item>
-
-                        <v-tab-item value="tab-2" class="pa-5">
-                            <div v-for="item in news_item.news_items" :key="item.id">
-                                <NewsItemAttribute v-for="attribute in item.news_item_data.attributes"
-                                                   :key="attribute.id" :attribute="attribute"
-                                                   :news_item_data="news_item.news_items[0].news_item_data" />
-                            </div>
-                        </v-tab-item>
-
-                        <v-tab-item value="tab-3" class="pa-5">
-                            <vue-editor ref="assessDetailComments" v-model="editorData"
-                                        :editorOptions="editorOptionVue2">
-                            </vue-editor>
-                        </v-tab-item>
-
-                    </v-tabs>
-
-                </v-card>
-            </v-dialog>
-        </v-row>
-        <MessageBox v-model="msgbox_visible"
-                    @yes="handleMsgBox"
-                    @cancel="msgbox_visible = false"
-                    :title="$t('common.messagebox.delete')"
-                    :message="news_item.title">
-        </MessageBox>
-    </v-container>
+    <NewsItemDetailDialog
+        v-model="showDialog"
+        :news-item="newsItem"
+        :multi-select-active="multiSelectActive"
+        @action="handleAction"
+        @delete="handleDelete"
+    />
 </template>
 
-<script>
-    import { deleteNewsItemAggregate, getNewsItem, voteNewsItemAggregate } from "@/api/assess";
-    import { readNewsItemAggregate } from "@/api/assess";
-    import { importantNewsItemAggregate } from "@/api/assess";
-    import { saveNewsItemAggregate } from "@/api/assess";
-    import NewsItemAttribute from "@/components/assess/NewsItemAttribute";
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
-    import { VueEditor } from 'vue2-editor';
-    import MessageBox from "@/components/common/MessageBox.vue";
-    import NewsItemMixin from "@/components/assess/news_item_mixin";
+<script setup lang="ts">
+    import { ref } from 'vue'
+    import NewsItemDetailDialog from '@/components/assess/NewsItemDetailDialog.vue'
+    import { getNewsItem } from '@/api/assess'
 
-    const toolbarOptions = [
-        ['bold', 'italic', 'underline', 'strike', { 'script': 'sub' }, { 'script': 'super' },
-            'blockquote', 'code-block', 'clean'],
-        [{ align: "" }, { align: "center" }, { align: "right" }, { align: "justify" }],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-        [{ 'size': ['small', false, 'large', 'huge'] }, { 'header': [1, 2, 3, 4, 5, 6, false] },
-        { 'color': [] }, { 'background': [] }],
-        ['link', 'image'],
-    ];
+    type NewsItem = {
+        id?: number | string
+        [key: string]: any
+    }
 
-    export default {
-        name: "NewsItemSingleDetail",
-        components: { MessageBox, NewsItemAttribute, VueEditor },
-        mixins: [AuthMixin, NewsItemMixin],
-        props: {
-            analyze_selector: Boolean,
+    type ActionPayload = {
+        action?: string
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attach?: string | HTMLElement | undefined
+            verticalView?: boolean
+            multiSelectActive?: boolean
+        }>(),
+        {
             attach: undefined,
-            verticalView: Boolean,
-        },
-        computed: {
-            canModify() {
-                return this.checkPermission(Permissions.ASSESS_UPDATE) && this.modify === true
-            },
+            verticalView: false,
+            multiSelectActive: false
+        }
+    )
 
-            canDelete() {
-                return this.checkPermission(Permissions.ASSESS_DELETE) && this.modify === true
-            },
-        },
-        data: () => ({
-            content: null,
-            editorData: '<p></p>',
-            editorOptionVue2: {
-                theme: 'snow',
-                placeholder: "insert text here ...",
-                modules: {
-                    toolbar: toolbarOptions
-                }
-            },
-            visible: false,
-            access: false,
-            modify: false,
-            news_item: { news_items: [{ news_item_data: {} }] },
-        }),
-        methods: {
-            open(news_item) {
-                this.access = news_item.news_items[0].access
-                this.modify = news_item.news_items[0].modify
-                if (news_item.news_items[0].access === true) {
-                    getNewsItem(news_item.news_items[0].id).then((response) => {
-                        this.visible = true
-                        this.news_item = news_item;
-                        this.news_item.news_items[0] = response.data;
-                        this.title = news_item.title;
-                        this.description = news_item.description;
-                        this.editorData = news_item.comments
-                    });
-                } else {
-                    this.visible = true
-                    this.news_item = news_item;
-                    this.title = news_item.title;
-                    this.description = news_item.description;
-                    this.editorData = news_item.comments
-                }
+    const emit = defineEmits<{
+        (e: 'action', payload: ActionPayload): void
+        (e: 'delete', item: NewsItem): void
+    }>()
 
-                this.$root.$emit('first-dialog', 'push');
-            },
+    const showDialog = ref<boolean>(false)
+    const newsItem = ref<NewsItem>({})
 
-            close(event) {
-                if (event) event.stopPropagation();  // prevent the ESC to close also parent window in side-view mode
-                this.visible = false;
-                if (this.canModify) {
-                    saveNewsItemAggregate(this.getGroupId(), this.news_item.id, this.news_item.title, this.news_item.description, this.editorData).then(() => {
-                        this.news_item.comments = this.editorData
-                    });
-                }
-                this.$root.$emit('change-state', 'DEFAULT');
-                this.$root.$emit('first-dialog', '');
-            },
-
-            cardItemToolbar(action) {
-                switch (action) {
-                    case "like":
-                        voteNewsItemAggregate(this.getGroupId(), this.news_item.id, 1).then(() => {
-                            this.news_item.me_like = !this.news_item.me_like;
-                            if (this.news_item.me_like) {
-                                this.news_item.me_dislike = false;
-                            }
-                        });
-                        break;
-
-                    case "unlike":
-                        voteNewsItemAggregate(this.getGroupId(), this.news_item.id, -1).then(() => {
-                            this.news_item.me_dislike = !this.news_item.me_dislike;
-                            if (this.news_item.me_dislike) {
-                                this.news_item.me_like = false;
-                            }
-                        });
-                        break;
-
-                    case "detail":
-                        this.toolbar = false;
-                        this.itemClicked(this.card);
-                        break;
-
-                    case "new":
-                        this.$root.$emit('new-report', [this.news_item]);
-                        break;
-
-                    case "important":
-                        importantNewsItemAggregate(this.getGroupId(), this.news_item.id).then(() => {
-                            this.news_item.important = this.news_item.important === false;
-                        });
-                        break;
-
-                    case "read":
-                        readNewsItemAggregate(this.getGroupId(), this.news_item.id).then(() => {
-                            this.news_item.read = this.news_item.read === false;
-                        });
-                        break;
-
-                    case "delete":
-                        deleteNewsItemAggregate(this.getGroupId(), this.news_item.id).then(() => {
-                            this.visible = false;
-                        });
-                        break;
-
-                    default:
-                        this.toolbar = false;
-                        //this.itemClicked(this.card);
-                        break;
-                }
-            },
-
-            onTabClick(tabNumber) {
-                if (tabNumber === 3) {   // Set the editor's focus so the user can start typing immediately
-                    this.$nextTick(() => {
-                        setTimeout(() => {
-                            this.$refs.assessDetailComments.quill.focus();
-                        }, 100);
-                    });
-                }
+    const open = async (item: NewsItem): Promise<void> => {
+        try {
+            // For single items, get the full detail from API
+            if (item && item.id) {
+                const response = await getNewsItem(item.id)
+                newsItem.value = (response || item) as NewsItem
+            } else {
+                newsItem.value = item
             }
+            showDialog.value = true
+        } catch {
+            // Fallback to passed item data
+            newsItem.value = item
+            showDialog.value = true
         }
     }
+
+    const handleAction = (payload: ActionPayload): void => {
+        emit('action', payload)
+    }
+
+    const handleDelete = (item: NewsItem): void => {
+        showDialog.value = false
+        emit('delete', item)
+    }
+
+    defineExpose({
+        open
+    })
 </script>

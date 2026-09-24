@@ -3,7 +3,7 @@
 Listing attributes used to nest each one's constants in the response. CPE and CVE were skipped
 because their dictionaries are huge, but CWE was not - a loaded CWE dictionary alone is on the
 order of 1500 rows - and the constants of every RADIO/ENUM/MULTI_CHOICE attribute were serialised
-too. None of it is read: both GUIs load an attribute's constants from the paginated
+too. None of it is read: the GUI loads an attribute's constants from the paginated
 ``/config/attributes/<id>/enums`` endpoint when the edit dialog opens.
 
 Dropping them means an update round-tripped from a list row no longer carries the field, so the
