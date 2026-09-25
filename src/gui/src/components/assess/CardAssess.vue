@@ -88,8 +88,7 @@
                     <v-col class="d-flex align-center flex-wrap">
                         <span
                             v-if="!isAggregate && !hideSourceLinks && firstNewsItem?.news_item_data?.link"
-                            class="text-label-small text-primary pe-2"
-                            style="display: inline-block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+                            class="text-label-small text-primary pe-2 source-link"
                         >
                             <bdi dir="ltr">{{ firstNewsItem?.news_item_data?.link }}</bdi>
                         </span>
@@ -457,5 +456,13 @@
     .aggregate-items-leave-to {
         opacity: 0;
         transform: translateY(-8px);
+    }
+
+    .source-link {
+        display: inline-block;
+        max-width: 600px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 </style>

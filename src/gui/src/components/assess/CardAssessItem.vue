@@ -248,7 +248,7 @@
 
     .source-link {
         display: inline-block;
-        max-width: 300px;
+        max-width: 600px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

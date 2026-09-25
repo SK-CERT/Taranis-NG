@@ -429,6 +429,9 @@
         if (source.status === 'orange') {
             return { key: 'stale', color: 'warning', label: 'collectors.sources.state_stale' }
         }
+        if (source.enabled === false) {
+            return { key: 'stale', color: 'surface', label: 'collectors.sources.disabled' }
+        }
         return { key: 'pending', color: 'info', label: 'collectors.sources.state_pending' }
     }
 
