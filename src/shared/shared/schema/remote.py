@@ -1,6 +1,6 @@
 """Module for Remote Access schema."""
 
-from marshmallow import Schema, fields
+from marshmallow import EXCLUDE, Schema, fields
 
 from shared.schema.osint_source import OSINTSourcePresentationSchema
 from shared.schema.presentation import PresentationSchema
@@ -9,6 +9,11 @@ from shared.schema.report_item_type import ReportItemTypePresentationSchema
 
 class RemoteAccessSchema(Schema):
     """Schema for remote access details."""
+
+    class Meta:
+        """Meta class to define schema behavior."""
+
+        unknown = EXCLUDE
 
     id = fields.Int()
     name = fields.Str()
@@ -27,6 +32,11 @@ class RemoteAccessPresentationSchema(RemoteAccessSchema, PresentationSchema):
 
 class RemoteNodeSchema(Schema):
     """Schema for remote node details."""
+
+    class Meta:
+        """Meta class to define schema behavior."""
+
+        unknown = EXCLUDE
 
     id = fields.Int()
     name = fields.Str()
