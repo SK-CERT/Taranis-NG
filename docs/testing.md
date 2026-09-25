@@ -12,9 +12,9 @@ python3 scripts/run_tests.py      # run every suite except e2e
 | Suite | What it covers | Where it lives |
 | --- | --- | --- |
 | `pytest` | Python unit tests | `src/core/tests`, `src/shared/tests`, and one suite per service (see `PYTEST_SUITES`) |
-| `vitest` | GUI unit/component tests | `src/gui-v3/tests/unit` |
+| `vitest` | GUI unit/component tests | `src/gui/tests/unit` |
 | `ansible` | Playbook syntax check + `ansible-lint` | `ansible/playbooks`, `ansible/roles` |
-| `e2e` | Playwright end-to-end | `src/gui-v3/tests/e2e` |
+| `e2e` | Playwright end-to-end | `src/gui/tests/e2e` |
 
 `e2e` is **not** in the default set: it builds and boots a Docker stack and takes minutes.
 Ask for it explicitly.
@@ -33,7 +33,7 @@ can still commit. CI adds `--require`, which turns each skip into a failure.
 
 `scripts/dev_setup.py` builds **one** `.venv` at the repository root holding the dev
 tooling, pytest, and every backend service's runtime dependencies, plus
-`src/gui-v3/node_modules`.
+`src/gui/node_modules`.
 
 One environment rather than one per service is deliberate: an editor's Python extension
 issues a single pytest invocation per workspace folder, so per-service virtualenvs would
@@ -83,12 +83,7 @@ Then, in your workspace settings:
 ```
 
 Vitest and Playwright need no settings — both extensions discover
-`src/gui-v3/vitest.config.js` and `src/gui-v3/playwright.config.js` on their own.
-
-> If the Vitest extension ever attaches to the legacy Vue 2 GUI at `src/gui`, point it at
-> the right config with `"vitest.rootConfig": "src/gui-v3/vitest.config.js"`. That
-> directory carries a `node_modules` containing Vitest but no config of its own, which has
-> caused exactly this confusion before.
+`src/gui/vitest.config.js` and `src/gui/playwright.config.js` on their own.
 
 ## Where versions come from
 
@@ -100,9 +95,9 @@ Each tool version is declared **once**:
 | ruff, djlint | root `pyproject.toml` → `[dependency-groups] dev` |
 | uv | root `pyproject.toml` → `[tool.uv] required-version` |
 | ansible-core, ansible-lint | root `pyproject.toml` → `[dependency-groups] ansible` |
-| vitest, Playwright | `src/gui-v3/package.json` |
+| vitest, Playwright | `src/gui/package.json` |
 | Python (CI) | `.github/python-version` |
-| Node (CI) | `src/gui-v3/.nvmrc` |
+| Node (CI) | `src/gui/.nvmrc` |
 | Release version | `VERSION.md` |
 
 Nothing restates them. The workflows omit `version:` on `astral-sh/setup-uv` so it reads
@@ -121,7 +116,7 @@ pre-commit run --all-files
 ```
 
 Each test hook is gated by path, so a commit only pays for what it can affect: Python
-changes run pytest, `src/gui-v3` changes run lint-staged and Vitest, `ansible/` changes run
+changes run pytest, `src/gui` changes run lint-staged and Vitest, `ansible/` changes run
 the syntax check and lint. All three go through `scripts/run_tests.py`, the same entry
 point CI uses.
 

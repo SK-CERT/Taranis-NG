@@ -70,7 +70,7 @@ def test_saml_login_uses_opaque_server_side_request_state(monkeypatch) -> None: 
     monkeypatch.setattr(auth_manager, "get_saml_authenticator", lambda _slug: authenticator)
 
     with app.test_request_context(
-        "/api/v1/auth/saml/corporate/login?gotoUrl=/v2/dashboard",
+        "/api/v1/auth/saml/corporate/login?gotoUrl=/dashboard",
         base_url="https://taranis.example",
     ):
         response = auth.SamlLoginRedirect.get.__wrapped__(auth.SamlLoginRedirect(), "corporate")
@@ -78,7 +78,7 @@ def test_saml_login_uses_opaque_server_side_request_state(monkeypatch) -> None: 
     kind, payload, ttl, token = created[0]
     assert kind is AuthTransactionKind.SAML_STATE
     assert payload["provider_id"] == 23
-    assert payload["goto_url"] == "/v2/dashboard"
+    assert payload["goto_url"] == "/dashboard"
     assert payload["acs_url"] == "https://taranis.example/api/v1/auth/saml/corporate/acs"
     assert payload["request_id"].startswith("_")
     assert token == "A" * 43
@@ -94,7 +94,7 @@ def test_saml_acs_consumes_state_and_passes_stored_binding_once(monkeypatch) -> 
     state = "A" * 43
     values[(AuthTransactionKind.SAML_STATE, state)] = {
         "provider_id": 23,
-        "goto_url": "/v2/dashboard",
+        "goto_url": "/dashboard",
         "request_id": "_request",
         "acs_url": "https://taranis.example/api/v1/auth/saml/corporate/acs",
         "idp_entity_id": "https://idp.example/metadata",

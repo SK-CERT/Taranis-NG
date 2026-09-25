@@ -1,37 +1,57 @@
 <template>
-    <v-card>
-        <v-card-title style="font-size: 16px; font-weight: bold; padding-top:0; padding-bottom:0">
-            {{ attribute_item.title }}
+    <v-card
+        variant="outlined"
+        class="remote-attribute"
+    >
+        <v-card-title class="remote-attribute__title">
+            {{ attributeGroup.title }}
         </v-card-title>
-
-        <v-card-text>
-            <v-divider style="padding-bottom:8px"></v-divider>
-            <component v-bind:is="attributeType()" :values="attribute_item.values"></component>
+        <v-divider />
+        <v-card-text class="remote-attribute__body">
+            <component
+                :is="attributeComponent"
+                :attribute-group="attributeGroup"
+                :report-item-id="reportItemId"
+            />
         </v-card-text>
     </v-card>
 </template>
 
-<script>
-import RemoteAttributeString from "@/components/common/attribute/RemoteAttributeString";
-import RemoteAttributeAttachment from "@/components/common/attribute/RemoteAttributeAttachment";
+<script setup lang="ts">
+    import { computed } from 'vue'
+    import RemoteAttributeString from './RemoteAttributeString.vue'
+    import RemoteAttributeAttachment from './RemoteAttributeAttachment.vue'
 
-export default {
-    name: "RemoteAttributeContainer",
-    components: {
-        RemoteAttributeString,
-        RemoteAttributeAttachment
-    },
-    props: {
-        attribute_item: Object,
-    },
-    methods: {
-        attributeType: function () {
-            if (this.attribute_item.attribute_group_item.attribute.type === 'ATTACHMENT') {
-                return "RemoteAttributeAttachment"
-            } else {
-                return "RemoteAttributeString"
-            }
-        }
+    type RemoteAttributeGroup = {
+        title: string
+        attributeType?: string
+        attributes: Array<{
+            id: number | string
+            value?: string
+            binary_size?: number | null
+            binary_description?: string | null
+            [key: string]: unknown
+        }>
     }
-}
+
+    const props = defineProps<{
+        attributeGroup: RemoteAttributeGroup
+        reportItemId: number
+    }>()
+
+    const attributeComponent = computed(() =>
+        props.attributeGroup.attributeType?.toUpperCase() === 'ATTACHMENT' ? RemoteAttributeAttachment : RemoteAttributeString
+    )
 </script>
+
+<style scoped>
+    .remote-attribute__title {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .remote-attribute__body {
+        padding: 0.75rem 1rem;
+    }
+</style>

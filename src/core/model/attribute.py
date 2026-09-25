@@ -436,7 +436,7 @@ class Attribute(db.Model):
         """
         attributes, total_count = cls.get(search)
 
-        # Without the constants: the list shows name, type and description, and both GUIs load an
+        # Without the constants: the list shows name, type and description, and the GUI loads an
         # attribute's constants from the paginated /enums endpoint when the edit dialog opens.
         # Nesting them here shipped every constant of every attribute on every page load - CPE and
         # CVE were already skipped for that reason, but a loaded CWE dictionary is just as large,

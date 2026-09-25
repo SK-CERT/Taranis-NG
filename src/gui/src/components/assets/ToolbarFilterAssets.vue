@@ -1,98 +1,92 @@
 <template>
-    <v-container v-bind="UI.TOOLBAR.CONTAINER" :style="UI.STYLE.shadow">
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col v-bind="UI.TOOLBAR.COL.LEFT">
-                <div :class="UI.CLASS.toolbar_filter_title">{{$t( title )}}</div>
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
-                <v-text-field v-bind="UI.ELEMENT.SEARCH" v-model="filter.search"
-                              :placeholder="$t('toolbar_filter.search')"
-                              v-on:keyup="filterSearch" />
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
-                <slot name="addbutton"></slot>
-            </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col class="py-0">
-                <!-- FILTER -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FILTER_ONE">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterVulnerable">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('assets.tooltip.filter_vulnerable')">{{ UI.ICON.VULNERABLE }}</v-icon>
-                    </v-chip>
-                </v-chip-group>
+    <BaseToolbarFilter
+        title="main_menu.my_assets"
+        total-count-title="asset.total_count"
+        :total-count="assetsStore.assets.total_count"
+        :initial-filter="initialFilter"
+        :show-day-ranges="false"
+        :show-sort="true"
+        @update-filter="handleFilterUpdate"
+    >
+        <template #addbutton>
+            <slot name="add-button" />
+        </template>
 
-                <!-- SORT -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.SORT">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('ALPHABETICAL')" :title="$t('assets.tooltip.sort.alphabetical.ascending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.ALPHABETICAL }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.ASC }}</v-icon>
-                    </v-chip>
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('VULNERABILITY')" :title="$t('assets.tooltip.sort.vulnerability.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.VULNERABLE }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.DESC }}</v-icon>
-                    </v-chip>
-                </v-chip-group>
-            </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col v-bind="UI.TOOLBAR.COL.INFO">
-                <span>{{$t(total_count_title)}}<strong>{{totalCount}}</strong></span>
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.RIGHT"></v-col>
-        </v-row>
-    </v-container>
+        <template #custom-filters="{ filter, emitFilter }">
+            <v-chip
+                size="small"
+                :color="filter['vulnerable'] ? 'error' : 'default'"
+                :variant="filter['vulnerable'] ? 'flat' : 'outlined'"
+                :title="$t('asset.vulnerable')"
+                @click="toggleVulnerable(filter, emitFilter)"
+            >
+                <v-icon>mdi-shield-alert</v-icon>
+            </v-chip>
+        </template>
+
+        <template #sort-buttons="{ filter, emitFilter }">
+            <v-chip
+                size="small"
+                :color="filter.sort === 'ALPHABETICAL' ? 'primary' : 'default'"
+                :variant="filter.sort === 'ALPHABETICAL' ? 'flat' : 'outlined'"
+                :title="$t('asset.sort.alphabetical')"
+                @click="selectSort(filter, 'ALPHABETICAL', emitFilter)"
+            >
+                <v-icon>mdi-sort-alphabetical-ascending</v-icon>
+            </v-chip>
+            <v-chip
+                size="small"
+                :color="filter.sort === 'VULNERABILITY' ? 'primary' : 'default'"
+                :variant="filter.sort === 'VULNERABILITY' ? 'flat' : 'outlined'"
+                :title="$t('asset.sort.vulnerability')"
+                @click="selectSort(filter, 'VULNERABILITY', emitFilter)"
+            >
+                <v-icon>mdi-sort-numeric-descending</v-icon>
+            </v-chip>
+        </template>
+    </BaseToolbarFilter>
 </template>
 
-<script>
-    import AuthMixin from "../../services/auth/auth_mixin";
+<script setup lang="ts">
+    import { reactive } from 'vue'
+    import { useAssetsStore } from '@/stores/assets'
+    import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
 
-    export default {
-        name: "ToolbarFilterAssets",
-        props: {
-            title: String,
-            dialog: String,
-            total_count_title: String,
-        },
-        components: {},
-        computed: {
-            totalCount() {
-                return this.$store.getters.getAssets.total_count;
-            }
-        },
-        data: () => ({
-            filter: {
-                search: "",
-                vulnerable: false,
-                sort: "ALPHABETICAL"
-            }
-        }),
-        mixins: [AuthMixin],
-        methods: {
-            filterVulnerable() {
-                this.filter.vulnerable = !this.filter.vulnerable;
-                this.$root.$emit('update-assets-filter', this.filter);
-            },
-            filterSort(sort) {
-                this.filter.sort = sort;
-                this.$root.$emit('update-assets-filter', this.filter);
-            },
-            filterSearch() {
-                clearTimeout(this.timeout);
-                let self = this;
-                this.timeout = setTimeout(function () {
-                    self.$root.$emit('update-assets-filter', self.filter);
-                }, 300);
-            },
-            remove(item) {
-                this.chips.splice(this.chips.indexOf(item), 1);
-                this.chips = [...this.chips]
-            },
-            callDialog: function (e) {
-                this.$root.$emit('callDialog', e);
-            },
-        }
+    type AssetFilter = {
+        search: string
+        vulnerable: boolean
+        sort: 'ALPHABETICAL' | 'VULNERABILITY'
+        [key: string]: unknown
+    }
+
+    type EmitFilter = () => void
+
+    const assetsStore = useAssetsStore()
+    const emit = defineEmits<{
+        (e: 'update-filter', payload: AssetFilter): void
+    }>()
+
+    const initialFilter = reactive<AssetFilter>({
+        search: '',
+        vulnerable: false,
+        sort: 'ALPHABETICAL'
+    })
+
+    const toggleVulnerable = (filter: Record<string, unknown>, emitFilter: EmitFilter): void => {
+        filter['vulnerable'] = !filter['vulnerable']
+        emitFilter()
+    }
+
+    const selectSort = (filter: Record<string, unknown>, sort: AssetFilter['sort'], emitFilter: EmitFilter): void => {
+        filter['sort'] = sort
+        emitFilter()
+    }
+
+    const handleFilterUpdate = (filter: Record<string, unknown>): void => {
+        emit('update-filter', {
+            search: typeof filter['search'] === 'string' ? filter['search'] : '',
+            vulnerable: Boolean(filter['vulnerable']),
+            sort: filter['sort'] === 'VULNERABILITY' ? 'VULNERABILITY' : 'ALPHABETICAL'
+        })
     }
 </script>

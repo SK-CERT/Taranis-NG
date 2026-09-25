@@ -1,277 +1,528 @@
 <template>
-    <v-data-table :headers="headers"
-                  :items="records"
-                  :items-per-page="-1"
-                  item-key="id"
-                  sort-by="description"
-                  class="elevation-1"
-                  :search="search"
-                  :clickable="false"
-                  @click.stop
-                  disable-pagination
-                  hide-default-footer>
-        <template v-slot:top>
-            <v-row v-bind="UI.TOOLBAR.ROW">
-                <v-col v-bind="UI.TOOLBAR.COL.LEFT">
-                    <div v-if="glob_setting" :class="UI.CLASS.toolbar_filter_title">
-                        {{$t('nav_menu.settings')}}
-                    </div>
-                </v-col>
-                <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
-                    <v-text-field v-bind="UI.ELEMENT.SEARCH"
-                                  v-model="search"
-                                  :label="$t('toolbar_filter.search')"
-                                  single-line
-                                  hide-details></v-text-field>
-                </v-col>
-                <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
-                    <slot name="XXX"></slot>
-                </v-col>
-            </v-row>
-        </template>
+    <!-- Application Settings uses the same card + toolbar layout as the Access
+         Management tabs. Inside the User Settings dialog (globalSetting = false) the
+         wrapper stays flat/padding-free so it doesn't nest a card in a card. -->
+    <v-container
+        fluid
+        :class="{ 'pa-0': !globalSetting }"
+    >
+        <v-card :flat="!globalSetting">
+            <!-- Toolbar -->
+            <v-card-text>
+                <v-row class="settings-search-row">
+                    <v-col
+                        cols="12"
+                        md="7"
+                    >
+                        <SearchField
+                            v-model="search"
+                            :width="350"
+                        />
+                    </v-col>
+                </v-row>
+            </v-card-text>
 
-        <template v-slot:item.value="{ item }">
-            <template v-if="item.type === 'B'">
-                <v-switch :input-value="item.value === 'true'"
-                          @change="val => {
-                              setting = { ...item, value: val ? 'true' : 'false' };
-                              save(item);
-                          }"
-                          inset></v-switch>
-            </template>
-            <template v-else-if="item.key === 'UI_LANGUAGE' || item.options">
-                <v-select v-model="item.value"
-                          @change="val => { setting = { ...item, value: val }; save(item); }"
-                          :value="item.value"
-                          :items="getDisplayOptions(item)"
-                          item-value="id"
-                          item-text="txt"></v-select>
-            </template>
-            <template v-else>
-                <v-edit-dialog v-model="item.value"
-                               large
-                               @save="save()"
-                               @cancel="cancel"
-                               @open="open(item)"
-                               @close="close">
-                    <v-chip :color="getColor(item.value, item.default_val)"
-                            :label="true"
-                            style="cursor: pointer"
-                            dark>
-                        {{ item.value }}
-                    </v-chip>
-                    <template v-slot:input>
-                        <div class="mt-4 text-h6">
-                            {{$t('settings.update_value')}}
-                        </div>
-                        <v-text-field v-model="setting.value"
-                                      :rules="[max150chars]"
-                                      label="Edit"
-                                      single-line
-                                      counter
-                                      autofocus></v-text-field>
+            <v-data-table
+                :headers="headers"
+                :items="records"
+                :search="search"
+                :items-per-page="-1"
+                item-key="id"
+                :sort-by="globalSetting ? [{ key: 'description', order: 'asc' }] : []"
+                density="compact"
+                hide-default-footer
+                class="settings-table"
+                :class="{ 'elevation-1': globalSetting, 'settings-table--personal': !globalSetting }"
+            >
+                <template #item.value="{ item }">
+                    <!-- Boolean setting (switch) -->
+                    <template v-if="item.type === 'B'">
+                        <v-switch
+                            :model-value="item.value === 'true'"
+                            color="primary"
+                            hide-details
+                            density="compact"
+                            :disabled="!canEditSettings"
+                            @update:model-value="(val) => updateSetting(item, val ? 'true' : 'false')"
+                        />
                     </template>
-                </v-edit-dialog>
-            </template>
-        </template>
 
-        <!-- default value tooltip moved to next column due to readability -->
-        <template v-slot:item.description="{ item }">
-            <v-tooltip bottom>
-                <template v-slot:activator="{ on, attrs }">
-                    <span v-bind="attrs" v-on="on"
-                          style="cursor: pointer; white-space: normal; word-wrap: break-word; word-break: break-word;">
-                        {{ $te('settings_enum.' + item.key) ? $t('settings_enum.' + item.key) : item.description }}
-                    </span>
+                    <!-- Select with options -->
+                    <template v-else-if="item.key === Settings.UI_LANGUAGE || item.key === Settings.UI_THEME || item.options">
+                        <v-select
+                            :model-value="item.value"
+                            :items="getDisplayOptions(item)"
+                            item-title="txt"
+                            item-value="id"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            :prepend-inner-icon="getSelectIcon(item)"
+                            :disabled="!canEditSettings"
+                            @update:model-value="(val) => updateSetting(item, val)"
+                        />
+                    </template>
+
+                    <!-- Text input with edit dialog -->
+                    <template v-else>
+                        <v-chip
+                            :color="getColor(item.value, item.default_val)"
+                            label
+                            :clickable="canEditSettings"
+                            @click="openEditDialog(item)"
+                        >
+                            {{ item.value }}
+                        </v-chip>
+                    </template>
                 </template>
-                <span>{{$t('settings.default_value')}}: {{ item.default_val }}</span>
-            </v-tooltip>
-        </template>
 
-        <template v-slot:item.updated_at="{ item }">
-            <span>{{ formatDate(item.updated_at) }}</span>
-        </template>
+                <template #item.description="{ item }">
+                    <div :class="{ 'setting-label': !globalSetting }">
+                        <span
+                            v-if="!globalSetting"
+                            class="setting-label__icon"
+                        >
+                            <v-icon size="20">{{ getSettingIcon(item.key) }}</v-icon>
+                        </span>
+                        <span
+                            class="setting-label__text"
+                            style="cursor: help"
+                            :title="formatDefaultValue(item.default_val)"
+                        >
+                            {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
+                        </span>
+                    </div>
+                </template>
 
-    </v-data-table>
+                <template #item.updated_at="{ item }">
+                    <span>{{ formatDate(item.updated_at) }}</span>
+                </template>
+            </v-data-table>
+        </v-card>
+    </v-container>
+
+    <!-- Edit Dialog for text values -->
+    <v-dialog
+        v-model="editDialog"
+        max-width="500"
+    >
+        <v-card>
+            <v-card-title>{{ t('settings.update_value') }}</v-card-title>
+            <v-card-text>
+                <v-text-field
+                    v-model="editValue"
+                    :label="t('settings.value')"
+                    :rules="[maxCharsRule]"
+                    variant="outlined"
+                    counter="150"
+                    autofocus
+                    @keydown.enter="saveEdit"
+                />
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer />
+                <v-btn
+                    variant="text"
+                    @click="editDialog = false"
+                >
+                    {{ t('common.cancel') }}
+                </v-btn>
+                <v-btn
+                    v-if="canEditSettings"
+                    color="primary"
+                    variant="text"
+                    @click="saveEdit"
+                >
+                    {{ t('common.save') }}
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
-<script>
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import { format } from "date-fns";
-    import Settings, { getSetting, getSettingBoolean } from "@/services/settings";
-    import { supportedLocales } from "@/i18n/messages";
-    import ISO6391 from "iso-639-1";
+<script setup lang="ts">
+    import { ref, computed, onMounted, watch } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useAuth } from '@/composables/useAuth'
+    import { useAppTheme } from '@/composables/useAppTheme'
+    import { useSettingsStore } from '@/stores/settings'
+    import { supportedLocales } from '@/i18n'
+    import { resolveFamily, themeFamilies } from '@/themes'
+    import { Settings, type SettingKey } from '@/types/settings'
+    import SearchField from '@/components/common/SearchField.vue'
+    import { format } from 'date-fns'
 
-    export default {
-        name: "SettingsTable",
-        props: {
-            glob_setting: { type: Boolean, required: true },
-        },
+    type SettingType = 'B' | 'I' | 'N' | 'S'
 
-        data() {
-            return {
-                search: '',
-                records: [],
-                dialog: false,
-                max150chars: v => v.length <= 150 || 'Input too long!',
-                setting: {
-                    id: -1,
-                    value: "",
-                    type: "",
-                    is_global: true,
-                },
-                date_format: "yyyy-MM-dd HH:mm:ss", // Default format
-            };
-        },
-        mixins: [AuthMixin],
+    type SettingOption = {
+        id: string | number
+        txt: string
+        [key: string]: unknown
+    }
 
-        computed: {
-            headers() {
-                const headers = [
-                    // { text: 'Key', value: 'key' },
-                    { text: this.$t('settings.description'), value: 'description', cellClass: 'wrap-text-cell' },
-                    { text: this.$t('settings.value'), value: 'value' },
-                    // { text: 'Type', value: 'type' },
-                ];
-                if (this.glob_setting) {
-                    headers.push({ text: this.$t('settings.updated_by'), value: 'updated_by' });
-                    headers.push({ text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false });
-                }
-                return headers;
-            },
-        },
+    type SettingsRecord = {
+        id?: string | number
+        key: SettingKey
+        value: string
+        type?: SettingType
+        description?: string
+        default_val?: string
+        updated_by?: string
+        updated_at?: string
+        options?: string
+        is_global?: boolean
+        [key: string]: unknown
+    }
 
-        methods: {
-            getColor(value, default_val) {
-                return value === default_val ? "#a6a6a6" : "green";
-            },
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+    }
 
-            formatDate(dateString) {
-                return dateString ? format(new Date(dateString), this.date_format) : "";
-            },
+    const props = defineProps<{
+        globalSetting: boolean
+    }>()
 
-            getDisplayOptions(item) {
-                if (item.key === Settings.UI_LANGUAGE) {
-                    return supportedLocales.map(code => ({
-                        id: code,
-                        txt: this.getLanguageName(code),
-                    }));
-                }
+    const { t, te, locale } = useI18n()
+    const { checkPermission } = useAuth()
+    const { applyVariant, applyFamily } = useAppTheme()
+    const settingsStore = useSettingsStore()
 
-                try {
-                    const options = JSON.parse(item.options);
+    const search = ref('')
+    let date_format: string
+    const records = ref<SettingsRecord[]>([])
+    const editDialog = ref(false)
+    const editValue = ref('')
+    const editItem = ref<SettingsRecord | null>(null)
+    const canEditSettings = computed(() => !props.globalSetting || checkPermission('CONFIG_SETTINGS_UPDATE'))
 
-                    // Content languages remain configured by the backend.
-                    if (item.key === Settings.CONTENT_DEFAULT_LANGUAGE) {
-                        return options.map(opt => ({
-                            ...opt,
-                            txt: this.getLanguageName(opt.id, opt.txt),
-                        }));
-                    }
+    const MAX_SETTING_VALUE_LENGTH = 150
+    const FIRST_STRONG_ISOLATE = '\u2068'
+    const LEFT_TO_RIGHT_ISOLATE = '\u2066'
+    const POP_DIRECTIONAL_ISOLATE = '\u2069'
 
-                    return options;
-                } catch (e) {
-                    return [];
-                }
-            },
+    const isolateAuto = (value: unknown): string => `${FIRST_STRONG_ISOLATE}${String(value ?? '')}${POP_DIRECTIONAL_ISOLATE}`
+    const isolateLtr = (value: unknown): string => `${LEFT_TO_RIGHT_ISOLATE}${String(value ?? '')}${POP_DIRECTIONAL_ISOLATE}`
 
-            getLanguageName(code, defaultName) {
-                try {
-                    const currentLang = getSetting(Settings.UI_LANGUAGE, 'en');
+    const formatDefaultValue = (value?: string): string => t('settings.default_value_with_value', { value: isolateAuto(value) })
 
-                    // Try to use Intl.DisplayNames for multilingual support (modern browsers)
-                    if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
-                        try {
-                            const displayNames = new Intl.DisplayNames([currentLang, 'en'], { type: 'language' });
-                            return displayNames.of(code);
-                        } catch (e) {
-                            // Fallback if Intl.DisplayNames fails
-                        }
-                    }
+    const maxCharsRule = (value: string | null | undefined): true | string =>
+        !value ||
+        value.length <= MAX_SETTING_VALUE_LENGTH ||
+        t('settings.input_too_long', { count: value.length, max: MAX_SETTING_VALUE_LENGTH })
 
-                    // Fallback to iso-639-1 library for English name
-                    const langName = ISO6391.getName(code);
-                    return langName || defaultName || code;
-                } catch (e) {
-                    return defaultName || code;
-                }
-            },
+    const headers = computed<HeaderEntry[]>(() => {
+        const baseHeaders: HeaderEntry[] = [
+            { title: t('settings.description'), key: 'description' },
+            { title: t('settings.value'), key: 'value', sortable: false }
+        ]
 
-            initRecords() {
-                var dateFmt = getSetting(Settings.DATE_FORMAT, "yyyy-MM-dd");
-                var timeFmt = getSetting(Settings.TIME_FORMAT, "HH:mm:ss");
-                if (dateFmt != "" && timeFmt != "") {
-                    this.date_format = dateFmt + " " + timeFmt;
-                }
-                const allItems = this.$store.getters.getSettings;
-                // UI_THEME is a gui-v3 setting; this GUI has no theme families to offer,
-                // and with empty options it would render as a free-text field.
-                this.records = allItems.filter(item => item.is_global === this.glob_setting && item.key !== "UI_THEME" && item.key !== "CUSTOM_THEME");
-            },
+        if (props.globalSetting) {
+            baseHeaders.push(
+                { title: t('settings.updated_by'), key: 'updated_by' },
+                { title: t('settings.updated_at'), key: 'updated_at', sortable: true }
+            )
+        }
 
-            save() {
-                // console.log('saving value:', this.setting.value)
-                var val = this.setting.value.trim();
-                if (this.setting.type == 'B') {
-                    val = val.toLowerCase();
-                    if (val != "true" && val != "false") {
-                        this.showMsg("warning", "settings.boolean_error");
-                        return;
-                    }
-                } else if (this.setting.type == 'I') {
-                    val = Number(val);
-                    if (isNaN(val) || !Number.isInteger(val)) {
-                        this.showMsg("warning", "settings.integer_error");
-                        return;
-                    }
-                } else if (this.setting.type === 'N') {
-                    val = Number(val);
-                    if (isNaN(val) || !isFinite(val)) {
-                        this.showMsg("warning", "settings.decimal_error");
-                        return;
-                    }
-                }
-                this.setting.value = String(val)
-                // console.log('saving corrected value:', this.setting.value, 'Object:', this.setting)
-                this.$store.dispatch('saveSettings', { data: this.setting, is_global: this.glob_setting }).then(() => {
-                    this.initRecords()
-                    // Some special settings require immediate application
-                    if (this.setting.key === Settings.DARK_THEME) {
-                        this.$vuetify.theme.dark = getSettingBoolean(Settings.DARK_THEME);
-                    } else if (this.setting.key === Settings.UI_LANGUAGE) {
-                        this.$i18n.locale = getSetting(Settings.UI_LANGUAGE);
-                    } else if (this.setting.key === Settings.SPELLCHECK) {
-                        this.$store.state.settings.spellcheck = getSettingBoolean(Settings.SPELLCHECK);
-                    }
-                    this.showMsg("success", "settings.successful_edit");
-                }).catch(() => {
-                    this.showMsg("error", "settings.error");
+        return baseHeaders
+    })
+
+    const getColor = (value: string, defaultValue?: string): string => {
+        return value === defaultValue ? 'grey' : 'success'
+    }
+
+    const settingIcons: Record<SettingKey, string> = {
+        [Settings.DATE_FORMAT]: 'mdi-calendar-range',
+        [Settings.REPORT_SELECTOR_READ_ONLY]: 'mdi-eye-lock-outline',
+        [Settings.TIME_FORMAT]: 'mdi-clock-outline',
+        [Settings.CASCADE_STATES_ENABLED]: 'mdi-state-machine',
+        [Settings.CONTENT_DEFAULT_LANGUAGE]: 'mdi-file-document-edit-outline',
+        [Settings.DARK_THEME]: 'mdi-theme-light-dark',
+        [Settings.HOTKEYS]: 'mdi-keyboard-outline',
+        [Settings.SPELLCHECK]: 'mdi-spellcheck',
+        [Settings.TAG_COLOR]: 'mdi-palette-outline',
+        [Settings.UI_LANGUAGE]: 'mdi-web',
+        [Settings.UI_THEME]: 'mdi-palette',
+        [Settings.CUSTOM_THEME]: 'mdi-palette-swatch'
+    }
+
+    const getSettingIcon = (key: SettingKey): string => settingIcons[key] || 'mdi-tune-variant'
+
+    const getSelectIcon = (item: SettingsRecord): string | undefined => {
+        if (item.key === Settings.UI_LANGUAGE) return 'mdi-web'
+        if (item.key === Settings.CONTENT_DEFAULT_LANGUAGE) return 'mdi-translate'
+        if (item.key === Settings.UI_THEME) return 'mdi-palette'
+        return undefined
+    }
+
+    const formatDate = (dateString?: string): string => {
+        if (!dateString) return ''
+        try {
+            const date = new Date(dateString)
+            return format(date, date_format)
+        } catch {
+            return dateString
+        }
+    }
+
+    const getDisplayOptions = (item: SettingsRecord): SettingOption[] => {
+        if (item.key === Settings.UI_LANGUAGE) {
+            return supportedLocales.map((code) => ({
+                id: code,
+                txt: t('settings.language_name_with_code', {
+                    name: isolateAuto(getLanguageName(code, undefined, true)),
+                    code: isolateLtr(code)
                 })
-            },
+            }))
+        }
 
-            cancel() {
-                // console.log('cancel', this.setting.value)
-            },
+        if (item.key === Settings.UI_THEME) {
+            return themeFamilies.map((family) => ({
+                id: family.id,
+                txt: te('themes.' + family.id) ? t('themes.' + family.id) : family.label
+            }))
+        }
 
-            open(item) {
-                this.setting = Object.assign({}, item);
-                // console.log('open', this.setting.value)
-            },
+        try {
+            const options = JSON.parse(item.options || '[]') as SettingOption[]
 
-            close() {
-                // console.log('close')
-            },
+            // Content languages remain configured by the backend.
+            if (item.key === Settings.CONTENT_DEFAULT_LANGUAGE) {
+                return options.map((opt) => ({
+                    ...opt,
+                    txt: getLanguageName(String(opt.id), opt.txt)
+                }))
+            }
 
-            showMsg(type, message) {
-                this.$root.$emit('notification', { type: type, loc: message })
-            },
+            return options
+        } catch {
+            return []
+        }
+    }
 
-        },
+    const getLanguageName = (code: string, defaultName?: string, native = false): string => {
+        try {
+            // Try to use Intl.DisplayNames for multilingual support
+            if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
+                try {
+                    const displayNames = new Intl.DisplayNames(native ? [code, 'en'] : [locale.value, 'en'], { type: 'language' })
+                    return displayNames.of(code) || defaultName || code
+                } catch {
+                    // Fallback
+                }
+            }
 
-        mounted() {
-            this.$store.dispatch('getAllSettings', { search: '' }).then(() => {
-                this.initRecords()
-            });
-        },
-    };
+            // Simple fallback - return default name or code
+            return defaultName || code
+        } catch {
+            return defaultName || code
+        }
+    }
+
+    const initRecords = (): void => {
+        const allSettings = settingsStore.getSettings || []
+
+        if (!Array.isArray(allSettings)) {
+            console.warn('[SettingsTable] allSettings is not an array:', typeof allSettings)
+            records.value = []
+            return
+        }
+        date_format = settingsStore.getDateTimeFormat
+
+        const settingsRecords = allSettings as SettingsRecord[]
+        const filtered = settingsRecords.filter((item) => {
+            const settingsItem = item as SettingsRecord
+            // Edited in the Theme tab; its value is a JSON blob, useless as a text row.
+            if (settingsItem.key === Settings.CUSTOM_THEME) return false
+            return settingsItem.is_global === props.globalSetting
+        })
+
+        if (props.globalSetting) {
+            records.value = filtered as SettingsRecord[]
+            return
+        }
+
+        const personalSettingOrder: Partial<Record<SettingKey, number>> = {
+            [Settings.UI_LANGUAGE]: 0,
+            [Settings.CONTENT_DEFAULT_LANGUAGE]: 1,
+            [Settings.UI_THEME]: 2,
+            [Settings.DARK_THEME]: 3
+        }
+
+        records.value = [...filtered].sort((left, right) => {
+            const priorityDifference = (personalSettingOrder[left.key] ?? 10) - (personalSettingOrder[right.key] ?? 10)
+            if (priorityDifference !== 0) return priorityDifference
+
+            const leftLabel = te('settings_enum.' + left.key) ? t('settings_enum.' + left.key) : left.description || ''
+            const rightLabel = te('settings_enum.' + right.key) ? t('settings_enum.' + right.key) : right.description || ''
+            return leftLabel.localeCompare(rightLabel, locale.value)
+        })
+    }
+
+    const validateValue = (item: SettingsRecord, value: string): string => {
+        let val = value.trim()
+
+        if (item.type === 'B') {
+            val = val.toLowerCase()
+            if (val !== 'true' && val !== 'false') {
+                throw new Error(t('settings.boolean_error'))
+            }
+        } else if (item.type === 'I') {
+            const numVal = Number(val)
+            if (isNaN(numVal) || !Number.isInteger(numVal)) {
+                throw new Error(t('settings.integer_error'))
+            }
+        } else if (item.type === 'N') {
+            const numVal = Number(val)
+            if (isNaN(numVal) || !isFinite(numVal)) {
+                throw new Error(t('settings.decimal_error'))
+            }
+        }
+
+        return String(val)
+    }
+
+    const updateSetting = async (item: SettingsRecord, value: string): Promise<void> => {
+        if (!canEditSettings.value) return
+        try {
+            const validatedValue = validateValue(item, value)
+            const settingData = {
+                ...item,
+                value: validatedValue
+            }
+
+            await settingsStore.saveSettings({ data: settingData, is_global: props.globalSetting })
+            initRecords()
+
+            // Apply special settings immediately
+            if (item.key === Settings.DARK_THEME) {
+                applyVariant(validatedValue === 'true')
+            } else if (item.key === Settings.UI_THEME) {
+                applyFamily(resolveFamily(validatedValue))
+            } else if (item.key === Settings.UI_LANGUAGE) {
+                locale.value = validatedValue
+            } else if (item.key === Settings.SPELLCHECK) {
+                settingsStore.spellcheck = validatedValue === 'true'
+            }
+
+            // Show success notification
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: 'settings.successful_edit' }
+                })
+            )
+        } catch (error) {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'settings.error' }
+                })
+            )
+        }
+    }
+
+    const openEditDialog = (item: SettingsRecord): void => {
+        if (!canEditSettings.value) return
+        editItem.value = item
+        editValue.value = item.value
+        editDialog.value = true
+    }
+
+    const saveEdit = (): void => {
+        if (!canEditSettings.value) return
+        if (editItem.value && editValue.value !== null) {
+            updateSetting(editItem.value, editValue.value)
+        }
+        editDialog.value = false
+    }
+
+    onMounted(async () => {
+        await settingsStore.loadSettings({ search: '' })
+        initRecords()
+    })
+
+    // Re-filter records whenever globalSetting prop changes
+    watch(
+        () => props.globalSetting,
+        () => {
+            initRecords()
+        }
+    )
 </script>
+
+<style scoped>
+    .settings-search-row {
+        margin-bottom: 0.25rem;
+    }
+
+    .settings-table--personal {
+        overflow: hidden;
+        border: 1px solid var(--review-panel-border);
+        border-radius: 5px;
+        background: rgb(var(--v-theme-surface));
+        box-shadow: 0 4px 14px rgba(16, 43, 67, 0.1);
+    }
+
+    .settings-table--personal :deep(thead) {
+        background: rgba(var(--v-theme-surface-variant), 0.42);
+    }
+
+    .settings-table--personal :deep(th) {
+        height: 44px;
+        font-weight: 700;
+    }
+
+    .settings-table--personal :deep(td) {
+        height: 66px;
+        padding-block: 0.55rem;
+        border-bottom-color: var(--review-list-border) !important;
+    }
+
+    .settings-table--personal :deep(td:last-child) {
+        width: 42%;
+    }
+
+    .settings-table--personal :deep(.v-select) {
+        width: min(100%, 330px);
+    }
+
+    .setting-label {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .setting-label__icon {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        place-items: center;
+        border: 1px solid rgba(var(--v-theme-primary), 0.2);
+        border-radius: 4px;
+        background: rgba(var(--v-theme-primary), 0.08);
+        color: rgb(var(--v-theme-primary));
+    }
+
+    .setting-label__text {
+        min-width: 0;
+        font-weight: 550;
+    }
+
+    .wrap-text-cell {
+        white-space: normal;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+
+    @media (max-width: 700px) {
+        .settings-table--personal :deep(td:last-child) {
+            width: 48%;
+        }
+
+        .setting-label {
+            gap: 0.5rem;
+        }
+    }
+</style>

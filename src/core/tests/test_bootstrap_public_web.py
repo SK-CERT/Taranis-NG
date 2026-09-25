@@ -8,9 +8,9 @@ satellites, and these tests pin the three properties that move bought:
 * the compose profile still gates it - a stack without the feed gets no node;
 * an existing node is matched on ``api_url``, so an operator who renamed it in
   Configuration -> Public Web keeps their name and gets no duplicate;
-* a node that never answers is reported and skipped, never raised - ``gui`` and
-  ``gui-v3`` wait on this script completing, so an optional feed must not be able
-  to take the whole stack down.
+* a node that never answers is reported and skipped, never raised - ``gui``
+  waits on this script completing, so an optional feed must not be able to take
+  the whole stack down.
 """
 
 from __future__ import annotations
@@ -164,7 +164,7 @@ def test_unreachable_node_warns_but_does_not_raise(
     session: _FakeSession,
     capsys: pytest.CaptureFixture,
 ) -> None:
-    """gui/gui-v3 gate on this script exiting 0, so an absent feed must not raise."""
+    """The gui service gates on this script exiting 0, so an absent feed must not raise."""
     _stub_lookup(monkeypatch, None)
     _stub_verify(monkeypatch, "No public-web node answered at 'http://public-web'")
     monkeypatch.setattr(bootstrap_docker, "MAX_ATTEMPTS", 3)

@@ -1,20 +1,11 @@
 <template>
-    <Navigation
-            :links  = "links"
-            :icon   = "'mdi-send'"
-    />
+    <div>
+        <!-- Publish has no navigation sidebar -->
+    </div>
 </template>
 
-<script>
-    import Navigation from "../../components/common/Navigation";
-
-    export default {
-        name: "AnalyzeNav",
-        components: {
-            Navigation
-        },
-        data: () => ({
-            links: []
-        })
+<style scoped>
+    .v-list-item {
+        min-height: auto;
     }
-</script>
+</style>

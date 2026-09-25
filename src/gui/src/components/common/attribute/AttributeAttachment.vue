@@ -1,417 +1,600 @@
 <template>
-    <div class="dropzone-wrapper-div">
-        <vue-dropzone ref="myVueDropzone"
-                      id="dropzone"
-                      v-on:vdropzone-file-added="fileAdded"
-                      v-on:vdropzone-sending="sendingEvent"
-                      v-on:vdropzone-success="uploadSuccess"
-                      :options="getOptions"
-                      :include-styling="false"
-                      :useCustomSlot="true">
-            <div v-if="!read_only" class="subtitle-2 text-center pt-5 grey--text">
-                {{ $t('drop_zone.default_message') }}
+    <AttributeItemLayout
+        :add-button="false"
+        :values="values"
+    >
+        <template #content>
+            <div class="attachment-list">
+                <button
+                    v-if="canAddAttachment"
+                    type="button"
+                    class="attachment-dropzone"
+                    :class="{ 'attachment-dropzone--active': dragActive }"
+                    :disabled="uploading"
+                    @click="openFilePicker"
+                    @dragenter.prevent="dragActive = true"
+                    @dragover.prevent="dragActive = true"
+                    @dragleave.prevent="dragActive = false"
+                    @drop.prevent="handleDrop"
+                >
+                    <v-icon size="28">mdi-cloud-upload-outline</v-icon>
+                    <span>{{ t('drop_zone.default_message') }}</span>
+                </button>
+                <input
+                    ref="fileInput"
+                    class="attachment-file-input"
+                    type="file"
+                    multiple
+                    :disabled="!canAddAttachment || uploading"
+                    @change="handleFileInput"
+                />
+
+                <v-alert
+                    v-if="operationError"
+                    type="error"
+                    variant="tonal"
+                    density="compact"
+                    closable
+                    class="mb-2"
+                    @click:close="operationError = false"
+                >
+                    {{ t('error.server_error') }}
+                </v-alert>
+
+                <div
+                    v-for="(value, index) in values"
+                    :key="attachmentKey(value, index)"
+                    class="attachment-row"
+                    :class="{ 'attachment-row--remote': value.remote }"
+                >
+                    <v-icon
+                        color="primary"
+                        class="attachment-row__icon"
+                    >
+                        {{ ICONS.FILE_DOCUMENT }}
+                    </v-icon>
+
+                    <button
+                        type="button"
+                        class="attachment-row__details"
+                        :disabled="value.uploading"
+                        @click="openDetails(value)"
+                    >
+                        <bdi
+                            dir="auto"
+                            class="attachment-row__name"
+                            >{{ attachmentName(value) }}</bdi
+                        >
+                        <bdi
+                            v-if="value.binary_description"
+                            dir="auto"
+                            class="attachment-row__description"
+                        >
+                            {{ value.binary_description }}
+                        </bdi>
+                        <span class="attachment-row__meta">
+                            <bdi
+                                dir="ltr"
+                                class="attachment-row__meta-item"
+                                >{{ value.binary_mime_type || value.file?.type || 'application/octet-stream' }}</bdi
+                            >
+                            <bdi
+                                v-if="attachmentSize(value) > 0"
+                                dir="ltr"
+                                class="attachment-row__meta-item"
+                                >{{ formatFileSize(attachmentSize(value)) }}</bdi
+                            >
+                            <i18n-t
+                                v-if="value.last_updated && value.user?.name"
+                                scope="global"
+                                keypath="drop_zone.last_updated_by_at"
+                                tag="span"
+                                class="attachment-row__meta-item"
+                            >
+                                <template #user>
+                                    <bdi dir="auto">{{ value.user.name }}</bdi>
+                                </template>
+                                <template #date>
+                                    <bdi dir="auto">{{ formatAttachmentTimestamp(value.last_updated) }}</bdi>
+                                </template>
+                            </i18n-t>
+                            <i18n-t
+                                v-else-if="value.last_updated"
+                                scope="global"
+                                keypath="drop_zone.last_updated_at"
+                                tag="span"
+                                class="attachment-row__meta-item"
+                            >
+                                <template #date>
+                                    <bdi dir="auto">{{ formatAttachmentTimestamp(value.last_updated) }}</bdi>
+                                </template>
+                            </i18n-t>
+                            <i18n-t
+                                v-else-if="value.user?.name"
+                                scope="global"
+                                keypath="drop_zone.attachment_by"
+                                tag="span"
+                                class="attachment-row__meta-item"
+                            >
+                                <template #user>
+                                    <bdi dir="auto">{{ value.user.name }}</bdi>
+                                </template>
+                            </i18n-t>
+                        </span>
+                    </button>
+
+                    <v-progress-circular
+                        v-if="value.uploading"
+                        indeterminate
+                        color="primary"
+                        size="22"
+                        width="2"
+                    />
+                    <v-btn
+                        v-else-if="value.uploadError && value.file"
+                        variant="text"
+                        size="small"
+                        color="error"
+                        :title="t('attribute.add_attachment')"
+                        @click="uploadValue(value)"
+                    >
+                        <v-icon>mdi-reload</v-icon>
+                    </v-btn>
+                    <v-btn
+                        v-if="canDownload(value)"
+                        variant="text"
+                        size="small"
+                        :title="t('drop_zone.download')"
+                        @click="downloadAttachmentNow(value)"
+                    >
+                        <v-icon>{{ ICONS.DOWNLOAD }}</v-icon>
+                    </v-btn>
+                    <v-btn
+                        v-if="canManageValue(value)"
+                        variant="text"
+                        size="small"
+                        :title="t('common.edit')"
+                        @click="openDescriptionEditor(value)"
+                    >
+                        <v-icon>mdi-pencil-outline</v-icon>
+                    </v-btn>
+                    <v-btn
+                        v-if="canManageValue(value)"
+                        variant="text"
+                        size="small"
+                        color="error"
+                        :title="t('common.delete')"
+                        @click="requestDelete(value)"
+                    >
+                        <v-icon>mdi-delete-outline</v-icon>
+                    </v-btn>
+                </div>
             </div>
-        </vue-dropzone>
+        </template>
+    </AttributeItemLayout>
 
-        <v-dialog v-model="renameDialog" max-width="700px">
-            <v-card>
-                <v-card-title>
-                    <span class="headline">{{ $t('drop_zone.attachment_load') }}</span>
-                </v-card-title>
+    <v-dialog
+        v-model="descriptionDialog"
+        max-width="620px"
+        persistent
+    >
+        <v-card>
+            <v-card-title class="d-flex align-center">
+                <v-icon
+                    color="primary"
+                    class="me-2"
+                >
+                    {{ ICONS.FILE_DOCUMENT }}
+                </v-icon>
+                {{ descriptionMode === 'new' ? t('drop_zone.attachment_load') : t('drop_zone.attachment_detail') }}
+            </v-card-title>
+            <v-card-text>
+                <div class="text-body-2 font-weight-medium mb-3">
+                    <bdi dir="auto">{{ descriptionMode === 'new' ? currentPendingFile?.name : attachmentName(selectedValue) }}</bdi>
+                </div>
+                <v-textarea
+                    v-model="descriptionDraft"
+                    :spellcheck="spellcheck"
+                    :label="t('drop_zone.file_description')"
+                    rows="3"
+                    auto-grow
+                    autofocus
+                    :readonly="descriptionMode === 'detail'"
+                />
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer />
+                <v-btn
+                    variant="text"
+                    @click="cancelDescriptionDialog"
+                >
+                    {{ t('common.cancel') }}
+                </v-btn>
+                <v-btn
+                    v-if="descriptionMode !== 'detail'"
+                    color="primary"
+                    variant="elevated"
+                    :loading="savingDescription"
+                    @click="confirmDescription"
+                >
+                    {{ t('common.save') }}
+                </v-btn>
+                <v-btn
+                    v-else
+                    color="primary"
+                    variant="text"
+                    @click="descriptionDialog = false"
+                >
+                    {{ t('common.done') }}
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 
-                <v-card-text>
-                    <v-textarea v-model="description" :label="$t('drop_zone.file_description')"></v-textarea>
-                </v-card-text>
-
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn color="primary" dark @click="save">{{ $t('common.save') }}</v-btn>
-                    <v-btn color="primary" text @click="close">{{ $t('common.cancel') }}</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-
-        <v-dialog v-model="detailDialog" max-width="700px">
-            <v-card>
-                <v-card-title>
-                    <span class="headline">{{ $t('drop_zone.attachment_detail') }}</span>
-                </v-card-title>
-
-                <v-card-text>
-                    <v-row>
-                        <v-col style="flex-grow: 0">
-                            <v-icon class="text--primary">mdi-file-document</v-icon>
-                        </v-col>
-                        <v-col>
-                            <div>{{ selected_attachment.file_name }}</div>
-                        </v-col>
-                    </v-row>
-                    <v-row v-if="read_only || report_item_id !== null">
-                        <v-col style="flex-grow: 0;" cols="3">
-                            <span class="text--primary">{{ $t('drop_zone.file_description') }}:</span>
-                        </v-col>
-                        <v-col>
-                            <div>{{ selected_attachment.description }}</div>
-                        </v-col>
-                    </v-row>
-                    <v-row v-if="selected_attachment.last_updated !== null">
-                        <v-col style="flex-grow: 0;" cols="3">
-                            <span class="text--primary">{{ $t('drop_zone.last_updated') }}:</span>
-                        </v-col>
-                        <v-col>
-                            <div>{{ selected_attachment.last_updated }}</div>
-                        </v-col>
-                    </v-row>
-                    <v-textarea v-if="!read_only && report_item_id === null" v-model="selected_attachment.description"
-                                :label="$t('drop_zone.file_description')"></v-textarea>
-                </v-card-text>
-
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn v-if="!read_only && report_item_id === null" color="primary" dark @click="saveDetail">
-                        {{ $t('common.save') }}
-                    </v-btn>
-                    <v-btn v-if="report_item_id !== null" color="primary" dark @click="downloadFile">
-                        {{ $t('drop_zone.download') }}
-                        <v-icon right dark>mdi-cloud-download</v-icon>
-                    </v-btn>
-                    <v-btn v-if="!read_only" color="error" dark @click="removeDetail">
-                        {{ $t('common.delete') }}
-                        <v-icon right dark>mdi-delete</v-icon>
-                    </v-btn>
-                    <v-btn color="primary" text @click="closeDetail">{{ $t('common.cancel') }}</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-
-    </div>
+    <ConfirmationDialog
+        v-model="deleteDialog"
+        @confirm="deleteSelectedAttachment"
+    >
+        <bdi dir="auto">{{ attachmentName(selectedValue) }}</bdi>
+    </ConfirmationDialog>
 </template>
 
-<script>
-    import vue2Dropzone from 'vue2-dropzone';
-    import 'vue2-dropzone/dist/vue2Dropzone.min.css';
-    import { removeAttachment, downloadAttachment } from "@/api/analyze";
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
+<script setup lang="ts">
+    import { computed, ref } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { ICONS } from '@/config/ui-constants'
+    import AuthService from '@/services/auth_service'
+    import Permissions from '@/services/auth/permissions'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import { useAttributes } from './useAttributes'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { downloadAttachment, removeAttachment, updateAttachmentDescription, uploadAttachment } from '@/api/analyze'
 
-    const getTemplate = (isDark) => `
-         <div cs class="dz-preview dz-file-preview">
-            <div class="attachment-preview" data-file-id="FILE_ID" data-attr-id="ATTR_ID">
-                <div class="v-icon mdi mdi-file-document-outline ${isDark ? 'theme--dark' : 'theme--light'}"></div>
-                <div class="dz-image">
-                    <div data-dz-thumbnail-bg></div>
-                </div>
-                <div class="dz-details">
-                    <div class="dz-filename"><span data-dz-name></span></div>
-                </div>
-                <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-                <div class="dz-error-message"><span data-dz-errormessage></span></div>
-                <div class="dz-success-mark"><i class="fa fa-check"></i></div>
-                <div class="dz-error-mark"><i class="fa fa-close"></i></div>
-            </div>
-        </div>
-    `;
+    type AttachmentValue = {
+        id?: number
+        index?: string | number
+        value?: string
+        remote?: boolean
+        locked?: boolean
+        binary_description?: string
+        binary_mime_type?: string
+        binary_size?: number
+        last_updated?: string
+        user?: { name?: string } | null
+        file?: File
+        uploading?: boolean
+        uploadError?: boolean
+        [key: string]: unknown
+    }
 
-    export default {
-        name: "AttributeAttachment",
-        components: {
-            vueDropzone: vue2Dropzone
-        },
-        mixins: [AttributesMixin],
-        data: () => ({
-            renameDialog: false,
-            detailDialog: false,
-            description: "",
-            last_updated: "",
-            files: [],
-            download_link: "",
-            selected_attachment: {
-                id: "",
-                file_name: "",
-                size: -1,
-                mime_type: "",
-                user_name: "",
-                last_updated: "",
-                description: ""
-            },
-        }),
-        computed: {
-            getOptions() {
-                return {
-                    url: this.baseUrl(),
-                    thumbnailWidth: 64,
-                    thumbnailHeight: 96,
-                    previewTemplate: getTemplate(this.$vuetify.theme.dark),
-                    addRemoveLinks: false,
-                    autoProcessQueue: false,
-                    clickable: !this.read_only
-                }
-            },
-        },
-        methods: {
-            baseUrl(report_id = this.report_item_id) {
-                return (typeof process.env.VUE_APP_TARANIS_NG_CORE_API === "undefined"
-                    ? "$VUE_APP_TARANIS_NG_CORE_API"
-                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + `/analyze/report-items/${report_id}/file-attributes`
-            },
+    type AttributeGroup = {
+        id?: number
+        max_occurrence?: number | null
+        [key: string]: unknown
+    }
 
-            getLink(file_id) {
-                return `/analyze/report-items/${this.report_item_id}/file-attributes/${file_id}/file`;
-            },
+    type DescriptionMode = 'new' | 'edit' | 'detail'
+    type FileInputControl = {
+        click: () => void
+        files: ArrayLike<File> | null
+        value: string
+    }
 
-            sendingEvent(file, xhr, formData) {
-                xhr.setRequestHeader("Authorization", "Bearer " + localStorage.ACCESS_TOKEN)
-                formData.append('attribute_group_item_id', this.attribute_group.id);
-                if (this.report_item_id === null) {
-                    formData.append('description', file.description);
-                } else {
-                    formData.append('description', this.description);
-                }
-            },
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttachmentValue[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
 
-            uploadSuccess(file, response) {
-                file.id = response.attribute_id;
-                if (this.report_item_id === null) {
-                    if (this.$refs.myVueDropzone.getQueuedFiles().length === 0) {
-                        this.$refs.myVueDropzone.removeAllFiles();
-                        this.files = [];
-                        this.values = [];
-                        this.$root.$emit('attachments-uploaded', {});
-                    }
-                } else {
-                    file.description = this.description;
-                    let previewHTML = file.previewTemplate.innerHTML;
-                    previewHTML = previewHTML.replace('FILE_ID', file.id).replace('ATTR_ID', this.attribute_group.id);
-                    file.previewTemplate.innerHTML = previewHTML;
-                }
-            },
+    const { t } = useI18n()
+    const { formatDateTime, formatFileSize } = useLocaleFormatters()
+    const spellcheck = useSpellcheck()
+    // Besides the field-editing helpers, this composable keeps the values synchronized when
+    // another analyst uploads, updates, or deletes an attachment over SSE.
+    useAttributes(props)
+    const fileInput = ref<FileInputControl | null>(null)
+    const dragActive = ref(false)
+    const operationError = ref(false)
+    const pendingFiles = ref<File[]>([])
+    const currentPendingFile = ref<File | null>(null)
+    const selectedValue = ref<AttachmentValue | null>(null)
+    const descriptionDraft = ref('')
+    const descriptionDialog = ref(false)
+    const descriptionMode = ref<DescriptionMode>('detail')
+    const savingDescription = ref(false)
+    const deleteDialog = ref(false)
+    let temporaryId = -1
 
-            fileAdded(file) {
-                if (this.read_only) {
-                    this.$refs.myVueDropzone.removeFile(file)
-                    return
-                }
+    const mayCreate = computed(() => AuthService.hasPermission(Permissions.ANALYZE_CREATE))
+    const mayUpdate = computed(() => AuthService.hasPermission(Permissions.ANALYZE_UPDATE) && props.modify === true)
+    const canManage = computed(() => !props.readOnly && (props.edit ? mayUpdate.value : mayCreate.value))
+    const uploading = computed(() => props.values.some((value) => value.uploading))
+    const canAddAttachment = computed(() => {
+        const maximum = props.attributeGroup.max_occurrence ?? Infinity
+        const describing = currentPendingFile.value ? 1 : 0
+        return canManage.value && props.values.length + pendingFiles.value.length + describing < maximum
+    })
 
-                if (this.report_item_id === null) {
-                    this.renameDialog = true;
-                    file.id = this.files.length;
-                    let previewHTML = file.previewTemplate.innerHTML;
-                    previewHTML = previewHTML.replace('FILE_ID', file.id).replace('ATTR_ID', this.attribute_group.id);
-                    file.previewTemplate.innerHTML = previewHTML;
-                    this.values.push({
-                        id: file.id,
-                        value: file.name
+    const attachmentKey = (value: AttachmentValue, index: number): string => String(value.id ?? value.index ?? index)
+    const attachmentName = (value: AttachmentValue | null): string => value?.value || value?.file?.name || t('attribute.select_attachment')
+    const attachmentSize = (value: AttachmentValue): number => Number(value.binary_size ?? value.file?.size ?? 0)
+
+    const formatAttachmentTimestamp = (value: string): string => formatDateTime(value) || value
+
+    const openFilePicker = (): void => fileInput.value?.click()
+
+    const acceptFiles = (files: File[]): void => {
+        if (!canAddAttachment.value || files.length === 0) return
+        const maximum = props.attributeGroup.max_occurrence ?? Infinity
+        const describing = currentPendingFile.value ? 1 : 0
+        const available = Math.max(0, maximum - props.values.length - pendingFiles.value.length - describing)
+        pendingFiles.value.push(...files.slice(0, available))
+        openNextFileDescription()
+    }
+
+    const handleFileInput = (event: Event): void => {
+        const input = event.target as unknown as FileInputControl
+        acceptFiles(Array.from(input.files ?? []))
+        input.value = ''
+    }
+
+    const handleDrop = (event: DragEvent): void => {
+        dragActive.value = false
+        acceptFiles(Array.from(event.dataTransfer?.files ?? []))
+    }
+
+    const openNextFileDescription = (): void => {
+        if (descriptionDialog.value || currentPendingFile.value || pendingFiles.value.length === 0) return
+        currentPendingFile.value = pendingFiles.value.shift() ?? null
+        descriptionDraft.value = ''
+        descriptionMode.value = 'new'
+        descriptionDialog.value = currentPendingFile.value !== null
+    }
+
+    const queueAttachment = (file: File, description: string): AttachmentValue => {
+        const value: AttachmentValue = {
+            id: temporaryId--,
+            index: props.values.length,
+            value: file.name,
+            binary_description: description,
+            binary_mime_type: file.type || 'application/octet-stream',
+            binary_size: file.size,
+            user: null,
+            remote: false,
+            file
+        }
+        props.values.push(value)
+        return value
+    }
+
+    const uploadValue = async (value: AttachmentValue): Promise<boolean> => {
+        if (!value.file || !props.reportItemId || !props.attributeGroup.id) return false
+        value.uploading = true
+        value.uploadError = false
+        operationError.value = false
+        try {
+            const response = await uploadAttachment(props.reportItemId, props.attributeGroup.id, value.file, value.binary_description || '')
+            value.id = Number(response.data.attribute_id)
+            value.index = props.values.indexOf(value)
+            delete value.file
+            value.uploading = false
+            return true
+        } catch (error) {
+            console.error('Failed to upload attachment:', error)
+            value.uploading = false
+            value.uploadError = true
+            operationError.value = true
+            return false
+        }
+    }
+
+    const confirmDescription = async (): Promise<void> => {
+        if (descriptionMode.value === 'new' && currentPendingFile.value) {
+            const value = queueAttachment(currentPendingFile.value, descriptionDraft.value)
+            currentPendingFile.value = null
+            descriptionDialog.value = false
+            if (props.edit) await uploadValue(value)
+            openNextFileDescription()
+            return
+        }
+
+        if (descriptionMode.value === 'edit' && selectedValue.value) {
+            savingDescription.value = true
+            operationError.value = false
+            try {
+                if (props.edit && props.reportItemId && selectedValue.value.id && selectedValue.value.id > 0) {
+                    const response = await updateAttachmentDescription({
+                        report_item_id: props.reportItemId,
+                        attribute_id: selectedValue.value.id,
+                        description: descriptionDraft.value
                     })
+                    selectedValue.value.binary_description = response.data.binary_description ?? descriptionDraft.value
+                    selectedValue.value.uploadError = false
                 } else {
-                    if (typeof file.id === 'undefined') {
-                        this.description = "";
-                        this.renameDialog = true;
-                    } else {
-                        let previewHTML = file.previewTemplate.innerHTML;
-                        previewHTML = previewHTML.replace('FILE_ID', file.id).replace('ATTR_ID', this.attribute_group.id);
-                        file.previewTemplate.innerHTML = previewHTML;
-                    }
+                    selectedValue.value.binary_description = descriptionDraft.value
                 }
-                this.files.push(file);
-            },
-
-            save() {
-                if (this.report_item_id === null) {
-                    let files = this.$refs.myVueDropzone.getQueuedFiles();
-                    for (let i = 0; i < files.length; i++) {
-                        if (typeof files[i].description === 'undefined') {
-                            files[i].description = this.description
-                        }
-                    }
-                    this.description = ""
-                } else {
-                    this.$refs.myVueDropzone.processQueue()
-                }
-                this.renameDialog = false;
-            },
-
-            close() {
-                this.description = "";
-                this.renameDialog = false;
-                let files = this.$refs.myVueDropzone.getQueuedFiles();
-                for (let i = 0; i < files.length; i++) {
-                    if (this.report_item_id === null) {
-                        if (typeof files[i].description === 'undefined') {
-                            this.$refs.myVueDropzone.removeFile(files[i])
-                        }
-                    } else {
-                        this.$refs.myVueDropzone.removeFile(files[i])
-                    }
-                }
-            },
-
-            saveDetail() {
-                if (this.report_item_id === null) {
-                    this.detailDialog = false;
-                    this.selected_attachment.file.description = this.selected_attachment.description
-                }
-                this.detailDialog = false;
-            },
-
-            closeDetail() {
-                this.detailDialog = false;
-            },
-
-            removeDetail() {
-                if (this.report_item_id === null) {
-                    this.detailDialog = false;
-                    for (let i = 0; i < this.values.length; i++) {
-                        if (this.values[i].id === this.selected_attachment.file.id) {
-                            this.values.splice(i, 1);
-                            break;
-                        }
-                    }
-                    this.$refs.myVueDropzone.removeFile(this.selected_attachment.file);
-                } else {
-                    removeAttachment({
-                        report_item_id: this.report_item_id,
-                        attribute_id: this.selected_attachment.id,
-                    }).then(() => {
-                        this.$refs.myVueDropzone.removeFile(this.selected_attachment.file);
-                        for (let i = 0; i < this.values.length; i++) {
-                            if (this.values[i].id === this.selected_attachment.id) {
-                                this.values.splice(i, 1);
-                                break;
-                            }
-                        }
-                        this.detailDialog = false;
-                    });
-                }
-            },
-
-            addFile(value) {
-                let file = {
-                    id: value.id,
-                    size: value.binary_size,
-                    name: value.value,
-                    type: value.binary_mime_type,
-                    description: value.binary_description,
-                    last_updated: value.last_updated + " " + value.user.name,
-                };
-                let url = this.getLink(value.id);
-                this.$refs.myVueDropzone.manuallyAddFile(file, url);
-            },
-
-            removeFile(file_id) {
-                for (let i = 0; i < this.files.length; i++) {
-                    if (this.files[i].id.toString() === file_id) {
-                        this.$refs.myVueDropzone.removeFile(this.files[i]);
-                        this.files.splice(i, 1);
-                        break;
-                    }
-                }
-            },
-
-            initDropzone() {
-                this.$refs.myVueDropzone.removeAllFiles();
-                this.files = [];
-                for (let i = 0; i < this.values.length; i++) {
-                    let file = {
-                        id: this.values[i].id,
-                        size: this.values[i].binary_size,
-                        name: this.values[i].value,
-                        type: this.values[i].binary_mime_type,
-                        description: this.values[i].binary_description,
-                        last_updated: this.values[i].last_updated + " " + this.values[i].user.name,
-                    };
-                    let url = this.getLink(this.values[i].id);
-                    this.$refs.myVueDropzone.manuallyAddFile(file, url);
-                }
-            },
-
-            onAttachmentClick(e) {
-                const el = e.target.closest('.attachment-preview');
-                if (!el) return;
-                // do i need again emit event? i can directly call the function here
-                this.$root.$emit('attachment-clicked', {
-                    attachment_id: el.dataset.fileId,
-                    attribute_id: el.dataset.attrId
-                });
-            },
-
-            downloadFile() {
-                downloadAttachment(this.download_link, this.selected_attachment.file_name);
+                descriptionDialog.value = false
+            } catch (error) {
+                console.error('Failed to update attachment description:', error)
+                operationError.value = true
+            } finally {
+                savingDescription.value = false
             }
-        },
-        mounted() {
-            this.$root.$on('attachment-clicked', (data) => {
-                if (this.report_item_id === null) {
-                    if (this.attribute_group.id === data.attribute_id) {
-                        for (let i = 0; i < this.files.length; i++) {
-                            if (this.files[i].id.toString() === data.attachment_id) {
-                                this.selected_attachment = {
-                                    id: this.files[i].id,
-                                    file_name: this.files[i].name,
-                                    description: this.files[i].description,
-                                    file: this.files[i],
-                                    last_updated: null
-                                };
-                                this.detailDialog = true;
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    for (let i = 0; i < this.files.length; i++) {
-                        if (this.files[i].id.toString() === data.attachment_id) {
-                            this.selected_attachment = {
-                                id: this.files[i].id,
-                                file_name: this.files[i].name,
-                                mime_type: this.files[i].type,
-                                file_size: this.files[i].size,
-                                description: this.files[i].description,
-                                last_updated: this.files[i].last_updated,
-                                file: this.files[i]
-                            };
-                            this.download_link = this.getLink(this.selected_attachment.id);
-                            this.detailDialog = true;
-                            break;
-                        }
-                    }
-                }
-            });
+        }
+    }
 
-            this.$root.$on('dropzone-new-process', (data) => {
-                if (this.report_item_id === null) {
-                    this.$refs.myVueDropzone.setOption('url', this.baseUrl(data.report_item_id))
-                    if (this.$refs.myVueDropzone.getQueuedFiles().length === 0) {
-                        this.$root.$emit('attachments-uploaded', {});
-                    } else {
-                        this.$refs.myVueDropzone.processQueue()
-                    }
-                }
-            });
+    const cancelDescriptionDialog = (): void => {
+        const wasNew = descriptionMode.value === 'new'
+        currentPendingFile.value = null
+        descriptionDialog.value = false
+        if (wasNew) openNextFileDescription()
+    }
 
-            if (this.$vuetify.theme.dark) {
-                const dz = this.$refs.myVueDropzone.$el;
-                dz.classList.add('dz-dark');
+    const canDownload = (value: AttachmentValue): boolean => !!props.reportItemId && !!value.id && value.id > 0 && !value.uploading
+    const canManageValue = (value: AttachmentValue): boolean => canManage.value && !value.remote && !value.locked && !value.uploading
+
+    const downloadAttachmentNow = (value: AttachmentValue): void => {
+        if (!canDownload(value)) return
+        downloadAttachment(`/analyze/report-items/${props.reportItemId}/file-attributes/${value.id}/file`, attachmentName(value))
+    }
+
+    const openDescriptionEditor = (value: AttachmentValue): void => {
+        selectedValue.value = value
+        descriptionDraft.value = value.binary_description || ''
+        descriptionMode.value = 'edit'
+        descriptionDialog.value = true
+    }
+
+    const openDetails = (value: AttachmentValue): void => {
+        if (canManageValue(value)) {
+            openDescriptionEditor(value)
+            return
+        }
+        selectedValue.value = value
+        descriptionDraft.value = value.binary_description || ''
+        descriptionMode.value = 'detail'
+        descriptionDialog.value = true
+    }
+
+    const requestDelete = (value: AttachmentValue): void => {
+        selectedValue.value = value
+        deleteDialog.value = true
+    }
+
+    const deleteSelectedAttachment = async (): Promise<void> => {
+        const value = selectedValue.value
+        if (!value) return
+        operationError.value = false
+        try {
+            if (props.edit && props.reportItemId && value.id && value.id > 0) {
+                await removeAttachment({ report_item_id: props.reportItemId, attribute_id: value.id })
             }
-
-            this.$refs.myVueDropzone.$el.addEventListener('click', this.onAttachmentClick);
-
-            if (this.report_item_id !== null) {
-                this.$refs.myVueDropzone.setOption('url', this.baseUrl())
-            }
-
-            this.initDropzone()
-        },
-        beforeDestroy() {
-            this.$refs.myVueDropzone.$el.removeEventListener('click', this.onAttachmentClick);
-            this.$root.$off('attachment-clicked')
-            this.$root.$off('dropzone-new-process')
+            const index = props.values.indexOf(value)
+            if (index >= 0) props.values.splice(index, 1)
+            props.values.forEach((item, itemIndex) => (item.index = itemIndex))
+            selectedValue.value = null
+        } catch (error) {
+            console.error('Failed to delete attachment:', error)
+            operationError.value = true
         }
     }
 </script>
 
-<style>
-    /* Dark theme support, dropzone doesn’t support it natively */
-    #dropzone.dz-dark {
-        background-color: #272727;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+<style scoped>
+    .attachment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        width: 100%;
+        overflow: hidden;
+        border: 1px solid rgba(var(--v-border-color), 0.5);
+        border-radius: 6px;
+    }
+
+    .attachment-file-input {
+        display: none;
+    }
+
+    .attachment-dropzone {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 68px;
+        padding: 12px;
+        color: rgb(var(--v-theme-primary));
+        background: rgba(var(--v-theme-primary), 0.05);
+        border: 1px dashed rgba(var(--v-theme-primary), 0.55);
+        cursor: pointer;
+        transition:
+            background-color 120ms ease,
+            border-color 120ms ease;
+    }
+
+    .attachment-dropzone:hover,
+    .attachment-dropzone:focus-visible,
+    .attachment-dropzone--active {
+        background: rgba(var(--v-theme-primary), 0.12);
+        border-color: rgb(var(--v-theme-primary));
+        outline: none;
+    }
+
+    .attachment-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-height: 58px;
+        padding-block: 7px;
+        padding-inline: 12px 8px;
+        background: rgb(var(--v-theme-surface));
+        border-top: 1px solid rgba(var(--v-border-color), 0.35);
+    }
+
+    .attachment-row--remote {
+        background: rgba(var(--v-theme-primary), 0.035);
+    }
+
+    .attachment-row__icon {
+        flex: 0 0 auto;
+        margin-inline-end: 6px;
+    }
+
+    .attachment-row__details {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-width: 0;
+        padding: 3px 6px;
+        color: inherit;
+        text-align: start;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+    }
+
+    .attachment-row__details:focus-visible {
+        border-radius: 3px;
+        outline: 2px solid rgb(var(--v-theme-primary));
+    }
+
+    .attachment-row__name,
+    .attachment-row__description {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .attachment-row__name {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .attachment-row__description,
+    .attachment-row__meta {
+        color: rgba(var(--v-theme-on-surface), 0.66);
+        font-size: 0.75rem;
+    }
+
+    .attachment-row__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.15rem 0.6rem;
+        align-items: baseline;
+    }
+
+    .attachment-row__meta-item {
+        min-width: 0;
     }
 </style>

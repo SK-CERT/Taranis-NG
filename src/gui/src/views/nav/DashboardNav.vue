@@ -1,16 +1,9 @@
 <template>
-    <div></div>
+    <div>
+        <!-- Dashboard has no navigation sidebar -->
+    </div>
 </template>
 
-<script>
-
-    export default {
-        name: "DashboardNav",
-        components: {
-
-        },
-        data: () => ({
-            links: []
-        })
-    }
+<script setup lang="ts">
+    // Empty navigation component
 </script>

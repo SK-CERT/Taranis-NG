@@ -38,11 +38,10 @@ configuration, see [`auth/README.md`](auth/README.md).
 ## Authentication development
 
 Login methods (local accounts, LDAP, OpenID Connect, OAuth 2.0, SAML) are
-database auth providers configured in the Vue 3 GUI under *Access Management →
+database auth providers configured in the GUI under *Access Management →
 Login Methods*; no environment variable selects them. Changing Docker secret
 files does not rotate passwords already stored for application users in
 PostgreSQL.
 
-The tracked deployment serves the Vue 2 GUI. The optional Vue 3 application has
-separate instructions in [`src/gui-v3/README.md`](../gui-v3/README.md); Core
-development setup does not enable it.
+The GUI has separate development instructions in
+[`src/gui/README.md`](../gui/README.md).

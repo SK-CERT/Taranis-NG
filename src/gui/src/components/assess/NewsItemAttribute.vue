@@ -1,41 +1,73 @@
 <template>
-    <v-row>
-        <v-col>
-            <span style="margin-right:20px; font-size:12px">{{attribute.key}}</span>
-            <br/>
-            <span v-if="attribute.binary_mime_type === ''" style="font-size:16px">{{attribute.value}}</span>
-            <v-row v-if="attribute.binary_mime_type !== ''">
-                <v-col style="flex-grow: 0">
-                    <v-icon>mdi-file-document</v-icon>
-                </v-col>
-                <v-col>
-                    <div>{{attribute.value}}</div>
-                </v-col>
-                <v-col>
-                    <v-btn small @click="downloadFile">{{$t('assess.download')}}
-                        <v-icon right dark>mdi-cloud-download</v-icon>
+    <v-container class="ma-0 pa-0">
+        <v-row>
+            <v-col>
+                <span class="pe-6 font-weight-bold text-medium-emphasis">
+                    <bdi dir="auto">{{ attribute.key }}</bdi>
+                </span>
+                <!-- add space to allow copy formatted -->
+                <span>&nbsp;</span>
+                <span v-if="!attribute.binary_mime_type">
+                    <bdi dir="auto">{{ attribute.value }}</bdi>
+                </span>
+                <span
+                    v-else
+                    class="align-center"
+                >
+                    <v-icon class="pe-6">mdi-file-document</v-icon>
+                    <bdi
+                        class="pe-6"
+                        dir="auto"
+                        >{{ attribute.value }}</bdi
+                    >
+                    <v-btn
+                        prepend-icon="mdi-cloud-download"
+                        variant="outlined"
+                        size="large"
+                        @click="downloadFile"
+                    >
+                        {{ t('assess.download') }}
                     </v-btn>
-                </v-col>
-            </v-row>
-        </v-col>
-
-    </v-row>
+                </span>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
-<script>
-    import { downloadAttachment } from "@/api/assess";
+<script setup lang="ts">
+    import { computed } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useAuthStore } from '@/stores/auth'
+    import { downloadAttachment } from '@/api/analyze'
 
-    export default {
-        name: "NewsItemAttribute",
-        props: {
-            attribute: Object,
-            news_item_data: Object
-        },
-        data: () => ({}),
-        methods: {
-            downloadFile() {
-                downloadAttachment(`/assess/news-item-data/${this.news_item_data.id}/attributes/${this.attribute.id}/file`);
-            }
+    type NewsAttribute = {
+        id: number | string
+        key?: string
+        value?: string
+        binary_mime_type?: string
+        [key: string]: unknown
+    }
+
+    type NewsItemData = {
+        id?: number | string
+        [key: string]: unknown
+    }
+
+    const { t } = useI18n()
+    const authStore = useAuthStore()
+
+    const props = withDefaults(
+        defineProps<{
+            attribute: NewsAttribute
+            newsItemData?: NewsItemData
+        }>(),
+        {
+            newsItemData: () => ({})
         }
+    )
+
+    async function downloadFile() {
+        const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || ''
+        downloadAttachment(`${apiBase}/assess/news-item-data/${props.newsItemData.id}/attributes/${props.attribute.id}/file`, undefined)
     }
 </script>

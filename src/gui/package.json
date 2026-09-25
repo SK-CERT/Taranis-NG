@@ -1,88 +1,91 @@
 {
-    "name": "taranis-ng-ui",
+    "name": "taranis-ng-gui",
     "version": "26.05.1",
     "private": true,
+    "type": "module",
     "scripts": {
-        "prebuild": "node ./git-info.js",
-        "serve": "vue-cli-service serve",
-        "build": "vue-cli-service build",
-        "lint": "vue-cli-service lint",
-        "addrouter": "vue add router",
-        "addvuetify": "vue add vuetify",
-        "installvuetify": "npm install vuetify",
-        "installaxios": "npm install axios",
-        "installvuex": "npm install vuex",
-        "installmdiicons": "npm install @mdi/font -D",
-        "installveevalidate": "npm install vee-validate",
-        "installvuei18n": "npm install vue-i18n",
-        "installcookie": "npm install vue-cookies",
-        "installwordcloud": "npm install vue-wordcloud",
-        "installvuesse": "npm install vue-sse",
-        "installvuedatetime": "npm install vuetify-datetime-picker",
-        "installdatepicker": "npm install vuetify-datetime-picker vue2-datepicker",
-        "installeditor": "npm install vue2-editor",
-        "installdropzone": "npm install vue2-dropzone"
+        "dev": "vite",
+        "dev:remote": "vite --host 127.0.0.1 --port 4444 --strictPort",
+        "prebuild": "node scripts/update-version.cjs",
+        "build": "vite build",
+        "preview": "vite preview",
+        "format": "prettier --write \"src/**/*.{js,ts,vue,css,scss,json}\" \"src/**/*.d.ts\" \"tests/**/*.{js,ts}\"",
+        "format:check": "prettier --check \"src/**/*.{js,ts,vue,css,scss,json}\" \"src/**/*.d.ts\" \"tests/**/*.{js,ts}\"",
+        "lint": "eslint . --fix",
+        "lint:check": "eslint .",
+        "pretypecheck": "node scripts/update-version.cjs",
+        "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+        "test": "vitest",
+        "test:unit": "vitest run",
+        "test:ui": "vitest --ui",
+        "test:coverage": "vitest run --coverage",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui --config=playwright.ui.config.js",
+        "test:e2e:ui:remote": "playwright test --ui --ui-host=127.0.0.1 --ui-port=9323 --config=playwright.ui.config.js",
+        "test:e2e:headed": "playwright test --headed",
+        "test:e2e:debug": "playwright test --debug",
+        "test:e2e:report": "playwright show-report"
     },
     "dependencies": {
-        "axios": "^1.13.2",
-        "core-js": "^3.47.0",
-        "iso-639-1": "^2.1.15",
-        "js-base64": "^3.7.8",
-        "papaparse": "^5.5.3",
-        "sass-loader": "^10.5.2",
-        "vee-validate": "^2.2.15",
-        "vue": "^2.7.16",
-        "vue-cookies": "^1.8.4",
-        "vue-i18n": "^8.28.2",
-        "vue-router": "^3.6.5",
-        "vue-sse": "^1.1.1",
-        "vue-wordcloud": "^1.1.1",
-        "vue2-datepicker": "^3.11.1",
-        "vue2-dropzone": "^3.6.0",
-        "vue2-editor": "^2.10.3",
-        "vuetify": "^2.7.2",
-        "vuetify-datetime-picker": "^2.1.1",
-        "vuex": "^3.6.2"
+        "@mdi/font": "^7.4.47",
+        "@primeuix/themes": "^3.0.0",
+        "@types/d3-cloud": "^1.2.9",
+        "@simplewebauthn/browser": "^14.0.0",
+        "ae-cvss-calculator": "^1.0.13",
+        "axios": "^1.19.0",
+        "d3-cloud": "^1.2.9",
+        "date-fns": "^4.4.0",
+        "dompurify": "^3.4.15",
+        "pinia": "^4.0.3",
+        "primeicons": "^8.0.1",
+        "primevue": "4.5.5",
+        "qrcode": "^1.5.4",
+        "quill": "^2.0.3",
+        "vee-validate": "^4.14.11",
+        "vue": "^3.5.42",
+        "vue-i18n": "^11.4.10",
+        "vue-router": "^5.3.1",
+        "vuetify": "^4.2.0"
     },
     "devDependencies": {
-        "@babel/helper-compilation-targets": "^7.25.9",
-        "@mdi/font": "^7.4.47",
-        "@vue/cli-plugin-babel": "^4.5.19",
-        "@vue/cli-plugin-eslint": "^4.5.19",
-        "@vue/cli-service": "^4.5.19",
-        "babel-eslint": "^10.1.0",
-        "cache-loader": "^4.1.0",
-        "eslint": "^5.16.0",
-        "eslint-plugin-vue": "^5.2.3",
-        "sass": "^1.80.4",
-        "vue-cli-plugin-vuetify": "^0.6.3",
-        "vue-template-compiler": "^2.7.16",
-        "vuetify-loader": "^1.9.2",
-        "webpack": "^4.47.0"
+        "@eslint/js": "^10.0.1",
+        "@intlify/eslint-plugin-vue-i18n": "^4.5.1",
+        "@playwright/test": "^1.63.0",
+        "@types/node": "^26.5.1",
+        "@types/qrcode": "^1.5.6",
+        "@typescript-eslint/parser": "^8.70.0",
+        "@vitejs/plugin-vue": "^6.0.9",
+        "@vitest/coverage-v8": "^5.0.1",
+        "@vitest/ui": "^5.0.1",
+        "@vue/test-utils": "^2.4.11",
+        "eslint": "^10.8.1",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-vue": "^10.11.0",
+        "happy-dom": "^20.14.5",
+        "jsdom": "^30.0.1",
+        "jsonc-eslint-parser": "^3.3.0",
+        "lint-staged": "^17.2.0",
+        "prettier": "^3.9.6",
+        "sass": "^1.103.1",
+        "typescript": "^6.0.3",
+        "vite": "^8.3.0",
+        "vite-plugin-vuetify": "^2.1.3",
+        "vitest": "^5.0.1",
+        "vue-tsc": "^3.3.11"
     },
-    "eslintConfig": {
-        "root": true,
-        "env": {
-            "node": true
-        },
-        "extends": [
-            "plugin:vue/essential",
-            "eslint:recommended"
+    "lint-staged": {
+        "*.{js,ts,vue}": [
+            "eslint --fix",
+            "prettier --write"
         ],
-        "rules": {
-            "no-console": "warn"
-        },
-        "parserOptions": {
-            "parser": "babel-eslint"
-        }
-    },
-    "postcss": {
-        "plugins": {
-            "autoprefixer": {}
-        }
-    },
-    "browserslist": [
-        "> 1%",
-        "last 2 versions"
-    ]
+        "*.d.ts": [
+            "prettier --write"
+        ],
+        "*.{css,scss,json,md}": [
+            "prettier --write"
+        ],
+        "src/i18n/*.json": [
+            "eslint"
+        ]
+    }
 }

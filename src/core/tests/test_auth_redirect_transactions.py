@@ -88,7 +88,7 @@ def test_oauth_state_keeps_pkce_verifier_server_side(monkeypatch) -> None:  # no
     monkeypatch.setattr(auth_manager, "get_oauth_authenticator", lambda _slug: authenticator)
 
     with app.test_request_context(
-        "/api/v1/auth/oauth/corporate/login?gotoUrl=/v2/dashboard",
+        "/api/v1/auth/oauth/corporate/login?gotoUrl=/dashboard",
         base_url="https://taranis.example",
     ):
         response = auth.OAuthLoginRedirect.get.__wrapped__(auth.OAuthLoginRedirect(), "corporate")
@@ -101,7 +101,7 @@ def test_oauth_state_keeps_pkce_verifier_server_side(monkeypatch) -> None:  # no
     assert "server-side-verifier" not in state
     assert payload == {
         "provider_id": 17,
-        "goto_url": "/v2/dashboard",
+        "goto_url": "/dashboard",
         "nonce": authenticator.authorization["nonce"],
         "code_verifier": "server-side-verifier",
         "pkce_method": "S256",
@@ -238,7 +238,7 @@ def test_refused_client_credentials_are_reported_as_a_misconfiguration(monkeypat
     state = "A" * 43
     stored[(AuthTransactionKind.OAUTH_STATE, state)] = {
         "provider_id": 17,
-        "goto_url": "/v2/dashboard",
+        "goto_url": "/dashboard",
         "nonce": "oidc-nonce",
         "code_verifier": "server-side-verifier",
         "pkce_method": "S256",
@@ -263,7 +263,7 @@ def test_refused_client_credentials_are_reported_as_a_misconfiguration(monkeypat
         response = auth.OAuthCallback.get.__wrapped__(auth.OAuthCallback(), "corporate")
 
     assert response.status_code == HTTPStatus.FOUND
-    assert response.location == "/v2/dashboard?login_error=provider_misconfigured"
+    assert response.location == "/dashboard?login_error=provider_misconfigured"
     # The IdP's own wording stays in the audit log, never in the browser.
     assert "Corporate login" not in response.location
 

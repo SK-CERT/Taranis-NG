@@ -1,103 +1,197 @@
 <template>
-    <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" @keydown.esc="cancel" report-item>
-            <v-card>
+    <v-dialog
+        v-model="visible"
+        fullscreen
+        persistent
+        @keydown.esc.stop="handleClose"
+    >
+        <v-card class="remote-report">
+            <v-toolbar color="primary">
+                <v-btn
+                    icon
+                    :title="t('notification.close')"
+                    @click="handleClose"
+                >
+                    <v-icon>mdi-close-circle</v-icon>
+                </v-btn>
+                <v-toolbar-title
+                    ><bdi dir="auto">{{ reportItem.title }}</bdi></v-toolbar-title
+                >
+            </v-toolbar>
 
-                <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000" data-dialog="report-item">
-                    <v-btn icon dark @click="cancel" data-btn="cancel">
-                        <v-icon>mdi-close-circle</v-icon>
-                    </v-btn>
-                    <v-toolbar-title>{{report_item.title}}</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                </v-toolbar>
-
-                <v-form @submit.prevent="add" id="form" ref="form">
-                    <v-card>
-                        <v-card-text>
-                            <span>ID: {{report_item.uuid}}</span>
-                        </v-card-text>
-                    </v-card>
-
-                    <div style="padding:16px" class="div-wrapper">
-                        <v-card style="margin-bottom: 8px">
-
-                            <v-card-title class="v-card-title-dialog">
-                                {{$t('report_item.attributes')}}
-                            </v-card-title>
-
-                            <v-card-text style="padding-top:8px">
-                                <RemoteAttributeContainer v-for="attribute_item in report_item.attributes"
-                                                          :key="attribute_item.id"
-                                                          :attribute_item="attribute_item"></RemoteAttributeContainer>
-                            </v-card-text>
-                        </v-card>
+            <v-card-text class="remote-report__body">
+                <v-alert
+                    type="info"
+                    variant="tonal"
+                    class="mb-4"
+                >
+                    <div class="remote-report__identity">
+                        <i18n-t
+                            scope="global"
+                            keypath="report_item.id_with_value"
+                        >
+                            <template #id>
+                                <bdi dir="ltr">{{ reportItem.uuid }}</bdi>
+                            </template>
+                        </i18n-t>
+                        <i18n-t
+                            v-if="reportItem.remote_user"
+                            scope="global"
+                            keypath="card_item.source_with_value"
+                        >
+                            <template #source>
+                                <bdi dir="auto">{{ reportItem.remote_user }}</bdi>
+                            </template>
+                        </i18n-t>
                     </div>
+                </v-alert>
 
-                </v-form>
-
-            </v-card>
-        </v-dialog>
-    </v-row>
+                <h2 class="text-h6 mb-3">
+                    {{ t('report_item.attributes') }}
+                </h2>
+                <div
+                    v-if="reportItem.attributes.length > 0"
+                    class="remote-report__attributes"
+                >
+                    <RemoteAttributeContainer
+                        v-for="attribute in reportItem.attributes"
+                        :key="attribute.id"
+                        :attribute-group="attribute"
+                        :report-item-id="Number(reportItem.id)"
+                    />
+                </div>
+                <v-alert
+                    v-else
+                    type="info"
+                    variant="tonal"
+                >
+                    {{ t('report_item.no_attributes') }}
+                </v-alert>
+            </v-card-text>
+        </v-card>
+    </v-dialog>
 </template>
 
-<script>
-    import {getReportItem} from "@/api/analyze";
-    import RemoteAttributeContainer from "../common/attribute/RemoteAttributeContainer";
+<script setup lang="ts">
+    import { ref } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import RemoteAttributeContainer from '@/components/common/attribute/RemoteAttributeContainer.vue'
+    import { getReportItem } from '@/api/analyze'
 
-    export default {
-        name: "RemoteReportItem",
-        components: {RemoteAttributeContainer},
-        data: () => ({
-            visible: false,
-            report_item: {
-                uuid: null,
-                title: "",
-                title_prefix: "",
-                completed: false,
-                attributes: []
+    const { t } = useI18n()
+
+    type RemoteAttributeValue = {
+        id: number | string
+        value?: string
+        binary_mime_type?: string | null
+        binary_size?: number | null
+        binary_description?: string | null
+        attribute_group_item_title?: string | null
+        [key: string]: unknown
+    }
+
+    type RemoteAttributeGroup = {
+        id: string
+        title: string
+        attributeType: string
+        attributes: RemoteAttributeValue[]
+    }
+
+    type RemoteReportItemSummary = {
+        id: number | string
+        title?: string
+        uuid?: string
+        remote_user?: string | null
+        [key: string]: unknown
+    }
+
+    type RemoteReportItemModel = {
+        id: number | string
+        title: string
+        uuid: string
+        remote_user: string
+        attributes: RemoteAttributeGroup[]
+    }
+
+    const emptyReportItem = (): RemoteReportItemModel => ({
+        id: 0,
+        title: '',
+        uuid: '',
+        remote_user: '',
+        attributes: []
+    })
+
+    const visible = ref(false)
+    const reportItem = ref<RemoteReportItemModel>(emptyReportItem())
+
+    const groupAttributes = (attributes: unknown): RemoteAttributeGroup[] => {
+        if (!Array.isArray(attributes)) return []
+
+        const groups = new Map<string, RemoteAttributeGroup>()
+        for (const candidate of attributes) {
+            if (!candidate || typeof candidate !== 'object') continue
+            const value = candidate as RemoteAttributeValue
+            const title = value.attribute_group_item_title?.trim() || t('attribute.unknown_type')
+            const attributeType = value.binary_mime_type ? 'ATTACHMENT' : 'TEXT'
+            const key = `${title}\u0000${attributeType}`
+            let group = groups.get(key)
+            if (!group) {
+                group = { id: key, title, attributeType, attributes: [] }
+                groups.set(key, group)
             }
-        }),
-        methods: {
-            cancel() {
-                this.visible = false;
-            },
-            showDetail(report_item) {
-                getReportItem(report_item.id).then((response) => {
+            group.attributes.push(value)
+        }
+        return Array.from(groups.values())
+    }
 
-                    let data = response.data
+    const showDetail = async (item: RemoteReportItemSummary): Promise<void> => {
+        if (item.id === null || item.id === undefined || item.remote_user === null || item.remote_user === undefined) return
 
-                    this.visible = true;
+        try {
+            const response = await getReportItem(item.id)
+            const data = response?.data
+            if (!data || data.remote_user === null || data.remote_user === undefined) return
 
-                    this.report_item.uuid = data.uuid;
-                    this.report_item.title = data.title;
-                    this.report_item.title_prefix = data.title_prefix;
-                    this.report_item.completed = data.completed;
-
-                    this.report_item.attributes = []
-                    for (let i = 0; i < data.attributes.length; i++) {
-                        let exists = false
-                        for (let k = 0; k < this.report_item.attributes.length; k++) {
-                            if (this.report_item.attributes[k].title === data.attributes[i].attribute_group_item_title) {
-                                exists = true
-                                this.report_item.attributes[k].values.push({
-                                    value: data.attributes[i].value,
-                                    index: this.report_item.attributes[k].values.length
-                                })
-                                break
-                            }
-                        }
-
-                        if (exists === false) {
-                            let attribute = {title: data.attributes[i].attribute_group_item_title, values: []}
-                            attribute.values.push({
-                                value: data.attributes[i].value,
-                                index: 0
-                            })
-                            this.report_item.attributes.push(attribute)
-                        }
-                    }
-                });
+            reportItem.value = {
+                id: data.id,
+                title: typeof data.title === 'string' ? data.title : item.title || '',
+                uuid: typeof data.uuid === 'string' ? data.uuid : item.uuid || '',
+                remote_user: String(data.remote_user),
+                attributes: groupAttributes(data.attributes)
             }
+            visible.value = true
+        } catch {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', message: t('error.server_error') }
+                })
+            )
         }
     }
+
+    const handleClose = (): void => {
+        visible.value = false
+        reportItem.value = emptyReportItem()
+    }
+
+    defineExpose({ showDetail })
 </script>
+
+<style scoped>
+    .remote-report__body {
+        width: min(100%, 1080px);
+        margin-inline: auto;
+        padding: 1.5rem;
+    }
+
+    .remote-report__identity {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.5rem;
+    }
+
+    .remote-report__attributes {
+        display: grid;
+        gap: 0.75rem;
+    }
+</style>

@@ -1,92 +1,115 @@
 <template>
-    <ViewLayout>
-        <template v-slot:panel>
-            <ToolbarFilterAnalyze :show_group_toolbar="true" title='nav_menu.report_items' total_count_title="analyze.total_count"
-                                  @update-report-items-filter="updateFilter"
-                                  ref="toolbarFilter">
-                <template v-slot:addbutton>
-                    <NewReportItem add_button ref="reportItemDialog" />
-                </template>
-
-            </ToolbarFilterAnalyze>
+    <ViewLayout integrated-toolbar>
+        <template #panel>
+            <ToolbarFilterAnalyze
+                ref="toolbarFilter"
+                :multi-select="!isRemoteScope"
+                title="nav_menu.report_items"
+                total-count-title="toolbar_filter.total_count"
+                :show-add-button="canCreateReportItem"
+                @update-filter="updateFilter"
+                @update-data="updateData"
+                @add-new="handleAddNew"
+            />
         </template>
-        <template v-slot:content>
-            <ContentDataAnalyze :show_remove_action="false" :remote_reports="false"
-                                card-item="CardAnalyze" ref="contentData"
-                                @show-report-item-detail="showReportItemDetail"
-                                @show-remote-report-item-detail="showRemoteReportItemDetail"
-                                @new-data-loaded="newDataLoaded" />
-            <NewProduct class="np" add_button />
-            <RemoteReportItem ref="remoteReportItemDialog" />
+        <template #content>
+            <ContentDataAnalyze
+                ref="contentData"
+                :show-remove-action="false"
+                :remote-reports="false"
+                :selection="analyzeStore.getSelectionReport"
+                :disable-actions="isRemoteScope"
+                @new-data-loaded="newDataLoaded"
+                @update-showing-count="updateShowingCount"
+                @show-report-item-detail="showReportItemDetail"
+                @show-remote-report-item-detail="showRemoteReportItemDetail"
+            />
         </template>
     </ViewLayout>
 
+    <NewReportItem
+        ref="newReportItemRef"
+        :show-button="false"
+        @data-updated="updateData"
+    />
+    <RemoteReportItem ref="remoteReportItemRef" />
 </template>
 
-<script>
-    import ViewLayout from "../../components/layouts/ViewLayout";
-    import ToolbarFilterAnalyze from "@/components/analyze/ToolbarFilterAnalyze";
-    import NewReportItem from "@/components/analyze/NewReportItem";
-    import NewProduct from "@/components/publish/NewProduct";
-    import ContentDataAnalyze from "../../components/analyze/ContentDataAnalyze";
-    import { deleteReportItem } from "@/api/analyze";
-    import RemoteReportItem from "@/components/analyze/RemoteReportItem";
+<script setup lang="ts">
+    import { ref, computed, watch } from 'vue'
+    import { useRoute, onBeforeRouteLeave } from 'vue-router'
+    import { useAnalyzeStore } from '@/stores/analyze'
+    import { useAuth } from '@/composables/useAuth'
+    import ViewLayout from '@/components/layouts/ViewLayout.vue'
+    import ToolbarFilterAnalyze from '@/components/analyze/ToolbarFilterAnalyze.vue'
+    import ContentDataAnalyze from '@/components/analyze/ContentDataAnalyze.vue'
+    import NewReportItem from '@/components/analyze/NewReportItem.vue'
+    import RemoteReportItem from '@/components/analyze/RemoteReportItem.vue'
+    import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
 
-    export default {
-        name: "Analyze",
-        components: {
-            ViewLayout,
-            ToolbarFilterAnalyze,
-            ContentDataAnalyze,
-            NewProduct,
-            NewReportItem,
-            RemoteReportItem
-        },
-        methods: {
-            newDataLoaded(count) {
-                this.$refs.toolbarFilter.updateDataCount(count)
-            },
-            updateFilter(filter) {
-                this.$refs.contentData.updateFilter(filter)
-            },
-            showReportItemDetail(report_item) {
-                this.$refs.reportItemDialog.showDetail(report_item)
-            },
-            showRemoteReportItemDetail(report_item) {
-                this.$refs.remoteReportItemDialog.showDetail(report_item)
-            },
-        },
-        computed: {},
-        watch: {
-            $route() {
-                this.$refs.contentData.updateData(false, false);
-            }
-        },
-        beforeCreate() {
-            this.$root.$on('delete-report-item', (item) => {
-                deleteReportItem(item).then(() => {
+    const route = useRoute()
+    const analyzeStore = useAnalyzeStore()
+    const { checkPermission } = useAuth()
+    const toolbarFilter = ref<any>(null)
+    const contentData = ref<any>(null)
+    const newReportItemRef = ref<any>(null)
+    const remoteReportItemRef = ref<any>(null)
 
-                    this.$root.$emit('notification',
-                        {
-                            type: 'success',
-                            loc: 'report_item.removed'
-                        }
-                    )
-                }).catch(() => {
-                    this.$root.$emit('notification',
-                        {
-                            type: 'error',
-                            loc: 'report_item.removed_error'
-                        }
-                    )
-                })
-            });
+    const isRemoteScope = computed(() => isRemoteAnalyzeRoute(route))
+
+    watch(
+        isRemoteScope,
+        (remote) => {
+            if (remote) analyzeStore.multiSelectReport(false)
         },
-        mounted() {
-            this.analyze_selector = true
-        },
-        beforeDestroy() {
-            this.$root.$off('delete-report-item');
+        { immediate: true }
+    )
+
+    const canCreateReportItem = computed(() => {
+        return checkPermission('ANALYZE_CREATE') && !isRemoteScope.value
+    })
+
+    const handleAddNew = (): void => {
+        if (newReportItemRef.value) {
+            newReportItemRef.value.openDialog()
         }
-    };
+    }
+
+    const newDataLoaded = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateDataCount(count)
+        }
+    }
+
+    const updateShowingCount = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateShowingCount(count)
+        }
+    }
+
+    const updateFilter = (filter: Record<string, unknown>): void => {
+        if (contentData.value) {
+            contentData.value.updateFilter(filter)
+        }
+    }
+
+    const updateData = (): void => {
+        if (contentData.value) {
+            contentData.value.updateData(false, true)
+        }
+    }
+
+    const showReportItemDetail = (reportItem: unknown): void => {
+        if (newReportItemRef.value) {
+            newReportItemRef.value.showDetail(reportItem)
+        }
+    }
+
+    const showRemoteReportItemDetail = (reportItem: unknown): void => {
+        remoteReportItemRef.value?.showDetail(reportItem)
+    }
+
+    onBeforeRouteLeave(() => {
+        analyzeStore.multiSelectReport(false)
+    })
 </script>

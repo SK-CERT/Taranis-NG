@@ -15,7 +15,7 @@ from shared.log_manager import logger
 TZ = ZoneInfo(os.getenv("TZ", "UTC"))
 
 # Tags kept as-is. Same list as the GUI's DOMPurify allowlist
-# (src/gui-v3/src/utils/sanitizeNewsItemHtml.ts), so what is stored is also what renders.
+# (src/gui/src/utils/sanitizeNewsItemHtml.ts), so what is stored is also what renders.
 ALLOWED_HTML_TAGS = {
     "p",
     "h1",

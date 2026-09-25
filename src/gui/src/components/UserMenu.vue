@@ -1,86 +1,101 @@
 <template>
-    <div class="user-menu cx-user-menu">
-
-        <!--USERMENU-->
-        <v-menu close-on-click close-on-content-click offset-y st>
-            <template v-slot:activator="{ on }">
-                <div class="user-menu-button pl-0 pr-2">
-                    <v-btn icon v-on="on">
-                        <v-icon color="white" medium>mdi-shield-account</v-icon>
-                    </v-btn>
-                </div>
+    <div class="user-menu">
+        <!-- User Menu -->
+        <v-menu offset-y>
+            <template #activator="{ props }">
+                <v-btn
+                    data-test="user-menu"
+                    icon
+                    v-bind="props"
+                >
+                    <v-icon>mdi-shield-account</v-icon>
+                </v-btn>
             </template>
+
             <v-list>
+                <!-- User info -->
                 <v-list-item>
-                    <v-list-item-avatar class="">
-                        <v-icon>mdi-shield-account</v-icon>
-                    </v-list-item-avatar>
-                    <v-list-item-content>
-                        <v-list-item-title>{{ username }}</v-list-item-title>
-                        <v-list-item-subtitle>{{ organizationName }}</v-list-item-subtitle>
-                    </v-list-item-content>
+                    <template #prepend>
+                        <v-avatar color="primary">
+                            <v-icon color="white">mdi-shield-account</v-icon>
+                        </v-avatar>
+                    </template>
+                    <v-list-item-title
+                        ><bdi dir="auto">{{ username }}</bdi></v-list-item-title
+                    >
+                    <v-list-item-subtitle
+                        ><bdi dir="auto">{{ organizationName }}</bdi></v-list-item-subtitle
+                    >
                 </v-list-item>
-                <v-divider></v-divider>
 
-                <v-list-item @click="settings">
-                    <v-list-item-icon>
+                <v-divider />
+
+                <!-- Settings -->
+                <v-list-item @click="showSettings">
+                    <template #prepend>
                         <v-icon>mdi-account-cog</v-icon>
-                    </v-list-item-icon>
-                    <v-list-item-content>
-                        <v-list-item-title> {{ $t('user_menu.settings') }}</v-list-item-title>
-                    </v-list-item-content>
+                    </template>
+                    <v-list-item-title>{{ t('user_menu.settings') }}</v-list-item-title>
                 </v-list-item>
 
-                <v-list-item @click="deauthenticate">
-                    <v-list-item-icon>
-                        <v-icon>mdi-logout</v-icon>
-                    </v-list-item-icon>
-                    <v-list-item-content>
-                        <v-list-item-title> {{ $t('user_menu.logout') }}</v-list-item-title>
-                    </v-list-item-content>
+                <!-- Logout -->
+                <v-list-item
+                    data-test="logout-action"
+                    @click="handleLogout"
+                >
+                    <template #prepend>
+                        <v-icon :style="isRtl ? { transform: 'scaleX(-1)' } : undefined">mdi-logout</v-icon>
+                    </template>
+                    <v-list-item-title>{{ t('user_menu.logout') }}</v-list-item-title>
                 </v-list-item>
             </v-list>
         </v-menu>
 
-        <UserSettings />
-
+        <!-- User Settings Dialog (includes Security tab) -->
+        <UserSettings v-model="settingsVisible" />
     </div>
 </template>
 
-<script>
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import UserSettings from "./UserSettings";
+<script setup lang="ts">
+    import { ref, computed } from 'vue'
+    import { useRouter } from 'vue-router'
+    import { useI18n } from 'vue-i18n'
+    import { useAuthStore } from '@/stores/auth'
+    import { useUserStore } from '@/stores/user'
+    import UserSettings from './UserSettings.vue'
+    import { useRtl } from 'vuetify'
 
-    export default {
-        name: "UserMenu",
-        mixins: [AuthMixin],
-        components: {
-            UserSettings
-        },
-        data: () => ({
-            darkTheme: false
-        }),
-        computed: {
-            username() {
-                return this.$store.getters.getUserName
-            },
+    const { t } = useI18n()
+    const router = useRouter()
+    const authStore = useAuthStore()
+    const userStore = useUserStore()
+    const { isRtl } = useRtl()
 
-            organizationName() {
-                return this.$store.getters.getOrganizationName
-            }
-        },
-        methods: {
-            deauthenticate() {
-                this.$store.dispatch('logout');
-            },
+    const settingsVisible = ref<boolean>(false)
 
-            settings() {
-                this.$root.$emit('show-user-settings');
-            },
+    const username = computed(() => userStore.userName || t('user_menu.unknown_user'))
+    const organizationName = computed(() => userStore.organizationName || t('user_menu.no_organization'))
 
-            darkToggle() {
-                this.$vuetify.theme.dark = this.darkTheme
-            }
-        }
+    const showSettings = (): void => {
+        settingsVisible.value = true
+    }
+
+    const handleLogout = async (): Promise<void> => {
+        const logoutRequest = authStore.logout().catch((error: unknown) => {
+            console.error('Logout error:', error)
+        })
+
+        // Leave the protected route immediately; reporting a server-side
+        // logout failure must not keep cached application content visible.
+        await router.replace('/login')
+
+        await logoutRequest
     }
 </script>
+
+<style scoped>
+    .user-menu {
+        display: flex;
+        align-items: center;
+    }
+</style>
