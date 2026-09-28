@@ -225,6 +225,11 @@ export function useKeyboard(targetId: string, router: Router) {
         return isTypingTarget(document.activeElement)
     }
 
+    /** True while a v-dialog is open (not other overlays like tooltips..) */
+    function isDialogOpen(): boolean {
+        return !!document.querySelector('.v-overlay--active.v-dialog')
+    }
+
     function groupPosition(direction: boolean): void {
         const groups = configStore.osintSourceGroupsForAssess as GroupNavItem[]
         const activeGroupId = assessStore.getCurrentGroup
@@ -284,6 +289,8 @@ export function useKeyboard(targetId: string, router: Router) {
     function keyAction(event: KeyboardEvent): void {
         // Don't process if hotkeys are disabled
         if (!state.value.keyActionEnabled) return
+
+        if (isDialogOpen()) return
 
         // console.debug("Key:", event.key, ", class:", document.activeElement?.className, ", activeElement:", document.activeElement);
 
