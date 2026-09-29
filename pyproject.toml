@@ -72,7 +72,7 @@ test = [
 # on the CONTROL host only — worker hosts are driven through the compose CLI.
 ansible = [
     "ansible-core==2.21.3",
-    "ansible-lint==26.8.0",
+    "ansible-lint==26.9.0",
     "docker>=7.1.0",
 ]
 
