@@ -1,6 +1,6 @@
 {
     "name": "taranis-ng-gui",
-    "version": "26.05.1",
+    "version": "26.10.1",
     "private": true,
     "type": "module",
     "scripts": {
