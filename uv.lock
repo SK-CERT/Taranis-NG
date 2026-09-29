@@ -1304,7 +1304,7 @@ wheels = [
 
 [[package]]
 name = "taranis-ng"
-version = "26.5.1"
+version = "26.10.1"
 source = { virtual = "." }
 
 [package.dev-dependencies]
@@ -1341,7 +1341,7 @@ test = [{ name = "pytest", specifier = "==9.1.1" }]
 
 [[package]]
 name = "taranis-ng-shared"
-version = "26.5.1"
+version = "26.10.1"
 source = { editable = "src/shared" }
 dependencies = [
     { name = "marshmallow" },

@@ -1,6 +1,6 @@
 [project]
 name = "taranis-ng-bots"
-version = "26.05.1"
+version = "26.10.1"
 description = "Taranis-NG Bots service."
 requires-python = ">=3.11"
 dependencies = [
@@ -18,7 +18,7 @@ dependencies = [
     "requests==2.34.2",
     "schedule==1.2.2",
     "sseclient-py==1.9.0",
-    "taranis-ng-shared==26.05.1",
+    "taranis-ng-shared==26.10.1",
 ]
 
 [build-system]

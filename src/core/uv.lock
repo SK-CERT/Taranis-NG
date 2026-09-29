@@ -2240,7 +2240,7 @@ wheels = [
 
 [[package]]
 name = "taranis-ng-core"
-version = "26.5.1"
+version = "26.10.1"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
@@ -2323,7 +2323,7 @@ requires-dist = [
 
 [[package]]
 name = "taranis-ng-shared"
-version = "26.5.1"
+version = "26.10.1"
 source = { directory = "../shared" }
 dependencies = [
     { name = "marshmallow" },

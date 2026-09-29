@@ -1,6 +1,189 @@
 # Changelog
 
 ---
+## [26.10.1] - 2026-09-29
+- The GUI has been migrated from the Vue 2 to the Vue 3 framework. The following are the major features related to this upgrade:
+    - New authentication settings in Taranis (local password, LDAP, OAuth 2.0 / OIDC with PKCE support, and SAML 2.0 with signed/encrypted assertions, SP metadata endpoint, SP key pair generation, and IdP metadata import), including 2FA. #1345
+    - Redesigned OSINT source screen with more details, enable/disable functionality, manual execution, and more. #1598
+    - Public web module for sharing reports on a customized web interface. #1327
+    - Added MULTI_CHOICE report item attribute type. #1600
+    - Added themes. #1602
+    - Extract vulnerability identifiers at collection time. #1569
+    - The Vue 3 interface now supports 19 languages. #1426
+    - Added support for custom e-mail headers from report items. #1599
+
+### Breaking change for authentification using keycloak, openid or ldap!
+
+Deployments using TARANIS_NG_AUTHENTICATOR = keycloak | openid | ldap must first:
+
+- Create the matching OIDC or LDAP login method in the GUI. For Keycloak, register https://<host>/api/v1/auth/oauth/<slug>/callback as a redirect URI.
+- Link existing users to the new method in their user dialog.
+- Remove the old KEYCLOAK_*, LDAP_*, OPENID_LOGOUT_URL and *_LOGIN_URL/*_LOGOUT_URL variables and the keycloak_* secrets.
+
+or
+
+- use local admin user to setup authentication method and then link local accounts to the new authentication method
+
+Please read `src/core/auth/README.md` for details.
+
+### Changes not related to the Vue 3 migration:
+
+- Fix collectors start, if core is not ready yet and startup timeout elapses - #1665
+    - Fix a bug where, if CORE is not ready yet and the COLLECTORS startup timeout elapses, collecting remain dead and is never  started. This can happen after a Docker restart. Later container will look like online but no sources will run. Only error stay in logs.
+    - Now collectors docker restart is very fast in case that core is already running
+
+- Fix pdf download on Chrome/Brave - #1664
+    - 2026-09-21: Chrome started requiring the preview resource twice (preview, save).
+    - The single-use Redis entry prevented users from downloading an opened PDF.
+
+- unify short timeouts (increase timeout 10 to 30) - #1663
+
+- stop reporting delivered e-mails as failed - #1657
+    - Publishing any product by e-mail logged Email sending failed, see publisher logs while the mail was actually delivered - so reports got re-sent.
+
+- Custom e-mail headers from report items - #1599
+    - Lets a product carry classification values from its report items as custom mail headers, so downstream filters and archives can route on them.
+
+- stop sources being collected several times at once - #1596
+    - BaseCollector.refresh() assigned source.scheduler_job but nothing ever cancelled those jobs, so every refresh stacked another job per source. Since core calls refresh_collector on every source save, this compounds quickly.
+
+- keep the text of collected content instead of deletâ€¦ - #1595
+    - Sanitization used a single allowlist to decide both may this tag render and is the text inside it worth keeping. Unsupported tags were decompose()d â€” deleted along with their content â€” so any markup we do not render ourselves took the message body with it.
+
+- do not log upload bodies, and never write NUL to the log - #1567
+    - A text column cannot hold NUL, so the INSERT failed and took the upload with it.
+    - An audit record must never be able to fail the operation it is recording.
+
+- run every service as an unprivileged user - #1565
+    - no Dockerfile carried a USER directive, so every Python service ran its whole stack as uid 0. A container escape or an RCE in any of them started as root.
+    - Why the entrypoint and not USER â€” named volumes (/data, /app/templates, /app/storage) take their ownership from the image directory the first time they are mounted. Existing deployments already hold root-owned contents, so a USER line alone would leave every upgraded install unable to write to its own data.
+
+- verify SSH host keys, and keep SFTP out of the FTP publisher - #1564
+    - Host keys were never verified
+    - New managers/ssh_host_keys.p
+    - The FTP publisher no longer speaks SFTP
+    - Upgrade note â€” existing FTP presets configured with an sftp:// URL stop working and must move to the SFTP publisher
+
+- sandbox the Jinja environment and make the suite runnable #1563
+    - BasePresenter.render_jinja built a plain jinja2.Environment and injected vars as a template global. Report templates are edited through the GUI and the data flowing into them is attacker-controlled OSINT content, so a plain environment turns {{ ''.class... }} style template injection into code execution inside the presenter container â€” and vars shortcuts several of the well-known escape chains by handing out a module namespace directly.
+
+- close attachment IDOR, open redirects and an SSRF redirectâ€¦ - #1562
+    - Attachment download ignored the item it was asked for
+    - Login redirects were not all same-origin checked
+    - SAML metadata fetches followed redirects past their own guard
+
+- fix: harden the API's browser-facing surface and error responses - #1561
+    - CORS reflected any origin â€” CORS(app, supports_credentials=True) with no origin list makes flask-cors echo back whatever Origin it is sent, with credentials, so any website a logged-in analyst visited could make authenticated API calls. Now off unless TARANIS_NG_CORS_ORIGINS names the allowed origins. Production needs none (Traefik serves GUI and API under one hostname); npm run dev:remote does, so docker/.env.e2e sets it. The four worker services dropped CORS(app) outright â€” nothing browser-based reaches them.
+    - Config.DEBUG was hardcoded True â€” the Werkzeug debugger executes arbitrary code from any traceback page, and run.py hands it app.debug directly. Now reads FLASK_DEBUG, default off.
+    - Preview tickets were replayable â€” the endpoint minted a uuid4 in Redis and served the report from an unauthenticated GET. The comment claimed single use; nothing ever deleted the key, so anyone with the URL could replay it for an hour. Now consumed on read, TTL 3600 â†’ 600 s.
+    - A rejected request body came back in the error response â€” flask_restful builds error responses from the exception's .data, and marshmallow's ValidationError.data is the input it just rejected, so POST /config/users with a malformed payload answered 500 with the new account's cleartext password in the body. SafeErrorApi turns those into a 400 carrying only field errors. Fixed centrally rather than at the ~46 schema.load() call sites, because one missed site reintroduces the leak.
+
+- throttle failed logins per username - #1560
+    - Failed local/LDAP logins and wrong TOTP codes were slowed only by a 1â€“3 s jitter. No lockout existed, and the counter lived nowhere â€” every gunicorn worker was independently unaware of the others' failures. Password spraying the single privileged admin account is the most direct remote attack on a deployment.
+
+- Fix presenter error: time data '2026-XX-XX' does not match format - #1531
+    - Fix presenter error: time data '2026-XX-XX' does not match format '%Y.%m.%d'
+    - Error appear in templates where was used strfdate function like: {{ rpt.attrs.exposure_date | strfdate | e }}
+
+- Redis and PostgresSQL version pinning - #1489
+    - Fixed Redis and PostgreSQL version pinning in docker-compose instead of .env
+
+- Fix configuration GUI + OSINT source node move - #1488
+    - Previously update() silently ignored a changed parent id, so an item could never be moved to another node. Now supported in osint_source.py, bot_preset.py, product_type.py, publisher_preset.py:
+        - Reassign collector_id / bot_id / presenter_id / publisher_id when it changes
+        - Target must exist and be of the same type (parameter sets must be compatible), otherwise ValueError
+        - ParameterValue.parameter_id is re-mapped onto the target's parameters by parameter.key
+
+
+- Update test infrastructure + fixes - #1487
+    - Consolidates five test stacks (pytest, Vitest, Playwright, ansible syntax, ansible-lint) behind two commands, and makes every tool version live in exactly one place.
+
+- Ansible - #1485
+   - Recreated Ansible. For now it enables:
+        - deployment on the single machine (localhost)
+        - deployment of worker(s) on remote machines
+        - turning on/off and removal of worker(s) on remote machines
+
+- Email publisher fix - #1484
+    - Email publisher, envelope, guesses the body mime type based on absence or presence of HTML tags <>. When <> is used in plaintext, envelope changes the mime type of body to html. This modifies message presenter to add body mime type based on the used template.
+
+- Validate service node API keys - #1450
+    - Require the existence of API-key in shared service-node schemas.
+
+- refresh user-facing documentation - #1424
+    - Refresh user-facing documentation across Taranis NG so it accurately describes the current installation, development, GUI, testing, and operational workflows
+
+- refactor vulnerability template formatting - #1420
+    - prettify the inside of the template without changing its output
+
+- fix the CI/CD build process - #1418
+
+- update the default templates - #1417
+
+- Optimize presenter rendering (minor performance improvement) - #1415
+    - avoid duplicate JSON sanitization for PDFs (2Ã—) and messages (3Ã—)
+    - remove duplicate logs from the presenter container
+
+- remove obsolete class from testing - #1405
+    - class attribute-description-help was only introduced for the purpose of test. This PR removes it again.
+
+- remove traefik dependency on gui and core - #1404
+    - traefik should be able to start even if gui/core are down; and NOT be restarted when they are.
+
+- improve tooltip help in Analyze - #1403
+    - move tooltip in legacy gui a bit to the right
+    - fix tooltip in the new gui
+
+- reorder the build process for speed - #1402
+    - reorder the build process so that minor source code changes don't require package reinstallation (before, .git got copied in too early.
+
+- add new taranis vulnerability template - #1401
+    - new template for vulnerability advisory and the summary advisory
+
+- add grace period of 5 minutes to the core to prevent long migrations from killing core at startup - #1400
+    - add grace period of 5 minutes to the core to prevent long migrations from killing core at startup
+
+- improve speed of template rendering by eliminating to-from JSON - #1398
+    - base presenter used object->json->object to better serialize certain types of data. This version does that without the needless round trip, which (with multiple sources) tool several seconds to finish.
+
+- fix clicking on "vulnerability fixed" in self service asset management - #1397
+    - Self service asset management in the legacy GUI has a button to mark vulnerability as "fixed/seen". The GUI was using POST instead of PUT, reaching unimplemented API call. This PR fixes that.
+
+- fix previews - #1396
+  - makes product previews more reliable.
+
+- disable reasoning - #1395
+    - Reasoning breaks pre-filling the fields, takes more time and eats available context. For that reason, only non-reasoning models used to work with Taranis NG. Since reasoning became de-facto default, we need to explicitly turn it off in the request.
+
+- Remove DeprecationWarning: Call to deprecated setex - #1394
+  - remove DeprecationWarning: Call to deprecated setex. (Use 'set' instead.)
+
+- New OSINT sources #1375
+  - added new OSINT sources
+
+- Pre-commit error on Windows, Pull requests label #1346
+    - Fixed pre-commit error on Windows: Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings
+    - Unified label in Pull requests that update a dependencies
+
+- Node creation fix #1328
+
+- Version bumps, sync and cleanup, CI, management scripts #1331
+
+- Docker files improvements #1299
+    - LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format
+    - gcc, g++, make, musl-dev are already included in build-base (duplicity package)
+    - "COPY --chmod=755" in one step
+    - warning redirecting incorrect #include <sys/poll.h> to <poll.h>
+
+- Fix saving reports on Chrome, Brave (again) #1265
+    - Chrome does not process the Content-Disposition filename on POST requests -> therefore, GET is used.
+    - small enchacement on preview_filename (can casue problem on parsing filename if contains ")
+
+- Add pdf file name definition #1214
+    - add pdf file name definition (empty = functionality like before)
+    - one render_jinja function (refactoring duplicity code)
+    - ruff checks
+
 ## [26.05.1] - 2026-04-29
 - Try fix "/.git": not found on github actions #1173
     - Try fix github actions build check
@@ -93,7 +276,7 @@
     - this actions is not valid inside "all" group because we can't mix news items from various groups. This leads in loose of original OSINT group.
 
 - Fixed broken attachment download (Content-Security-Policy) #1106
-    - Fixed broken attachment download by Content-Security-Policy (Error: The page’s settings blocked an event handler (script-src-attr) from being executed because it violates the following directive: “default-src 'self'”.)
+    - Fixed broken attachment download by Content-Security-Policy (Error: The pageï¿½s settings blocked an event handler (script-src-attr) from being executed because it violates the following directive: ï¿½default-src 'self'ï¿½.)
 
 - Better About section on Dashboard #1105
     - Database caption changed to About
@@ -367,7 +550,7 @@
     - Merged custom.css into main.css.
     - pdf_template.html now uses only the smaller main.css. PDF rendering speed increased.
     - template.html: sorted styles for clarity; improved checkboxes.
-    - No other visual changes—pure cleanup!
+    - No other visual changesï¿½pure cleanup!
 
 - Fix attribute sort #945
     - Fixed sorting on attributes:
@@ -502,7 +685,7 @@
 - Add HTML display support for WEB-collected news items #844
     - Added HTML content support for WEB-type collected items
     - Works only on new items; old crawled text remains plain text (losing line breaks)
-    - Added extra strip() step to remove_empty_html_tags output — removes useless leading and trailing whitespace
+    - Added extra strip() step to remove_empty_html_tags output ï¿½ removes useless leading and trailing whitespace
     - Remove empty html tags on manual user news item input
     - New function text_to_simple_html for future using (formatting other collectors content to display properly line breaks in news feed)
 
@@ -640,12 +823,12 @@
 - Documentation tidy-up #739
     - Added AI-related documentation
     - Updated existing documentation
-    - Created additional help file howto.md – guides for using Taranis NG to perform specific tasks
+    - Created additional help file howto.md ï¿½ guides for using Taranis NG to perform specific tasks
     - Main README.md kept minimal: overview only; Docker-specific instructions separated to avoid mixing content
     - Management script help moved to howto.md (unrelated to Docker build process)
-    - Removed duplicate CPE upload section from main and Docker READMEs — full version retained in howto.md
+    - Removed duplicate CPE upload section from main and Docker READMEs ï¿½ full version retained in howto.md
     - Removed obsolete demo files from Docusaurus (only outdated examples, no active content)
-    - Renamed folder doc › docs (all documentation will reside here)
+    - Renamed folder doc ï¿½ docs (all documentation will reside here)
     - Fixed broken taranis-logo.svg in assets (may still be unused)
 
 - Optimize case-insensitive search performance #733
@@ -743,7 +926,7 @@
     - Add to RSS collector Exception handling for fetch feed. This also add missing prefix in logs
 
 - Fix Collector Content debug print & Tuple Error, Keycloak Auth #652
-    - Fixed debug print for new item’s Content property (previously displayed as an array of strings; issue introduced in the last PR)
+    - Fixed debug print for new itemï¿½s Content property (previously displayed as an array of strings; issue introduced in the last PR)
     - Fixed Keycloak authentication compatibility with the latest Keycloak versions
     - Fixed collector error: An unhandled exception occurred during scheduled collector run: '>' not supported between instances of 'tuple' and 'int'
 
@@ -768,21 +951,21 @@
 - Unified Configuration #636
     - Unified Global Configuration and My Assets module configuration. Now everything is under a single Configuration. All permissions and rights remain unchanged and work as expected.
     - Moved the Configuration menu item to the far right.
-    - Fixed bug where external users couldn’t be edited without entering a password.
+    - Fixed bug where external users couldnï¿½t be edited without entering a password.
     - Corrected access rights to Settings.
     - Fixed typo
 
 - Added coloring to OSINT sources records #635
     - Added coloring to OSINT sources records: Green - Ok, Gray - disabled, Red - error, Orange - not collected for N days
     - Added default value 30 days for "No new data warning interval in days (0 to disable)" parameter in collectors
-    - Fix bug caused by #613 Add support for default values when creating new Collectors… Opening existing record add default values too
+    - Fix bug caused by #613 Add support for default values when creating new Collectorsï¿½ Opening existing record add default values too
 
 - Preparation for user settings table (Part 1) #627
     - preparation for user settings table (replacement for user profile)
     - remap hotkeys to user table (before to profile table)
     - hide OPTIONS requests in gunicorn core log
 
-- Add support for default values when creating new Collectors, Bots … #613
+- Add support for default values when creating new Collectors, Bots ï¿½ #613
     - Add support for default values when creating new Collectors, Publisher presets, Bot presets and Product types
     - Automatically select first node and first type on New action
 
@@ -843,7 +1026,7 @@
     - Truncates text on specific symbol
 
 - Improve Tag Cloud words (handle accented characters, filter short words) #575
-    - Added support for Tag Cloud words with accented characters (like über)
+    - Added support for Tag Cloud words with accented characters (like ï¿½ber)
     - Filter short words (length < 3)
     - Fix issue #35 Tag cloud has troubles with umlauts and other characters
 
@@ -983,7 +1166,7 @@
     - Added tooltips for remove buttons.
     - Fixed error: AttributeError: 'OptionEngine' object has no attribute 'execute' (Flask migration).
     - Renamed showDeletePopup to showMsgBox due to its more generic meaning, not just for deleting.
-    - Changed the text message for removing items (delete › remove) as it was misleading.
+    - Changed the text message for removing items (delete ï¿½ remove) as it was misleading.
 
 - fix send_file #498
     - Flask send_file changed keyword arguments, see pallets/flask#4667
@@ -1520,6 +1703,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 - Merged multiple Taranis NG repositories into one for easier understanding and management of the project
 
 
+[26.10.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/26.10.1
 [26.05.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/26.05.1
 [26.02.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v26.02.1
 [25.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v25.12.1
