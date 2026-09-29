@@ -1,6 +1,6 @@
 [project]
 name = "taranis-ng-core"
-version = "26.05.1"
+version = "26.10.1"
 description = "Taranis-NG Core service."
 requires-python = ">=3.11"
 dependencies = [
@@ -38,9 +38,9 @@ dependencies = [
     "tqdm==4.70.1",
     "Werkzeug==3.1.8",
     "langchain==1.4.2",
-    "langchain-openai==1.6.3",
+    "langchain-openai==1.6.6",
     "pycountry==26.2.16",
-    "taranis-ng-shared==26.05.1",
+    "taranis-ng-shared==26.10.1",
 ]
 
 [build-system]

@@ -759,7 +759,7 @@ wheels = [
 
 [[package]]
 name = "taranis-ng-presenters"
-version = "26.5.1"
+version = "26.10.1"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -796,7 +796,7 @@ requires-dist = [
 
 [[package]]
 name = "taranis-ng-shared"
-version = "26.5.1"
+version = "26.10.1"
 source = { directory = "../shared" }
 dependencies = [
     { name = "marshmallow" },

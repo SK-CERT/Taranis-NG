@@ -1,6 +1,6 @@
 [project]
 name = "taranis-ng-collectors"
-version = "26.05.1"
+version = "26.10.1"
 description = "Taranis-NG Collectors service."
 requires-python = ">=3.11"
 dependencies = [
@@ -23,7 +23,7 @@ dependencies = [
     "selenium==4.49.0",
     "slackclient==2.9.4",
     "tweepy==4.17.0",
-    "taranis-ng-shared==26.05.1",
+    "taranis-ng-shared==26.10.1",
 ]
 
 [build-system]
