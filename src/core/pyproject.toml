@@ -27,7 +27,7 @@ dependencies = [
     "PyJWT==2.13.0",
     "pyotp==2.10.0",
     "python-dotenv==1.2.3",
-    "webauthn==3.0.0",
+    "webauthn==3.0.1",
     "redis==8.1.0",
     # Bounds admin-supplied attribute extraction patterns with a timeout (shared.attribute_extraction).
     "regex==2026.9.10",
