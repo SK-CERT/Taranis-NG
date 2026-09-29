@@ -128,7 +128,7 @@
             :title="t('assess.tooltip.highlight_wordlist')"
             @click="toggleHighlightWordlist"
         >
-            <v-icon>{{ highlightWordlist ? 'mdi-alphabetical-off' : 'mdi-alphabetical' }}</v-icon>
+            <v-icon>{{ 'mdi-alphabetical' }}</v-icon>
         </v-btn>
 
         <!-- Compact Mode Button -->
@@ -139,7 +139,7 @@
             :title="t('assess.tooltip.compact_mode')"
             @click="toggleCompactMode"
         >
-            <v-icon>mdi-format-list-bulleted</v-icon>
+            <v-icon>{{ 'mdi-view-headline' }}</v-icon>
         </v-btn>
     </v-toolbar>
 </template>
