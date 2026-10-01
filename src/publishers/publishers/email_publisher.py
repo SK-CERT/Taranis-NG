@@ -192,7 +192,6 @@ class EMAILPublisher(BasePublisher):
                 msg = "Email sent successfully"
                 status = HTTPStatus.OK
                 self.logger.info(msg)
-                Envelope.smtp_quit()
             else:
                 msg = "Email sending failed, see publisher logs"
                 status = HTTPStatus.INTERNAL_SERVER_ERROR
@@ -204,3 +203,13 @@ class EMAILPublisher(BasePublisher):
         except Exception as error:
             self.logger.exception(f"Error: {error}")
             return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+        finally:
+            try:
+                # Instance form, not Envelope.smtp_quit(): the class form calls
+                # SMTPHandler.quit_all(), which iterates every cached connection and
+                # crashed on a stale `False` left in the class-level cache by a failed
+                # login. This closes only the connection this publish used.
+                envelope.smtp_quit()
+            except Exception:
+                self.logger.exception("Failed to close SMTP connection")
