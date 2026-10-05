@@ -128,6 +128,52 @@ describe('Content data scroll guards', () => {
         })
     })
 
+    it.each([
+        ['Assess', ContentDataAssess, mockAssessStore.loadNewsItemsByGroup],
+        ['Analyze', ContentDataAnalyze, mockAnalyzeStore.loadReportItems],
+        ['Publish', ContentDataPublish, mockPublishStore.loadProducts]
+    ])('%s uses skeletons for the first page and a spinner for appended pages', async (_name, component, load) => {
+        let finishLoad
+        load.mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    finishLoad = resolve
+                })
+        )
+        const wrapper = mountWithPlugins(component, { global: { stubs: commonStubs } })
+
+        try {
+            await flushPromises()
+            expect(wrapper.find('.content-skeleton').exists()).toBe(true)
+            expect(wrapper.find('.v-progress-circular').exists()).toBe(false)
+
+            finishLoad({ data: { ...mockAssessStore.getNewsItems, total_count: 40 } })
+            await flushPromises()
+            expect(wrapper.find('.content-skeleton').exists()).toBe(false)
+
+            mockAssessStore.getNewsItems.total_count = 40
+            mockAnalyzeStore.getReportItems.total_count = 40
+            mockPublishStore.getProducts.total_count = 40
+            load.mockImplementationOnce(
+                () =>
+                    new Promise((resolve) => {
+                        finishLoad = resolve
+                    })
+            )
+            const append = wrapper.vm.updateData(true)
+            await flushPromises()
+            expect(wrapper.find('.content-skeleton').exists()).toBe(false)
+            expect(wrapper.find('.v-progress-circular').exists()).toBe(true)
+
+            finishLoad({ data: { ...mockAssessStore.getNewsItems, total_count: 40 } })
+            await append
+            await flushPromises()
+            expect(wrapper.find('.v-progress-circular').exists()).toBe(false)
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
     it('ContentDataAssess stops append loading when all news items are already loaded', async () => {
         const wrapper = mountWithPlugins(ContentDataAssess, {
             props: { analyze_selector: false },

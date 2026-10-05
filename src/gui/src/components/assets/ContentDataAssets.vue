@@ -1,15 +1,6 @@
 <template>
     <div class="asset-content">
-        <div
-            v-if="loading"
-            class="asset-content__state"
-        >
-            <v-progress-circular
-                indeterminate
-                color="primary"
-                size="64"
-            />
-        </div>
+        <ContentSkeleton v-if="loading" />
         <v-alert
             v-else-if="loadError"
             class="ma-3"
@@ -45,6 +36,7 @@
     import { useRoute } from 'vue-router'
     import { deleteAsset } from '@/api/assets'
     import { useAssetsStore } from '@/stores/assets'
+    import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardAsset from './CardAsset.vue'
     import type { Asset, AssetFilter } from '@/types/assets'
     import { useSseResync } from '@/composables/useSseResync'
@@ -53,7 +45,7 @@
     const { t } = useI18n()
     const route = useRoute()
     const store = useAssetsStore()
-    const loading = ref(false)
+    const loading = ref(true)
     const loadError = ref(false)
     const filter = ref<AssetFilter>({ search: '', vulnerable: false, sort: 'ALPHABETICAL' })
     const groupId = computed(() => String(route.params['groupId'] || ''))
@@ -64,6 +56,7 @@
 
     const reloadData = async (silent = false): Promise<void> => {
         if (!groupId.value) {
+            loading.value = false
             store.clearAssets()
             return
         }
@@ -110,12 +103,6 @@
     .asset-content {
         min-height: 100%;
         background: var(--review-list-row);
-    }
-
-    .asset-content__state {
-        display: grid;
-        min-height: 12rem;
-        place-items: center;
     }
 
     .asset-list {

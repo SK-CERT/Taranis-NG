@@ -4,6 +4,10 @@
         fluid
         class="pa-0"
     >
+        <ContentSkeleton
+            v-if="!dataLoaded && collections.length === 0"
+            :compact="currentCard === CardCompact"
+        />
         <TransitionGroup
             name="card-list"
             tag="div"
@@ -81,6 +85,7 @@
     import { ICONS } from '@/config/ui-constants'
     import { useAnalyzeStore } from '@/stores/analyze'
     import CardAnalyze from './CardAnalyze.vue'
+    import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
     import { useSseResync } from '@/composables/useSseResync'
     import { getAnalyzeGroupName } from '@/utils/analyze-routing'
@@ -124,7 +129,7 @@
     const analyzeStore = useAnalyzeStore()
 
     const collections = ref<ReportItem[]>([])
-    const dataLoaded = ref(true)
+    const dataLoaded = ref(false)
     let updateSequence = 0
     const filter = ref<FilterState>({
         search: '',

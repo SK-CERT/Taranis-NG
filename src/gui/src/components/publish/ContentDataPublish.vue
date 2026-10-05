@@ -4,6 +4,10 @@
         fluid
         class="pa-0"
     >
+        <ContentSkeleton
+            v-if="!dataLoaded && collections.length === 0"
+            :compact="currentCard === CardCompact"
+        />
         <TransitionGroup
             name="card-list"
             tag="div"
@@ -78,6 +82,7 @@
     import { usePublishStore } from '@/stores/publish'
     import { getAllUserProductTypes } from '@/api/user'
     import CardProduct from './CardProduct.vue'
+    import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
     import { useSseResync } from '@/composables/useSseResync'
 
@@ -117,7 +122,7 @@
     const publishStore = usePublishStore()
 
     const collections = ref<ProductItem[]>([])
-    const dataLoaded = ref(true)
+    const dataLoaded = ref(false)
     let updateSequence = 0
     const filter = ref<FilterState>({
         search: '',
