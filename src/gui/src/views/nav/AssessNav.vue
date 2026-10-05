@@ -30,14 +30,6 @@
         try {
             await configStore.loadOSINTSourceGroupsAssess({ search: '' })
             groups.value = configStore.osintSourceGroupsForAssess as GroupNavItem[]
-
-            // If not on a specific group route and groups exist, redirect to first
-            if (!route.path.includes('/group/') && groups.value.length > 0) {
-                const firstGroup = groups.value[0]
-                if (firstGroup) {
-                    router.push(firstGroup.route)
-                }
-            }
         } catch (error) {
             console.error('Error loading OSINT source groups:', error)
         }
