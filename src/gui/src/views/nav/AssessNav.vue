@@ -1,5 +1,7 @@
 <template>
+    <NavSkeleton v-if="loading" />
     <GroupNavList
+        v-else
         :groups="groups"
         :active-id="activeGroupId"
         @select="onSelect"
@@ -11,12 +13,14 @@
     import { useRouter, useRoute } from 'vue-router'
     import { useConfigStore } from '@/stores/config'
     import GroupNavList from '@/components/common/GroupNavList.vue'
+    import NavSkeleton from '@/components/common/NavSkeleton.vue'
     import { type GroupNavItem } from '@/types/routing'
 
     const router = useRouter()
     const route = useRoute()
     const configStore = useConfigStore()
 
+    const loading = ref(true)
     const groups = ref<GroupNavItem[]>([])
 
     // Highlight the group matching the current /assess/group/:groupId route.
@@ -40,6 +44,8 @@
             }
         } catch (error) {
             console.error('Error loading OSINT source groups:', error)
+        } finally {
+            loading.value = false
         }
     })
 </script>
