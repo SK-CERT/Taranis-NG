@@ -200,7 +200,7 @@
                     >
                         <v-form
                             ref="formRef"
-                            class="px-4"
+                            class="px-4 pt-4"
                             @submit.prevent="addReportItem"
                         >
                             <v-row>
