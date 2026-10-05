@@ -40,6 +40,7 @@ describe('asset group loading presentation', () => {
             const request = store.loadAssetGroups()
             await flushPromises()
             expect(wrapper.find('.content-skeleton').exists()).toBe(true)
+            expect(wrapper.find('toolbar-filter-assets-stub').exists()).toBe(true)
             expect(wrapper.find('.v-alert').exists()).toBe(false)
             expect(store.assetGroupsLoaded).toBe(false)
 
@@ -52,6 +53,7 @@ describe('asset group loading presentation', () => {
             route.params.groupId = '3'
             await flushPromises()
             expect(wrapper.find('[data-test="asset-list"]').exists()).toBe(true)
+            expect(wrapper.find('toolbar-filter-assets-stub').exists()).toBe(true)
             expect(wrapper.find('.v-alert').exists()).toBe(false)
         } finally {
             wrapper.unmount()

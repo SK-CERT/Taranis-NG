@@ -1,5 +1,8 @@
 <template>
-    <div class="asset-content">
+    <v-container
+        fluid
+        class="asset-content pa-0"
+    >
         <ContentSkeleton
             v-if="loading"
             variant="asset"
@@ -11,13 +14,27 @@
             variant="tonal"
             >{{ t('asset.load_error') }}</v-alert
         >
-        <v-alert
+        <v-row
             v-else-if="assets.length === 0"
-            class="ma-3"
-            type="info"
-            variant="tonal"
-            >{{ t('asset.no_data') }}</v-alert
+            justify="center"
+            class="asset-empty-state my-8"
         >
+            <v-col
+                cols="12"
+                md="6"
+                class="text-center"
+            >
+                <v-icon
+                    size="64"
+                    color="grey"
+                >
+                    mdi-laptop
+                </v-icon>
+                <p class="text-h6 text-grey mt-4">
+                    {{ t('asset.no_data') }}
+                </p>
+            </v-col>
+        </v-row>
         <div
             v-else
             class="asset-list"
@@ -30,7 +47,7 @@
                 @delete="remove"
             />
         </div>
-    </div>
+    </v-container>
 </template>
 
 <script setup lang="ts">
@@ -104,8 +121,13 @@
 
 <style scoped>
     .asset-content {
-        min-height: 100%;
+        display: flow-root;
         background: var(--review-list-row);
+    }
+
+    .asset-empty-state {
+        /* Match the space reserved for the scroll trigger above other empty states. */
+        padding-block-start: 116px;
     }
 
     .asset-list {

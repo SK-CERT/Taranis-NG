@@ -165,7 +165,7 @@
     .content-skeleton__card--structured :deep(.v-skeleton-loader__actions) {
         flex-wrap: nowrap;
         padding-inline-start: 16px;
-        border-inline-start: 1px solid var(--review-panel-border);
+        border-inline-start: 1px solid rgba(var(--v-theme-outline), 0.24);
     }
 
     .content-skeleton__card--product :deep(.v-skeleton-loader__report-details > .v-skeleton-loader__text:last-child) {

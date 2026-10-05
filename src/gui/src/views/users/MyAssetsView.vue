@@ -1,10 +1,7 @@
 <template>
     <ViewLayout integrated-toolbar>
         <template #panel>
-            <ToolbarFilterAssets
-                v-if="selectedGroup"
-                @update-filter="content?.updateFilter($event)"
-            >
+            <ToolbarFilterAssets @update-filter="content?.updateFilter($event)">
                 <template #add-button>
                     <AddNewButton
                         :show="canCreate"
