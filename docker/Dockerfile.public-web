@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.14
+
 # public-web — Taranis-NG API-backed public vulnerability report feed.
 # A web-only build (adapted from an upstream Flask feed app) that fetches
 # report data live from the Taranis-NG core API instead of from files.
@@ -55,7 +57,9 @@ RUN uv pip install --system --no-cache --find-links /tmp/wheels . && \
     rm -rf /tmp/wheels /root/.cache
 
 # Application source.
-COPY ./src/public_web/ /app/
+# Normalize file permissions: directories stay traversable and files
+# readable by taranis.
+COPY --chmod=u=rwX,go=rX ./src/public_web/ /app/
 
 EXPOSE 80
 
