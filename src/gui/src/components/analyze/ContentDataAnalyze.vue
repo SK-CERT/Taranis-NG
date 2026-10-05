@@ -7,12 +7,10 @@
         <ContentSkeleton
             v-if="!dataLoaded && collections.length === 0"
             :compact="currentCard === CardCompact"
+            variant="report"
+            :hide-actions="disableActions"
         />
-        <TransitionGroup
-            name="card-list"
-            tag="div"
-            class="analyze-list"
-        >
+        <div class="analyze-list">
             <component
                 :is="currentCard"
                 v-for="collection in collections"
@@ -27,7 +25,7 @@
                 @show-detail="showDetail"
                 @edit="showDetail"
             />
-        </TransitionGroup>
+        </div>
         <div
             v-intersect="infiniteScrolling"
             class="mt-4"

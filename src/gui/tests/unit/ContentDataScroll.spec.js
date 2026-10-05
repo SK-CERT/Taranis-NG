@@ -146,6 +146,15 @@ describe('Content data scroll guards', () => {
             await flushPromises()
             expect(wrapper.find('.content-skeleton').exists()).toBe(true)
             expect(wrapper.find('.v-progress-circular').exists()).toBe(false)
+            const skeleton = wrapper.find('.content-skeleton__card')
+            if (_name === 'Assess') {
+                expect(skeleton.find('.v-skeleton-loader__paragraph').exists()).toBe(true)
+            } else {
+                expect(skeleton.find('.v-skeleton-loader__avatar').exists()).toBe(true)
+                expect(skeleton.find('.v-skeleton-loader__chip').exists()).toBe(true)
+                expect(skeleton.find('.v-skeleton-loader__paragraph').exists()).toBe(false)
+                expect(skeleton.findAll('.v-skeleton-loader__actions .v-skeleton-loader__button')).toHaveLength(_name === 'Analyze' ? 2 : 1)
+            }
 
             finishLoad({ data: { ...mockAssessStore.getNewsItems, total_count: 40 } })
             await flushPromises()

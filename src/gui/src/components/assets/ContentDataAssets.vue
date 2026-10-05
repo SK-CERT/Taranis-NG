@@ -1,6 +1,9 @@
 <template>
     <div class="asset-content">
-        <ContentSkeleton v-if="loading" />
+        <ContentSkeleton
+            v-if="loading"
+            variant="asset"
+        />
         <v-alert
             v-else-if="loadError"
             class="ma-3"
