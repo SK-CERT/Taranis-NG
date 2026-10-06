@@ -83,6 +83,9 @@ export function getReportItemData(report_item_id, data) {
     if (data.title_prefix !== undefined) {
         params += '&title_prefix=' + encodeURIComponent(data.title_prefix)
     }
+    if (data.state_id !== undefined) {
+        params += '&state_id=' + encodeURIComponent(data.state_id)
+    }
     if (data.attribute_id !== undefined) {
         params += '&attribute_id=' + encodeURIComponent(data.attribute_id)
     }

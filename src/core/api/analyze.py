@@ -172,7 +172,8 @@ class ReportItemData(Resource):
                 "remote_report_item_ids",
             ]:
                 value = request.args.get(key)
-                if value:
+                # empty value '' also means: this field changed, refetch
+                if value is not None:
                     if key in ["aggregate_ids", "remote_report_item_ids"]:
                         data[key] = value.split("--")
                     else:
