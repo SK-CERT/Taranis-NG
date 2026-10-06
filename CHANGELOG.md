@@ -1,7 +1,11 @@
 # Changelog
 
+<!-- markdownlint-configure-file { "MD007": { "indent": 4 }, "MD013": false, "MD024": { "siblings_only": true } } -->
+
 ---
+
 ## [26.10.1] - 2026-09-29
+
 - The GUI has been migrated from the Vue 2 to the Vue 3 framework. The following are the major features related to this upgrade:
     - New authentication settings in Taranis (local password, LDAP, OAuth 2.0 / OIDC with PKCE support, and SAML 2.0 with signed/encrypted assertions, SP metadata endpoint, SP key pair generation, and IdP metadata import), including 2FA. #1345
     - Redesigned OSINT source screen with more details, enable/disable functionality, manual execution, and more. #1598
@@ -12,13 +16,13 @@
     - The Vue 3 interface now supports 19 languages. #1426
     - Added support for custom e-mail headers from report items. #1599
 
-### Breaking change for authentification using keycloak, openid or ldap!
+### Breaking change for authentication using keycloak, openid or ldap
 
 Deployments using TARANIS_NG_AUTHENTICATOR = keycloak | openid | ldap must first:
 
-- Create the matching OIDC or LDAP login method in the GUI. For Keycloak, register https://<host>/api/v1/auth/oauth/<slug>/callback as a redirect URI.
+- Create the matching OIDC or LDAP login method in the GUI. For Keycloak, register `https://<host>/api/v1/auth/oauth/<slug>/callback` as a redirect URI.
 - Link existing users to the new method in their user dialog.
-- Remove the old KEYCLOAK_*, LDAP_*, OPENID_LOGOUT_URL and *_LOGIN_URL/*_LOGOUT_URL variables and the keycloak_* secrets.
+- Remove the old `KEYCLOAK_*`, `LDAP_*`, `OPENID_LOGOUT_URL` and `*_LOGIN_URL`/`*_LOGOUT_URL` variables and the `keycloak_*` secrets.
 
 or
 
@@ -26,7 +30,7 @@ or
 
 Please read `src/core/auth/README.md` for details.
 
-### Changes not related to the Vue 3 migration:
+### Changes not related to the Vue 3 migration
 
 - Fix collectors start, if core is not ready yet and startup timeout elapses - #1665
     - Fix a bug where, if CORE is not ready yet and the COLLECTORS startup timeout elapses, collecting remain dead and is never  started. This can happen after a Docker restart. Later container will look like online but no sources will run. Only error stay in logs.
@@ -47,7 +51,7 @@ Please read `src/core/auth/README.md` for details.
 - stop sources being collected several times at once - #1596
     - BaseCollector.refresh() assigned source.scheduler_job but nothing ever cancelled those jobs, so every refresh stacked another job per source. Since core calls refresh_collector on every source save, this compounds quickly.
 
-- keep the text of collected content instead of delet… - #1595
+- keep the text of collected content instead of deleting it - #1595
     - Sanitization used a single allowlist to decide both may this tag render and is the text inside it worth keeping. Unsupported tags were decompose()d — deleted along with their content — so any markup we do not render ourselves took the message body with it.
 
 - do not log upload bodies, and never write NUL to the log - #1567
@@ -67,7 +71,7 @@ Please read `src/core/auth/README.md` for details.
 - sandbox the Jinja environment and make the suite runnable #1563
     - BasePresenter.render_jinja built a plain jinja2.Environment and injected vars as a template global. Report templates are edited through the GUI and the data flowing into them is attacker-controlled OSINT content, so a plain environment turns {{ ''.class... }} style template injection into code execution inside the presenter container — and vars shortcuts several of the well-known escape chains by handing out a module namespace directly.
 
-- close attachment IDOR, open redirects and an SSRF redirect… - #1562
+- close attachment IDOR, open redirects and an SSRF redirect gap - #1562
     - Attachment download ignored the item it was asked for
     - Login redirects were not all same-origin checked
     - SAML metadata fetches followed redirects past their own guard
@@ -94,12 +98,11 @@ Please read `src/core/auth/README.md` for details.
         - Target must exist and be of the same type (parameter sets must be compatible), otherwise ValueError
         - ParameterValue.parameter_id is re-mapped onto the target's parameters by parameter.key
 
-
 - Update test infrastructure + fixes - #1487
     - Consolidates five test stacks (pytest, Vitest, Playwright, ansible syntax, ansible-lint) behind two commands, and makes every tool version live in exactly one place.
 
 - Ansible - #1485
-   - Recreated Ansible. For now it enables:
+    - Recreated Ansible. For now it enables:
         - deployment on the single machine (localhost)
         - deployment of worker(s) on remote machines
         - turning on/off and removal of worker(s) on remote machines
@@ -150,16 +153,16 @@ Please read `src/core/auth/README.md` for details.
     - Self service asset management in the legacy GUI has a button to mark vulnerability as "fixed/seen". The GUI was using POST instead of PUT, reaching unimplemented API call. This PR fixes that.
 
 - fix previews - #1396
-  - makes product previews more reliable.
+    - makes product previews more reliable.
 
 - disable reasoning - #1395
     - Reasoning breaks pre-filling the fields, takes more time and eats available context. For that reason, only non-reasoning models used to work with Taranis NG. Since reasoning became de-facto default, we need to explicitly turn it off in the request.
 
 - Remove DeprecationWarning: Call to deprecated setex - #1394
-  - remove DeprecationWarning: Call to deprecated setex. (Use 'set' instead.)
+    - remove DeprecationWarning: Call to deprecated setex. (Use 'set' instead.)
 
 - New OSINT sources #1375
-  - added new OSINT sources
+    - added new OSINT sources
 
 - Pre-commit error on Windows, Pull requests label #1346
     - Fixed pre-commit error on Windows: Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings
@@ -177,7 +180,7 @@ Please read `src/core/auth/README.md` for details.
 
 - Fix saving reports on Chrome, Brave (again) #1265
     - Chrome does not process the Content-Disposition filename on POST requests -> therefore, GET is used.
-    - small enchacement on preview_filename (can casue problem on parsing filename if contains ")
+    - small enhancement on preview_filename (can cause problem on parsing filename if contains ")
 
 - Add pdf file name definition #1214
     - add pdf file name definition (empty = functionality like before)
@@ -185,6 +188,7 @@ Please read `src/core/auth/README.md` for details.
     - ruff checks
 
 ## [26.05.1] - 2026-04-29
+
 - Try fix "/.git": not found on github actions #1173
     - Try fix github actions build check
 
@@ -223,7 +227,7 @@ Please read `src/core/auth/README.md` for details.
     - remove from logs received Keycloak authentication data
     - ruff checks
 
-- Fix SSE authorization for external authentification type #1122
+- Fix SSE authorization for external authentication type #1122
     - fix SSE check for external authentication
     - fix logging errors can cause crash in some cases
     - ruff checks
@@ -254,7 +258,7 @@ Please read `src/core/auth/README.md` for details.
     - used build-in verification for attachment download (no code duplicity, simplified code)
     - better global download function
 
-- Treafik increased to 3.6.9 #1110
+- Traefik increased to 3.6.9 #1110
     - We recommend all users upgrade as soon as possible. CVE fixed:
     - CVE-2026-26998 (Advisory GHSA-fw45-f5q2-2p4x)
     - CVE-2026-26999 (Advisory GHSA-xw98-5q62-jx94)
@@ -276,7 +280,7 @@ Please read `src/core/auth/README.md` for details.
     - this actions is not valid inside "all" group because we can't mix news items from various groups. This leads in loose of original OSINT group.
 
 - Fixed broken attachment download (Content-Security-Policy) #1106
-    - Fixed broken attachment download by Content-Security-Policy (Error: The page�s settings blocked an event handler (script-src-attr) from being executed because it violates the following directive: �default-src 'self'�.)
+    - Fixed broken attachment download by Content-Security-Policy (Error: The page’s settings blocked an event handler (script-src-attr) from being executed because it violates the following directive: “default-src 'self'”.)
 
 - Better About section on Dashboard #1105
     - Database caption changed to About
@@ -293,7 +297,7 @@ Please read `src/core/auth/README.md` for details.
 - Fix github build (git_version file) #1102
     - github actions to create git_version file
     - fix github build
-    - add to comit hash also commited date
+    - add to commit hash also committed date
 
 - Add version info to dashboard #1091
     - add version number, build date and commit hash to dashboard
@@ -375,7 +379,7 @@ Please read `src/core/auth/README.md` for details.
 - Unified delete button appearance #1041
     - just add same look that was done last time to other parts of the application
 
-- Sources auto formated by ruff #1040
+- Sources auto formatted by ruff #1040
     - auto formatting generated by ruff, no more error in Github linting & formatting checks
 
 - Product preview / publish #1009
@@ -467,7 +471,7 @@ Please read `src/core/auth/README.md` for details.
     - unified duplicitous functions assess GUI
     - improved formatting of aggregated news item detail
     - fixed news item card height when link is hidden
-    - fix problem with filter change and open agregated item
+    - fix problem with filter change and open aggregated item
 
 - Wrong collector type shown on OSINT source screen on first open #985
     - Fix: OSINT source screen displayed the wrong collector type on first open. Issue occurs only the first time the screen is opened.
@@ -526,7 +530,7 @@ Please read `src/core/auth/README.md` for details.
     - when you use DATE filter you need pass another two new parameters: date_from, date_to
     - date is in ISO format: YYYY-MM-DD
     - added to Product JSON output new information field: Created
-    - better error handling in API processing when some deeper error occured
+    - better error handling in API processing when some deeper error occurred
 
 - All News Item category, Available Wordlist API #947
     - All category for News Items - respects ACLs
@@ -550,7 +554,7 @@ Please read `src/core/auth/README.md` for details.
     - Merged custom.css into main.css.
     - pdf_template.html now uses only the smaller main.css. PDF rendering speed increased.
     - template.html: sorted styles for clarity; improved checkboxes.
-    - No other visual changes�pure cleanup!
+    - No other visual changes—pure cleanup!
 
 - Fix attribute sort #945
     - Fixed sorting on attributes:
@@ -646,9 +650,9 @@ Please read `src/core/auth/README.md` for details.
     - Fixed TAG word creation (don't use HTML tags as words)
     - Fixed background color of TAG cloud on dark theme
     - Added new user setting: Colorful tag cloud
-    - small GUI changes on Dashbord screen
+    - small GUI changes on Dashboard screen
     - Added support for delayed setting loading (isInitializedSetting, settings-loaded)
-    - Ruff precomit checks
+    - Ruff pre-commit checks
 
 - Small migration fix #872
     - Fix: cannot drop table user_profile because other objects depend on it. Constraint user_profile_id_fkey on table "user" depends on table user_profile
@@ -656,13 +660,13 @@ Please read `src/core/auth/README.md` for details.
 - User settings #867
     - Added support for generic global/user settings. We have big need of user customization and this simplify future process. Developer now just add setting definition and can immediately use it in code by (get_setting - python, getSetting - js, vue), No other coding.
     - Added new table settings_user that is sub-table for settings. Each user has own records. There are global and user settings now.
-    - New table user_word_list (before user_profile_word_list). All user worlists are migrated
+    - New table user_word_list (before user_profile_word_list). All user wordlists are migrated
     - Some API optimizations in old settings code
     - Fixed news item keywords highlighting in dark theme
     - Heavy corrections in code (ruff checks)
     - Fixed jinja2.exceptions.UndefinedError: 'dict object' has no attribute 'baseScore' - added default values for empty CVSS
     - Added new user setting: Show source link in news items (default True)
-    - Fixed: In agregate news items content was displayed html code instead of formatted text
+    - Fixed: In aggregate news items content was displayed html code instead of formatted text
     - Some small source refactoring
 
 - Additional fix to #854 #855
@@ -685,7 +689,7 @@ Please read `src/core/auth/README.md` for details.
 - Add HTML display support for WEB-collected news items #844
     - Added HTML content support for WEB-type collected items
     - Works only on new items; old crawled text remains plain text (losing line breaks)
-    - Added extra strip() step to remove_empty_html_tags output � removes useless leading and trailing whitespace
+    - Added extra strip() step to remove_empty_html_tags output — removes useless leading and trailing whitespace
     - Remove empty html tags on manual user news item input
     - New function text_to_simple_html for future using (formatting other collectors content to display properly line breaks in news feed)
 
@@ -757,10 +761,10 @@ Please read `src/core/auth/README.md` for details.
     - fixed formatting
     - slight refactoring
     - added docstrings
-    - added missing __init__.py
+    - added missing `__init__.py`
 
 - Basic formatting #798
-    - This adresses following in non Python files:
+    - This addresses following in non Python files:
         - missing newlines at the end of the file
         - useless whitespace in files
         - some basic Jinja HTML formatting
@@ -778,7 +782,7 @@ Please read `src/core/auth/README.md` for details.
     - add pyproject.toml for configuration
 
 - Jinja template loading secured #759
-    - Adresses #725 CESNET pentest: Arbitrary file read by /config/product/types
+    - Addresses #725 CESNET pentest: Arbitrary file read by /config/product/types
     - PDF is typeset without temporary files
     - unified Jinja template path handling for all presenters
 
@@ -823,12 +827,12 @@ Please read `src/core/auth/README.md` for details.
 - Documentation tidy-up #739
     - Added AI-related documentation
     - Updated existing documentation
-    - Created additional help file howto.md � guides for using Taranis NG to perform specific tasks
+    - Created additional help file howto.md – guides for using Taranis NG to perform specific tasks
     - Main README.md kept minimal: overview only; Docker-specific instructions separated to avoid mixing content
     - Management script help moved to howto.md (unrelated to Docker build process)
-    - Removed duplicate CPE upload section from main and Docker READMEs � full version retained in howto.md
+    - Removed duplicate CPE upload section from main and Docker READMEs — full version retained in howto.md
     - Removed obsolete demo files from Docusaurus (only outdated examples, no active content)
-    - Renamed folder doc � docs (all documentation will reside here)
+    - Renamed folder doc › docs (all documentation will reside here)
     - Fixed broken taranis-logo.svg in assets (may still be unused)
 
 - Optimize case-insensitive search performance #733
@@ -906,7 +910,7 @@ Please read `src/core/auth/README.md` for details.
 - Fixed error message in Bots (master_id) #673
     - Fixed error message in Bots: cannot access local variable 'master_id' where it is not associated with a value. It was caused previous commit.
 
-- Fixed authentification for collectors when exists multiple nodes #672
+- Fixed authentication for collectors when exists multiple nodes #672
     - Fixed verification for collectors in case when more nodes share the same API_KEY. Warning: "Collector ID does not match"
 
 - Fixed Core logger wrong SSE prefix #671
@@ -926,7 +930,7 @@ Please read `src/core/auth/README.md` for details.
     - Add to RSS collector Exception handling for fetch feed. This also add missing prefix in logs
 
 - Fix Collector Content debug print & Tuple Error, Keycloak Auth #652
-    - Fixed debug print for new item�s Content property (previously displayed as an array of strings; issue introduced in the last PR)
+    - Fixed debug print for new item’s Content property (previously displayed as an array of strings; issue introduced in the last PR)
     - Fixed Keycloak authentication compatibility with the latest Keycloak versions
     - Fixed collector error: An unhandled exception occurred during scheduled collector run: '>' not supported between instances of 'tuple' and 'int'
 
@@ -937,7 +941,7 @@ Please read `src/core/auth/README.md` for details.
     - Fixed connection error in "Bots/SSE" and "Collector/Report status" when starting or restarting the entire Taranis. Core is not ready yet, and we need to connect a little bit later. Now the start logs are error free.
     - Added to logs: "Awaiting initialization of CORE (timeout: 20s)" message to indicate background activity for delayed processes.
 
-- Fix Bots schedulling and logger issues #642
+- Fix Bots scheduling and logger issues #642
     - Minor logger fixes for Bots.
     - Fixed Bots scheduling, until now they run only once at beginning (scheduler was being overwritten; threading added, same approach as in Collectors).
     - Bots SSE now remains active after losing Core connection or after unexpected crash (attempts reconnect every 30 seconds).
@@ -951,21 +955,21 @@ Please read `src/core/auth/README.md` for details.
 - Unified Configuration #636
     - Unified Global Configuration and My Assets module configuration. Now everything is under a single Configuration. All permissions and rights remain unchanged and work as expected.
     - Moved the Configuration menu item to the far right.
-    - Fixed bug where external users couldn�t be edited without entering a password.
+    - Fixed bug where external users couldn’t be edited without entering a password.
     - Corrected access rights to Settings.
     - Fixed typo
 
 - Added coloring to OSINT sources records #635
     - Added coloring to OSINT sources records: Green - Ok, Gray - disabled, Red - error, Orange - not collected for N days
     - Added default value 30 days for "No new data warning interval in days (0 to disable)" parameter in collectors
-    - Fix bug caused by #613 Add support for default values when creating new Collectors� Opening existing record add default values too
+    - Fix bug caused by #613 Add support for default values when creating new Collectors… Opening existing record add default values too
 
 - Preparation for user settings table (Part 1) #627
     - preparation for user settings table (replacement for user profile)
     - remap hotkeys to user table (before to profile table)
     - hide OPTIONS requests in gunicorn core log
 
-- Add support for default values when creating new Collectors, Bots � #613
+- Add support for default values when creating new Collectors, Bots … #613
     - Add support for default values when creating new Collectors, Publisher presets, Bot presets and Product types
     - Automatically select first node and first type on New action
 
@@ -981,8 +985,8 @@ Please read `src/core/auth/README.md` for details.
     - Add cascade delete to User, Organization and Word_list to able delete these records without errors. Some deletion logic is still maintained by Taranis.
     - Fixed Issue #96: Deleting organization with associated accounts fails
 
-- Remove yarm.lock file from doc directory #603
-    - Remove yarm.lock file from doc directory due a lot of security alerts (npm will be used)
+- Remove yarn.lock file from doc directory #603
+    - Remove yarn.lock file from doc directory due a lot of security alerts (npm will be used)
     - Docusaurus is still not used yet.
     - Removed 71/108 alerts
 
@@ -1010,7 +1014,7 @@ Please read `src/core/auth/README.md` for details.
     - Unified print_news_item() function for web and RSS collectors.
     - Improved input sanitization for manual input of news items (HTML tags, scripts, excessively long reviews, etc.).
 
-- Added posibility manualy regenerate all parameters + Fix issue #572 #587
+- Added possibility manually regenerate all parameters + Fix issue #572 #587
     - Added: possibility manually regenerate all parameters (just run in core: python db_migration.py regenerate)
     - Fixed: Issue #572: Error when manually run migration on the already latest version
 
@@ -1026,7 +1030,7 @@ Please read `src/core/auth/README.md` for details.
     - Truncates text on specific symbol
 
 - Improve Tag Cloud words (handle accented characters, filter short words) #575
-    - Added support for Tag Cloud words with accented characters (like �ber)
+    - Added support for Tag Cloud words with accented characters (like über)
     - Filter short words (length < 3)
     - Fix issue #35 Tag cloud has troubles with umlauts and other characters
 
@@ -1038,7 +1042,7 @@ Please read `src/core/auth/README.md` for details.
     - OSINT sources are sorted a < z < A < Z. Ignorance of case is more intuitive in this case.
 
 - Restructure custom Jinja filters #571
-    - Restructure custom Jinja filters to seperate file and replace loading of individual filters with loading of all.
+    - Restructure custom Jinja filters to separate file and replace loading of individual filters with loading of all.
     - added regex string replace filter
     - sample Jinja2 templates for Mastodon post and spoiler
 
@@ -1073,13 +1077,13 @@ Please read `src/core/auth/README.md` for details.
     - Fixed not working open source url shortcut in Assess
     - Fixed: don't overwrite shortcuts if user press Cancel in settings
     - Fixed duplicity keys errors for shortcuts with the same alias
-    - Fixed error: this.card_items[this.pos] is undefined Fixed error: document.querySelectorAll(...)[this.pos] is undefined
+    - Fixed error: `this.card_items[this.pos] is undefined`. Fixed error: `document.querySelectorAll(...)[this.pos] is undefined`
     - Added support for uppercase letters in hotkeys (it was predefined but not possible to set)
     - Removed hotkey.key_code column (it was useless, more keys use the same code, we now store and compare real key name which is more unique. In past you can't define for example 'r' and 'R')
     - Small speedup in hotkeys initialization
     - This commit make working definition/setting of hotkeys. There can be still problem if and how they work. I also fix some errors/bugs on some shortcuts that i found when i test it.
 
-- Fixed API keys authetification #553
+- Fixed API keys authentication #553
     - Fixed checking of API keys in CORE. To this moment all modules were checking against Collector node key - wrong. Bots, Publisher, Presenter and Remote node access can have different keys!
     - Fixed checking of API keys in SSE. To this moment was all checking against Bots node key - wrong. Remote node access can have different key!
     - Unify API_KEY and ACCESS_KEY. Now we can use one functionality for all modules. No extra verification functions, code...
@@ -1097,9 +1101,9 @@ Please read `src/core/auth/README.md` for details.
     - Added Mastodon publisher
 
 - Fixed error in Presenter: default_value: Field may not be null. #547
-    - This error is caused by #546 Added posibility "refresh" parameters for Presenter, Collector, Bot, and Publisher and their products
+    - This error is caused by #546 Added possibility "refresh" parameters for Presenter, Collector, Bot, and Publisher and their products
 
-- Added posibility "refresh" parameters for Presenter, Collector, Bot, and Publisher and their products #546
+- Added possibility "refresh" parameters for Presenter, Collector, Bot, and Publisher and their products #546
     - Added cascade delete for Parameter, Presenter, Collector, Bot and Publisher tables
     - Added cascade delete for Parameter_Values tables: osint_source_parameter_value, bot_preset_parameter_value, publisher_preset_parameter_value
     - Added a "refresh" functionality for parameters in Presenter, Collector, Bot and Publisher. This can be called in Migration process. It was not possible to this time - you had to delete nodes (and all data) to reflect the new changes. Existing records then miss some new parameters that can cause errors in logs or missing functionality.
@@ -1166,7 +1170,7 @@ Please read `src/core/auth/README.md` for details.
     - Added tooltips for remove buttons.
     - Fixed error: AttributeError: 'OptionEngine' object has no attribute 'execute' (Flask migration).
     - Renamed showDeletePopup to showMsgBox due to its more generic meaning, not just for deleting.
-    - Changed the text message for removing items (delete � remove) as it was misleading.
+    - Changed the text message for removing items (delete › remove) as it was misleading.
 
 - fix send_file #498
     - Flask send_file changed keyword arguments, see pallets/flask#4667
@@ -1275,9 +1279,11 @@ Please read `src/core/auth/README.md` for details.
 ## [24.11.1] - 2024-11-04
 
 ### Breaking Change! (Database migration from Postgres version 13 to 16)
+
 Please read `docker/MIGRATE_DB.md` documentation for migrate process.
 
 ### Added
+
 - Email collector improvements #402
     - Save attachment to Taranis only if it's not another email or signature
     - Improve logging
@@ -1311,7 +1317,7 @@ Please read `docker/MIGRATE_DB.md` documentation for migrate process.
     - Add check if ldap is set to be used.
 - Added "Last attempt" and "Last collected" columns in OSINT sources #316
     - Added "Last attempt" and "Last collected" date columns in OSINT sources configuration view
-- Add cascade delete to NEWS_ITEM releated tables #286
+- Add cascade delete to NEWS_ITEM related tables #286
     - Allow keep data in database more consistent
     - Simplifies "maintenance" of the database (if you want manually delete some old data)
 - Use secrets for Docker #211
@@ -1345,9 +1351,9 @@ Please read `docker/MIGRATE_DB.md` documentation for migrate process.
     - Adds attribute description to report item. This is useful for CWE, CVE, CPE and other attributes which have value description. This is also usable in presenter - for now just for CWE as it is new and does not brake anything, but in future it is possible to improve this to include CVE, CPE or other.
 - Collectors update (Limit for article links, logs, fixes) #221
     - Better logs: article link progress for current page
-    - Added optional "Limit for article links" setting (WEB, RSS, ATOM). You can process only first N articles. Usefull on sources with big article count (when you don't want kill collector)
+    - Added optional "Limit for article links" setting (WEB, RSS, ATOM). You can process only first N articles. Useful on sources with big article count (when you don't want kill collector)
     - Display "Page limit reached" only if "Pagination limit" was set
-    - Fixed crash when article items are parsed ok but link is not found (java scripts, not fully dynamicaly loaded page)
+    - Fixed crash when article items are parsed ok but link is not found (java scripts, not fully dynamically loaded page)
     - Removed one duplicity log about parsing article link
     - Removed from RSS/ATOM date check condition (now it works in the same way as in WEB collector, now it's possible collect initial source state)
     - Fixed ATOM author element that can exist/miss in header/entry
@@ -1365,11 +1371,12 @@ Please read `docker/MIGRATE_DB.md` documentation for migrate process.
 - Add support for language setting per user #202
 - Cancel the same GET request #204
     - Cancel the same GET request (not yet processed) on some main screens.
-      This prevent blinking, dalayed loading old data. Need solve cancel backend actions too (database selects..)
+      This prevent blinking, delayed loading old data. Need solve cancel backend actions too (database selects..)
 
 ### Fixed
-- Fixed: first key is acting as shorcut in empty editor #387
-    - Fixed: first key is acting as shorcut in empty editor component (e.g Assess Detail Comments)
+
+- Fixed: first key is acting as shortcut in empty editor #387
+    - Fixed: first key is acting as shortcut in empty editor component (e.g Assess Detail Comments)
     - Added: set focus directly to to Assess Detail Comments after switching to Comments tab
 - Fixed keycloak logout #381
     - Fixed keycloak logout (was not possible logout from system)
@@ -1388,10 +1395,10 @@ Please read `docker/MIGRATE_DB.md` documentation for migrate process.
     - Fix for this endless warning :)
 - Fix: OSINT sources open first OSINT group screen #350
     - When you open OSINT sources multiple times you get first Osint groups screen which you must first close to continue work
-- Fixed bugs in Product and Report screens (endless status, errors mesages) #348
+- Fixed bugs in Product and Report screens (endless status, errors messages) #348
     - Empty type cause endless progress status without any error message
     - If any error occurred and you return back or open another screen a previous error message stay on the screen
-- Fix sorting report atrributes to respect user order #343
+- Fix sorting report attributes to respect user order #343
     - Fix sorting report attributes to respect user order.
 - Fix error for user with no organization #335
     - Fix IndexError: list index out of range when user is not part of any organization
@@ -1423,7 +1430,7 @@ Please read `docker/MIGRATE_DB.md` documentation for migrate process.
 - Fix upgrade db error (caused previous PR) #223
     - Multiple head revisions are present for given argument 'head'; please specify a specific target revision
 - Fix upgrade db error 2 (caused previous PR) #224
-- Fix: disable shorcuts on text/textarea fields (prevents typing text) #207
+- Fix: disable shortcuts on text/textarea fields (prevents typing text) #207
     - In Assess, create report from item and you type N in description field -> all is canceled and it creates new report again
 - Fixed bug in chrome driver: unrecognized proxy type: MANUAL #214
     - This fix crash on some special OSINT source configurations
@@ -1445,6 +1452,7 @@ Please read `docker/MIGRATE_DB.md` documentation for migrate process.
 - A lot of various small fixes
 
 ### Changed
+
 - Remove redundant code #404
     - Remove code that is already called in main base collector
 - Remove marshmallow-enum #403
@@ -1468,7 +1476,7 @@ Please read `docker/MIGRATE_DB.md` documentation for migrate process.
     - Removed .env passwords, now are only Secrets supported
     - Removed docker warnings: variable is not set. Defaulting to a blank string.
     - Removed warning: the attribute version is obsolete, it will be ignored, please remove it to avoid potential confusion"
-- Opitimalization: tables relationship (join) #334
+- Optimization: tables relationship (join) #334
     - This commit add some speed up with modifying "lazy" parameter in db.relationship. Mostly is added JOIN type. This reduce a quantity of database requests from framework resulting more user gui fluently work and reducing waiting times on some actions.
 - Update value desc only if found #327
     - Another fix of value_description. It is updated only if found in input data.
@@ -1504,6 +1512,7 @@ Remap user-changed reports to the `/app/templates/user_templates` directory.
 Simply update the old template path in `Configuration / Product Types`: e.g., `/app/templates/file.html` -> `/app/templates/user_templates/file.html`
 
 ### Added
+
 - Added variable `TARANIS_NG_AUTHENTICATOR` to `docker.yml` and `.env` (default value "password").
 - Improved regex bots (logs, multiple regex, disable bot, don't try to create duplicity values...).
 - Migrated COLLECTORS, PUBLISHERS, BOTS, and PRESENTERS to the latest Python 3.12, Alpine 3.18, and latest Python modules.
@@ -1513,6 +1522,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 - If more users work on the same report item -> update locked field with a new value.
 
 ### Changed
+
 - Fixed the issue when the message title or body is missing in the publisher.
 - Fixed LDAP crash (moved cert path to env variable `LDAP_CA_CERT_PATH`).
 - Disabled keyboard shortcuts in News Items comments editor.
@@ -1538,110 +1548,123 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 ## [23.09.1] - 2023-09-27
 
 ### Added
-* New reports (OSINT, Disinfo, Offensive, Weekly)
-* Keycloak authentication support
-* JSON presenter
-* Email presenter
-* LDAP authentication
-* Support for password authentication (database), removed test_authenticator
-* More product information inside the presenter to be able to use it in reports
-* Password data were logged in plain text, now replaced by string CENSORED
+
+- New reports (OSINT, Disinfo, Offensive, Weekly)
+- Keycloak authentication support
+- JSON presenter
+- Email presenter
+- LDAP authentication
+- Support for password authentication (database), removed test_authenticator
+- More product information inside the presenter to be able to use it in reports
+- Password data were logged in plain text, now replaced by string CENSORED
 
 ### Changed
-* In Products, display "Report type" instead of the string "Title" in row detail
-* Fixed GUI shortcuts
-* Collectors: better logs, fixed "Popup close" crash
-* Fixed Access denied by ACL in News items (deleting Osint sources)
-* Fixed MISP template
-* Confidentiality not showing TOP SECRET on PDF, HTML, HTML WEEKLY templates
-* TLC updated: WHITE to CLEAR, added AMBER+STRICT
-* CASE INSENSITIVE search for attributes
-* Fixed time zone displacement out of range error when time > 16:00 + wrong datetime evaluated in SQL queries
-* Fixed error: Signature has expired
-* Properly display attributes in an aggregate
-* Fixed bad authentication required for the product (PUBLISH_ACCESS, PRODUCT_TYPE_ACCESS)
-* Fixed bots crash, better Regex
-* Added missing TOR binary to the collectors
-* Improved templates
-* Fixed bug when new templates stay hiden due wrong docker mapping
-* A lot of various fixes
+
+- In Products, display "Report type" instead of the string "Title" in row detail
+- Fixed GUI shortcuts
+- Collectors: better logs, fixed "Popup close" crash
+- Fixed Access denied by ACL in News items (deleting Osint sources)
+- Fixed MISP template
+- Confidentiality not showing TOP SECRET on PDF, HTML, HTML WEEKLY templates
+- TLC updated: WHITE to CLEAR, added AMBER+STRICT
+- CASE INSENSITIVE search for attributes
+- Fixed time zone displacement out of range error when time > 16:00 + wrong datetime evaluated in SQL queries
+- Fixed error: Signature has expired
+- Properly display attributes in an aggregate
+- Fixed bad authentication required for the product (PUBLISH_ACCESS, PRODUCT_TYPE_ACCESS)
+- Fixed bots crash, better Regex
+- Added missing TOR binary to the collectors
+- Improved templates
+- Fixed bug when new templates stay hidden due wrong docker mapping
+- A lot of various fixes
 
 ---
 
 ## [22.12.1] - 2022-12-16
 
 ### GUI
-* Analyze: new feature - side by side view
-* Assess: Show number of selected news items
-* possibility to NOT set hotkeys in user profile
-* taranis-logo.svg now has colors
+
+- Analyze: new feature - side by side view
+- Assess: Show number of selected news items
+- possibility to NOT set hotkeys in user profile
+- taranis-logo.svg now has colors
 
 ### Collectors
-* fixed crash when processing an empty link in RSS
-* fixed proxy settings parsing ; fixed setting proxy for firefox headless browser
-* fixed chromium driver initialization; added more logging for web driver initialization
+
+- fixed crash when processing an empty link in RSS
+- fixed proxy settings parsing ; fixed setting proxy for firefox headless browser
+- fixed chromium driver initialization; added more logging for web driver initialization
 
 ### Logging
-* more verbose logging in cve/cpe import
-* removed useless warnings from logs
+
+- more verbose logging in cve/cpe import
+- removed useless warnings from logs
 
 ### Wordlists
-* Added default wordlists for the English and Slovak language
-* added option to download wordlists from URL; added default downloadable wordlists
+
+- Added default wordlists for the English and Slovak language
+- added option to download wordlists from URL; added default downloadable wordlists
 
 ### Other changes and fixes
-* build: added Github action and pre-commit hook for linting
-* certain packages upgraded for security
-* refactor some code to create "shared" module with data models
-* various other fixes and updates across the code base
+
+- build: added Github action and pre-commit hook for linting
+- certain packages upgraded for security
+- refactor some code to create "shared" module with data models
+- various other fixes and updates across the code base
 
 ---
 
 ## [22.05.1] - 2022-05-17
 
 ### Added
-* gui: keyboard shortcuts: use delete for deleting news items by @sebix in #46
-* assess: add noreferrer attribute to source links by @sebix in #44
-* readme: add alternative source for stop lists by @sebix in #34
-* gitignore: add more rules and make others more generic by @sebix in #25
-* Document keyboard shortchuts by @sebix in #31
-* doc harware requirements: add cpu cores by @sebix in #75
+
+- gui: keyboard shortcuts: use delete for deleting news items by @sebix in #46
+- assess: add noreferrer attribute to source links by @sebix in #44
+- readme: add alternative source for stop lists by @sebix in #34
+- gitignore: add more rules and make others more generic by @sebix in #25
+- Document keyboard shortcuts by @sebix in #31
+- doc hardware requirements: add cpu cores by @sebix in #75
 
 ### Changed
-* fix bare except clauses by @sebix in #42
-* Assess: Do not reload news items when in selection mode by @sebix in #40
-* fix gui shortcuts in assess by @sebix in #56
-* Security upgrade lxml from 4.5.0 to 4.6.3 by @sebix in #47
-* Keyboard fixes and new shortcuts by @sebix in #52
-* gui: remove unused vue logo by @sebix in #58
-* GUI Keyboard improvements by @sebix in #57
-* use log_manager by @b3n4kh in #62
-* refactor auth_manager by @b3n4kh in #63
-* cleanup ftp publisher code by @b3n4kh in #64
-* monkeypatch before init by @b3n4kh in #65
-* shortcuts: ignore keypresses in search field except Escape by @sebix in #76
+
+- fix bare except clauses by @sebix in #42
+- Assess: Do not reload news items when in selection mode by @sebix in #40
+- fix gui shortcuts in assess by @sebix in #56
+- Security upgrade lxml from 4.5.0 to 4.6.3 by @sebix in #47
+- Keyboard fixes and new shortcuts by @sebix in #52
+- gui: remove unused vue logo by @sebix in #58
+- GUI Keyboard improvements by @sebix in #57
+- use log_manager by @b3n4kh in #62
+- refactor auth_manager by @b3n4kh in #63
+- cleanup ftp publisher code by @b3n4kh in #64
+- monkeypatch before init by @b3n4kh in #65
+- shortcuts: ignore keypresses in search field except Escape by @sebix in #76
 
 ---
 
 ## [21.11.1] - 2021-11-19
 
 ### Added
-* Added collector management to manage.py
+
+- Added collector management to manage.py
 
 ### Changed
-* Docker readme: Fix URLs/Ports with switch to HTTPS by @sebix
-* Tidied up word lists
-* Re-worked proxy handling for the RSS collector
-* Fixed issues with collector node and OSINT source status models and schemas
+
+- Docker readme: Fix URLs/Ports with switch to HTTPS by @sebix
+- Tidied up word lists
+- Re-worked proxy handling for the RSS collector
+- Fixed issues with collector node and OSINT source status models and schemas
 
 ---
 
 ## [21.10.6] - 2021-11-10
 
 ### Added
+
 - added sample word block list for tag cloud
 
 ### Changed
+
 - more verbose logging in the RSS collector
 - usability fixes in collectors
 - fixed asset group updates
@@ -1652,9 +1675,11 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 ## [21.10.5] - 2021-11-09
 
 ### Added
+
 - authors of _Product templates_ may now use the new `Configuration -> Product types` help screen, which lists all the fields defined in a chosen _Report item type_. This simplifies the development of new product templates.
 
 ### Changed
+
 - GUI and RSS collector fixes
 
 ---
@@ -1662,9 +1687,11 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 ## [21.10.4] - 2021-11-08
 
 ### Added
+
 - keycloak container (not enabled yet)
 
 ### Changed
+
 - gui: fix news item group operations
 - gui: bundle fonts
 - gui: upgrade for security (breaks minor stuff, will be fixed in a later release)
@@ -1675,11 +1702,12 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 ## [21.10.3] - 2021-11-08
 
 ### Changed
+
 - minor fixes and improvements across the entire project
 - security patches for third party libraries
 - docker:
-   - deployment now includes Traefik as a reverse proxy for more convenient deployment (supports self generated, pre-uploaded, and letsencrypt certificates)
-   - collectors container minimised
+    - deployment now includes Traefik as a reverse proxy for more convenient deployment (supports self generated, pre-uploaded, and letsencrypt certificates)
+    - collectors container minimised
 - complete rewrite of web collector: more robust, better support for various selectors, upgrade to selenium 4.0.0
 
 ---
@@ -1687,9 +1715,11 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 ## [21.10.2] - 2021-09-25
 
 ### Added
+
 - sample templates for products (PDF, HTML, TXT, MISP)
 
 ### Changed
+
 - multiple usability fixes across the product
 
 ---
@@ -1697,11 +1727,12 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 ## [21.10.1] - 2021-09-25
 
 ### Added
+
 - Initial release of Taranis NG
 
 ### Changed
-- Merged multiple Taranis NG repositories into one for easier understanding and management of the project
 
+- Merged multiple Taranis NG repositories into one for easier understanding and management of the project
 
 [26.10.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/26.10.1
 [26.05.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/26.05.1

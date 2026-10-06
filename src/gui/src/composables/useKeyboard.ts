@@ -37,6 +37,22 @@ export function isTypingTarget(element: Element | null): boolean {
     return (element as HTMLElement).isContentEditable === true
 }
 
+// The news item detail is itself a v-dialog, and the shortcuts are built around it:
+// Escape / ArrowLeft / h close it, r / i / u / Delete... act on the item it shows. So it
+// is the one dialog that leaves them on. NewsItemDetailDialog.vue carries this class.
+const DETAIL_DIALOG_CLASS = 'news-item-detail-dialog'
+
+/**
+ * Tell whether a dialog other than the news item detail is open, so shortcuts must not
+ * fire behind it - including one opened on top of the detail, such as a delete
+ * confirmation. Tooltips, menus and other overlays are not dialogs and do not count.
+ *
+ * Exported for the unit tests; the composable checks the live document.
+ */
+export function isBlockingDialogOpen(): boolean {
+    return document.querySelector(`.v-overlay--active.v-dialog:not(.${DETAIL_DIALOG_CLASS})`) !== null
+}
+
 interface Shortcut {
     key: string
     alias: HotkeyActionType
@@ -225,11 +241,6 @@ export function useKeyboard(targetId: string, router: Router) {
         return isTypingTarget(document.activeElement)
     }
 
-    /** True while a v-dialog is open (not other overlays like tooltips..) */
-    function isDialogOpen(): boolean {
-        return !!document.querySelector('.v-overlay--active.v-dialog')
-    }
-
     function groupPosition(direction: boolean): void {
         const groups = configStore.osintSourceGroupsForAssess as GroupNavItem[]
         const activeGroupId = assessStore.getCurrentGroup
@@ -290,7 +301,7 @@ export function useKeyboard(targetId: string, router: Router) {
         // Don't process if hotkeys are disabled
         if (!state.value.keyActionEnabled) return
 
-        if (isDialogOpen()) return
+        if (isBlockingDialogOpen()) return
 
         // console.debug("Key:", event.key, ", class:", document.activeElement?.className, ", activeElement:", document.activeElement);
 

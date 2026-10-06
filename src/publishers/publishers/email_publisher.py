@@ -207,9 +207,9 @@ class EMAILPublisher(BasePublisher):
         finally:
             try:
                 # Instance form, not Envelope.smtp_quit(): the class form calls
-                # SMTPHandler.quit_all(), which iterates every cached connection and
-                # crashed on a stale `False` left in the class-level cache by a failed
-                # login. This closes only the connection this publish used.
+                # SMTPHandler.quit_all() and closes every cached connection, not just
+                # this one. Since envelope 2.4.2 this also drops the connection from the
+                # class-level cache, so the next publish opens a fresh one.
                 envelope.smtp_quit()
             except Exception:
                 self.logger.exception("Failed to close SMTP connection")

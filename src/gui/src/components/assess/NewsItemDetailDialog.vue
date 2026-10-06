@@ -4,8 +4,11 @@
     <!-- No `scrollable`: it makes Vuetify force `max-height: 100%` on the card (which
          resolves against an auto-height overlay = no cap). We cap via .detail-card and
          scroll inside each pane instead. -->
+    <!-- news-item-detail-dialog: keyboard shortcuts stay on while this dialog is open,
+         unlike behind any other (isBlockingDialogOpen in composables/useKeyboard.ts). -->
     <v-dialog
         v-model="isOpen"
+        class="news-item-detail-dialog"
         :contained="contained"
         :max-width="contained ? '100%' : '90vw'"
         max-height="90vh"
