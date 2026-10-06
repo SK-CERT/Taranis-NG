@@ -25,6 +25,7 @@ from dataclasses import dataclass
 from email import policy
 from email.parser import BytesParser
 from http import HTTPStatus
+from smtplib import SMTPServerDisconnected
 from typing import TYPE_CHECKING, ClassVar
 
 import pytest
@@ -59,12 +60,15 @@ class RecordingSMTP:
     # What the server rejects: {recipient: (code, reason)}, empty means it took everything.
     refuse: ClassVar[dict[str, tuple[int, bytes]]] = {}
     refuse_connection: ClassVar[bool] = False
+    connections: ClassVar[int] = 0
 
     def __init__(self, host: str = "", port: int = 0, *_args: object, **_kwargs: object) -> None:
         """Take the arguments ``SMTPHandler.connect()`` passes (local_hostname, timeout) and connect to nothing."""
         if RecordingSMTP.refuse_connection:
             raise ConnectionRefusedError
         RecordingSMTP.connected_to = (host, port)
+        RecordingSMTP.connections += 1
+        self.closed = False
 
     def starttls(self, *_args: object, **_kwargs: object) -> None:
         """Upgrade the imaginary connection."""
@@ -76,12 +80,16 @@ class RecordingSMTP:
 
     def send_message(self, msg: RawMessage, from_addr: str | None = None, to_addrs: list[str] | None = None) -> dict:
         """Serialise the message and report the refused recipients, as smtplib does."""
+        if self.closed:
+            # What smtplib raises when a quit() session is reused.
+            raise SMTPServerDisconnected
         RecordingSMTP.sent.append((from_addr, to_addrs or [], msg.as_bytes()))
         return dict(RecordingSMTP.refuse)
 
     def quit(self) -> None:
         """End the session."""
         RecordingSMTP.quit_called = True
+        self.closed = True
 
 
 @dataclass(frozen=True)
@@ -108,6 +116,7 @@ def smtp_server(monkeypatch: pytest.MonkeyPatch) -> type[RecordingSMTP]:
     RecordingSMTP.sent = []
     RecordingSMTP.refuse = {}
     RecordingSMTP.refuse_connection = False
+    RecordingSMTP.connections = 0
     # SMTPHandler caches connections in a class-level dict keyed by the smtp settings, so
     # without this a neighbouring test's transport is reused instead of the one just built.
     smtp_handler.SMTPHandler._instances.clear()
@@ -208,6 +217,46 @@ def test_an_unreachable_server_is_reported_as_failed(
     assert publication.status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "error" in publication.response
     assert smtp_server.sent == []
+
+
+def test_a_failed_connection_does_not_break_later_publishes(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+) -> None:
+    """A server that was down once must be tried again on the next publish.
+
+    envelope 2.3.1 cached the failed connection (``False``) for the life of the process, so
+    every later publish to that server failed without connecting until the publishers
+    container was restarted (CZ-NIC/envelope#60).
+    """
+    smtp_server.refuse_connection = True
+    assert publish().status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+    smtp_server.refuse_connection = False
+    publication = publish()
+
+    assert publication.status == HTTPStatus.OK, f"server is back but publish failed: {publication.response}"
+    assert publication.message is not None
+
+
+def test_back_to_back_publishes_do_not_reuse_a_closed_session(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Each publish closes its session, so the next one must open a new one.
+
+    envelope 2.3.1 kept the closed connection cached: every publish after the first hit it,
+    slept for the retry delay (3 s) and only then reconnected.
+    """
+    sleeps: list[float] = []
+    monkeypatch.setattr(smtp_handler, "sleep", sleeps.append)
+
+    first, second = publish(), publish()
+
+    assert (first.status, second.status) == (HTTPStatus.OK, HTTPStatus.OK)
+    assert smtp_server.connections == 2
+    assert sleeps == [], "the second publish retried a closed session"
 
 
 def test_a_refused_recipient_is_still_reported_as_sent(
