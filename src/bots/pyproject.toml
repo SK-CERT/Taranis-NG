@@ -12,7 +12,7 @@ dependencies = [
     "gevent==26.9.0",
     "gunicorn==26.2.0",
     "marshmallow==4.3.1",
-    "oauthlib==3.3.1",
+    "oauthlib==4.0.0",
     "PySocks==1.7.1",
     "python-dotenv==1.2.4",
     "requests==2.34.2",
