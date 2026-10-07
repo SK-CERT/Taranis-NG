@@ -30,7 +30,7 @@ dependencies = [
     "webauthn==3.0.1",
     "redis==8.1.0",
     # Bounds admin-supplied attribute extraction patterns with a timeout (shared.attribute_extraction).
-    "regex==2026.9.10",
+    "regex==2026.9.29",
     "requests==2.34.2",
     "schedule==1.2.2",
     "sseclient-py==1.9.0",
