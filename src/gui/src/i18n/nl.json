@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Bron",
+        "version_label": "Versie {version}",
+        "current_version_label": "Versie {version} (huidige)",
+        "superseded_at": "Vervangen door een nieuwere versie op {date}",
         "comments": "Opmerkingen",
         "add_news_item": "Nieuwsitems toevoegen",
         "attached_news_items": "Gekoppelde nieuwsitems",
@@ -1062,6 +1065,7 @@
         "boolean_error": "De waarde moet 'True' of 'False' zijn!",
         "integer_error": "De waarde moet een geldig geheel getal zijn!",
         "decimal_error": "De waarde moet een geldig decimaal getal zijn!",
+        "integer_range_error": "De waarde moet een geheel getal van {min} tot {max} zijn!",
         "default_value_with_value": "Standaardwaarde: {value}",
         "input_too_long": "De waarde is {count} tekens lang; het maximum is {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Standaardtaal voor rapporten/producten",
         "REPORT_SELECTOR_READ_ONLY": "Rapportitemkiezer in alleen-lezenmodus openen",
         "SPELLCHECK": "Spellingcontrole",
+        "TAG_CLOUD_RETENTION_DAYS": "Bewaartermijn tagwolk (dagen)",
         "TAG_COLOR": "Kleurrijke tagwolk",
         "TIME_FORMAT": "Tijdnotatie"
     },

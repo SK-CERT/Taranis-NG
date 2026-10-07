@@ -16,6 +16,7 @@ class CoreApi:
     api_url = os.getenv("TARANIS_NG_CORE_URL")
     api_url = api_url.removesuffix("/")
     headers = {"Authorization": f"ApiKey {Config.API_KEY}"}  # noqa: RUF012
+    ADD_NEWS_ITEMS_TIMEOUT = 30
 
     def read_collector_config_id() -> dict:
         """Read the collector configuration ID from the configuration file.
@@ -211,11 +212,23 @@ class CoreApi:
             news_items (list): A list of news items to be added.
 
         Returns:
-            int: The HTTP status code of the response.
+            int: The HTTP status code of the response, or an error tuple when the request
+                failed - with HTTPStatus.GATEWAY_TIMEOUT when core did not answer in time.
         """
         try:
-            response = requests.post(f"{cls.api_url}/api/v1/collectors/news-items", json=news_items, headers=cls.headers, timeout=30)
+            response = requests.post(
+                f"{cls.api_url}/api/v1/collectors/news-items",
+                json=news_items,
+                headers=cls.headers,
+                timeout=cls.ADD_NEWS_ITEMS_TIMEOUT,
+            )
             return response.status_code
+        except requests.exceptions.Timeout:
+            # Core carries on after the client gives up, and usually stores the items anyway:
+            # this is not a rejection, and a traceback would only point away from core.
+            msg = "Add news items timed out"
+            logger.warning(f"{msg}: core did not answer within {cls.ADD_NEWS_ITEMS_TIMEOUT} seconds and may still store them")
+            return {"error": msg}, HTTPStatus.GATEWAY_TIMEOUT
         except Exception as ex:
             msg = "Add news items failed"
             logger.exception(f"{msg}: {ex}")

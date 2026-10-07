@@ -139,6 +139,21 @@ class NewsItemResource(Resource):
         return response, code
 
 
+class NewsItemVersions(Resource):
+    """News item versions API endpoint."""
+
+    @auth_required("ASSESS_ACCESS", ACLCheck.NEWS_ITEM_ACCESS)
+    def get(self, item_id: str) -> dict:
+        """Get every revision of a news item, newest first.
+
+        Args:
+            item_id (str): The news item ID
+        Returns:
+            (dict): The revisions, the current one first
+        """
+        return NewsItem.get_versions_json(item_id)
+
+
 class NewsItemAggregateResource(Resource):
     """News item aggregate API endpoint."""
 
@@ -248,6 +263,7 @@ def initialize(api: object) -> None:
     api.add_resource(AddNewsItem, "/api/v1/assess/news-items")
     api.add_resource(NewsItemsByGroup, "/api/v1/assess/news-item-aggregates-by-group/<string:group_id>")
     api.add_resource(NewsItemResource, "/api/v1/assess/news-items/<int:item_id>")
+    api.add_resource(NewsItemVersions, "/api/v1/assess/news-items/<int:item_id>/versions")
     api.add_resource(NewsItemAggregateResource, "/api/v1/assess/news-item-aggregates/<int:aggregate_id>")
     api.add_resource(GroupAction, "/api/v1/assess/news-item-aggregates-group-action")
     api.add_resource(DownloadAttachment, "/api/v1/assess/news-item-data/<string:item_data_id>/attributes/<int:attribute_id>/file")

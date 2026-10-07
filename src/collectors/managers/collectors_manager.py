@@ -9,6 +9,7 @@ from pathlib import Path
 from remote.core_api import CoreApi
 from shared.log_manager import logger
 
+from collectors.csaf_collector import CSAFCollector
 from collectors.email_collector import EmailCollector
 from collectors.manual_collector import ManualCollector
 from collectors.rss_collector import RSSCollector
@@ -76,6 +77,7 @@ def initialize_after_core_is_ready() -> None:
         time.sleep(10)
 
     register_collector(RSSCollector())
+    register_collector(CSAFCollector())
     register_collector(WebCollector())
     register_collector(TwitterCollector())
     register_collector(EmailCollector())

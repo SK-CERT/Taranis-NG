@@ -271,6 +271,14 @@ describe('ContentDataOSINTSource', () => {
             expect(icon.attributes('title')).toBe('RSS Collector')
         })
 
+        it('has an icon of its own for the CSAF collector', async () => {
+            const wrapper = await mountTable([source({ collector: { id: 'collector-1', type: 'CSAF_COLLECTOR', name: 'CSAF Collector' } })])
+
+            const icon = wrapper.get('tbody td.collector-icon-column .v-icon')
+            expect(icon.classes()).toContain('mdi-shield-alert-outline')
+            expect(icon.attributes('title')).toBe('CSAF Collector')
+        })
+
         it('falls back to a placeholder icon for an unknown collector type', async () => {
             const wrapper = await mountTable([source({ collector: { id: 'collector-1', type: 'FUTURE_COLLECTOR' } })])
 

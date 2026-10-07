@@ -134,9 +134,11 @@ point CI uses.
 - **`src/bots` has no tests yet.** Add a `tests/` directory, then list the project in
   `PYTEST_SUITES` in `scripts/run_tests.py` and in `testpaths` in the root
   `pyproject.toml`.
-- **`src/collectors/tests` covers the email collector only.** It stubs `config` and
-  `TARANIS_NG_CORE_URL` the way presenters does, since `remote/core_api.py` reads both at
-  import time. The RSS, web, Slack and Twitter collectors all reach the network in
+- **`src/collectors/tests` covers the email and CSAF collectors, and the scheduling they
+  share.** It stubs `config` and `TARANIS_NG_CORE_URL` the way presenters does, since
+  `remote/core_api.py` reads both at import time. The CSAF tests answer every request from
+  a fake fetcher and sign their documents with a key generated for the run, so they never
+  reach the network. The RSS, web, Slack and Twitter collectors all reach the network in
   `collect()` and have no coverage.
 - **`src/publishers/tests` has to bind its own package before pytest does.** It stubs
   `config` like presenters, and works around a service-root/inner-package name clash on

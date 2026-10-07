@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "来源",
+        "version_label": "版本 {version}",
+        "current_version_label": "版本 {version}（当前）",
+        "superseded_at": "已于 {date} 被较新的版本取代",
         "comments": "评论",
         "add_news_item": "添加新闻条目",
         "attached_news_items": "附加的新闻条目",
@@ -1062,6 +1065,7 @@
         "boolean_error": "值必须为“True”或“False”！",
         "integer_error": "值必须是有效整数！",
         "decimal_error": "值必须是有效小数！",
+        "integer_range_error": "值必须是 {min} 到 {max} 之间的整数！",
         "default_value_with_value": "默认值：{value}",
         "input_too_long": "该值包含 {count} 个字符；最多允许 {max} 个字符。",
         "language_name_with_code": "{name}（{code}）",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "报告/产品的默认语言",
         "REPORT_SELECTOR_READ_ONLY": "以只读模式打开报告条目选择器",
         "SPELLCHECK": "拼写检查",
+        "TAG_CLOUD_RETENTION_DAYS": "标签云保留期（天）",
         "TAG_COLOR": "彩色标签云",
         "TIME_FORMAT": "时间格式"
     },

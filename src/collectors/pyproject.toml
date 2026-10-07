@@ -15,6 +15,7 @@ dependencies = [
     "gunicorn==26.2.0",
     "marshmallow==4.3.1",
     "PySocks==1.7.1",
+    "pysequoia==0.1.35",
     "python-dateutil==2.9.0.post0",
     "python-dotenv==1.2.3",
     "regex==2026.9.10",

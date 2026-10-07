@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Джерело",
+        "version_label": "Версія {version}",
+        "current_version_label": "Версія {version} (поточна)",
+        "superseded_at": "Замінено новішою версією {date}",
         "comments": "Коментарі",
         "add_news_item": "Додати новинні матеріали",
         "attached_news_items": "Прикріплені новинні матеріали",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Значення має бути «True» або «False»!",
         "integer_error": "Значення має бути припустимим цілим числом!",
         "decimal_error": "Значення має бути припустимим десятковим числом!",
+        "integer_range_error": "Значення має бути цілим числом від {min} до {max}!",
         "default_value_with_value": "Типове значення: {value}",
         "input_too_long": "Довжина значення — {count} символів; максимально допустимо {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Типова мова для звітів і продуктів",
         "REPORT_SELECTOR_READ_ONLY": "Відкривати засіб вибору елементів звіту в режимі лише для читання",
         "SPELLCHECK": "Перевірка орфографії",
+        "TAG_CLOUD_RETENTION_DAYS": "Термін зберігання хмари тегів (дні)",
         "TAG_COLOR": "Кольорова хмара тегів",
         "TIME_FORMAT": "Формат часу"
     },

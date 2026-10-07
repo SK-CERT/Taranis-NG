@@ -14,7 +14,7 @@ import socks
 from dateutil.parser import parse as date_parse
 from remote.core_api import CoreApi
 from shared.attribute_extraction import ExtractionRule, extract_attributes
-from shared.common import TZ, remove_empty_html_tags, resolve_relative_links, simplify_html_text, smart_truncate, strip_html
+from shared.common import TZ, sanitize_content_html, smart_truncate, strip_html
 from shared.log_manager import create_logger, logger
 from shared.schema import collector, news_item, osint_source
 from shared.time_manager import SchedulerManager
@@ -242,21 +242,27 @@ class BaseCollector:
         # The article's own URL is the base for its links; sources collected as a single page
         # carry the index URL as their link, which is the right base for that markup too.
         base_url = news_item.link or getattr(source, "url", "")
-        news_item.content = remove_empty_html_tags(resolve_relative_links(simplify_html_text(news_item.content), base_url))
+        news_item.content = sanitize_content_html(news_item.content, base_url)
         news_item.author = strip_html(news_item.author)
         return news_item
 
-    def publish(self, news_items: list) -> None:
+    def publish(self, news_items: list) -> object:
         """Publish the collected news items to the CoreApi.
 
         Args:
             news_items (list): A list of news items to be published.
+
+        Returns:
+            (object): What CoreApi.add_news_items answered - the HTTP status on a response, an
+                error tuple when the request failed (HTTPStatus.GATEWAY_TIMEOUT when core did
+                not answer in time, and may still store the items). Collectors that track what
+                they have published compare it with HTTPStatus.OK; the others ignore it.
         """
         self.source.logger.debug(f"Collected {len(news_items)} news items")
         filtered_news_items = self.filter_by_word_list(news_items, self.source)
         filtered_news_items = self.extract_attributes(filtered_news_items, self.source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
-        CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
+        return CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
 
     def refresh_attribute_extraction_rules(self) -> None:
         """Re-read the attribute extraction rules from core.

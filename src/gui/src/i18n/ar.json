@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "المصدر",
+        "version_label": "الإصدار {version}",
+        "current_version_label": "الإصدار {version} (الحالي)",
+        "superseded_at": "استُبدل بإصدار أحدث في {date}",
         "comments": "التعليقات",
         "add_news_item": "إضافة عناصر إخبارية",
         "attached_news_items": "العناصر الإخبارية المرفقة",
@@ -1062,6 +1065,7 @@
         "boolean_error": "يجب أن تكون القيمة إما 'True' أو 'False'!",
         "integer_error": "يجب أن تكون القيمة عددًا صحيحًا صالحًا!",
         "decimal_error": "يجب أن تكون القيمة عددًا عشريًا صالحًا!",
+        "integer_range_error": "يجب أن تكون القيمة عددًا صحيحًا من {min} إلى {max}!",
         "default_value_with_value": "القيمة الافتراضية: {value}",
         "input_too_long": "طول القيمة {count} حرفًا؛ والحد الأقصى {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "اللغة الافتراضية للتقارير والمنتجات",
         "REPORT_SELECTOR_READ_ONLY": "فتح محدّد عناصر التقارير في وضع القراءة فقط",
         "SPELLCHECK": "التدقيق الإملائي",
+        "TAG_CLOUD_RETENTION_DAYS": "مدة الاحتفاظ بسحابة الوسوم (بالأيام)",
         "TAG_COLOR": "سحابة وسوم ملوّنة",
         "TIME_FORMAT": "تنسيق الوقت"
     },

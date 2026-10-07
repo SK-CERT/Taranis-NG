@@ -341,6 +341,7 @@
         ],
         "de": [
             "access_management.roles.name",
+            "assess.version_label",
             "asset.name",
             "asset_group.name",
             "attribute.status",
@@ -450,6 +451,7 @@
             "assess.aggregate_description",
             "assess.description",
             "assess.source",
+            "assess.version_label",
             "asset.description",
             "asset.total",
             "asset_group.description",

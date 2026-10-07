@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Источник",
+        "version_label": "Версия {version}",
+        "current_version_label": "Версия {version} (текущая)",
+        "superseded_at": "Заменена более новой версией {date}",
         "comments": "Комментарии",
         "add_news_item": "Добавить новостные материалы",
         "attached_news_items": "Прикрепленные новостные материалы",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Значение должно быть «True» или «False»!",
         "integer_error": "Значение должно быть допустимым целым числом!",
         "decimal_error": "Значение должно быть допустимым десятичным числом!",
+        "integer_range_error": "Значение должно быть целым числом от {min} до {max}!",
         "default_value_with_value": "Значение по умолчанию: {value}",
         "input_too_long": "Длина значения — {count} символов; максимально допустимо {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Язык по умолчанию для отчетов и продуктов",
         "REPORT_SELECTOR_READ_ONLY": "Открывать средство выбора элементов отчета в режиме только для чтения",
         "SPELLCHECK": "Проверка орфографии",
+        "TAG_CLOUD_RETENTION_DAYS": "Срок хранения облака тегов (дни)",
         "TAG_COLOR": "Цветное облако тегов",
         "TIME_FORMAT": "Формат времени"
     },

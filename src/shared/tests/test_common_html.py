@@ -6,7 +6,15 @@ two properties asserted here are: text is never lost to markup the application d
 render itself, and nothing outside the allowlist survives.
 """
 
-from shared.common import remove_empty_html_tags, resolve_relative_links, simplify_html_text, strip_html, text_to_simple_html
+import pytest
+from shared.common import (
+    remove_empty_html_tags,
+    resolve_relative_links,
+    sanitize_content_html,
+    simplify_html_text,
+    strip_html,
+    text_to_simple_html,
+)
 
 
 def test_allowed_tags_are_kept_with_their_href() -> None:
@@ -120,3 +128,25 @@ def test_links_survive_the_full_sanitization_chain_absolute() -> None:
     result = remove_empty_html_tags(resolve_relative_links(simplify_html_text(content), "https://example.com/list/"))
 
     assert '<a href="https://example.com/a/b">Advisory</a>' in result
+
+
+@pytest.mark.parametrize(
+    "html",
+    [
+        "<html><head><title>T</title><style>x{}</style></head><body><p>a<p>b</p></p></body></html>",
+        "<table><tr><td>c</td><th>d</th></tr></table><article><section>deep</section></article>",
+        '<div><span></span><p> </p><p><b></b><br></p><img src="x"><a href="/rel">link</a><a href="">e</a></div>',
+        "<p>unclosed <b>bold <i>both</p> tail &amp; &lt;tag&gt; &nbsp; x</p>",
+        "<!--[if mso]><p>hidden</p><![endif]--><ul><li></li><li>item</li></ul>",
+        '<pre>  keep\n  spaces &lt;a&gt;</pre><code></code><p onclick="x()">txt</p><script>alert(1)</script>',
+        "<ul><li><ul><li></li></ul></li></ul><div><div><div></div></div></div>after",
+        "plain text",
+        "",
+    ],
+)
+@pytest.mark.parametrize("base_url", ["https://example.com/list/", ""])
+def test_one_pass_sanitizing_matches_the_three_step_chain(html: str, base_url: str) -> None:
+    # Collectors and manual entry use the one-pass form; it must store exactly what the chain did.
+    chained = remove_empty_html_tags(resolve_relative_links(simplify_html_text(html), base_url))
+
+    assert sanitize_content_html(html, base_url) == chained

@@ -17,6 +17,8 @@ type DashboardData = {
     latest_collected: string
     news_items_by_day: DailyNewsItemCount[]
     tag_cloud: unknown[]
+    // The first day the tag cloud still holds (ISO date); empty when core does not say.
+    tag_cloud_oldest_date: string
     [key: string]: unknown
 }
 
@@ -63,7 +65,8 @@ const toDashboardData = (value: unknown): DashboardData => {
         total_database_items: asNumber(source['total_database_items']),
         latest_collected: asString(source['latest_collected']),
         news_items_by_day: normalizeDailyNewsItems(source['news_items_by_day']),
-        tag_cloud: normalizeTagCloud(source['tag_cloud'])
+        tag_cloud: normalizeTagCloud(source['tag_cloud']),
+        tag_cloud_oldest_date: asString(source['tag_cloud_oldest_date'])
     }
 }
 
@@ -76,7 +79,8 @@ const emptyDashboardData = (): DashboardData => ({
     total_database_items: 0,
     latest_collected: '',
     news_items_by_day: [],
-    tag_cloud: []
+    tag_cloud: [],
+    tag_cloud_oldest_date: ''
 })
 
 export const useDashboardStore = defineStore('dashboard', () => {

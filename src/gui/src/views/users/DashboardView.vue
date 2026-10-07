@@ -181,6 +181,7 @@
                                 type="date"
                                 variant="outlined"
                                 :label="t('analyze.from')"
+                                :min="tagCloudOldestDate"
                                 :max="draftDateTo || latestCustomDate"
                             />
                             <v-text-field
@@ -189,7 +190,7 @@
                                 type="date"
                                 variant="outlined"
                                 :label="t('analyze.to')"
-                                :min="draftDateFrom"
+                                :min="draftDateFrom || tagCloudOldestDate"
                                 :max="latestCustomDate"
                             />
                         </v-card-text>
@@ -409,6 +410,7 @@
         latest_collected: string
         news_items_by_day: Array<{ date: string; count: number }>
         tag_cloud: Array<{ word: string; word_quantity: number }>
+        tag_cloud_oldest_date: string
         report_item_states: Record<string, DashboardStateInfo>
         product_states: Record<string, DashboardStateInfo>
     }
@@ -435,6 +437,7 @@
         latest_collected: '',
         news_items_by_day: [],
         tag_cloud: [],
+        tag_cloud_oldest_date: '',
         report_item_states: {},
         product_states: {}
     })
@@ -450,6 +453,9 @@
         return (dashboardStore.dashboard_data as DashboardData) || emptyDashboardData()
     })
     const tagCloud = computed(() => (Array.isArray(dashboardData.value.tag_cloud) ? dashboardData.value.tag_cloud : []))
+    // Days before this are no longer kept (the tag cloud retention setting), so a custom range
+    // cannot start earlier.
+    const tagCloudOldestDate = computed(() => dashboardData.value.tag_cloud_oldest_date || undefined)
     const refreshing = ref(false)
 
     const previousDay = (): string => {
@@ -483,6 +489,7 @@
     const customRangeValid = computed(
         () =>
             Boolean(draftDateFrom.value && draftDateTo.value) &&
+            (!tagCloudOldestDate.value || draftDateFrom.value >= tagCloudOldestDate.value) &&
             draftDateFrom.value <= draftDateTo.value &&
             draftDateTo.value <= latestCustomDate.value
     )

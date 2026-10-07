@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "소스",
+        "version_label": "버전 {version}",
+        "current_version_label": "버전 {version} (현재)",
+        "superseded_at": "{date}에 새 버전으로 대체됨",
         "comments": "댓글",
         "add_news_item": "뉴스 항목 추가",
         "attached_news_items": "첨부된 뉴스 항목",
@@ -1062,6 +1065,7 @@
         "boolean_error": "값은 “True” 또는 “False”여야 합니다!",
         "integer_error": "값은 유효한 정수여야 합니다!",
         "decimal_error": "값은 유효한 소수여야 합니다!",
+        "integer_range_error": "값은 {min}에서 {max} 사이의 정수여야 합니다!",
         "default_value_with_value": "기본값: {value}",
         "input_too_long": "값의 길이는 {count}자이며 최대 길이는 {max}자입니다.",
         "language_name_with_code": "{name}({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "보고서/제품 기본 언어",
         "REPORT_SELECTOR_READ_ONLY": "보고서 항목 선택기를 읽기 전용 모드로 열기",
         "SPELLCHECK": "맞춤법 검사",
+        "TAG_CLOUD_RETENTION_DAYS": "태그 클라우드 보존 기간(일)",
         "TAG_COLOR": "색상 태그 클라우드",
         "TIME_FORMAT": "시간 형식"
     },

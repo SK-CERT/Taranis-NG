@@ -5,6 +5,10 @@ The collectors package provides various classes for collecting data from differe
 
 __all__ = [
     "base_collector",
+    "csaf_collector",
+    "csaf_document",
+    "csaf_integrity",
+    "csaf_sources",
     "email_collector",
     "manual_collector",
     "rss_collector",

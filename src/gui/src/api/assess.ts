@@ -112,6 +112,11 @@ export function getNewsItem(news_item_id) {
     return ApiService.get('/assess/news-items/' + news_item_id)
 }
 
+/** Every revision of a versioned news item, newest (current) first. */
+export function getNewsItemVersions(news_item_id) {
+    return ApiService.get('/assess/news-items/' + news_item_id + '/versions')
+}
+
 export function voteNewsItem(group_id, news_item_id, vote) {
     return ApiService.put('/assess/news-items/' + news_item_id, { group_id, vote })
 }

@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Nguồn",
+        "version_label": "Phiên bản {version}",
+        "current_version_label": "Phiên bản {version} (hiện tại)",
+        "superseded_at": "Đã được thay thế bằng phiên bản mới hơn vào {date}",
         "comments": "Bình luận",
         "add_news_item": "Thêm tin",
         "attached_news_items": "Tin đính kèm",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Giá trị phải là «True» hoặc «False»!",
         "integer_error": "Giá trị phải là số nguyên hợp lệ!",
         "decimal_error": "Giá trị phải là số thập phân hợp lệ!",
+        "integer_range_error": "Giá trị phải là số nguyên từ {min} đến {max}!",
         "default_value_with_value": "Giá trị mặc định: {value}",
         "input_too_long": "Giá trị dài {count} ký tự; tối đa là {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Ngôn ngữ mặc định cho báo cáo/sản phẩm",
         "REPORT_SELECTOR_READ_ONLY": "Mở trình chọn mục báo cáo ở chế độ chỉ đọc",
         "SPELLCHECK": "Kiểm tra chính tả",
+        "TAG_CLOUD_RETENTION_DAYS": "Thời gian lưu đám mây thẻ (ngày)",
         "TAG_COLOR": "Đám mây thẻ nhiều màu",
         "TIME_FORMAT": "Định dạng thời gian"
     },

@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Fonte",
+        "version_label": "Versão {version}",
+        "current_version_label": "Versão {version} (atual)",
+        "superseded_at": "Substituída por uma versão mais recente em {date}",
         "comments": "Comentários",
         "add_news_item": "Adicionar itens de notícias",
         "attached_news_items": "Itens de notícias anexados",
@@ -1062,6 +1065,7 @@
         "boolean_error": "O valor deve ser 'True' ou 'False'!",
         "integer_error": "O valor deve ser um número inteiro válido!",
         "decimal_error": "O valor deve ser um número decimal válido!",
+        "integer_range_error": "O valor deve ser um número inteiro de {min} a {max}!",
         "default_value_with_value": "Valor padrão: {value}",
         "input_too_long": "O valor tem {count} caracteres; o máximo é {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Idioma padrão para relatórios/produtos",
         "REPORT_SELECTOR_READ_ONLY": "Abrir o seletor de itens de relatório no modo somente leitura",
         "SPELLCHECK": "Verificação ortográfica",
+        "TAG_CLOUD_RETENTION_DAYS": "Retenção da nuvem de tags (dias)",
         "TAG_COLOR": "Nuvem de tags colorida",
         "TIME_FORMAT": "Formato de hora"
     },
