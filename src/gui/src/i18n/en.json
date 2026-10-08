@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Source",
+        "version_label": "Version {version}",
+        "current_version_label": "Version {version} (current)",
+        "superseded_at": "Replaced by a newer version on {date}",
         "comments": "Comments",
         "add_news_item": "Add News Items",
         "attached_news_items": "Attached News Items",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Value must be either 'True' or 'False'!",
         "integer_error": "Value must be a valid integer!",
         "decimal_error": "Value must be a valid decimal number!",
+        "integer_range_error": "Value must be a whole number from {min} to {max}!",
         "default_value_with_value": "Default value: {value}",
         "input_too_long": "The value is {count} characters long; the maximum is {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Default language for reports/products",
         "REPORT_SELECTOR_READ_ONLY": "Open the report item selector in read-only mode",
         "SPELLCHECK": "Spellcheck",
+        "TAG_CLOUD_RETENTION_DAYS": "Tag cloud retention (days)",
         "TAG_COLOR": "Colorful tag cloud",
         "TIME_FORMAT": "Time format"
     },

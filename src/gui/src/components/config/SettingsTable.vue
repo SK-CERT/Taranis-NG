@@ -112,7 +112,7 @@
                 <v-text-field
                     v-model="editValue"
                     :label="t('settings.value')"
-                    :rules="[maxCharsRule]"
+                    :rules="[maxCharsRule, valueRule]"
                     variant="outlined"
                     counter="150"
                     autofocus
@@ -149,10 +149,9 @@
     import { supportedLocales } from '@/i18n'
     import { resolveFamily, themeFamilies } from '@/themes'
     import { Settings, type SettingKey } from '@/types/settings'
+    import { checkSettingValue, type SettingType, type SettingValueProblem } from '@/utils/settingValue'
     import SearchField from '@/components/common/SearchField.vue'
     import { format } from 'date-fns'
-
-    type SettingType = 'B' | 'I' | 'N' | 'S'
 
     type SettingOption = {
         id: string | number
@@ -237,6 +236,7 @@
         [Settings.REPORT_SELECTOR_READ_ONLY]: 'mdi-eye-lock-outline',
         [Settings.TIME_FORMAT]: 'mdi-clock-outline',
         [Settings.CASCADE_STATES_ENABLED]: 'mdi-state-machine',
+        [Settings.TAG_CLOUD_RETENTION_DAYS]: 'mdi-calendar-clock',
         [Settings.CONTENT_DEFAULT_LANGUAGE]: 'mdi-file-document-edit-outline',
         [Settings.DARK_THEME]: 'mdi-theme-light-dark',
         [Settings.HOTKEYS]: 'mdi-keyboard-outline',
@@ -360,27 +360,19 @@
         })
     }
 
+    const problemText = (problem: SettingValueProblem): string => t(problem.message, problem)
+
     const validateValue = (item: SettingsRecord, value: string): string => {
-        let val = value.trim()
+        const checked = checkSettingValue(item.key, item.type, value)
+        if (checked.problem) throw new Error(problemText(checked.problem))
+        return checked.value
+    }
 
-        if (item.type === 'B') {
-            val = val.toLowerCase()
-            if (val !== 'true' && val !== 'false') {
-                throw new Error(t('settings.boolean_error'))
-            }
-        } else if (item.type === 'I') {
-            const numVal = Number(val)
-            if (isNaN(numVal) || !Number.isInteger(numVal)) {
-                throw new Error(t('settings.integer_error'))
-            }
-        } else if (item.type === 'N') {
-            const numVal = Number(val)
-            if (isNaN(numVal) || !isFinite(numVal)) {
-                throw new Error(t('settings.decimal_error'))
-            }
-        }
-
-        return String(val)
+    // Shown in the edit dialog, so a value that cannot be stored says why before it is saved.
+    const valueRule = (value: string | null | undefined): true | string => {
+        if (!editItem.value) return true
+        const checked = checkSettingValue(editItem.value.key, editItem.value.type, value ?? '')
+        return checked.problem ? problemText(checked.problem) : true
     }
 
     const updateSetting = async (item: SettingsRecord, value: string): Promise<void> => {
@@ -431,6 +423,8 @@
     const saveEdit = (): void => {
         if (!canEditSettings.value) return
         if (editItem.value && editValue.value !== null) {
+            // Keep the dialog open: the field already says what is wrong.
+            if (valueRule(editValue.value) !== true) return
             updateSetting(editItem.value, editValue.value)
         }
         editDialog.value = false

@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Zdroj",
+        "version_label": "Verze {version}",
+        "current_version_label": "Verze {version} (aktuální)",
+        "superseded_at": "Nahrazeno novější verzí dne {date}",
         "comments": "Komentáře",
         "add_news_item": "Přidat novinku",
         "attached_news_items": "Přiložené novinky",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Hodnota musí být buď 'True' nebo 'False'!",
         "integer_error": "Hodnota musí být platné celé číslo!",
         "decimal_error": "Hodnota musí být platné desetinné číslo!",
+        "integer_range_error": "Hodnota musí být celé číslo od {min} do {max}!",
         "default_value_with_value": "Výchozí hodnota: {value}",
         "input_too_long": "Hodnota má {count} znaků; maximum je {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Výchozí jazyk pro reporty/produkty",
         "REPORT_SELECTOR_READ_ONLY": "Otevřít výběr reportů v režimu pouze pro čtení",
         "SPELLCHECK": "Kontrolovat pravopis",
+        "TAG_CLOUD_RETENTION_DAYS": "Uchovávání mraku štítků (dny)",
         "TAG_COLOR": "Barevný mrak štítků",
         "TIME_FORMAT": "Formát času"
     },

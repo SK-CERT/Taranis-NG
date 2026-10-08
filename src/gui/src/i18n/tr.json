@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Kaynak",
+        "version_label": "Sürüm {version}",
+        "current_version_label": "Sürüm {version} (güncel)",
+        "superseded_at": "{date} tarihinde daha yeni bir sürümle değiştirildi",
         "comments": "Yorumlar",
         "add_news_item": "Haber öğeleri ekle",
         "attached_news_items": "Ekli haber öğeleri",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Değer 'True' veya 'False' olmalıdır!",
         "integer_error": "Değer geçerli bir tam sayı olmalıdır!",
         "decimal_error": "Değer geçerli bir ondalık sayı olmalıdır!",
+        "integer_range_error": "Değer {min} ile {max} arasında bir tam sayı olmalıdır!",
         "default_value_with_value": "Varsayılan değer: {value}",
         "input_too_long": "Değer {count} karakter uzunluğunda; en fazla {max} karakter olabilir.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Raporlar ve ürünler için varsayılan dil",
         "REPORT_SELECTOR_READ_ONLY": "Rapor öğesi seçicisini salt okunur modda aç",
         "SPELLCHECK": "Yazım denetimi",
+        "TAG_CLOUD_RETENTION_DAYS": "Etiket bulutu saklama süresi (gün)",
         "TAG_COLOR": "Renkli etiket bulutu",
         "TIME_FORMAT": "Saat biçimi"
     },

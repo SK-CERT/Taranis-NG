@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Fuente",
+        "version_label": "Versión {version}",
+        "current_version_label": "Versión {version} (actual)",
+        "superseded_at": "Sustituida por una versión más reciente el {date}",
         "comments": "Comentarios",
         "add_news_item": "Añadir noticias",
         "attached_news_items": "Noticias adjuntas",
@@ -1062,6 +1065,7 @@
         "boolean_error": "¡El valor debe ser «True» o «False»!",
         "integer_error": "¡El valor debe ser un número entero válido!",
         "decimal_error": "¡El valor debe ser un número decimal válido!",
+        "integer_range_error": "¡El valor debe ser un número entero entre {min} y {max}!",
         "default_value_with_value": "Valor predeterminado: {value}",
         "input_too_long": "El valor tiene {count} caracteres; el máximo es {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Idioma predeterminado para informes/productos",
         "REPORT_SELECTOR_READ_ONLY": "Abrir el selector de elementos de informe en modo de solo lectura",
         "SPELLCHECK": "Corrector ortográfico",
+        "TAG_CLOUD_RETENTION_DAYS": "Conservación de la nube de etiquetas (días)",
         "TAG_COLOR": "Nube de etiquetas con colores",
         "TIME_FORMAT": "Formato de hora"
     },

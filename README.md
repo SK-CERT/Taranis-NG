@@ -35,6 +35,7 @@ Key capabilities include:
 | Type      | Name             | Description                                         |
 | :-------- | :--------------- | :-------------------------------------------------- |
 | Collector | web              | crawl web sites                                     |
+|           | csaf             | read [CSAF](https://www.csaf.io/) advisories        |
 |           | email            | read e-mails                                        |
 |           | manual entry     | enter news item manually                            |
 |           | rss              | read RSS, Atom feeds                                |

@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "แหล่งที่มา",
+        "version_label": "เวอร์ชัน {version}",
+        "current_version_label": "เวอร์ชัน {version} (ปัจจุบัน)",
+        "superseded_at": "ถูกแทนที่ด้วยเวอร์ชันใหม่กว่าเมื่อ {date}",
         "comments": "ความคิดเห็น",
         "add_news_item": "เพิ่มรายการข่าว",
         "attached_news_items": "รายการข่าวที่แนบ",
@@ -1062,6 +1065,7 @@
         "boolean_error": "ค่าต้องเป็น “True” หรือ “False” เท่านั้น",
         "integer_error": "ค่าต้องเป็นจำนวนเต็มที่ถูกต้อง",
         "decimal_error": "ค่าต้องเป็นเลขทศนิยมที่ถูกต้อง",
+        "integer_range_error": "ค่าต้องเป็นจำนวนเต็มตั้งแต่ {min} ถึง {max}",
         "default_value_with_value": "ค่าเริ่มต้น: {value}",
         "input_too_long": "ค่ามีความยาว {count} อักขระ; กำหนดได้สูงสุด {max} อักขระ",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "ภาษาเริ่มต้นสำหรับรายงาน/ผลิตภัณฑ์",
         "REPORT_SELECTOR_READ_ONLY": "เปิดตัวเลือกรายการรายงานในโหมดอ่านอย่างเดียว",
         "SPELLCHECK": "ตรวจการสะกด",
+        "TAG_CLOUD_RETENTION_DAYS": "ระยะเวลาเก็บแท็กคลาวด์ (วัน)",
         "TAG_COLOR": "แท็กคลาวด์หลากสี",
         "TIME_FORMAT": "รูปแบบเวลา"
     },

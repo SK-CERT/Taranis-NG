@@ -1,11 +1,15 @@
 import { createI18n } from 'vue-i18n'
-import { describe, expect, it, vi } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewsItemDetailDialog from '@/components/assess/NewsItemDetailDialog.vue'
 
 vi.mock('@/composables/useAuth', () => ({
     useAuth: () => ({ checkPermission: () => true })
 }))
+
+const { getNewsItemVersions } = vi.hoisted(() => ({ getNewsItemVersions: vi.fn() }))
+vi.mock('@/api/assess', () => ({ getNewsItemVersions }))
 
 const createMessages = () =>
     createI18n({
@@ -23,7 +27,10 @@ const createMessages = () =>
                 },
                 assess: {
                     source: 'Quelle',
-                    attributes: 'Attribute'
+                    attributes: 'Attribute',
+                    version_label: 'Fassung {version}',
+                    current_version_label: 'Fassung {version} (aktuell)',
+                    superseded_at: 'Am {date} ersetzt'
                 }
             }
         }
@@ -109,5 +116,123 @@ describe('NewsItemDetailDialog locale-safe metadata', () => {
         expect(footer.text()).toContain(`Quelle öffnen: ${unsafeLink}`)
         expect(footer.find('a').exists()).toBe(false)
         expect(footer.get('bdi[dir="ltr"]').text()).toBe(unsafeLink)
+    })
+})
+
+const formatGerman = (value: string) => new Intl.DateTimeFormat('de', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+
+const versionedItem = (data: Record<string, unknown> = {}) => ({
+    id: 1,
+    entityType: 'news_item',
+    title: 'EX-2026-001: Example',
+    modify: true,
+    news_items: [
+        {
+            id: 7,
+            news_item_data: {
+                id: 'data-1',
+                hash: 'hash-2',
+                version: '2',
+                content: '<p>Second revision</p>',
+                link: 'https://example.test/advisory',
+                attributes: [],
+                ...data
+            }
+        }
+    ]
+})
+
+const versions = {
+    data: {
+        items: [
+            { id: null, version: '2', content: '<p>Second revision</p>', current: true, superseded: null },
+            {
+                id: 11,
+                version: '1',
+                content: '<p>First revision</p>',
+                collected: '2026-09-01T10:00:00Z',
+                published: '2026-09-01T09:00:00Z',
+                author: 'Example PSIRT',
+                link: 'https://example.test/advisory',
+                superseded: '2026-09-10T08:00:00Z',
+                current: false
+            }
+        ]
+    }
+}
+
+const mountVersioned = (newsItem: Record<string, unknown>) =>
+    mountWithPlugins(NewsItemDetailDialog, {
+        props: { modelValue: true, newsItem },
+        global: {
+            plugins: [createMessages()],
+            stubs: { VDialog: VDialogStub, AssessItemActions: true, NewsItemAttribute: true, Editor: true }
+        }
+    })
+
+const activePane = (wrapper: ReturnType<typeof mountVersioned>) => wrapper.get('.pane.pane--active')
+
+describe('NewsItemDetailDialog versions', () => {
+    beforeEach(() => {
+        getNewsItemVersions.mockReset()
+    })
+
+    it('keeps the single source tab for an item without versions', async () => {
+        const wrapper = mountDialog({ content: '<p>Body</p>' })
+        await flushPromises()
+
+        expect(wrapper.get('[data-test="source-tab"]').text()).toBe('Quelle')
+        expect(wrapper.findAll('[data-test="version-tab"]')).toHaveLength(0)
+        expect(getNewsItemVersions).not.toHaveBeenCalled()
+    })
+
+    it('shows one tab per version, newest first, with the current one open', async () => {
+        getNewsItemVersions.mockResolvedValue(versions)
+        const wrapper = mountVersioned(versionedItem())
+
+        // The current version needs no request: it is the item itself.
+        expect(wrapper.get('[data-test="source-tab"]').text()).toBe('Fassung 2 (aktuell)')
+        expect(activePane(wrapper).text()).toContain('Second revision')
+
+        await flushPromises()
+        // The versions belong to the news item (7), not to the aggregate around it (1).
+        expect(getNewsItemVersions).toHaveBeenCalledWith(7)
+        expect(wrapper.findAll('[data-test="version-tab"]').map((tab) => tab.text())).toEqual(['Fassung 1'])
+        // An older version is only rendered once opened.
+        expect(wrapper.text()).not.toContain('First revision')
+
+        await wrapper.findComponent({ name: 'VTabs' }).vm.$emit('update:modelValue', 'version-11')
+        await flushPromises()
+
+        const pane = activePane(wrapper)
+        expect(pane.text()).toContain('First revision')
+        expect(pane.get('[data-test="superseded-notice"]').text()).toBe(`Am ${formatGerman('2026-09-10T08:00:00Z')} ersetzt`)
+        expect(pane.text()).toContain('Example PSIRT')
+    })
+
+    it('shows only the current version when the history cannot be read', async () => {
+        getNewsItemVersions.mockRejectedValue(new Error('403'))
+        const wrapper = mountVersioned(versionedItem())
+        await flushPromises()
+
+        expect(wrapper.findAll('[data-test="version-tab"]')).toHaveLength(0)
+        expect(activePane(wrapper).text()).toContain('Second revision')
+    })
+
+    it('reloads the versions when a newer revision arrives', async () => {
+        getNewsItemVersions.mockResolvedValue(versions)
+        const wrapper = mountVersioned(versionedItem())
+        await flushPromises()
+        expect(getNewsItemVersions).toHaveBeenCalledTimes(1)
+
+        // The same data refreshed: nothing to load.
+        await wrapper.setProps({ newsItem: versionedItem() })
+        await flushPromises()
+        expect(getNewsItemVersions).toHaveBeenCalledTimes(1)
+
+        await wrapper.setProps({ newsItem: versionedItem({ hash: 'hash-3', version: '3', content: '<p>Third revision</p>' }) })
+        await flushPromises()
+        expect(getNewsItemVersions).toHaveBeenCalledTimes(2)
+        expect(wrapper.get('[data-test="source-tab"]').text()).toBe('Fassung 3 (aktuell)')
     })
 })

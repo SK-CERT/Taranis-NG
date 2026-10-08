@@ -125,6 +125,7 @@ export const ICONS = Object.freeze({
 })
 
 export const COLLECTOR_TYPE_ICONS: Readonly<Record<string, string>> = Object.freeze({
+    CSAF_COLLECTOR: 'mdi-shield-alert-outline',
     RSS_COLLECTOR: 'mdi-rss',
     WEB_COLLECTOR: 'mdi-web',
     EMAIL_COLLECTOR: 'mdi-email-outline',

@@ -127,6 +127,11 @@ def simplify_html_text(html_string: str) -> str:
         string: The simplified string with only allowed tags.
     """
     soup = BeautifulSoup(html_string, "html.parser")
+    _simplify_soup(soup)
+    return str(soup)
+
+
+def _simplify_soup(soup: BeautifulSoup) -> None:
     for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
         comment.extract()
     for tag in soup.find_all(list(DISCARDED_HTML_TAGS)):
@@ -141,7 +146,6 @@ def simplify_html_text(html_string: str) -> str:
             if tag.name in SEPARATED_HTML_TAGS:
                 tag.append(" ")
             tag.unwrap()
-    return str(soup)
 
 
 def resolve_relative_links(html_string: str, base_url: str) -> str:
@@ -167,9 +171,13 @@ def resolve_relative_links(html_string: str, base_url: str) -> str:
     if not base_url or not html_string:
         return html_string
     soup = BeautifulSoup(html_string, "html.parser")
+    _resolve_links_in_soup(soup, base_url)
+    return str(soup)
+
+
+def _resolve_links_in_soup(soup: BeautifulSoup, base_url: str) -> None:
     for tag in soup.find_all("a", href=True):
         tag["href"] = urljoin(base_url, tag["href"])
-    return str(soup)
 
 
 def remove_empty_html_tags(html_string: str) -> str:
@@ -182,6 +190,11 @@ def remove_empty_html_tags(html_string: str) -> str:
         string: The string without empty HTML tags.
     """
     soup = BeautifulSoup(html_string, "html.parser")
+    _remove_empty_tags_in_soup(soup)
+    return str(soup).strip()
+
+
+def _remove_empty_tags_in_soup(soup: BeautifulSoup) -> None:
     changed = True
     while changed:
         changed = False
@@ -193,6 +206,27 @@ def remove_empty_html_tags(html_string: str) -> str:
             if not tag.get_text(strip=True) and not tag.find_all():
                 tag.decompose()
                 changed = True
+
+
+def sanitize_content_html(html_string: str, base_url: str) -> str:
+    """Simplify collected HTML, resolve its relative links and drop its empty tags, in one parse.
+
+    The result is that of ``remove_empty_html_tags(resolve_relative_links(simplify_html_text(html),
+    base_url))``, which parses and serializes the markup three times: for a large item (a CSAF
+    advisory runs to hundreds of kB) the costliest part of storing it.
+
+    Args:
+        html_string (string): The HTML string.
+        base_url (string): The URL the markup was collected from. Falsy leaves links as they are.
+
+    Returns:
+        string: The sanitized HTML.
+    """
+    soup = BeautifulSoup(html_string, "html.parser")
+    _simplify_soup(soup)
+    if base_url:
+        _resolve_links_in_soup(soup, base_url)
+    _remove_empty_tags_in_soup(soup)
     return str(soup).strip()
 
 

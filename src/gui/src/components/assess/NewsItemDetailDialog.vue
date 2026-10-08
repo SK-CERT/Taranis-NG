@@ -52,6 +52,7 @@
                 v-model="activeTab"
                 dark
                 density="compact"
+                show-arrows
                 class="flex-fixed"
             >
                 <!-- Aggregate Tabs: Info -->
@@ -61,10 +62,26 @@
                     </v-tab>
                 </template>
 
-                <!-- Single Item Tabs: Source, Attributes -->
+                <!-- Single Item Tabs: Source (or one tab per version, newest first), Attributes -->
                 <template v-else>
-                    <v-tab value="source">
-                        {{ t('assess.source') }}
+                    <v-tab
+                        value="source"
+                        data-test="source-tab"
+                    >
+                        <template v-if="currentVersion">
+                            {{ t('assess.current_version_label', { version: currentVersion }) }}
+                        </template>
+                        <template v-else>
+                            {{ t('assess.source') }}
+                        </template>
+                    </v-tab>
+                    <v-tab
+                        v-for="version in olderVersions"
+                        :key="versionTab(version)"
+                        :value="versionTab(version)"
+                        data-test="version-tab"
+                    >
+                        {{ t('assess.version_label', { version: version.version || '' }) }}
                     </v-tab>
                     <v-tab value="attributes">
                         {{ t('assess.attributes') }}
@@ -84,130 +101,35 @@
                  switching tabs. Only the active pane is visible (toggled with visibility, so
                  hidden panes still reserve their space). -->
             <div class="bg-surface tab-content">
-                <!-- Single Item: Source Tab -->
-                <div
+                <!-- Single Item: Source Tab (the current version of a versioned item) -->
+                <NewsItemSourcePane
                     v-if="!isAggregate"
-                    class="pane source-tab"
+                    class="pane"
                     :class="{ 'pane--active': activeTab === 'source' }"
-                >
-                    <!-- Fixed header: metadata + article title stay pinned -->
-                    <div class="source-header">
-                        <v-row class="mb-6">
-                            <v-col
-                                cols="12"
-                                md="3"
-                                class="text-center"
-                            >
-                                <i18n-t
-                                    scope="global"
-                                    keypath="card_item.collected_at"
-                                    tag="div"
-                                    class="text-overline font-weight-bold"
-                                >
-                                    <template #date>
-                                        <div class="text-caption font-weight-regular text-none">
-                                            <bdi dir="auto">{{ collectedDisplay }}</bdi>
-                                        </div>
-                                    </template>
-                                </i18n-t>
-                            </v-col>
-                            <v-col
-                                cols="12"
-                                md="3"
-                                class="text-center"
-                            >
-                                <i18n-t
-                                    scope="global"
-                                    keypath="card_item.published_at"
-                                    tag="div"
-                                    class="text-overline font-weight-bold"
-                                >
-                                    <template #date>
-                                        <div class="text-caption font-weight-regular text-none">
-                                            <bdi dir="auto">{{ publishedDisplay }}</bdi>
-                                        </div>
-                                    </template>
-                                </i18n-t>
-                            </v-col>
-                            <v-col
-                                cols="12"
-                                md="3"
-                                class="text-center"
-                            >
-                                <i18n-t
-                                    scope="global"
-                                    keypath="card_item.source_with_value"
-                                    tag="div"
-                                    class="text-overline font-weight-bold"
-                                >
-                                    <template #source>
-                                        <div class="text-caption font-weight-regular text-none">
-                                            <bdi dir="auto">{{ sourceDisplay }}</bdi>
-                                        </div>
-                                    </template>
-                                </i18n-t>
-                            </v-col>
-                            <v-col
-                                cols="12"
-                                md="3"
-                                class="text-center"
-                            >
-                                <i18n-t
-                                    scope="global"
-                                    keypath="card_item.author_with_value"
-                                    tag="div"
-                                    class="text-overline font-weight-bold"
-                                >
-                                    <template #author>
-                                        <div class="text-caption font-weight-regular text-none">
-                                            <bdi dir="auto">{{ authorDisplay }}</bdi>
-                                        </div>
-                                    </template>
-                                </i18n-t>
-                            </v-col>
-                        </v-row>
+                    :collected="firstNewsItemData.collected"
+                    :published="firstNewsItemData.published"
+                    :source="firstNewsItemData.source"
+                    :author="firstNewsItemData.author"
+                    :content="firstNewsItemData.content"
+                    :link="firstNewsItemData.link"
+                />
 
-                        <v-divider />
-                    </div>
-
-                    <!-- Scrollable body: only the article content scrolls -->
-                    <div class="source-body">
-                        <div
-                            class="text-body-2 text-medium-emphasis"
-                            v-html="sanitizedNewsItemContent"
-                        />
-                    </div>
-
-                    <!-- Fixed footer: link stays pinned -->
-                    <div
-                        v-if="hasLink"
-                        class="source-footer"
-                    >
-                        <v-divider class="mb-3" />
-                        <div class="text-caption">
-                            <i18n-t
-                                scope="global"
-                                keypath="card_item.link_with_url"
-                            >
-                                <template #url>
-                                    <a
-                                        v-if="isSafeNewsItemLink"
-                                        :href="newsItemLink"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <bdi dir="ltr">{{ newsItemLink }}</bdi>
-                                    </a>
-                                    <bdi
-                                        v-else
-                                        dir="ltr"
-                                        >{{ newsItemLink }}</bdi
-                                    >
-                                </template>
-                            </i18n-t>
-                        </div>
-                    </div>
-                </div>
+                <!-- Single Item: older versions, rendered once opened -->
+                <template v-if="!isAggregate">
+                    <NewsItemSourcePane
+                        v-for="version in renderedVersions"
+                        :key="versionTab(version)"
+                        class="pane"
+                        :class="{ 'pane--active': activeTab === versionTab(version) }"
+                        :collected="version.collected"
+                        :published="version.published"
+                        :source="firstNewsItemData.source"
+                        :author="version.author"
+                        :content="version.content"
+                        :link="version.link"
+                        :superseded="version.superseded"
+                    />
+                </template>
 
                 <!-- Single Item: Attributes Tab -->
                 <div
@@ -297,9 +219,9 @@
     import Editor from 'primevue/editor'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
     import NewsItemAttribute from '@/components/assess/NewsItemAttribute.vue'
+    import NewsItemSourcePane from '@/components/assess/NewsItemSourcePane.vue'
+    import { getNewsItemVersions } from '@/api/assess'
     import { Action, type ActionKey } from '@/types/actions'
-    import { sanitizeNewsItemHtml } from '@/utils/sanitizeNewsItemHtml'
-    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type NewsAttributeItem = {
         id: number | string
@@ -314,6 +236,8 @@
     }
 
     type NewsItemData = {
+        id?: string
+        hash?: string
         collected?: string
         published?: string
         source?: string
@@ -321,11 +245,32 @@
         title?: string
         content?: string
         link?: string
+        /** The provider's label for the revision held, set only for versioned items. */
+        version?: string | null
         attributes?: NewsAttributeItem[]
         [key: string]: any
     }
 
+    /** One revision of a versioned item, as GET /assess/news-items/<id>/versions returns it. */
+    type NewsItemVersion = {
+        id: number | null
+        version?: string | null
+        title?: string
+        review?: string
+        content?: string
+        link?: string
+        published?: string
+        author?: string
+        collected?: string
+        superseded?: string | null
+        current?: boolean
+    }
+
+    type VersionTab = `version-${number}`
+    type TabValue = 'source' | 'attributes' | 'comments' | 'info' | VersionTab
+
     type NestedNewsItem = {
+        id?: number | string
         news_item_data?: NewsItemData
         [key: string]: any
     }
@@ -373,13 +318,12 @@
     }>()
 
     const { t } = useI18n()
-    const { formatDateTime } = useLocaleFormatters()
     const { checkPermission } = useAuth()
     const spellcheck = useSpellcheck()
     const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
 
     const isOpen = ref<boolean>(false)
-    const activeTab = ref<'source' | 'attributes' | 'comments' | 'info'>('source')
+    const activeTab = ref<TabValue>('source')
     const commentText = ref<string>('')
     const editTitle = ref<string>('')
     const editDescription = ref<string>('')
@@ -408,6 +352,7 @@
                     const isAgg = (newItem.news_items?.length || 0) > 1
                     activeTab.value = isAgg ? 'info' : 'source'
                     lastNewsItemId = newItem.id ?? null
+                    visitedVersionTabs.value = new Set()
                 }
                 editTitle.value = newItem.title || ''
                 editDescription.value = newItem.description || ''
@@ -439,35 +384,76 @@
         return newsItem.value.news_items?.[0]?.news_item_data || {}
     })
 
-    const formatMetadataDate = (value: unknown): string => {
-        if (value === null || value === undefined || value === '') return t('card_item.not_available')
-        const rawValue = String(value)
-        return formatDateTime(rawValue) || rawValue
-    }
-    const collectedDisplay = computed(() => formatMetadataDate(firstNewsItemData.value.collected))
-    const publishedDisplay = computed(() => formatMetadataDate(firstNewsItemData.value.published))
-    const sourceDisplay = computed(() => firstNewsItemData.value.source || t('card_item.not_available'))
-    const authorDisplay = computed(() => firstNewsItemData.value.author || t('card_item.not_available'))
+    // ---- Versions ----
+    // A versioned item (e.g. a CSAF advisory) shows one tab per revision: the current one
+    // from the item itself, the older ones fetched when the dialog opens.
+    const currentVersion = computed(() => firstNewsItemData.value.version || '')
+    const olderVersions = ref<NewsItemVersion[]>([])
+    const visitedVersionTabs = ref<Set<VersionTab>>(new Set())
+    let loadedVersionsKey = ''
 
-    const sanitizedNewsItemContent = computed(() => {
-        return sanitizeNewsItemHtml(firstNewsItemData.value.content)
-    })
+    const versionTab = (version: NewsItemVersion): VersionTab => `version-${version.id ?? 0}`
 
-    const newsItemLink = computed(() => {
-        return firstNewsItemData.value.link || ''
-    })
+    // Older versions render once opened, then stay: a long history would otherwise put every
+    // revision's full text in the page at once.
+    const renderedVersions = computed(() => olderVersions.value.filter((version) => visitedVersionTabs.value.has(versionTab(version))))
 
-    const hasLink = computed(() => {
-        return !!newsItemLink.value
-    })
-
-    const isSafeNewsItemLink = computed(() => {
-        try {
-            return ['http:', 'https:'].includes(new URL(newsItemLink.value).protocol)
-        } catch {
-            return false
+    watch(activeTab, (tab: TabValue) => {
+        if (tab.startsWith('version-')) {
+            visitedVersionTabs.value.add(tab as VersionTab)
         }
     })
+
+    const loadVersions = async (): Promise<void> => {
+        // The versions belong to the news item, not to the aggregate wrapping it.
+        const newsItemId = newsItem.value.news_items?.[0]?.id
+        const open = props.modelValue || isOpen.value
+        if (!open || isAggregate.value || !currentVersion.value || newsItemId === undefined || newsItemId === null) {
+            olderVersions.value = []
+            loadedVersionsKey = ''
+            return
+        }
+        // Keyed by the revision held, so a newer revision arriving (SSE refresh) reloads them.
+        const key = `${newsItemId}:${firstNewsItemData.value.id ?? ''}:${firstNewsItemData.value.hash ?? ''}`
+        if (key === loadedVersionsKey) {
+            return
+        }
+        loadedVersionsKey = key
+        olderVersions.value = []
+        visitedVersionTabs.value = new Set()
+        if (activeTab.value.startsWith('version-')) {
+            activeTab.value = 'source'
+        }
+        try {
+            const response = await getNewsItemVersions(newsItemId)
+            if (key !== loadedVersionsKey) {
+                return
+            }
+            const items: NewsItemVersion[] = response?.data?.items || []
+            olderVersions.value = items.filter((version) => !version.current)
+        } catch {
+            // Not allowed or not reachable (e.g. from the Analyze selector): the current
+            // version is still shown, just without its history.
+            if (key === loadedVersionsKey) {
+                olderVersions.value = []
+            }
+        }
+    }
+
+    watch(
+        () => [
+            props.modelValue,
+            isOpen.value,
+            newsItem.value.news_items?.[0]?.id,
+            firstNewsItemData.value.id,
+            firstNewsItemData.value.hash,
+            currentVersion.value
+        ],
+        () => {
+            void loadVersions()
+        },
+        { immediate: true }
+    )
 
     const newsItemAttributes = computed<NewsAttributeItem[]>(() => {
         const attributes: NewsAttributeItem[] = []
@@ -585,50 +571,6 @@
     .tab-pane {
         padding: 24px;
         overflow-y: auto;
-    }
-
-    /* ---- Source tab: pinned metadata header + footer link, scrolling body ----
-       Grid stretch gives this pane the full cell height, so .source-body can scroll. */
-    .source-tab {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .source-header {
-        flex: 0 0 auto;
-        padding: 24px 24px 0;
-    }
-
-    /* flex-basis: auto (not 0) so a long article counts toward the dialog height, letting
-       it grow to the 90vh cap; min-height: 0 lets it then shrink and scroll internally. */
-    .source-body {
-        flex: 1 1 auto;
-        min-height: 0;
-        overflow-y: auto;
-        padding: 8px 24px;
-    }
-
-    .source-footer {
-        flex: 0 0 auto;
-        padding: 0 24px 24px;
-    }
-
-    /* Collected content is injected by v-html, so it carries no scope attribute - :deep()
-       is the only way to reach it. Preformatted bodies (a plain text email, an article the
-       RSS collector could not parse as HTML) keep their line breaks and indentation, but
-       must wrap: unwrapped <pre> would scroll the whole dialog sideways. */
-    .source-body :deep(pre) {
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-        margin: 0;
-        /* Monospace (the <pre> default) is kept on purpose: it is what holds the columns of
-           an ASCII table or a signature block together. */
-        font-size: inherit;
-    }
-
-    /* Nothing in an article may push the dialog wider than the pane. */
-    .source-body :deep(*) {
-        max-width: 100%;
     }
 
     /* ---- Misc ---- */

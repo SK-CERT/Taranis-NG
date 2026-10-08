@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "स्रोत",
+        "version_label": "संस्करण {version}",
+        "current_version_label": "संस्करण {version} (वर्तमान)",
+        "superseded_at": "{date} को नए संस्करण से बदला गया",
         "comments": "टिप्पणियाँ",
         "add_news_item": "समाचार आइटम जोड़ें",
         "attached_news_items": "संलग्न समाचार आइटम",
@@ -1062,6 +1065,7 @@
         "boolean_error": "मान “True” या “False” होना चाहिए!",
         "integer_error": "मान एक मान्य पूर्णांक होना चाहिए!",
         "decimal_error": "मान एक मान्य दशमलव संख्या होना चाहिए!",
+        "integer_range_error": "मान {min} से {max} तक का पूर्णांक होना चाहिए!",
         "default_value_with_value": "डिफ़ॉल्ट मान: {value}",
         "input_too_long": "मान {count} वर्ण लंबा है; अधिकतम {max} है।",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "रिपोर्ट/उत्पाद की डिफ़ॉल्ट भाषा",
         "REPORT_SELECTOR_READ_ONLY": "रिपोर्ट आइटम चयनकर्ता केवल-पढ़ने के मोड में खोलें",
         "SPELLCHECK": "वर्तनी जाँच",
+        "TAG_CLOUD_RETENTION_DAYS": "टैग क्लाउड प्रतिधारण (दिन)",
         "TAG_COLOR": "रंगीन टैग क्लाउड",
         "TIME_FORMAT": "समय प्रारूप"
     },

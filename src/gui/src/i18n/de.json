@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Quelle",
+        "version_label": "Version {version}",
+        "current_version_label": "Version {version} (aktuell)",
+        "superseded_at": "Am {date} durch eine neuere Version ersetzt",
         "comments": "Kommentare",
         "add_news_item": "Nachrichtenbeiträge hinzufügen",
         "attached_news_items": "Angehängte Nachrichtenbeiträge",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Der Wert muss entweder „True“ oder „False“ sein!",
         "integer_error": "Der Wert muss eine gültige Ganzzahl sein!",
         "decimal_error": "Der Wert muss eine gültige Dezimalzahl sein!",
+        "integer_range_error": "Der Wert muss eine Ganzzahl von {min} bis {max} sein!",
         "default_value_with_value": "Standardwert: {value}",
         "input_too_long": "Der Wert ist {count} Zeichen lang; maximal sind {max} zulässig.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Standardsprache für Berichte/Produkte",
         "REPORT_SELECTOR_READ_ONLY": "Berichtselementauswahl im schreibgeschützten Modus öffnen",
         "SPELLCHECK": "Rechtschreibprüfung",
+        "TAG_CLOUD_RETENTION_DAYS": "Aufbewahrung der Schlagwortwolke (Tage)",
         "TAG_COLOR": "Farbige Schlagwortwolke",
         "TIME_FORMAT": "Zeitformat"
     },

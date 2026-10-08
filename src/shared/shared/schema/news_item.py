@@ -68,6 +68,9 @@ class NewsItemDataBaseSchema(Schema):
     author = fields.Str()
     collected = fields.DateTime("%d.%m.%Y - %H:%M")
     osint_source_id = fields.Str(load_default=None, allow_none=True)
+    # The provider's own label for this revision of the item (e.g. a CSAF tracking version).
+    # None for items that have no versions.
+    version = fields.Str(load_default=None, allow_none=True)
 
 
 class NewsItemData:
@@ -87,6 +90,9 @@ class NewsItemData:
         content: str,
         osint_source_id: str,
         attributes: list,
+        version: str | None = None,
+        version_key: str | None = None,
+        resurface: bool = True,
     ) -> None:
         """Initialize a NewsItemData instance.
 
@@ -103,6 +109,13 @@ class NewsItemData:
             content (str): The content of the news item.
             osint_source_id (str): The OSINT source ID of the news item.
             attributes (list): The attributes of the news item.
+            version (str | None): The provider's label for this revision of the item.
+            version_key (str | None): Identity shared by every revision of the same item. Core
+                stores a newer revision as a new version of the existing item instead of as a
+                separate one.
+            resurface (bool): Whether this revision, when it replaces an earlier one, brings the
+                item back to the analysts' attention: unread, and listed with the items
+                collected now. Otherwise core updates the item quietly.
         """
         self.id = id
         self.hash = hash
@@ -116,6 +129,9 @@ class NewsItemData:
         self.content = content
         self.osint_source_id = osint_source_id
         self.attributes = attributes
+        self.version = version
+        self.version_key = version_key
+        self.resurface = resurface
 
     def print_news_item(self, logger: object) -> None:
         """Print news item details using the provided logger."""
@@ -134,6 +150,10 @@ class NewsItemDataSchema(NewsItemDataBaseSchema):
 
     content = fields.Str()
     attributes = fields.Nested(NewsItemAttributeSchema, many=True)
+    version_key = fields.Str(load_default=None, allow_none=True)
+    # Sent by collectors with each item, never stored: whether a newer revision of a stored
+    # item resurfaces it. Items that do not say so do, as before the setting existed.
+    resurface = fields.Bool(load_default=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> NewsItemData:  # noqa: ANN003, ARG002
@@ -155,6 +175,24 @@ class NewsItemRemoteSchema(Schema):
     content = fields.Str()
     attributes = fields.Nested(NewsItemAttributeRemoteSchema, many=True)
     relevance = fields.Int()
+    version = fields.Str(allow_none=True)
+    version_key = fields.Str(allow_none=True)
+
+
+class NewsItemDataVersionSchema(Schema):
+    """Schema for one version of a news item: the current one or a superseded one."""
+
+    id = fields.Int(allow_none=True)
+    version = fields.Str(allow_none=True)
+    title = fields.Str()
+    review = fields.Str()
+    content = fields.Str()
+    link = fields.Str()
+    published = fields.Str()
+    author = fields.Str()
+    collected = fields.DateTime("%d.%m.%Y - %H:%M")
+    superseded = fields.DateTime("%d.%m.%Y - %H:%M", allow_none=True)
+    current = fields.Bool()
 
 
 class NewsItemDataPresentationSchema(NewsItemDataBaseSchema):

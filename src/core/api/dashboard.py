@@ -165,9 +165,10 @@ class Dashboard(Resource):
         Returns:
             (dict): The dashboard data.
         """
+        today = datetime.datetime.now(TZ).date()
         try:
             tag_cloud_arguments = {name: request.args.getlist(name) for name in TAG_CLOUD_QUERY_ARGUMENTS if name in request.args}
-            date_from, date_to = parse_tag_cloud_interval(tag_cloud_arguments, datetime.datetime.now(TZ).date())
+            date_from, date_to = parse_tag_cloud_interval(tag_cloud_arguments, today)
         except TagCloudQueryError as ex:
             logger.warning(f"Invalid dashboard tag-cloud interval: {ex}")
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
@@ -195,6 +196,8 @@ class Dashboard(Resource):
             "latest_collected": latest_collected,
             "news_items_by_day": news_items_by_day,
             "tag_cloud": grouped_words,
+            # Days before this are no longer kept (the tag cloud retention setting).
+            "tag_cloud_oldest_date": TagCloud.oldest_date(today).isoformat(),
         }
 
 

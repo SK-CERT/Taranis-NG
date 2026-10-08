@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "ソース",
+        "version_label": "バージョン {version}",
+        "current_version_label": "バージョン {version}（最新）",
+        "superseded_at": "{date} に新しいバージョンに置き換えられました",
         "comments": "コメント",
         "add_news_item": "ニュース項目を追加",
         "attached_news_items": "添付されたニュース項目",
@@ -1062,6 +1065,7 @@
         "boolean_error": "値は「True」または「False」でなければなりません。",
         "integer_error": "有効な整数を入力してください。",
         "decimal_error": "有効な小数を入力してください。",
+        "integer_range_error": "{min}から{max}までの整数を入力してください。",
         "default_value_with_value": "デフォルト値: {value}",
         "input_too_long": "値は {count} 文字です。上限は {max} 文字です。",
         "language_name_with_code": "{name}（{code}）",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "レポート／プロダクトの既定言語",
         "REPORT_SELECTOR_READ_ONLY": "レポート項目セレクターを読み取り専用モードで開く",
         "SPELLCHECK": "スペルチェック",
+        "TAG_CLOUD_RETENTION_DAYS": "タグクラウドの保持期間（日）",
         "TAG_COLOR": "色付きタグクラウド",
         "TIME_FORMAT": "時刻形式"
     },

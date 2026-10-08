@@ -10,7 +10,9 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Query
 
 import base64
+import hashlib
 import uuid
+from collections import Counter
 from datetime import datetime, timedelta
 from http import HTTPStatus
 
@@ -22,10 +24,60 @@ from model.attribute_extraction_rule import AttributeExtractionRule
 from model.osint_source import OSINTSource, OSINTSourceGroup
 from model.tag_cloud import TagCloud
 from shared.attribute_extraction import ExtractionRule, extract_attributes
-from shared.common import TZ, remove_empty_html_tags, resolve_relative_links, simplify_html_text, smart_truncate, strip_html
+from shared.common import TZ, sanitize_content_html, smart_truncate, strip_html
 from shared.schema.acl_entry import ItemType
-from shared.schema.news_item import NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemDataSchema, NewsItemRemoteSchema, NewsItemSchema
-from sqlalchemy import and_, func, or_, orm
+from shared.schema.news_item import (
+    NewsItemAggregateSchema,
+    NewsItemAttributeSchema,
+    NewsItemDataSchema,
+    NewsItemDataVersionSchema,
+    NewsItemRemoteSchema,
+    NewsItemSchema,
+)
+from sqlalchemy import and_, func, or_, orm, text
+
+# Attribute keys that describe one revision of a versioned item rather than the item. When a
+# newer revision arrives these are replaced, not merged, so an item never shows two TLP labels
+# or the integrity result of a revision it no longer holds.
+VERSION_SCOPED_ATTRIBUTE_KEYS = frozenset({"TLP", "CSAF_HASH", "CSAF_SIGNATURE"})
+
+# The format collectors write `published` in (see NewsItemData).
+PUBLISHED_FORMAT = "%d.%m.%Y - %H:%M"
+
+
+def _published_datetime(published: str | None) -> datetime | None:
+    """Read a `published` value as a date, or None when it is not in the collectors' format.
+
+    Args:
+        published (str | None): The stored or incoming `published` string.
+
+    Returns:
+        The parsed date, or None.
+    """
+    if not published:
+        return None
+    try:
+        return datetime.strptime(published.strip(), PUBLISHED_FORMAT)  # noqa: DTZ007 - both sides are compared naive
+    except ValueError:
+        return None
+
+
+def _ingest_lock_ids(news_items_data: list[NewsItemData]) -> list[int]:
+    """Advisory lock keys for the identities a batch stores: its hashes and version keys.
+
+    Derived here rather than in SQL, and sorted, so every batch takes its locks in one order.
+
+    Args:
+        news_items_data (list[NewsItemData]): The items of the batch.
+
+    Returns:
+        The distinct lock keys, in ascending order.
+    """
+    identities = {f"hash:{item.hash}" for item in news_items_data if item.hash}
+    identities |= {f"version:{item.version_key}" for item in news_items_data if item.version_key}
+    return sorted(
+        {int.from_bytes(hashlib.sha256(f"taranis-ingest:{identity}".encode()).digest()[:8], "big", signed=True) for identity in identities},
+    )
 
 
 class NewsItemAttribute(db.Model):
@@ -108,7 +160,8 @@ class NewsItemData(db.Model):
     """
 
     id = db.Column(db.String(64), primary_key=True)
-    hash = db.Column(db.String())
+    # Looked up for every item a collector sends, to skip the ones already stored.
+    hash = db.Column(db.String(), index=True)
 
     title = db.Column(db.String())
     review = db.Column(db.String())
@@ -128,6 +181,29 @@ class NewsItemData(db.Model):
     osint_source = db.relationship("OSINTSource")
     remote_source = db.Column(db.String())
 
+    # Versioned items (e.g. CSAF advisories) carry the provider's label for the revision held
+    # here, and a key shared by every revision of the item. A newer revision updates this row
+    # in place; the one it replaces moves to `versions`. Both stay NULL for other items.
+    version = db.Column(db.String())
+    version_key = db.Column(db.String())
+    versions = db.relationship(
+        "NewsItemDataVersion",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="select",
+        order_by="desc(NewsItemDataVersion.superseded), desc(NewsItemDataVersion.id)",
+    )
+
+    # Partial, because most items have no version key: the index then only holds the few
+    # that do, on what is the largest table.
+    __table_args__ = (
+        db.Index(
+            "ix_news_item_data_version_key",
+            "version_key",
+            postgresql_where=db.text("version_key IS NOT NULL"),
+        ),
+    )
+
     def __init__(
         self,
         id: str,  # noqa: A002
@@ -142,6 +218,9 @@ class NewsItemData(db.Model):
         content: str,
         osint_source_id: str,
         attributes: list[NewsItemAttribute],
+        version: str | None = None,
+        version_key: str | None = None,
+        resurface: bool = True,
     ) -> None:
         """Initialize news item data."""
         if id is None:
@@ -159,12 +238,26 @@ class NewsItemData(db.Model):
         self.content = content
         self.attributes = attributes
         self.osint_source_id = osint_source_id
+        self.version = version
+        self.version_key = version_key
+        # Not stored: how an incoming revision is to be handled when it replaces a stored one
+        # (see NewsItemAggregate._add_new_version). Items loaded from the database lack it.
+        self.resurface = resurface
         self.updated = datetime.now(TZ)
 
     @property
     def content_plaintext(self) -> str:
-        """Return plain text version of content."""
-        return strip_html(self.content) if self.content else ""
+        """Return plain text version of content.
+
+        Parsed once per content value: storing an item reads it for the search index of every
+        group showing the item and for the tag cloud, and a large item takes a while to parse.
+        """
+        content = self.content or ""
+        cached = getattr(self, "_content_plaintext", None)
+        if cached is None or cached[0] != content:
+            cached = (content, strip_html(content) if content else "")
+            self._content_plaintext = cached
+        return cached[1]
 
     @property
     def osint_source_name(self) -> str:
@@ -256,6 +349,137 @@ class NewsItemData(db.Model):
             News item data
         """
         return cls.query.filter(NewsItemData.hash == hash_string).first()
+
+    @classmethod
+    def find_by_version_key(cls, version_key: str) -> NewsItemData | None:
+        """Find the item holding a revision of the given versioned item.
+
+        Ordered, so that if two sources ever raced and both inserted the same key, every later
+        revision keeps landing on the same, oldest, row.
+
+        Args:
+            version_key (str): Identity shared by every revision of the item.
+
+        Returns:
+            The news item data, or None when no revision of it is stored yet.
+        """
+        return cls.query.filter(NewsItemData.version_key == version_key).order_by(NewsItemData.collected, NewsItemData.id).first()
+
+    @classmethod
+    def hash_known(cls, hash_string: str) -> bool:
+        """Check whether a revision with this hash is stored, as the current one or in history.
+
+        Checking history too means an older revision sent again - by a second source, or a
+        feed that lists it once more - is recognised rather than taken for a new one.
+
+        Args:
+            hash_string (str): Hash string
+
+        Returns:
+            True when the hash belongs to a stored revision.
+        """
+        if cls.identical(hash_string):
+            return True
+        return db.session.query(db.exists().where(NewsItemDataVersion.hash == hash_string)).scalar()
+
+    @classmethod
+    def lock_identities(cls, news_items_data: list[NewsItemData]) -> None:
+        """Make batches that carry the same item wait for each other until they commit.
+
+        Storing checks that an item's hash, or its version key, is unknown and then inserts it.
+        A batch commits only once it is complete, and nothing in the database forbids a second
+        row, so two batches carrying the same new item - two sources of one feed, or a chunk sent
+        again while core is still storing it - would both store it. A transaction-level advisory
+        lock per hash and version key makes the second batch wait, then find the item. The locks
+        are taken in one sorted pass, so batches never wait on each other in a cycle.
+
+        Args:
+            news_items_data (list[NewsItemData]): The items of the batch.
+        """
+        lock_ids = _ingest_lock_ids(news_items_data)
+        if lock_ids:
+            db.session.execute(
+                text("SELECT pg_advisory_xact_lock(lock_id) FROM unnest(CAST(:lock_ids AS bigint[])) AS lock_id"),
+                {"lock_ids": lock_ids},
+            )
+
+    def is_newer(self, incoming: NewsItemData) -> bool:
+        """Check whether an incoming revision may replace the one stored here.
+
+        Revisions are ordered by their publication date, not by their version labels, which
+        providers write in different schemes (`3`, `1.2.0`). A revision dated before the stored
+        one arrived late and must not overwrite it. When either date cannot be read, the
+        incoming revision is taken: it was sent because it changed.
+
+        Args:
+            incoming (NewsItemData): The revision that just arrived.
+
+        Returns:
+            False only when the incoming revision is known to be older.
+        """
+        current = _published_datetime(self.published)
+        candidate = _published_datetime(incoming.published)
+        if current is None or candidate is None:
+            return True
+        return candidate >= current
+
+    def is_same_revision(self, incoming: NewsItemData) -> bool:
+        """Check whether an incoming copy is the revision stored here, published again.
+
+        The version label names a revision. Providers republish a document without a new one:
+        Red Hat moves the date of its "Last generated version" every few hours. Such a copy is
+        the same revision, not a newer one. Without labels on both sides this cannot be told.
+
+        Args:
+            incoming (NewsItemData): The copy that just arrived.
+
+        Returns:
+            True when both carry the same version label.
+        """
+        return bool(self.version) and self.version == incoming.version
+
+    def apply_new_version(self, incoming: NewsItemData, *, merge_attributes: bool = True, keep_current: bool = True) -> None:
+        """Replace the revision held here with a newer one, keeping the current one as history.
+
+        Args:
+            incoming (NewsItemData): The newer revision. It is not stored itself: its fields
+                are copied onto this row, so everything that points here keeps doing so.
+            merge_attributes (bool): Merge the incoming attributes into these. The remote path
+                replaces a node's own attributes instead, so it merges nothing here.
+            keep_current (bool): Keep the revision held now as history. A newer copy of the same
+                revision replaces it without: history would only repeat it.
+        """
+        if keep_current:
+            self.versions.append(NewsItemDataVersion.snapshot(self))
+        for field in ("hash", "version", "title", "review", "content", "link", "published", "author", "collected", "source"):
+            setattr(self, field, getattr(incoming, field))
+        self.updated = datetime.now(TZ)
+        if merge_attributes:
+            self._merge_attributes_of_version(incoming.attributes or [])
+
+    def _merge_attributes_of_version(self, incoming_attributes: list[NewsItemAttribute]) -> None:
+        """Merge the attributes of a newer revision into the ones stored.
+
+        Attributes describing a single revision (VERSION_SCOPED_ATTRIBUTE_KEYS) are dropped, so
+        the item never shows the TLP or integrity result of two revisions at once. Every other
+        attribute stays: an attribute added by a user cannot be told apart from one added by
+        the collector, and losing the user's would be worse than keeping a stale one.
+
+        Args:
+            incoming_attributes (list[NewsItemAttribute]): The attributes of the newer revision.
+        """
+        existing = set()
+        for attribute in self.attributes[:]:
+            if attribute.key in VERSION_SCOPED_ATTRIBUTE_KEYS:
+                self.attributes.remove(attribute)
+                if orm.object_session(attribute) is not None:
+                    db.session.delete(attribute)
+            else:
+                existing.add((attribute.key, attribute.value))
+        for attribute in incoming_attributes:
+            if (attribute.key, attribute.value) not in existing:
+                existing.add((attribute.key, attribute.value))
+                self.attributes.append(attribute)
 
     @classmethod
     def count_all(cls) -> int:
@@ -398,6 +622,56 @@ class NewsItemData(db.Model):
         return items, last_sync_time
 
 
+class NewsItemDataVersion(db.Model):
+    """A revision of a versioned news item that a newer revision has replaced.
+
+    The current revision lives in NewsItemData itself, so everything pointing at the item -
+    aggregates, votes, reports - follows it to each new revision. This table only keeps the
+    ones it replaced, as full copies, for the history shown in the GUI.
+
+    Attributes:
+        id (int): ID
+        news_item_data_id (str): The item this was a revision of
+        hash (str): Hash of this revision, so it is recognised if it is ever sent again
+        version (str): The provider's label for this revision
+        superseded (datetime): When a newer revision replaced it
+    """
+
+    id = db.Column(db.Integer, primary_key=True)
+    news_item_data_id = db.Column(db.String(64), db.ForeignKey("news_item_data.id", ondelete="CASCADE"), nullable=False, index=True)
+    hash = db.Column(db.String(), index=True)
+    version = db.Column(db.String())
+
+    title = db.Column(db.String())
+    review = db.Column(db.String())
+    author = db.Column(db.String())
+    source = db.Column(db.String())
+    link = db.Column(db.String())
+    content = db.Column(db.String())
+    published = db.Column(db.String())
+    collected = db.Column(db.DateTime)
+    superseded = db.Column(db.DateTime)
+
+    # Read by NewsItemDataVersionSchema: a stored revision is never the current one.
+    current = False
+
+    @classmethod
+    def snapshot(cls, news_item_data: NewsItemData) -> NewsItemDataVersion:
+        """Copy the revision an item holds now, before a newer one replaces it.
+
+        Args:
+            news_item_data (NewsItemData): The item about to receive a newer revision.
+
+        Returns:
+            The copy, not yet added to the item's history.
+        """
+        version = cls()
+        for field in ("hash", "version", "title", "review", "author", "source", "link", "content", "published", "collected"):
+            setattr(version, field, getattr(news_item_data, field))
+        version.superseded = datetime.now(TZ)
+        return version
+
+
 class NewNewsItemDataSchema(NewsItemDataSchema):
     """New news item data schema.
 
@@ -445,10 +719,10 @@ class NewsItem(db.Model):
     dislikes = db.Column(db.Integer, default=0)
     relevance = db.Column(db.Integer, default=0)
 
-    news_item_data_id = db.Column(db.String, db.ForeignKey("news_item_data.id"))
+    news_item_data_id = db.Column(db.String, db.ForeignKey("news_item_data.id"), index=True)
     news_item_data = db.relationship("NewsItemData", lazy="selectin")
 
-    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"))
+    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"), index=True)
 
     @classmethod
     def find(cls, news_item_id: int) -> NewsItem:
@@ -484,6 +758,38 @@ class NewsItem(db.Model):
         news_item = db.session.get(cls, news_item_data_id)
         news_item_schema = NewsItemSchema()
         return news_item_schema.dump(news_item)
+
+    @classmethod
+    def get_versions_json(cls, news_item_id: int) -> dict:
+        """List every revision of a news item, newest first.
+
+        The current revision comes first, from the item itself, followed by the ones it
+        replaced, so the GUI can show one tab per revision the same way.
+
+        Args:
+            news_item_id (int): News item ID
+        Returns:
+            {"items": [...]}, empty when the item does not exist.
+        """
+        news_item = db.session.get(cls, news_item_id)
+        if news_item is None or news_item.news_item_data is None:
+            return {"items": []}
+        data = news_item.news_item_data
+        schema = NewsItemDataVersionSchema()
+        current = {
+            "id": None,
+            "version": data.version,
+            "title": data.title,
+            "review": data.review,
+            "content": data.content,
+            "link": data.link,
+            "published": data.published,
+            "author": data.author,
+            "collected": data.collected,
+            "superseded": None,
+            "current": True,
+        }
+        return {"items": [schema.dump(current)] + [schema.dump(version) for version in data.versions]}
 
     @classmethod
     def get_total_relevance(cls, news_item_data_id: int) -> int:
@@ -814,7 +1120,7 @@ class NewsItemAggregate(db.Model):
 
     comments = db.Column(db.String(), default="")
 
-    osint_source_group_id = db.Column(db.String, db.ForeignKey("osint_source_group.id"))
+    osint_source_group_id = db.Column(db.String, db.ForeignKey("osint_source_group.id"), index=True)
 
     news_items = db.relationship("NewsItem", lazy="joined")
 
@@ -980,7 +1286,7 @@ class NewsItemAggregate(db.Model):
 
     @classmethod
     def create_new_for_all_groups(cls, news_item_data: NewsItemData) -> None:
-        """Create new for all groups.
+        """Create new for all groups. The caller commits.
 
         Args:
             news_item_data (NewsItemData): News item data
@@ -999,11 +1305,11 @@ class NewsItemAggregate(db.Model):
             aggregate.news_items.append(news_item)
             db.session.add(aggregate)
 
-            NewsItemAggregateSearchIndex.prepare(aggregate)
+            NewsItemAggregateSearchIndex.prepare(aggregate, commit=False)
 
     @classmethod
     def create_new_for_group(cls, news_item_data: NewsItemData, osint_source_group_id: str) -> None:
-        """Create new for group.
+        """Create new for group. The caller commits.
 
         Args:
             news_item_data (NewsItemData): News item data
@@ -1021,7 +1327,7 @@ class NewsItemAggregate(db.Model):
         aggregate.news_items.append(news_item)
         db.session.add(aggregate)
 
-        NewsItemAggregateSearchIndex.prepare(aggregate)
+        NewsItemAggregateSearchIndex.prepare(aggregate, commit=False)
 
     @classmethod
     def add_news_items(cls, news_items_data_list: list[dict]) -> set[int]:
@@ -1035,21 +1341,129 @@ class NewsItemAggregate(db.Model):
         news_item_data_schema = NewNewsItemDataSchema(many=True)
         news_items_data = news_item_data_schema.load(news_items_data_list)
         osint_source_ids = set()
+        # Counted over the whole batch and written once: large items carry thousands of words.
+        tag_cloud_words = Counter()
+        NewsItemData.lock_identities(news_items_data)
 
         for news_item_data in news_items_data:
-            if not NewsItemData.identical(news_item_data.hash):
-                db.session.add(news_item_data)
-                cls.create_new_for_all_groups(news_item_data)
-                osint_source_ids.add(news_item_data.osint_source_id)
+            if NewsItemData.hash_known(news_item_data.hash):
+                continue
 
-                TagCloud.generate_tag_cloud_words(news_item_data)
+            # A newer revision of an item already stored updates that item rather than
+            # becoming a second one. Items without a version key never take this path.
+            stored = NewsItemData.find_by_version_key(news_item_data.version_key) if news_item_data.version_key else None
+            if stored is not None:
+                if cls._add_new_version(stored, news_item_data):
+                    osint_source_ids.update(source_id for source_id in (news_item_data.osint_source_id, stored.osint_source_id) if source_id)
+                continue
 
+            db.session.add(news_item_data)
+            cls.create_new_for_all_groups(news_item_data)
+            osint_source_ids.add(news_item_data.osint_source_id)
+
+            tag_cloud_words.update(TagCloud.words(news_item_data))
+
+        TagCloud.add_words(tag_cloud_words)
+        # The only commit: a batch is stored completely or not at all, and the collector sends
+        # it again when it did not get through.
         db.session.commit()
 
         for source_id in osint_source_ids:
             OSINTSource.update_collected(source_id)
 
         return osint_source_ids
+
+    @classmethod
+    def _add_new_version(cls, stored: NewsItemData, incoming: NewsItemData) -> bool:
+        """Store a newer revision of an item on the item itself.
+
+        A newer copy of the revision already stored - the same version label, published again -
+        refreshes it in place: nothing goes to history and the item does not resurface. A new
+        revision from a source that does not resurface them goes to history like any other, but
+        the item is only refreshed.
+
+        The tag cloud is left alone: the words of a revision are mostly those of the one it
+        replaces, and counting them again would inflate them.
+
+        Args:
+            stored (NewsItemData): The item holding an earlier revision.
+            incoming (NewsItemData): The revision that just arrived.
+
+        Returns:
+            True when the item was updated, False when the incoming revision is older.
+        """
+        if not stored.is_newer(incoming):
+            logger.info(f"Skipping version {incoming.version} of news item {stored.id}: it is older than the stored version {stored.version}")
+            return False
+        old_title, old_review = stored.title, stored.review
+        same_revision = stored.is_same_revision(incoming)
+        stored.apply_new_version(incoming, keep_current=not same_revision)
+        if same_revision or not incoming.resurface:
+            cls._refresh(stored, old_title, old_review)
+        else:
+            cls._resurface(stored, old_title, old_review)
+        return True
+
+    @staticmethod
+    def _follow_new_text(aggregate: NewsItemAggregate, news_item_data: NewsItemData, old_title: str, old_review: str) -> None:
+        # A lone item's aggregate copies its title and review. Follow the new revision, unless an
+        # analyst renamed it or it groups several items.
+        if len(aggregate.news_items) == 1:
+            if aggregate.title == old_title:
+                aggregate.title = news_item_data.title
+            if aggregate.description == old_review:
+                aggregate.description = news_item_data.review
+
+    @classmethod
+    def _refresh(cls, news_item_data: NewsItemData, old_title: str, old_review: str) -> None:
+        """Show the text an item now holds, without resurfacing it.
+
+        Used for a republished copy of the revision the item held, and for a new revision from a
+        source that does not resurface them. The aggregates showing it take its text and are
+        searched by it; nothing becomes unread or moves in time, and a deleted item stays
+        deleted. The caller commits.
+
+        Args:
+            news_item_data (NewsItemData): The item, already holding the newer copy.
+            old_title (str): Its title before.
+            old_review (str): Its review before.
+        """
+        for news_item in NewsItem.get_all_with_data(news_item_data.id):
+            aggregate = cls.find(news_item.news_item_aggregate_id)
+            if aggregate is None:
+                continue
+            cls._follow_new_text(aggregate, news_item_data, old_title, old_review)
+            NewsItemAggregateSearchIndex.prepare(aggregate, commit=False)
+
+    @classmethod
+    def _resurface(cls, news_item_data: NewsItemData, old_title: str, old_review: str) -> None:
+        """Bring an item that received a newer revision back to the analysts' attention.
+
+        Every news item showing it, in every group, becomes unread, and its aggregate moves to
+        the time of the new revision, so it is listed with today's items. Votes, importance,
+        comments and report links stay: the item is the same one. The caller commits.
+
+        Args:
+            news_item_data (NewsItemData): The item, already holding the new revision.
+            old_title (str): Its title before the new revision.
+            old_review (str): Its review before the new revision.
+        """
+        news_items = NewsItem.get_all_with_data(news_item_data.id)
+        if not news_items:
+            # Deleting a news item keeps its data, so a revision can arrive for an item nobody
+            # sees any more. A new revision is new information: show it again.
+            cls.create_new_for_all_groups(news_item_data)
+            return
+
+        for news_item in news_items:
+            news_item.read = False
+            aggregate = cls.find(news_item.news_item_aggregate_id)
+            if aggregate is None:
+                continue
+            aggregate.created = news_item_data.collected
+            cls._follow_new_text(aggregate, news_item_data, old_title, old_review)
+            cls.update_status(aggregate.id)
+            NewsItemAggregateSearchIndex.prepare(aggregate, commit=False)
 
     @staticmethod
     def _apply_attribute_extraction(news_item_data: NewsItemData) -> None:
@@ -1118,8 +1532,7 @@ class NewsItemAggregate(db.Model):
         # sanitize news item from user manual input
         news_item_data.title = smart_truncate(strip_html(news_item_data.title), 200)
         news_item_data.review = smart_truncate(strip_html(news_item_data.review))
-        content = simplify_html_text(news_item_data.content)
-        news_item_data.content = remove_empty_html_tags(resolve_relative_links(content, news_item_data.link))
+        news_item_data.content = sanitize_content_html(news_item_data.content, news_item_data.link)
         news_item_data.author = strip_html(news_item_data.author)
         # Manually entered items never pass through a collector, so extraction is applied
         # here instead. This is the single place a manual item is created, and the text has
@@ -1163,8 +1576,10 @@ class NewsItemAggregate(db.Model):
         """
         news_item_data_schema = NewNewsItemDataSchema(many=True)
         news_items_data = news_item_data_schema.load(news_items_data_list)
+        NewsItemData.lock_identities(news_items_data)
 
         news_item_data_ids = set()
+        tag_cloud_words = Counter()
         for news_item_data in news_items_data:
             news_item_data.remote_source = remote_node.name
             for attribute in news_item_data.attributes:
@@ -1173,10 +1588,27 @@ class NewsItemAggregate(db.Model):
 
             original_news_item = NewsItemData.find_by_hash(news_item_data.hash)
 
+            # A newer revision of a versioned item updates the stored item, as it does for
+            # collected items. Its attributes are then handled below like any update from this
+            # node: the node's own attributes are replaced, never merged.
+            replaced_revision = None
+            same_revision = False
+            if original_news_item is None and news_item_data.version_key:
+                stored = NewsItemData.find_by_version_key(news_item_data.version_key)
+                if stored is not None:
+                    if NewsItemData.hash_known(news_item_data.hash) or not stored.is_newer(news_item_data):
+                        continue
+                    replaced_revision = (stored.title, stored.review)
+                    same_revision = stored.is_same_revision(news_item_data)
+                    stored.apply_new_version(news_item_data, merge_attributes=False, keep_current=not same_revision)
+                    original_news_item = stored
+
             if original_news_item is None:
                 db.session.add(news_item_data)
                 cls.create_new_for_group(news_item_data, osint_source_group_id)
                 news_item_data_ids.add(str(news_item_data.id))
+                # Items from a remote node are items like any other: the tag cloud counts them.
+                tag_cloud_words.update(TagCloud.words(news_item_data))
             else:
                 original_news_item.updated = datetime.now(TZ)
                 for attribute in original_news_item.attributes[:]:
@@ -1186,7 +1618,11 @@ class NewsItemAggregate(db.Model):
 
                 original_news_item.attributes.extend(news_item_data.attributes)
                 news_item_data_ids.add(str(original_news_item.id))
+                if replaced_revision is not None:
+                    follow = cls._refresh if same_revision else cls._resurface
+                    follow(original_news_item, *replaced_revision)
 
+        TagCloud.add_words(tag_cloud_words)
         db.session.commit()
 
         aggregate_ids = set()
@@ -1603,7 +2039,7 @@ class NewsItemAggregateSearchIndex(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.String)
-    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"))
+    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"), index=True)
 
     @classmethod
     def remove(cls, aggregate: NewsItemAggregate) -> None:
@@ -1618,14 +2054,19 @@ class NewsItemAggregateSearchIndex(db.Model):
             db.session.commit()
 
     @classmethod
-    def prepare(cls, aggregate: NewsItemAggregate) -> None:
+    def prepare(cls, aggregate: NewsItemAggregate, *, commit: bool = True) -> None:
         """Prepare.
 
         Args:
             aggregate (NewsItemAggregate): Aggregate
+            commit (bool): Commit the session. Storing collected items commits once per batch.
         """
-        search_index = cls.query.filter_by(news_item_aggregate_id=aggregate.id).first()
+        # A new aggregate, not flushed yet, cannot have a row: flush it for its id instead of
+        # looking one up.
+        search_index = None if aggregate.id is None else cls.query.filter_by(news_item_aggregate_id=aggregate.id).first()
         if search_index is None:
+            if aggregate.id is None:
+                db.session.flush()
             search_index = NewsItemAggregateSearchIndex()
             search_index.news_item_aggregate_id = aggregate.id
             db.session.add(search_index)
@@ -1645,7 +2086,8 @@ class NewsItemAggregateSearchIndex(db.Model):
                 data += " " + attribute.value
 
         search_index.data = data.lower()
-        db.session.commit()
+        if commit:
+            db.session.commit()
 
 
 class NewsItemDataNewsItemAttribute(db.Model):

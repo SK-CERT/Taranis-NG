@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Zdroj",
+        "version_label": "Verzia {version}",
+        "current_version_label": "Verzia {version} (aktuálna)",
+        "superseded_at": "Nahradená novšou verziou dňa {date}",
         "comments": "Komentáre",
         "add_news_item": "Pridať novinku",
         "attached_news_items": "Priložené novinky",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Hodnota musí byť buď 'True' alebo 'False'!",
         "integer_error": "Hodnota musí byť platné celé číslo!",
         "decimal_error": "Hodnota musí byť platné desatinné číslo!",
+        "integer_range_error": "Hodnota musí byť celé číslo od {min} do {max}!",
         "default_value_with_value": "Predvolená hodnota: {value}",
         "input_too_long": "Hodnota má {count} znakov; maximum je {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Predvolený jazyk pre analýzy/publikácie",
         "REPORT_SELECTOR_READ_ONLY": "Otvoriť výber analýz v režime iba na čítanie",
         "SPELLCHECK": "Kontrolovať pravopis",
+        "TAG_CLOUD_RETENTION_DAYS": "Uchovávanie oblaku značiek (dni)",
         "TAG_COLOR": "Farebný oblak značiek",
         "TIME_FORMAT": "Formát času"
     },

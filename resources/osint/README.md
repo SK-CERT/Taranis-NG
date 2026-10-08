@@ -14,6 +14,14 @@ individual JSON files and an aggregate `all.json`. Do not modify generated
 
 The default refresh interval for RSS and Atom feeds is 180 minutes, with an article limit of 10.
 
+Files ending in `_csaf.json` use the CSAF collector, which reads security advisories in
+the CSAF format from a provider's metadata, a ROLIE or RSS feed, a directory, or a GitHub
+repository. They refresh every 180 minutes, collect at most 100 new or changed documents
+per distribution and run, skip VEX documents, and check each document's published hash
+and signature. A newer version of an advisory already collected marks its news item unread
+again; turn off "Resurface new versions" on a source to update its items quietly instead.
+The `cert` folder holds national CERTs.
+
 Review a source's URL, collection limit, legal constraints, expected volume,
 and relevance before importing it. Importing an aggregate catalog is not
 recommended for a first evaluation; start with one or two bounded sources.

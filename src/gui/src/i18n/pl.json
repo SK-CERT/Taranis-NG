@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Źródło",
+        "version_label": "Wersja {version}",
+        "current_version_label": "Wersja {version} (bieżąca)",
+        "superseded_at": "Zastąpiona nowszą wersją {date}",
         "comments": "Komentarze",
         "add_news_item": "Dodaj elementy wiadomości",
         "attached_news_items": "Dołączone elementy wiadomości",
@@ -1062,6 +1065,7 @@
         "boolean_error": "Wartość musi mieć postać 'True' albo 'False'!",
         "integer_error": "Wartość musi być prawidłową liczbą całkowitą!",
         "decimal_error": "Wartość musi być prawidłową liczbą dziesiętną!",
+        "integer_range_error": "Wartość musi być liczbą całkowitą od {min} do {max}!",
         "default_value_with_value": "Wartość domyślna: {value}",
         "input_too_long": "Wartość ma {count} znaków; maksymalna liczba to {max}.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "Domyślny język raportów i produktów",
         "REPORT_SELECTOR_READ_ONLY": "Otwórz selektor elementów raportu w trybie tylko do odczytu",
         "SPELLCHECK": "Sprawdzanie pisowni",
+        "TAG_CLOUD_RETENTION_DAYS": "Okres przechowywania chmury tagów (dni)",
         "TAG_COLOR": "Kolorowa chmura tagów",
         "TIME_FORMAT": "Format czasu"
     },

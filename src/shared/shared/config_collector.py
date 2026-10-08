@@ -37,6 +37,103 @@ class ConfigCollector(ConfigBase):
         """Initialize collector modules."""
         self.modules: list[module_type] = []
 
+        mod = module_type(
+            "CSAF_COLLECTOR",
+            "CSAF Collector",
+            "Collector for security advisories in the CSAF format (OASIS Common Security Advisory Framework 2.0 and 2.1)",
+        )
+        mod.parameters = self.add_default()
+        mod.parameters.extend(
+            [
+                param_type(
+                    "CSAF_URL",
+                    "CSAF URL",
+                    (
+                        "Where the advisories are published: a domain (discovered through /.well-known/csaf or security.txt), "
+                        "a provider-metadata.json URL, a ROLIE feed, an RSS or Atom feed linking to CSAF documents, "
+                        "a directory containing changes.csv, or a GitHub repository (https://github.com/<owner>/<repo>, "
+                        "optionally /tree/<branch>/<folder>). Provider metadata pulls every distribution it lists, "
+                        "except one named as VEX (e.g. csaf-vex/) while csaf_vex is skipped; point at one directory or "
+                        "feed to limit that."
+                    ),
+                    ParameterType.STRING,
+                ),
+                param_type(
+                    "USER_AGENT",
+                    "User agent",
+                    (
+                        "OPTIONAL: String sent in the request header to identify the collector. Leave empty to send the "
+                        "standard client identifier (python-requests): some providers block unknown or browser-like values."
+                    ),
+                    ParameterType.STRING,
+                ),
+                param_type(
+                    "PUBLIC_KEY_URLS",
+                    "Public OpenPGP key URLs",
+                    (
+                        "OPTIONAL: Comma-separated URLs of OpenPGP public keys used to verify signatures, in addition to the "
+                        "keys listed in the provider metadata. Needed when the provider metadata cannot be reached."
+                    ),
+                    ParameterType.STRING,
+                ),
+                param_type(
+                    "SKIP_CATEGORIES",
+                    "Skip document categories",
+                    (
+                        "OPTIONAL: Comma-separated CSAF document categories to ignore (e.g. csaf_vex). Empty collects every "
+                        "category. While csaf_vex is skipped, a distribution named as VEX (e.g. csaf-vex/ or vex/) is not "
+                        "read at all."
+                    ),
+                    ParameterType.STRING,
+                    "csaf_vex",
+                ),
+                param_type(
+                    "MAX_DOCUMENTS",
+                    "Limit for documents per run",
+                    (
+                        "Maximum number of new or changed documents collected from each distribution in one run. "
+                        "The first run collects only this many of the newest documents."
+                    ),
+                    ParameterType.NUMBER,
+                    "100",
+                ),
+                param_type(
+                    "VERIFY_SIGNATURES",
+                    "Verify hashes and signatures",
+                    (
+                        "OPTIONAL: Check each document against its published SHA-256/SHA-512 hash and OpenPGP signature. "
+                        "Documents are collected either way; the result is stored as an attribute. Default: true"
+                    ),
+                    ParameterType.BOOLEAN,
+                    "true",
+                ),
+                param_type(
+                    "CHECK_IF_MODIFIED",
+                    "Check if modified",
+                    (
+                        "OPTIONAL: Ask the server whether each listing (changes.csv, feed or repository tree) changed "
+                        "since the last run (If-None-Match / If-Modified-Since) and skip reading it when it reports "
+                        "no change. Turn off for servers that refuse the request or answer it wrongly. Default: true"
+                    ),
+                    ParameterType.BOOLEAN,
+                    "true",
+                ),
+                param_type(
+                    "RESURFACE_NEW_VERSIONS",
+                    "Resurface new versions",
+                    (
+                        "OPTIONAL: When a newer version of an advisory already collected arrives, mark its news item unread "
+                        "again and list it with the items collected now, showing it again if it was deleted. Turn off to "
+                        "update the item quietly: it shows the new version and keeps the older ones in its history, but "
+                        "stays read and where it was listed. Default: true"
+                    ),
+                    ParameterType.BOOLEAN,
+                    "true",
+                ),
+            ],
+        )
+        self.modules.append(mod)
+
         mod = module_type("EMAIL_COLLECTOR", "EMAIL Collector", "Collector for gathering data from emails")
         mod.parameters = self.add_default()
         mod.parameters.extend(

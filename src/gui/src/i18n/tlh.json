@@ -869,6 +869,9 @@
     },
     "assess": {
         "source": "Hal",
+        "version_label": "ghun mI' {version}",
+        "current_version_label": "ghun mI' {version} (DaH)",
+        "superseded_at": "{date} ghun mI' chu' lutam",
         "comments": "mu'mey",
         "add_news_item": "De'mey chu' yIchel",
         "attached_news_items": "De'mey chu' rarlu'bogh",
@@ -1062,6 +1065,7 @@
         "boolean_error": "'True' pagh 'False' ghaHnIS lo'laHghach!",
         "integer_error": "mI' naQ lugh ghaHnIS lo'laHghach!",
         "decimal_error": "mI' lugh ghaHnIS lo'laHghach!",
+        "integer_range_error": "mI' naQ ghaHnIS mI'vam, {min} {max} je joj!",
         "default_value_with_value": "lo'laHghach motlh: {value}",
         "input_too_long": "{count} ngutlh ghaj lo'laHghach; {max} law'qu'.",
         "language_name_with_code": "{name} ({code})",
@@ -1085,6 +1089,7 @@
         "CONTENT_DEFAULT_LANGUAGE": "ja'ghachmey ghItlhmey je Hol motlh",
         "REPORT_SELECTOR_READ_ONLY": "laD neH mIwDaq ja'ghach wIvwI' yIpoSmoH",
         "SPELLCHECK": "ngutlh 'olghach",
+        "TAG_CLOUD_RETENTION_DAYS": "per 'eng pol poH (jajmey)",
         "TAG_COLOR": "per 'eng rItlh law'",
         "TIME_FORMAT": "poH ghItlh Segh"
     },
