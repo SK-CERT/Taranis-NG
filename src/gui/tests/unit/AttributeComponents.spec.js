@@ -52,12 +52,12 @@ const AttributeValueLayoutStub = {
     emits: ['del-value']
 }
 
-// Stub PrimeVue Editor (used by AttributeRichText only)
+// Stub RichTextEditor (used by AttributeRichText only)
 const EditorStub = {
-    name: 'Editor',
+    name: 'RichTextEditor',
     props: ['modelValue', 'readonly', 'placeholder'],
     template: '<div class="editor-stub"><slot /></div>',
-    emits: ['update:modelValue']
+    emits: ['update:modelValue', 'focus', 'blur']
 }
 
 // Stub CalculatorCVSS (used by AttributeCVSS only)
@@ -85,7 +85,7 @@ const EnumSelectorStub = {
 const globalStubs = {
     AttributeItemLayout: AttributeItemLayoutStub,
     AttributeValueLayout: AttributeValueLayoutStub,
-    Editor: EditorStub,
+    RichTextEditor: EditorStub,
     CalculatorCVSS: CalculatorCVSSStub,
     VDialog: DialogStub,
     EnumSelector: EnumSelectorStub
@@ -847,9 +847,9 @@ describe('AttributeRichText', () => {
         expect(wrapper.find('.richtext-display').exists()).toBe(true)
     })
 
-    it('shows Editor component in edit mode', () => {
+    it('shows the rich text editor in edit mode', () => {
         const wrapper = mountAttr(AttributeRichText, baseProps({ value: '<p>Hello</p>' }))
-        const editor = wrapper.findComponent({ name: 'Editor' })
+        const editor = wrapper.findComponent({ name: 'RichTextEditor' })
         expect(editor.exists()).toBe(true)
         expect(editor.props('placeholder')).toBe('Enter rich text')
     })

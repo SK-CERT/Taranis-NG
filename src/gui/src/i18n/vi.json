@@ -2188,5 +2188,29 @@
             "filterControlsBg": "Thanh bộ lọc",
             "menuItemActive": "Mục menu đang chọn"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "Định dạng văn bản",
+        "bold": "In đậm",
+        "italic": "In nghiêng",
+        "underline": "Gạch chân",
+        "strike": "Gạch ngang",
+        "heading_1": "Tiêu đề 1",
+        "heading_2": "Tiêu đề 2",
+        "heading_3": "Tiêu đề 3",
+        "bullet_list": "Danh sách dấu đầu dòng",
+        "ordered_list": "Danh sách đánh số",
+        "blockquote": "Trích dẫn",
+        "code_block": "Khối mã",
+        "link": "Liên kết",
+        "link_url": "Địa chỉ liên kết",
+        "link_invalid": "Nhập địa chỉ web (http, https) hoặc mailto:",
+        "apply_link": "Áp dụng",
+        "remove_link": "Gỡ liên kết",
+        "open_link": "Mở liên kết trong thẻ mới",
+        "open_link_hint": "{key}+nhấp để mở liên kết",
+        "clear_formatting": "Xóa định dạng",
+        "undo": "Hoàn tác",
+        "redo": "Làm lại"
     }
 }

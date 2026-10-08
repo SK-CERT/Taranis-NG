@@ -66,10 +66,10 @@ describe('i18n catalog registry', () => {
     })
 
     it('discovers every JSON catalog and exposes matching selector options', () => {
-        expect(supportedLocales).toHaveLength(21)
+        expect(supportedLocales).toHaveLength(22)
         expect(Object.keys(messages).sort()).toEqual([...supportedLocales].sort())
         expect(localeOptions.map(({ id }) => id).sort()).toEqual([...supportedLocales].sort())
-        expect(supportedLocales).toEqual(expect.arrayContaining(['ar', 'en', 'cs', 'sk', 'pt-BR', 'zh-CN']))
+        expect(supportedLocales).toEqual(expect.arrayContaining(['ar', 'en', 'cs', 'kk', 'sk', 'pt-BR', 'zh-CN']))
     })
 
     it.each([
@@ -82,6 +82,9 @@ describe('i18n catalog registry', () => {
         ['zh', 'zh-CN'],
         ['zh-TW', 'zh-CN'],
         ['cs-CZ', 'cs'],
+        ['kk', 'kk'],
+        ['kk-KZ', 'kk'],
+        ['kk_Cyrl_KZ', 'kk'],
         ['ar', 'ar'],
         ['ar-EG', 'ar'],
         ['ar_SA', 'ar'],
@@ -157,6 +160,7 @@ describe('i18n catalog registry', () => {
         expect(vuetifyMessages.cs.close).not.toBe(vuetifyMessages.en.close)
         expect(vuetifyMessages['pt-BR']).toBeDefined()
         expect(vuetifyMessages['zh-CN']).toBeDefined()
+        expect(vuetifyMessages.kk.close).toBe('Жабу')
     })
 
     it('uses representative native language names when the display locale is supported', () => {

@@ -2188,5 +2188,29 @@
             "filterControlsBg": "شريط التصفية",
             "menuItemActive": "عنصر التنقل النشط"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "تنسيق النص",
+        "bold": "غامق",
+        "italic": "مائل",
+        "underline": "تسطير",
+        "strike": "يتوسطه خط",
+        "heading_1": "عنوان 1",
+        "heading_2": "عنوان 2",
+        "heading_3": "عنوان 3",
+        "bullet_list": "قائمة نقطية",
+        "ordered_list": "قائمة مرقمة",
+        "blockquote": "اقتباس",
+        "code_block": "كتلة برمجية",
+        "link": "رابط",
+        "link_url": "عنوان الرابط",
+        "link_invalid": "أدخل عنوان ويب (http أو https) أو عنوان mailto:",
+        "apply_link": "تطبيق",
+        "remove_link": "إزالة الرابط",
+        "open_link": "فتح الرابط في علامة تبويب جديدة",
+        "open_link_hint": "{key}+نقرة لفتح الرابط",
+        "clear_formatting": "مسح التنسيق",
+        "undo": "تراجع",
+        "redo": "إعادة"
     }
 }

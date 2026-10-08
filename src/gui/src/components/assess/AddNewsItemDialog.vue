@@ -95,10 +95,9 @@
                         <label class="text-subtitle-2 text-medium-emphasis mb-2 d-block">
                             {{ t('enter.content') }}
                         </label>
-                        <Editor
+                        <RichTextEditor
                             v-model="editorContent"
-                            :pt="editorPassThrough"
-                            editor-style="height: 200px; font-size: 16px;"
+                            height="200px"
                         />
                     </div>
 
@@ -146,7 +145,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
-    import Editor from 'primevue/editor'
+    import RichTextEditor from '@/components/common/RichTextEditor.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { addNewsItem } from '@/api/assess'
     import { useUserStore } from '@/stores/user'
@@ -204,7 +203,6 @@
     const { checkPermission } = useAuth()
     const canCreateNewsItem = computed(() => checkPermission(Permissions.ASSESS_CREATE))
     const spellcheck = useSpellcheck()
-    const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
 
     const isOpen = computed<boolean>({
         get: () => props.modelValue,

@@ -2188,5 +2188,29 @@
             "filterControlsBg": "wIvwI' tlhegh",
             "menuItemActive": "He Doch Qapbogh"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "ghItlh Segh",
+        "bold": "ghItlh HoS",
+        "italic": "ghItlh SIH",
+        "underline": "bIngDaq tlhegh",
+        "strike": "Qaw' tlhegh",
+        "heading_1": "nach 1",
+        "heading_2": "nach 2",
+        "heading_3": "nach 3",
+        "bullet_list": "mI' Hutlhbogh tetlh",
+        "ordered_list": "mI' ghajbogh tetlh",
+        "blockquote": "jatlhpu'bogh mu'mey",
+        "code_block": "ngoq ghom",
+        "link": "rarwI'",
+        "link_url": "rarwI' Daq",
+        "link_invalid": "Internet Daq (http, https) pagh mailto: Daq yIghItlh",
+        "apply_link": "yIlo'",
+        "remove_link": "rarwI' yIteq",
+        "open_link": "'echlet chu'Daq rarwI' yIpoSmoH",
+        "open_link_hint": "rarwI' DapoSmoHmeH {key}+yI'uy'",
+        "clear_formatting": "Segh yIteq",
+        "undo": "yIchegh",
+        "redo": "yIqaSmoHqa'"
     }
 }

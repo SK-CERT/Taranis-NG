@@ -390,6 +390,13 @@
         overflow-wrap: anywhere;
     }
 
+    /* Vuetify fixes the items-per-page select at 90px, which fits English "All" but cuts
+       "Všetko", "Wszystkie" or "Бәрі" to one letter. Let it grow to its label instead. */
+    .v-data-table-footer__items-per-page > .v-select {
+        width: auto;
+        min-width: 90px;
+    }
+
     /* Selected left-nav item: tint the icon and label with the primary colour. */
     .v-navigation-drawer .v-list-item--active,
     .v-navigation-drawer .v-list-item--active .v-icon {

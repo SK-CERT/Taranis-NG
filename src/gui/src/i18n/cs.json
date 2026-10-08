@@ -2188,5 +2188,29 @@
             "filterControlsBg": "Lišta filtrů",
             "menuItemActive": "Aktivní položka nabídky"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "Formátování textu",
+        "bold": "Tučné",
+        "italic": "Kurzíva",
+        "underline": "Podtržené",
+        "strike": "Přeškrtnuté",
+        "heading_1": "Nadpis 1",
+        "heading_2": "Nadpis 2",
+        "heading_3": "Nadpis 3",
+        "bullet_list": "Odrážkový seznam",
+        "ordered_list": "Číslovaný seznam",
+        "blockquote": "Citace",
+        "code_block": "Blok kódu",
+        "link": "Odkaz",
+        "link_url": "Adresa odkazu",
+        "link_invalid": "Zadejte webovou (http, https) nebo mailto: adresu",
+        "apply_link": "Použít",
+        "remove_link": "Odebrat odkaz",
+        "open_link": "Otevřít odkaz v novém okně",
+        "open_link_hint": "{key}+kliknutím otevřete odkaz",
+        "clear_formatting": "Vymazat formátování",
+        "undo": "Zpět",
+        "redo": "Znovu"
     }
 }

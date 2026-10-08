@@ -28,13 +28,12 @@
                     @del-value="del(index)"
                 >
                     <template #col_middle>
-                        <Editor
+                        <RichTextEditor
                             v-model="value.value"
-                            :pt="editorPassThrough"
-                            :read-only="false"
                             :placeholder="t('report_item.enter_rich_text')"
-                            editor-style="height: 250px; font-size: 16px;"
+                            @focus="onFocus(index)"
                             @blur="onBlur(index)"
+                            @keyup="onKeyUp(index)"
                         />
                     </template>
                 </AttributeValueLayout>
@@ -44,13 +43,12 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, onMounted } from 'vue'
-    import Editor from 'primevue/editor'
+    import { onMounted } from 'vue'
+    import RichTextEditor from '@/components/common/RichTextEditor.vue'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import { useAttributes } from './useAttributes'
     import { sanitizeRichTextHtml } from '@/utils/sanitizeRichTextHtml'
-    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { useI18n } from 'vue-i18n'
 
     type AttributeValueItem = {
@@ -82,10 +80,8 @@
         }
     )
 
-    const { canModify, addInitialValues, addButtonVisible, add, del, onBlur } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, onFocus, onBlur, onKeyUp } = useAttributes(props)
     const { t } = useI18n()
-    const spellcheck = useSpellcheck()
-    const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
 
     // Count words in rich text (strips HTML)
     const getWordCount = (html: string | null | undefined): number => {
@@ -98,10 +94,6 @@
 </script>
 
 <style scoped>
-    .prose {
-        color: var(--p-text-color);
-    }
-
     .line-clamp-4 {
         display: -webkit-box;
         -webkit-line-clamp: 4;

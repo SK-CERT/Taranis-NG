@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import ar from '@/i18n/ar.json'
 import cs from '@/i18n/cs.json'
 import en from '@/i18n/en.json'
+import kk from '@/i18n/kk.json'
 import ru from '@/i18n/ru.json'
 import sk from '@/i18n/sk.json'
 import th from '@/i18n/th.json'
@@ -241,7 +242,8 @@ describe.each([
 
 describe.each([
     ['tr', tr],
-    ['th', th]
+    ['th', th],
+    ['kk', kk]
 ])('%s invariant-plural catalog contracts', (locale, catalog) => {
     const englishStrings = collectStrings(en)
     const localizedStrings = collectStrings(catalog)

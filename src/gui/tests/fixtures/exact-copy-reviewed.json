@@ -396,6 +396,7 @@
             "reports.attributes.name",
             "reports.attributes.validator",
             "reports.types.name",
+            "rich_text_editor.link",
             "routing.header_name",
             "routing.served_hostname",
             "routing.tab_title",
@@ -577,6 +578,12 @@
             "publishers.nodes.api_url",
             "report_item.id_with_value"
         ],
+        "kk": [
+            "card_item.source_with_type",
+            "data_providers.data.user_agent",
+            "report_item.id_with_value",
+            "settings.language_name_with_code"
+        ],
         "ko": [
             "bots.nodes.api_url",
             "collectors.nodes.api_url",
@@ -690,6 +697,7 @@
             "publishers.nodes.api_key",
             "publishers.nodes.api_url",
             "report_item.id_with_value",
+            "rich_text_editor.link",
             "routing.served_days_left",
             "settings.dashboard_view",
             "settings.language_name_with_code",

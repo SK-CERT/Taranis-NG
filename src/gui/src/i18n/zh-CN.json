@@ -2188,5 +2188,29 @@
             "filterControlsBg": "筛选栏",
             "menuItemActive": "当前菜单项"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "文本格式",
+        "bold": "粗体",
+        "italic": "斜体",
+        "underline": "下划线",
+        "strike": "删除线",
+        "heading_1": "标题 1",
+        "heading_2": "标题 2",
+        "heading_3": "标题 3",
+        "bullet_list": "项目符号列表",
+        "ordered_list": "编号列表",
+        "blockquote": "引用",
+        "code_block": "代码块",
+        "link": "链接",
+        "link_url": "链接地址",
+        "link_invalid": "请输入网址（http、https）或 mailto: 地址",
+        "apply_link": "应用",
+        "remove_link": "移除链接",
+        "open_link": "在新标签页中打开链接",
+        "open_link_hint": "{key}+单击以打开链接",
+        "clear_formatting": "清除格式",
+        "undo": "撤销",
+        "redo": "重做"
     }
 }

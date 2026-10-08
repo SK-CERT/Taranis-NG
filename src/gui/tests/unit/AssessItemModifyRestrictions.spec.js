@@ -12,10 +12,10 @@ const VDialogStub = {
 }
 
 const EditorStub = {
-    name: 'Editor',
+    name: 'RichTextEditor',
     props: ['modelValue', 'readonly'],
-    emits: ['text-change'],
-    template: '<button class="editor" @click="$emit(\'text-change\')" />'
+    emits: ['update:modelValue', 'blur'],
+    template: '<button class="editor" @click="$emit(\'update:modelValue\', \'<p>x</p>\')" />'
 }
 
 const mountDialog = (newsItem) =>
@@ -24,7 +24,7 @@ const mountDialog = (newsItem) =>
         global: {
             stubs: {
                 VDialog: VDialogStub,
-                Editor: EditorStub,
+                RichTextEditor: EditorStub,
                 AssessItemActions: true,
                 NewsItemAttribute: true
             }
@@ -43,7 +43,7 @@ describe('Assess item modify restrictions', () => {
         try {
             const tabValues = wrapper.findAllComponents({ name: 'VTab' }).map((tab) => tab.props('value'))
             expect(tabValues).toEqual(['source', 'attributes'])
-            expect(wrapper.findComponent({ name: 'Editor' }).exists()).toBe(false)
+            expect(wrapper.findComponent({ name: 'RichTextEditor' }).exists()).toBe(false)
         } finally {
             wrapper.unmount()
         }
@@ -60,7 +60,7 @@ describe('Assess item modify restrictions', () => {
         try {
             expect(wrapper.findComponent({ name: 'VTextField' }).props('readonly')).toBe(false)
             expect(wrapper.findComponent({ name: 'VTextarea' }).props('readonly')).toBe(false)
-            expect(wrapper.findComponent({ name: 'Editor' }).props('readonly')).toBe(false)
+            expect(wrapper.findComponent({ name: 'RichTextEditor' }).props('readonly')).toBe(false)
         } finally {
             wrapper.unmount()
         }

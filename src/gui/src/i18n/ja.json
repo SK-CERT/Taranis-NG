@@ -2188,5 +2188,29 @@
             "filterControlsBg": "フィルターバー",
             "menuItemActive": "選択中のメニュー項目"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "テキストの書式",
+        "bold": "太字",
+        "italic": "斜体",
+        "underline": "下線",
+        "strike": "取り消し線",
+        "heading_1": "見出し 1",
+        "heading_2": "見出し 2",
+        "heading_3": "見出し 3",
+        "bullet_list": "箇条書き",
+        "ordered_list": "番号付きリスト",
+        "blockquote": "引用",
+        "code_block": "コードブロック",
+        "link": "リンク",
+        "link_url": "リンク先アドレス",
+        "link_invalid": "Web（http、https）または mailto: のアドレスを入力してください",
+        "apply_link": "適用",
+        "remove_link": "リンクを削除",
+        "open_link": "リンクを新しいタブで開く",
+        "open_link_hint": "{key}+クリックでリンクを開く",
+        "clear_formatting": "書式をクリア",
+        "undo": "元に戻す",
+        "redo": "やり直す"
     }
 }

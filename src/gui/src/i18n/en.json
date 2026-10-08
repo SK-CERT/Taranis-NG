@@ -2188,5 +2188,29 @@
             "filterControlsBg": "Filter bar",
             "menuItemActive": "Active nav item"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "Text formatting",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "strike": "Strikethrough",
+        "heading_1": "Heading 1",
+        "heading_2": "Heading 2",
+        "heading_3": "Heading 3",
+        "bullet_list": "Bulleted list",
+        "ordered_list": "Numbered list",
+        "blockquote": "Quote",
+        "code_block": "Code block",
+        "link": "Link",
+        "link_url": "Link address",
+        "link_invalid": "Enter a web (http, https) or mailto: address",
+        "apply_link": "Apply",
+        "remove_link": "Remove link",
+        "open_link": "Open link in a new tab",
+        "open_link_hint": "{key}+click to open the link",
+        "clear_formatting": "Clear formatting",
+        "undo": "Undo",
+        "redo": "Redo"
     }
 }

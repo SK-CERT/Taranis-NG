@@ -90,7 +90,7 @@ The interface is translated into the following languages:
 - Western European languages: Dutch (`nl`), English (`en`), French (`fr`),
   German (`de`), Italian (`it`), Brazilian Portuguese (`pt-BR`), and Spanish
   (`es`)
-- Turkish (`tr`)
+- Turkic languages: Kazakh (`kk`) and Turkish (`tr`)
 
 English is the fallback locale.
 

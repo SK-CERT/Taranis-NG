@@ -32,7 +32,7 @@ export function isTypingTarget(element: Element | null): boolean {
     }
     if (element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') return true
 
-    // Covers rich text editors (Quill's .ql-editor among them), including a
+    // Covers rich text editors (Tiptap's .ProseMirror among them), including a
     // focused descendant of a contenteditable container.
     return (element as HTMLElement).isContentEditable === true
 }
@@ -232,7 +232,11 @@ export function useKeyboard(targetId: string, router: Router) {
                 break
 
             default: // refresh, append
-                updateCardFocus()
+                // A refresh runs in the background (after an autosave, or a server event), so it
+                // must not pull focus out of a field the user is typing in, or out of any dialog.
+                if (!isInputFieldFocused() && !document.querySelector('.v-overlay--active.v-dialog')) {
+                    updateCardFocus()
+                }
                 break
         }
     }

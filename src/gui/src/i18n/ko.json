@@ -2188,5 +2188,29 @@
             "filterControlsBg": "필터 바",
             "menuItemActive": "활성 메뉴 항목"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "텍스트 서식",
+        "bold": "굵게",
+        "italic": "기울임꼴",
+        "underline": "밑줄",
+        "strike": "취소선",
+        "heading_1": "제목 1",
+        "heading_2": "제목 2",
+        "heading_3": "제목 3",
+        "bullet_list": "글머리 기호 목록",
+        "ordered_list": "번호 매기기 목록",
+        "blockquote": "인용",
+        "code_block": "코드 블록",
+        "link": "링크",
+        "link_url": "링크 주소",
+        "link_invalid": "웹(http, https) 또는 mailto: 주소를 입력하세요",
+        "apply_link": "적용",
+        "remove_link": "링크 제거",
+        "open_link": "새 탭에서 링크 열기",
+        "open_link_hint": "{key}+클릭하여 링크 열기",
+        "clear_formatting": "서식 지우기",
+        "undo": "실행 취소",
+        "redo": "다시 실행"
     }
 }

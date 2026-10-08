@@ -47,7 +47,7 @@ describe('keyboard shortcut input guard', () => {
 
     it('treats a rich text editor as typing', () => {
         const editor = document.createElement('div')
-        editor.className = 'ql-editor'
+        editor.className = 'ProseMirror'
         editor.setAttribute('contenteditable', 'true')
         document.body.appendChild(editor)
 
