@@ -159,7 +159,7 @@ export const vuetifyRtlLocales: Readonly<Record<string, boolean>> = Object.freez
     )
 )
 
-/** Framework-owned labels (tables, pagination, dismiss buttons, etc.) for every locale Vuetify provides. */
+/** Framework-owned labels (tables, pagination, dismiss buttons, etc.) for every locale Vuetify provides, and Kazakh, which it does not. */
 export const vuetifyMessages = Object.freeze({
     ar,
     cs,
@@ -169,6 +169,7 @@ export const vuetifyMessages = Object.freeze({
     fr,
     it,
     ja,
+    kk,
     ko,
     nl,
     pl,
@@ -209,3 +210,4 @@ export const localeOptions: ReadonlyArray<LocaleOption> = Object.freeze(
     }))
 )
 import { ar, cs, de, en, es, fr, it, ja, ko, nl, pl, pt, ru, sk, th, tr, uk, vi, zhHans } from 'vuetify/locale'
+import kk from './vuetify/kk'

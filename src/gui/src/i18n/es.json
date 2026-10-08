@@ -2188,5 +2188,29 @@
             "filterControlsBg": "Barra de filtros",
             "menuItemActive": "Elemento de menú activo"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "Formato de texto",
+        "bold": "Negrita",
+        "italic": "Cursiva",
+        "underline": "Subrayado",
+        "strike": "Tachado",
+        "heading_1": "Título 1",
+        "heading_2": "Título 2",
+        "heading_3": "Título 3",
+        "bullet_list": "Lista con viñetas",
+        "ordered_list": "Lista numerada",
+        "blockquote": "Cita",
+        "code_block": "Bloque de código",
+        "link": "Enlace",
+        "link_url": "Dirección del enlace",
+        "link_invalid": "Introduzca una dirección web (http, https) o mailto:",
+        "apply_link": "Aplicar",
+        "remove_link": "Quitar enlace",
+        "open_link": "Abrir enlace en una pestaña nueva",
+        "open_link_hint": "{key}+clic para abrir el enlace",
+        "clear_formatting": "Borrar formato",
+        "undo": "Deshacer",
+        "redo": "Rehacer"
     }
 }

@@ -74,7 +74,7 @@ images from source.
 ## Languages
 
 The GUI includes translations for Arabic, Brazilian Portuguese, Czech, Dutch,
-English, French, German, Hindi, Italian, Japanese, Korean, Polish,
+English, French, German, Hindi, Italian, Japanese, Kazakh, Korean, Polish,
 Russian, Simplified Chinese, Slovak, Spanish, Thai, Turkish, Ukrainian, and
 Vietnamese. English is the fallback language.
 

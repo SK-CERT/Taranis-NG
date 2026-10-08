@@ -524,7 +524,11 @@
                 }
             }
 
-            notify({ type: 'success', loc: 'assess.item_updated' })
+            // The comment saves itself as the user types: a toast at every pause is noise, and
+            // while one is shown it takes Escape away from the dialog.
+            if (action !== Action.COMMENT) {
+                notify({ type: 'success', loc: 'assess.item_updated' })
+            }
         } catch (error) {
             notifyActionError(error, 'Error handling detail action:', 'assess.error_updating')
         } finally {

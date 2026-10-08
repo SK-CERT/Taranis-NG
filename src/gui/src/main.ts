@@ -2,13 +2,10 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import { createI18n } from 'vue-i18n'
-import PrimeVue from 'primevue/config'
-import Material from '@primeuix/themes/material'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
-import 'primeicons/primeicons.css'
 
 import App from './App.vue'
 import router from './router'
@@ -120,14 +117,6 @@ bootstrapTestingToken(pinia)
 app.use(router)
 app.use(vuetify)
 app.use(i18n)
-app.use(PrimeVue, {
-    theme: {
-        preset: Material,
-        options: {
-            darkModeSelector: '.dark-mode'
-        }
-    }
-})
 
 // Wait for styles to be ready, then mount.
 waitForStylesReady().then(() => {

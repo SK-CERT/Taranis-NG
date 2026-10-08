@@ -108,7 +108,7 @@ function mountManualEntryDialog() {
                 VDialog: VDialogStub,
                 VForm: VFormStub,
                 DialogToolbar: DialogToolbarStub,
-                Editor: true
+                RichTextEditor: true
             }
         }
     })

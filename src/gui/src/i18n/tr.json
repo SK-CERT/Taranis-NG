@@ -2188,5 +2188,29 @@
             "filterControlsBg": "Filtre çubuğu",
             "menuItemActive": "Etkin menü öğesi"
         }
+    },
+    "rich_text_editor": {
+        "toolbar": "Metin biçimlendirme",
+        "bold": "Kalın",
+        "italic": "İtalik",
+        "underline": "Altı çizili",
+        "strike": "Üstü çizili",
+        "heading_1": "Başlık 1",
+        "heading_2": "Başlık 2",
+        "heading_3": "Başlık 3",
+        "bullet_list": "Madde işaretli liste",
+        "ordered_list": "Numaralı liste",
+        "blockquote": "Alıntı",
+        "code_block": "Kod bloğu",
+        "link": "Bağlantı",
+        "link_url": "Bağlantı adresi",
+        "link_invalid": "Bir web (http, https) veya mailto: adresi girin",
+        "apply_link": "Uygula",
+        "remove_link": "Bağlantıyı kaldır",
+        "open_link": "Bağlantıyı yeni sekmede aç",
+        "open_link_hint": "Bağlantıyı açmak için {key}+tıklayın",
+        "clear_formatting": "Biçimlendirmeyi temizle",
+        "undo": "Geri al",
+        "redo": "Yinele"
     }
 }

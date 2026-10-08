@@ -1,6 +1,6 @@
 import { ref } from 'vue'
-import { describe, expect, it } from 'vitest'
-import { createLocaleFormatters } from '@/composables/useLocaleFormatters'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createLocaleFormatters, hasCalendarData } from '@/composables/useLocaleFormatters'
 
 describe('active-locale display formatters', () => {
     it('uses the app locale rather than the browser locale and follows runtime changes', () => {
@@ -81,5 +81,45 @@ describe('active-locale display formatters', () => {
 
         expect(formatFileSize(bytes, { unitSystem: 'si' })).toBe('1.5 MB')
         expect(bytes).toBe(1_500_000)
+    })
+})
+
+describe('dates in a locale the browser has no date names for', () => {
+    const RealDateTimeFormat = Intl.DateTimeFormat
+
+    // Chrome reports Kazakh as supported but has none of its calendar data: a month name comes
+    // out as ICU's root pattern. Node carries the full data, so play Chrome for 'kk'.
+    const actLikeChrome = (): void => {
+        vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(function (locales?: string | string[], options?: Intl.DateTimeFormatOptions) {
+            if (locales === 'kk' && options?.month === 'long' && Object.keys(options).length === 1) {
+                return { format: () => 'M10' } as unknown as Intl.DateTimeFormat
+            }
+            return new RealDateTimeFormat(locales, options)
+        } as unknown as typeof Intl.DateTimeFormat)
+    }
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('recognises a locale with real date names', () => {
+        expect(hasCalendarData('cs-CZ')).toBe(true)
+        expect(hasCalendarData('ja')).toBe(true)
+    })
+
+    it('writes dates with digits only, day first, instead of the root pattern', () => {
+        actLikeChrome()
+        const { formatDate, formatTime, formatDateTime } = createLocaleFormatters('kk')
+        const value = new Date('2026-08-09T07:05:03.000Z')
+        const utc = { timeZone: 'UTC' } as const
+
+        expect(hasCalendarData('kk')).toBe(false)
+        expect(formatDateTime(value, { dateStyle: 'medium', timeStyle: 'short', ...utc })).toBe('09.08.2026 07:05')
+        expect(formatDate(value, { dateStyle: 'long', ...utc })).toBe('09.08.2026')
+        expect(formatTime(value, { timeStyle: 'medium', ...utc })).toBe('07:05:03')
+        expect(formatDate(value, { day: 'numeric', month: 'short', ...utc })).toBe('09.08')
+        expect(formatDate(value, { weekday: 'short', ...utc })).toBe('09.08')
+        expect(formatDate('2026-08-09')).toBe('09.08.2026')
+        expect(formatDate('not-a-date')).toBe('')
     })
 })

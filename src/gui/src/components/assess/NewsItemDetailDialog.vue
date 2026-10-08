@@ -193,12 +193,11 @@
                     class="pane tab-pane"
                     :class="{ 'pane--active': activeTab === 'comments' }"
                 >
-                    <Editor
+                    <RichTextEditor
                         v-model="commentText"
-                        :pt="editorPassThrough"
-                        editor-style="height: 250px; font-size: 16px;"
                         :readonly="!canModifyItem"
-                        @text-change="autoSaveComment"
+                        @update:model-value="scheduleCommentSave"
+                        @blur="flushCommentSave"
                     />
                     <div class="text-caption text-grey mt-2">{{ t('assess.auto_save_changes') }}</div>
                 </div>
@@ -208,12 +207,12 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, watch } from 'vue'
+    import { ref, computed, watch, onBeforeUnmount } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import { PERMISSIONS } from '@/services/auth/permissions'
-    import Editor from 'primevue/editor'
+    import RichTextEditor from '@/components/common/RichTextEditor.vue'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
     import NewsItemAttribute from '@/components/assess/NewsItemAttribute.vue'
     import NewsItemSourcePane from '@/components/assess/NewsItemSourcePane.vue'
@@ -317,11 +316,12 @@
     const { t } = useI18n()
     const { checkPermission } = useAuth()
     const spellcheck = useSpellcheck()
-    const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
 
     const isOpen = ref<boolean>(false)
     const activeTab = ref<TabValue>('source')
     const commentText = ref<string>('')
+    // The comment as last saved (or loaded), to tell a draft with unsaved changes from a clean one.
+    const savedComment = ref<string>('')
     const editTitle = ref<string>('')
     const editDescription = ref<string>('')
     let lastNewsItemId: number | string | null = null
@@ -335,6 +335,9 @@
     )
 
     watch(isOpen, (newVal: boolean) => {
+        if (!newVal) {
+            flushCommentSave()
+        }
         emit('update:modelValue', newVal)
     })
 
@@ -345,7 +348,10 @@
             if (newItem) {
                 // Only reset tab when switching to a different item, not on data refresh.
                 // Aggregates have no "source" tab, so start them on "info".
-                if (lastNewsItemId !== newItem.id) {
+                const switched = lastNewsItemId !== newItem.id
+                if (switched) {
+                    // Save the previous item's comment before the editor is handed the new one.
+                    flushCommentSave()
                     const isAgg = (newItem.news_items?.length || 0) > 1
                     activeTab.value = isAgg ? 'info' : 'source'
                     lastNewsItemId = newItem.id ?? null
@@ -353,8 +359,14 @@
                 }
                 editTitle.value = newItem.title || ''
                 editDescription.value = newItem.description || ''
-                // Pre-populate comment editor with existing comments
-                commentText.value = newItem.comments || ''
+                // Pre-populate comment editor with existing comments. On a refresh of the same
+                // item, keep a draft with unsaved changes: the refresh that follows an autosave
+                // carries the comment as it was saved, older than what was typed since.
+                const comments = newItem.comments || ''
+                if (switched || commentText.value === savedComment.value) {
+                    commentText.value = comments
+                }
+                savedComment.value = comments
             }
         }
     )
@@ -486,28 +498,55 @@
     }
 
     const handleDelete = (): void => {
+        // The item is going away, and its comment draft with it.
+        cancelCommentSave()
         isOpen.value = false
         emit('delete', newsItem.value)
     }
 
-    // timeout for auto-save
-    let saveTimeout: ReturnType<typeof setTimeout> | null = null
+    // ---- Comment auto-save ----
+    // Saved once the user stops typing, and at once when the editor loses focus, the dialog
+    // closes or another item is opened, so no draft is left behind.
+    const COMMENT_SAVE_DELAY_MS = 2000
+    let commentSaveTimeout: ReturnType<typeof setTimeout> | null = null
+    // The item the draft belongs to, taken as it is typed: the dialog may show another by the
+    // time the save runs.
+    let commentSaveItem: NewsItemModel | null = null
 
-    const autoSaveComment = (): void => {
+    const cancelCommentSave = (): void => {
+        if (commentSaveTimeout) {
+            clearTimeout(commentSaveTimeout)
+            commentSaveTimeout = null
+        }
+        commentSaveItem = null
+    }
+
+    const flushCommentSave = (): void => {
+        const item = commentSaveItem
+        cancelCommentSave()
+        if (!item || commentText.value === savedComment.value) {
+            return
+        }
+        savedComment.value = commentText.value
+        emit('action', {
+            action: Action.COMMENT,
+            newsItem: item,
+            comment: commentText.value
+        })
+    }
+
+    const scheduleCommentSave = (): void => {
         if (!canModifyItem.value || isChild.value) {
             return
         }
-        if (saveTimeout) {
-            clearTimeout(saveTimeout)
+        commentSaveItem = newsItem.value
+        if (commentSaveTimeout) {
+            clearTimeout(commentSaveTimeout)
         }
-        saveTimeout = setTimeout(() => {
-            emit('action', {
-                action: Action.COMMENT,
-                newsItem: newsItem.value,
-                comment: commentText.value
-            })
-        }, 1000) // Save 1 second after the user stops typing
+        commentSaveTimeout = setTimeout(flushCommentSave, COMMENT_SAVE_DELAY_MS)
     }
+
+    onBeforeUnmount(flushCommentSave)
 
     const autoSaveAggregateInfo = (): void => {
         if (!canModifyItem.value || !isAggregate.value) {

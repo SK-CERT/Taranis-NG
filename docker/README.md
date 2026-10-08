@@ -304,7 +304,7 @@ are derived from `TARANIS_NG_HTTPS_URI` in `docker-compose.yml`.
 
 The GUI supports Arabic (`ar`), Brazilian Portuguese (`pt-BR`), Czech (`cs`),
 Dutch (`nl`), English (`en`), French (`fr`), German (`de`), Hindi (`hi`),
-Italian (`it`), Japanese (`ja`), Korean (`ko`), Polish (`pl`),
+Italian (`it`), Japanese (`ja`), Kazakh (`kk`), Korean (`ko`), Polish (`pl`),
 Russian (`ru`), Simplified Chinese (`zh-CN`), Slovak (`sk`), Spanish (`es`),
 Thai (`th`), Turkish (`tr`), Ukrainian (`uk`), and Vietnamese (`vi`). English is
 the fallback.

@@ -382,13 +382,13 @@
     import gitMeta from '../../../git-info.json'
     import packageJson from '../../../package.json'
     import { useSseResync } from '@/composables/useSseResync'
-    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { hasCalendarData, useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { useTagPalette } from '@/composables/useTagPalette'
     import { useRtl } from 'vuetify'
 
     const dashboardStore = useDashboardStore()
     const { t, te, locale } = useI18n()
-    const { formatDateTime, formatNumber } = useLocaleFormatters()
+    const { formatDate, formatDateTime, formatNumber } = useLocaleFormatters()
     // Tag colours follow the active theme; see themes/tagPalette.ts.
     const tagColors = useTagPalette()
     const { isRtl } = useRtl()
@@ -471,7 +471,12 @@
     const draftDateTo = ref(latestCustomDate.value)
     const customRangeDialog = ref(false)
     const tagCloudPeriod = ref<TagCloudPeriod>('lastSevenDays')
-    const yesterdayLabel = computed(() => new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' }).format(-1, 'day'))
+    // A browser without the locale's date names would say "yesterday" in English: show the date instead.
+    const yesterdayLabel = computed(() =>
+        hasCalendarData(locale.value)
+            ? new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' }).format(-1, 'day')
+            : formatDate(latestCustomDate.value, { day: 'numeric', month: 'short' })
+    )
     const tagCloudPeriodOptions = computed<Array<{ value: TagCloudPeriod; label: string }>>(() => [
         { value: 'lastSevenDays', label: t('toolbar_filter.last_7_days') },
         { value: 'today', label: t('toolbar_filter.today') },
@@ -497,16 +502,13 @@
     const ingestionData = computed(() => {
         const dailyCounts = dashboardData.value.news_items_by_day || []
         const maximum = Math.max(1, ...dailyCounts.map((item) => item.count))
-        const weekdayFormatter = new Intl.DateTimeFormat(locale.value, { weekday: 'short' })
-        const dateFormatter = new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short' })
-
         return dailyCounts.map((item) => {
             const date = new Date(`${item.date}T12:00:00`)
 
             return {
                 date: item.date,
-                fullDate: dateFormatter.format(date),
-                label: weekdayFormatter.format(date),
+                fullDate: formatDate(date, { day: 'numeric', month: 'short' }),
+                label: formatDate(date, { weekday: 'short' }),
                 value: item.count,
                 height: item.count === 0 ? 0 : Math.max(10, Math.round((item.count / maximum) * 100))
             }
