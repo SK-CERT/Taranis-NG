@@ -2,6 +2,81 @@
     "version": 1,
     "data": [
         {
+            "name": "ABB Cyber Security Advisories",
+            "description": "ABB cyber security advisories in CSAF format, from ABB's TLP:WHITE ROLIE feed, signed and hashed.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://psirt.abb.com/csaf/abb-csaf-feed-tlp-white.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "AMD Security Bulletins and Briefs",
             "description": "",
             "collector": {
@@ -581,6 +656,81 @@
             ]
         },
         {
+            "name": "Intel Security Advisories",
+            "description": "Intel security advisories in CSAF format, from the advisories folder of Intel's GitHub repository (its VEX folder is left out). Hashed; Intel does not sign its CSAF documents.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://github.com/intel/security-center/tree/main/advisories",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "NVIDIA Product Security Notifications",
             "description": "NVIDIA Security Bulletins and Notices available at https://www.nvidia.com/en-us/security/",
             "collector": {
@@ -650,6 +800,81 @@
             ]
         },
         {
+            "name": "NVIDIA Security Bulletins",
+            "description": "NVIDIA security bulletins in CSAF format, published in NVIDIA's GitHub repository. Hashed; NVIDIA does not sign its CSAF documents.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://github.com/nvidia/product-security",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "QNAP Security Advisories",
             "description": "QNAP Security Advisories",
             "collector": {
@@ -696,6 +921,156 @@
                     "value": "False",
                     "parameter": {
                         "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Schneider Electric Security Notifications",
+            "description": "Schneider Electric security notifications in CSAF format, signed and hashed. Schneider Electric blocks browser-like user agents: leave the user agent empty.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.se.com/.well-known/csaf/provider-metadata.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Siemens ProductCERT Advisory Feed",
+            "description": "Siemens ProductCERT security advisories (SSA) in CSAF format, from Siemens' TLP:WHITE ROLIE feed, signed and hashed.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://cert-portal.siemens.com/productcert/csaf/ssa-feed-tlp-white.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
                     }
                 }
             ]
