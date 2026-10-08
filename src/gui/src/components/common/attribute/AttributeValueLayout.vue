@@ -23,62 +23,60 @@
             cols="auto"
             class="attribute-provenance"
         >
-            <v-menu location="bottom end">
-                <template #activator="{ props: menuProps }">
-                    <v-btn
-                        v-bind="menuProps"
-                        class="attribute-provenance__activator ms-1"
+            <v-tooltip
+                location="top"
+                content-class="attribute-provenance__tooltip"
+            >
+                <template #activator="{ props: tooltipProps }">
+                    <v-icon
+                        v-bind="tooltipProps"
+                        class="attribute-provenance__activator"
                         :icon="ICONS.CLOCK"
-                        variant="text"
-                        density="compact"
-                        size="x-small"
-                        :aria-label="provenanceLabel"
+                        size="small"
+                        @click.stop
                     />
                 </template>
-                <v-card
-                    class="attribute-provenance__details"
-                    variant="outlined"
-                >
-                    <v-card-text class="pa-3">
-                        <div
-                            v-if="lastUpdated"
-                            class="attribute-provenance__row"
+
+                <div class="attribute-provenance__details">
+                    <div
+                        v-if="lastUpdated"
+                        class="attribute-provenance__row"
+                    >
+                        <v-icon
+                            :icon="ICONS.CLOCK"
+                            size="small"
+                        />
+                        <i18n-t
+                            scope="global"
+                            keypath="attribute.last_updated_at"
+                            tag="span"
                         >
-                            <v-icon
-                                :icon="ICONS.CLOCK"
-                                size="small"
-                            />
-                            <i18n-t
-                                scope="global"
-                                keypath="attribute.last_updated_at"
-                                tag="span"
-                            >
-                                <template #date>
-                                    <bdi dir="auto">{{ lastUpdated }}</bdi>
-                                </template>
-                            </i18n-t>
-                        </div>
-                        <div
-                            v-if="modifiedBy"
-                            class="attribute-provenance__row"
+                            <template #date>
+                                <bdi dir="auto">{{ lastUpdated }}</bdi>
+                            </template>
+                        </i18n-t>
+                    </div>
+
+                    <div
+                        v-if="modifiedBy"
+                        class="attribute-provenance__row"
+                    >
+                        <v-icon
+                            :icon="ICONS.ACCOUNT"
+                            size="small"
+                        />
+                        <i18n-t
+                            scope="global"
+                            keypath="attribute.updated_by_user"
+                            tag="span"
                         >
-                            <v-icon
-                                :icon="ICONS.ACCOUNT"
-                                size="small"
-                            />
-                            <i18n-t
-                                scope="global"
-                                keypath="attribute.updated_by_user"
-                                tag="span"
-                            >
-                                <template #user>
-                                    <bdi dir="auto">{{ modifiedBy }}</bdi>
-                                </template>
-                            </i18n-t>
-                        </div>
-                    </v-card-text>
-                </v-card>
-            </v-menu>
+                            <template #user>
+                                <bdi dir="auto">{{ modifiedBy }}</bdi>
+                            </template>
+                        </i18n-t>
+                    </div>
+                </div>
+            </v-tooltip>
         </v-col>
         <v-col
             v-if="!embedDelete"
@@ -183,10 +181,10 @@
         color: rgb(var(--v-theme-outline));
     }
 
-    .attribute-provenance__details {
+    :deep(.attribute-provenance__tooltip) {
         min-width: 14rem;
         max-width: min(24rem, calc(100vw - 2rem));
-        background: rgb(var(--v-theme-surface));
+        padding: 8px 12px;
     }
 
     .attribute-provenance__row {

@@ -344,9 +344,9 @@
                                                                     <template #activator="{ props: tooltipProps }">
                                                                         <v-icon
                                                                             v-bind="tooltipProps"
-                                                                            class="ms-1"
-                                                                            color="primary"
-                                                                            size="x-small"
+                                                                            class="ms-2"
+                                                                            color="outline"
+                                                                            size="small"
                                                                             @click.stop
                                                                         >
                                                                             {{ ICONS.INFORMATION_OUTLINE }}

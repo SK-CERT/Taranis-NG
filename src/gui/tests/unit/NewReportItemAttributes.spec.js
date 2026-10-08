@@ -233,7 +233,7 @@ describe('NewReportItem — label-only attributes (max_occurrence 0)', () => {
 
         expect(wrapper.findAll('.pe-3')).toHaveLength(3)
         expect(wrapper.find('.pr-3').exists()).toBe(false)
-        expect(activator.some((node) => node.props?.class === 'ms-1')).toBe(true)
+        expect(activator.some((node) => node.props?.class === 'ms-2')).toBe(true)
         expect(describedPanel.findAll('bdi[dir="auto"]').map((node) => node.text())).toContain(EDITABLE_TITLE)
         const reportTitleFields = wrapper
             .findAllComponents({ name: 'VTextField' })
