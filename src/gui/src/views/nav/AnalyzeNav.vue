@@ -1,5 +1,7 @@
 <template>
+    <NavSkeleton v-if="loading" />
     <v-list
+        v-else
         density="compact"
         class="section-navigation"
     >
@@ -35,6 +37,7 @@
     import { ref, onMounted } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { useAnalyzeStore } from '@/stores/analyze'
+    import NavSkeleton from '@/components/common/NavSkeleton.vue'
     import { type GroupNavItem } from '@/types/routing'
     import { createRemoteAnalyzePath } from '@/utils/analyze-routing'
 
@@ -42,6 +45,7 @@
     const route = useRoute()
     const analyzeStore = useAnalyzeStore()
 
+    const loading = ref(true)
     const groups = ref<Array<string | number>>([])
     const links = ref<GroupNavItem[]>([])
 
@@ -83,6 +87,8 @@
             }
         } catch (error) {
             console.error('Error loading report item groups:', error)
+        } finally {
+            loading.value = false
         }
     })
 </script>

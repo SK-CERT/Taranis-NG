@@ -275,6 +275,81 @@
             ]
         },
         {
+            "name": "Red Hat Security Advisories",
+            "description": "Red Hat security advisories (RHSA) in CSAF format, signed and hashed. Collects the advisories directory only; Red Hat's VEX documents (one per CVE) are a separate, much larger distribution.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://security.access.redhat.com/data/csaf/v2/advisories/",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Red Hat Security Errata",
             "description": "Red Hat security advisories released in the last three days",
             "collector": {
@@ -321,6 +396,81 @@
                     "value": "False",
                     "parameter": {
                         "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SUSE Security Advisories",
+            "description": "SUSE and openSUSE security advisories in CSAF format. SUSE's signing key is bound with SHA-1 self-signatures, which the verifier no longer accepts, so signatures are reported as unverified; hashes are checked.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.suse.com/.well-known/csaf/provider-metadata.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
                     }
                 }
             ]

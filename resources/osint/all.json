@@ -2,6 +2,81 @@
     "version": 1,
     "data": [
         {
+            "name": "ABB Cyber Security Advisories",
+            "description": "ABB cyber security advisories in CSAF format, from ABB's TLP:WHITE ROLIE feed, signed and hashed.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://psirt.abb.com/csaf/abb-csaf-feed-tlp-white.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "AMD Security Bulletins and Briefs",
             "description": "",
             "collector": {
@@ -1109,6 +1184,156 @@
             ]
         },
         {
+            "name": "CISA ICS and IT Advisories",
+            "description": "CISA industrial control systems and IT advisories in CSAF format, from CISA's GitHub repository. Hashed and signed; CISA's key is published only in its provider metadata on cisa.gov, so set its URL under public OpenPGP key URLs to verify the signatures.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://github.com/cisagov/CSAF",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Cisco Security Advisories",
+            "description": "Cisco PSIRT security advisories in CSAF format, found through Cisco's provider metadata, signed and hashed.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.cisco.com/.well-known/csaf/provider-metadata.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Cisco Security Advisory",
             "description": "Cisco Security Advisory RSS Feed",
             "collector": {
@@ -2045,6 +2270,81 @@
             ]
         },
         {
+            "name": "Intel Security Advisories",
+            "description": "Intel security advisories in CSAF format, from the advisories folder of Intel's GitHub repository (its VEX folder is left out). Hashed; Intel does not sign its CSAF documents.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://github.com/intel/security-center/tree/main/advisories",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Ivanti Blog: Security Advisory",
             "description": "Ivanti Blog: Security Advisory",
             "collector": {
@@ -2249,6 +2549,81 @@
             ]
         },
         {
+            "name": "Microsoft Security Updates",
+            "description": "Microsoft Security Response Center advisories in CSAF format, one document per CVE. Hashed; Microsoft does not sign its CSAF documents.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://msrc.microsoft.com/csaf/advisories",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "MikroTik Security Advisories",
             "description": "MikroTik Security Advisories",
             "collector": {
@@ -2420,6 +2795,81 @@
             ]
         },
         {
+            "name": "NVIDIA Security Bulletins",
+            "description": "NVIDIA security bulletins in CSAF format, published in NVIDIA's GitHub repository. Hashed; NVIDIA does not sign its CSAF documents.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://github.com/nvidia/product-security",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Node.js",
             "description": "",
             "collector": {
@@ -2466,6 +2916,156 @@
                     "value": "false",
                     "parameter": {
                         "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "OPC Foundation Security Advisories",
+            "description": "OPC Foundation security bulletins in CSAF format, published in a GitHub repository together with signatures and hashes.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://github.com/OPCFoundation/OPC-SecurityAdvisories",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Oracle Critical Patch Update Advisories",
+            "description": "Oracle Critical Patch Update and Security Alert advisories in CSAF format, listed in an RSS feed. Each advisory covers hundreds of CVEs; every CVE becomes an attribute. Oracle publishes no hashes or signatures.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.oracle.com/a/tech/docs/security-alerts/oracle-cpu-csaf-rss.xml",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
                     }
                 }
             ]
@@ -2693,6 +3293,81 @@
             ]
         },
         {
+            "name": "Red Hat Security Advisories",
+            "description": "Red Hat security advisories (RHSA) in CSAF format, signed and hashed. Collects the advisories directory only; Red Hat's VEX documents (one per CVE) are a separate, much larger distribution.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://security.access.redhat.com/data/csaf/v2/advisories/",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Red Hat Security Errata",
             "description": "Red Hat security advisories released in the last three days",
             "collector": {
@@ -2744,6 +3419,81 @@
             ]
         },
         {
+            "name": "SUSE Security Advisories",
+            "description": "SUSE and openSUSE security advisories in CSAF format. SUSE's signing key is bound with SHA-1 self-signatures, which the verifier no longer accepts, so signatures are reported as unverified; hashes are checked.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.suse.com/.well-known/csaf/provider-metadata.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Salesforce Security Advisories",
             "description": "Salesforce Security Advisories",
             "collector": {
@@ -2790,6 +3540,156 @@
                     "value": "False",
                     "parameter": {
                         "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Schneider Electric Security Notifications",
+            "description": "Schneider Electric security notifications in CSAF format, signed and hashed. Schneider Electric blocks browser-like user agents: leave the user agent empty.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.se.com/.well-known/csaf/provider-metadata.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Siemens ProductCERT Advisory Feed",
+            "description": "Siemens ProductCERT security advisories (SSA) in CSAF format, from Siemens' TLP:WHITE ROLIE feed, signed and hashed.",
+            "collector": {
+                "type": "CSAF_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://cert-portal.siemens.com/productcert/csaf/ssa-feed-tlp-white.json",
+                    "parameter": {
+                        "key": "CSAF_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLIC_KEY_URLS"
+                    }
+                },
+                {
+                    "value": "csaf_vex",
+                    "parameter": {
+                        "key": "SKIP_CATEGORIES"
+                    }
+                },
+                {
+                    "value": "100",
+                    "parameter": {
+                        "key": "MAX_DOCUMENTS"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "VERIFY_SIGNATURES"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "CHECK_IF_MODIFIED"
+                    }
+                },
+                {
+                    "value": "true",
+                    "parameter": {
+                        "key": "RESURFACE_NEW_VERSIONS"
                     }
                 }
             ]

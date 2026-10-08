@@ -38,6 +38,7 @@
             <v-data-table
                 ref="tableRef"
                 :headers="headers"
+                :aria-busy="loading"
                 :items="filteredUsers"
                 :items-per-page="-1"
                 :search="search"
@@ -45,6 +46,24 @@
                 item-key="id"
                 class="elevation-1"
             >
+                <template
+                    v-if="loading"
+                    #body
+                >
+                    <TableSkeletonRows
+                        :columns="headers"
+                        :cells="{
+                            username: { width: 120 },
+                            name: { width: 140 },
+                            roles: { type: 'chip', width: 64 },
+                            organizations: { type: 'chip', width: 100 },
+                            last_login_at: { width: 170 },
+                            login_methods: { type: 'chip', width: 64 },
+                            actions: { type: 'actions', width: 90 }
+                        }"
+                        :action-count="3"
+                    />
+                </template>
                 <template #item.username="{ item }">
                     <strong>{{ asUserItem(item).username }}</strong>
                 </template>
@@ -173,6 +192,7 @@
 
 <script setup lang="ts">
     import { computed, ref, onMounted } from 'vue'
+    import TableSkeletonRows from '@/components/common/TableSkeletonRows.vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteUser, updateUserStatus } from '@/api/config'
@@ -270,11 +290,19 @@
 
     const hasMfa = (user: UserItem): boolean => !!(user.mfa?.totp || (user.mfa?.passkeys ?? 0) > 0)
 
+    const loading = ref(true)
+    let pendingLoads = 0
+
     const loadData = async (): Promise<void> => {
+        pendingLoads++
+        loading.value = true
         try {
             await configStore.loadUsers({ search: search.value })
         } catch (error) {
             console.error('Error loading users:', error)
+        } finally {
+            pendingLoads--
+            loading.value = pendingLoads > 0
         }
     }
 

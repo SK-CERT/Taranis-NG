@@ -43,7 +43,7 @@
         "qrcode": "^1.5.4",
         "vee-validate": "^4.14.11",
         "vue": "^3.5.42",
-        "vue-i18n": "^11.4.10",
+        "vue-i18n": "^11.4.13",
         "vue-router": "^5.3.1",
         "vuetify": "^4.2.0"
     },
@@ -51,7 +51,7 @@
         "@eslint/js": "^10.0.1",
         "@intlify/eslint-plugin-vue-i18n": "^4.5.1",
         "@playwright/test": "^1.63.0",
-        "@types/node": "^26.6.2",
+        "@types/node": "^26.6.4",
         "@types/qrcode": "^1.5.6",
         "@typescript-eslint/parser": "^8.70.1",
         "@vitejs/plugin-vue": "^6.0.9",
@@ -66,12 +66,12 @@
         "jsonc-eslint-parser": "^3.3.0",
         "lint-staged": "^17.2.0",
         "prettier": "^3.9.9",
-        "sass": "^1.105.0",
+        "sass": "^1.105.1",
         "typescript": "^6.0.3",
         "vite": "^8.3.1",
         "vite-plugin-vuetify": "^2.1.3",
         "vitest": "^5.0.1",
-        "vue-tsc": "^3.3.11"
+        "vue-tsc": "^3.3.12"
     },
     "lint-staged": {
         "*.{js,ts,vue}": [

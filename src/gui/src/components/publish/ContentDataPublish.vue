@@ -4,11 +4,12 @@
         fluid
         class="pa-0"
     >
-        <TransitionGroup
-            name="card-list"
-            tag="div"
-            class="publish-list w-100"
-        >
+        <ContentSkeleton
+            v-if="!dataLoaded && collections.length === 0"
+            :compact="currentCard === CardCompact"
+            variant="product"
+        />
+        <div class="publish-list w-100">
             <component
                 :is="currentCard"
                 v-for="collection in collections"
@@ -20,7 +21,7 @@
                 @show-detail="openProduct"
                 @edit="openProduct"
             />
-        </TransitionGroup>
+        </div>
         <div
             v-intersect="infiniteScrolling"
             class="mt-4"
@@ -78,6 +79,7 @@
     import { usePublishStore } from '@/stores/publish'
     import { getAllUserProductTypes } from '@/api/user'
     import CardProduct from './CardProduct.vue'
+    import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
     import { useSseResync } from '@/composables/useSseResync'
 
@@ -117,7 +119,7 @@
     const publishStore = usePublishStore()
 
     const collections = ref<ProductItem[]>([])
-    const dataLoaded = ref(true)
+    const dataLoaded = ref(false)
     let updateSequence = 0
     const filter = ref<FilterState>({
         search: '',

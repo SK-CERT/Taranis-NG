@@ -26,12 +26,28 @@
             <!-- Data Table -->
             <v-data-table
                 :headers="headers"
+                :aria-busy="loading"
                 :items="configStore.acls.items"
                 :items-per-page="-1"
                 :search="search"
                 item-key="id"
                 class="elevation-1"
             >
+                <template
+                    v-if="loading"
+                    #body
+                >
+                    <TableSkeletonRows
+                        :columns="headers"
+                        :cells="{
+                            name: { width: 130 },
+                            description: { width: 260 },
+                            item_type: { width: 100 },
+                            actions: { type: 'actions', width: 60 }
+                        }"
+                        :action-count="2"
+                    />
+                </template>
                 <template #item.name="{ item }">
                     <strong>{{ asACLItem(item).name }}</strong>
                 </template>
@@ -72,6 +88,7 @@
 
 <script setup lang="ts">
     import { computed, ref, onMounted } from 'vue'
+    import TableSkeletonRows from '@/components/common/TableSkeletonRows.vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteACLEntry } from '@/api/config'
@@ -117,11 +134,19 @@
 
     const asACLItem = (item: unknown): ACLItem => item as ACLItem
 
+    const loading = ref(true)
+    let pendingLoads = 0
+
     const loadData = async (): Promise<void> => {
+        pendingLoads++
+        loading.value = true
         try {
             await configStore.loadACLEntries({ search: search.value })
         } catch (error) {
             console.error('Error loading ACL entries:', error)
+        } finally {
+            pendingLoads--
+            loading.value = pendingLoads > 0
         }
     }
 
