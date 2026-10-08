@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Continuous-Actions/dynamic-monorepo/v1/schema.json",
+  "projects": {
+    "shared": { "path": "src/shared", "targets": [] },
+    "bots": {
+      "path": "src/bots", "dependsOn": ["shared"], "targets": ["docker"],
+      "include": ["docker/Dockerfile.bots", "docker/start.sh", "docker/prestart.sh", "docker/entrypoint.sh", "docker/gunicorn_conf.py"]
+    },
+    "collectors": {
+      "path": "src/collectors", "dependsOn": ["shared"], "targets": ["docker"],
+      "include": ["docker/Dockerfile.collectors", "docker/start.sh", "docker/prestart.sh", "docker/entrypoint.sh", "docker/gunicorn_conf.py"]
+    },
+    "core": {
+      "path": "src/core", "dependsOn": ["shared"], "targets": ["docker"],
+      "include": ["docker/Dockerfile.core", "docker/start.sh", "docker/prestart_core.sh", "docker/entrypoint.sh", "docker/gunicorn_conf.py"]
+    },
+    "presenters": {
+      "path": "src/presenters", "dependsOn": ["shared"], "targets": ["docker"],
+      "include": ["docker/Dockerfile.presenters", "docker/start.sh", "docker/prestart.sh", "docker/entrypoint.sh", "docker/gunicorn_conf.py"]
+    },
+    "publishers": {
+      "path": "src/publishers", "dependsOn": ["shared"], "targets": ["docker"],
+      "include": ["docker/Dockerfile.publishers", "docker/start.sh", "docker/prestart.sh", "docker/entrypoint.sh", "docker/gunicorn_conf.py"]
+    }
+  }
+}

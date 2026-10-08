@@ -817,12 +817,7 @@
         }
 
         field_baseline[field_id] = report_item[field_id]
-
-        updateReportItem(report_item.id, data)
-            .then(() => {
-                window.dispatchEvent(new CustomEvent('report-item-updated'))
-            })
-            .catch(() => {})
+        updateReportItem(report_item.id, data).catch(() => {})
         unlockReportItem(report_item.id, { field_id }).catch(() => {})
     }
 

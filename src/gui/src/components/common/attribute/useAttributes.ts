@@ -561,6 +561,15 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
         if (props.edit === true && props.reportItemId === dataInfo.report_item_id) {
             if (dataInfo.user_id !== currentUserId()) {
                 if (dataInfo.update !== undefined) {
+                    // Attribute record ids are globally unique per report, so exactly one component
+                    // on the page owns the edited value. Title/state events carry no attribute_id:
+                    // Number(undefined) is NaN and matches nothing, so they never fetch here
+                    // (NewReportItem.vue syncs titles on its own).
+                    const editedId = Number(dataInfo.attribute_id)
+                    if (!props.values.some((item) => item.id !== undefined && Number(item.id) === editedId)) {
+                        return
+                    }
+
                     const response = await getReportItemData(props.reportItemId, dataInfo)
                     const itemData = (response as ReportItemDataResponse).data
 
