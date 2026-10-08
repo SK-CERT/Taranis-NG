@@ -1,13 +1,5 @@
 <template>
-    <div
-        v-if="loading"
-        class="pa-4 text-center"
-    >
-        <v-progress-circular
-            indeterminate
-            color="primary"
-        />
-    </div>
+    <NavSkeleton v-if="loading" />
     <v-alert
         v-else-if="loadError"
         class="ma-2"
@@ -46,6 +38,7 @@
 <script setup lang="ts">
     import { computed, onMounted, ref, watch } from 'vue'
     import { useRoute, useRouter } from 'vue-router'
+    import NavSkeleton from '@/components/common/NavSkeleton.vue'
     import GroupNavList from '@/components/common/GroupNavList.vue'
     import { useAssetsStore } from '@/stores/assets'
     import { useSseResync } from '@/composables/useSseResync'
@@ -53,7 +46,7 @@
     const store = useAssetsStore()
     const route = useRoute()
     const router = useRouter()
-    const loading = ref(false)
+    const loading = ref(true)
     const loadError = ref(false)
     const groupsLoaded = ref(false)
     let loadPromise: Promise<void> | null = null

@@ -25,6 +25,11 @@
             </v-btn>
         </div>
 
+        <ContentSkeleton
+            v-if="loading && news_items_data.length === 0"
+            :compact="!!filter.compact_mode"
+        />
+
         <!-- News Items Cards -->
         <div
             ref="listRef"
@@ -56,7 +61,7 @@
             class="mt-4 infinite-scroll-trigger"
         >
             <div
-                v-if="loading"
+                v-if="loading && news_items_data.length > 0"
                 class="text-center text-grey"
             >
                 <v-progress-circular
@@ -131,6 +136,7 @@
     import { deleteNewsItem, groupAction, importantNewsItem, readNewsItem, voteNewsItem } from '@/api/assess'
     import { useAssessStore } from '@/stores/assess'
     import CardAssess from './CardAssess.vue'
+    import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
     import NewsItemDetailDialog from './NewsItemDetailDialog.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'

@@ -1,10 +1,7 @@
 <template>
     <ViewLayout integrated-toolbar>
         <template #panel>
-            <ToolbarFilterAssets
-                v-if="selectedGroup"
-                @update-filter="content?.updateFilter($event)"
-            >
+            <ToolbarFilterAssets @update-filter="content?.updateFilter($event)">
                 <template #add-button>
                     <AddNewButton
                         :show="canCreate"
@@ -15,8 +12,12 @@
             </ToolbarFilterAssets>
         </template>
         <template #content>
+            <ContentSkeleton
+                v-if="!selectedGroup && (!store.assetGroupsLoaded || store.assetGroups.items.length > 0) && !store.assetGroupsLoadError"
+                variant="asset"
+            />
             <ContentDataAssets
-                v-if="selectedGroup"
+                v-else-if="selectedGroup"
                 ref="content"
                 @edit="openEdit"
             />
@@ -25,10 +26,12 @@
                 fluid
             >
                 <v-alert
-                    :type="groupId ? 'warning' : 'info'"
+                    :type="store.assetGroupsLoadError ? 'error' : groupId ? 'warning' : 'info'"
                     variant="tonal"
                 >
-                    {{ $t(groupId ? 'error.not_found.message' : 'asset.no_groups_message') }}
+                    {{
+                        $t(store.assetGroupsLoadError ? 'error.load_groups' : groupId ? 'error.not_found.message' : 'asset.no_groups_message')
+                    }}
                 </v-alert>
             </v-container>
         </template>
@@ -50,6 +53,7 @@
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import AssetDialog from '@/components/assets/AssetDialog.vue'
     import ContentDataAssets from '@/components/assets/ContentDataAssets.vue'
+    import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import ToolbarFilterAssets from '@/components/assets/ToolbarFilterAssets.vue'
     import { useAssetsStore } from '@/stores/assets'
     import type { Asset } from '@/types/assets'
