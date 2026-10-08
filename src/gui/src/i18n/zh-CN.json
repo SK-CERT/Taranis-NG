@@ -1176,6 +1176,8 @@
         "save_failed": "保存失败",
         "loading_data": "加载数据失败",
         "delete_failed": "删除失败",
+        "in_use": "仍在使用中，无法删除",
+        "server_unreachable": "无法连接到服务器。请检查网络连接后重试。",
         "load_groups": "加载组失败",
         "not_found": {
             "title": "找不到页面",

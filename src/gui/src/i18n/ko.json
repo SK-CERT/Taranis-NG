@@ -1176,6 +1176,8 @@
         "save_failed": "저장 실패",
         "loading_data": "데이터 불러오기 실패",
         "delete_failed": "삭제 실패",
+        "in_use": "아직 사용 중이어서 삭제할 수 없습니다",
+        "server_unreachable": "서버에 연결할 수 없습니다. 연결을 확인한 후 다시 시도하세요.",
         "load_groups": "그룹 불러오기 실패",
         "not_found": {
             "title": "페이지를 찾을 수 없음",

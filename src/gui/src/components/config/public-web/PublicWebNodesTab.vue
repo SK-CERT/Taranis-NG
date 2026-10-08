@@ -147,6 +147,7 @@
     import NodePanelTitle from '@/components/common/nodes/NodePanelTitle.vue'
     import { useOptimisticToggle } from '@/composables/useOptimisticToggle'
     import NewPublicWeb from '@/components/config/public-web/NewPublicWeb.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type NodeItem = {
         id: number
@@ -290,6 +291,7 @@
             publishStore.invalidatePublicWebOptions()
         } catch (error) {
             console.error('Error deleting:', error)
+            notifyDeleteError(error)
         } finally {
             confirmDelete.value.show = false
         }

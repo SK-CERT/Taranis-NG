@@ -149,6 +149,7 @@
     import NodeDialog from '@/components/common/nodes/NodeDialog.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { exportOSINTSources, importOSINTSources } from '@/api/config'
+    import { isServerUnreachable, notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -220,6 +221,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting OSINT source:', error)
+            notifyDeleteError(error, { inUse: 'collectors.sources.removed_error' })
         }
     }
 
@@ -241,18 +243,20 @@
     const deleteSelected = async (): Promise<void> => {
         const doomed = sourceItems.value.filter((source) => selectedIds.value.includes(source.id))
         let failed = 0
+        let unreachable = false
         for (const source of doomed) {
             try {
                 await deleteOSINTSource(source)
             } catch (error) {
                 failed += 1
+                unreachable ||= isServerUnreachable(error)
                 console.error('Error deleting OSINT source:', error)
             }
         }
         clearSelection()
         await loadData()
         if (failed > 0) {
-            notify('error', 'collectors.sources.delete_selected_error')
+            notify('error', unreachable ? 'error.server_unreachable' : 'collectors.sources.delete_selected_error')
         } else {
             notify('success', 'collectors.sources.delete_selected_success')
         }
@@ -480,7 +484,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting collectors node:', error)
-            notify('error', 'collectors.nodes.delete_error')
+            notifyDeleteError(error, { inUse: 'collectors.nodes.removed_error', failed: 'collectors.nodes.delete_error' })
         }
     }
 

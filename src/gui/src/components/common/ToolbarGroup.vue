@@ -221,6 +221,7 @@
     import { getAllProductsUnpaginated, deleteProduct } from '@/api/publish'
     import { Action, type ActionKey } from '@/types/actions'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type ViewMode = 'assess' | 'analyze' | 'publish' | 'collectors.sources'
     type GenericFilter = Record<string, unknown>
@@ -808,8 +809,7 @@
                     emit('update-data')
                 } catch (error: unknown) {
                     console.error('Error deleting items:', error)
-                    const responseData = (error as { response?: { data?: string } } | undefined)?.response?.data
-                    notify({ type: 'error', loc: `error.${responseData || 'server_error'}` })
+                    notifyDeleteError(error, { inUse: 'report_item.removed_error' })
                 }
             }
         } else if (props.view === 'publish') {
@@ -844,8 +844,7 @@
                     emit('update-data')
                 } catch (error: unknown) {
                     console.error('Error deleting items:', error)
-                    const responseData = (error as { response?: { data?: string } } | undefined)?.response?.data
-                    notify({ type: 'error', loc: `error.${responseData || 'server_error'}` })
+                    notifyDeleteError(error, { inUse: 'product.removed_error' })
                 }
             }
         }

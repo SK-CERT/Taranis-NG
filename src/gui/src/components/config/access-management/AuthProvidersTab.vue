@@ -112,6 +112,7 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import SearchField from '@/components/common/SearchField.vue'
     import NewAuthProvider from '@/components/config/auth-providers/NewAuthProvider.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t, n } = useI18n()
     const { checkPermission } = useAuth()
@@ -218,7 +219,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting auth provider:', error)
-            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: 'auth_provider.remove_error' } }))
+            notifyDeleteError(error, { failed: 'auth_provider.remove_error' })
         } finally {
             deleteTarget.value = null
             deleteDialog.value = false

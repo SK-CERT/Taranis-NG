@@ -1176,6 +1176,8 @@
         "save_failed": "Nie udało się zapisać",
         "loading_data": "Nie udało się wczytać danych",
         "delete_failed": "Nie udało się usunąć",
+        "in_use": "Element jest nadal używany i nie może zostać usunięty",
+        "server_unreachable": "Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.",
         "load_groups": "Nie udało się wczytać grup",
         "not_found": {
             "title": "Nie znaleziono strony",

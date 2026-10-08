@@ -1176,6 +1176,8 @@
         "save_failed": "vIpollaHbe'",
         "loading_data": "De' vIlaDlaHbe'",
         "delete_failed": "vIQaw'laHbe'",
+        "in_use": "lo'lu'taH; vIQaw'laHbe'",
+        "server_unreachable": "jabwI' vIrarlaHbe'. rarghach yInuD 'ej yInIDqa'.",
         "load_groups": "ghommey vIlaDlaHbe'",
         "not_found": {
             "title": "'echlet tu'lu'be'",

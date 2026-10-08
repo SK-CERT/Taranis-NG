@@ -36,6 +36,7 @@
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import AssetGroupDialog from '@/components/config/assets/AssetGroupDialog.vue'
     import type { AssetGroup } from '@/types/assets'
+    import { notifyDeleteError } from '@/utils/deleteError'
     const store = useAssetsStore()
     const loading = ref(false)
     const filter = ref({ search: '' })
@@ -71,8 +72,8 @@
             await deleteAssetGroup(value as AssetGroup)
             notify('success', 'asset_group.removed')
             await load()
-        } catch {
-            notify('error', 'asset_group.removed_error')
+        } catch (error) {
+            notifyDeleteError(error, { inUse: 'asset_group.removed_error' })
         }
     }
     onMounted(load)

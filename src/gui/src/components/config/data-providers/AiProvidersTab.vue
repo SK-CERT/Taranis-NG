@@ -93,6 +93,7 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { useAuth } from '@/composables/useAuth'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type HeaderEntry = {
         title: string
@@ -168,6 +169,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting AI provider:', error)
+            notifyDeleteError(error, { inUse: 'data_providers.ai.removed_error' })
         } finally {
             itemToDelete.value = null
         }

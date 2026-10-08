@@ -218,6 +218,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { createNewStateEntityType, updateStateEntityType, deleteStateEntityType } from '@/api/config'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type EntityType = 'product' | 'report_item' | string
     type StateType = 'initial' | 'normal' | 'final' | string
@@ -465,11 +466,7 @@
             // Surface the failure and close the dialog instead of leaving it silently stuck
             // open (which otherwise looks like a hang to the user and to E2E).
             console.error('Error deleting state entity type:', error)
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'common.error_deleting' }
-                })
-            )
+            notifyDeleteError(error, { inUse: 'workflow.state_workflow.removed_error' })
             closeDelete()
         }
     }

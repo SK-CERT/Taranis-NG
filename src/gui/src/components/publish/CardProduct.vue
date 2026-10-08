@@ -133,6 +133,7 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type ProductCard = {
         id: number | string
@@ -236,13 +237,7 @@
             window.dispatchEvent(new CustomEvent('product-updated'))
         } catch (error: unknown) {
             console.error('Error deleting product:', error)
-
-            // Show error notification
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'common.error_deleting' }
-                })
-            )
+            notifyDeleteError(error, { inUse: 'product.removed_error' })
         }
     }
 </script>

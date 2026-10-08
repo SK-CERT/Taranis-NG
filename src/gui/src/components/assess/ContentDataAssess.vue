@@ -140,6 +140,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import Permissions from '@/services/permissions'
+    import { isServerUnreachable } from '@/utils/deleteError'
 
     type NewsItem = {
         id: string | number
@@ -406,7 +407,7 @@
         }
 
         console.error(logMessage, error)
-        notify({ type: 'error', loc })
+        notify({ type: 'error', loc: isServerUnreachable(error) ? 'error.server_unreachable' : loc })
     }
 
     const handleViewReportDetail = (report: unknown): void => {

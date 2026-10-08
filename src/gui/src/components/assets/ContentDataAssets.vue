@@ -48,6 +48,7 @@
     import CardAsset from './CardAsset.vue'
     import type { Asset, AssetFilter } from '@/types/assets'
     import { useSseResync } from '@/composables/useSseResync'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const emit = defineEmits<{ (e: 'edit', asset: Asset): void }>()
     const { t } = useI18n()
@@ -90,8 +91,8 @@
             await deleteAsset({ id: asset.id, asset_group_id: groupId.value })
             notify('success', 'asset.removed')
             await reload()
-        } catch {
-            notify('error', 'asset.removed_error')
+        } catch (error) {
+            notifyDeleteError(error, { inUse: 'asset.removed_error' })
         }
     }
 

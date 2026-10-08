@@ -36,6 +36,7 @@
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import NotificationTemplateDialog from '@/components/config/notifications/NotificationTemplateDialog.vue'
     import type { NotificationTemplate } from '@/types/assets'
+    import { notifyDeleteError } from '@/utils/deleteError'
     const store = useAssetsStore()
     const loading = ref(false)
     const filter = ref({ search: '' })
@@ -71,8 +72,8 @@
             await deleteNotificationTemplate(value as NotificationTemplate)
             notify('success', 'notification_template.removed')
             await load()
-        } catch {
-            notify('error', 'notification_template.removed_error')
+        } catch (error) {
+            notifyDeleteError(error, { inUse: 'notification_template.removed_error' })
         }
     }
     onMounted(load)

@@ -38,6 +38,7 @@
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
     import NewWordList from '@/components/config/word-lists/NewWordList.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -82,6 +83,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting word list:', error)
+            notifyDeleteError(error, { inUse: 'word_lists.removed_error' })
         }
     }
 

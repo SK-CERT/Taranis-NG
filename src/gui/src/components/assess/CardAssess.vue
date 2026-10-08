@@ -228,6 +228,7 @@
     import { collectHighlightWords } from '@/utils/word-list-highlighting'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { useRtl } from 'vuetify'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type NewsItemData = {
         osint_source_name?: string
@@ -419,14 +420,7 @@
                     })
                 )
             } else {
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            type: 'error',
-                            message: t('error.server_error')
-                        }
-                    })
-                )
+                notifyDeleteError(error)
             }
         }
     }

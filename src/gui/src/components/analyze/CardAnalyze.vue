@@ -174,6 +174,7 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type AnalyzeCard = {
         id: number | string
@@ -295,11 +296,7 @@
             )
         } catch (error: unknown) {
             console.error('Error deleting report item:', error)
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', message: t('error.server_error') }
-                })
-            )
+            notifyDeleteError(error, { inUse: 'report_item.removed_error' })
         }
     }
 

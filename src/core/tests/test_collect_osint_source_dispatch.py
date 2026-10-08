@@ -19,6 +19,7 @@ from http import HTTPStatus
 from typing import ClassVar
 
 import pytest
+import requests
 from managers import collectors_manager
 
 
@@ -141,6 +142,28 @@ def test_deleting_a_source_does_not_re_collect_every_source_of_its_type(monkeypa
     collectors_manager.delete_osint_source("source-1")
 
     assert FakeCollectorsApi.calls == [("refresh", "WEB_COLLECTOR", False)]
+
+
+@pytest.mark.usefixtures("marks")
+def test_a_delete_is_not_reported_as_failed_when_the_node_is_down(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The row is already gone by the time the node is told, so the request must not fail with it.
+    deleted: list[str] = []
+    source = make_source()
+    monkeypatch.setattr(
+        collectors_manager,
+        "OSINTSource",
+        types.SimpleNamespace(find=lambda _id: source, delete=deleted.append),
+    )
+
+    def unreachable(*_args: object, **_kwargs: object) -> HTTPStatus:
+        msg = "node is down"
+        raise requests.ConnectionError(msg)
+
+    monkeypatch.setattr(FakeCollectorsApi, "refresh_collector", unreachable)
+
+    collectors_manager.delete_osint_source("source-1")
+
+    assert deleted == ["source-1"]
 
 
 def test_adding_a_source_collects_only_the_new_one(monkeypatch: pytest.MonkeyPatch, marks: list[str]) -> None:
