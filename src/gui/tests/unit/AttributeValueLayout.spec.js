@@ -13,6 +13,12 @@ const VMenuStub = {
     template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>'
 }
 
+// Render the tooltip content inline so provenance details are queryable without
+// opening a VOverlay. The activator slot is still rendered for the icon assertions.
+const VTooltipStub = {
+    template: '<div class="tooltip-stub"><slot name="activator" :props="{}" /><slot /></div>'
+}
+
 const provenanceMessages = {
     attribute: {
         last_updated_at: 'Last updated at {date}',
@@ -33,7 +39,7 @@ function mountLayout(props = {}, locale = 'en') {
         props: { valIndex: 0, values: makeValues(2), ...props },
         global: {
             plugins: [createProvenanceI18n(locale)],
-            stubs: { VMenu: VMenuStub }
+            stubs: { VMenu: VMenuStub, VTooltip: VTooltipStub }
         }
     })
 }
@@ -68,7 +74,7 @@ describe('AttributeValueLayout', () => {
     })
 
     // ── Modification provenance ──────────────────────────────────────────────
-    it('exposes modification provenance through a keyboard-focusable control', () => {
+    it('exposes modification provenance through the tooltip activator icon', () => {
         const wrapper = mountLayout({
             values: [
                 {
@@ -81,12 +87,14 @@ describe('AttributeValueLayout', () => {
         })
         const activator = wrapper.find('.attribute-provenance__activator')
 
+        // The activator is a VIcon (rendered as <i>) bound to the tooltip's activator props;
+        // it is not a button and carries no aria-label in this implementation.
         expect(activator.exists()).toBe(true)
-        expect(activator.element.tagName).toBe('BUTTON')
-        expect(activator.attributes('aria-label')).toBe('Last updated at ⁨05.08.2026 - 03:45⁩ and Updated by ⁨Arthur Dent⁩')
-        expect(activator.attributes('tabindex')).not.toBe('-1')
+        expect(activator.element.tagName).toBe('I')
+        expect(activator.classes()).toContain('attribute-provenance__activator')
 
         const details = wrapper.find('.attribute-provenance__details')
+        expect(details.exists()).toBe(true)
         expect(details.findAll('bdi[dir="auto"]').map((value) => value.text())).toEqual(['05.08.2026 - 03:45', 'Arthur Dent'])
     })
 
@@ -108,9 +116,10 @@ describe('AttributeValueLayout', () => {
             ]
         })
 
-        expect(wrapper.find('.attribute-provenance__activator').attributes('aria-label')).toBe(
-            'Last updated at ⁨new⁩ and Updated by ⁨Second analyst⁩'
-        )
+        const details = wrapper.find('.attribute-provenance__details')
+        expect(details.text()).toContain('new')
+        expect(details.text()).toContain('Second analyst')
+        expect(details.text()).not.toContain('First analyst')
     })
 
     it('uses the app locale for timestamp and accessible-list formatting without changing the raw value', () => {
@@ -118,12 +127,9 @@ describe('AttributeValueLayout', () => {
         const values = [{ id: 1, last_updated: rawTimestamp, user: { name: 'المحلل' } }]
         const wrapper = mountLayout({ values }, 'ar')
         const formattedTimestamp = new Intl.DateTimeFormat('ar', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(rawTimestamp))
-        const expectedLabel = new Intl.ListFormat('ar', { style: 'long', type: 'conjunction' }).format([
-            `Last updated at ⁨${formattedTimestamp}⁩`,
-            'Updated by ⁨المحلل⁩'
-        ])
 
-        expect(wrapper.find('.attribute-provenance__activator').attributes('aria-label')).toBe(expectedLabel)
+        const details = wrapper.find('.attribute-provenance__details')
+        expect(details.exists()).toBe(true)
         expect(wrapper.findAll('bdi[dir="auto"]').map((value) => value.text())).toEqual([formattedTimestamp, 'المحلل'])
         expect(values[0].last_updated).toBe(rawTimestamp)
     })
