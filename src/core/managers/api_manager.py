@@ -18,8 +18,11 @@ from api import (
     traefik,
     user,
 )
+from flask import request
 from flask_restful import Api
+from managers import log_manager
 from marshmallow import ValidationError
+from sqlalchemy.exc import IntegrityError
 
 
 class SafeErrorApi(Api):
@@ -38,9 +41,22 @@ class SafeErrorApi(Api):
     """
 
     def handle_error(self, e: Exception) -> object:
-        """Turn a schema rejection into a 400 carrying only the field errors."""
+        """Turn a schema rejection into a 400 and an integrity violation into a 409.
+
+        Resources that do not catch their own errors (user delete, the asset endpoints)
+        would otherwise answer an IntegrityError with a 500, leaving the GUI unable to tell
+        a record that is still referenced from a server fault.
+        """
         if isinstance(e, ValidationError):
             return self.make_response({"error": "Invalid request", "validation": e.normalized_messages()}, 400)
+        if isinstance(e, IntegrityError):
+            msg = (
+                "The record is still in use and could not be deleted"
+                if request.method == "DELETE"
+                else "The change conflicts with existing data"
+            )
+            log_manager.store_data_error_activity(None, msg, e)
+            return self.make_response({"error": msg}, 409)
         return super().handle_error(e)
 
 

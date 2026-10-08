@@ -38,6 +38,7 @@
     import ContentData from '@/components/common/ContentData.vue'
     import NodeDialog from './NodeDialog.vue'
     import { NODE_TYPES, type NodeType } from './nodeTypes'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const props = defineProps<{ type: NodeType }>()
 
@@ -94,7 +95,7 @@
             await loadData()
         } catch (error) {
             console.error(`Error deleting ${props.type} node:`, error)
-            notify('error', 'common.error_deleting')
+            notifyDeleteError(error, { inUse: `${config.value.i18nPrefix}.removed_error` })
         }
     }
 

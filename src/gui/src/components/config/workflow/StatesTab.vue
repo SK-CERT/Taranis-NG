@@ -184,6 +184,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { createNewStateDefinition, updateStateDefinition, deleteStateDefinition } from '@/api/config'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type StateDefinition = {
         id: string | number
@@ -365,6 +366,7 @@
             closeDelete()
         } catch (error) {
             console.error('Error deleting state:', error)
+            notifyDeleteError(error, { inUse: 'workflow.states.removed_error' })
         }
     }
 

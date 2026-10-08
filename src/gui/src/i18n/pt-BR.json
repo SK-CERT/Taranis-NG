@@ -1176,6 +1176,8 @@
         "save_failed": "Falha ao salvar",
         "loading_data": "Falha ao carregar os dados",
         "delete_failed": "Falha ao excluir",
+        "in_use": "Ainda está em uso e não pôde ser excluído",
+        "server_unreachable": "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
         "load_groups": "Falha ao carregar os grupos",
         "not_found": {
             "title": "Página não encontrada",

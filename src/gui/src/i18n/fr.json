@@ -1176,6 +1176,8 @@
         "save_failed": "Échec de l’enregistrement",
         "loading_data": "Échec du chargement des données",
         "delete_failed": "Échec de la suppression",
+        "in_use": "L’élément est encore utilisé et n’a pas pu être supprimé",
+        "server_unreachable": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
         "load_groups": "Échec du chargement des groupes",
         "not_found": {
             "title": "Page introuvable",

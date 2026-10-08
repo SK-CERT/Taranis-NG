@@ -71,6 +71,7 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import SearchField from '@/components/common/SearchField.vue'
     import { useAuth } from '@/composables/useAuth'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     // Representative icon per attribute type.
     const TYPE_ICONS: Record<string, string> = {
@@ -154,10 +155,12 @@
             // The backend refuses to delete an attribute that report types still build fields
             // on, and names them. Say so instead of leaving the row silently undeleted.
             const data = (error as { response?: { data?: { report_types?: string[]; error?: string } } })?.response?.data
-            const detail = data?.report_types?.length
-                ? { type: 'error', loc: 'reports.attributes.in_use', params: { types: data.report_types.join(', ') } }
-                : { type: 'error', loc: 'common.error_deleting' }
-            window.dispatchEvent(new CustomEvent('notification', { detail }))
+            if (data?.report_types?.length) {
+                const detail = { type: 'error', loc: 'reports.attributes.in_use', params: { types: data.report_types.join(', ') } }
+                window.dispatchEvent(new CustomEvent('notification', { detail }))
+            } else {
+                notifyDeleteError(error, { inUse: 'attribute.removed_error' })
+            }
         }
     }
 

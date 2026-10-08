@@ -16,10 +16,9 @@ from managers.db_manager import db
 from managers.log_manager import logger
 from marshmallow import post_load
 from model.parameter import Parameter
-from sqlalchemy import or_, orm
-
 from shared.common import TZ
 from shared.schema.collectors_node import CollectorsNodePresentationSchema, CollectorsNodeSchema
+from sqlalchemy import or_, orm
 
 
 class CollectorsNode(db.Model):
@@ -250,7 +249,7 @@ class CollectorsNode(db.Model):
             if node_def is None:
                 msg = "Cannot delete the last collectors node. If you need to delete it, delete associated OSINT sources first!"
                 logger.warning(msg)
-                return {"error": msg}, HTTPStatus.BAD_REQUEST
+                return {"error": msg}, HTTPStatus.CONFLICT
 
             for collector in node.collectors:
                 for source in collector.sources:

@@ -202,6 +202,7 @@
     import SearchField from '@/components/common/SearchField.vue'
     import { useAuth } from '@/composables/useAuth'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type HeaderEntry = {
         title: string
@@ -336,6 +337,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting user:', error)
+            notifyDeleteError(error, { inUse: 'access_management.users.removed_error' })
         } finally {
             itemToDelete.value = null
         }

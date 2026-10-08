@@ -35,6 +35,7 @@
     import ContentData from '@/components/common/ContentData.vue'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import NewExternalUser from '@/components/config/external/NewExternalUser.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type User = { id?: number; username: string; name: string; permissions?: Array<{ id: number }> }
     const store = useConfigStore()
@@ -72,8 +73,8 @@
             await deleteExternalUser(value)
             notify('success', 'external_user.removed')
             await load()
-        } catch {
-            notify('error', 'external_user.removed_error')
+        } catch (error) {
+            notifyDeleteError(error, { failed: 'external_user.removed_error' })
         }
     }
     onMounted(load)

@@ -1176,6 +1176,8 @@
         "save_failed": "Uloženie zlyhalo",
         "loading_data": "Načítanie zlyhalo",
         "delete_failed": "Zmazanie zlyhalo",
+        "in_use": "Položka sa stále používa a nie je možné ju odstrániť",
+        "server_unreachable": "Server je nedostupný. Skontrolujte pripojenie a skúste to znova.",
         "load_groups": "Načítanie skupín zlyhalo",
         "not_found": {
             "title": "Stránka sa nenašla",

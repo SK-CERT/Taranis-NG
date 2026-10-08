@@ -1,23 +1,31 @@
 """PublishersNode model."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.publisher import Publisher
+
 import uuid
+from http import HTTPStatus
 
 from managers.db_manager import db
 from marshmallow import post_load
-from sqlalchemy import or_, orm
-
 from shared.schema.publishers_node import PublishersNodePresentationSchema, PublishersNodeSchema
+from sqlalchemy import or_, orm
 
 
 class NewPublishersNodeSchema(PublishersNodeSchema):
     """New PublishersNode schema."""
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> PublishersNode:  # noqa: ARG002, ANN003
         """Return a new PublishersNode object.
 
         Args:
             data (dict): Data to create a new PublishersNode object.
+            **kwargs: Additional arguments.
 
         Returns:
             PublishersNode: New PublishersNode object.
@@ -46,7 +54,14 @@ class PublishersNode(db.Model):
 
     publishers = db.relationship("Publisher", back_populates="node", cascade="all")
 
-    def __init__(self, id, name, description, api_url, api_key):
+    def __init__(
+        self,
+        id: str,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        api_url: str,
+        api_key: str,
+    ) -> None:
         """Initialize a new PublishersNode object."""
         self.id = str(uuid.uuid4())
         self.name = name
@@ -58,14 +73,14 @@ class PublishersNode(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the object."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-server-network"
 
     @classmethod
-    def get_by_api_key(cls, api_key):
+    def get_by_api_key(cls, api_key: str) -> PublishersNode:
         """Get a publisher node by API key.
 
         Args:
@@ -77,7 +92,7 @@ class PublishersNode(db.Model):
         return cls.query.filter_by(api_key=api_key).first()
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[PublishersNode]:
         """Get all publisher nodes.
 
         Returns:
@@ -86,7 +101,7 @@ class PublishersNode(db.Model):
         return cls.query.order_by(db.asc(PublishersNode.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str) -> tuple[list[PublishersNode], int]:
         """Get publisher nodes.
 
         Args:
@@ -104,7 +119,7 @@ class PublishersNode(db.Model):
         return query.order_by(db.asc(PublishersNode.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str) -> dict:
         """Get all publisher nodes in JSON format.
 
         Args:
@@ -118,7 +133,7 @@ class PublishersNode(db.Model):
         return {"total_count": count, "items": node_schema.dump(nodes)}
 
     @classmethod
-    def add_new(cls, node_data, publishers):
+    def add_new(cls, node_data: dict, publishers: list[Publisher]) -> None:
         """Add a new publisher node.
 
         Args:
@@ -132,7 +147,7 @@ class PublishersNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, node_id, node_data, publishers):
+    def update(cls, node_id: str, node_data: dict, publishers: list[Publisher]) -> None:
         """Update a publisher node.
 
         Args:
@@ -160,16 +175,20 @@ class PublishersNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, node_id):
+    def delete(cls, node_id: str) -> tuple[dict, HTTPStatus] | None:
         """Delete a publisher node.
 
         Args:
             node_id (str): Node ID.
+
+        Returns:
+            (dict, HTTPStatus): A 409 when presets still use the node's publishers.
         """
         node = db.session.get(cls, node_id)
         for publisher in node.publishers:
             if len(publisher.presets) > 0:
-                raise Exception("Presenters has mapped presets")
+                return {"error": "Publisher presets still use this node's publishers"}, HTTPStatus.CONFLICT
 
         db.session.delete(node)
         db.session.commit()
+        return None

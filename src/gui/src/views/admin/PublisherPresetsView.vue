@@ -38,6 +38,7 @@
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
     import NewPublisherPreset from '@/components/config/publishers/NewPublisherPreset.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -83,6 +84,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting publisher preset:', error)
+            notifyDeleteError(error, { inUse: 'publishers.presets.removed_error' })
         }
     }
 

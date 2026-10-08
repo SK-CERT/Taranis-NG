@@ -1176,6 +1176,8 @@
         "save_failed": "Failed to save",
         "loading_data": "Failed to load data",
         "delete_failed": "Failed to delete",
+        "in_use": "It is still in use and could not be deleted",
+        "server_unreachable": "Cannot reach the server. Check your connection and try again.",
         "load_groups": "Failed to load groups",
         "not_found": {
             "title": "Page not found",

@@ -38,6 +38,7 @@
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
     import NewRemoteAccess from '@/components/config/remote/NewRemoteAccess.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -82,6 +83,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting remote access:', error)
+            notifyDeleteError(error, { inUse: 'remote.access.removed_error' })
         }
     }
 

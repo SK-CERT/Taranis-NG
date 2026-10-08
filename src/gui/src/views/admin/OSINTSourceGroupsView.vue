@@ -39,6 +39,7 @@
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
     import NewOSINTSourceGroup from '@/components/config/collectors/NewOSINTSourceGroup.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -90,6 +91,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting OSINT source group:', error)
+            notifyDeleteError(error, { inUse: 'collectors.groups.removed_error' })
         }
     }
 

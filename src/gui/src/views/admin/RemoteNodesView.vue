@@ -38,6 +38,7 @@
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
     import NewRemoteNode from '@/components/config/remote/NewRemoteNode.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -82,6 +83,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting remote node:', error)
+            notifyDeleteError(error, { inUse: 'remote.nodes.removed_error' })
         }
     }
 

@@ -9,12 +9,12 @@ if TYPE_CHECKING:
     from model.presenters_node import PresentersNode
 
 import uuid
+from http import HTTPStatus
 
 from managers.db_manager import db
 from marshmallow import post_load
-from sqlalchemy import or_, orm
-
 from shared.schema.presenters_node import PresentersNodePresentationSchema, PresentersNodeSchema
+from sqlalchemy import or_, orm
 
 
 class PresentersNode(db.Model):
@@ -159,20 +159,23 @@ class PresentersNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, node_id: str) -> None:
+    def delete(cls, node_id: str) -> tuple[dict, HTTPStatus] | None:
         """Delete.
 
         Args:
             node_id (str): Node GUID.
+
+        Returns:
+            (dict, HTTPStatus): A 409 when product types still use the node's presenters.
         """
         node = db.session.get(cls, node_id)
         for presenter in node.presenters:
             if len(presenter.product_types) > 0:
-                msg = "Presenters has mapped product types"
-                raise Exception(msg)  # noqa: TRY002
+                return {"error": "Product types still use this node's presenters"}, HTTPStatus.CONFLICT
 
         db.session.delete(node)
         db.session.commit()
+        return None
 
 
 class NewPresentersNodeSchema(PresentersNodeSchema):

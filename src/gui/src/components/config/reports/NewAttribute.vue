@@ -255,6 +255,7 @@
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
     import AttributeConstantCsvImport from '@/components/config/reports/AttributeConstantCsvImport.vue'
     import { mergeAttributeConstants, type AttributeConstantImport } from '@/utils/attribute-constant-csv'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type AttributeType =
         | 'STRING'
@@ -522,7 +523,7 @@
             }
         } catch (error) {
             console.error('Error deleting attribute constant:', error)
-            notify('error', 'common.error_saving')
+            notifyDeleteError(error)
         }
     }
 

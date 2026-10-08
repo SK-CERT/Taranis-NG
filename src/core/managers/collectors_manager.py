@@ -6,6 +6,8 @@ import json
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 
+import requests
+from managers.log_manager import logger
 from model.collector import Collector
 from model.collectors_node import CollectorsNode
 from model.osint_source import OSINTSource
@@ -95,7 +97,13 @@ def delete_osint_source(osint_source_id: str) -> None:
     osint_source = OSINTSource.find(osint_source_id)
     collector = osint_source.collector
     OSINTSource.delete(osint_source_id)
-    refresh_collector(collector, collect_now=False)
+    # The source is gone from the database at this point. Failing the request because the node
+    # could not be told would report a delete that happened as one that did not; the node reads
+    # its sources from core again when it next starts or refreshes.
+    try:
+        refresh_collector(collector, collect_now=False)
+    except requests.RequestException as ex:
+        logger.warning(f"Deleted OSINT source {osint_source_id}, but could not reschedule its collectors node: {ex}")
 
 
 def refresh_collector(collector: Collector, *, collect_now: bool = True) -> HTTPStatus:

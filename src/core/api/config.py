@@ -68,10 +68,33 @@ from shared.schema.role import PermissionSchema
 from shared.schema.security_settings import SecuritySettingsSchema
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
 from shared.schema.traefik_settings import TraefikSettingsSchema
+from sqlalchemy.exc import IntegrityError
 
 # Fetching an admin-supplied metadata URL is a server-side request: keep it tight.
 SAML_METADATA_TIMEOUT = 10
 SAML_METADATA_MAX_BYTES = 2 * 1024 * 1024
+
+
+def _delete_failed(msg: str, ex: Exception) -> tuple[dict, HTTPStatus]:
+    """Log a failed delete and answer with a status the GUI can tell apart.
+
+    A row that other records still reference fails at commit with an IntegrityError. That
+    is a conflict with the current data - the admin has to detach those records first - not
+    a malformed request, so it answers 409 and the GUI can say "in use" only when it is.
+
+    Args:
+        msg (str): What could not be deleted, e.g. "Could not delete role".
+        ex (Exception): The exception the delete raised.
+
+    Returns:
+        (dict, HTTPStatus): The error body and 409 or 400.
+    """
+    status = HTTPStatus.BAD_REQUEST
+    if isinstance(ex, IntegrityError):
+        msg = f"{msg}: it is still in use"
+        status = HTTPStatus.CONFLICT
+    log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+    return {"error": msg}, status
 
 
 class DictionariesReloadResource(Resource):
@@ -155,9 +178,7 @@ class AttributeResource(Resource):
             log_manager.store_data_error_activity(get_user_from_jwt(), msg)
             return {"error": msg, "report_types": ex.report_types}, HTTPStatus.CONFLICT
         except Exception as ex:
-            msg = "Could not delete attribute"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete attribute", ex)
 
 
 class AttributeEnumsResource(Resource):
@@ -227,9 +248,7 @@ class AttributeEnumResource(Resource):
         try:
             return attribute.AttributeEnum.delete(enum_id)
         except Exception as ex:
-            msg = "Could not delete attribute enum"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete attribute enum", ex)
 
 
 class AiProvidersResource(Resource):
@@ -363,9 +382,7 @@ class AttributeExtractionRuleResource(Resource):
         try:
             attribute_extraction_rule.AttributeExtractionRule.delete(rule_id)
         except Exception as ex:
-            msg = "Could not delete attribute extraction rule"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete attribute extraction rule", ex)
         return None
 
 
@@ -403,9 +420,7 @@ class AiProviderResource(Resource):
         try:
             return ai_provider.AiProvider.delete(ai_provider_id)
         except Exception as ex:
-            msg = "Could not delete AI model"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete AI model", ex)
 
 
 class AuthProvidersResource(Resource):
@@ -473,9 +488,7 @@ class AuthProviderResource(Resource):
         try:
             return auth_provider.AuthProvider.delete(auth_provider_id)
         except Exception as ex:
-            msg = "Could not delete authentication provider"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete authentication provider", ex)
 
 
 def _read_idp_metadata_xml(data: dict) -> str:
@@ -700,9 +713,7 @@ class DataProviderResource(Resource):
         try:
             return data_provider.DataProvider.delete(data_provider_id)
         except Exception as ex:
-            msg = "Could not delete data provider"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete data provider", ex)
 
 
 class DataProvidersResource(Resource):
@@ -807,9 +818,7 @@ class ReportItemTypeResource(Resource):
             log_manager.store_data_error_activity(get_user_from_jwt(), msg)
             return {"error": msg, "report_item_count": ex.report_item_count}, HTTPStatus.CONFLICT
         except Exception as ex:
-            msg = "Could not delete report type"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete report type", ex)
 
 
 class ProductTypesResource(Resource):
@@ -871,9 +880,7 @@ class ProductTypeResource(Resource):
         try:
             return product_type.ProductType.delete(type_id)
         except Exception as ex:
-            msg = "Could not delete product type"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete product type", ex)
 
 
 class PermissionsResource(Resource):
@@ -964,9 +971,7 @@ class RoleResource(Resource):
         try:
             return role.Role.delete(role_id)
         except Exception as ex:
-            msg = "Could not delete role"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete role", ex)
 
 
 class ACLEntriesResource(Resource):
@@ -1028,9 +1033,7 @@ class ACLEntryResource(Resource):
         try:
             return acl_entry.ACLEntry.delete(acl_id)
         except Exception as ex:
-            msg = "Could not delete acl entry"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete acl entry", ex)
 
 
 class OrganizationsResource(Resource):
@@ -1092,9 +1095,7 @@ class OrganizationResource(Resource):
         try:
             return organization.Organization.delete(organization_id)
         except Exception as ex:
-            msg = "Could not delete organization"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete organization", ex)
 
 
 class UsersResource(Resource):
@@ -1262,9 +1263,7 @@ class ExternalUserResource(Resource):
         try:
             return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id)
         except Exception as ex:
-            msg = "Could not delete external user"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete external user", ex)
 
 
 class SettingsResource(Resource):
@@ -1372,9 +1371,7 @@ class WordListResource(Resource):
         try:
             return word_list.WordList.delete(word_list_id)
         except Exception as ex:
-            msg = "Could not delete word list"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete word list", ex)
 
     @auth_required("CONFIG_WORD_LIST_UPDATE")
     def put(self, word_list_id: int) -> tuple[dict, HTTPStatus] | None:
@@ -1452,9 +1449,7 @@ class CollectorsNodeResource(Resource):
         try:
             return collectors_node.CollectorsNode.delete(node_id)
         except Exception as ex:
-            msg = "Could not delete collectors node"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete collectors node", ex)
 
 
 class OSINTSourcesResource(Resource):
@@ -1518,9 +1513,7 @@ class OSINTSourceResource(Resource):
         try:
             collectors_manager.delete_osint_source(source_id)
         except Exception as ex:
-            msg = "Could not delete OSINT source"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete OSINT source", ex)
 
 
 class OSINTSourceCollectResource(Resource):
@@ -1673,9 +1666,7 @@ class OSINTSourceGroupResource(Resource):
         try:
             return osint_source.OSINTSourceGroup.delete(group_id)
         except Exception as ex:
-            msg = "Could not delete OSINT source group"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete OSINT source group", ex)
 
 
 class RemoteAccessesResource(Resource):
@@ -1739,9 +1730,7 @@ class RemoteAccessResource(Resource):
         try:
             return remote.RemoteAccess.delete(remote_access_id)
         except Exception as ex:
-            msg = "Could not delete remote access"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete remote access", ex)
 
 
 class PublicWebNodesResource(Resource):
@@ -1841,9 +1830,7 @@ class PublicWebNodeResource(Resource):
         try:
             return public_web_node.PublicWebNode.delete(node_id)
         except Exception as ex:
-            msg = "Could not delete public-web node"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete public-web node", ex)
 
 
 def _notify_public_web_node(node_id: int) -> None:
@@ -1977,9 +1964,7 @@ class PublicWebResource(Resource):
             _notify_public_web_node(node_id)
             return result
         except Exception as ex:
-            msg = "Could not delete public web"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete public web", ex)
 
 
 class PublicWebImageResource(Resource):
@@ -2022,9 +2007,7 @@ class PublicWebImageResource(Resource):
                 web.remove_image(kind)
             _notify_public_web_node(node_id)
         except Exception as ex:
-            msg = "Could not delete public web image"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete public web image", ex)
 
 
 class PublicWebEmailTestResource(Resource):
@@ -2166,9 +2149,7 @@ class RemoteNodeResource(Resource):
             remote_manager.disconnect_from_node(remote_node_id)
             return remote.RemoteNode.delete(remote_node_id)
         except Exception as ex:
-            msg = "Could not delete remote node"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete remote node", ex)
 
 
 class RemoteNodeConnectResource(Resource):
@@ -2250,9 +2231,7 @@ class PresentersNodeResource(Resource):
         try:
             return presenters_node.PresentersNode.delete(node_id)
         except Exception as ex:
-            msg = "Could not delete presenters node"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete presenters node", ex)
 
 
 class PublisherNodesResource(Resource):
@@ -2314,9 +2293,7 @@ class PublishersNodeResource(Resource):
         try:
             return publishers_node.PublishersNode.delete(node_id)
         except Exception as ex:
-            msg = "Could not delete publishers node"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete publishers node", ex)
 
 
 class PublisherPresetsResource(Resource):
@@ -2378,9 +2355,7 @@ class PublisherPresetResource(Resource):
         try:
             return publisher_preset.PublisherPreset.delete(preset_id)
         except Exception as ex:
-            msg = "Could not delete publishers preset"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete publishers preset", ex)
 
 
 class BotNodesResource(Resource):
@@ -2442,9 +2417,7 @@ class BotsNodeResource(Resource):
         try:
             return bots_node.BotsNode.delete(node_id)
         except Exception as ex:
-            msg = "Could not delete bots node"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete bots node", ex)
 
 
 class BotPresetsResource(Resource):
@@ -2506,9 +2479,7 @@ class BotPresetResource(Resource):
         try:
             return bot_preset.BotPreset.delete(preset_id)
         except Exception as ex:
-            msg = "Could not delete bots preset"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete bots preset", ex)
 
 
 class StatesResource(Resource):
@@ -2595,9 +2566,7 @@ class StateResource(Resource):
             return result, status_code
 
         except Exception as ex:
-            msg = "Could not delete state definition"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete state definition", ex)
 
 
 class StateEntityTypesResource(Resource):
@@ -2693,10 +2662,7 @@ class StateEntityTypeResource(Resource):
             return {"message": "Association deleted successfully"}, HTTPStatus.OK
 
         except Exception as ex:
-            db.session.rollback()
-            msg = "Could not delete state-entity type association"
-            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return _delete_failed("Could not delete state-entity type association", ex)
 
 
 def initialize(api: Api) -> None:  # noqa: PLR0915

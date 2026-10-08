@@ -38,6 +38,7 @@
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
     import NewProductType from '@/components/config/presenters/NewProductType.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -80,6 +81,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting product type:', error)
+            notifyDeleteError(error, { inUse: 'presenters.types.removed_error' })
         }
     }
 

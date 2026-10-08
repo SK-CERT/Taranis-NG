@@ -1176,6 +1176,8 @@
         "save_failed": "Opslaan is mislukt",
         "loading_data": "Laden van gegevens is mislukt",
         "delete_failed": "Verwijderen is mislukt",
+        "in_use": "Is nog in gebruik en kon niet worden verwijderd",
+        "server_unreachable": "De server is niet bereikbaar. Controleer uw verbinding en probeer het opnieuw.",
         "load_groups": "Laden van groepen is mislukt",
         "not_found": {
             "title": "Pagina niet gevonden",

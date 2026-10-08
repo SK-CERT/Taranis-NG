@@ -1176,6 +1176,8 @@
         "save_failed": "Speichern fehlgeschlagen",
         "loading_data": "Daten konnten nicht geladen werden",
         "delete_failed": "Löschen fehlgeschlagen",
+        "in_use": "Wird noch verwendet und konnte nicht gelöscht werden",
+        "server_unreachable": "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
         "load_groups": "Gruppen konnten nicht geladen werden",
         "not_found": {
             "title": "Seite nicht gefunden",

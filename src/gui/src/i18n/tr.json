@@ -1176,6 +1176,8 @@
         "save_failed": "Kaydedilemedi",
         "loading_data": "Veriler yüklenemedi",
         "delete_failed": "Silinemedi",
+        "in_use": "Hâlâ kullanımda olduğundan silinemedi",
+        "server_unreachable": "Sunucuya ulaşılamıyor. Bağlantınızı kontrol edip tekrar deneyin.",
         "load_groups": "Gruplar yüklenemedi",
         "not_found": {
             "title": "Sayfa bulunamadı",

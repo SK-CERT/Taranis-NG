@@ -1176,6 +1176,8 @@
         "save_failed": "Salvataggio non riuscito",
         "loading_data": "Caricamento dei dati non riuscito",
         "delete_failed": "Eliminazione non riuscita",
+        "in_use": "È ancora in uso e non può essere eliminato",
+        "server_unreachable": "Impossibile raggiungere il server. Controlla la connessione e riprova.",
         "load_groups": "Caricamento dei gruppi non riuscito",
         "not_found": {
             "title": "Pagina non trovata",

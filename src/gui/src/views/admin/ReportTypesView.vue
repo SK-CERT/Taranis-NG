@@ -38,6 +38,7 @@
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
     import NewReportType from '@/components/config/reports/NewReportType.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -82,10 +83,13 @@
             console.error('Error deleting report type:', error)
             // The backend refuses to delete a report type that report items are based on.
             const count = (error as { response?: { data?: { report_item_count?: number } } })?.response?.data?.report_item_count
-            const detail = count
-                ? { type: 'error', loc: 'reports.types.in_use', params: { count } }
-                : { type: 'error', loc: 'common.error_deleting' }
-            window.dispatchEvent(new CustomEvent('notification', { detail }))
+            if (count) {
+                window.dispatchEvent(
+                    new CustomEvent('notification', { detail: { type: 'error', loc: 'reports.types.in_use', params: { count } } })
+                )
+            } else {
+                notifyDeleteError(error, { inUse: 'reports.types.removed_error' })
+            }
         }
     }
 

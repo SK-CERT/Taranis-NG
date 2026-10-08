@@ -38,6 +38,7 @@
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
     import NewBotPreset from '@/components/config/bots/NewBotPreset.vue'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -82,6 +83,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting bot preset:', error)
+            notifyDeleteError(error, { inUse: 'bots.presets.removed_error' })
         }
     }
 

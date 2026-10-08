@@ -1176,6 +1176,8 @@
         "save_failed": "Uložení se nezdařilo",
         "loading_data": "Načítání dat selhalo",
         "delete_failed": "Smazání se nezdařilo",
+        "in_use": "Položka se stále používá a nelze ji smazat",
+        "server_unreachable": "Server je nedostupný. Zkontrolujte připojení a zkuste to znovu.",
         "load_groups": "Načítání skupin selhalo",
         "not_found": {
             "title": "Stránka nenalezena",

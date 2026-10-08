@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 
 import uuid
 from datetime import datetime
+from http import HTTPStatus
 
 from managers.db_manager import db
 from marshmallow import post_load
-from sqlalchemy import or_, orm
-
 from shared.common import TZ
 from shared.schema.bots_node import BotsNodePresentationSchema, BotsNodeSchema
+from sqlalchemy import or_, orm
 
 
 class BotsNode(db.Model):
@@ -186,20 +186,23 @@ class BotsNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, node_id: str) -> None:
+    def delete(cls, node_id: str) -> tuple[dict, HTTPStatus] | None:
         """Delete a node.
 
         Args:
             node_id: ID of the node to delete.
+
+        Returns:
+            (dict, HTTPStatus): A 409 when bot presets still use the node's bots.
         """
         node = db.session.get(cls, node_id)
         for b in node.bots:
             if len(b.presets) > 0:
-                msg = "Bots has mapped presets"
-                raise Exception(msg)  # noqa: TRY002
+                return {"error": "Bot presets still use this node's bots"}, HTTPStatus.CONFLICT
 
         db.session.delete(node)
         db.session.commit()
+        return None
 
     def update_last_seen(self) -> None:
         """Update the last seen date of the node."""

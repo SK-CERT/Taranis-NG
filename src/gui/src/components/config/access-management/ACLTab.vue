@@ -98,6 +98,7 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import SearchField from '@/components/common/SearchField.vue'
     import { useAuth } from '@/composables/useAuth'
+    import { notifyDeleteError } from '@/utils/deleteError'
 
     type HeaderEntry = {
         title: string
@@ -169,6 +170,7 @@
             await loadData()
         } catch (error) {
             console.error('Error deleting ACL entry:', error)
+            notifyDeleteError(error, { inUse: 'access_management.acls.removed_error' })
         } finally {
             itemToDelete.value = null
         }

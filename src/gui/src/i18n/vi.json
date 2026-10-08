@@ -1176,6 +1176,8 @@
         "save_failed": "Không thể lưu",
         "loading_data": "Không thể tải dữ liệu",
         "delete_failed": "Không thể xóa",
+        "in_use": "Vẫn đang được sử dụng và không thể xóa",
+        "server_unreachable": "Không thể kết nối tới máy chủ. Hãy kiểm tra kết nối và thử lại.",
         "load_groups": "Không thể tải nhóm",
         "not_found": {
             "title": "Không tìm thấy trang",
