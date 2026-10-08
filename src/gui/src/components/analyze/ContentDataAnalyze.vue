@@ -4,11 +4,13 @@
         fluid
         class="pa-0"
     >
-        <TransitionGroup
-            name="card-list"
-            tag="div"
-            class="analyze-list"
-        >
+        <ContentSkeleton
+            v-if="!dataLoaded && collections.length === 0"
+            :compact="currentCard === CardCompact"
+            variant="report"
+            :hide-actions="disableActions"
+        />
+        <div class="analyze-list">
             <component
                 :is="currentCard"
                 v-for="collection in collections"
@@ -23,7 +25,7 @@
                 @show-detail="showDetail"
                 @edit="showDetail"
             />
-        </TransitionGroup>
+        </div>
         <div
             v-intersect="infiniteScrolling"
             class="mt-4"
@@ -81,6 +83,7 @@
     import { ICONS } from '@/config/ui-constants'
     import { useAnalyzeStore } from '@/stores/analyze'
     import CardAnalyze from './CardAnalyze.vue'
+    import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
     import { useSseResync } from '@/composables/useSseResync'
     import { getAnalyzeGroupName } from '@/utils/analyze-routing'
@@ -124,7 +127,7 @@
     const analyzeStore = useAnalyzeStore()
 
     const collections = ref<ReportItem[]>([])
-    const dataLoaded = ref(true)
+    const dataLoaded = ref(false)
     let updateSequence = 0
     const filter = ref<FilterState>({
         search: '',

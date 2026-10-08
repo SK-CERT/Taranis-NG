@@ -3,6 +3,10 @@
         fluid
         class="config-card-list pa-0"
     >
+        <ContentSkeleton
+            v-if="loading && items.length === 0"
+            compact
+        />
         <component
             :is="cardComponent"
             v-for="item in typedItems"
@@ -17,7 +21,7 @@
 
         <!-- Empty state -->
         <v-row
-            v-if="items.length === 0"
+            v-if="!loading && items.length === 0"
             justify="center"
             class="mt-8"
         >
@@ -39,7 +43,7 @@
 
         <!-- Loading indicator -->
         <v-row
-            v-if="loading"
+            v-if="loading && items.length > 0"
             justify="center"
             class="mt-4"
         >
@@ -64,6 +68,7 @@
     import type { PermissionKey } from '@/types/permissions'
 
     // Import available card components
+    import ContentSkeleton from './ContentSkeleton.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
     // TODO: Import other card components as they are migrated
     // import CardNode from '@/components/common/CardNode.vue'

@@ -1,15 +1,12 @@
 <template>
-    <div class="asset-content">
-        <div
+    <v-container
+        fluid
+        class="asset-content pa-0"
+    >
+        <ContentSkeleton
             v-if="loading"
-            class="asset-content__state"
-        >
-            <v-progress-circular
-                indeterminate
-                color="primary"
-                size="64"
-            />
-        </div>
+            variant="asset"
+        />
         <v-alert
             v-else-if="loadError"
             class="ma-3"
@@ -17,13 +14,27 @@
             variant="tonal"
             >{{ t('asset.load_error') }}</v-alert
         >
-        <v-alert
+        <v-row
             v-else-if="assets.length === 0"
-            class="ma-3"
-            type="info"
-            variant="tonal"
-            >{{ t('asset.no_data') }}</v-alert
+            justify="center"
+            class="asset-empty-state my-8"
         >
+            <v-col
+                cols="12"
+                md="6"
+                class="text-center"
+            >
+                <v-icon
+                    size="64"
+                    color="grey"
+                >
+                    mdi-laptop
+                </v-icon>
+                <p class="text-h6 text-grey mt-4">
+                    {{ t('asset.no_data') }}
+                </p>
+            </v-col>
+        </v-row>
         <div
             v-else
             class="asset-list"
@@ -36,7 +47,7 @@
                 @delete="remove"
             />
         </div>
-    </div>
+    </v-container>
 </template>
 
 <script setup lang="ts">
@@ -45,6 +56,7 @@
     import { useRoute } from 'vue-router'
     import { deleteAsset } from '@/api/assets'
     import { useAssetsStore } from '@/stores/assets'
+    import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardAsset from './CardAsset.vue'
     import type { Asset, AssetFilter } from '@/types/assets'
     import { useSseResync } from '@/composables/useSseResync'
@@ -53,7 +65,7 @@
     const { t } = useI18n()
     const route = useRoute()
     const store = useAssetsStore()
-    const loading = ref(false)
+    const loading = ref(true)
     const loadError = ref(false)
     const filter = ref<AssetFilter>({ search: '', vulnerable: false, sort: 'ALPHABETICAL' })
     const groupId = computed(() => String(route.params['groupId'] || ''))
@@ -64,6 +76,7 @@
 
     const reloadData = async (silent = false): Promise<void> => {
         if (!groupId.value) {
+            loading.value = false
             store.clearAssets()
             return
         }
@@ -108,14 +121,13 @@
 
 <style scoped>
     .asset-content {
-        min-height: 100%;
+        display: flow-root;
         background: var(--review-list-row);
     }
 
-    .asset-content__state {
-        display: grid;
-        min-height: 12rem;
-        place-items: center;
+    .asset-empty-state {
+        /* Match the space reserved for the scroll trigger above other empty states. */
+        padding-block-start: 116px;
     }
 
     .asset-list {

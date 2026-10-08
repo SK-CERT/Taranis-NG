@@ -26,12 +26,23 @@
             <!-- Data Table -->
             <v-data-table
                 :headers="headers"
+                :aria-busy="loading"
                 :items="configStore.organizations.items"
                 :items-per-page="-1"
                 :search="search"
                 item-key="id"
                 class="elevation-1"
             >
+                <template
+                    v-if="loading"
+                    #body
+                >
+                    <TableSkeletonRows
+                        :columns="headers"
+                        :cells="{ name: { width: 150 }, description: { width: 300 }, actions: { type: 'actions', width: 60 } }"
+                        :action-count="2"
+                    />
+                </template>
                 <template #item.name="{ item }">
                     <strong
                         ><bdi dir="auto">{{ asOrganizationItem(item).name }}</bdi></strong
@@ -70,6 +81,7 @@
 
 <script setup lang="ts">
     import { computed, ref, onMounted } from 'vue'
+    import TableSkeletonRows from '@/components/common/TableSkeletonRows.vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteOrganization } from '@/api/config'
@@ -115,11 +127,19 @@
     const isolateAuto = (value: unknown): string =>
         value == null || value === '' ? '' : `${FIRST_STRONG_ISOLATE}${String(value)}${POP_DIRECTIONAL_ISOLATE}`
 
+    const loading = ref(true)
+    let pendingLoads = 0
+
     const loadData = async (): Promise<void> => {
+        pendingLoads++
+        loading.value = true
         try {
             await configStore.loadOrganizations({ search: search.value })
         } catch (error) {
             console.error('Error loading organizations:', error)
+        } finally {
+            pendingLoads--
+            loading.value = pendingLoads > 0
         }
     }
 

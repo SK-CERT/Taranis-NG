@@ -8,14 +8,23 @@ const empty = <T>(): ListResponse<T> => ({ total_count: 0, items: [] })
 
 export const useAssetsStore = defineStore('assets', () => {
     const assetGroups = ref<ListResponse<AssetGroup>>(empty())
+    const assetGroupsLoaded = ref(false)
+    const assetGroupsLoadError = ref(false)
     const notificationTemplates = ref<ListResponse<NotificationTemplate>>(empty())
     const assets = ref<ListResponse<Asset>>(empty())
     let assetLoadSequence = 0
 
     async function loadAssetGroups(filter: { search?: string } = {}): Promise<ApiResponse<ListResponse<AssetGroup>>> {
-        const response = (await getAllAssetGroups(filter)) as ApiResponse<ListResponse<AssetGroup>>
-        assetGroups.value = response.data || empty()
-        return response
+        assetGroupsLoadError.value = false
+        try {
+            const response = (await getAllAssetGroups(filter)) as ApiResponse<ListResponse<AssetGroup>>
+            assetGroups.value = response.data || empty()
+            assetGroupsLoaded.value = true
+            return response
+        } catch (error) {
+            assetGroupsLoadError.value = true
+            throw error
+        }
     }
 
     async function loadNotificationTemplates(filter: { search?: string } = {}): Promise<ApiResponse<ListResponse<NotificationTemplate>>> {
@@ -35,5 +44,15 @@ export const useAssetsStore = defineStore('assets', () => {
         assets.value = empty()
     }
 
-    return { assetGroups, notificationTemplates, assets, loadAssetGroups, loadNotificationTemplates, loadAssets, clearAssets }
+    return {
+        assetGroups,
+        assetGroupsLoaded,
+        assetGroupsLoadError,
+        notificationTemplates,
+        assets,
+        loadAssetGroups,
+        loadNotificationTemplates,
+        loadAssets,
+        clearAssets
+    }
 })

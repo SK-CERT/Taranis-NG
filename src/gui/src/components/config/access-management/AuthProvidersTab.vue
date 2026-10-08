@@ -26,13 +26,32 @@
             <!-- Data Table -->
             <v-data-table
                 :headers="headers"
+                :aria-busy="loading"
                 :items="configStore.authProviders.items as AuthProviderItem[]"
                 :items-per-page="-1"
                 :search="search"
-                :loading="loading"
                 item-key="id"
                 class="elevation-1"
             >
+                <template
+                    v-if="loading"
+                    #body
+                >
+                    <TableSkeletonRows
+                        :columns="headers"
+                        :cells="{
+                            id: { width: 30 },
+                            name: { width: 130 },
+                            kind: { type: 'chip', width: 70 },
+                            organization: { width: 120 },
+                            provisioning_mode: { width: 100 },
+                            enabled: { type: 'button', width: 18 },
+                            linked_identity_count: { width: 30 },
+                            actions: { type: 'actions', width: 60 }
+                        }"
+                        :action-count="2"
+                    />
+                </template>
                 <template #item.id="{ item }">
                     <code class="text-body-2 font-weight-medium">{{ item.id }}</code>
                 </template>
@@ -103,6 +122,7 @@
 
 <script setup lang="ts">
     import { ref, computed, onMounted } from 'vue'
+    import TableSkeletonRows from '@/components/common/TableSkeletonRows.vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
@@ -129,7 +149,7 @@
         [key: string]: unknown
     }
 
-    const loading = ref(false)
+    const loading = ref(true)
     const search = ref('')
     const editItem = ref<AuthProviderItem | null>(null)
     const deleteDialog = ref(false)
