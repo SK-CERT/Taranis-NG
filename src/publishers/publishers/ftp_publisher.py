@@ -1,9 +1,9 @@
 """Publisher for publishing to an FTP server."""
 
-import datetime
 import ftplib
 import mimetypes
 from base64 import b64decode
+from datetime import datetime
 from http import HTTPStatus
 from io import BytesIO
 from urllib.parse import urlsplit
@@ -46,7 +46,7 @@ class FTPPublisher(BasePublisher):
             ftp_url = publisher_input.param_key_values["FTP_URL"]
             mime_type = publisher_input.mime_type[:]
             file_extension = mimetypes.guess_extension(mime_type)
-            filename = f"file_{datetime.datetime.now(TZ).strftime('%d-%m-%Y_%H:%M')}{file_extension}"
+            filename = f"file_{datetime.now(TZ).strftime('%Y-%m-%d_%H-%M-%S')}{file_extension}"
             data = publisher_input.data[:]
             bytes_data = b64decode(data, validate=True)
             # Kept in memory rather than staged on disk: the working directory belongs
