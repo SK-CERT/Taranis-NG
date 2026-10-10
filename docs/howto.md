@@ -13,6 +13,7 @@ item and product preview.
 - [Customizing stop lists](#_toc4)
 - [Management script - configure accounts, roles, nodes and dictionaries via commandline](#_toc5)
 - [Using AI in Taranis NG](#_toc6)
+- [Citing sources in reports and products](#_toc7)
 
 # <a id="_toc1"></a>Altering the roles
 
@@ -317,3 +318,31 @@ This example demonstrates how to use **Ollama** with **Taranis NG**. Ollama is a
 2. This process can be repeated for any report type, using custom AI prompts defined per attribute.
 
 3. The quality of the result depends on both the prompt and the selected model. Experiment with different models and prompts to achieve optimal results for your specific use case.
+
+# <a id="_toc7"></a>Citing sources in reports and products
+
+Report text cites its sources by the **Link** attribute type: each link has a stable key, and a
+citation is stored as a token such as `[#k3f9a2]`. Inserting, moving or deleting links never
+changes what a citation points at.
+
+- In the report dialog, the **Links** attribute lists the links numbered as they are cited. A
+  **+** between two rows inserts a link there, and **Add from news items** adds the source URLs
+  of the attached news items. Deleting a link that is cited asks first.
+- Every text attribute (Text, Text Area, Rich Text) has a cite button that inserts a citation at
+  the cursor. Under the field, each citation shows the link it resolves to, and a citation of a
+  deleted link is flagged.
+- A product has links of its own, which its description cites the same way. Its cite button also
+  offers the links of the product's reports; citing one copies it into the product's links.
+
+When core hands a product to a presenter or to a public-web node, it renders every citation to a
+plain number, `[1]`, `[2]`..., which indexes one list of sources: the product's own links first,
+then the links of each report in report order. Equal URLs share one number. Templates get that
+list as `data.product.links` (URL strings, `[1]` being the first); the texts in
+`report_item.attrs` already contain the numbers. A citation of a link that no longer exists is
+left out.
+
+For a custom report type to support citations, give it an attribute of type **Link**. The
+`a3c9f1d27b64` migration switched the existing attributes titled "Links" to that type and turned
+the positional `[n]` citations of existing reports and product descriptions into tokens. Core
+and public-web nodes must run the same version: a public-web node only shows the numbers core
+rendered.

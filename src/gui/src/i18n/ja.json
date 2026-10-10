@@ -2214,5 +2214,26 @@
         "clear_formatting": "書式をクリア",
         "undo": "元に戻す",
         "redo": "やり直す"
+    },
+    "links": {
+        "add": "リンクを追加",
+        "add_all": "すべて追加",
+        "cite": "リンクを引用",
+        "cite_no_links": "引用するには、まずリンクを追加してください",
+        "cited": "{count}回引用",
+        "cited_hint": "本文がこのリンクを引用している回数",
+        "citations": "引用されたリンク",
+        "delete_cited_title": "引用されているリンクを削除しますか？",
+        "delete_cited_message": "本文中のこのリンクの引用: {count}。公開される出力では省略されます。",
+        "from_news_items": "ニュース項目から追加",
+        "insert_here": "ここにリンクを挿入",
+        "missing": "存在しないリンク",
+        "missing_hint": "引用されたリンクはもう存在しません。公開される出力では引用が省略されます。",
+        "no_news_item_links": "添付されたニュース項目のリンクはすべて追加済みです",
+        "not_numbered": "URLのないリンクには番号が付きません",
+        "number_hint": "このリンクの引用にはこの番号が表示されます",
+        "product_hint": "製品の説明が引用できる情報源です。公開される製品では、レポートのリンクより先に番号が付けられます。",
+        "product_title": "リンク",
+        "url": "URL"
     }
 }

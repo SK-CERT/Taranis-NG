@@ -44,11 +44,14 @@ class VulnerabilityReportPart:
         """
         self.item = item
         self._attrs: dict[str, list[dict[str, Any]]] = {}
+        self._links: list[str] = []
         for attribute in item.get("attributes") or []:
             key = (attribute.get("key") or "").strip()
             self._attrs.setdefault(key, []).append(
                 {"value": attribute.get("value"), "description": attribute.get("description")},
             )
+            if attribute.get("type") == "LINK":
+                self._links.append(attribute.get("value"))
         self.validate()
 
     def validate(self) -> None:
@@ -108,13 +111,6 @@ class VulnerabilityReportPart:
             return invalid_value
         return values[0]
 
-    def _set_attr_value(self, key: str, index: int, value: str) -> None:
-        """Replaces the attribute value at the given index.
-
-        Used for link renumbering; operates on this object only, not on the source data.
-        """
-        self._attrs[key][index]["value"] = value
-
     def get_name(self) -> str:
         """Get the name of the report part."""
         return fix_spaces(
@@ -148,29 +144,8 @@ class VulnerabilityReportPart:
         return capitalize(fix_spaces(recommendations))
 
     def get_links(self) -> list[str]:
-        """Get the links of the report part."""
-        return self._attr_values("links")
-
-    def renumber_links(self, product_links: list[str]) -> None:
-        """Replaces link references in the description and recommendations.
-
-        So that they point to the indices in the report-wide product_links
-        list instead of this part's own links list.
-        """
-        report_links = self.get_links()
-        if not report_links:
-            return
-        mapping = {old_index + 1: product_links.index(link) + 1 for old_index, link in enumerate(report_links) if link in product_links}
-
-        def replace_match(match: re.Match) -> str:
-            old_index = int(match.group(1))
-            new_index = mapping.get(old_index, old_index)
-            return f"[{new_index}]"
-
-        for key in ("description", "recommendations"):
-            for i, attr in enumerate(self._attrs.get(key, [])):
-                if attr["value"]:
-                    self._set_attr_value(key, i, re.sub(r"\[(\d+)\]", replace_match, attr["value"]))
+        """Get the links (attributes of type LINK) of the report part."""
+        return [link for link in self._links if link]
 
 
 class VulnerabilityReportIntro(VulnerabilityReportPart):

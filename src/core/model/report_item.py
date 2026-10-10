@@ -21,6 +21,7 @@ from http import HTTPStatus
 
 import sqlalchemy
 from managers.db_manager import db
+from managers.link_references import generate_link_key
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
@@ -265,7 +266,15 @@ class ReportItem(db.Model):
         secondaryjoin=lambda: ReportItemRemoteReportItem.remote_report_item_id == ReportItem.id,
     )
 
-    attributes = db.relationship("ReportItemAttribute", back_populates="report_item", cascade="all, delete-orphan", lazy="joined")
+    # Ordered by id: values of one attribute have no ordering column, so their id order is the
+    # order the GUI shows, link citations are numbered in, and reordering in the GUI relies on.
+    attributes = db.relationship(
+        "ReportItemAttribute",
+        back_populates="report_item",
+        cascade="all, delete-orphan",
+        lazy="joined",
+        order_by="ReportItemAttribute.id",
+    )
 
     report_item_cpes = db.relationship("ReportItemCpe", cascade="all, delete-orphan")
 
@@ -311,6 +320,53 @@ class ReportItem(db.Model):
         """Reconstructs the report item."""
         self.subtitle = ""
         self.tag = "mdi-file-table-outline"
+
+    @staticmethod
+    def _is_link_attribute(attribute_group_item_id: int | None) -> bool:
+        """Tell whether values of the attribute group item are citable links (type LINK)."""
+        group_item = AttributeGroupItem.find(attribute_group_item_id) if attribute_group_item_id is not None else None
+        return bool(group_item and group_item.attribute and group_item.attribute.type == AttributeType.LINK)
+
+    def _link_attributes(self) -> list[ReportItemAttribute]:
+        """Return the LINK values of this report item in display order: by group, group item and id."""
+
+        def position(attribute: ReportItemAttribute) -> tuple:
+            group_item = attribute.attribute_group_item
+            group = group_item.attribute_group if group_item else None
+            return (
+                getattr(group, "index", None) or 0,
+                getattr(group_item, "index", None) or 0,
+                attribute.id is None,
+                attribute.id or 0,
+            )
+
+        return sorted(
+            (attribute for attribute in self.attributes if self._is_link_attribute(attribute.attribute_group_item_id)),
+            key=position,
+        )
+
+    @property
+    def links(self) -> list[dict]:
+        """The citable links of this report item ({key, url}), in display order."""
+        return [
+            {"key": attribute.value_description, "url": attribute.value}
+            for attribute in self._link_attributes()
+            if attribute.value and attribute.value.strip()
+        ]
+
+    def ensure_link_keys(self) -> None:
+        """Give every LINK value a stable key (kept in value_description) that text can cite.
+
+        Keys the values already have are kept; a missing key, or one an earlier value already
+        uses, is replaced by a fresh one.
+        """
+        link_attributes = self._link_attributes()
+        taken = {attribute.value_description for attribute in link_attributes if attribute.value_description}
+        seen: set[str] = set()
+        for attribute in link_attributes:
+            if not attribute.value_description or attribute.value_description in seen:
+                attribute.value_description = generate_link_key(taken | seen)
+            seen.add(attribute.value_description)
 
     @classmethod
     def find(cls, report_item_id: int) -> ReportItem:
@@ -688,6 +744,7 @@ class ReportItem(db.Model):
         report_item.updated_by = user.name
         for attribute in report_item.attributes:
             attribute.user_id = user.id
+        report_item.ensure_link_keys()
 
         # Assign initial state if not provided
         if not report_item.state_id:
@@ -935,6 +992,8 @@ class ReportItem(db.Model):
                     new_attribute = ReportItemAttribute(None, default_value, "", None, 0, None, data["attribute_group_item_id"], None)
                     new_attribute.user = user
                     report_item.attributes.append(new_attribute)
+                    # A new link gets its citation key right away; get_updated_data hands it back.
+                    report_item.ensure_link_keys()
 
                 if "aggregate_ids" in data:
                     modified = True

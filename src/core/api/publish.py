@@ -20,6 +20,7 @@ from managers import auth_manager, log_manager, publishers_manager
 from managers.auth_manager import ACLCheck, auth_required
 from managers.cache_manager import redis_client
 from managers.db_manager import db
+from managers.link_references import render_presenter_input
 from managers.log_manager import logger
 from model.permission import Permission
 from model.product import Product
@@ -245,6 +246,7 @@ def prepare_product(product_data: dict, user: User, token: str) -> tuple[dict, H
             product_type_id=product_type_id,
             state_id=product_data.get("state_id"),
             report_items=report_items_list,
+            links=product_data.get("links"),
         )
 
         product.product_type = prod_type
@@ -267,8 +269,10 @@ def prepare_product(product_data: dict, user: User, token: str) -> tuple[dict, H
 
     input_data = PresenterInput(presenter.type, product)
     input_schema = PresenterInputSchema()
+    # Presenters get the citations already numbered, never the link keys.
+    presenter_input = render_presenter_input(input_schema.dump(input_data), product.links)
 
-    generated_data, status_code = PresentersApi(node.api_url, node.api_key).generate(input_schema.dump(input_data))
+    generated_data, status_code = PresentersApi(node.api_url, node.api_key).generate(presenter_input)
 
     if status_code != HTTPStatus.OK:
         err_msg = f"Failed to generate preview (status: {status_code})"

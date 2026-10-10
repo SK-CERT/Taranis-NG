@@ -2214,5 +2214,26 @@
         "clear_formatting": "Xóa định dạng",
         "undo": "Hoàn tác",
         "redo": "Làm lại"
+    },
+    "links": {
+        "add": "Thêm liên kết",
+        "add_all": "Thêm tất cả",
+        "cite": "Trích dẫn liên kết",
+        "cite_no_links": "Hãy thêm liên kết trước để trích dẫn",
+        "cited": "Trích dẫn {count}×",
+        "cited_hint": "Số lần văn bản trích dẫn liên kết này",
+        "citations": "Liên kết được trích dẫn",
+        "delete_cited_title": "Xóa liên kết đang được trích dẫn?",
+        "delete_cited_message": "Số trích dẫn liên kết này trong văn bản: {count}. Chúng sẽ bị bỏ qua trong bản đã xuất bản.",
+        "from_news_items": "Thêm từ tin",
+        "insert_here": "Chèn liên kết vào đây",
+        "missing": "Liên kết không tồn tại",
+        "missing_hint": "Liên kết được trích dẫn không còn tồn tại; trích dẫn bị bỏ qua trong bản đã xuất bản.",
+        "no_news_item_links": "Tất cả liên kết của các tin đính kèm đã được thêm",
+        "not_numbered": "Liên kết không có URL sẽ không được đánh số",
+        "number_hint": "Các trích dẫn của liên kết này hiển thị số này",
+        "product_hint": "Các nguồn mà mô tả sản phẩm có thể trích dẫn. Trong sản phẩm đã xuất bản, chúng được đánh số trước các liên kết của báo cáo.",
+        "product_title": "Liên kết",
+        "url": "URL"
     }
 }

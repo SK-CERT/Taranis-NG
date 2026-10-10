@@ -2214,5 +2214,26 @@
         "clear_formatting": "Vymazať formátovanie",
         "undo": "Späť",
         "redo": "Znova"
+    },
+    "links": {
+        "add": "Pridať odkaz",
+        "add_all": "Pridať všetko",
+        "cite": "Citovať odkaz",
+        "cite_no_links": "Najprv pridajte odkaz, aby ste ho mohli citovať",
+        "cited": "Citované {count}×",
+        "cited_hint": "Koľkokrát text cituje tento odkaz",
+        "citations": "Citované odkazy",
+        "delete_cited_title": "Odstrániť citovaný odkaz?",
+        "delete_cited_message": "Počet citácií tohto odkazu v texte: {count}. Vo zverejnenom výstupe budú vynechané.",
+        "from_news_items": "Pridať z noviniek",
+        "insert_here": "Vložiť odkaz sem",
+        "missing": "Chýbajúci odkaz",
+        "missing_hint": "Citovaný odkaz už neexistuje; citácia bude vo zverejnenom výstupe vynechaná.",
+        "no_news_item_links": "Všetky odkazy z pripojených noviniek sú už pridané",
+        "not_numbered": "Odkaz bez URL nedostane číslo",
+        "number_hint": "Citácie tohto odkazu zobrazujú toto číslo",
+        "product_hint": "Zdroje, ktoré môže citovať popis produktu. Vo zverejnenom produkte sú očíslované ako prvé, pred odkazmi jeho reportov.",
+        "product_title": "Odkazy",
+        "url": "URL"
     }
 }

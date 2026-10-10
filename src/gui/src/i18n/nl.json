@@ -2214,5 +2214,26 @@
         "clear_formatting": "Opmaak wissen",
         "undo": "Ongedaan maken",
         "redo": "Opnieuw"
+    },
+    "links": {
+        "add": "Koppeling toevoegen",
+        "add_all": "Alles toevoegen",
+        "cite": "Een koppeling citeren",
+        "cite_no_links": "Voeg eerst een koppeling toe om die te citeren",
+        "cited": "{count}× geciteerd",
+        "cited_hint": "Hoe vaak de tekst deze koppeling citeert",
+        "citations": "Geciteerde koppelingen",
+        "delete_cited_title": "Een geciteerde koppeling verwijderen?",
+        "delete_cited_message": "Citaten van deze koppeling in de tekst: {count}. Ze worden weggelaten in de gepubliceerde uitvoer.",
+        "from_news_items": "Toevoegen uit nieuwsitems",
+        "insert_here": "Hier een koppeling invoegen",
+        "missing": "Ontbrekende koppeling",
+        "missing_hint": "De geciteerde koppeling bestaat niet meer; het citaat wordt weggelaten in de gepubliceerde uitvoer.",
+        "no_news_item_links": "Alle koppelingen van de bijgevoegde nieuwsitems zijn al toegevoegd",
+        "not_numbered": "Een koppeling zonder URL krijgt geen nummer",
+        "number_hint": "Citaten van deze koppeling tonen dit nummer",
+        "product_hint": "Bronnen die de productbeschrijving kan citeren. In het gepubliceerde product worden ze als eerste genummerd, vóór de koppelingen van de rapporten.",
+        "product_title": "Koppelingen",
+        "url": "URL"
     }
 }

@@ -2214,5 +2214,26 @@
         "clear_formatting": "Clear formatting",
         "undo": "Undo",
         "redo": "Redo"
+    },
+    "links": {
+        "add": "Add link",
+        "add_all": "Add all",
+        "cite": "Cite a link",
+        "cite_no_links": "Add a link first to cite it",
+        "cited": "Cited {count}×",
+        "cited_hint": "How many times the text cites this link",
+        "citations": "Cited links",
+        "delete_cited_title": "Delete a cited link?",
+        "delete_cited_message": "Citations of this link in the text: {count}. They will be left out of the published output.",
+        "from_news_items": "Add from news items",
+        "insert_here": "Insert a link here",
+        "missing": "Missing link",
+        "missing_hint": "The cited link no longer exists; the citation is left out of the published output.",
+        "no_news_item_links": "All links of the attached news items are already added",
+        "not_numbered": "A link without a URL gets no number",
+        "number_hint": "Citations of this link show this number",
+        "product_hint": "Sources the product description can cite. In the published product they are numbered first, before the links of its reports.",
+        "product_title": "Links",
+        "url": "URL"
     }
 }

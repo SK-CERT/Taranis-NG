@@ -3,6 +3,7 @@ import { useUserStore } from '@/stores/user'
 import AuthService from '@/services/auth_service'
 import Permissions from '@/services/auth/permissions'
 import { getReportItemData, holdLockReportItem, lockReportItem, unlockReportItem, updateReportItem } from '@/api/analyze'
+import { generateLinkKey } from '@/utils/linkReferences'
 
 type AttributeUser = {
     name?: string
@@ -182,6 +183,8 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                     // The server seeds a new value from the attribute's default_value, so take
                     // what it stored rather than blanking the field the user is about to see.
                     value: toLocalValue(itemData.attribute_value ?? ''),
+                    // A new link comes with the citation key the server gave it.
+                    value_description: String(itemData.attribute_value_description ?? ''),
                     last_updated: itemData.attribute_last_updated,
                     user: { name: String(itemData.attribute_user ?? '') },
                     version: Number(itemData.attribute_version ?? 1)
@@ -191,13 +194,18 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
             }
         } else {
             // Nothing is persisted while a report item is being created, so apply the
-            // attribute's default here instead.
-            props.values.push({
+            // attribute's default here instead - and give a new link its citation key, which
+            // the server keeps when the report item is saved.
+            const value: AttributeValue = {
                 id: -1,
                 index: props.values.length,
                 value: toLocalValue(props.attributeGroup?.attribute?.default_value ?? ''),
                 user: null
-            })
+            }
+            if (props.attributeGroup?.attribute?.type === 'LINK') {
+                value.value_description = generateLinkKey(props.values.map((item) => String(item.value_description ?? '')))
+            }
+            props.values.push(value)
         }
 
         props.values.forEach((val, idx) => {
@@ -394,9 +402,31 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
         )
     }
 
-    const onEdit = async (fieldIndex: number) => {
+    // Saves of one value run one after the other: a save sends the version the previous one
+    // returned, so two overlapping saves (a blur, then an inserted citation) would otherwise
+    // refuse each other as conflicting edits.
+    const pendingSaves = new Map<string, Promise<void>>()
+
+    const onEdit = (fieldIndex: number): Promise<void> => {
         const value = props.values[fieldIndex]
-        if (!value) {
+        if (!value || props.edit !== true) {
+            return Promise.resolve()
+        }
+        const key = String(value.id)
+        const save = (pendingSaves.get(key) ?? Promise.resolve()).then(() => persist(value))
+        pendingSaves.set(key, save)
+        // Only bookkeeping: the caller gets `save` itself, failures included.
+        save.finally(() => {
+            if (pendingSaves.get(key) === save) {
+                pendingSaves.delete(key)
+            }
+        }).catch(() => {})
+        return save
+    }
+
+    const persist = async (value: AttributeValue) => {
+        const fieldIndex = props.values.indexOf(value)
+        if (fieldIndex === -1) {
             return
         }
 
@@ -613,7 +643,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                             id: Number(itemData.attribute_id),
                             index: props.values.length,
                             value: itemData.attribute_value,
-                            value_description: String(itemData.value_description ?? ''),
+                            value_description: String(itemData.attribute_value_description ?? itemData.value_description ?? ''),
                             binary_mime_type: itemData.binary_mime_type,
                             binary_size: itemData.binary_size,
                             binary_description: itemData.binary_description,

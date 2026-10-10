@@ -199,12 +199,46 @@
                         </v-col>
                         <v-col cols="12">
                             <v-textarea
+                                :ref="(field) => setDescriptionField(0, field)"
                                 v-model="product.description"
                                 dir="auto"
                                 :spellcheck="spellcheck"
                                 :label="$t('product.description')"
                                 :disabled="!canModify"
                                 rows="3"
+                                @blur="onDescriptionBlur"
+                                @keyup="trackDescriptionSelection(0)"
+                                @click="trackDescriptionSelection(0)"
+                            >
+                                <template #append-inner>
+                                    <CiteMenu
+                                        :links="productCitableLinks"
+                                        :groups="reportLinkGroups"
+                                        :disabled="!canModify"
+                                        @pick="(link) => citeInDescription(0, link.key)"
+                                        @pick-external="citeReportLink"
+                                    />
+                                </template>
+                            </v-textarea>
+                            <ReferencePreview
+                                :text="product.description"
+                                :resolve="resolveProductCitation"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <div class="text-title-medium">
+                                {{ $t('links.product_title') }}
+                            </div>
+                            <div class="text-body-2 text-medium-emphasis mb-1">
+                                {{ $t('links.product_hint') }}
+                            </div>
+                            <LinkListEditor
+                                :values="productLinks"
+                                :disabled="!canModify"
+                                :citation-count="productCitationCount"
+                                @insert="insertProductLink"
+                                @remove="removeProductLink"
+                                @move="moveProductLink"
                                 @blur="handleUpdateRecord"
                             />
                         </v-col>
@@ -352,7 +386,12 @@
     import StateSelector from '@/components/common/StateSelector.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
+    import CiteMenu from '@/components/common/links/CiteMenu.vue'
+    import LinkListEditor from '@/components/common/links/LinkListEditor.vue'
+    import ReferencePreview from '@/components/common/links/ReferencePreview.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { useCitingField } from '@/composables/useCitingField'
+    import { citedKeys, generateLinkKey, numberLinks, type ExternalLink, type LinkValue } from '@/utils/linkReferences'
 
     type ProductModel = {
         id: number
@@ -362,6 +401,13 @@
         state_id: number | string | undefined
         report_items: Array<{ id: number | string }>
         public_web_ids: Array<number | string>
+        links: ProductLink[]
+    }
+
+    /** A source of the product, cited from its description by key. */
+    type ProductLink = {
+        key: string
+        url: string
     }
 
     type FormRef = {
@@ -371,6 +417,8 @@
 
     type ReportItem = {
         id: number | string
+        title?: string
+        links?: Array<{ key: string | null; url: string }>
         [key: string]: unknown
     }
 
@@ -403,6 +451,7 @@
         state_id: number | string | undefined
         report_items?: ReportItem[]
         public_web_ids?: Array<number | string>
+        links?: ProductLink[]
         modify: boolean
         access: boolean
     }
@@ -415,6 +464,7 @@
         state_id: number | string | undefined
         report_items?: ReportItem[]
         public_web_ids?: Array<number | string>
+        links?: ProductLink[]
     }
 
     const { t } = useI18n()
@@ -445,7 +495,8 @@
         product_type_id: undefined,
         state_id: undefined,
         report_items: [],
-        public_web_ids: []
+        public_web_ids: [],
+        links: []
     })
 
     const selectedType = ref<ProductType | null>(null)
@@ -454,6 +505,86 @@
     const publisherPresets = ref<PublisherPreset[]>([])
     const availableStates = ref<AvailableState[]>([])
     const reportItemSelector = ref<{ openSelector?: () => void } | null>(null)
+
+    // ---- Links ----
+    // Edited in the shape of report attribute values (URL in value, key in value_description),
+    // which is what the link list editor works on; prepareProduct turns them into product links.
+    const productLinks = ref<LinkValue[]>([])
+
+    const toLinkValues = (links: ProductLink[] | undefined): LinkValue[] =>
+        (links || []).map((link) => ({ value: link.url, value_description: link.key }))
+
+    const takenLinkKeys = (): string[] => productLinks.value.map((link) => String(link.value_description ?? ''))
+
+    // The product's own links are numbered first; the links of its reports follow (as core does).
+    const productCitableLinks = computed(() => numberLinks(productLinks.value))
+    const allCitableLinks = computed(() =>
+        numberLinks([
+            ...productLinks.value,
+            ...reportItems.value.flatMap((item) => (item.links || []).map((link) => ({ value: link.url, value_description: link.key })))
+        ])
+    )
+    const citableByKey = computed(() => new Map(allCitableLinks.value.map((link) => [link.key, link])))
+    const resolveProductCitation = (key: string) => citableByKey.value.get(key)
+
+    const productCitationCount = (key: string): number => citedKeys(product.value.description).filter((cited) => cited === key).length
+
+    const reportLinkGroups = computed(() =>
+        reportItems.value
+            .filter((item) => (item.links || []).length > 0)
+            .map((item) => ({ title: String(item.title || item.id), links: (item.links || []) as ExternalLink[] }))
+    )
+
+    function insertProductLink(index: number): void {
+        productLinks.value.splice(index, 0, { value: '', value_description: generateLinkKey(takenLinkKeys()) })
+    }
+
+    function removeProductLink(index: number): void {
+        productLinks.value.splice(index, 1)
+        void handleUpdateRecord()
+    }
+
+    function moveProductLink(from: number, to: number): void {
+        const [moved] = productLinks.value.splice(from, 1)
+        if (!moved) return
+        productLinks.value.splice(to, 0, moved)
+        void handleUpdateRecord()
+    }
+
+    // ---- Citing from the description ----
+    // The description is the one citing "value" (index 0) of the form.
+    const description = {
+        get value(): string {
+            return product.value.description || ''
+        },
+        set value(text: unknown) {
+            product.value.description = String(text ?? '')
+        }
+    }
+    const {
+        setField: setDescriptionField,
+        trackSelection: trackDescriptionSelection,
+        cite: citeInDescription
+    } = useCitingField(
+        () => [description],
+        () => handleUpdateRecord()
+    )
+
+    function onDescriptionBlur(): void {
+        trackDescriptionSelection(0)
+        void handleUpdateRecord()
+    }
+
+    /** Cite a report's link: it becomes one of the product's links (unless it already is), then gets cited. */
+    async function citeReportLink(link: ExternalLink): Promise<void> {
+        const url = link.url.trim()
+        let existing = productLinks.value.find((candidate) => String(candidate.value ?? '').trim() === url)
+        if (!existing) {
+            existing = { value: url, value_description: generateLinkKey(takenLinkKeys()) }
+            productLinks.value.push(existing)
+        }
+        await citeInDescription(0, String(existing.value_description))
+    }
 
     // Validation rules
     const requiredRule = (value: string | number | null | undefined): true | string => !!value || t('common.required')
@@ -499,8 +630,10 @@
             product_type_id: undefined,
             state_id: undefined,
             report_items: [],
-            public_web_ids: []
+            public_web_ids: [],
+            links: []
         }
+        productLinks.value = []
         selectedType.value = null
         isEditMode.value = false
         showError.value = false
@@ -550,6 +683,7 @@
     function snapshotForm() {
         return JSON.stringify({
             product: product.value,
+            links: productLinks.value,
             selectedType: selectedType.value,
             reportItems: reportItems.value,
             publisherPresets: publisherPresets.value.map((p) => ({ id: p.id, selected: p.selected }))
@@ -559,6 +693,30 @@
     function hasUnsavedChanges() {
         if (initialFormState.value === null) return false
         return snapshotForm() !== initialFormState.value
+    }
+
+    /**
+     * Saving a product in a FINAL state (e.g. published) completes its reports on the server -
+     * whether the state was just set or reports were just added. Show the states they have now.
+     */
+    async function refreshReportItemStates(): Promise<void> {
+        if (product.value.id === -1 || !productStateIsFinal.value || reportItems.value.length === 0) return
+
+        try {
+            const response = await getProductById(product.value.id)
+            const stored = new Map(((response.data?.report_items || []) as ReportItem[]).map((item) => [String(item.id), item] as const))
+            // The new states are the server's, not an edit: keep a pristine form pristine.
+            const wasPristine = !hasUnsavedChanges()
+            reportItems.value = reportItems.value.map((item) => {
+                const current = stored.get(String(item.id))
+                return current ? { ...item, state: current['state'], state_id: current['state_id'] } : item
+            })
+            if (wasPristine) {
+                initialFormState.value = snapshotForm()
+            }
+        } catch (error: unknown) {
+            console.error('Failed to refresh the states of the report items:', error)
+        }
     }
 
     function selectDefaultState() {
@@ -581,6 +739,9 @@
         product.value.product_type_id = selectedType.value?.id
         product.value.report_items = reportItems.value.map((item) => ({ id: item.id }))
         product.value.public_web_ids = normalizePublicWebIds(product.value.public_web_ids)
+        product.value.links = productLinks.value
+            .map((link) => ({ key: String(link.value_description ?? ''), url: String(link.value ?? '').trim() }))
+            .filter((link) => link.url)
     }
 
     async function handlePublicWebSelectionChange(): Promise<void> {
@@ -648,6 +809,7 @@
             }
             window.dispatchEvent(new CustomEvent('product-updated'))
             initialFormState.value = snapshotForm()
+            await refreshReportItemStates()
             return true
         } catch {
             showError.value = true
@@ -681,7 +843,9 @@
             initialFormState.value = snapshotForm()
         } catch {
             showError.value = true
+            return
         }
+        await refreshReportItemStates()
     }
 
     function handleCancel(): void {
@@ -869,8 +1033,10 @@
             product_type_id: data.product_type_id,
             state_id: data.state_id,
             report_items: data.report_items || [],
-            public_web_ids: normalizePublicWebIds(data.public_web_ids)
+            public_web_ids: normalizePublicWebIds(data.public_web_ids),
+            links: data.links || []
         }
+        productLinks.value = toLinkValues(data.links)
 
         reportItems.value = Array.isArray(data.report_items) ? [...data.report_items] : []
         selectedType.value = productTypes.value.find((type) => type.id === data.product_type_id) || null
