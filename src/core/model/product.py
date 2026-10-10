@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 
 import sqlalchemy
 from managers.db_manager import db
+from managers.link_references import normalize_links
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.public_web import PublicWeb
@@ -28,6 +29,7 @@ from shared.schema.acl_entry import ItemType
 from shared.schema.product import ProductPresentationSchema, ProductSchemaBase
 from shared.schema.report_item import ReportItemIdSchema
 from sqlalchemy import and_, func, or_, orm
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql.expression import cast
 
 
@@ -67,11 +69,15 @@ class Product(db.Model):
         user_id: User id
         user: User
         report_items: List of report items
+        links: The product's own sources ([{"key", "url"}]) in citation order; the description
+            cites them by key (see managers.link_references)
     """
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(), nullable=False)
     description = db.Column(db.String())
+    # JSONB, not JSON: product queries use SELECT DISTINCT, and Postgres has no equality for json.
+    links = db.Column(JSONB, nullable=False, default=list, server_default=sqlalchemy.text("'[]'"))
 
     created = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now)
@@ -98,6 +104,7 @@ class Product(db.Model):
         state_id: int,
         report_items: list[ReportItem],
         public_web_ids: list[int] | None = None,
+        links: list[dict] | None = None,
     ) -> None:
         """Initialize a product."""
         if id != -1:
@@ -107,6 +114,7 @@ class Product(db.Model):
 
         self.title = title
         self.description = description
+        self.links = normalize_links(links)
         self.product_type_id = product_type_id
         self.state_id = state_id
         self.subtitle = ""
@@ -461,6 +469,11 @@ class Product(db.Model):
         db.session.add(product)
         db.session.commit()
 
+        # A product can be created straight in a FINAL state (e.g. published) with its reports
+        # attached; those reports are completed just as if they had been added to it later.
+        if user and product.report_items:
+            cls._auto_complete_added_reports(product.state_id, user, {report_item.id for report_item in product.report_items})
+
         return product
 
     @classmethod
@@ -483,6 +496,7 @@ class Product(db.Model):
         existing_report_item_ids = {ri.id for ri in original_product.report_items} if original_product.report_items else set()
         original_product.title = product.title
         original_product.description = product.description
+        original_product.links = product.links
         original_product.product_type_id = product.product_type_id
         original_product.state_id = product.state_id
         original_product.report_items = []

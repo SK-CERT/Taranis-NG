@@ -112,6 +112,13 @@
                     </v-menu>
                 </template>
             </template>
+            <template v-if="$slots['toolbar-append']">
+                <v-divider
+                    vertical
+                    class="mx-1 my-1"
+                />
+                <slot name="toolbar-append" />
+            </template>
         </div>
         <div
             class="rich-text-editor__content"
@@ -135,6 +142,7 @@
     import StarterKit from '@tiptap/starter-kit'
     import { Placeholder } from '@tiptap/extensions'
     import { useSpellcheck } from '@/composables/useSpellcheck'
+    import { LINK_TOKEN_RE } from '@/utils/linkReferences'
 
     type Tool = {
         name: string
@@ -151,12 +159,15 @@
             readonly?: boolean
             placeholder?: string
             height?: string
+            /** Links that citations in the text resolve to; null leaves citations unmarked. */
+            citations?: Map<string, { number: number; url: string }> | null
         }>(),
         {
             modelValue: '',
             readonly: false,
             placeholder: '',
-            height: '250px'
+            height: '250px',
+            citations: null
         }
     )
 
@@ -235,6 +246,58 @@
         }
     })
 
+    /**
+     * Mark link citations ("[#k3f9a2]"): the number the cited link has follows the token, and its
+     * title shows the URL. A citation of a link that no longer exists is flagged.
+     */
+    const CitationMarks = Extension.create({
+        name: 'citationMarks',
+        addProseMirrorPlugins() {
+            return [
+                new Plugin({
+                    key: new PluginKey('citationMarks'),
+                    props: {
+                        decorations: (state) => {
+                            const citations = props.citations
+                            if (!citations) {
+                                return null
+                            }
+                            const marks: Decoration[] = []
+                            state.doc.descendants((node, pos) => {
+                                if (!node.isText || !node.text) {
+                                    return
+                                }
+                                for (const match of node.text.matchAll(LINK_TOKEN_RE)) {
+                                    const from = pos + (match.index ?? 0)
+                                    const to = from + match[0].length
+                                    const link = citations.get(match[1] as string)
+                                    const number = link ? `[${link.number}]` : '[?]'
+                                    marks.push(
+                                        Decoration.inline(from, to, {
+                                            class: link ? 'rich-text-citation' : 'rich-text-citation rich-text-citation--missing',
+                                            title: link ? link.url : t('links.missing_hint')
+                                        }),
+                                        Decoration.widget(
+                                            to,
+                                            () => {
+                                                const label = document.createElement('span')
+                                                label.className = 'rich-text-citation__number'
+                                                label.textContent = number
+                                                return label
+                                            },
+                                            { side: 1, key: `${match[1]}:${number}` }
+                                        )
+                                    )
+                                }
+                            })
+                            return DecorationSet.create(state.doc, marks)
+                        }
+                    }
+                })
+            ]
+        }
+    })
+
     // The last value this editor emitted or loaded, so its own echo is not taken for a change.
     let knownValue = props.modelValue || ''
 
@@ -255,7 +318,8 @@
                 }
             }),
             Placeholder.configure({ placeholder: () => props.placeholder }),
-            LinkOpening
+            LinkOpening,
+            CitationMarks
         ],
         editorProps: { attributes: contentAttributes() },
         // The editor is only created on mount, so pick up a value that changed before then.
@@ -293,6 +357,38 @@
     )
 
     watch(spellcheck, () => editor.value?.setOptions({ editorProps: { attributes: contentAttributes() } }))
+
+    // Decorations are only recomputed on a transaction; an empty one redraws them for new links.
+    watch(
+        () => props.citations,
+        () => {
+            const instance = editor.value
+            if (instance && !instance.isDestroyed) {
+                instance.view.dispatch(instance.state.tr.setMeta('citationMarks', true))
+            }
+        }
+    )
+
+    /**
+     * Insert plain text at the cursor (or in place of the selection), separated from a preceding
+     * word by a space - as a citation follows the word it supports.
+     */
+    const insertText = (text: string): void => {
+        const instance = editor.value
+        if (!instance || props.readonly) {
+            return
+        }
+        const { from } = instance.state.selection
+        const before = from > 1 ? instance.state.doc.textBetween(from - 1, from, '\n', '\n') : ''
+        const spacer = before && !/\s/.test(before) ? ' ' : ''
+        instance
+            .chain()
+            .focus()
+            .insertContent({ type: 'text', text: `${spacer}${text}` })
+            .run()
+    }
+
+    defineExpose({ insertText })
 
     // ---- Toolbar ----
     const chain = () => editor.value!.chain().focus()
@@ -512,6 +608,23 @@
 
     .rich-text-editor__content :deep(.ProseMirror a) {
         color: rgb(var(--v-theme-primary));
+    }
+
+    .rich-text-editor__content :deep(.rich-text-citation) {
+        color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+        font-size: 0.85em;
+    }
+
+    .rich-text-editor__content :deep(.rich-text-citation--missing) {
+        color: rgb(var(--v-theme-warning));
+        text-decoration: line-through;
+    }
+
+    .rich-text-editor__content :deep(.rich-text-citation__number) {
+        margin-inline-start: 2px;
+        color: rgb(var(--v-theme-primary));
+        font-weight: 600;
+        user-select: none;
     }
 
     .rich-text-editor__content :deep(.ProseMirror p.is-editor-empty:first-child::before) {

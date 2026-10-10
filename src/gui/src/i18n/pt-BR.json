@@ -2214,5 +2214,26 @@
         "clear_formatting": "Limpar formatação",
         "undo": "Desfazer",
         "redo": "Refazer"
+    },
+    "links": {
+        "add": "Adicionar link",
+        "add_all": "Adicionar todos",
+        "cite": "Citar um link",
+        "cite_no_links": "Adicione um link primeiro para poder citá-lo",
+        "cited": "Citado {count}×",
+        "cited_hint": "Quantas vezes o texto cita este link",
+        "citations": "Links citados",
+        "delete_cited_title": "Excluir um link citado?",
+        "delete_cited_message": "Citações deste link no texto: {count}. Elas serão omitidas na saída publicada.",
+        "from_news_items": "Adicionar dos itens de notícias",
+        "insert_here": "Inserir um link aqui",
+        "missing": "Link inexistente",
+        "missing_hint": "O link citado não existe mais; a citação é omitida na saída publicada.",
+        "no_news_item_links": "Todos os links dos itens de notícias anexados já foram adicionados",
+        "not_numbered": "Um link sem URL não recebe número",
+        "number_hint": "As citações deste link mostram este número",
+        "product_hint": "Fontes que a descrição do produto pode citar. No produto publicado, elas são numeradas primeiro, antes dos links dos seus relatórios.",
+        "product_title": "Links",
+        "url": "URL"
     }
 }

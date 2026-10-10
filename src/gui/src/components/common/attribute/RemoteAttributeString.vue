@@ -5,12 +5,20 @@
             :key="value.id"
             class="remote-values__item"
         >
-            {{ value.value }}
+            <CitedText
+                :text="value.value"
+                :resolve="references.resolve"
+            />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+    import CitedText from '@/components/common/links/CitedText.vue'
+    import { useLinkReferences } from '@/composables/useLinkReferences'
+
+    const references = useLinkReferences()
+
     type RemoteAttributeValue = {
         id: number | string
         value?: string

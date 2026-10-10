@@ -2214,5 +2214,26 @@
         "clear_formatting": "Effacer la mise en forme",
         "undo": "Annuler",
         "redo": "Rétablir"
+    },
+    "links": {
+        "add": "Ajouter un lien",
+        "add_all": "Tout ajouter",
+        "cite": "Citer un lien",
+        "cite_no_links": "Ajoutez d'abord un lien pour pouvoir le citer",
+        "cited": "Cité {count}×",
+        "cited_hint": "Nombre de fois où le texte cite ce lien",
+        "citations": "Liens cités",
+        "delete_cited_title": "Supprimer un lien cité ?",
+        "delete_cited_message": "Citations de ce lien dans le texte : {count}. Elles seront omises dans le résultat publié.",
+        "from_news_items": "Ajouter depuis les actualités",
+        "insert_here": "Insérer un lien ici",
+        "missing": "Lien manquant",
+        "missing_hint": "Le lien cité n'existe plus ; la citation est omise dans le résultat publié.",
+        "no_news_item_links": "Tous les liens des actualités jointes sont déjà ajoutés",
+        "not_numbered": "Un lien sans URL ne reçoit pas de numéro",
+        "number_hint": "Les citations de ce lien affichent ce numéro",
+        "product_hint": "Sources que la description du produit peut citer. Dans le produit publié, elles sont numérotées en premier, avant les liens de ses rapports.",
+        "product_title": "Liens",
+        "url": "URL"
     }
 }

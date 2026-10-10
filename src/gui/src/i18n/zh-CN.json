@@ -2214,5 +2214,26 @@
         "clear_formatting": "清除格式",
         "undo": "撤销",
         "redo": "重做"
+    },
+    "links": {
+        "add": "添加链接",
+        "add_all": "全部添加",
+        "cite": "引用链接",
+        "cite_no_links": "请先添加链接才能引用",
+        "cited": "已引用 {count} 次",
+        "cited_hint": "正文引用此链接的次数",
+        "citations": "已引用的链接",
+        "delete_cited_title": "删除已被引用的链接？",
+        "delete_cited_message": "正文中对此链接的引用：{count}。它们将在发布的输出中被省略。",
+        "from_news_items": "从新闻条目添加",
+        "insert_here": "在此插入链接",
+        "missing": "链接不存在",
+        "missing_hint": "被引用的链接已不存在；该引用将在发布的输出中被省略。",
+        "no_news_item_links": "附加新闻条目的所有链接均已添加",
+        "not_numbered": "没有 URL 的链接不会编号",
+        "number_hint": "此链接的引用显示此编号",
+        "product_hint": "产品描述可以引用的来源。在发布的产品中，它们先于其报告的链接编号。",
+        "product_title": "链接",
+        "url": "URL"
     }
 }

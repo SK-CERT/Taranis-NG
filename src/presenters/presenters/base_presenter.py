@@ -11,7 +11,6 @@ import datetime
 import io
 import json
 import os
-import re
 import types
 from base64 import b64encode
 from pathlib import Path
@@ -288,32 +287,6 @@ class BasePresenter:
 
             return cvss_dict
 
-        def link_renumbering(self, text: str, report_links: list, product_links: list) -> str:
-            """Replace the numbers enclosed in brackets in the given text with the corresponding indices from product_links.
-
-            Parameters
-            Args:
-                text (str): The text in which the numbers enclosed in brackets will be replaced.
-                report_links (list): The list of report links.
-                product_links (list): The list of product links.
-
-            Returns:
-                str: The updated text with the numbers enclosed in brackets replaced by the corresponding indices from product_links.
-
-            """
-            pattern = r"\[(\d+)\]"
-
-            # Create a mapping from old indices to new indices
-            mapping = {old_index + 1: product_links.index(item) + 1 for old_index, item in enumerate(report_links)}
-
-            # Use a regular expression to find all instances of numbers enclosed in brackets
-            def replace_match(match: re.Match) -> str:
-                old_index = int(match.group(1))
-                new_index = mapping.get(old_index, old_index)  # Use the old index as a fallback
-                return f"[{new_index}]"
-
-            return re.sub(pattern, replace_match, text)
-
         def __init__(self, presenter_input: any) -> None:
             """Initialize the object.
 
@@ -329,13 +302,16 @@ class BasePresenter:
             attribute_map = self._build_attribute_map(presenter_input.report_types)
 
             self.report_items = [BasePresenter.ReportItemObject(report, report_types, attribute_map) for report in presenter_input.reports]
+            # Core renders the link citations before it sends the input: the texts already cite
+            # "[n]", where n is the position in this merged list of the product's sources.
+            if getattr(self.product, "links", None) is None:
+                self.product.links = []
 
-            vul_report_count, product_links = self._process_vul_reports(self.report_items)
+            vul_report_count = self._process_vul_reports(self.report_items)
 
             if vul_report_count > 0:
                 self.product.max_tlp = self.get_max_tlp(self.report_items)
                 self.product.max_cvss = self.get_max_cvss(self.report_items)
-                self.product.links = product_links
 
         def _build_report_types(self, report_types_input: list) -> dict:
             """Build report types dictionary."""
@@ -350,41 +326,15 @@ class BasePresenter:
                         attribute_map[attribute_group_item.id] = attribute_group_item
             return attribute_map
 
-        def _process_vul_reports(self, report_items: list) -> tuple[int, list]:
-            """Process vulnerability reports, renumber links and calculate CVSS."""
+        def _process_vul_reports(self, report_items: list) -> int:
+            """Calculate the CVSS of vulnerability reports and return how many there are."""
             vul_report_count = 0
-            product_links = []
             for report in report_items:
                 if not report.type.startswith("Vulnerability Report"):
                     continue
                 vul_report_count += 1
-                self._update_product_links(report, product_links)
-                self._renumber_report_links(report, product_links)
                 self._update_cvss(report)
-            return vul_report_count, product_links
-
-        def _update_product_links(self, report: any, product_links: list) -> None:
-            """Update product links from report links."""
-            if hasattr(report.attrs, "links"):
-                for link in report.attrs.links:
-                    if link not in product_links:
-                        product_links.append(link)
-
-        def _renumber_report_links(self, report: any, product_links: list) -> None:
-            """Renumber links in description and recommendations."""
-            if hasattr(report.attrs, "links"):
-                if hasattr(report.attrs, "description"):
-                    report.attrs.description = self.link_renumbering(
-                        report.attrs.description,
-                        report.attrs.links,
-                        product_links,
-                    )
-                if hasattr(report.attrs, "recommendations"):
-                    report.attrs.recommendations = self.link_renumbering(
-                        report.attrs.recommendations,
-                        report.attrs.links,
-                        product_links,
-                    )
+            return vul_report_count
 
         def _update_cvss(self, report: any) -> None:
             """Update CVSS value."""

@@ -2214,5 +2214,26 @@
         "clear_formatting": "Biçimlendirmeyi temizle",
         "undo": "Geri al",
         "redo": "Yinele"
+    },
+    "links": {
+        "add": "Bağlantı ekle",
+        "add_all": "Tümünü ekle",
+        "cite": "Bağlantıya atıf yap",
+        "cite_no_links": "Atıf yapmak için önce bir bağlantı ekleyin",
+        "cited": "{count}× atıf",
+        "cited_hint": "Metnin bu bağlantıya kaç kez atıf yaptığı",
+        "citations": "Atıf yapılan bağlantılar",
+        "delete_cited_title": "Atıf yapılan bağlantı silinsin mi?",
+        "delete_cited_message": "Metinde bu bağlantıya yapılan atıflar: {count}. Yayımlanan çıktıda bunlar çıkarılacak.",
+        "from_news_items": "Haber öğelerinden ekle",
+        "insert_here": "Buraya bağlantı ekle",
+        "missing": "Eksik bağlantı",
+        "missing_hint": "Atıf yapılan bağlantı artık yok; atıf yayımlanan çıktıda çıkarılır.",
+        "no_news_item_links": "Ekli haber öğelerinin tüm bağlantıları zaten eklendi",
+        "not_numbered": "URL'si olmayan bağlantı numara almaz",
+        "number_hint": "Bu bağlantıya yapılan atıflar bu numarayı gösterir",
+        "product_hint": "Ürün açıklamasının atıf yapabileceği kaynaklar. Yayımlanan üründe raporlarının bağlantılarından önce numaralandırılır.",
+        "product_title": "Bağlantılar",
+        "url": "URL"
     }
 }

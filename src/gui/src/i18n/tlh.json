@@ -2214,5 +2214,26 @@
         "clear_formatting": "Segh yIteq",
         "undo": "yIchegh",
         "redo": "yIqaSmoHqa'"
+    },
+    "links": {
+        "add": "rarwI' yIchel",
+        "add_all": "Hoch yIchel",
+        "cite": "rarwI' yIngu'",
+        "cite_no_links": "wa'DIch rarwI' yIchel, vaj yIngu'",
+        "cited": "{count}-logh ngu'lu'",
+        "cited_hint": "rarwI'vam ngu' ghItlh, 'ar logh?",
+        "citations": "rarwI'mey ngu'lu'pu'bogh",
+        "delete_cited_title": "rarwI' ngu'lu'pu'bogh DaQaw'?",
+        "delete_cited_message": "ghItlhDaq rarwI'vam ngu'meH mI': {count}. ghItlh DelaHbogh Daq chaH tu'lu'be'.",
+        "from_news_items": "De'mey chu'vo' yIchel",
+        "insert_here": "naDev rarwI' yIlIH",
+        "missing": "rarwI' Dachlu'",
+        "missing_hint": "rarwI' ngu'lu'pu'bogh tu'lu'be'; ghItlh DelaHbogh Daq ngu'meH tu'lu'be'.",
+        "no_news_item_links": "De'mey chu' rarwI'mey Hoch chellu'pu'",
+        "not_numbered": "URL Hutlhbogh rarwI' mI' Hev ghobe'",
+        "number_hint": "rarwI'vam ngu'meH mI'vam cha'",
+        "product_hint": "Hal'a' ngu'laH Delghach. Delghach DelaHbogh Daq wa'DIch mI' lunob, ja'meymey rarwI'mey nI'.",
+        "product_title": "rarwI'mey",
+        "url": "URL"
     }
 }

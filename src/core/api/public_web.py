@@ -6,7 +6,8 @@ exactly like the other nodes, via ``api_key_required("public_web")``.
 
 The product detail is serialized directly from the database models into a small,
 purpose-built structure (product info + report items with their attributes); no
-presenter is involved.
+presenter is involved. Link citations are rendered here, so a node only ever sees
+numbered ``[n]`` references and the merged ``links`` list they index.
 """
 
 import io
@@ -16,6 +17,7 @@ from flask import request, send_file
 from flask_restful import Api, Resource
 from managers.auth_manager import api_key_required
 from managers.db_manager import db
+from managers.link_references import CITING_TYPES, ReferenceIndex, build_index
 from managers.log_manager import logger
 from model.product import Product, ProductPublicWeb
 from model.public_web import PublicWeb
@@ -35,30 +37,47 @@ def _serialize_web(web: PublicWeb) -> dict:
     }
 
 
-def _serialize_attribute(attribute) -> list[dict]:  # noqa: ANN001
-    """Serialize one report item attribute into one or more entries.
+def _attribute_type(attribute) -> AttributeType | None:  # noqa: ANN001
+    """Return the type of a report item attribute, if its definition is known."""
+    return getattr(getattr(attribute.attribute_group_item, "attribute", None), "type", None)
+
+
+def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict) -> list[dict]:  # noqa: ANN001
+    """Serialize one report item attribute into zero or more entries.
 
     The key is derived from the attribute group item title ("Affected systems"
     -> "affected_systems"). Repeated keys mean multiple values of the same
     attribute; consumers group them as needed. A multiple choice attribute keeps
     its ticked values newline-joined in a single row, so it fans out into one
     entry per ticked value rather than exposing the joined string.
+
+    Citing text has its link references rendered to ``[n]``. A link is reported by
+    its URL alone (its citation key stays internal), and a link without URL is left out.
     """
     group_item = attribute.attribute_group_item
     key = group_item.title.lower().replace(" ", "_") if group_item and group_item.title else ""
-    definition = getattr(group_item, "attribute", None)
+    attribute_type = _attribute_type(attribute)
+    type_name = attribute_type.name if attribute_type else None
 
-    if getattr(definition, "type", None) == AttributeType.MULTI_CHOICE:
+    if attribute_type == AttributeType.MULTI_CHOICE:
         return [
-            {"key": key, "value": selected, "description": attribute.value_description}
+            {"key": key, "type": type_name, "value": selected, "description": attribute.value_description}
             for selected in (attribute.value or "").split("\n")
             if selected
         ]
 
+    if attribute_type == AttributeType.LINK:
+        url = (attribute.value or "").strip()
+        return [{"key": key, "type": type_name, "value": url, "description": None}] if url else []
+
+    value = attribute.value
+    if type_name in CITING_TYPES:
+        value = index.render(value, local_numbers)
     return [
         {
             "key": key,
-            "value": attribute.value,
+            "type": type_name,
+            "value": value,
             "description": attribute.value_description,
         },
     ]
@@ -66,8 +85,13 @@ def _serialize_attribute(attribute) -> list[dict]:  # noqa: ANN001
 
 def _serialize_product(product: Product) -> dict:
     """Serialize a product with its report items and attributes for the public web feed."""
+    index, local_numbers = build_index(
+        product.links,
+        [[(link["key"], link["url"]) for link in report_item.links] for report_item in product.report_items],
+    )
+
     report_items = []
-    for report_item in product.report_items:
+    for report_item, local in zip(product.report_items, local_numbers, strict=True):
         report_type = report_item.report_item_type
         report_items.append(
             {
@@ -78,7 +102,7 @@ def _serialize_product(product: Product) -> dict:
                 "last_updated": report_item.last_updated.isoformat() if report_item.last_updated else None,
                 "type": report_type.title if report_type else None,
                 "type_description": report_type.description if report_type else None,
-                "attributes": [entry for attribute in report_item.attributes for entry in _serialize_attribute(attribute)],
+                "attributes": [entry for attribute in report_item.attributes for entry in _serialize_attribute(attribute, index, local)],
             },
         )
 
@@ -86,7 +110,8 @@ def _serialize_product(product: Product) -> dict:
     return {
         "id": product.id,
         "title": product.title,
-        "description": product.description,
+        "description": index.render(product.description),
+        "links": list(index.urls),
         "created": product.created.isoformat() if product.created else None,
         "user": {"name": user.name, "username": user.username} if user else None,
         "report_items": report_items,

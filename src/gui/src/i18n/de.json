@@ -2214,5 +2214,26 @@
         "clear_formatting": "Formatierung löschen",
         "undo": "Rückgängig",
         "redo": "Wiederholen"
+    },
+    "links": {
+        "add": "Link hinzufügen",
+        "add_all": "Alle hinzufügen",
+        "cite": "Link zitieren",
+        "cite_no_links": "Fügen Sie zuerst einen Link hinzu, um ihn zu zitieren",
+        "cited": "{count}× zitiert",
+        "cited_hint": "Wie oft der Text diesen Link zitiert",
+        "citations": "Zitierte Links",
+        "delete_cited_title": "Zitierten Link löschen?",
+        "delete_cited_message": "Zitate dieses Links im Text: {count}. Sie werden in der veröffentlichten Ausgabe weggelassen.",
+        "from_news_items": "Aus Nachrichtenbeiträgen hinzufügen",
+        "insert_here": "Hier einen Link einfügen",
+        "missing": "Fehlender Link",
+        "missing_hint": "Der zitierte Link existiert nicht mehr; das Zitat wird in der veröffentlichten Ausgabe weggelassen.",
+        "no_news_item_links": "Alle Links der angehängten Nachrichtenbeiträge sind bereits hinzugefügt",
+        "not_numbered": "Ein Link ohne URL erhält keine Nummer",
+        "number_hint": "Zitate dieses Links zeigen diese Nummer",
+        "product_hint": "Quellen, die die Produktbeschreibung zitieren kann. Im veröffentlichten Produkt werden sie zuerst nummeriert, vor den Links seiner Berichte.",
+        "product_title": "Links",
+        "url": "URL"
     }
 }
