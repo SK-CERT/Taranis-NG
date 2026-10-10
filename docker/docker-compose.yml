@@ -127,9 +127,14 @@ services:
       # for the GUI. Unused on a single host: the satellites there reach core at
       # http://core over the compose network and never traverse Traefik at all,
       # which is why the published port below binds to loopback by default.
+      #
+      # /api/v1/isalive is here as well as on :443: a collectors node waits for it
+      # to answer 200 before it starts collecting or sending the heartbeat that
+      # drives its status, so without it a remote node sits red forever. It is
+      # unauthenticated and already public on :443, so this exposes nothing new.
       traefik.http.routers.taranis-api-satellite.entrypoints: "satellite"
       traefik.http.routers.taranis-api-satellite.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && (PathPrefix(`/api/v1/collectors`)
-        || PathPrefix(`/api/v1/bots`) || PathPrefix(`/api/v1/public-web`))"
+        || PathPrefix(`/api/v1/bots`) || PathPrefix(`/api/v1/public-web`) || Path(`/api/v1/isalive`))"
       traefik.http.routers.taranis-api-satellite.tls: "true"
       traefik.http.routers.taranis-api-satellite.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-api-satellite.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-}"
