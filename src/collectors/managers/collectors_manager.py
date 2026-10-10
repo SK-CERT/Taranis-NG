@@ -72,9 +72,9 @@ def initialize() -> None:
 def initialize_after_core_is_ready() -> None:
     """Wait for Core, then start reporting and initialize the collectors."""
     attempt = 0
+    logger.debug("Awaiting initialization of CORE (timeout: 10s)")
     while True:
         attempt += 1
-        logger.debug(f"Awaiting initialization of CORE (timeout: 10s, attempt {attempt})")
         response, status_code = CoreApi.is_live(show_error=False)
         if status_code == HTTPStatus.OK:
             break
