@@ -703,9 +703,28 @@ be fixed.
   problem is the certificate or the node's API key.
 
   Remember this port carries *all* worker→Core traffic, not just the provider:
-  `/api/v1/{collectors,bots,public-web}` and `/sse` too. So a node can register
-  successfully — registration is control-host→Core on 443 plus Core→worker on
-  `worker_api_port`, neither of which uses this leg — and then do no work at all.
+  `/api/v1/{collectors,bots,public-web}`, `/api/v1/isalive` and `/sse` too. So a
+  node can register successfully — registration is control-host→Core on 443 plus
+  Core→worker on `worker_api_port`, neither of which uses this leg — and then do
+  no work at all.
+- **A collectors node registers but stays red, and its log ends after gunicorn
+  boots**: the node is still waiting for Core. It collects nothing and sends no
+  heartbeat (the heartbeat is what turns the node green) until
+  `<core>:8443/api/v1/isalive` answers 200. Ask from inside the node:
+
+  ```bash
+  cd /etc/taranis-ng
+  docker compose -f docker-compose.worker.yml exec -T collectors python -c \
+    "import os, requests; print(requests.get(os.environ['TARANIS_NG_CORE_URL'] + '/api/v1/isalive', timeout=10).status_code)"
+  ```
+
+  `200` is healthy. `404` means Core's Traefik doesn't route `/api/v1/isalive` on
+  the satellite entrypoint: the `taranis-api-satellite` rule in
+  `docker/docker-compose.yml` must include `` Path(`/api/v1/isalive`) ``. Older
+  stacks lack it; update and run `docker compose up -d core`, and the node
+  starts within 10 s without a restart. A timeout or refusal is the
+  satellite-port problem described in the previous entry. Newer collectors
+  images log a `Waiting for core` warning about once a minute while this lasts.
 - **A public web serves the wrong certificate, or 404s every hostname**: the
   worker's Traefik could not poll `/traefik/dynamic/node`. Check that the Core
   host publishes its satellite port (`TARANIS_NG_SATELLITE_BIND` / `_BIND6`) and
