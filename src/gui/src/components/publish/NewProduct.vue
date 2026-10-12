@@ -774,7 +774,7 @@
         // until either promise resolves loses browser user activation and may
         // cause the preview to be blocked as an unsolicited popup.
         const previewWindow = openBlankTabWithoutOpener()
-        const ctrl = Boolean(event?.ctrlKey)
+        const ctrl = Boolean(event?.ctrlKey || event?.metaKey)
 
         try {
             const { valid } = (await formRef.value?.validate?.()) || { valid: false }
