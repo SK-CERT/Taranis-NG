@@ -133,5 +133,20 @@ def test_product_descriptions_use_the_old_product_wide_numbering() -> None:
 def test_the_upgrade_converts_reports_before_product_descriptions() -> None:
     upgrade = _function("upgrade")
     source = ast.get_source_segment(MIGRATION.read_text(encoding="utf-8"), upgrade)
-    assert {"autocommit_block", "_add_product_links", "_switch_links_items", "_key_report_links"} <= _calls(upgrade)
+    assert {"autocommit_block", "_add_product_links", "_ensure_attribute", "_switch_links_items", "_key_report_links"} <= _calls(upgrade)
     assert source.index("_key_report_links") < source.index("_rewrite_report_text") < source.index("_rewrite_product_descriptions")
+
+
+def test_the_upgrade_ensures_the_default_link_and_rich_text_attributes() -> None:
+    """Both are created only where no attribute of their type exists yet."""
+    module = _load()
+    assert (module.RICH_TEXT_TYPE, module.RICH_TEXT_ATTRIBUTE_NAME) == ("RICH_TEXT", "Rich Text")
+    assert module.RICH_TEXT_TYPE in module.CITING_TYPES
+
+    upgrade = _source("upgrade")
+    assert "(LINK_TYPE, RICH_TEXT_TYPE)" in upgrade
+    assert "_ensure_attribute(connection, LINK_TYPE, LINK_ATTRIBUTE_NAME, LINK_ATTRIBUTE_DESCRIPTION)" in upgrade
+    assert "_ensure_attribute(connection, RICH_TEXT_TYPE, RICH_TEXT_ATTRIBUTE_NAME, RICH_TEXT_ATTRIBUTE_DESCRIPTION)" in upgrade
+
+    ensure = _source("_ensure_attribute")
+    assert ensure.index("WHERE type::text = :type") < ensure.index("INSERT INTO attribute")

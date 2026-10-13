@@ -149,11 +149,11 @@ describe('NewProduct links', () => {
         expect(lastSaved().description).toBe('Intro [#prod01]')
     })
 
-    it('resolves citations of report links in the description, numbered after the product links', async () => {
+    it('resolves citations of report links in the description', async () => {
         const wrapper = await openProduct(productDetail({ description: 'Our note [#prod01], NVD [#rep1bb].' }))
 
         const chips = wrapper.findAll('[data-test="reference-preview"] [data-test="reference-chip"]').map((chip) => chip.text())
-        expect(chips).toEqual(['[1]blog.example/post', '[3]nvd.nist.gov/vuln/detail/CVE-2026-0001'])
+        expect(chips).toEqual(['[#prod01]blog.example/post', '[#rep1bb]nvd.nist.gov/vuln/detail/CVE-2026-0001'])
         expect(wrapper.find('[data-test="reference-missing"]').exists()).toBe(false)
     })
 })

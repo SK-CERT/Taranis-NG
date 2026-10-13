@@ -196,13 +196,16 @@ describe('citing links from text attributes', () => {
         })
 
         const offered = wrapper.findAll('[data-test="cite-link"]')
-        expect(offered.map((item) => item.text())).toEqual(['[1]vendor.example/advisory', '[2]nvd.nist.gov/vuln/detail/CVE-2026-0001'])
+        expect(offered.map((item) => item.text())).toEqual([
+            '[#aaaaaa]vendor.example/advisory',
+            '[#bbbbbb]nvd.nist.gov/vuln/detail/CVE-2026-0001'
+        ])
 
         await offered[1].trigger('click')
         await flushPromises()
 
         expect(textValues[0].value).toBe('Fixed upstream [#bbbbbb]')
-        expect(wrapper.find('[data-test="reference-chip"]').text()).toBe('[2]nvd.nist.gov/vuln/detail/CVE-2026-0001')
+        expect(wrapper.find('[data-test="reference-chip"]').text()).toBe('[#bbbbbb]nvd.nist.gov/vuln/detail/CVE-2026-0001')
     })
 
     it('saves an inserted citation in edit mode', async () => {
@@ -218,7 +221,7 @@ describe('citing links from text attributes', () => {
     it('flags a citation whose link was deleted', () => {
         const { wrapper } = mountForm({ links: [linkValue(1, VENDOR, 'aaaaaa')], text: 'See [#gone00] and [#aaaaaa]' })
 
-        expect(wrapper.find('[data-test="reference-missing"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="reference-missing"]').text()).toContain('[#gone00]')
         expect(wrapper.findAll('[data-test="reference-chip"]')).toHaveLength(1)
     })
 })

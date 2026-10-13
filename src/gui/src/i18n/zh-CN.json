@@ -2220,6 +2220,8 @@
         "add_all": "全部添加",
         "cite": "引用链接",
         "cite_no_links": "请先添加链接才能引用",
+        "cite_no_match": "没有与搜索匹配的链接",
+        "cite_search": "搜索链接",
         "cited": "已引用 {count} 次",
         "cited_hint": "正文引用此链接的次数",
         "citations": "已引用的链接",

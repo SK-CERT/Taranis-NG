@@ -329,8 +329,10 @@ changes what a citation points at.
   **+** between two rows inserts a link there, and **Add from news items** adds the source URLs
   of the attached news items. Deleting a link that is cited asks first.
 - Every text attribute (Text, Text Area, Rich Text) has a cite button that inserts a citation at
-  the cursor. Under the field, each citation shows the link it resolves to, and a citation of a
-  deleted link is flagged.
+  the cursor. It lists the links by their tokens, and with more than 8 links it offers a search by
+  URL or token. Under the field, each citation shows its token and the link it resolves to, and a
+  citation of a deleted link is flagged. A default **Rich Text** attribute is available to add to
+  report types.
 - A product has links of its own, which its description cites the same way. Its cite button also
   offers the links of the product's reports; citing one copies it into the product's links.
 

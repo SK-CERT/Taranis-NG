@@ -2220,6 +2220,8 @@
         "add_all": "Dodaj wszystkie",
         "cite": "Cytuj łącze",
         "cite_no_links": "Najpierw dodaj łącze, aby je zacytować",
+        "cite_no_match": "Żadne łącze nie pasuje do wyszukiwania",
+        "cite_search": "Szukaj łączy",
         "cited": "Cytowano {count}×",
         "cited_hint": "Ile razy tekst cytuje to łącze",
         "citations": "Cytowane łącza",

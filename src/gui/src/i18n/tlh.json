@@ -2220,6 +2220,8 @@
         "add_all": "Hoch yIchel",
         "cite": "rarwI' yIngu'",
         "cite_no_links": "wa'DIch rarwI' yIchel, vaj yIngu'",
+        "cite_no_match": "rarwI' tu'lu'be'",
+        "cite_search": "rarwI'mey yInej",
         "cited": "{count}-logh ngu'lu'",
         "cited_hint": "rarwI'vam ngu' ghItlh, 'ar logh?",
         "citations": "rarwI'mey ngu'lu'pu'bogh",

@@ -2220,6 +2220,8 @@
         "add_all": "Aggiungi tutti",
         "cite": "Cita un collegamento",
         "cite_no_links": "Aggiungi prima un collegamento per poterlo citare",
+        "cite_no_match": "Nessun collegamento corrisponde alla ricerca",
+        "cite_search": "Cerca collegamenti",
         "cited": "Citato {count}×",
         "cited_hint": "Quante volte il testo cita questo collegamento",
         "citations": "Collegamenti citati",

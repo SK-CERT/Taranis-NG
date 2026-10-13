@@ -2220,6 +2220,8 @@
         "add_all": "すべて追加",
         "cite": "リンクを引用",
         "cite_no_links": "引用するには、まずリンクを追加してください",
+        "cite_no_match": "検索に一致するリンクはありません",
+        "cite_search": "リンクを検索",
         "cited": "{count}回引用",
         "cited_hint": "本文がこのリンクを引用している回数",
         "citations": "引用されたリンク",

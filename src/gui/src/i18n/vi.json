@@ -2220,6 +2220,8 @@
         "add_all": "Thêm tất cả",
         "cite": "Trích dẫn liên kết",
         "cite_no_links": "Hãy thêm liên kết trước để trích dẫn",
+        "cite_no_match": "Không có liên kết nào khớp với tìm kiếm",
+        "cite_search": "Tìm liên kết",
         "cited": "Trích dẫn {count}×",
         "cited_hint": "Số lần văn bản trích dẫn liên kết này",
         "citations": "Liên kết được trích dẫn",

@@ -2220,6 +2220,8 @@
         "add_all": "모두 추가",
         "cite": "링크 인용",
         "cite_no_links": "인용하려면 먼저 링크를 추가하세요",
+        "cite_no_match": "검색과 일치하는 링크가 없습니다",
+        "cite_search": "링크 검색",
         "cited": "{count}회 인용됨",
         "cited_hint": "본문에서 이 링크를 인용한 횟수",
         "citations": "인용된 링크",

@@ -2220,6 +2220,8 @@
         "add_all": "Alles toevoegen",
         "cite": "Een koppeling citeren",
         "cite_no_links": "Voeg eerst een koppeling toe om die te citeren",
+        "cite_no_match": "Geen koppeling komt overeen met de zoekopdracht",
+        "cite_search": "Koppelingen zoeken",
         "cited": "{count}× geciteerd",
         "cited_hint": "Hoe vaak de tekst deze koppeling citeert",
         "citations": "Geciteerde koppelingen",

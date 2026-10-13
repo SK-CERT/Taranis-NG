@@ -2220,6 +2220,8 @@
         "add_all": "Přidat vše",
         "cite": "Citovat odkaz",
         "cite_no_links": "Nejprve přidejte odkaz, abyste ho mohli citovat",
+        "cite_no_match": "Hledání neodpovídá žádný odkaz",
+        "cite_search": "Hledat odkazy",
         "cited": "Citováno {count}×",
         "cited_hint": "Kolikrát text tento odkaz cituje",
         "citations": "Citované odkazy",

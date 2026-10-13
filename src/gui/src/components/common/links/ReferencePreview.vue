@@ -21,7 +21,11 @@
                 :title="entry.link.url"
                 data-test="reference-chip"
             >
-                <span class="reference-preview__number">[{{ entry.link.number }}]</span>
+                <bdi
+                    dir="ltr"
+                    class="reference-preview__token"
+                    >{{ linkToken(entry.key) }}</bdi
+                >
                 <bdi dir="ltr">{{ shortUrl(entry.link.url) }}</bdi>
             </v-chip>
             <v-chip
@@ -34,6 +38,11 @@
                 :title="t('links.missing_hint')"
                 data-test="reference-missing"
             >
+                <bdi
+                    dir="ltr"
+                    class="reference-preview__token"
+                    >{{ linkToken(entry.key) }}</bdi
+                >
                 {{ t('links.missing') }}
             </v-chip>
         </template>
@@ -44,9 +53,9 @@
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
-    import { citedKeys, isHttpUrl, shortUrl, type CitableLink } from '@/utils/linkReferences'
+    import { citedKeys, isHttpUrl, linkToken, shortUrl, type CitableLink } from '@/utils/linkReferences'
 
-    /** Shows what each citation in a text resolves to, and flags citations of removed links. */
+    /** Shows each citation's token with the link it resolves to, and flags citations of removed links. */
     const props = defineProps<{
         text: unknown
         resolve: (key: string) => CitableLink | undefined
@@ -64,7 +73,7 @@
 </script>
 
 <style scoped>
-    .reference-preview__number {
+    .reference-preview__token {
         margin-inline-end: 4px;
         font-weight: 600;
     }

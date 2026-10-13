@@ -12,10 +12,12 @@ This revision converts the existing data, so no positional citations remain:
    no equality operator for json.
 2. A "Link" attribute of type LINK is ensured, and every attribute group item titled "Links"
    that used a STRING or TEXT attribute is switched to it.
-3. Every LINK value gets a key (kept in ``value_description``).
-4. In report text (STRING, TEXT and RICH_TEXT values, remote report items included), "[n]"
+3. A "Rich Text" attribute of type RICH_TEXT is ensured, so a report type can offer formatted
+   text that cites the links.
+4. Every LINK value gets a key (kept in ``value_description``).
+5. In report text (STRING, TEXT and RICH_TEXT values, remote report items included), "[n]"
    becomes the token of the report's n-th link.
-5. In product descriptions, "[n]" used the product-wide numbering the presenter built: the
+6. In product descriptions, "[n]" used the product-wide numbering the presenter built: the
    links of the product's vulnerability reports, de-duplicated. It becomes the token of that
    link. A product of vulnerability reports keeps its numbers; in one that mixes report
    types, the links of the other reports are numbered now as well, which can shift later
@@ -57,6 +59,9 @@ depends_on = None
 LINK_TYPE = "LINK"
 LINK_ATTRIBUTE_NAME = "Link"
 LINK_ATTRIBUTE_DESCRIPTION = "Source link; text attributes of the report can cite it"
+RICH_TEXT_TYPE = "RICH_TEXT"
+RICH_TEXT_ATTRIBUTE_NAME = "Rich Text"
+RICH_TEXT_ATTRIBUTE_DESCRIPTION = "Formatted text area; it can cite the report's links"
 # What the "Links" group items used before; the downgrade switches them back to it.
 TEXT_ATTRIBUTE_NAME = "Text"
 LINKS_TITLE_KEY = "links"
@@ -160,11 +165,11 @@ def _add_product_links(connection: Connection) -> None:
         op.execute("ALTER TABLE product ALTER COLUMN links SET DEFAULT '[]'::jsonb")
 
 
-def _link_attribute_id(connection: Connection) -> int:
-    """Return the id of a LINK attribute, creating the "Link" attribute when there is none."""
+def _ensure_attribute(connection: Connection, attribute_type: str, name: str, description: str) -> int:
+    """Return the id of an attribute of ``attribute_type``, creating one when there is none."""
     existing = connection.execute(
         sa.text("SELECT id FROM attribute WHERE type::text = :type ORDER BY id LIMIT 1"),
-        {"type": LINK_TYPE},
+        {"type": attribute_type},
     ).scalar()
     if existing is not None:
         return existing
@@ -179,7 +184,7 @@ def _link_attribute_id(connection: Connection) -> int:
             f'VALUES (:name, :description, CAST(:type AS "{type_name}"), NULL, CAST(:validator AS "{validator_type}"), NULL) '
             "RETURNING id",
         ),
-        {"name": LINK_ATTRIBUTE_NAME, "description": LINK_ATTRIBUTE_DESCRIPTION, "type": LINK_TYPE, "validator": "NONE"},
+        {"name": name, "description": description, "type": attribute_type, "validator": "NONE"},
     ).scalar_one()
 
 
@@ -295,14 +300,17 @@ def _rewrite_product_descriptions(connection: Connection, links: dict, pattern: 
 def upgrade() -> None:
     """Store link keys, give products links, and turn positional citations into key tokens."""
     type_name = _enum_type_name(op.get_bind(), "attribute", "type")
-    # LINK has been part of the enum since the early revisions; make sure, outside the
-    # transaction, because Postgres refuses to use a label added in the same one.
+    # LINK and RICH_TEXT have been part of the enum since the early revisions; make sure, outside
+    # the transaction, because Postgres refuses to use a label added in the same one.
     with op.get_context().autocommit_block():
-        op.execute(f"ALTER TYPE \"{type_name}\" ADD VALUE IF NOT EXISTS '{LINK_TYPE}'")
+        for label in (LINK_TYPE, RICH_TEXT_TYPE):
+            op.execute(f"ALTER TYPE \"{type_name}\" ADD VALUE IF NOT EXISTS '{label}'")
 
     connection = op.get_bind()
     _add_product_links(connection)
-    _switch_links_items(connection, _link_attribute_id(connection), CONVERTED_TYPES)
+    link_attribute_id = _ensure_attribute(connection, LINK_TYPE, LINK_ATTRIBUTE_NAME, LINK_ATTRIBUTE_DESCRIPTION)
+    _switch_links_items(connection, link_attribute_id, CONVERTED_TYPES)
+    _ensure_attribute(connection, RICH_TEXT_TYPE, RICH_TEXT_ATTRIBUTE_NAME, RICH_TEXT_ATTRIBUTE_DESCRIPTION)
 
     rows = _report_values(connection)
     links = _link_keys_by_report(rows)
@@ -314,8 +322,8 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Turn key tokens back into positional citations and drop the product links.
 
-    The keys stay in value_description, where the old code ignores them, and the "Link"
-    attribute stays configured. Citations of product links cannot be expressed without
+    The keys stay in value_description, where the old code ignores them, and the "Link" and
+    "Rich Text" attributes stay configured. Citations of product links cannot be expressed without
     product.links and are left as tokens.
     """
     connection = op.get_bind()

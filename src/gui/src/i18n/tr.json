@@ -2220,6 +2220,8 @@
         "add_all": "Tümünü ekle",
         "cite": "Bağlantıya atıf yap",
         "cite_no_links": "Atıf yapmak için önce bir bağlantı ekleyin",
+        "cite_no_match": "Aramayla eşleşen bağlantı yok",
+        "cite_search": "Bağlantılarda ara",
         "cited": "{count}× atıf",
         "cited_hint": "Metnin bu bağlantıya kaç kez atıf yaptığı",
         "citations": "Atıf yapılan bağlantılar",
