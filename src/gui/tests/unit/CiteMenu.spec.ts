@@ -36,10 +36,10 @@ const offeredExternal = (wrapper: VueWrapper) => wrapper.findAll('[data-test="ci
 const search = (wrapper: VueWrapper, text: string) => wrapper.find('[data-test="cite-search"] input').setValue(text)
 
 describe('CiteMenu', () => {
-    it('labels each link with the token it inserts', () => {
+    it('labels each link by its URL, without its token', () => {
         const wrapper = mountMenu([VENDOR, NVD])
 
-        expect(offered(wrapper)).toEqual(['[#vendor]vendor.example/advisory', '[#nvdkey]nvd.nist.gov/vuln/detail/CVE-2026-0001'])
+        expect(offered(wrapper)).toEqual(['vendor.example/advisory', 'nvd.nist.gov/vuln/detail/CVE-2026-0001'])
     })
 
     it('offers a search only for more than eight links', () => {
@@ -50,16 +50,16 @@ describe('CiteMenu', () => {
         expect(mountMenu(ownLinks(8), groups).find('[data-test="cite-search"]').exists()).toBe(true)
     })
 
-    it('finds links by URL and by token', async () => {
+    it('finds links by URL, not by their hidden token', async () => {
         const wrapper = mountMenu([...ownLinks(8), NVD])
 
         await search(wrapper, 'NVD.nist')
-        expect(offered(wrapper)).toEqual(['[#nvdkey]nvd.nist.gov/vuln/detail/CVE-2026-0001'])
+        expect(offered(wrapper)).toEqual(['nvd.nist.gov/vuln/detail/CVE-2026-0001'])
 
-        await search(wrapper, '[#key00')
+        await search(wrapper, '.example/advisory')
         expect(offered(wrapper)).toHaveLength(8)
 
-        await search(wrapper, 'key009')
+        await search(wrapper, 'nvdkey')
         expect(offered(wrapper)).toEqual([])
         expect(wrapper.find('[data-test="cite-no-match"]').exists()).toBe(true)
     })

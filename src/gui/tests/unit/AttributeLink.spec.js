@@ -87,13 +87,6 @@ describe('AttributeLink', () => {
         expect(wrapper.findComponent(AttributeLink).exists()).toBe(true)
     })
 
-    it('numbers the links as their citations will be numbered', () => {
-        const { wrapper } = mountForm({ links: [linkValue(1, VENDOR, 'aaaaaa'), linkValue(2, '', 'bbbbbb'), linkValue(3, NVD, 'cccccc')] })
-
-        const numbers = wrapper.findAll('[data-test="link-row"] .link-list__number').map((number) => number.text())
-        expect(numbers).toEqual(['[1]', '–', '[2]'])
-    })
-
     it('inserts a new link between two links, and every link keeps its key', async () => {
         const { wrapper, linkValues } = mountForm({ links: [linkValue(1, VENDOR, 'aaaaaa'), linkValue(2, NVD, 'bbbbbb')] })
 
@@ -196,10 +189,7 @@ describe('citing links from text attributes', () => {
         })
 
         const offered = wrapper.findAll('[data-test="cite-link"]')
-        expect(offered.map((item) => item.text())).toEqual([
-            '[#aaaaaa]vendor.example/advisory',
-            '[#bbbbbb]nvd.nist.gov/vuln/detail/CVE-2026-0001'
-        ])
+        expect(offered.map((item) => item.text())).toEqual(['vendor.example/advisory', 'nvd.nist.gov/vuln/detail/CVE-2026-0001'])
 
         await offered[1].trigger('click')
         await flushPromises()

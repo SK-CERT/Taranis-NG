@@ -108,12 +108,11 @@ describe('NewProduct links', () => {
         mounted = null
     })
 
-    it('shows the product links numbered first and saves them with their keys', async () => {
+    it('shows the product links and saves them with their keys', async () => {
         const wrapper = await openProduct(productDetail())
 
         const rows = wrapper.findAll('[data-test="link-row"]')
         expect(rows).toHaveLength(1)
-        expect(rows[0].find('.link-list__number').text()).toBe('[1]')
 
         await wrapper.find('[data-test="link-add"]').trigger('click')
         await wrapper.vm.handleSave()

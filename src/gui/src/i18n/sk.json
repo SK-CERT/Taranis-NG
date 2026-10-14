@@ -2232,8 +2232,6 @@
         "missing": "Chýbajúci odkaz",
         "missing_hint": "Citovaný odkaz už neexistuje; citácia bude vo zverejnenom výstupe vynechaná.",
         "no_news_item_links": "Všetky odkazy z pripojených noviniek sú už pridané",
-        "not_numbered": "Odkaz bez URL nedostane číslo",
-        "number_hint": "Citácie tohto odkazu zobrazujú toto číslo",
         "product_hint": "Zdroje, ktoré môže citovať popis produktu. Vo zverejnenom produkte sú očíslované ako prvé, pred odkazmi jeho reportov.",
         "product_title": "Odkazy",
         "url": "URL"

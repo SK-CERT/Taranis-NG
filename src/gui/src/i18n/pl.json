@@ -2232,8 +2232,6 @@
         "missing": "Brakujące łącze",
         "missing_hint": "Cytowane łącze już nie istnieje; cytowanie zostanie pominięte w opublikowanym wyniku.",
         "no_news_item_links": "Wszystkie łącza z dołączonych elementów wiadomości są już dodane",
-        "not_numbered": "Łącze bez adresu URL nie otrzymuje numeru",
-        "number_hint": "Cytowania tego łącza pokazują ten numer",
         "product_hint": "Źródła, które może cytować opis produktu. W opublikowanym produkcie są numerowane jako pierwsze, przed łączami jego raportów.",
         "product_title": "Łącza",
         "url": "URL"

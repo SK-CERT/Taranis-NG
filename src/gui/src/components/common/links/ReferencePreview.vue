@@ -33,7 +33,7 @@
                 role="listitem"
                 size="x-small"
                 variant="tonal"
-                color="warning"
+                color="error"
                 :prepend-icon="ICONS.LINK_OFF"
                 :title="t('links.missing_hint')"
                 data-test="reference-missing"

@@ -33,7 +33,7 @@ export const ICONS = Object.freeze({
     CHECKBOX_MULTIPLE_MARKED: 'mdi-checkbox-multiple-marked',
     CLOCK: 'mdi-clock-outline',
     CLOCK_ALERT: 'mdi-clock-alert',
-    CITE: 'mdi-bookmark-plus-outline',
+    CITE: 'mdi-comment-quote-outline',
     CLOSE: 'mdi-close-circle',
     CLOSE_BOX: 'mdi-close',
     CLOSE_BOX_OUTLINE: 'mdi-close-box-outline',

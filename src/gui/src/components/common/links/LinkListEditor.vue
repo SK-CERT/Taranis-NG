@@ -1,7 +1,7 @@
 <template>
     <div class="link-list">
-        <!-- Read-only: a numbered list of links -->
-        <ol
+        <!-- Read-only: a list of links -->
+        <ul
             v-if="readOnly"
             class="link-list__readonly"
         >
@@ -10,7 +10,6 @@
                 :key="rowKey(link, index)"
                 class="link-list__readonly-row"
             >
-                <span class="link-list__number text--disabled">{{ numberLabel(link) }}</span>
                 <a
                     v-if="isHttpUrl(link.value)"
                     :href="String(link.value).trim()"
@@ -24,7 +23,7 @@
                     >{{ link.value }}</bdi
                 >
             </li>
-        </ol>
+        </ul>
 
         <template v-else>
             <div
@@ -64,10 +63,13 @@
                     :val-index="index"
                     @del-value="requestRemove(index)"
                 >
-                    <template #col_left>
+                    <!-- Reordering controls: only when there is something to reorder -->
+                    <template
+                        v-if="values.length > 1"
+                        #col_left
+                    >
                         <div class="link-list__controls d-flex align-center">
                             <v-icon
-                                v-if="values.length > 1"
                                 class="drag-handle"
                                 size="small"
                                 draggable="true"
@@ -76,15 +78,7 @@
                                 @dragstart="onDragStart(index, $event)"
                                 @dragend="onDragEnd"
                             />
-                            <span
-                                class="link-list__number text--disabled"
-                                :title="numberTitle(link)"
-                                >{{ numberLabel(link) }}</span
-                            >
-                            <div
-                                v-if="values.length > 1"
-                                class="d-flex flex-column ms-1"
-                            >
+                            <div class="d-flex flex-column ms-1">
                                 <v-btn
                                     variant="text"
                                     density="compact"
@@ -190,10 +184,10 @@
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { ICONS } from '@/config/ui-constants'
-    import { isHttpUrl, numberLinks, type LinkValue } from '@/utils/linkReferences'
+    import { isHttpUrl, type LinkValue } from '@/utils/linkReferences'
 
     /**
-     * An ordered list of citable links: numbered rows that can be reordered, inserted between
+     * An ordered list of citable links: rows that can be reordered, inserted between
      * and removed. The rows are edited in place (v-model on `value`); everything that changes
      * the list itself is left to the parent through events, because a report item persists
      * those changes value by value while a product saves its links as a whole.
@@ -229,18 +223,6 @@
     const { t } = useI18n()
 
     const canInsert = computed(() => !props.disabled && props.values.length < (props.maxOccurrence ?? Infinity))
-
-    const numbers = computed(() => new Map(numberLinks(props.values).map((link) => [link.key, link.number])))
-
-    const numberOf = (link: LinkValue): number | undefined =>
-        typeof link.value_description === 'string' ? numbers.value.get(link.value_description) : undefined
-
-    const numberLabel = (link: LinkValue): string => {
-        const number = numberOf(link)
-        return number === undefined ? '–' : `[${number}]`
-    }
-
-    const numberTitle = (link: LinkValue): string => (numberOf(link) === undefined ? t('links.not_numbered') : t('links.number_hint'))
 
     const citations = (link: LinkValue): number =>
         typeof link.value_description === 'string' && link.value_description ? props.citationCount(link.value_description) : 0
@@ -318,14 +300,6 @@
 <style scoped>
     .link-list {
         width: 100%;
-    }
-
-    .link-list__number {
-        display: inline-block;
-        min-width: 32px;
-        margin-inline-end: 4px;
-        font-variant-numeric: tabular-nums;
-        user-select: none;
     }
 
     .link-list__row {

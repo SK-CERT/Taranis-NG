@@ -51,6 +51,6 @@
     }
 
     .cited-text__citation--missing {
-        color: rgb(var(--v-theme-warning));
+        color: rgb(var(--v-theme-error));
     }
 </style>

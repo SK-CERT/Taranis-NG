@@ -2232,8 +2232,6 @@
         "missing": "Collegamento mancante",
         "missing_hint": "Il collegamento citato non esiste più; la citazione viene omessa nell'output pubblicato.",
         "no_news_item_links": "Tutti i collegamenti delle notizie allegate sono già stati aggiunti",
-        "not_numbered": "Un collegamento senza URL non riceve un numero",
-        "number_hint": "Le citazioni di questo collegamento mostrano questo numero",
         "product_hint": "Fonti che la descrizione del prodotto può citare. Nel prodotto pubblicato sono numerate per prime, prima dei collegamenti dei suoi report.",
         "product_title": "Collegamenti",
         "url": "URL"

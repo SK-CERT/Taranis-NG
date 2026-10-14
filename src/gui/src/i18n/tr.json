@@ -2232,8 +2232,6 @@
         "missing": "Eksik bağlantı",
         "missing_hint": "Atıf yapılan bağlantı artık yok; atıf yayımlanan çıktıda çıkarılır.",
         "no_news_item_links": "Ekli haber öğelerinin tüm bağlantıları zaten eklendi",
-        "not_numbered": "URL'si olmayan bağlantı numara almaz",
-        "number_hint": "Bu bağlantıya yapılan atıflar bu numarayı gösterir",
         "product_hint": "Ürün açıklamasının atıf yapabileceği kaynaklar. Yayımlanan üründe raporlarının bağlantılarından önce numaralandırılır.",
         "product_title": "Bağlantılar",
         "url": "URL"

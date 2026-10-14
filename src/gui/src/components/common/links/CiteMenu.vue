@@ -63,11 +63,11 @@
                     @click="pick(link)"
                 >
                     <template #prepend>
-                        <bdi
-                            dir="ltr"
-                            class="cite-menu__token"
-                            >{{ linkToken(link.key) }}</bdi
-                        >
+                        <v-icon
+                            size="small"
+                            class="cite-menu__icon"
+                            :icon="ICONS.LINK"
+                        />
                     </template>
                     <v-list-item-title>
                         <bdi
@@ -92,7 +92,6 @@
                         @click="pickExternal(link)"
                     >
                         <template #prepend>
-                            <!-- No token: citing copies the link into the form's links under a new key. -->
                             <v-icon
                                 size="small"
                                 class="cite-menu__icon"
@@ -118,7 +117,7 @@
     import { useI18n } from 'vue-i18n'
     import SearchField from '@/components/common/SearchField.vue'
     import { ICONS } from '@/config/ui-constants'
-    import { linkToken, shortUrl, type CitableLink, type ExternalLink } from '@/utils/linkReferences'
+    import { shortUrl, type CitableLink, type ExternalLink } from '@/utils/linkReferences'
 
     /** More links than this, and the menu offers a search. */
     const SEARCH_THRESHOLD = 8
@@ -158,8 +157,8 @@
     const needle = computed(() => (searchable.value ? (query.value ?? '').trim().toLowerCase() : ''))
     const matches = (text: string): boolean => text.toLowerCase().includes(needle.value)
 
-    // A link is found by its URL or its token; a report's links also by the report's title.
-    const shownLinks = computed(() => props.links.filter((link) => matches(link.url) || matches(linkToken(link.key))))
+    // A link is found by its URL; a report's links also by the report's title.
+    const shownLinks = computed(() => props.links.filter((link) => matches(link.url)))
     const shownGroups = computed(() =>
         props.groups
             .map((group) => (matches(group.title) ? group : { ...group, links: group.links.filter((link) => matches(link.url)) }))
@@ -197,12 +196,6 @@
 </script>
 
 <style scoped>
-    .cite-menu__token {
-        margin-inline-end: 8px;
-        color: rgb(var(--v-theme-primary));
-        font-weight: 600;
-    }
-
     .cite-menu__icon {
         margin-inline-end: 8px;
         color: rgb(var(--v-theme-primary));

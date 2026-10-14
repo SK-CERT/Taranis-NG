@@ -2232,8 +2232,6 @@
         "missing": "Enlace inexistente",
         "missing_hint": "El enlace citado ya no existe; la cita se omite en la salida publicada.",
         "no_news_item_links": "Todos los enlaces de las noticias adjuntas ya están añadidos",
-        "not_numbered": "Un enlace sin URL no recibe número",
-        "number_hint": "Las citas de este enlace muestran este número",
         "product_hint": "Fuentes que puede citar la descripción del producto. En el producto publicado se numeran primero, antes de los enlaces de sus informes.",
         "product_title": "Enlaces",
         "url": "URL"

@@ -160,7 +160,7 @@
             placeholder?: string
             height?: string
             /** Links that citations in the text resolve to; null leaves citations unmarked. */
-            citations?: Map<string, { number: number; url: string }> | null
+            citations?: Map<string, { url: string }> | null
         }>(),
         {
             modelValue: '',
@@ -247,8 +247,8 @@
     })
 
     /**
-     * Mark link citations ("[#k3f9a2]"): the number the cited link has follows the token, and its
-     * title shows the URL. A citation of a link that no longer exists is flagged.
+     * Mark link citations ("[#k3f9a2]"): the title shows the URL of the cited link. A citation of a
+     * link that no longer exists is flagged.
      */
     const CitationMarks = Extension.create({
         name: 'citationMarks',
@@ -271,22 +271,11 @@
                                     const from = pos + (match.index ?? 0)
                                     const to = from + match[0].length
                                     const link = citations.get(match[1] as string)
-                                    const number = link ? `[${link.number}]` : '[?]'
                                     marks.push(
                                         Decoration.inline(from, to, {
                                             class: link ? 'rich-text-citation' : 'rich-text-citation rich-text-citation--missing',
                                             title: link ? link.url : t('links.missing_hint')
-                                        }),
-                                        Decoration.widget(
-                                            to,
-                                            () => {
-                                                const label = document.createElement('span')
-                                                label.className = 'rich-text-citation__number'
-                                                label.textContent = number
-                                                return label
-                                            },
-                                            { side: 1, key: `${match[1]}:${number}` }
-                                        )
+                                        })
                                     )
                                 }
                             })
@@ -616,15 +605,8 @@
     }
 
     .rich-text-editor__content :deep(.rich-text-citation--missing) {
-        color: rgb(var(--v-theme-warning));
+        color: rgb(var(--v-theme-error));
         text-decoration: line-through;
-    }
-
-    .rich-text-editor__content :deep(.rich-text-citation__number) {
-        margin-inline-start: 2px;
-        color: rgb(var(--v-theme-primary));
-        font-weight: 600;
-        user-select: none;
     }
 
     .rich-text-editor__content :deep(.ProseMirror p.is-editor-empty:first-child::before) {

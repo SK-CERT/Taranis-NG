@@ -2232,8 +2232,6 @@
         "missing": "Ontbrekende koppeling",
         "missing_hint": "De geciteerde koppeling bestaat niet meer; het citaat wordt weggelaten in de gepubliceerde uitvoer.",
         "no_news_item_links": "Alle koppelingen van de bijgevoegde nieuwsitems zijn al toegevoegd",
-        "not_numbered": "Een koppeling zonder URL krijgt geen nummer",
-        "number_hint": "Citaten van deze koppeling tonen dit nummer",
         "product_hint": "Bronnen die de productbeschrijving kan citeren. In het gepubliceerde product worden ze als eerste genummerd, vóór de koppelingen van de rapporten.",
         "product_title": "Koppelingen",
         "url": "URL"
