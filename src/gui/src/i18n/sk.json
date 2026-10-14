@@ -888,6 +888,7 @@
         "download": "Stiahnuť",
         "total_count": "Žiadne novinky | {count} novinka | {count} novinky | {count} noviniek",
         "selected_count": "Nie sú vybrané žiadne novinky | Vybraná {count} novinka | Vybrané {count} novinky | Vybraných {count} noviniek",
+        "unread_count": "Neprečítané: {count}",
         "no_items": "Novinky sa nenašli",
         "item_updated": "Novinka bola úspešne aktualizovaná",
         "item_deleted": "Novinka bola úspešne zmazaná",

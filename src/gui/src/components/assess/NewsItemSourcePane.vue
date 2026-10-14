@@ -99,7 +99,10 @@
         </div>
 
         <!-- Scrollable body: only the article content scrolls -->
-        <div class="source-body">
+        <div
+            class="source-body"
+            data-detail-scroll
+        >
             <div
                 class="text-body-2 text-medium-emphasis"
                 v-html="sanitizedContent"

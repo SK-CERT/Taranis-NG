@@ -24,6 +24,15 @@
 - `f`: Switch to Filter mode (see below)
 - `v`: Switch to View mode (see below)
 
+### Detailed item view
+While a news item is open, the shortcuts act on that item:
+- `↓/↑/j/k`: Scroll the open item down/up
+- `Home`/`End`: Scroll to the top/bottom of the open item
+- `←/Esc/h`: Close detailed item view
+- `r`, `i`, `u`, `U`, `Del`, `G`, `n`, `o`: As above, for the open item
+
+The shortcuts for the list behind it (`s`, `g`, `a`, `R`, `/` and switching source groups) do nothing until the item is closed.
+
 ### Filter mode
 - `Esc`: Exit filter mode
 - `r`: Toggle filter read news items and exit filter mode

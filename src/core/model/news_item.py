@@ -1138,6 +1138,70 @@ class NewsItemAggregate(db.Model):
         return db.session.get(cls, news_item_aggregate_id)
 
     @classmethod
+    def _apply_see_acl(cls, query: Query, user: User, *, group_acl: bool) -> Query:
+        """Keep the aggregates the user may see.
+
+        Access is decided by the OSINT source and the collector of each news item in the
+        aggregate, and - when `group_acl` is set, as for the "all" view - by the OSINT source
+        group too. A single group's view does not check its own group: the group list the
+        user picks it from is already filtered by that.
+
+        Args:
+            query (Query): Query over news item aggregates
+            user (User): User
+            group_acl (bool): Whether the OSINT source group ACL applies as well
+        Returns:
+            Query: The query joined to the ACL entries and filtered by them
+        """
+        query = query.join(NewsItem, NewsItem.news_item_aggregate_id == NewsItemAggregate.id)
+        query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
+        query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
+
+        acl_conditions = [
+            and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
+            and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
+        ]
+        if group_acl:
+            acl_conditions.append(
+                and_(NewsItemAggregate.osint_source_group_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP),
+            )
+
+        query = query.outerjoin(ACLEntry, or_(*acl_conditions))
+
+        return ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
+
+    @classmethod
+    def count_unread_by_group(cls, user: User) -> dict[str, int]:
+        """Count the unread aggregates the user may see, per OSINT source group and in total.
+
+        Each count is the total a group's Assess list shows with the "unread" filter on, so
+        the same ACL decides it. The number of queries does not grow with the number of groups.
+
+        Args:
+            user (User): User
+        Returns:
+            dict[str, int]: Count per OSINT source group ID, and under "all" for every group
+                together. Only the groups the user may see are counted; one with nothing
+                unread is left out.
+        """
+        visible_groups, _ = OSINTSourceGroup.get(None, user, acl_check=True)
+        visible_group_ids = {group.id for group in visible_groups}
+        unread_ids = func.count(NewsItemAggregate.id.distinct())
+
+        per_group = db.session.query(NewsItemAggregate.osint_source_group_id, unread_ids).select_from(NewsItemAggregate)
+        per_group = cls._apply_see_acl(per_group.filter(NewsItemAggregate.read.is_(False)), user, group_acl=False)
+        counts = {
+            group_id: count
+            for group_id, count in per_group.group_by(NewsItemAggregate.osint_source_group_id)
+            if group_id in visible_group_ids
+        }
+
+        every_group = db.session.query(unread_ids).select_from(NewsItemAggregate).filter(NewsItemAggregate.read.is_(False))
+        counts["all"] = cls._apply_see_acl(every_group, user, group_acl=True).scalar() or 0
+
+        return counts
+
+    @classmethod
     def get_by_group(cls, group_id: str, filters: dict, offset: int, limit: int, user: User) -> tuple[list[NewsItemAggregate], int]:
         """Get by group.
 
@@ -1156,23 +1220,7 @@ class NewsItemAggregate(db.Model):
         if group_id != "all":
             query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
 
-        query = query.join(NewsItem, NewsItem.news_item_aggregate_id == NewsItemAggregate.id)
-        query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
-        query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
-
-        # Build ACL conditions - check OSINT source, collector and OSINT source group access (when viewing 'all')
-        acl_conditions = [
-            and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
-            and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
-        ]
-        if group_id == "all":
-            acl_conditions.append(
-                and_(NewsItemAggregate.osint_source_group_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP),
-            )
-
-        query = query.outerjoin(ACLEntry, or_(*acl_conditions))
-
-        query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
+        query = cls._apply_see_acl(query, user, group_acl=group_id == "all")
 
         if "search" in filters and filters["search"] != "":
             search_string = "%" + filters["search"].lower() + "%"

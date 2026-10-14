@@ -42,6 +42,13 @@ export function isTypingTarget(element: Element | null): boolean {
 // is the one dialog that leaves them on. NewsItemDetailDialog.vue carries this class.
 const DETAIL_DIALOG_CLASS = 'news-item-detail-dialog'
 
+// What scrolls in the open detail: the article body of a source or version tab, or the whole
+// attributes / info / comments tab. Every tab stays in the DOM, so only the active one counts.
+const DETAIL_SCROLL_SELECTOR = '.pane--active[data-detail-scroll], .pane--active [data-detail-scroll]'
+
+// About what the browser scrolls for one press of an arrow key.
+const DETAIL_SCROLL_STEP = 40
+
 /**
  * Tell whether a dialog other than the news item detail is open, so shortcuts must not
  * fire behind it - including one opened on top of the detail, such as a delete
@@ -51,6 +58,19 @@ const DETAIL_DIALOG_CLASS = 'news-item-detail-dialog'
  */
 export function isBlockingDialogOpen(): boolean {
     return document.querySelector(`.v-overlay--active.v-dialog:not(.${DETAIL_DIALOG_CLASS})`) !== null
+}
+
+function getOpenDetailDialog(): HTMLElement | null {
+    return document.querySelector<HTMLElement>(`.v-overlay--active.v-dialog.${DETAIL_DIALOG_CLASS}`)
+}
+
+function clickAction(container: HTMLElement | null, action: ActionKey): void {
+    const button = container?.querySelector<HTMLElement>(`[data-action="${action}"]`)
+    if (!button) {
+        console.warn(`[Keyboard] Action not found: ${action}`)
+        return
+    }
+    button.click()
 }
 
 interface Shortcut {
@@ -273,13 +293,7 @@ export function useKeyboard(targetId: string, router: Router) {
     function triggerCardAction(action: ActionKey): void {
         if (assessStore.getMultiSelect) return
         // console.log(`[Keyboard] triggerCardAction: ${action}`)
-        const card = getCurrentCardElement()
-        const button = card?.querySelector(`[data-action="${action}"]`) as HTMLElement | null
-        if (!button) {
-            console.warn(`[Keyboard] Card action not found: ${action}`)
-            return
-        }
-        button.click()
+        clickAction(getCurrentCardElement(), action)
     }
 
     function triggerToolbarAction(action: ActionKey): void {
@@ -298,6 +312,96 @@ export function useKeyboard(targetId: string, router: Router) {
             triggerToolbarAction(action)
         } else {
             triggerCardAction(action)
+        }
+    }
+
+    function closeDetail(): void {
+        if (state.value.dialogCloseCallback) {
+            state.value.dialogCloseCallback()
+        }
+        updateCardFocus()
+    }
+
+    function scrollDetail(dialog: HTMLElement, top: number, repeat: boolean): void {
+        // A held key repeats faster than a smooth scroll runs, so the repeats jump.
+        dialog.querySelector<HTMLElement>(DETAIL_SCROLL_SELECTOR)?.scrollBy({ top, behavior: repeat ? 'instant' : 'smooth' })
+    }
+
+    function scrollDetailToEdge(dialog: HTMLElement, end: boolean): void {
+        const scroller = dialog.querySelector<HTMLElement>(DETAIL_SCROLL_SELECTOR)
+        scroller?.scrollTo({ top: end ? scroller.scrollHeight : 0, behavior: 'smooth' })
+    }
+
+    /**
+     * The shortcuts while the news item detail is open. They act on the item it shows, through
+     * the dialog's own buttons so the dialog reflects the change, and the navigation keys scroll
+     * it. Everything aimed at the list behind - moving along it, selecting, grouping, switching
+     * source groups, searching - stays off: the user cannot see it happen.
+     */
+    function detailKeyAction(event: KeyboardEvent, keyAlias: HotkeyActionType, dialog: HTMLElement): void {
+        switch (keyAlias) {
+            case HotkeyAction.COLLECTION_UP_1:
+            case HotkeyAction.COLLECTION_UP_2:
+                event.preventDefault()
+                scrollDetail(dialog, -DETAIL_SCROLL_STEP, event.repeat)
+                break
+
+            case HotkeyAction.COLLECTION_DOWN_1:
+            case HotkeyAction.COLLECTION_DOWN_2:
+                event.preventDefault()
+                scrollDetail(dialog, DETAIL_SCROLL_STEP, event.repeat)
+                break
+
+            case HotkeyAction.HOME:
+                event.preventDefault()
+                scrollDetailToEdge(dialog, false)
+                break
+
+            case HotkeyAction.END:
+                event.preventDefault()
+                scrollDetailToEdge(dialog, true)
+                break
+
+            case HotkeyAction.CLOSE_ITEM_1:
+            case HotkeyAction.CLOSE_ITEM_2:
+            case HotkeyAction.CLOSE_ITEM_3:
+                closeDetail()
+                break
+
+            case HotkeyAction.READ_ITEM:
+                clickAction(dialog, Action.READ)
+                break
+
+            case HotkeyAction.IMPORTANT_ITEM:
+                clickAction(dialog, Action.IMPORTANT)
+                break
+
+            case HotkeyAction.LIKE_ITEM:
+                clickAction(dialog, Action.LIKE)
+                break
+
+            case HotkeyAction.UNLIKE_ITEM:
+                clickAction(dialog, Action.DISLIKE)
+                break
+
+            case HotkeyAction.DELETE_ITEM:
+                clickAction(dialog, Action.DELETE)
+                break
+
+            case HotkeyAction.UNGROUP:
+                clickAction(dialog, Action.UNGROUP)
+                break
+
+            case HotkeyAction.NEW_PRODUCT:
+                clickAction(dialog, Action.CREATE_REPORT)
+                break
+
+            case HotkeyAction.OPEN_ITEM_SOURCE:
+                clickAction(dialog, Action.OPEN)
+                break
+
+            default:
+                break
         }
     }
 
@@ -324,6 +428,12 @@ export function useKeyboard(targetId: string, router: Router) {
 
         const keyAlias = getKeyAlias(event)
         if (!keyAlias) return
+
+        const detailDialog = getOpenDetailDialog()
+        if (detailDialog) {
+            detailKeyAction(event, keyAlias, detailDialog)
+            return
+        }
 
         //console.info(`[Keyboard] keyAction: ${keyAlias}`)
 
@@ -374,10 +484,7 @@ export function useKeyboard(targetId: string, router: Router) {
             case HotkeyAction.CLOSE_ITEM_1:
             case HotkeyAction.CLOSE_ITEM_2:
             case HotkeyAction.CLOSE_ITEM_3:
-                if (state.value.dialogCloseCallback) {
-                    state.value.dialogCloseCallback()
-                }
-                updateCardFocus()
+                closeDetail()
                 break
 
             case HotkeyAction.READ_ITEM:

@@ -888,6 +888,7 @@
         "download": "다운로드",
         "total_count": "뉴스 항목 {count}개 | 뉴스 항목 {count}개",
         "selected_count": "뉴스 항목 {count}개 선택됨 | 뉴스 항목 {count}개 선택됨",
+        "unread_count": "읽지 않음: {count}",
         "no_items": "뉴스 항목 없음",
         "item_updated": "뉴스 항목을 업데이트했습니다",
         "item_deleted": "뉴스 항목을 삭제했습니다",

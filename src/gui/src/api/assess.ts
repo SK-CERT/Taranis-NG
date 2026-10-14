@@ -27,6 +27,11 @@ export function getAllOSINTSourceGroupsAssess() {
     return ApiService.get('/assess/osint-source-groups')
 }
 
+/** Unread news items per OSINT source group ID, and for every group together under "all". */
+export function getUnreadCountsByGroup() {
+    return ApiService.get('/assess/osint-source-groups/unread-counts')
+}
+
 export function getManualOSINTSources() {
     return ApiService.get('/assess/manual-osint-sources')
 }

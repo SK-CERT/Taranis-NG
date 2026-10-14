@@ -5,7 +5,9 @@
          resolves against an auto-height overlay = no cap). We cap via .detail-card and
          scroll inside each pane instead. -->
     <!-- news-item-detail-dialog: keyboard shortcuts stay on while this dialog is open,
-         unlike behind any other (isBlockingDialogOpen in composables/useKeyboard.ts). -->
+         unlike behind any other (isBlockingDialogOpen in composables/useKeyboard.ts), and act
+         on it: its action buttons are pressed, and the up / down keys scroll the element
+         marked data-detail-scroll in the active pane. -->
     <v-dialog
         v-model="isOpen"
         class="news-item-detail-dialog"
@@ -135,6 +137,7 @@
                 <div
                     v-if="!isAggregate"
                     class="pane tab-pane"
+                    data-detail-scroll
                     :class="{ 'pane--active': activeTab === 'attributes' }"
                 >
                     <v-row>
@@ -162,6 +165,7 @@
                 <div
                     v-if="isAggregate"
                     class="pane tab-pane"
+                    data-detail-scroll
                     :class="{ 'pane--active': activeTab === 'info' }"
                 >
                     <v-form>
@@ -194,6 +198,7 @@
                 <div
                     v-if="!isChild"
                     class="pane tab-pane"
+                    data-detail-scroll
                     :class="{ 'pane--active': activeTab === 'comments' }"
                 >
                     <RichTextEditor

@@ -888,6 +888,7 @@
         "download": "Pobierz",
         "total_count": "Brak elementów wiadomości | {count} element wiadomości | {count} elementy wiadomości | {count} elementów wiadomości",
         "selected_count": "Nie wybrano elementów wiadomości | Wybrano {count} element wiadomości | Wybrano {count} elementy wiadomości | Wybrano {count} elementów wiadomości",
+        "unread_count": "Nieprzeczytane: {count}",
         "no_items": "Nie znaleziono elementów wiadomości",
         "item_updated": "Zaktualizowano element wiadomości",
         "item_deleted": "Usunięto element wiadomości",

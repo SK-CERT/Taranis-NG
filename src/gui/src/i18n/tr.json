@@ -888,6 +888,7 @@
         "download": "İndir",
         "total_count": "Haber öğesi yok | {count} haber öğesi | {count} haber öğesi",
         "selected_count": "Haber öğesi seçilmedi | {count} haber öğesi seçildi | {count} haber öğesi seçildi",
+        "unread_count": "Okunmayanlar: {count}",
         "no_items": "Haber öğesi bulunamadı",
         "item_updated": "Haber öğesi başarıyla güncellendi",
         "item_deleted": "Haber öğesi başarıyla silindi",

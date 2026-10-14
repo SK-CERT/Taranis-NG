@@ -23,6 +23,15 @@ class OSINTSourceGroupsAssess(Resource):
         return OSINTSourceGroup.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
 
 
+class UnreadCountsByGroup(Resource):
+    """Unread news item counts per OSINT source group API endpoint."""
+
+    @auth_required("ASSESS_ACCESS")
+    def get(self) -> dict:
+        """Get the number of unread news items in each OSINT source group, and in all of them under "all"."""
+        return NewsItemAggregate.count_unread_by_group(auth_manager.get_user_from_jwt())
+
+
 class ManualOSINTSources(Resource):
     """Manual OSINT sources for Assess API endpoint."""
 
@@ -259,6 +268,7 @@ class DownloadAttachment(Resource):
 def initialize(api: object) -> None:
     """Initialize Assess API endpoints."""
     api.add_resource(OSINTSourceGroupsAssess, "/api/v1/assess/osint-source-groups")
+    api.add_resource(UnreadCountsByGroup, "/api/v1/assess/osint-source-groups/unread-counts")
     api.add_resource(ManualOSINTSources, "/api/v1/assess/manual-osint-sources")
     api.add_resource(AddNewsItem, "/api/v1/assess/news-items")
     api.add_resource(NewsItemsByGroup, "/api/v1/assess/news-item-aggregates-by-group/<string:group_id>")
