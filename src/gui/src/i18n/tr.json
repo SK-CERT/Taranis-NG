@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Rapor öğesi seçicisini salt okunur modda aç",
         "SPELLCHECK": "Yazım denetimi",
         "TAG_CLOUD_RETENTION_DAYS": "Etiket bulutu saklama süresi (gün)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Geçiş anahtarı kimlik doğrulayıcıları: adları ve simgeleri göster (topluluk AAGUID listesini indirir)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Geçiş anahtarı kimlik doğrulayıcıları: liste URL’si (AAGUID)",
         "TAG_COLOR": "Renkli etiket bulutu",
         "TIME_FORMAT": "Saat biçimi"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Geçiş anahtarı",
         "passkey_created": "Oluşturuldu",
         "passkey_last_used": "Son kullanım",
+        "passkey_authenticator": "Kimlik doğrulayıcı",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Bilinmeyen kimlik doğrulayıcı",
+        "authenticator_not_disclosed": "Kimlik doğrulayıcı bildirmedi",
+        "authenticator_not_recorded": "Kaydedilmedi",
         "passkey_added": "Geçiş anahtarı kaydedildi.",
         "no_passkeys": "Kayıtlı geçiş anahtarı yok."
     },

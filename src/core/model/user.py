@@ -716,7 +716,11 @@ class User(db.Model):
     @property
     def mfa(self) -> dict:
         """Summarize the user's MFA enrollments for the GUI."""
-        return {"totp": bool(self.totp_secret), "passkeys": len(self.webauthn_credentials)}
+        return {
+            "totp": bool(self.totp_secret),
+            "passkeys": len(self.webauthn_credentials),
+            "passkey_details": [credential.to_json() for credential in self.webauthn_credentials],
+        }
 
     def get_current_organization_name(self) -> str:
         """Return the name of the current organization.

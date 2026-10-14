@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Mở trình chọn mục báo cáo ở chế độ chỉ đọc",
         "SPELLCHECK": "Kiểm tra chính tả",
         "TAG_CLOUD_RETENTION_DAYS": "Thời gian lưu đám mây thẻ (ngày)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Trình xác thực khóa truy cập: hiển thị tên và biểu tượng (tải danh sách AAGUID của cộng đồng)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Trình xác thực khóa truy cập: URL danh sách (AAGUID)",
         "TAG_COLOR": "Đám mây thẻ nhiều màu",
         "TIME_FORMAT": "Định dạng thời gian"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Khóa truy cập",
         "passkey_created": "Đã tạo",
         "passkey_last_used": "Dùng lần cuối",
+        "passkey_authenticator": "Trình xác thực",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Trình xác thực không xác định",
+        "authenticator_not_disclosed": "Trình xác thực không tiết lộ",
+        "authenticator_not_recorded": "Chưa được ghi nhận",
         "passkey_added": "Đã đăng ký khóa truy cập.",
         "no_passkeys": "Chưa đăng ký khóa truy cập nào."
     },

@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Ouvrir le sélecteur d’éléments de rapport en lecture seule",
         "SPELLCHECK": "Vérification orthographique",
         "TAG_CLOUD_RETENTION_DAYS": "Conservation du nuage de mots-clés (jours)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Authentificateurs de clés d’accès : afficher le nom et l’icône (télécharge la liste communautaire des AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Authentificateurs de clés d’accès : URL de la liste (AAGUID)",
         "TAG_COLOR": "Nuage de mots-clés coloré",
         "TIME_FORMAT": "Format de l’heure"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Clé d’accès",
         "passkey_created": "Créée",
         "passkey_last_used": "Dernière utilisation",
+        "passkey_authenticator": "Authentificateur",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Authentificateur inconnu",
+        "authenticator_not_disclosed": "Non communiqué par l’authentificateur",
+        "authenticator_not_recorded": "Non enregistré",
         "passkey_added": "Clé d’accès enregistrée.",
         "no_passkeys": "Aucune clé d’accès enregistrée."
     },

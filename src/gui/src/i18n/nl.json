@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Rapportitemkiezer in alleen-lezenmodus openen",
         "SPELLCHECK": "Spellingcontrole",
         "TAG_CLOUD_RETENTION_DAYS": "Bewaartermijn tagwolk (dagen)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Passkey-authenticators: namen en pictogrammen tonen (downloadt de AAGUID-lijst van de community)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Passkey-authenticators: URL van de lijst (AAGUID)",
         "TAG_COLOR": "Kleurrijke tagwolk",
         "TIME_FORMAT": "Tijdnotatie"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Passkey",
         "passkey_created": "Aangemaakt",
         "passkey_last_used": "Laatst gebruikt",
+        "passkey_authenticator": "Authenticator",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Onbekende authenticator",
+        "authenticator_not_disclosed": "Niet vrijgegeven door de authenticator",
+        "authenticator_not_recorded": "Niet vastgelegd",
         "passkey_added": "Passkey geregistreerd.",
         "no_passkeys": "Geen passkeys geregistreerd."
     },

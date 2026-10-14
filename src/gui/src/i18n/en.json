@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Open the report item selector in read-only mode",
         "SPELLCHECK": "Spellcheck",
         "TAG_CLOUD_RETENTION_DAYS": "Tag cloud retention (days)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Passkey authenticators: show names and icons (downloads the community AAGUID list)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Passkey authenticators: list URL (AAGUID)",
         "TAG_COLOR": "Colorful tag cloud",
         "TIME_FORMAT": "Time format"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Passkey",
         "passkey_created": "Created",
         "passkey_last_used": "Last used",
+        "passkey_authenticator": "Authenticator",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Unknown authenticator",
+        "authenticator_not_disclosed": "Not disclosed by the authenticator",
+        "authenticator_not_recorded": "Not recorded",
         "passkey_added": "Passkey registered.",
         "no_passkeys": "No passkeys registered."
     },

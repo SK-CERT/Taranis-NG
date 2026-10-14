@@ -75,16 +75,18 @@
                                 :disabled="saving"
                             />
                         </v-col>
-                        <v-col
-                            cols="3"
-                            class="d-flex align-center"
-                        >
+                        <!-- Top-aligned and as tall as a comfortable field (48px), so the button lines up
+                             with the inputs beside it rather than with their hint row as well. -->
+                        <v-col cols="3">
                             <v-btn
                                 v-if="isEdit && hasMfa"
                                 color="warning"
                                 variant="outlined"
                                 prepend-icon="mdi-shield-off"
+                                height="48"
+                                block
                                 :disabled="saving"
+                                data-test="reset-mfa"
                                 @click="resetMfaDialog = true"
                             >
                                 {{ t('access_management.users.reset_mfa') }}

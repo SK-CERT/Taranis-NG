@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "रिपोर्ट आइटम चयनकर्ता केवल-पढ़ने के मोड में खोलें",
         "SPELLCHECK": "वर्तनी जाँच",
         "TAG_CLOUD_RETENTION_DAYS": "टैग क्लाउड प्रतिधारण (दिन)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "पासकी प्रमाणक: नाम और आइकन दिखाएँ (समुदाय की AAGUID सूची डाउनलोड करता है)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "पासकी प्रमाणक: सूची का URL (AAGUID)",
         "TAG_COLOR": "रंगीन टैग क्लाउड",
         "TIME_FORMAT": "समय प्रारूप"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "पासकी",
         "passkey_created": "बनाने का समय",
         "passkey_last_used": "अंतिम इस्तेमाल",
+        "passkey_authenticator": "प्रमाणक",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "अज्ञात प्रमाणक",
+        "authenticator_not_disclosed": "प्रमाणक ने नहीं बताया",
+        "authenticator_not_recorded": "दर्ज नहीं",
         "passkey_added": "पासकी पंजीकृत हो गई।",
         "no_passkeys": "कोई पासकी पंजीकृत नहीं है।"
     },

@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "以只读模式打开报告条目选择器",
         "SPELLCHECK": "拼写检查",
         "TAG_CLOUD_RETENTION_DAYS": "标签云保留期（天）",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "通行密钥认证器：显示名称和图标（下载社区 AAGUID 列表）",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "通行密钥认证器：列表 URL（AAGUID）",
         "TAG_COLOR": "彩色标签云",
         "TIME_FORMAT": "时间格式"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "通行密钥",
         "passkey_created": "创建时间",
         "passkey_last_used": "上次使用时间",
+        "passkey_authenticator": "认证器",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "未知认证器",
+        "authenticator_not_disclosed": "认证器未披露",
+        "authenticator_not_recorded": "未记录",
         "passkey_added": "通行密钥已注册。",
         "no_passkeys": "尚未注册通行密钥。"
     },

@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Otwórz selektor elementów raportu w trybie tylko do odczytu",
         "SPELLCHECK": "Sprawdzanie pisowni",
         "TAG_CLOUD_RETENTION_DAYS": "Okres przechowywania chmury tagów (dni)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Moduły uwierzytelniające kluczy dostępu: pokazuj nazwy i ikony (pobiera społecznościową listę AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Moduły uwierzytelniające kluczy dostępu: URL listy (AAGUID)",
         "TAG_COLOR": "Kolorowa chmura tagów",
         "TIME_FORMAT": "Format czasu"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Klucz dostępu",
         "passkey_created": "Utworzono",
         "passkey_last_used": "Ostatnio użyto",
+        "passkey_authenticator": "Moduł uwierzytelniający",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Nieznany moduł uwierzytelniający",
+        "authenticator_not_disclosed": "Nieujawniony przez moduł uwierzytelniający",
+        "authenticator_not_recorded": "Nie zapisano",
         "passkey_added": "Klucz dostępu został zarejestrowany.",
         "no_passkeys": "Nie zarejestrowano żadnych kluczy dostępu."
     },

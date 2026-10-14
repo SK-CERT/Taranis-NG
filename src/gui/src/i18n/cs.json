@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Otevřít výběr reportů v režimu pouze pro čtení",
         "SPELLCHECK": "Kontrolovat pravopis",
         "TAG_CLOUD_RETENTION_DAYS": "Uchovávání mraku štítků (dny)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Autentizátory passkeys: zobrazovat názvy a ikony (stahuje komunitní seznam AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Autentizátory passkeys: URL seznamu (AAGUID)",
         "TAG_COLOR": "Barevný mrak štítků",
         "TIME_FORMAT": "Formát času"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Přístupový klíč",
         "passkey_created": "Vytvořeno",
         "passkey_last_used": "Naposledy použito",
+        "passkey_authenticator": "Autentizátor",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Neznámý autentizátor",
+        "authenticator_not_disclosed": "Autentizátor se neidentifikoval",
+        "authenticator_not_recorded": "Nezaznamenáno",
         "passkey_added": "Passkey zaregistrován.",
         "no_passkeys": "Žádné passkeys."
     },

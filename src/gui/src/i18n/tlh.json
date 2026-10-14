@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "laD neH mIwDaq ja'ghach wIvwI' yIpoSmoH",
         "SPELLCHECK": "ngutlh 'olghach",
         "TAG_CLOUD_RETENTION_DAYS": "per 'eng pol poH (jajmey)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "'elmeH ngaQHa'moHwI' 'olwI' jan: pongmey Degh je 'agh (AAGUID tetlh Suq)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "'elmeH ngaQHa'moHwI' 'olwI' jan: tetlh URL (AAGUID)",
         "TAG_COLOR": "per 'eng rItlh law'",
         "TIME_FORMAT": "poH ghItlh Segh"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "'elmeH ngaQHa'moHwI'",
         "passkey_created": "chenmoHlu'",
         "passkey_last_used": "lo' Qav",
+        "passkey_authenticator": "'olwI' jan",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "'olwI' jan Sovbe'lu'bogh",
+        "authenticator_not_disclosed": "'olwI' jan pong 'angbe'",
+        "authenticator_not_recorded": "qonlu'be'",
         "passkey_added": "'elmeH ngaQHa'moHwI' ghItlhlu'pu'.",
         "no_passkeys": "'elmeH ngaQHa'moHwI' ghItlhlu'be'."
     },

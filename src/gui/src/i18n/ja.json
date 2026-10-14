@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "レポート項目セレクターを読み取り専用モードで開く",
         "SPELLCHECK": "スペルチェック",
         "TAG_CLOUD_RETENTION_DAYS": "タグクラウドの保持期間（日）",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "パスキー認証器: 名前とアイコンを表示（コミュニティの AAGUID リストをダウンロード）",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "パスキー認証器: リストの URL（AAGUID）",
         "TAG_COLOR": "色付きタグクラウド",
         "TIME_FORMAT": "時刻形式"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "パスキー",
         "passkey_created": "作成日時",
         "passkey_last_used": "最終使用日時",
+        "passkey_authenticator": "認証器",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "不明な認証器",
+        "authenticator_not_disclosed": "認証器が開示していません",
+        "authenticator_not_recorded": "未記録",
         "passkey_added": "パスキーを登録しました。",
         "no_passkeys": "登録済みのパスキーはありません。"
     },

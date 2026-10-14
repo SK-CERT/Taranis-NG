@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Berichtselementauswahl im schreibgeschützten Modus öffnen",
         "SPELLCHECK": "Rechtschreibprüfung",
         "TAG_CLOUD_RETENTION_DAYS": "Aufbewahrung der Schlagwortwolke (Tage)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Passkey-Authentifikatoren: Namen und Symbole anzeigen (lädt die AAGUID-Liste der Community herunter)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Passkey-Authentifikatoren: URL der Liste (AAGUID)",
         "TAG_COLOR": "Farbige Schlagwortwolke",
         "TIME_FORMAT": "Zeitformat"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Passkey",
         "passkey_created": "Erstellt",
         "passkey_last_used": "Zuletzt verwendet",
+        "passkey_authenticator": "Authentifikator",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Unbekannter Authentifikator",
+        "authenticator_not_disclosed": "Vom Authentifikator nicht angegeben",
+        "authenticator_not_recorded": "Nicht erfasst",
         "passkey_added": "Passkey registriert.",
         "no_passkeys": "Keine Passkeys registriert."
     },

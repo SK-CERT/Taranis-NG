@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from managers import passkey_authenticator_manager
 from managers.db_manager import db
 from shared.common import TZ
 
@@ -19,6 +20,8 @@ class WebauthnCredential(db.Model):
         public_key (str): base64 COSE public key.
         sign_count (int): Signature counter reported by the authenticator.
         transports (str): Comma-separated transport hints.
+        aaguid (str): Model identifier the authenticator reported at registration; None for
+            passkeys registered before it was recorded.
         created_at (datetime): Registration time.
         last_used_at (datetime): Last successful assertion.
     """
@@ -32,6 +35,7 @@ class WebauthnCredential(db.Model):
     public_key = db.Column(db.String(), nullable=False)
     sign_count = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     transports = db.Column(db.String(), nullable=True)
+    aaguid = db.Column(db.String(36), nullable=True)
     created_at = db.Column(db.DateTime)
     last_used_at = db.Column(db.DateTime)
 
@@ -45,6 +49,7 @@ class WebauthnCredential(db.Model):
         public_key: str,
         sign_count: int = 0,
         transports: str | None = None,
+        aaguid: str | None = None,
     ) -> None:
         """Create a new passkey credential record."""
         self.user_id = user_id
@@ -53,6 +58,7 @@ class WebauthnCredential(db.Model):
         self.public_key = public_key
         self.sign_count = sign_count
         self.transports = transports
+        self.aaguid = aaguid
         self.created_at = datetime.now(TZ)
 
     @classmethod
@@ -136,6 +142,11 @@ class WebauthnCredential(db.Model):
             "name": self.name,
             "created_at": str(self.created_at) if self.created_at else None,
             "last_used_at": str(self.last_used_at) if self.last_used_at else None,
+            "aaguid": self.aaguid,
+            "authenticator": passkey_authenticator_manager.describe(self.aaguid),
+            # Without it the GUI could not tell an authenticator the list does not know from one
+            # nobody looked up.
+            "authenticator_lookup": passkey_authenticator_manager.lookup_enabled(),
         }
 
     def touch(self, sign_count: int) -> None:

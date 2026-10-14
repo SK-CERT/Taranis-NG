@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "เปิดตัวเลือกรายการรายงานในโหมดอ่านอย่างเดียว",
         "SPELLCHECK": "ตรวจการสะกด",
         "TAG_CLOUD_RETENTION_DAYS": "ระยะเวลาเก็บแท็กคลาวด์ (วัน)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "ตัวยืนยันตัวตนพาสคีย์: แสดงชื่อและไอคอน (ดาวน์โหลดรายการ AAGUID ของชุมชน)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "ตัวยืนยันตัวตนพาสคีย์: URL ของรายการ (AAGUID)",
         "TAG_COLOR": "แท็กคลาวด์หลากสี",
         "TIME_FORMAT": "รูปแบบเวลา"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "พาสคีย์",
         "passkey_created": "สร้างเมื่อ",
         "passkey_last_used": "ใช้ล่าสุด",
+        "passkey_authenticator": "ตัวยืนยันตัวตน",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "ตัวยืนยันตัวตนที่ไม่รู้จัก",
+        "authenticator_not_disclosed": "ตัวยืนยันตัวตนไม่เปิดเผย",
+        "authenticator_not_recorded": "ไม่ได้บันทึก",
         "passkey_added": "ลงทะเบียนพาสคีย์แล้ว",
         "no_passkeys": "ยังไม่ได้ลงทะเบียนพาสคีย์"
     },

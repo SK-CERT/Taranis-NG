@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "보고서 항목 선택기를 읽기 전용 모드로 열기",
         "SPELLCHECK": "맞춤법 검사",
         "TAG_CLOUD_RETENTION_DAYS": "태그 클라우드 보존 기간(일)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "패스키 인증기: 이름과 아이콘 표시(커뮤니티 AAGUID 목록을 다운로드)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "패스키 인증기: 목록 URL(AAGUID)",
         "TAG_COLOR": "색상 태그 클라우드",
         "TIME_FORMAT": "시간 형식"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "패스키",
         "passkey_created": "생성 시각",
         "passkey_last_used": "마지막 사용 시각",
+        "passkey_authenticator": "인증기",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "알 수 없는 인증기",
+        "authenticator_not_disclosed": "인증기가 공개하지 않음",
+        "authenticator_not_recorded": "기록되지 않음",
         "passkey_added": "패스키가 등록되었습니다.",
         "no_passkeys": "등록된 패스키가 없습니다."
     },

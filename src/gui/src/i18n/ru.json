@@ -1091,6 +1091,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Открывать средство выбора элементов отчета в режиме только для чтения",
         "SPELLCHECK": "Проверка орфографии",
         "TAG_CLOUD_RETENTION_DAYS": "Срок хранения облака тегов (дни)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Аутентификаторы ключей доступа: показывать названия и значки (загружает общедоступный список AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Аутентификаторы ключей доступа: URL списка (AAGUID)",
         "TAG_COLOR": "Цветное облако тегов",
         "TIME_FORMAT": "Формат времени"
     },
@@ -1951,6 +1953,11 @@
         "default_passkey_name": "Ключ доступа",
         "passkey_created": "Создан",
         "passkey_last_used": "Последнее использование",
+        "passkey_authenticator": "Аутентификатор",
+        "passkey_aaguid": "AAGUID",
+        "authenticator_unknown": "Неизвестный аутентификатор",
+        "authenticator_not_disclosed": "Аутентификатор не сообщил",
+        "authenticator_not_recorded": "Не записано",
         "passkey_added": "Ключ доступа зарегистрирован.",
         "no_passkeys": "Зарегистрированных ключей доступа нет."
     },

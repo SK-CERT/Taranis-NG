@@ -149,6 +149,7 @@ def finish_registration(user: User, challenge_id: str, credential: dict, name: s
         public_key=bytes_to_base64url(verification.credential_public_key),
         sign_count=verification.sign_count,
         transports=",".join(credential.get("response", {}).get("transports", []) or []),
+        aaguid=verification.aaguid,
     )
     db.session.add(record)
     db.session.commit()
