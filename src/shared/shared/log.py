@@ -5,6 +5,8 @@ import logging.handlers
 import socket
 import sys
 
+MAX_STORED_MESSAGE_LENGTH = 5_000
+
 
 class TaranisLogger:
     """A logger class for Taranis-NG.
@@ -89,7 +91,13 @@ class TaranisLogger:
     def _store_message(self, level: str, message: str) -> None:
         # Only store if this level is configured in store_messages
         if level.lower() in self.stored_message_levels:
-            self.stored_message = message
+            marker = "...\n"
+            previous_messages = self.stored_message or ""
+            previous_messages = previous_messages.removeprefix(marker)
+            stored_message = f"{previous_messages}\n{message}" if previous_messages else message
+            if len(stored_message) > MAX_STORED_MESSAGE_LENGTH:
+                stored_message = marker + stored_message[-(MAX_STORED_MESSAGE_LENGTH - len(marker)) :]
+            self.stored_message = stored_message
 
     def debug(self, message: str) -> None:
         """Log a debug message.
@@ -116,7 +124,7 @@ class TaranisLogger:
             message (str, optional): An optional message to include in the log. Defaults to "Traceback:".
         """
         self._store_message("exception", message)
-        self.logger.exception(self._format_message(message))
+        self.logger.exception(self._format_message(message))  # noqa: LOG004
 
     def info(self, message: str) -> None:
         """Log an info message.
