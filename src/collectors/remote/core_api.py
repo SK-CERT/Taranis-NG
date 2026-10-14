@@ -118,18 +118,27 @@ class CoreApi:
         Returns:
             tuple: A tuple containing the JSON response and the HTTP status code.
         """
+        msg = "Is CORE alive failed"
         try:
             response = requests.get(
                 f"{cls.api_url}/api/v1/isalive",
                 headers=cls.headers,
                 timeout=10,
             )
-            return response.json(), response.status_code
         except Exception as ex:
-            msg = "Is CORE alive failed"
             if show_error:
                 logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+            return {"error": f"{msg}: {ex}"}, HTTPStatus.INTERNAL_SERVER_ERROR
+        try:
+            return response.json(), response.status_code
+        except ValueError:
+            # Not core answering but something in front of it - typically Traefik's plain-text
+            # 404 for a path it does not route. Its status is the clue, so it is kept; a 200
+            # that is not core's JSON still never counts as alive.
+            status_code = HTTPStatus.BAD_GATEWAY if response.status_code == HTTPStatus.OK else response.status_code
+            if show_error:
+                logger.error(f"{msg}: HTTP {response.status_code} with a non-JSON body")
+            return {"error": f"{msg}: non-JSON answer {response.text[:100]!r}"}, status_code
 
     @classmethod
     def update_sources_schedule(cls, next_run_by_source: dict) -> tuple[dict, HTTPStatus]:
