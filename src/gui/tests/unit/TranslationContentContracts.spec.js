@@ -32,7 +32,9 @@ const universalExactCopyAllowlist = new Set([
     'auth_provider.kinds.oauth2',
     'auth_provider.kinds.ldap',
     'auth_provider.kinds.saml',
-    'auth_provider.delete_message'
+    'auth_provider.delete_message',
+    // The WebAuthn field name, spelled the same in every language.
+    'security.passkey_aaguid'
 ])
 
 // Exact spelling can still be the correct translation. Keep these exceptions
@@ -106,6 +108,7 @@ const localeExactCopyAllowlists = {
         'auth_provider.scopes',
         'security.passkeys_title',
         'security.default_passkey_name',
+        'security.passkey_authenticator',
         'login.enroll_passkey_name'
     ]),
     'pl': new Set(['access_management.users.email', 'access_management.users.status']),

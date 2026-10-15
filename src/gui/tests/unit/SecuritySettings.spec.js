@@ -179,6 +179,30 @@ describe('SecuritySettings', () => {
         expect(wrapper.get('.passkey-last-used').attributes('dir')).toBe('auto')
     })
 
+    it('shows the icon and name of each authenticator, its AAGUID in the browser tooltip, and says when none was recorded', async () => {
+        const icon = 'data:image/svg+xml;base64,PHN2Zy8+'
+        const wrapper = await mountSecurity({
+            passkeys: [
+                {
+                    id: 1,
+                    name: 'Work key',
+                    aaguid: 'cb69481e-8ff7-4039-93ec-0a2729a154a8',
+                    authenticator: { name: 'YubiKey 5 Series', icon_light: icon, icon_dark: null }
+                },
+                { id: 2, name: 'Old key', aaguid: null, authenticator: null }
+            ]
+        })
+        const cells = wrapper.findAll('.passkey-authenticator-cell')
+
+        expect(wrapper.find('thead').text()).toContain('Authenticator')
+        expect(cells[0].text()).toContain('YubiKey 5 Series')
+        expect(cells[0].find('[data-test="passkey-authenticator-aaguid"]').exists()).toBe(false)
+        expect(cells[0].attributes('title')).toBe('AAGUID cb69481e-8ff7-4039-93ec-0a2729a154a8')
+        expect(cells[0].get('img').attributes('src')).toBe(icon)
+        expect(cells[1].text()).toBe('Not recorded')
+        expect(cells[1].find('img').exists()).toBe(false)
+    })
+
     it('surfaces a failed registration (e.g. passkey provider not configured)', async () => {
         const wrapper = await mountSecurity()
         const error = new Error('not configured')

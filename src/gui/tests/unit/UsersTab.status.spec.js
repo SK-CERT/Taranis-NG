@@ -121,9 +121,10 @@ describe('UsersTab - status and login methods', () => {
 
     it('flags users with an MFA enrollment', async () => {
         const { wrapper } = await mountTab()
-        expect(wrapper.vm.hasMfa(USERS[0])).toBe(true) // TOTP enrolled
-        expect(wrapper.vm.hasMfa(USERS[1])).toBe(false)
-        expect(wrapper.vm.hasMfa({ mfa: { totp: false, passkeys: 2 } })).toBe(true) // passkeys count too
+        const rows = wrapper.findAll('tbody tr')
+        // Each factor has its own icon (passkeys: see UsersTab.mfa.spec.js).
+        expect(rows[0].find('[data-test="user-mfa-totp"]').exists()).toBe(true) // TOTP enrolled
+        expect(rows[1].find('[data-test="user-mfa-totp"]').exists()).toBe(false)
     })
 
     it('filters the table by status', async () => {

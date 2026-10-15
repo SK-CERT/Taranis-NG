@@ -123,6 +123,7 @@
                     <thead>
                         <tr>
                             <th>{{ t('security.passkey_name') }}</th>
+                            <th>{{ t('security.passkey_authenticator') }}</th>
                             <th>{{ t('security.passkey_created') }}</th>
                             <th>{{ t('security.passkey_last_used') }}</th>
                             <th class="text-end">{{ t('settings.actions') }}</th>
@@ -139,6 +140,15 @@
                                     class="passkey-name"
                                     >{{ passkey.name }}</bdi
                                 >
+                            </td>
+                            <td>
+                                <PasskeyAuthenticator
+                                    class="passkey-authenticator-cell"
+                                    :aaguid="passkey.aaguid"
+                                    :authenticator="passkey.authenticator"
+                                    :lookup="passkey.authenticator_lookup !== false"
+                                    aaguid-tooltip
+                                />
                             </td>
                             <td>
                                 <bdi
@@ -234,6 +244,7 @@
     import QRCode from 'qrcode'
     import { startRegistration } from '@simplewebauthn/browser'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import PasskeyAuthenticator from '@/components/common/PasskeyAuthenticator.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import {
         getMyTotp,
@@ -246,13 +257,9 @@
         renamePasskey,
         deletePasskey
     } from '@/api/user'
+    import type { PasskeySummary } from '@/types/auth'
 
-    type Passkey = {
-        id: number
-        name: string
-        created_at?: string | null
-        last_used_at?: string | null
-    }
+    type Passkey = PasskeySummary
 
     const props = withDefaults(
         defineProps<{

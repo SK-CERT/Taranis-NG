@@ -128,13 +128,29 @@
                     >
                         {{ identity.provider_name }}
                     </v-chip>
+                    <!-- Second factors: TOTP, then each passkey by its authenticator's icon; the
+                         browser tooltip names the authenticator, or gives its AAGUID. -->
                     <v-icon
-                        v-if="hasMfa(asUserItem(item))"
-                        size="small"
+                        v-if="asUserItem(item).mfa?.totp"
+                        size="20"
                         color="success"
-                        :title="t('access_management.users.mfa_enabled')"
-                        >mdi-shield-key</v-icon
+                        class="me-1"
+                        :title="t('security.totp_title')"
+                        :aria-label="t('security.totp_title')"
+                        role="img"
+                        data-test="user-mfa-totp"
+                        >mdi-cellphone-key</v-icon
                     >
+                    <PasskeyAuthenticator
+                        v-for="passkey in asUserItem(item).mfa?.passkey_details || []"
+                        :key="passkey.id"
+                        class="me-1 user-passkey"
+                        :aaguid="passkey.aaguid"
+                        :authenticator="passkey.authenticator"
+                        :lookup="passkey.authenticator_lookup !== false"
+                        icon-only
+                        data-test="user-mfa-passkey"
+                    />
                 </template>
 
                 <template #item.actions="{ item }">
@@ -200,9 +216,11 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import SearchField from '@/components/common/SearchField.vue'
+    import PasskeyAuthenticator from '@/components/common/PasskeyAuthenticator.vue'
     import { useAuth } from '@/composables/useAuth'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { notifyDeleteError } from '@/utils/deleteError'
+    import type { PasskeySummary } from '@/types/auth'
 
     type HeaderEntry = {
         title: string
@@ -240,7 +258,7 @@
         organizations?: OrganizationItem[]
         identities?: UserIdentity[]
         has_password?: boolean
-        mfa?: { totp?: boolean; passkeys?: number }
+        mfa?: { totp?: boolean; passkeys?: number; passkey_details?: PasskeySummary[] }
         [key: string]: unknown
     }
 
@@ -287,8 +305,6 @@
     const rowProps = ({ item }: { item: unknown }): Record<string, unknown> => ({
         class: (item as UserItem).status === 'disabled' ? 'user-disabled' : ''
     })
-
-    const hasMfa = (user: UserItem): boolean => !!(user.mfa?.totp || (user.mfa?.passkeys ?? 0) > 0)
 
     const loading = ref(true)
     let pendingLoads = 0

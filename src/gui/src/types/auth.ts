@@ -52,6 +52,28 @@ export interface LoginMethodsResponse {
     passkey_login_enabled: boolean
 }
 
+// The authenticator a passkey lives on, as core names it from the community
+// AAGUID list. Either icon may be missing; the other one stands in for it.
+export interface PasskeyAuthenticatorInfo {
+    name: string
+    icon_light?: string | null
+    icon_dark?: string | null
+}
+
+// A registered passkey, as GET /users/my-passkeys and the users list return it.
+export interface PasskeySummary {
+    id: number
+    name: string
+    created_at?: string | null
+    last_used_at?: string | null
+    // null for passkeys registered before the AAGUID was recorded
+    aaguid?: string | null
+    // null when the list does not know the AAGUID or core has no list
+    authenticator?: PasskeyAuthenticatorInfo | null
+    // false while the PASSKEY_AUTHENTICATOR_LOOKUP setting is off
+    authenticator_lookup?: boolean
+}
+
 // Error payload returned by the login/MFA endpoints (HTTP 403)
 export interface LoginErrorResponse {
     error?: string

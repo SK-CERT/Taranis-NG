@@ -173,6 +173,8 @@ describe('Arabic production catalog contracts', () => {
             'public_web.webs.hsts',
             'public_web.webs.image_favicon',
             'routing.hsts_title',
+            // The WebAuthn field name of an authenticator model.
+            'security.passkey_aaguid',
             'presenters.nodes.url',
             'presenters.nodes.api_url',
             'publishers.nodes.url',
