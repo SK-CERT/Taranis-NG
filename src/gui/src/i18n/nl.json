@@ -27,7 +27,6 @@
             },
             "login_methods": "Inlogmethoden",
             "local_password": "lokaal",
-            "mfa_enabled": "Tweefactorauthenticatie ingeschakeld",
             "approve": "Goedkeuren",
             "disable": "Uitschakelen",
             "enable": "Inschakelen",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Rapportitemkiezer in alleen-lezenmodus openen",
         "SPELLCHECK": "Spellingcontrole",
         "TAG_CLOUD_RETENTION_DAYS": "Bewaartermijn tagwolk (dagen)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Passkey-authenticators: namen en pictogrammen tonen (downloadt de AAGUID-lijst van de community)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "Passkey-authenticators: URL van de lijst (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID-lijst van de community gebruiken",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL van de AAGUID-lijst",
         "TAG_COLOR": "Kleurrijke tagwolk",
         "TIME_FORMAT": "Tijdnotatie"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "Onbekende authenticator",
         "authenticator_not_disclosed": "Niet vrijgegeven door de authenticator",
         "authenticator_not_recorded": "Niet vastgelegd",
+        "authenticator_not_identified": "Niet geïdentificeerd",
         "passkey_added": "Passkey geregistreerd.",
         "no_passkeys": "Geen passkeys geregistreerd."
     },

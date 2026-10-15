@@ -27,7 +27,6 @@
             },
             "login_methods": "วิธีเข้าสู่ระบบ",
             "local_password": "ภายใน",
-            "mfa_enabled": "เปิดใช้การยืนยันตัวตนแบบสองปัจจัยแล้ว",
             "approve": "อนุมัติ",
             "disable": "ปิดใช้งาน",
             "enable": "เปิดใช้งาน",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "เปิดตัวเลือกรายการรายงานในโหมดอ่านอย่างเดียว",
         "SPELLCHECK": "ตรวจการสะกด",
         "TAG_CLOUD_RETENTION_DAYS": "ระยะเวลาเก็บแท็กคลาวด์ (วัน)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "ตัวยืนยันตัวตนพาสคีย์: แสดงชื่อและไอคอน (ดาวน์โหลดรายการ AAGUID ของชุมชน)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "ตัวยืนยันตัวตนพาสคีย์: URL ของรายการ (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "ใช้รายการ AAGUID ของชุมชน",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL ของรายการ AAGUID",
         "TAG_COLOR": "แท็กคลาวด์หลากสี",
         "TIME_FORMAT": "รูปแบบเวลา"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "ตัวยืนยันตัวตนที่ไม่รู้จัก",
         "authenticator_not_disclosed": "ตัวยืนยันตัวตนไม่เปิดเผย",
         "authenticator_not_recorded": "ไม่ได้บันทึก",
+        "authenticator_not_identified": "ไม่ได้ระบุ",
         "passkey_added": "ลงทะเบียนพาสคีย์แล้ว",
         "no_passkeys": "ยังไม่ได้ลงทะเบียนพาสคีย์"
     },

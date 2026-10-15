@@ -27,7 +27,6 @@
             },
             "login_methods": "Métodos de inicio de sesión",
             "local_password": "local",
-            "mfa_enabled": "Autenticación de dos factores habilitada",
             "approve": "Aprobar",
             "disable": "Deshabilitar",
             "enable": "Habilitar",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Abrir el selector de elementos de informe en modo de solo lectura",
         "SPELLCHECK": "Corrector ortográfico",
         "TAG_CLOUD_RETENTION_DAYS": "Conservación de la nube de etiquetas (días)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Autenticadores de claves de acceso: mostrar nombres e iconos (descarga la lista comunitaria de AAGUID)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "Autenticadores de claves de acceso: URL de la lista (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Usar la lista comunitaria de AAGUID",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL de la lista de AAGUID",
         "TAG_COLOR": "Nube de etiquetas con colores",
         "TIME_FORMAT": "Formato de hora"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "Autenticador desconocido",
         "authenticator_not_disclosed": "El autenticador no lo indica",
         "authenticator_not_recorded": "No registrado",
+        "authenticator_not_identified": "Sin identificar",
         "passkey_added": "Clave de acceso registrada.",
         "no_passkeys": "No hay claves de acceso registradas."
     },

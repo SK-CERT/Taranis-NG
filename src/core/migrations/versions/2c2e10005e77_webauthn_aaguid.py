@@ -38,14 +38,14 @@ SETTINGS = (
         "type": "B",
         "value": "false",
         "default_val": "false",
-        "description": "Passkey authenticators: show names and icons (downloads the community AAGUID list)",
+        "description": "Use community AAGUID list",
     },
     {
         "key": URL_SETTING,
         "type": "S",
         "value": DEFAULT_URL,
         "default_val": DEFAULT_URL,
-        "description": "Passkey authenticators: list URL (AAGUID)",
+        "description": "AAGUID list URL",
     },
 )
 

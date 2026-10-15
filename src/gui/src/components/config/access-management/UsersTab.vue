@@ -128,63 +128,29 @@
                     >
                         {{ identity.provider_name }}
                     </v-chip>
-                    <!-- The tooltip is styled like a card of the current theme (see the style block),
-                         so the authenticator icons, which follow the theme, sit on a matching background. -->
-                    <v-tooltip
-                        v-if="hasMfa(asUserItem(item))"
-                        location="top"
-                        content-class="user-mfa-tooltip elevation-4"
+                    <!-- Second factors: TOTP, then each passkey by its authenticator's icon; the
+                         browser tooltip names the authenticator, or gives its AAGUID. -->
+                    <v-icon
+                        v-if="asUserItem(item).mfa?.totp"
+                        size="20"
+                        color="success"
+                        class="me-1"
+                        :title="t('security.totp_title')"
+                        :aria-label="t('security.totp_title')"
+                        role="img"
+                        data-test="user-mfa-totp"
+                        >mdi-cellphone-key</v-icon
                     >
-                        <template #activator="{ props: tooltipProps }">
-                            <v-icon
-                                v-bind="tooltipProps"
-                                size="small"
-                                color="success"
-                                tabindex="0"
-                                :aria-label="t('access_management.users.mfa_enabled')"
-                                data-test="user-mfa-badge"
-                                >mdi-shield-key</v-icon
-                            >
-                        </template>
-                        <div
-                            class="user-mfa-summary"
-                            data-test="user-mfa-summary"
-                        >
-                            <div class="user-mfa-summary__title">{{ t('access_management.users.mfa_enabled') }}</div>
-                            <div
-                                v-if="asUserItem(item).mfa?.totp"
-                                class="user-mfa-summary__factor"
-                                data-test="user-mfa-totp"
-                            >
-                                <v-icon size="20">mdi-cellphone-key</v-icon>
-                                <span>{{ t('security.totp_title') }}</span>
-                            </div>
-                            <template v-if="(asUserItem(item).mfa?.passkeys ?? 0) > 0">
-                                <div class="user-mfa-summary__factor">
-                                    <v-icon size="20">mdi-fingerprint</v-icon>
-                                    <span>{{ t('security.passkeys_title') }}</span>
-                                </div>
-                                <ul class="user-mfa-summary__passkeys">
-                                    <li
-                                        v-for="passkey in asUserItem(item).mfa?.passkey_details || []"
-                                        :key="passkey.id"
-                                        data-test="user-mfa-passkey"
-                                    >
-                                        <bdi
-                                            dir="auto"
-                                            class="user-mfa-summary__passkey-name"
-                                            >{{ passkey.name }}</bdi
-                                        >
-                                        <PasskeyAuthenticator
-                                            :aaguid="passkey.aaguid"
-                                            :authenticator="passkey.authenticator"
-                                            :lookup="passkey.authenticator_lookup !== false"
-                                        />
-                                    </li>
-                                </ul>
-                            </template>
-                        </div>
-                    </v-tooltip>
+                    <PasskeyAuthenticator
+                        v-for="passkey in asUserItem(item).mfa?.passkey_details || []"
+                        :key="passkey.id"
+                        class="me-1 user-passkey"
+                        :aaguid="passkey.aaguid"
+                        :authenticator="passkey.authenticator"
+                        :lookup="passkey.authenticator_lookup !== false"
+                        icon-only
+                        data-test="user-mfa-passkey"
+                    />
                 </template>
 
                 <template #item.actions="{ item }">
@@ -340,8 +306,6 @@
         class: (item as UserItem).status === 'disabled' ? 'user-disabled' : ''
     })
 
-    const hasMfa = (user: UserItem): boolean => !!(user.mfa?.totp || (user.mfa?.passkeys ?? 0) > 0)
-
     const loading = ref(true)
     let pendingLoads = 0
 
@@ -422,51 +386,5 @@
 
     :deep(.user-disabled:hover) {
         opacity: 1;
-    }
-
-    /* The tooltip is teleported out of this component, hence :global. App.vue paints every
-       tooltip in inverted colours (with !important) and caps it at 320px; a card of the current
-       theme keeps the theme-matched authenticator icons legible, and the AAGUIDs need the width. */
-    :global(.v-tooltip > .v-overlay__content.user-mfa-tooltip) {
-        max-width: none;
-        border: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
-        background: rgb(var(--v-theme-surface)) !important;
-        color: rgb(var(--v-theme-on-surface)) !important;
-        padding: 8px 12px;
-    }
-
-    .user-mfa-summary {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .user-mfa-summary__title {
-        font-weight: 600;
-    }
-
-    .user-mfa-summary__factor {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .user-mfa-summary__passkeys {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin: 0;
-        padding-inline-start: 28px;
-        list-style: none;
-    }
-
-    .user-mfa-summary__passkeys li {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .user-mfa-summary__passkey-name {
-        font-weight: 500;
     }
 </style>

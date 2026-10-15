@@ -27,7 +27,6 @@
             },
             "login_methods": "लॉगिन विधियाँ",
             "local_password": "स्थानीय",
-            "mfa_enabled": "दो-कारक प्रमाणीकरण सक्षम है",
             "approve": "अनुमोदित करें",
             "disable": "अक्षम करें",
             "enable": "सक्षम करें",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "रिपोर्ट आइटम चयनकर्ता केवल-पढ़ने के मोड में खोलें",
         "SPELLCHECK": "वर्तनी जाँच",
         "TAG_CLOUD_RETENTION_DAYS": "टैग क्लाउड प्रतिधारण (दिन)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "पासकी प्रमाणक: नाम और आइकन दिखाएँ (समुदाय की AAGUID सूची डाउनलोड करता है)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "पासकी प्रमाणक: सूची का URL (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "समुदाय की AAGUID सूची का उपयोग करें",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID सूची का URL",
         "TAG_COLOR": "रंगीन टैग क्लाउड",
         "TIME_FORMAT": "समय प्रारूप"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "अज्ञात प्रमाणक",
         "authenticator_not_disclosed": "प्रमाणक ने नहीं बताया",
         "authenticator_not_recorded": "दर्ज नहीं",
+        "authenticator_not_identified": "पहचाना नहीं गया",
         "passkey_added": "पासकी पंजीकृत हो गई।",
         "no_passkeys": "कोई पासकी पंजीकृत नहीं है।"
     },

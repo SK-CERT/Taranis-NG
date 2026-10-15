@@ -27,7 +27,6 @@
             },
             "login_methods": "Metody logowania",
             "local_password": "lokalne",
-            "mfa_enabled": "Uwierzytelnianie dwuskładnikowe włączone",
             "approve": "Zatwierdź",
             "disable": "Wyłącz",
             "enable": "Włącz",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Otwórz selektor elementów raportu w trybie tylko do odczytu",
         "SPELLCHECK": "Sprawdzanie pisowni",
         "TAG_CLOUD_RETENTION_DAYS": "Okres przechowywania chmury tagów (dni)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Moduły uwierzytelniające kluczy dostępu: pokazuj nazwy i ikony (pobiera społecznościową listę AAGUID)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "Moduły uwierzytelniające kluczy dostępu: URL listy (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Używaj społecznościowej listy AAGUID",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL listy AAGUID",
         "TAG_COLOR": "Kolorowa chmura tagów",
         "TIME_FORMAT": "Format czasu"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "Nieznany moduł uwierzytelniający",
         "authenticator_not_disclosed": "Nieujawniony przez moduł uwierzytelniający",
         "authenticator_not_recorded": "Nie zapisano",
+        "authenticator_not_identified": "Nie zidentyfikowano",
         "passkey_added": "Klucz dostępu został zarejestrowany.",
         "no_passkeys": "Nie zarejestrowano żadnych kluczy dostępu."
     },

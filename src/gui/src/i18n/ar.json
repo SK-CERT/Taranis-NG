@@ -27,7 +27,6 @@
             },
             "login_methods": "طرق تسجيل الدخول",
             "local_password": "محلي",
-            "mfa_enabled": "المصادقة الثنائية مفعّلة",
             "approve": "موافقة",
             "disable": "تعطيل",
             "enable": "تمكين",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "فتح محدّد عناصر التقارير في وضع القراءة فقط",
         "SPELLCHECK": "التدقيق الإملائي",
         "TAG_CLOUD_RETENTION_DAYS": "مدة الاحتفاظ بسحابة الوسوم (بالأيام)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "أدوات مصادقة مفاتيح المرور: عرض الأسماء والأيقونات (يُنزِّل قائمة AAGUID المجتمعية)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "أدوات مصادقة مفاتيح المرور: عنوان URL للقائمة (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "استخدام قائمة AAGUID المجتمعية",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "عنوان URL لقائمة AAGUID",
         "TAG_COLOR": "سحابة وسوم ملوّنة",
         "TIME_FORMAT": "تنسيق الوقت"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "أداة مصادقة غير معروفة",
         "authenticator_not_disclosed": "لم تُفصح عنه أداة المصادقة",
         "authenticator_not_recorded": "غير مسجَّل",
+        "authenticator_not_identified": "غير محدَّد",
         "passkey_added": "تم تسجيل مفتاح المرور.",
         "no_passkeys": "لا توجد مفاتيح مرور مسجّلة."
     },

@@ -27,7 +27,6 @@
             },
             "login_methods": "Способи входу",
             "local_password": "локальний",
-            "mfa_enabled": "Двофакторну автентифікацію ввімкнено",
             "approve": "Схвалити",
             "disable": "Вимкнути",
             "enable": "Увімкнути",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Відкривати засіб вибору елементів звіту в режимі лише для читання",
         "SPELLCHECK": "Перевірка орфографії",
         "TAG_CLOUD_RETENTION_DAYS": "Термін зберігання хмари тегів (дні)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Автентифікатори ключів доступу: показувати назви та значки (завантажує спільнотний список AAGUID)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "Автентифікатори ключів доступу: URL списку (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Використовувати спільнотний список AAGUID",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL списку AAGUID",
         "TAG_COLOR": "Кольорова хмара тегів",
         "TIME_FORMAT": "Формат часу"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "Невідомий автентифікатор",
         "authenticator_not_disclosed": "Автентифікатор не повідомив",
         "authenticator_not_recorded": "Не записано",
+        "authenticator_not_identified": "Не визначено",
         "passkey_added": "Ключ доступу зареєстровано.",
         "no_passkeys": "Немає зареєстрованих ключів доступу."
     },

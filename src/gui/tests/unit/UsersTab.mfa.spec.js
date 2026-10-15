@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
-import { defineComponent, h } from 'vue'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import UsersTab from '@/components/config/access-management/UsersTab.vue'
 
 const YUBIKEY = 'cb69481e-8ff7-4039-93ec-0a2729a154a8'
+const UNLISTED = '11111111-2222-3333-4444-555555555555'
 const ICON = 'data:image/svg+xml;base64,PHN2Zy8+'
 
 // Hoisted so the vi.mock factory below — hoisted above all top-level code — can
@@ -22,15 +22,23 @@ const { USERS } = vi.hoisted(() => ({
             has_password: true,
             mfa: {
                 totp: true,
-                passkeys: 2,
+                passkeys: 3,
                 passkey_details: [
                     {
                         id: 11,
                         name: 'Work key',
                         aaguid: 'cb69481e-8ff7-4039-93ec-0a2729a154a8',
-                        authenticator: { name: 'YubiKey 5 Series', icon_light: 'data:image/svg+xml;base64,PHN2Zy8+', icon_dark: null }
+                        authenticator: { name: 'YubiKey 5 Series', icon_light: 'data:image/svg+xml;base64,PHN2Zy8+', icon_dark: null },
+                        authenticator_lookup: true
                     },
-                    { id: 12, name: 'Old key', aaguid: null, authenticator: null }
+                    {
+                        id: 13,
+                        name: 'Odd key',
+                        aaguid: '11111111-2222-3333-4444-555555555555',
+                        authenticator: null,
+                        authenticator_lookup: true
+                    },
+                    { id: 12, name: 'Old key', aaguid: null, authenticator: null, authenticator_lookup: true }
                 ]
             }
         },
@@ -79,63 +87,54 @@ vi.mock('@/composables/useAuth', () => ({
     useAuth: () => ({ checkPermission: () => true })
 }))
 
-// A tooltip renders its content only once hovered, and then into an overlay outside
-// the wrapper. This stand-in renders the activator and the content inline.
-const InlineTooltip = defineComponent({
-    setup(_props, { slots }) {
-        return () =>
-            h('div', { class: 'tooltip-stub' }, [slots.activator?.({ props: {} }), h('div', { class: 'tooltip-content' }, slots.default?.())])
-    }
-})
-
 async function mountTab() {
-    const wrapper = mountWithPlugins(UsersTab, { global: { stubs: { VTooltip: InlineTooltip } } })
+    const wrapper = mountWithPlugins(UsersTab)
     await flushPromises()
     await wrapper.vm.$nextTick()
     return wrapper
 }
 
 const rowOf = (wrapper, username) => wrapper.findAll('tbody tr').find((row) => row.text().includes(username))
+const passkeyIcons = (row) => row.findAll('[data-test="user-mfa-passkey"]')
 
-describe('UsersTab - second-factor badge', () => {
-    it('lists TOTP and every passkey with its authenticator and AAGUID', async () => {
+describe('UsersTab - second factors', () => {
+    it('shows a TOTP icon, named in its tooltip', async () => {
         const wrapper = await mountTab()
-        const summary = rowOf(wrapper, 'both').get('[data-test="user-mfa-summary"]')
-        const passkeys = summary.findAll('[data-test="user-mfa-passkey"]')
+        const totp = rowOf(wrapper, 'both').get('[data-test="user-mfa-totp"]')
 
-        expect(summary.text()).toContain('Two-factor authentication enabled')
-        expect(summary.find('[data-test="user-mfa-totp"]').text()).toContain('Authenticator app (TOTP)')
-        expect(summary.text()).toContain('Passkeys')
-        expect(passkeys).toHaveLength(2)
-        expect(passkeys[0].text()).toContain('Work key')
-        expect(passkeys[0].text()).toContain('YubiKey 5 Series')
-        expect(passkeys[0].text()).toContain(`AAGUID ${YUBIKEY}`)
-        expect(passkeys[0].get('img').attributes('src')).toBe(ICON)
-        // A passkey registered before AAGUIDs were recorded still shows up.
-        expect(passkeys[1].text()).toContain('Old key')
-        expect(passkeys[1].text()).toContain('Not recorded')
+        expect(totp.attributes('title')).toBe('Authenticator app (TOTP)')
+        expect(totp.attributes('aria-label')).toBe('Authenticator app (TOTP)')
+    })
+
+    it("shows each passkey by its authenticator's icon, with the name or the AAGUID as the tooltip", async () => {
+        const wrapper = await mountTab()
+        const [yubikey, unlisted, legacy] = passkeyIcons(rowOf(wrapper, 'both'))
+
+        expect(passkeyIcons(rowOf(wrapper, 'both'))).toHaveLength(3)
+        expect(yubikey.get('img').attributes('src')).toBe(ICON)
+        expect(yubikey.attributes('title')).toBe('YubiKey 5 Series')
+        expect(yubikey.attributes('aria-label')).toBe('YubiKey 5 Series')
+        expect(unlisted.find('img').exists()).toBe(false)
+        expect(unlisted.attributes('title')).toBe(`AAGUID ${UNLISTED}`)
+        expect(legacy.attributes('title')).toBe('Not recorded')
+        // Icons only: no names or AAGUIDs written out in the table.
+        expect(rowOf(wrapper, 'both').text()).not.toContain('YubiKey 5 Series')
+        expect(rowOf(wrapper, 'both').text()).not.toContain(YUBIKEY)
     })
 
     it('shows only the factors a user has', async () => {
         const wrapper = await mountTab()
-        const summary = rowOf(wrapper, 'totp-only').get('[data-test="user-mfa-summary"]')
+        const row = rowOf(wrapper, 'totp-only')
 
-        expect(summary.find('[data-test="user-mfa-totp"]').exists()).toBe(true)
-        expect(summary.text()).not.toContain('Passkeys')
-        expect(summary.findAll('[data-test="user-mfa-passkey"]')).toHaveLength(0)
+        expect(row.find('[data-test="user-mfa-totp"]').exists()).toBe(true)
+        expect(passkeyIcons(row)).toHaveLength(0)
     })
 
-    it('gives a user without a second factor no badge', async () => {
+    it('shows no second-factor icons for a user without one', async () => {
         const wrapper = await mountTab()
+        const row = rowOf(wrapper, 'No Factor')
 
-        expect(rowOf(wrapper, 'No Factor').find('[data-test="user-mfa-badge"]').exists()).toBe(false)
-    })
-
-    it('keeps the badge reachable and named for keyboard and screen-reader users', async () => {
-        const wrapper = await mountTab()
-        const badge = rowOf(wrapper, 'both').get('[data-test="user-mfa-badge"]')
-
-        expect(badge.attributes('tabindex')).toBe('0')
-        expect(badge.attributes('aria-label')).toBe('Two-factor authentication enabled')
+        expect(row.find('[data-test="user-mfa-totp"]').exists()).toBe(false)
+        expect(passkeyIcons(row)).toHaveLength(0)
     })
 })

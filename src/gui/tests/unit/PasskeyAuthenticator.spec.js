@@ -21,6 +21,8 @@ const icon = (wrapper) => wrapper.find('[data-test="passkey-authenticator-icon"]
 const genericIcon = (wrapper) => wrapper.find('[data-test="passkey-authenticator-generic-icon"]')
 const name = (wrapper) => wrapper.get('[data-test="passkey-authenticator-name"]').text()
 const aaguidLine = (wrapper) => wrapper.find('[data-test="passkey-authenticator-aaguid"]')
+// The browser's own tooltip: the title attribute of the icon and name.
+const aaguidTitle = (wrapper) => wrapper.get('[data-test="passkey-authenticator"]').attributes('title')
 
 describe('PasskeyAuthenticator', () => {
     describe('icon follows the dark/light mode', () => {
@@ -93,10 +95,10 @@ describe('PasskeyAuthenticator', () => {
             expect(aaguidLine(wrapper).text()).toContain(YUBIKEY)
         })
 
-        it('shows just the AAGUID while the lookup is switched off, without calling it unknown', () => {
+        it('says "not identified", not "unknown", while the lookup is switched off', () => {
             const { wrapper } = mountAuthenticator({ aaguid: YUBIKEY, authenticator: null, lookup: false })
             expect(genericIcon(wrapper).exists()).toBe(true)
-            expect(wrapper.find('[data-test="passkey-authenticator-name"]').exists()).toBe(false)
+            expect(name(wrapper)).toBe('Not identified')
             expect(wrapper.text()).not.toContain('Unknown authenticator')
             expect(aaguidLine(wrapper).text()).toBe(`AAGUID ${YUBIKEY}`)
         })
@@ -121,6 +123,85 @@ describe('PasskeyAuthenticator', () => {
             expect(icon(wrapper).exists()).toBe(false)
             expect(genericIcon(wrapper).exists()).toBe(true)
             expect(name(wrapper)).toBe('YubiKey')
+        })
+    })
+
+    describe('AAGUID in a tooltip', () => {
+        it('shows the icon and the name, and the AAGUID only in the browser tooltip', () => {
+            const { wrapper } = mountAuthenticator({
+                aaguid: YUBIKEY,
+                authenticator: { name: 'YubiKey 5 Series', icon_light: LIGHT },
+                aaguidTooltip: true
+            })
+            expect(icon(wrapper).attributes('src')).toBe(LIGHT)
+            expect(name(wrapper)).toBe('YubiKey 5 Series')
+            expect(aaguidLine(wrapper).exists()).toBe(false)
+            expect(aaguidTitle(wrapper)).toBe(`AAGUID ${YUBIKEY}`)
+        })
+
+        it('keeps the fallback labels and puts their AAGUID in the tooltip', () => {
+            const unknown = mountAuthenticator({ aaguid: YUBIKEY, authenticator: null, aaguidTooltip: true })
+            const undisclosed = mountAuthenticator({ aaguid: ZERO, authenticator: null, aaguidTooltip: true })
+            expect(name(unknown.wrapper)).toBe('Unknown authenticator')
+            expect(aaguidTitle(unknown.wrapper)).toBe(`AAGUID ${YUBIKEY}`)
+            expect(name(undisclosed.wrapper)).toBe('Not disclosed by the authenticator')
+            expect(aaguidTitle(undisclosed.wrapper)).toBe(`AAGUID ${ZERO}`)
+        })
+
+        it('says "not identified" while the lookup is off, with the AAGUID in the tooltip', () => {
+            const { wrapper } = mountAuthenticator({ aaguid: YUBIKEY, authenticator: null, lookup: false, aaguidTooltip: true })
+            expect(genericIcon(wrapper).exists()).toBe(true)
+            expect(name(wrapper)).toBe('Not identified')
+            expect(aaguidLine(wrapper).exists()).toBe(false)
+            expect(aaguidTitle(wrapper)).toBe(`AAGUID ${YUBIKEY}`)
+        })
+
+        it('has no tooltip when no AAGUID was recorded', () => {
+            const { wrapper } = mountAuthenticator({ aaguid: null, authenticator: null, aaguidTooltip: true })
+            expect(name(wrapper)).toBe('Not recorded')
+            expect(aaguidTitle(wrapper)).toBeUndefined()
+        })
+
+        it('leaves the AAGUID on its own line, without a tooltip, by default', () => {
+            const { wrapper } = mountAuthenticator({ aaguid: YUBIKEY, authenticator: null })
+            expect(aaguidLine(wrapper).exists()).toBe(true)
+            expect(aaguidTitle(wrapper)).toBeUndefined()
+        })
+    })
+
+    describe('icon only', () => {
+        it('names the authenticator in the tooltip and to screen readers, and writes nothing out', () => {
+            const { wrapper } = mountAuthenticator({
+                aaguid: YUBIKEY,
+                authenticator: { name: 'YubiKey 5 Series', icon_light: LIGHT },
+                iconOnly: true
+            })
+            expect(icon(wrapper).attributes('src')).toBe(LIGHT)
+            expect(aaguidTitle(wrapper)).toBe('YubiKey 5 Series')
+            expect(wrapper.get('[data-test="passkey-authenticator"]').attributes('aria-label')).toBe('YubiKey 5 Series')
+            expect(wrapper.get('[data-test="passkey-authenticator"]').attributes('role')).toBe('img')
+            expect(wrapper.text()).toBe('')
+        })
+
+        it('gives the AAGUID when the authenticator has no name', () => {
+            const unknown = mountAuthenticator({ aaguid: YUBIKEY, authenticator: null, iconOnly: true })
+            const off = mountAuthenticator({ aaguid: YUBIKEY, authenticator: null, lookup: false, iconOnly: true })
+            expect(genericIcon(unknown.wrapper).exists()).toBe(true)
+            expect(aaguidTitle(unknown.wrapper)).toBe(`AAGUID ${YUBIKEY}`)
+            expect(aaguidTitle(off.wrapper)).toBe(`AAGUID ${YUBIKEY}`)
+        })
+
+        it('says "not recorded" when there is no AAGUID either', () => {
+            const { wrapper } = mountAuthenticator({ aaguid: null, authenticator: null, iconOnly: true })
+            expect(aaguidTitle(wrapper)).toBe('Not recorded')
+        })
+
+        it('follows the dark/light mode like the full display', () => {
+            const { wrapper } = mountAuthenticator(
+                { aaguid: YUBIKEY, authenticator: { name: 'YubiKey', icon_light: LIGHT, icon_dark: DARK }, iconOnly: true },
+                { theme: 'dark' }
+            )
+            expect(icon(wrapper).attributes('src')).toBe(DARK)
         })
     })
 })

@@ -27,7 +27,6 @@
             },
             "login_methods": "Phương thức đăng nhập",
             "local_password": "cục bộ",
-            "mfa_enabled": "Đã bật xác thực hai yếu tố",
             "approve": "Phê duyệt",
             "disable": "Tắt",
             "enable": "Bật",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Mở trình chọn mục báo cáo ở chế độ chỉ đọc",
         "SPELLCHECK": "Kiểm tra chính tả",
         "TAG_CLOUD_RETENTION_DAYS": "Thời gian lưu đám mây thẻ (ngày)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Trình xác thực khóa truy cập: hiển thị tên và biểu tượng (tải danh sách AAGUID của cộng đồng)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "Trình xác thực khóa truy cập: URL danh sách (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Dùng danh sách AAGUID của cộng đồng",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL danh sách AAGUID",
         "TAG_COLOR": "Đám mây thẻ nhiều màu",
         "TIME_FORMAT": "Định dạng thời gian"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "Trình xác thực không xác định",
         "authenticator_not_disclosed": "Trình xác thực không tiết lộ",
         "authenticator_not_recorded": "Chưa được ghi nhận",
+        "authenticator_not_identified": "Chưa xác định",
         "passkey_added": "Đã đăng ký khóa truy cập.",
         "no_passkeys": "Chưa đăng ký khóa truy cập nào."
     },

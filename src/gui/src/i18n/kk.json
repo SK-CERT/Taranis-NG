@@ -27,7 +27,6 @@
             },
             "login_methods": "Кіру әдістері",
             "local_password": "жергілікті",
-            "mfa_enabled": "Екі факторлы аутентификация қосулы",
             "approve": "Мақұлдау",
             "disable": "Өшіру",
             "enable": "Қосу",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Есеп элементтерін таңдау терезесін тек оқу режимінде ашу",
         "SPELLCHECK": "Емлені тексеру",
         "TAG_CLOUD_RETENTION_DAYS": "Тег бұлтын сақтау мерзімі (күн)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Кіру кілттерінің аутентификаторлары: атаулары мен белгішелерін көрсету (қауымдастықтың AAGUID тізімін жүктейді)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "Кіру кілттерінің аутентификаторлары: тізімнің URL мекенжайы (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Қауымдастықтың AAGUID тізімін пайдалану",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID тізімінің URL мекенжайы",
         "TAG_COLOR": "Түрлі түсті тег бұлты",
         "TIME_FORMAT": "Уақыт пішімі"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "Белгісіз аутентификатор",
         "authenticator_not_disclosed": "Аутентификатор хабарламады",
         "authenticator_not_recorded": "Жазылмаған",
+        "authenticator_not_identified": "Анықталмаған",
         "passkey_added": "Кіру кілті тіркелді.",
         "no_passkeys": "Тіркелген кіру кілттері жоқ."
     },

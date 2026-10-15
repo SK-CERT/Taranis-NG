@@ -27,7 +27,6 @@
             },
             "login_methods": "Spôsoby prihlásenia",
             "local_password": "lokálny",
-            "mfa_enabled": "Dvojfaktorové overenie zapnuté",
             "approve": "Schváliť",
             "disable": "Zablokovať",
             "enable": "Aktivovať",
@@ -1091,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Otvoriť výber analýz v režime iba na čítanie",
         "SPELLCHECK": "Kontrolovať pravopis",
         "TAG_CLOUD_RETENTION_DAYS": "Uchovávanie oblaku značiek (dni)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Autentifikátory passkeys: zobrazovať názvy a ikony (sťahuje komunitný zoznam AAGUID)",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "Autentifikátory passkeys: URL zoznamu (AAGUID)",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Používať komunitný zoznam AAGUID",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL zoznamu AAGUID",
         "TAG_COLOR": "Farebný oblak značiek",
         "TIME_FORMAT": "Formát času"
     },
@@ -1958,6 +1957,7 @@
         "authenticator_unknown": "Neznámy autentifikátor",
         "authenticator_not_disclosed": "Autentifikátor sa neidentifikoval",
         "authenticator_not_recorded": "Nezaznamenané",
+        "authenticator_not_identified": "Neidentifikované",
         "passkey_added": "Passkey zaregistrovaný.",
         "no_passkeys": "Žiadne passkeys."
     },

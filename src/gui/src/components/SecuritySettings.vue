@@ -147,6 +147,7 @@
                                     :aaguid="passkey.aaguid"
                                     :authenticator="passkey.authenticator"
                                     :lookup="passkey.authenticator_lookup !== false"
+                                    aaguid-tooltip
                                 />
                             </td>
                             <td>

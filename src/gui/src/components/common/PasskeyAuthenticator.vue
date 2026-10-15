@@ -1,5 +1,11 @@
 <template>
-    <span class="passkey-authenticator">
+    <span
+        class="passkey-authenticator"
+        :title="title"
+        :role="iconOnly ? 'img' : undefined"
+        :aria-label="iconOnly ? title : undefined"
+        data-test="passkey-authenticator"
+    >
         <img
             v-if="iconSrc"
             :src="iconSrc"
@@ -17,15 +23,17 @@
             data-test="passkey-authenticator-generic-icon"
             >mdi-key-variant</v-icon
         >
-        <span class="passkey-authenticator__text">
+        <span
+            v-if="!iconOnly"
+            class="passkey-authenticator__text"
+        >
             <bdi
-                v-if="label"
                 dir="auto"
                 data-test="passkey-authenticator-name"
                 >{{ label }}</bdi
             >
             <span
-                v-if="aaguid"
+                v-if="aaguid && !aaguidTooltip"
                 class="passkey-authenticator__aaguid text-caption"
                 dir="ltr"
                 data-test="passkey-authenticator-aaguid"
@@ -49,13 +57,22 @@
             aaguid?: string | null | undefined
             authenticator?: PasskeyAuthenticatorInfo | null | undefined
             // false while core does not name authenticators (the setting is off): an
-            // authenticator without a name is then not "unknown", just not looked up
+            // authenticator without a name is then not "unknown", just not identified
             lookup?: boolean | undefined
+            // Show the AAGUID as the browser's own tooltip (title) over the icon and name
+            // instead of on a line of its own, where the name alone is enough to tell
+            // passkeys apart.
+            aaguidTooltip?: boolean | undefined
+            // Just the icon, for a compact list; the browser tooltip names the
+            // authenticator, or gives its AAGUID when it has no name.
+            iconOnly?: boolean | undefined
         }>(),
         {
             aaguid: null,
             authenticator: null,
-            lookup: true
+            lookup: true,
+            aaguidTooltip: false,
+            iconOnly: false
         }
     )
 
@@ -80,12 +97,20 @@
         return (themeGlobal.current.value.dark ? dark || light : light || dark) || null
     })
 
-    // null leaves the AAGUID as the only line.
-    const label = computed((): string | null => {
+    const label = computed((): string => {
         if (props.authenticator?.name) return props.authenticator.name
         if (!props.aaguid) return t('security.authenticator_not_recorded')
         if (props.aaguid.toLowerCase() === ZERO_AAGUID) return t('security.authenticator_not_disclosed')
-        return props.lookup ? t('security.authenticator_unknown') : null
+        return props.lookup ? t('security.authenticator_unknown') : t('security.authenticator_not_identified')
+    })
+
+    const aaguidText = computed((): string | null => (props.aaguid ? `${t('security.passkey_aaguid')} ${props.aaguid}` : null))
+
+    // The browser tooltip; undefined leaves the attribute out.
+    const title = computed((): string | undefined => {
+        if (props.iconOnly) return props.authenticator?.name || aaguidText.value || label.value
+        if (props.aaguidTooltip) return aaguidText.value ?? undefined
+        return undefined
     })
 </script>
 
@@ -94,6 +119,9 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        /* Line up with the chips and icons next to it, which Vuetify centres; an inline-flex
+           box would otherwise sit on the text baseline. */
+        vertical-align: middle;
     }
 
     .passkey-authenticator__icon {
