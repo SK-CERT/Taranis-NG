@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Otvoriť výber analýz v režime iba na čítanie",
         "SPELLCHECK": "Kontrolovať pravopis",
         "TAG_CLOUD_RETENTION_DAYS": "Uchovávanie oblaku značiek (dni)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Používať komunitný zoznam AAGUID",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL zoznamu AAGUID",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID autentifikátora prístupového kľúča - používať komunitný zoznam",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID autentifikátora prístupového kľúča - URL zoznamu",
         "TAG_COLOR": "Farebný oblak značiek",
         "TIME_FORMAT": "Formát času"
     },

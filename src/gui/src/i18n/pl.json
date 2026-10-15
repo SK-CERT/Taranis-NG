@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Otwórz selektor elementów raportu w trybie tylko do odczytu",
         "SPELLCHECK": "Sprawdzanie pisowni",
         "TAG_CLOUD_RETENTION_DAYS": "Okres przechowywania chmury tagów (dni)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Używaj społecznościowej listy AAGUID",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL listy AAGUID",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID klucza dostępu - używaj listy społecznościowej",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID klucza dostępu - URL listy",
         "TAG_COLOR": "Kolorowa chmura tagów",
         "TIME_FORMAT": "Format czasu"
     },
