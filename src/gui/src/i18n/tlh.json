@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "laD neH mIwDaq ja'ghach wIvwI' yIpoSmoH",
         "SPELLCHECK": "ngutlh 'olghach",
         "TAG_CLOUD_RETENTION_DAYS": "per 'eng pol poH (jajmey)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID tetlh ghom lo'",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID tetlh URL",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID Passkey - ghom tetlh lo'",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID Passkey - tetlh URL",
         "TAG_COLOR": "per 'eng rItlh law'",
         "TIME_FORMAT": "poH ghItlh Segh"
     },

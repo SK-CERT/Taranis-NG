@@ -38,14 +38,14 @@ SETTINGS = (
         "type": "B",
         "value": "false",
         "default_val": "false",
-        "description": "Use community AAGUID list",
+        "description": "Passkey authenticator AAGUID - use community list",
     },
     {
         "key": URL_SETTING,
         "type": "S",
         "value": DEFAULT_URL,
         "default_val": DEFAULT_URL,
-        "description": "AAGUID list URL",
+        "description": "Passkey authenticator AAGUID - list URL",
     },
 )
 

@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Otevřít výběr reportů v režimu pouze pro čtení",
         "SPELLCHECK": "Kontrolovat pravopis",
         "TAG_CLOUD_RETENTION_DAYS": "Uchovávání mraku štítků (dny)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Používat komunitní seznam AAGUID",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL seznamu AAGUID",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID autentizátoru přístupového klíče - používat komunitní seznam",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID autentizátoru přístupového klíče - URL seznamu",
         "TAG_COLOR": "Barevný mrak štítků",
         "TIME_FORMAT": "Formát času"
     },

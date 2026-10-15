@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Rapportitemkiezer in alleen-lezenmodus openen",
         "SPELLCHECK": "Spellingcontrole",
         "TAG_CLOUD_RETENTION_DAYS": "Bewaartermijn tagwolk (dagen)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID-lijst van de community gebruiken",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL van de AAGUID-lijst",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID van de passkey - communitylijst gebruiken",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID van de passkey - URL van de lijst",
         "TAG_COLOR": "Kleurrijke tagwolk",
         "TIME_FORMAT": "Tijdnotatie"
     },

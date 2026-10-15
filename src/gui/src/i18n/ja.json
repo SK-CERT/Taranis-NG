@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "レポート項目セレクターを読み取り専用モードで開く",
         "SPELLCHECK": "スペルチェック",
         "TAG_CLOUD_RETENTION_DAYS": "タグクラウドの保持期間（日）",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "コミュニティの AAGUID リストを使用",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID リストの URL",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "パスキーの AAGUID - コミュニティリストを使用",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "パスキーの AAGUID - リストの URL",
         "TAG_COLOR": "色付きタグクラウド",
         "TIME_FORMAT": "時刻形式"
     },

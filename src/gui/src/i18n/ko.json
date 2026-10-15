@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "보고서 항목 선택기를 읽기 전용 모드로 열기",
         "SPELLCHECK": "맞춤법 검사",
         "TAG_CLOUD_RETENTION_DAYS": "태그 클라우드 보존 기간(일)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "커뮤니티 AAGUID 목록 사용",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID 목록 URL",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "패스키 AAGUID - 커뮤니티 목록 사용",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "패스키 AAGUID - 목록 URL",
         "TAG_COLOR": "색상 태그 클라우드",
         "TIME_FORMAT": "시간 형식"
     },

@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Mở trình chọn mục báo cáo ở chế độ chỉ đọc",
         "SPELLCHECK": "Kiểm tra chính tả",
         "TAG_CLOUD_RETENTION_DAYS": "Thời gian lưu đám mây thẻ (ngày)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Dùng danh sách AAGUID của cộng đồng",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL danh sách AAGUID",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID của passkey - dùng danh sách cộng đồng",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID của passkey - URL danh sách",
         "TAG_COLOR": "Đám mây thẻ nhiều màu",
         "TIME_FORMAT": "Định dạng thời gian"
     },

@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Open the report item selector in read-only mode",
         "SPELLCHECK": "Spellcheck",
         "TAG_CLOUD_RETENTION_DAYS": "Tag cloud retention (days)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Use community AAGUID list",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID list URL",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Passkey authenticator AAGUID - use community list",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Passkey authenticator AAGUID - list URL",
         "TAG_COLOR": "Colorful tag cloud",
         "TIME_FORMAT": "Time format"
     },

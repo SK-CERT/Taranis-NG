@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Rapor öğesi seçicisini salt okunur modda aç",
         "SPELLCHECK": "Yazım denetimi",
         "TAG_CLOUD_RETENTION_DAYS": "Etiket bulutu saklama süresi (gün)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Topluluk AAGUID listesini kullan",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID listesi URL’si",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Geçiş anahtarının AAGUID’si - topluluk listesini kullan",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Geçiş anahtarının AAGUID’si - liste URL’si",
         "TAG_COLOR": "Renkli etiket bulutu",
         "TIME_FORMAT": "Saat biçimi"
     },

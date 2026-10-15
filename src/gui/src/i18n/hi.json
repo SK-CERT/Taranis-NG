@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "रिपोर्ट आइटम चयनकर्ता केवल-पढ़ने के मोड में खोलें",
         "SPELLCHECK": "वर्तनी जाँच",
         "TAG_CLOUD_RETENTION_DAYS": "टैग क्लाउड प्रतिधारण (दिन)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "समुदाय की AAGUID सूची का उपयोग करें",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID सूची का URL",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "पासकी का AAGUID - समुदाय की सूची का उपयोग करें",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "पासकी का AAGUID - सूची का URL",
         "TAG_COLOR": "रंगीन टैग क्लाउड",
         "TIME_FORMAT": "समय प्रारूप"
     },

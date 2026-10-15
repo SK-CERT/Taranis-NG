@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "فتح محدّد عناصر التقارير في وضع القراءة فقط",
         "SPELLCHECK": "التدقيق الإملائي",
         "TAG_CLOUD_RETENTION_DAYS": "مدة الاحتفاظ بسحابة الوسوم (بالأيام)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "استخدام قائمة AAGUID المجتمعية",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "عنوان URL لقائمة AAGUID",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID مفتاح المرور - استخدام قائمة المجتمع",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID مفتاح المرور - عنوان URL للقائمة",
         "TAG_COLOR": "سحابة وسوم ملوّنة",
         "TIME_FORMAT": "تنسيق الوقت"
     },

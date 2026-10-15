@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Відкривати засіб вибору елементів звіту в режимі лише для читання",
         "SPELLCHECK": "Перевірка орфографії",
         "TAG_CLOUD_RETENTION_DAYS": "Термін зберігання хмари тегів (дні)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Використовувати спільнотний список AAGUID",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "URL списку AAGUID",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "AAGUID ключа доступу - використовувати спільнотний список",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID ключа доступу - URL списку",
         "TAG_COLOR": "Кольорова хмара тегів",
         "TIME_FORMAT": "Формат часу"
     },

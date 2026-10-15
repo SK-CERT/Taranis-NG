@@ -1090,8 +1090,8 @@
         "REPORT_SELECTOR_READ_ONLY": "Есеп элементтерін таңдау терезесін тек оқу режимінде ашу",
         "SPELLCHECK": "Емлені тексеру",
         "TAG_CLOUD_RETENTION_DAYS": "Тег бұлтын сақтау мерзімі (күн)",
-        "PASSKEY_AUTHENTICATOR_LOOKUP": "Қауымдастықтың AAGUID тізімін пайдалану",
-        "PASSKEY_AUTHENTICATOR_LIST_URL": "AAGUID тізімінің URL мекенжайы",
+        "PASSKEY_AUTHENTICATOR_LOOKUP": "Passkey AAGUID - қауымдастық тізімін пайдалану",
+        "PASSKEY_AUTHENTICATOR_LIST_URL": "Passkey AAGUID - тізімнің URL мекенжайы",
         "TAG_COLOR": "Түрлі түсті тег бұлты",
         "TIME_FORMAT": "Уақыт пішімі"
     },
