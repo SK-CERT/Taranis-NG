@@ -888,6 +888,7 @@
         "download": "Télécharger",
         "total_count": "{count} actualité | {count} actualités",
         "selected_count": "{count} actualité sélectionnée | {count} actualités sélectionnées",
+        "unread_count": "Non lues : {count}",
         "no_items": "Aucune actualité trouvée",
         "item_updated": "L’actualité a été mise à jour",
         "item_deleted": "L’actualité a été supprimée",

@@ -888,6 +888,7 @@
         "download": "Download",
         "total_count": "{count} news item | {count} news items",
         "selected_count": "{count} news item selected | {count} news items selected",
+        "unread_count": "Unread: {count}",
         "no_items": "No news items found",
         "item_updated": "News item updated successfully",
         "item_deleted": "News item deleted successfully",

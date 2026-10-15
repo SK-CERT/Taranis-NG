@@ -888,6 +888,7 @@
         "download": "डाउनलोड करें",
         "total_count": "{count} समाचार आइटम | {count} समाचार आइटम",
         "selected_count": "{count} समाचार आइटम चुना गया | {count} समाचार आइटम चुने गए",
+        "unread_count": "अपठित: {count}",
         "no_items": "कोई समाचार आइटम नहीं",
         "item_updated": "समाचार आइटम सफलतापूर्वक अपडेट हुआ",
         "item_deleted": "समाचार आइटम सफलतापूर्वक हटाया गया",

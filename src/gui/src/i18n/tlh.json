@@ -888,6 +888,7 @@
         "download": "yIHev",
         "total_count": "pagh De' chu' | {count} De' chu' | {count} De' chu'",
         "selected_count": "pagh De' chu' wIvlu' | {count} De' chu' wIvlu' | {count} De' chu' wIvlu'",
+        "unread_count": "laDbe'bogh: {count}",
         "no_items": "De' chu' tu'lu'be'",
         "item_updated": "De' chu' choHlu'pu'. Qapla'!",
         "item_deleted": "De' chu' Qaw'lu'pu'. Qapla'!",

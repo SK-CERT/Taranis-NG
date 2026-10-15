@@ -888,6 +888,7 @@
         "download": "Baixar",
         "total_count": "{count} notícia | {count} notícias",
         "selected_count": "{count} notícia selecionada | {count} notícias selecionadas",
+        "unread_count": "Não lidos: {count}",
         "no_items": "Nenhum item de notícia encontrado",
         "item_updated": "Item de notícia atualizado com sucesso",
         "item_deleted": "Item de notícia excluído com sucesso",

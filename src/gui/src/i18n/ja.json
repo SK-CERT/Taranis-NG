@@ -888,6 +888,7 @@
         "download": "ダウンロード",
         "total_count": "ニュース項目 {count} 件 | ニュース項目 {count} 件",
         "selected_count": "ニュース項目を {count} 件選択 | ニュース項目を {count} 件選択",
+        "unread_count": "未読: {count}",
         "no_items": "ニュース項目はありません",
         "item_updated": "ニュース項目を更新しました",
         "item_deleted": "ニュース項目を削除しました",

@@ -888,6 +888,7 @@
         "download": "Herunterladen",
         "total_count": "{count} Nachrichteneintrag | {count} Nachrichteneinträge",
         "selected_count": "{count} Nachrichteneintrag ausgewählt | {count} Nachrichteneinträge ausgewählt",
+        "unread_count": "Ungelesen: {count}",
         "no_items": "Keine Nachrichtenbeiträge gefunden",
         "item_updated": "Nachrichtenbeitrag erfolgreich aktualisiert",
         "item_deleted": "Nachrichtenbeitrag erfolgreich gelöscht",

@@ -888,6 +888,7 @@
         "download": "Downloaden",
         "total_count": "{count} nieuwsitem | {count} nieuwsitems",
         "selected_count": "{count} nieuwsitem geselecteerd | {count} nieuwsitems geselecteerd",
+        "unread_count": "Ongelezen: {count}",
         "no_items": "Geen nieuwsitems gevonden",
         "item_updated": "Nieuwsitem is bijgewerkt",
         "item_deleted": "Nieuwsitem is verwijderd",

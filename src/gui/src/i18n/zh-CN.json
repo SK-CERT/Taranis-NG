@@ -888,6 +888,7 @@
         "download": "下载",
         "total_count": "{count} 个新闻条目 | {count} 个新闻条目",
         "selected_count": "已选择 {count} 个新闻条目 | 已选择 {count} 个新闻条目",
+        "unread_count": "未读：{count}",
         "no_items": "没有新闻条目",
         "item_updated": "新闻条目更新成功",
         "item_deleted": "新闻条目删除成功",

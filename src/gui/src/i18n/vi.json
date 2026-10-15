@@ -888,6 +888,7 @@
         "download": "Tải xuống",
         "total_count": "{count} tin | {count} tin",
         "selected_count": "Đã chọn {count} tin | Đã chọn {count} tin",
+        "unread_count": "Chưa đọc: {count}",
         "no_items": "Không tìm thấy tin",
         "item_updated": "Đã cập nhật tin thành công",
         "item_deleted": "Đã xóa tin thành công",
