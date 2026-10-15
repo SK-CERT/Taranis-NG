@@ -7,7 +7,7 @@ Returns:
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import io
 import json
 import os
@@ -63,7 +63,7 @@ class BasePresenter:
             dict: serialized value
 
         """
-        if isinstance(value, datetime.date):
+        if isinstance(value, dt.date):
             return {"year": value.year, "month": value.month, "day": value.day}
         if isinstance(value, types.MappingProxyType):
             return dict(value)
@@ -72,7 +72,7 @@ class BasePresenter:
     @staticmethod
     def to_template_data(value: any) -> any:
         """Convert presenter objects to plain template data without a JSON round trip."""
-        if isinstance(value, datetime.date):
+        if isinstance(value, dt.date):
             return {"year": value.year, "month": value.month, "day": value.day}
         if isinstance(value, types.MappingProxyType):
             value = dict(value)
@@ -296,7 +296,7 @@ class BasePresenter:
 
             """
             self.product = presenter_input.product
-            self.product.date = datetime.datetime.now(TZ)
+            self.product.date = dt.datetime.now(TZ)
 
             report_types = self._build_report_types(presenter_input.report_types)
             attribute_map = self._build_attribute_map(presenter_input.report_types)
