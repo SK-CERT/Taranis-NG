@@ -5,6 +5,7 @@ import base64
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.acl_entry import ACLEntryStatusSchema
+from shared.schema.link import LinkRefSchema
 from shared.schema.news_item import NewsItemAggregateSchema
 from shared.schema.presentation import PresentationSchema
 from shared.schema.state import StateDefinitionSchema
@@ -177,10 +178,13 @@ class ReportItemAttributeRemoteSchema(Schema):
     Attributes:
         attribute_group_item_title (str): The title of the attribute group item.
         value (str): The value of the attribute.
+        value_description (str): The description of the value; for a link, the key its
+            citations in the report's text refer to.
     """
 
     attribute_group_item_title = fields.Str()
     value = fields.Str()
+    value_description = fields.Str(allow_none=True)
     binary_mime_type = fields.Str(allow_none=True)
     binary_size = fields.Int(allow_none=True)
     binary_description = fields.Str(allow_none=True)
@@ -224,12 +228,14 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
         news_items_count (int): The count of news items in this report item.
         user (UserSchemaBase): User who created the report item.
         updated_by (UserSchemaBase): User who last updated the report item.
+        links (list): The report item's citable links ({key, url}), in display order.
     """
 
     remote_user = fields.Str(allow_none=True)
     state = fields.Nested(StateDefinitionSchema, allow_none=True)
     news_items_count = fields.Int()
     updated_by = fields.Str(allow_none=True)
+    links = fields.Nested(LinkRefSchema, many=True, dump_only=True)
 
 
 class ReportItem:

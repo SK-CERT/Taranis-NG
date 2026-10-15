@@ -3,6 +3,7 @@
 from marshmallow import EXCLUDE, Schema, fields
 
 from shared.schema.acl_entry import ACLEntryStatusSchema
+from shared.schema.link import LinkRefSchema
 from shared.schema.presentation import PresentationSchema
 from shared.schema.report_item import ReportItemPresentationSchema
 from shared.schema.state import StateDefinitionSchema
@@ -24,6 +25,8 @@ class ProductSchemaBase(Schema):
     product_type_id = fields.Int()
     state_id = fields.Int(allow_none=True)
     public_web_ids = fields.List(fields.Int(), allow_none=True)
+    # The product's own sources, in citation order; the description cites them by key.
+    links = fields.Nested(LinkRefSchema, many=True, load_default=list)
 
 
 class ProductSchema(ProductSchemaBase):

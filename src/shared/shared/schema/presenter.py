@@ -31,7 +31,16 @@ class PresenterSchema(Schema):
 class PresenterInputProduct:
     """Real data holding object presented by PresenterInputProductSchema."""
 
-    def __init__(self, title: str, description: str, product_type: str, product_type_description: str, user: UserSchemaBase, id: str) -> None:  # noqa: A002
+    def __init__(
+        self,
+        title: str,
+        description: str,
+        product_type: str,
+        product_type_description: str,
+        user: UserSchemaBase,
+        id: str,  # noqa: A002
+        links: list[str] | None = None,
+    ) -> None:
         """Initialize the "presenter input product".
 
         Args:
@@ -41,6 +50,8 @@ class PresenterInputProduct:
             product_type_description (str): Product description.
             user (UserSchemaBase): Data about the user who created the product.
             id (str): Id.
+            links (list[str]): All sources of the product, numbered by position: ``links[0]`` is
+                what ``[1]`` in the texts refers to. Core fills it in when it renders the citations.
         """
         self.title = title
         self.description = description
@@ -48,6 +59,7 @@ class PresenterInputProduct:
         self.product_type_description = product_type_description
         self.user = user
         self.id = id
+        self.links = links
 
     @classmethod
     def make_from_product(cls, product: "PresenterInputProductSchema") -> "PresenterInputProduct":
@@ -82,6 +94,7 @@ class PresenterInputProductSchema(Schema):
     product_type_description = fields.Str()
     user = fields.Nested(UserSchemaBase, exclude=("password",))
     id = fields.Str()
+    links = fields.List(fields.Str(), load_default=list, allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> PresenterInputProduct:  # noqa: ANN003, ARG002

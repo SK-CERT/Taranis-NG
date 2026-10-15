@@ -37,6 +37,7 @@
     import AttributeCWE from './AttributeCWE.vue'
     import AttributeCVSS from './AttributeCVSS.vue'
     import AttributeMultiChoice from './AttributeMultiChoice.vue'
+    import AttributeLink from './AttributeLink.vue'
 
     type AttributeItem = {
         attribute_group_item?: {
@@ -87,7 +88,9 @@
         CPE: AttributeCPE,
         CVE: AttributeCVE,
         CWE: AttributeCWE,
-        CVSS: AttributeCVSS
+        CVSS: AttributeCVSS,
+        // Citable source links; the text attributes cite them (see utils/linkReferences)
+        LINK: AttributeLink
     }
 
     const attributeComponent = computed(() => {

@@ -472,7 +472,9 @@
     import RemoteReportItemSelector from '@/components/analyze/RemoteReportItemSelector.vue'
     import StateSelector from '@/components/common/StateSelector.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { createLinkReferences, provideLinkReferences } from '@/composables/useLinkReferences'
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
+    import { CITING_TYPES, isHttpUrl, numberLinks } from '@/utils/linkReferences'
 
     type FormRef = {
         resetValidation?: () => void
@@ -588,6 +590,21 @@
     })
 
     const spellcheck = computed(() => settingsStore.getSettingBoolean(Settings.SPELLCHECK, true))
+
+    // Link citations: the text attributes can cite the report's LINK values, numbered in form order.
+    const attributeItemsOf = (types: readonly string[]) =>
+        attribute_groups.value.flatMap((group) =>
+            (group.attribute_group_items || []).filter((item) => types.includes(item.attribute_group_item?.attribute?.type))
+        )
+    const reportLinks = computed(() => numberLinks(attributeItemsOf(['LINK']).flatMap((item) => item.values || [])))
+    const citingTexts = computed(() => attributeItemsOf(CITING_TYPES).flatMap((item) => (item.values || []).map((value) => value.value)))
+    const newsItemLinks = computed(() => {
+        const links = news_item_aggregates.value.flatMap((aggregate) =>
+            (aggregate?.news_items || []).map((newsItem) => String(newsItem?.news_item_data?.link ?? '').trim())
+        )
+        return [...new Set(links.filter((link) => isHttpUrl(link)))]
+    })
+    provideLinkReferences(createLinkReferences(reportLinks, citingTexts, newsItemLinks))
 
     const verticalView = computed<boolean>({
         get: () => userStore.verticalView,

@@ -73,10 +73,12 @@
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue'
+    import { computed, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import RemoteAttributeContainer from '@/components/common/attribute/RemoteAttributeContainer.vue'
     import { getReportItem } from '@/api/analyze'
+    import { createLinkReferences, provideLinkReferences } from '@/composables/useLinkReferences'
+    import { isHttpUrl, isLinkKey, numberLinks } from '@/utils/linkReferences'
 
     const { t } = useI18n()
 
@@ -87,6 +89,7 @@
         binary_size?: number | null
         binary_description?: string | null
         attribute_group_item_title?: string | null
+        value_description?: string | null
         [key: string]: unknown
     }
 
@@ -123,6 +126,16 @@
 
     const visible = ref(false)
     const reportItem = ref<RemoteReportItemModel>(emptyReportItem())
+
+    // A remote item arrives without its attribute definitions; its links are the values that
+    // carry a citation key, and its texts cite them.
+    const remoteValues = computed(() => reportItem.value.attributes.flatMap((group) => group.attributes))
+    provideLinkReferences(
+        createLinkReferences(
+            computed(() => numberLinks(remoteValues.value.filter((value) => isLinkKey(value.value_description) && isHttpUrl(value.value)))),
+            computed(() => remoteValues.value.map((value) => value.value))
+        )
+    )
 
     const groupAttributes = (attributes: unknown): RemoteAttributeGroup[] => {
         if (!Array.isArray(attributes)) return []

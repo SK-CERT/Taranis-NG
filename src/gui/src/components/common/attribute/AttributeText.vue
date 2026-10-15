@@ -24,7 +24,11 @@
                         class="text-number text--disabled"
                         >{{ index + 1 }}.</span
                     >
-                    <span class="text-content">{{ value.value }}</span>
+                    <span class="text-content"
+                        ><CitedText
+                            :text="value.value"
+                            :resolve="references.resolve"
+                    /></span>
                 </span>
 
                 <!-- Editable -->
@@ -76,6 +80,7 @@
                     </template>
                     <template #col_middle="{ delVisible, onDelete }">
                         <v-textarea
+                            :ref="(field) => setField(index, field)"
                             v-model="value.value"
                             :spellcheck="spellcheck"
                             density="compact"
@@ -87,16 +92,28 @@
                             :class="getLockedStyle(index)"
                             :disabled="value.locked || !canModify"
                             @focus="onFocus(index)"
-                            @blur="onBlur(index)"
-                            @keyup="onKeyUp(index)"
+                            @blur="onFieldBlur(index)"
+                            @keyup="onFieldKeyUp(index)"
+                            @click="trackSelection(index)"
                         >
                             <template #append-inner>
+                                <CiteMenu
+                                    v-if="references.enabled"
+                                    :links="references.links.value"
+                                    :disabled="value.locked || !canModify"
+                                    @pick="(link) => cite(index, link.key)"
+                                />
                                 <AttributeFieldDeleteButton
                                     :visible="delVisible"
                                     @delete="onDelete"
                                 />
                             </template>
                         </v-textarea>
+                        <ReferencePreview
+                            v-if="references.enabled"
+                            :text="value.value"
+                            :resolve="references.resolve"
+                        />
                     </template>
                 </AttributeValueLayout>
             </div>
@@ -111,6 +128,10 @@
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
+    import CiteMenu from '@/components/common/links/CiteMenu.vue'
+    import CitedText from '@/components/common/links/CitedText.vue'
+    import ReferencePreview from '@/components/common/links/ReferencePreview.vue'
+    import { useCitingField } from '@/composables/useCitingField'
     import { ICONS } from '@/config/ui-constants'
     import { useAttributes } from './useAttributes'
 
@@ -146,8 +167,33 @@
     const { t } = useI18n()
     const spellcheck = useSpellcheck()
 
-    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, move, moveUp, moveDown } =
-        useAttributes(props)
+    const {
+        canModify,
+        addInitialValues,
+        addButtonVisible,
+        add,
+        del,
+        getLockedStyle,
+        onFocus,
+        onBlur,
+        onKeyUp,
+        onEdit,
+        move,
+        moveUp,
+        moveDown
+    } = useAttributes(props)
+    const { references, setField, trackSelection, cite } = useCitingField(() => props.values, onEdit)
+
+    // The caret is remembered on the way, so a citation can be inserted where it was.
+    const onFieldBlur = (index: number) => {
+        trackSelection(index)
+        onBlur(index)
+    }
+
+    const onFieldKeyUp = (index: number) => {
+        trackSelection(index)
+        onKeyUp(index)
+    }
 
     // Drag-and-drop reordering state.
     const dragIndex = ref<number | null>(null)
