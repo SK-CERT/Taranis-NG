@@ -1,0 +1,53 @@
+{
+    "greeting": "Xin chào {name},",
+    "events": {
+        "password_changed": {
+            "subject": "Đã đổi mật khẩu",
+            "text": "Mật khẩu tài khoản Taranis NG của bạn đã được thay đổi."
+        },
+        "password_removed": {
+            "subject": "Đã tắt đăng nhập bằng mật khẩu",
+            "text": "Mật khẩu tài khoản Taranis NG của bạn đã bị xóa nên bạn không thể đăng nhập bằng mật khẩu nữa. Hãy dùng các phương thức đăng nhập khác đã được thiết lập cho tài khoản của bạn."
+        },
+        "totp_enabled": {
+            "subject": "Đã bật xác thực hai yếu tố",
+            "text": "Một ứng dụng xác thực (TOTP) đã được thiết lập làm yếu tố thứ hai cho tài khoản Taranis NG của bạn."
+        },
+        "totp_disabled": {
+            "subject": "Đã tắt xác thực hai yếu tố",
+            "text": "Ứng dụng xác thực (TOTP) đã bị gỡ khỏi tài khoản Taranis NG của bạn. Khi đăng nhập sẽ không còn hỏi mã dùng một lần của nó."
+        },
+        "passkey_added": {
+            "subject": "Đã thêm khóa truy cập mới",
+            "text": "Một khóa truy cập mới đã được đăng ký cho tài khoản Taranis NG của bạn."
+        },
+        "passkey_removed": {
+            "subject": "Đã gỡ khóa truy cập",
+            "text": "Một khóa truy cập đã bị gỡ khỏi tài khoản Taranis NG của bạn."
+        },
+        "mfa_reset": {
+            "subject": "Các yếu tố thứ hai của bạn đã được đặt lại",
+            "text": "Quản trị viên đã đặt lại các yếu tố thứ hai của tài khoản Taranis NG của bạn. Bạn có thể được yêu cầu thiết lập lại chúng ở lần đăng nhập tới."
+        },
+        "test": {
+            "subject": "Email thử nghiệm",
+            "text": "Đây là email thử nghiệm từ Taranis NG. Nếu bạn đang đọc nó, cài đặt email đang hoạt động."
+        }
+    },
+    "labels": {
+        "account": "Tài khoản",
+        "time": "Thời gian",
+        "changed_by": "Người thay đổi",
+        "ip": "Địa chỉ IP",
+        "passkey": "Khóa truy cập",
+        "authenticator": "Trình xác thực",
+        "factors": "Đã đặt lại"
+    },
+    "actor_self": "Bạn",
+    "actor_admin": "Quản trị viên {admin}",
+    "factor_totp": "Ứng dụng xác thực (TOTP)",
+    "factor_passkeys": "Tất cả khóa truy cập",
+    "unexpected": "Nếu bạn không thực hiện thay đổi này, hãy liên hệ ngay với quản trị viên.",
+    "signature": "Đây là tin nhắn tự động từ Taranis NG.",
+    "signature_with_url": "Đây là tin nhắn tự động từ Taranis NG ({url})."
+}

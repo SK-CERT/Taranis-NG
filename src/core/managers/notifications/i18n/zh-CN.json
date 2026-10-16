@@ -1,0 +1,53 @@
+{
+    "greeting": "{name}，您好：",
+    "events": {
+        "password_changed": {
+            "subject": "密码已更改",
+            "text": "您的 Taranis NG 帐户密码已更改。"
+        },
+        "password_removed": {
+            "subject": "已关闭密码登录",
+            "text": "您的 Taranis NG 帐户密码已被移除，因此无法再使用密码登录。请使用为您的帐户设置的其他登录方式。"
+        },
+        "totp_enabled": {
+            "subject": "双重身份验证已开启",
+            "text": "已为您的 Taranis NG 帐户设置身份验证器应用 (TOTP) 作为第二因素。"
+        },
+        "totp_disabled": {
+            "subject": "双重身份验证已关闭",
+            "text": "身份验证器应用 (TOTP) 已从您的 Taranis NG 帐户中移除。登录时将不再要求输入其一次性验证码。"
+        },
+        "passkey_added": {
+            "subject": "已添加新的通行密钥",
+            "text": "已为您的 Taranis NG 帐户注册了新的通行密钥。"
+        },
+        "passkey_removed": {
+            "subject": "通行密钥已移除",
+            "text": "已从您的 Taranis NG 帐户中移除了一个通行密钥。"
+        },
+        "mfa_reset": {
+            "subject": "您的第二因素已被重置",
+            "text": "管理员重置了您的 Taranis NG 帐户的第二因素。下次登录时可能会要求您重新设置。"
+        },
+        "test": {
+            "subject": "测试邮件",
+            "text": "这是来自 Taranis NG 的测试邮件。如果您正在阅读它，说明邮件设置工作正常。"
+        }
+    },
+    "labels": {
+        "account": "帐户",
+        "time": "时间",
+        "changed_by": "更改者",
+        "ip": "IP 地址",
+        "passkey": "通行密钥",
+        "authenticator": "认证器",
+        "factors": "已重置"
+    },
+    "actor_self": "您本人",
+    "actor_admin": "管理员 {admin}",
+    "factor_totp": "身份验证器应用 (TOTP)",
+    "factor_passkeys": "所有通行密钥",
+    "unexpected": "如果这不是您本人进行的更改，请立即联系管理员。",
+    "signature": "这是来自 Taranis NG 的自动消息。",
+    "signature_with_url": "这是来自 Taranis NG ({url}) 的自动消息。"
+}

@@ -1,0 +1,53 @@
+{
+    "greeting": "Olá, {name},",
+    "events": {
+        "password_changed": {
+            "subject": "Senha alterada",
+            "text": "A senha da sua conta Taranis NG foi alterada."
+        },
+        "password_removed": {
+            "subject": "Login com senha desativado",
+            "text": "A senha da sua conta Taranis NG foi removida, então você não pode mais entrar com senha. Use os outros métodos de login configurados para a sua conta."
+        },
+        "totp_enabled": {
+            "subject": "Autenticação de dois fatores ativada",
+            "text": "Um aplicativo autenticador (TOTP) foi configurado como segundo fator da sua conta Taranis NG."
+        },
+        "totp_disabled": {
+            "subject": "Autenticação de dois fatores desativada",
+            "text": "O aplicativo autenticador (TOTP) foi removido da sua conta Taranis NG. O login não pede mais o código de uso único dele."
+        },
+        "passkey_added": {
+            "subject": "Nova chave de acesso adicionada",
+            "text": "Uma nova chave de acesso foi registrada para a sua conta Taranis NG."
+        },
+        "passkey_removed": {
+            "subject": "Chave de acesso removida",
+            "text": "Uma chave de acesso foi removida da sua conta Taranis NG."
+        },
+        "mfa_reset": {
+            "subject": "Seus segundos fatores foram redefinidos",
+            "text": "Um administrador redefiniu os segundos fatores da sua conta Taranis NG. Talvez seja necessário configurá-los novamente no próximo login."
+        },
+        "test": {
+            "subject": "E-mail de teste",
+            "text": "Este é um e-mail de teste do Taranis NG. Se você está lendo, as configurações de e-mail funcionam."
+        }
+    },
+    "labels": {
+        "account": "Conta",
+        "time": "Horário",
+        "changed_by": "Alterado por",
+        "ip": "Endereço IP",
+        "passkey": "Chave de acesso",
+        "authenticator": "Autenticador",
+        "factors": "Redefinido"
+    },
+    "actor_self": "Você",
+    "actor_admin": "Administrador {admin}",
+    "factor_totp": "Aplicativo autenticador (TOTP)",
+    "factor_passkeys": "Todas as chaves de acesso",
+    "unexpected": "Se você não fez esta alteração, entre em contato com o administrador imediatamente.",
+    "signature": "Esta é uma mensagem automática do Taranis NG.",
+    "signature_with_url": "Esta é uma mensagem automática do Taranis NG ({url})."
+}

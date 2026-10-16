@@ -23,6 +23,7 @@ from managers import (
     certificate_manager,
     collectors_manager,
     log_manager,
+    notification_manager,
     presenters_manager,
     publishers_manager,
     remote_manager,
@@ -1126,6 +1127,15 @@ class UsersResource(Resource):
         return None
 
 
+def _notify_password_change(target: user.User | None, password_before: str | None) -> None:
+    """Tell a user that an edit of their account changed or removed their password."""
+    if target is None:
+        return
+    event = notification_manager.password_event(password_before, target.password)
+    if event:
+        notification_manager.notify_user(target, event, actor=get_user_from_jwt())
+
+
 class UserResource(Resource):
     """User API endpoint."""
 
@@ -1138,11 +1148,14 @@ class UserResource(Resource):
         Returns:
             (str, int): The result of the update
         """
+        target = user.User.find_by_id(user_id)
+        password_before = target.password if target else None
         try:
             user.User.update(user_id, request.json)
         except ValueError as ex:
             # a rejected identity link or status change: the message names what to fix
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        _notify_password_change(target, password_before)
         return None
 
     @auth_required("CONFIG_USER_DELETE")
@@ -1193,8 +1206,19 @@ class UserMfaResetResource(Resource):
         """
         try:
             data = request.json or {}
-            user.User.reset_mfa(user_id, reset_totp=data.get("reset_totp", True), reset_passkeys=data.get("reset_passkeys", True))
-            log_manager.store_user_activity(get_user_from_jwt(), "USER_MFA_RESET", f"MFA reset for user id {user_id}")
+            reset_totp, reset_passkeys = data.get("reset_totp", True), data.get("reset_passkeys", True)
+            # What the user actually loses, read before the reset; nothing lost, nothing to tell.
+            target = user.User.find_by_id(user_id)
+            factors = []
+            if target and reset_totp and target.totp_secret:
+                factors.append("totp")
+            if target and reset_passkeys and target.webauthn_credentials:
+                factors.append("passkeys")
+            user.User.reset_mfa(user_id, reset_totp=reset_totp, reset_passkeys=reset_passkeys)
+            admin = get_user_from_jwt()
+            log_manager.store_user_activity(admin, "USER_MFA_RESET", f"MFA reset for user id {user_id}")
+            if target and factors:
+                notification_manager.notify_user(target, notification_manager.MFA_RESET, actor=admin, factors=factors)
             return {}, HTTPStatus.OK
         except Exception as ex:
             msg = "Could not reset user MFA"
@@ -1243,6 +1267,8 @@ class ExternalUserResource(Resource):
         Returns:
             (str, int): The result of the update
         """
+        target = user.User.find_by_id(user_id)
+        password_before = target.password if target else None
         try:
             permissions = auth_manager.get_external_permissions_ids()
             user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
@@ -1250,6 +1276,8 @@ class ExternalUserResource(Resource):
             msg = "Could not update external user"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
+        _notify_password_change(target, password_before)
+        return None
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
@@ -2860,6 +2888,9 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
 
     Permission.add("CONFIG_TRAEFIK_ACCESS", "Config routing and TLS access", "Access to routing and TLS configuration")
     Permission.add("CONFIG_TRAEFIK_UPDATE", "Config routing and TLS update", "Update routing and TLS configuration")
+
+    Permission.add("CONFIG_NOTIFICATIONS_ACCESS", "Config notifications access", "Access to notification channels and their delivery log")
+    Permission.add("CONFIG_NOTIFICATIONS_UPDATE", "Config notifications update", "Update notification channels and retry deliveries")
 
     Permission.add("CONFIG_REMOTE_NODE_ACCESS", "Config remote nodes access", "Access to remote nodes configuration")
     Permission.add("CONFIG_REMOTE_NODE_CREATE", "Config remote node create", "Create remote node configuration")

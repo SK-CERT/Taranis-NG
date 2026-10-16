@@ -1,0 +1,53 @@
+{
+    "greeting": "Dobrý deň, {name},",
+    "events": {
+        "password_changed": {
+            "subject": "Heslo zmenené",
+            "text": "Heslo vášho účtu Taranis NG bolo zmenené."
+        },
+        "password_removed": {
+            "subject": "Prihlásenie heslom vypnuté",
+            "text": "Heslo vášho účtu Taranis NG bolo odstránené, takže sa už heslom prihlásiť nemôžete. Použite iné spôsoby prihlásenia nastavené pre váš účet."
+        },
+        "totp_enabled": {
+            "subject": "Dvojfaktorové overenie zapnuté",
+            "text": "K vášmu účtu Taranis NG bola ako druhý faktor nastavená aplikácia authenticator (TOTP)."
+        },
+        "totp_disabled": {
+            "subject": "Dvojfaktorové overenie vypnuté",
+            "text": "Aplikácia authenticator (TOTP) bola z vášho účtu Taranis NG odstránená. Prihlásenie už nevyžaduje jej jednorazový kód."
+        },
+        "passkey_added": {
+            "subject": "Pridaný nový passkey",
+            "text": "K vášmu účtu Taranis NG bol zaregistrovaný nový passkey."
+        },
+        "passkey_removed": {
+            "subject": "Passkey odstránený",
+            "text": "Z vášho účtu Taranis NG bol odstránený passkey."
+        },
+        "mfa_reset": {
+            "subject": "Vaše druhé faktory boli resetované",
+            "text": "Administrátor resetoval druhé faktory vášho účtu Taranis NG. Pri ďalšom prihlásení vás môže vyzvať na ich nové nastavenie."
+        },
+        "test": {
+            "subject": "Testovací e-mail",
+            "text": "Toto je testovací e-mail z Taranis NG. Ak ho čítate, nastavenie e-mailu funguje."
+        }
+    },
+    "labels": {
+        "account": "Účet",
+        "time": "Čas",
+        "changed_by": "Zmenil(a)",
+        "ip": "IP adresa",
+        "passkey": "Passkey",
+        "authenticator": "Autentifikátor",
+        "factors": "Resetované"
+    },
+    "actor_self": "Vy",
+    "actor_admin": "Administrátor {admin}",
+    "factor_totp": "Aplikácia authenticator (TOTP)",
+    "factor_passkeys": "Všetky passkeys",
+    "unexpected": "Ak ste túto zmenu nevykonali vy, okamžite kontaktujte svojho administrátora.",
+    "signature": "Toto je automatická správa z Taranis NG.",
+    "signature_with_url": "Toto je automatická správa z Taranis NG ({url})."
+}

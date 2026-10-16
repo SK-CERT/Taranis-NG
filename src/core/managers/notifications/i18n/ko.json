@@ -1,0 +1,53 @@
+{
+    "greeting": "{name}님, 안녕하세요.",
+    "events": {
+        "password_changed": {
+            "subject": "비밀번호가 변경되었습니다",
+            "text": "Taranis NG 계정의 비밀번호가 변경되었습니다."
+        },
+        "password_removed": {
+            "subject": "비밀번호 로그인이 꺼졌습니다",
+            "text": "Taranis NG 계정의 비밀번호가 제거되어 더 이상 비밀번호로 로그인할 수 없습니다. 계정에 설정된 다른 로그인 방법을 사용하세요."
+        },
+        "totp_enabled": {
+            "subject": "2단계 인증이 켜졌습니다",
+            "text": "Taranis NG 계정의 두 번째 인증 요소로 인증 앱(TOTP)이 설정되었습니다."
+        },
+        "totp_disabled": {
+            "subject": "2단계 인증이 꺼졌습니다",
+            "text": "Taranis NG 계정에서 인증 앱(TOTP)이 제거되었습니다. 이제 로그인할 때 일회용 코드를 묻지 않습니다."
+        },
+        "passkey_added": {
+            "subject": "새 패스키가 추가되었습니다",
+            "text": "Taranis NG 계정에 새 패스키가 등록되었습니다."
+        },
+        "passkey_removed": {
+            "subject": "패스키가 제거되었습니다",
+            "text": "Taranis NG 계정에서 패스키가 제거되었습니다."
+        },
+        "mfa_reset": {
+            "subject": "두 번째 인증 요소가 초기화되었습니다",
+            "text": "관리자가 Taranis NG 계정의 두 번째 인증 요소를 초기화했습니다. 다음 로그인 때 다시 설정하라는 요청을 받을 수 있습니다."
+        },
+        "test": {
+            "subject": "테스트 이메일",
+            "text": "Taranis NG에서 보낸 테스트 이메일입니다. 이 메일을 읽고 있다면 이메일 설정이 정상입니다."
+        }
+    },
+    "labels": {
+        "account": "계정",
+        "time": "시간",
+        "changed_by": "변경한 사람",
+        "ip": "IP 주소",
+        "passkey": "패스키",
+        "authenticator": "인증기",
+        "factors": "초기화 항목"
+    },
+    "actor_self": "본인",
+    "actor_admin": "관리자 {admin}",
+    "factor_totp": "인증 앱(TOTP)",
+    "factor_passkeys": "모든 패스키",
+    "unexpected": "본인이 변경하지 않았다면 즉시 관리자에게 연락하세요.",
+    "signature": "Taranis NG에서 자동으로 보낸 메시지입니다.",
+    "signature_with_url": "Taranis NG({url})에서 자동으로 보낸 메시지입니다."
+}

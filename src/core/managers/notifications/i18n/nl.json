@@ -1,0 +1,53 @@
+{
+    "greeting": "Hallo {name},",
+    "events": {
+        "password_changed": {
+            "subject": "Wachtwoord gewijzigd",
+            "text": "Het wachtwoord van uw Taranis NG-account is gewijzigd."
+        },
+        "password_removed": {
+            "subject": "Aanmelden met wachtwoord uitgeschakeld",
+            "text": "Het wachtwoord van uw Taranis NG-account is verwijderd, zodat u zich niet meer met een wachtwoord kunt aanmelden. Gebruik de andere aanmeldmethoden die voor uw account zijn ingesteld."
+        },
+        "totp_enabled": {
+            "subject": "Tweestapsverificatie ingeschakeld",
+            "text": "Er is een authenticatie-app (TOTP) ingesteld als tweede factor voor uw Taranis NG-account."
+        },
+        "totp_disabled": {
+            "subject": "Tweestapsverificatie uitgeschakeld",
+            "text": "De authenticatie-app (TOTP) is van uw Taranis NG-account verwijderd. Bij het aanmelden wordt niet meer om de eenmalige code gevraagd."
+        },
+        "passkey_added": {
+            "subject": "Nieuwe passkey toegevoegd",
+            "text": "Er is een nieuwe passkey geregistreerd voor uw Taranis NG-account."
+        },
+        "passkey_removed": {
+            "subject": "Passkey verwijderd",
+            "text": "Er is een passkey verwijderd van uw Taranis NG-account."
+        },
+        "mfa_reset": {
+            "subject": "Uw tweede factoren zijn gereset",
+            "text": "Een beheerder heeft de tweede factoren van uw Taranis NG-account gereset. Bij uw volgende aanmelding wordt u mogelijk gevraagd ze opnieuw in te stellen."
+        },
+        "test": {
+            "subject": "Test-e-mail",
+            "text": "Dit is een test-e-mail van Taranis NG. Als u dit leest, werken de e-mailinstellingen."
+        }
+    },
+    "labels": {
+        "account": "Account",
+        "time": "Tijd",
+        "changed_by": "Gewijzigd door",
+        "ip": "IP-adres",
+        "passkey": "Passkey",
+        "authenticator": "Authenticator",
+        "factors": "Gereset"
+    },
+    "actor_self": "U",
+    "actor_admin": "Beheerder {admin}",
+    "factor_totp": "Authenticatie-app (TOTP)",
+    "factor_passkeys": "Alle passkeys",
+    "unexpected": "Als u deze wijziging niet hebt gedaan, neem dan direct contact op met uw beheerder.",
+    "signature": "Dit is een automatisch bericht van Taranis NG.",
+    "signature_with_url": "Dit is een automatisch bericht van Taranis NG ({url})."
+}

@@ -1,0 +1,53 @@
+{
+    "greeting": "Dzień dobry {name},",
+    "events": {
+        "password_changed": {
+            "subject": "Hasło zmienione",
+            "text": "Hasło do Twojego konta Taranis NG zostało zmienione."
+        },
+        "password_removed": {
+            "subject": "Logowanie hasłem wyłączone",
+            "text": "Hasło do Twojego konta Taranis NG zostało usunięte, więc nie możesz już logować się hasłem. Użyj innych metod logowania skonfigurowanych dla Twojego konta."
+        },
+        "totp_enabled": {
+            "subject": "Uwierzytelnianie dwuskładnikowe włączone",
+            "text": "Dla Twojego konta Taranis NG skonfigurowano aplikację uwierzytelniającą (TOTP) jako drugi składnik."
+        },
+        "totp_disabled": {
+            "subject": "Uwierzytelnianie dwuskładnikowe wyłączone",
+            "text": "Aplikacja uwierzytelniająca (TOTP) została usunięta z Twojego konta Taranis NG. Logowanie nie wymaga już jej jednorazowego kodu."
+        },
+        "passkey_added": {
+            "subject": "Dodano nowy klucz dostępu",
+            "text": "Dla Twojego konta Taranis NG zarejestrowano nowy klucz dostępu."
+        },
+        "passkey_removed": {
+            "subject": "Usunięto klucz dostępu",
+            "text": "Z Twojego konta Taranis NG usunięto klucz dostępu."
+        },
+        "mfa_reset": {
+            "subject": "Twoje drugie składniki zostały zresetowane",
+            "text": "Administrator zresetował drugie składniki Twojego konta Taranis NG. Przy następnym logowaniu możesz zostać poproszony o ich ponowne skonfigurowanie."
+        },
+        "test": {
+            "subject": "Testowy e-mail",
+            "text": "To jest testowy e-mail z Taranis NG. Jeśli go czytasz, ustawienia e-mail działają."
+        }
+    },
+    "labels": {
+        "account": "Konto",
+        "time": "Czas",
+        "changed_by": "Zmienione przez",
+        "ip": "Adres IP",
+        "passkey": "Klucz dostępu",
+        "authenticator": "Moduł uwierzytelniający",
+        "factors": "Zresetowano"
+    },
+    "actor_self": "Ty",
+    "actor_admin": "Administrator {admin}",
+    "factor_totp": "Aplikacja uwierzytelniająca (TOTP)",
+    "factor_passkeys": "Wszystkie klucze dostępu",
+    "unexpected": "Jeśli to nie Ty wprowadziłeś tę zmianę, natychmiast skontaktuj się z administratorem.",
+    "signature": "To jest automatyczna wiadomość z Taranis NG.",
+    "signature_with_url": "To jest automatyczna wiadomość z Taranis NG ({url})."
+}

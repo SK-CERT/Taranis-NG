@@ -1,0 +1,53 @@
+{
+    "greeting": "{name} 様",
+    "events": {
+        "password_changed": {
+            "subject": "パスワードが変更されました",
+            "text": "Taranis NG アカウントのパスワードが変更されました。"
+        },
+        "password_removed": {
+            "subject": "パスワードでのサインインが無効になりました",
+            "text": "Taranis NG アカウントのパスワードが削除されたため、パスワードではサインインできなくなりました。アカウントに設定されている他のサインイン方法を使用してください。"
+        },
+        "totp_enabled": {
+            "subject": "2 段階認証が有効になりました",
+            "text": "Taranis NG アカウントの 2 番目の要素として認証アプリ (TOTP) が設定されました。"
+        },
+        "totp_disabled": {
+            "subject": "2 段階認証が無効になりました",
+            "text": "Taranis NG アカウントから認証アプリ (TOTP) が削除されました。サインイン時にワンタイムコードは求められなくなります。"
+        },
+        "passkey_added": {
+            "subject": "新しいパスキーが追加されました",
+            "text": "Taranis NG アカウントに新しいパスキーが登録されました。"
+        },
+        "passkey_removed": {
+            "subject": "パスキーが削除されました",
+            "text": "Taranis NG アカウントからパスキーが削除されました。"
+        },
+        "mfa_reset": {
+            "subject": "2 番目の要素がリセットされました",
+            "text": "管理者が Taranis NG アカウントの 2 番目の要素をリセットしました。次回のサインイン時に再設定を求められることがあります。"
+        },
+        "test": {
+            "subject": "テストメール",
+            "text": "これは Taranis NG からのテストメールです。このメールが読めていれば、メール設定は正しく動作しています。"
+        }
+    },
+    "labels": {
+        "account": "アカウント",
+        "time": "日時",
+        "changed_by": "変更者",
+        "ip": "IP アドレス",
+        "passkey": "パスキー",
+        "authenticator": "認証器",
+        "factors": "リセット対象"
+    },
+    "actor_self": "あなた",
+    "actor_admin": "管理者 {admin}",
+    "factor_totp": "認証アプリ (TOTP)",
+    "factor_passkeys": "すべてのパスキー",
+    "unexpected": "この変更に心当たりがない場合は、すぐに管理者に連絡してください。",
+    "signature": "これは Taranis NG からの自動送信メッセージです。",
+    "signature_with_url": "これは Taranis NG ({url}) からの自動送信メッセージです。"
+}
