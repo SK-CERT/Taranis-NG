@@ -625,7 +625,7 @@
     .selector-body {
         min-height: 0;
         display: grid;
-        grid-template-columns: 100px minmax(0, 1fr);
+        grid-template-columns: 160px minmax(0, 1fr);
         overflow: hidden;
     }
 

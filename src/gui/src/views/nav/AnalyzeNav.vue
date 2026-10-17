@@ -1,42 +1,19 @@
 <template>
     <NavSkeleton v-if="loading" />
-    <v-list
+    <GroupNavList
         v-else
-        density="compact"
-        class="section-navigation"
-    >
-        <!-- Group links -->
-        <v-list-subheader>{{ $t('analyze.source') }}</v-list-subheader>
-        <v-list-item
-            v-for="link in links"
-            :key="link.route"
-            :to="link.route"
-            class="section-navigation__item"
-        >
-            <template #default>
-                <div class="section-navigation__content">
-                    <v-icon
-                        :color="link.color || undefined"
-                        size="22"
-                    >
-                        {{ link.icon }}
-                    </v-icon>
-                    <bdi
-                        dir="auto"
-                        class="section-navigation__label"
-                    >
-                        {{ link.translate ? $t(link.title) : link.title }}
-                    </bdi>
-                </div>
-            </template>
-        </v-list-item>
-    </v-list>
+        :groups="links"
+        :active-id="activeGroupId"
+        title-key="analyze.source"
+        @select="onSelect"
+    />
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
+    import { computed, ref, onMounted } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { useAnalyzeStore } from '@/stores/analyze'
+    import GroupNavList from '@/components/common/GroupNavList.vue'
     import NavSkeleton from '@/components/common/NavSkeleton.vue'
     import { type GroupNavItem } from '@/types/routing'
     import { createRemoteAnalyzePath } from '@/utils/analyze-routing'
@@ -48,6 +25,16 @@
     const loading = ref(true)
     const groups = ref<Array<string | number>>([])
     const links = ref<GroupNavItem[]>([])
+    // Highlight the group matching the current /assess/group/:groupId route.
+    const activeGroupId = computed(() => {
+        const REMOTE_SCOPE_PREFIX = 'group-'
+        const scope = String(route.params['scope'] || '')
+        return scope.startsWith(REMOTE_SCOPE_PREFIX) ? scope.substring(REMOTE_SCOPE_PREFIX.length) : scope
+    })
+
+    const onSelect = (group: { route?: string }): void => {
+        if (group.route) router.push(group.route)
+    }
 
     onMounted(async () => {
         try {
@@ -92,25 +79,3 @@
         }
     })
 </script>
-
-<style scoped>
-    .section-navigation__item {
-        padding: 0.35rem 0.45rem !important;
-    }
-
-    .section-navigation__content {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-width: 0;
-    }
-
-    .section-navigation__label {
-        overflow: hidden;
-        font-size: 0.78rem;
-        font-weight: 600;
-        line-height: 1.2;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-</style>

@@ -1,7 +1,7 @@
 <template>
     <v-list
         density="compact"
-        class="group-navigation"
+        class="group-navigation ms-1"
     >
         <v-list-subheader>{{ $t(titleKey) }}</v-list-subheader>
         <v-list-item
@@ -12,7 +12,7 @@
             class="group-navigation__item"
             @click="emit('select', group)"
         >
-            <div class="group-navigation__content">
+            <div class="group-navigation__content ma-1">
                 <v-icon
                     :color="group.color || undefined"
                     size="22"
@@ -79,6 +79,15 @@
 </script>
 
 <style scoped>
+    .group-navigation {
+        background-color: var(--color-drawer-bg);
+        background-image: var(--v-drawer-gradient, none);
+        box-shadow: 2px 0 7px rgba(20, 42, 68, 0.08);
+        &:dir(rtl) {
+            box-shadow: -2px 0 7px rgba(20, 42, 68, 0.08);
+        }
+    }
+
     .group-navigation__item {
         padding: 0.35rem 0.45rem !important;
     }
@@ -114,5 +123,43 @@
         font-variant-numeric: tabular-nums;
         line-height: 1.25rem;
         text-align: center;
+    }
+
+    .v-list {
+        padding: 0;
+    }
+
+    .v-list-subheader {
+        min-height: 36px;
+        padding-inline: 12px;
+        color: rgb(var(--v-theme-on-surface));
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        opacity: 0.52;
+        text-transform: uppercase;
+    }
+
+    .v-list-item {
+        min-height: 38px;
+        margin-bottom: 3px;
+        border-radius: 3px;
+    }
+
+    .v-list-item--active {
+        background-color: rgba(var(--v-theme-primary), 0.16);
+        box-shadow: inset 3px 0 rgb(var(--v-theme-primary));
+        color: rgb(var(--v-theme-primary));
+    }
+
+    .v-list-item--active .v-icon {
+        color: rgb(var(--v-theme-primary));
+    }
+
+    /* Keep the active highlight grey (the overlay otherwise inherits the primary
+       text colour via currentColor and turns blue). The overlay is rendered inside
+       Vuetify's VListItem, so :deep() is required to reach it from a scoped block. */
+    .v-list-item--active > :deep(.v-list-item__overlay) {
+        background-color: rgb(var(--v-theme-on-surface));
     }
 </style>
