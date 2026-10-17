@@ -15,7 +15,6 @@
             v-if="showNavigation"
             v-model="navVisible"
             width="160"
-            color="drawer-bg"
             class="app-navigation"
         >
             <router-view name="nav" />
@@ -338,18 +337,7 @@
     }
 
     .app-navigation {
-        border-inline-end: 1px solid rgba(var(--v-theme-outline), 0.5) !important;
         background-color: var(--color-drawer-bg) !important;
-        background-image: var(--v-drawer-gradient, none) !important;
-        box-shadow: 2px 0 7px rgba(20, 42, 68, 0.08);
-
-        &:dir(rtl) {
-            box-shadow: -2px 0 7px rgba(20, 42, 68, 0.08);
-        }
-    }
-
-    .app-navigation .v-navigation-drawer__content {
-        padding: 8px 7px;
     }
 
     /* Filled (flat/elevated) colored buttons should use their themed on-color for the
@@ -395,45 +383,6 @@
     .v-data-table-footer__items-per-page > .v-select {
         width: auto;
         min-width: 90px;
-    }
-
-    /* Selected left-nav item: tint the icon and label with the primary colour. */
-    .v-navigation-drawer .v-list-item--active,
-    .v-navigation-drawer .v-list-item--active .v-icon {
-        color: rgb(var(--v-theme-primary)) !important;
-    }
-
-    /* Keep the active highlight grey (the overlay otherwise inherits the primary
-       text colour via currentColor and turns blue). */
-    .v-navigation-drawer .v-list-item--active > .v-list-item__overlay {
-        background-color: rgb(var(--v-theme-on-surface)) !important;
-    }
-
-    .v-navigation-drawer .v-list {
-        padding: 0;
-        background: transparent;
-    }
-
-    .v-navigation-drawer .v-list-subheader {
-        min-height: 36px;
-        padding-inline: 12px;
-        color: rgb(var(--v-theme-on-surface));
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.11em;
-        opacity: 0.52;
-        text-transform: uppercase;
-    }
-
-    .v-navigation-drawer .v-list-item {
-        min-height: 38px;
-        margin-bottom: 3px;
-        border-radius: 3px;
-    }
-
-    .v-navigation-drawer .v-list-item--active {
-        background: rgba(var(--v-theme-primary), 0.16);
-        box-shadow: inset 3px 0 rgb(var(--v-theme-primary));
     }
 
     @media (max-width: 900px) {
