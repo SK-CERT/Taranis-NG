@@ -1,0 +1,53 @@
+{
+    "greeting": "Hola, {name}:",
+    "events": {
+        "password_changed": {
+            "subject": "Contraseña cambiada",
+            "text": "Se cambió la contraseña de su cuenta de Taranis NG."
+        },
+        "password_removed": {
+            "subject": "Inicio de sesión con contraseña desactivado",
+            "text": "Se eliminó la contraseña de su cuenta de Taranis NG, por lo que ya no puede iniciar sesión con contraseña. Use los otros métodos de inicio de sesión configurados para su cuenta."
+        },
+        "totp_enabled": {
+            "subject": "Autenticación en dos pasos activada",
+            "text": "Se configuró una aplicación de autenticación (TOTP) como segundo factor de su cuenta de Taranis NG."
+        },
+        "totp_disabled": {
+            "subject": "Autenticación en dos pasos desactivada",
+            "text": "Se quitó la aplicación de autenticación (TOTP) de su cuenta de Taranis NG. El inicio de sesión ya no pide su código de un solo uso."
+        },
+        "passkey_added": {
+            "subject": "Nueva clave de acceso añadida",
+            "text": "Se registró una nueva clave de acceso para su cuenta de Taranis NG."
+        },
+        "passkey_removed": {
+            "subject": "Clave de acceso eliminada",
+            "text": "Se eliminó una clave de acceso de su cuenta de Taranis NG."
+        },
+        "mfa_reset": {
+            "subject": "Se restablecieron sus segundos factores",
+            "text": "Un administrador restableció los segundos factores de su cuenta de Taranis NG. Es posible que se le pida configurarlos de nuevo la próxima vez que inicie sesión."
+        },
+        "test": {
+            "subject": "Correo de prueba",
+            "text": "Este es un correo de prueba de Taranis NG. Si lo está leyendo, la configuración de correo funciona."
+        }
+    },
+    "labels": {
+        "account": "Cuenta",
+        "time": "Hora",
+        "changed_by": "Cambiado por",
+        "ip": "Dirección IP",
+        "passkey": "Clave de acceso",
+        "authenticator": "Autenticador",
+        "factors": "Restablecido"
+    },
+    "actor_self": "Usted",
+    "actor_admin": "Administrador {admin}",
+    "factor_totp": "Aplicación de autenticación (TOTP)",
+    "factor_passkeys": "Todas las claves de acceso",
+    "unexpected": "Si no hizo este cambio, póngase en contacto con su administrador de inmediato.",
+    "signature": "Este es un mensaje automático de Taranis NG.",
+    "signature_with_url": "Este es un mensaje automático de Taranis NG ({url})."
+}

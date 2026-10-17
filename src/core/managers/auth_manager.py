@@ -30,7 +30,7 @@ from config import Config
 from flask import request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
 from flask_jwt_extended.exceptions import JWTExtendedException
-from managers import log_manager, login_throttle, totp_manager, webauthn_manager
+from managers import log_manager, login_throttle, notification_manager, totp_manager, webauthn_manager
 from managers.db_manager import db
 from model.apikey import ApiKey
 from model.auth_provider import FORM_KINDS, OAUTH_KINDS, AuthProvider, UserAuthIdentity
@@ -587,6 +587,7 @@ def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict,
         return {"otpauth_uri": totp_manager.begin_enrollment(user.username)}, HTTPStatus.OK
     if not totp_manager.confirm_enrollment(user, code):
         return BaseAuthenticator.generate_error_code("Invalid authentication code", "TOTP_INVALID")
+    notification_manager.notify_user(user, notification_manager.TOTP_ENABLED)
     return BaseAuthenticator.generate_jwt(user)
 
 
@@ -621,10 +622,11 @@ def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, cre
         if not credential:
             return webauthn_manager.begin_registration(user), HTTPStatus.OK
         # the WebAuthn library raises its own exception types on a bad attestation
-        webauthn_manager.finish_registration(user, challenge_id or "", credential, name or "Passkey")
+        record = webauthn_manager.finish_registration(user, challenge_id or "", credential, name or "Passkey")
     except Exception as ex:
         log_manager.store_auth_error_activity(f"Passkey enrollment failed for user: {user.username}", ex)
         return BaseAuthenticator.generate_error_code(f"Passkey registration failed: {ex}", "PASSKEY_INVALID")
+    notification_manager.notify_user(user, notification_manager.PASSKEY_ADDED, **notification_manager.passkey_details(record))
     return BaseAuthenticator.generate_jwt(user)
 
 

@@ -1,0 +1,53 @@
+{
+    "greeting": "Bonjour {name},",
+    "events": {
+        "password_changed": {
+            "subject": "Mot de passe modifié",
+            "text": "Le mot de passe de votre compte Taranis NG a été modifié."
+        },
+        "password_removed": {
+            "subject": "Connexion par mot de passe désactivée",
+            "text": "Le mot de passe de votre compte Taranis NG a été supprimé : vous ne pouvez plus vous connecter avec un mot de passe. Utilisez les autres méthodes de connexion configurées pour votre compte."
+        },
+        "totp_enabled": {
+            "subject": "Authentification à deux facteurs activée",
+            "text": "Une application d’authentification (TOTP) a été configurée comme second facteur de votre compte Taranis NG."
+        },
+        "totp_disabled": {
+            "subject": "Authentification à deux facteurs désactivée",
+            "text": "L’application d’authentification (TOTP) a été retirée de votre compte Taranis NG. La connexion ne demande plus son code à usage unique."
+        },
+        "passkey_added": {
+            "subject": "Nouvelle clé d’accès ajoutée",
+            "text": "Une nouvelle clé d’accès a été enregistrée pour votre compte Taranis NG."
+        },
+        "passkey_removed": {
+            "subject": "Clé d’accès supprimée",
+            "text": "Une clé d’accès a été supprimée de votre compte Taranis NG."
+        },
+        "mfa_reset": {
+            "subject": "Vos seconds facteurs ont été réinitialisés",
+            "text": "Un administrateur a réinitialisé les seconds facteurs de votre compte Taranis NG. Il pourra vous être demandé de les configurer à nouveau lors de votre prochaine connexion."
+        },
+        "test": {
+            "subject": "E-mail de test",
+            "text": "Ceci est un e-mail de test de Taranis NG. Si vous le lisez, les paramètres d’e-mail fonctionnent."
+        }
+    },
+    "labels": {
+        "account": "Compte",
+        "time": "Heure",
+        "changed_by": "Modifié par",
+        "ip": "Adresse IP",
+        "passkey": "Clé d’accès",
+        "authenticator": "Authentificateur",
+        "factors": "Réinitialisé"
+    },
+    "actor_self": "Vous",
+    "actor_admin": "Administrateur {admin}",
+    "factor_totp": "Application d’authentification (TOTP)",
+    "factor_passkeys": "Toutes les clés d’accès",
+    "unexpected": "Si vous n’êtes pas à l’origine de cette modification, contactez immédiatement votre administrateur.",
+    "signature": "Ceci est un message automatique de Taranis NG.",
+    "signature_with_url": "Ceci est un message automatique de Taranis NG ({url})."
+}

@@ -47,6 +47,7 @@
     import type { PermissionKey } from '@/types/permissions'
     import SettingsTable from '@/components/config/SettingsTable.vue'
     import RoutingTlsTab from '@/components/config/RoutingTlsTab.vue'
+    import NotificationsTab from '@/components/config/NotificationsTab.vue'
 
     type SettingsTab = {
         value: string
@@ -84,6 +85,16 @@
             description: 'routing.tab_description',
             component: RoutingTlsTab,
             permission: 'CONFIG_TRAEFIK_ACCESS'
+        },
+        {
+            // How users are notified of what happens to their account (e-mail for now),
+            // and the log of what was delivered.
+            value: 'notifications',
+            title: 'notification_channels.tab_title',
+            icon: 'mdi-bell-outline',
+            description: 'notification_channels.tab_description',
+            component: NotificationsTab,
+            permission: 'CONFIG_NOTIFICATIONS_ACCESS'
         }
     ]
 

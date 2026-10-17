@@ -10,6 +10,7 @@ from api import (
     config,
     dashboard,
     isalive,
+    notifications,
     public_web,
     publish,
     remote,
@@ -80,3 +81,4 @@ def initialize(app: object) -> None:
     dashboard.initialize(api)
     state.initialize(api)
     traefik.initialize(api)
+    notifications.initialize(api)
