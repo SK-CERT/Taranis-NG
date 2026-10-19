@@ -2564,8 +2564,20 @@ class StateResource(Resource):
             if not state_def:
                 return {"error": "State definition not found"}, HTTPStatus.NOT_FOUND
 
+            if not state_def.editable:
+                # System state: only presentation fields (color/icon) may change.
+                payload = {
+                    "display_name": state_def.display_name,
+                    "description": state_def.description,
+                    "color": request.json.get("color", state_def.color),
+                    "icon": request.json.get("icon", state_def.icon),
+                    "editable": False,
+                }
+            else:
+                payload = request.json
+
             user = auth_manager.get_user_from_jwt()
-            state_def = state_def.update(request.json, user.name)
+            state_def = state_def.update(payload, user.name)
             schema = StateDefinitionSchema()
             return schema.dump(state_def), HTTPStatus.OK
 
