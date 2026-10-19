@@ -68,6 +68,13 @@
                     </template>
                     <template v-else>
                         <ActionButton
+                            v-if="canUpdate"
+                            action="edit"
+                            :title="t('common.edit')"
+                            class="me-1"
+                            @click="editItem(item)"
+                        />
+                        <ActionButton
                             action="lock"
                             :title="t('workflow.states.cannot_edit_system_state')"
                         />
@@ -113,7 +120,7 @@
                             v-model="editedItem.display_name"
                             :spellcheck="spellcheck"
                             :label="t('workflow.states.display_name')"
-                            :disabled="!canSave"
+                            :disabled="fieldsLocked"
                             variant="outlined"
                             density="comfortable"
                             class="mb-3"
@@ -124,7 +131,7 @@
                             v-model="editedItem.description"
                             :spellcheck="spellcheck"
                             :label="t('workflow.states.description')"
-                            :disabled="!canSave"
+                            :disabled="fieldsLocked"
                             variant="outlined"
                             density="comfortable"
                             rows="3"
@@ -243,8 +250,11 @@
     const canUpdate = computed(() => checkPermission('CONFIG_WORKFLOW_UPDATE'))
     const canDelete = computed(() => checkPermission('CONFIG_WORKFLOW_DELETE'))
 
-    const isEditable = computed(() => editedIndex.value === -1 || editedItem.value.editable)
-    const canSave = computed(() => isEditable.value && (editedIndex.value === -1 ? canCreate.value : canUpdate.value))
+    // System states (editable === false) are locked as to identity, but their
+    // presentation (color/icon) is still customizable.
+    const appearanceOnly = computed(() => editedIndex.value > -1 && !editedItem.value.editable)
+    const canSave = computed(() => (editedIndex.value === -1 ? canCreate.value : canUpdate.value))
+    const fieldsLocked = computed(() => !canSave.value || appearanceOnly.value)
 
     const filteredRecords = computed<StateDefinition[]>(() =>
         Array.isArray(configStore.stateDefinitions.items) ? (configStore.stateDefinitions.items as StateDefinition[]) : []
