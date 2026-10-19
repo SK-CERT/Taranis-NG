@@ -12,8 +12,9 @@ const isE2EState = (name) => name.startsWith('E2E State') || name.startsWith('E2
  * Covers the "States" tab of the Workflow view (/config/workflow). States use a
  * v-data-table with a search field and the shared "Add New" button. The add/edit
  * dialog uses the blue DialogToolbar; deletion goes through an in-app confirm
- * dialog. Seed data ships read-only "system" states (published / work_in_progress
- * / completed) that expose a lock icon instead of edit/delete actions.
+ * dialog. Seed data ships "system" states (published / work_in_progress /
+ * completed) that expose a lock icon and an edit button — only their appearance
+ * (color/icon) is editable — and never a delete action.
  */
 
 const STATES_URL = '/config/workflow'
@@ -194,11 +195,24 @@ test.describe('Workflow - States', () => {
         await expect(page.locator('tbody tr').filter({ hasText: renamed })).toHaveCount(0)
     })
 
-    test('system states are read-only (lock instead of edit/delete)', async ({ page }) => {
+    test('system states allow appearance edits only (lock + edit, no delete)', async ({ page }) => {
         const systemRow = page.locator('tbody tr').filter({ hasText: 'Published' }).first()
         await expect(systemRow).toBeVisible()
-        await expect(systemRow.locator('button[title="Edit"]')).toHaveCount(0)
+        // System states show a lock (identity is fixed) plus an edit button
+        // (color/icon may still be customized), but never delete.
         await expect(systemRow.locator('button[title="Delete"]')).toHaveCount(0)
         await expect(systemRow.locator('.mdi-lock-outline')).toBeVisible()
+        await expect(systemRow.locator('button[title="Edit"]')).toHaveCount(1)
+
+        // Opening the edit dialog: name/description are disabled, color/icon remain editable.
+        await systemRow.locator('button[title="Edit"]').click()
+        const dialog = page.locator('.v-dialog.v-overlay--active')
+        await expect(dialog).toBeVisible()
+        await expect(dialog.locator('input').first()).toBeDisabled()
+        await expect(dialog.locator('textarea').first()).toBeDisabled()
+        await expect(dialog.locator('input[type="color"]')).toBeEnabled()
+
+        await dialog.getByRole('button', { name: 'Cancel' }).click()
+        await expect(page.locator('.v-dialog.v-overlay--active')).toHaveCount(0)
     })
 })
