@@ -1,0 +1,53 @@
+{
+    "greeting": "Merhaba {name},",
+    "events": {
+        "password_changed": {
+            "subject": "Parola değiştirildi",
+            "text": "Taranis NG hesabınızın parolası değiştirildi."
+        },
+        "password_removed": {
+            "subject": "Parolayla oturum açma kapatıldı",
+            "text": "Taranis NG hesabınızın parolası kaldırıldı; artık parolayla oturum açamazsınız. Hesabınız için ayarlanmış diğer oturum açma yöntemlerini kullanın."
+        },
+        "totp_enabled": {
+            "subject": "İki adımlı doğrulama açıldı",
+            "text": "Taranis NG hesabınız için ikinci faktör olarak bir kimlik doğrulayıcı uygulaması (TOTP) ayarlandı."
+        },
+        "totp_disabled": {
+            "subject": "İki adımlı doğrulama kapatıldı",
+            "text": "Kimlik doğrulayıcı uygulaması (TOTP) Taranis NG hesabınızdan kaldırıldı. Oturum açarken artık tek kullanımlık kodu sorulmuyor."
+        },
+        "passkey_added": {
+            "subject": "Yeni geçiş anahtarı eklendi",
+            "text": "Taranis NG hesabınız için yeni bir geçiş anahtarı kaydedildi."
+        },
+        "passkey_removed": {
+            "subject": "Geçiş anahtarı kaldırıldı",
+            "text": "Taranis NG hesabınızdan bir geçiş anahtarı kaldırıldı."
+        },
+        "mfa_reset": {
+            "subject": "İkinci faktörleriniz sıfırlandı",
+            "text": "Bir yönetici Taranis NG hesabınızın ikinci faktörlerini sıfırladı. Bir sonraki oturum açışınızda bunları yeniden ayarlamanız istenebilir."
+        },
+        "test": {
+            "subject": "Test e-postası",
+            "text": "Bu, Taranis NG'den gönderilen bir test e-postasıdır. Bunu okuyorsanız e-posta ayarları çalışıyor."
+        }
+    },
+    "labels": {
+        "account": "Hesap",
+        "time": "Zaman",
+        "changed_by": "Değiştiren",
+        "ip": "IP adresi",
+        "passkey": "Geçiş anahtarı",
+        "authenticator": "Kimlik doğrulayıcı",
+        "factors": "Sıfırlanan"
+    },
+    "actor_self": "Siz",
+    "actor_admin": "Yönetici {admin}",
+    "factor_totp": "Kimlik doğrulayıcı uygulaması (TOTP)",
+    "factor_passkeys": "Tüm geçiş anahtarları",
+    "unexpected": "Bu değişikliği siz yapmadıysanız hemen yöneticinize başvurun.",
+    "signature": "Bu, Taranis NG'den gönderilen otomatik bir iletidir.",
+    "signature_with_url": "Bu, Taranis NG'den gönderilen otomatik bir iletidir ({url})."
+}

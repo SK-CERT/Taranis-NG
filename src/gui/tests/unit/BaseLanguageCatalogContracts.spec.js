@@ -175,6 +175,9 @@ describe('Arabic production catalog contracts', () => {
             'routing.hsts_title',
             // The WebAuthn field name of an authenticator model.
             'security.passkey_aaguid',
+            // Names of SMTP security protocols.
+            'notification_channels.security_starttls',
+            'notification_channels.security_ssl',
             'presenters.nodes.url',
             'presenters.nodes.api_url',
             'publishers.nodes.url',

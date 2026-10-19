@@ -16,7 +16,7 @@ from http import HTTPStatus
 from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
-from managers import auth_manager, totp_manager, webauthn_manager
+from managers import auth_manager, notification_manager, totp_manager, webauthn_manager
 from managers.auth_manager import auth_required
 from model.product_type import ProductType
 from model.publisher_preset import PublisherPreset
@@ -176,6 +176,7 @@ class UserTotp(Resource):
             return {"otpauth_uri": totp_manager.begin_enrollment(user.username)}, HTTPStatus.OK
         if not totp_manager.confirm_enrollment(user, code):
             return {"error": "Invalid authentication code"}, HTTPStatus.BAD_REQUEST
+        notification_manager.notify_user(user, notification_manager.TOTP_ENABLED)
         return {"enabled": True}, HTTPStatus.OK
 
     @jwt_required()
@@ -191,6 +192,7 @@ class UserTotp(Resource):
         data = request.json or {}
         if not totp_manager.disable(user, data.get("code", "")):
             return {"error": "Invalid authentication code"}, HTTPStatus.BAD_REQUEST
+        notification_manager.notify_user(user, notification_manager.TOTP_DISABLED)
         return {"enabled": False}, HTTPStatus.OK
 
 
@@ -252,6 +254,7 @@ class UserPasskeyRegisterFinish(Resource):
             )
         except Exception as ex:
             return {"error": f"Passkey registration failed: {ex}"}, HTTPStatus.BAD_REQUEST
+        notification_manager.notify_user(user, notification_manager.PASSKEY_ADDED, **notification_manager.passkey_details(record))
         return record.to_json(), HTTPStatus.OK
 
 
@@ -289,8 +292,12 @@ class UserPasskey(Resource):
         user = auth_manager.get_user_from_jwt()
         if not user:
             return {"error": "not authorized"}, HTTPStatus.UNAUTHORIZED
+        # Read before removing: the notification names the passkey that is gone.
+        record = WebauthnCredential.find(credential_id)
+        details = notification_manager.passkey_details(record) if record and record.user_id == user.id else {}
         if not WebauthnCredential.remove(credential_id, user.id):
             return {"error": "Passkey not found"}, HTTPStatus.NOT_FOUND
+        notification_manager.notify_user(user, notification_manager.PASSKEY_REMOVED, **details)
         return {}, HTTPStatus.OK
 
 

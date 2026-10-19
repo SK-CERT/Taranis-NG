@@ -122,6 +122,32 @@ export function getTraefikCertificates() {
     return ApiService.get('/config/traefik/certificates')
 }
 
+export function getNotificationSettings() {
+    return ApiService.get('/config/notifications')
+}
+
+export function saveNotificationEvents(events) {
+    return ApiService.put('/config/notifications/events', { events })
+}
+
+export function saveNotificationChannel(kind, payload) {
+    return ApiService.put('/config/notifications/channels/' + encodeURIComponent(kind), payload)
+}
+
+export function testNotificationChannel(kind, payload) {
+    return ApiService.post('/config/notifications/channels/' + encodeURIComponent(kind) + '/test', payload)
+}
+
+export function getNotificationOutbox(status, limit = 100) {
+    const query = new URLSearchParams({ limit: String(limit) })
+    if (status) query.set('status', status)
+    return ApiService.get('/config/notifications/outbox?' + query.toString())
+}
+
+export function retryNotification(id) {
+    return ApiService.post('/config/notifications/outbox/' + id + '/retry', {})
+}
+
 export function updateUserStatus(user_id, status) {
     return ApiService.put('/config/users/' + user_id + '/status', { status: status })
 }

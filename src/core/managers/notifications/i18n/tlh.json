@@ -1,0 +1,53 @@
+{
+    "greeting": "nuqneH {name},",
+    "events": {
+        "password_changed": {
+            "subject": "ngoq choHlu'",
+            "text": "Taranis NG mIvwa'lIj ngoq choHlu'."
+        },
+        "password_removed": {
+            "subject": "ngoq lo'meH 'elghach chu'Ha'lu'",
+            "text": "Taranis NG mIvwa'lIj ngoq teqlu'; ngoq lo'taHvIS 'ellaHbe'. mIvwa'lIjvaD 'elmeH mIwmey latlh cherlu'bogh yIlo'."
+        },
+        "totp_enabled": {
+            "subject": "cha' DuH 'olmeH mIw chu'lu'",
+            "text": "Taranis NG mIvwa'lIjvaD cha'DIch DuH 'olwI' ghun (TOTP) cherlu'."
+        },
+        "totp_disabled": {
+            "subject": "cha' DuH 'olmeH mIw chu'Ha'lu'",
+            "text": "Taranis NG mIvwa'lIjvo' 'olwI' ghun (TOTP) teqlu'. 'elDI' wa'logh ngoQ poQbe'lu'."
+        },
+        "passkey_added": {
+            "subject": "'elmeH ngaQHa'moHwI' chu' chellu'",
+            "text": "Taranis NG mIvwa'lIjvaD 'elmeH ngaQHa'moHwI' chu' qonlu'."
+        },
+        "passkey_removed": {
+            "subject": "'elmeH ngaQHa'moHwI' teqlu'",
+            "text": "Taranis NG mIvwa'lIjvo' 'elmeH ngaQHa'moHwI' teqlu'."
+        },
+        "mfa_reset": {
+            "subject": "cha'DIch DuHmeylIj lI'Qa'moHlu'",
+            "text": "Taranis NG mIvwa'lIj cha'DIch DuHmey lI'Qa'moH loHwI'. 'elDI' veb, chaH DacherQa'meH tlhoblu'laH."
+        },
+        "test": {
+            "subject": "QInvam waHlu'",
+            "text": "Taranis NG QIn waHlu'bogh 'oH QInvam'e'. DalaDlaHchugh, QIn DuHmey Qap."
+        }
+    },
+    "labels": {
+        "account": "mIvwa'",
+        "time": "poH",
+        "changed_by": "choHwI'",
+        "ip": "IP Daq",
+        "passkey": "'elmeH ngaQHa'moHwI'",
+        "authenticator": "'olwI' jan",
+        "factors": "lI'Qa'moHlu'bogh"
+    },
+    "actor_self": "SoH",
+    "actor_admin": "loHwI' {admin}",
+    "factor_totp": "'olwI' ghun (TOTP)",
+    "factor_passkeys": "'elmeH ngaQHa'moHwI'mey Hoch",
+    "unexpected": "choHmeH ghuHvam DaQaw'be'chugh, DaH loHwI'lIj yIjang.",
+    "signature": "Taranis NG QIn ngebHa' 'oH QInvam'e'.",
+    "signature_with_url": "Taranis NG ({url}) QIn ngebHa' 'oH QInvam'e'."
+}

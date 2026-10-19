@@ -1,0 +1,53 @@
+{
+    "greeting": "Hello {name},",
+    "events": {
+        "password_changed": {
+            "subject": "Password changed",
+            "text": "The password of your Taranis NG account was changed."
+        },
+        "password_removed": {
+            "subject": "Password sign-in turned off",
+            "text": "The password of your Taranis NG account was removed, so you can no longer sign in with a password. Use the other sign-in methods set up for your account."
+        },
+        "totp_enabled": {
+            "subject": "Two-factor authentication turned on",
+            "text": "An authenticator app (TOTP) was set up as a second factor for your Taranis NG account."
+        },
+        "totp_disabled": {
+            "subject": "Two-factor authentication turned off",
+            "text": "The authenticator app (TOTP) was removed from your Taranis NG account. Signing in no longer asks for its one-time code."
+        },
+        "passkey_added": {
+            "subject": "New passkey added",
+            "text": "A new passkey was registered for your Taranis NG account."
+        },
+        "passkey_removed": {
+            "subject": "Passkey removed",
+            "text": "A passkey was removed from your Taranis NG account."
+        },
+        "mfa_reset": {
+            "subject": "Your second factors were reset",
+            "text": "An administrator reset the second factors of your Taranis NG account. You may be asked to set them up again the next time you sign in."
+        },
+        "test": {
+            "subject": "Test e-mail",
+            "text": "This is a test e-mail from Taranis NG. If you are reading it, the e-mail settings work."
+        }
+    },
+    "labels": {
+        "account": "Account",
+        "time": "Time",
+        "changed_by": "Changed by",
+        "ip": "IP address",
+        "passkey": "Passkey",
+        "authenticator": "Authenticator",
+        "factors": "Reset"
+    },
+    "actor_self": "You",
+    "actor_admin": "Administrator {admin}",
+    "factor_totp": "Authenticator app (TOTP)",
+    "factor_passkeys": "All passkeys",
+    "unexpected": "If you did not make this change, contact your administrator immediately.",
+    "signature": "This is an automated message from Taranis NG.",
+    "signature_with_url": "This is an automated message from Taranis NG ({url})."
+}
