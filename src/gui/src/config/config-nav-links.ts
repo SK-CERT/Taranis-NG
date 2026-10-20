@@ -71,7 +71,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-web',
         title: 'nav_menu.public_web',
         route: '/config/public-web',
-        permission: 'CONFIG_PUBLIC_WEB_NODE_ACCESS',
+        permissions: ['CONFIG_PUBLIC_WEB_NODE_ACCESS'],
         translate: true
     },
     {
@@ -88,7 +88,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-format-list-text',
         title: 'nav_menu.word_lists',
         route: '/config/wordlists',
-        permission: 'CONFIG_WORD_LIST_ACCESS',
+        permissions: ['CONFIG_WORD_LIST_ACCESS'],
         translate: true
     },
     {
@@ -96,7 +96,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-state-machine',
         title: 'nav_menu.workflow',
         route: '/config/workflow',
-        permission: 'CONFIG_WORKFLOW_ACCESS',
+        permissions: ['CONFIG_WORKFLOW_ACCESS'],
         translate: true
     },
     {
@@ -112,7 +112,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-file-cabinet',
         title: 'nav_menu.external',
         route: '/config/external',
-        permission: 'MY_ASSETS_CONFIG',
+        permissions: ['MY_ASSETS_CONFIG'],
         translate: true
     }
 ]
@@ -134,9 +134,7 @@ export function filterConfigLinks(checkPermission: (permission: PermissionKey) =
                 filtered.push(link)
             }
         } else {
-            const allowed = link.permissions
-                ? link.permissions.some((permission) => checkPermission(permission))
-                : !link.permission || checkPermission(link.permission)
+            const allowed = !link.permissions || link.permissions.some((permission) => checkPermission(permission))
             if (allowed) {
                 filtered.push(link)
             }
