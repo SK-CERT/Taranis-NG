@@ -13,8 +13,7 @@ export type GroupNavItem = {
     title: string
     translate?: boolean | null
     route: string
-    permission?: PermissionKey
-    // If set, show when the user has ANY of these permissions.
+    // Show when the user has ANY of these permissions; empty is unrestricted.
     permissions?: PermissionKey[]
     separator?: boolean
 }
