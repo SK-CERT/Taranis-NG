@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewProduct from '@/components/publish/NewProduct.vue'
 import { previewProduct } from '@/api/publish'
+import ApiService from '@/services/api_service'
 import { navigateReservedTabOrCurrentWindow, openBlankTabWithoutOpener } from '@/utils/window'
 
 const validateForm = vi.fn()
@@ -12,6 +13,10 @@ vi.mock('@/api/publish', () => ({
     updateProduct: vi.fn(),
     publishProduct: vi.fn(),
     previewProduct: vi.fn()
+}))
+
+vi.mock('@/services/api_service', () => ({
+    default: { download: vi.fn().mockResolvedValue(true) }
 }))
 
 vi.mock('@/api/user', () => ({
@@ -113,5 +118,16 @@ describe('NewProduct preview', () => {
 
         expect(previewWindow.close).toHaveBeenCalledOnce()
         expect(navigateReservedTabOrCurrentWindow).not.toHaveBeenCalled()
+    })
+
+    it('downloads the generated product file through its preview ticket', async () => {
+        validateForm.mockResolvedValue({ valid: true })
+        vi.mocked(previewProduct).mockResolvedValue({ data: { token: 'download-ticket' } } as never)
+        const wrapper = mountPreviewEditor()
+
+        await wrapper.vm.handleDownload({ ctrlKey: false } as MouseEvent)
+
+        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '')
+        expect(ApiService.download).toHaveBeenCalledWith('/publish/products/preview/download-ticket', undefined, 'product', 'GET')
     })
 })

@@ -61,15 +61,14 @@ const ApiService = {
         })
     },
 
-    async download(resource, data = {}, fileName = 'download') {
+    async download(resource, data = {}, fileName = 'download', method = 'POST') {
         try {
-            // Make the Axios request
-            const config = {
+            const config: AxiosRequestConfig = {
                 url: resource, // full API path
-                method: 'POST' as const, // matches backend post()
-                responseType: 'blob' as const, // get raw data
-                data: data
+                method,
+                responseType: 'blob' as const
             }
+            if (method === 'POST') config.data = data
 
             const response = await axios(config)
 
@@ -77,9 +76,15 @@ const ApiService = {
             let filename = fileName
             const disposition = response.headers['content-disposition']
             if (disposition) {
-                // handles: attachment; filename = report.pdf  filename = "report.pdf"  filename*=UTF-8''my%20report.pdf
-                const match = disposition.match(/filename\*?=(?:UTF-8'')?["]?([^";\r\n]+)["]?/i)
-                if (match) filename = match[1]
+                const match = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";\r\n]+)"?/i)
+                if (match) {
+                    const value = match[1].trim()
+                    try {
+                        filename = decodeURIComponent(value)
+                    } catch {
+                        filename = value
+                    }
+                }
             }
 
             // Wrap in Blob for download
@@ -94,8 +99,10 @@ const ApiService = {
             link.remove()
 
             window.URL.revokeObjectURL(url)
+            return true
         } catch (err) {
             console.error('Download failed:', err)
+            return false
         }
     }
 }

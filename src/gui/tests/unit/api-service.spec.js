@@ -167,6 +167,28 @@ describe('ApiService', () => {
             expect(removeSpy).toHaveBeenCalled()
         })
 
+        it('should make GET request without a request body', async () => {
+            vi.mocked(axios).mockResolvedValue({
+                data: new Blob(['test']),
+                headers: {}
+            })
+
+            const mockLink = { href: '', download: '', click: vi.fn(), remove: vi.fn() }
+            vi.spyOn(document, 'createElement').mockReturnValue(mockLink)
+            vi.spyOn(document.body, 'appendChild').mockImplementation(() => {})
+            vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:url')
+            vi.spyOn(window.URL, 'revokeObjectURL').mockImplementation(() => {})
+
+            await ApiService.download('/preview/ticket-123', undefined, 'product', 'GET')
+
+            expect(axios).toHaveBeenCalledWith({
+                url: '/preview/ticket-123',
+                method: 'GET',
+                responseType: 'blob'
+            })
+            expect(mockLink.click).toHaveBeenCalledOnce()
+        })
+
         it('should use filename from content-disposition header', async () => {
             vi.mocked(axios).mockResolvedValue({
                 data: new Blob(['pdf']),
@@ -182,6 +204,25 @@ describe('ApiService', () => {
             await ApiService.download('/export', {}, 'fallback.pdf')
 
             expect(mockLink.download).toBe('server-report.pdf')
+        })
+
+        it('should decode UTF-8 filename from content-disposition header', async () => {
+            vi.mocked(axios).mockResolvedValue({
+                data: new Blob(['pdf']),
+                headers: {
+                    'content-disposition': "attachment; filename*=UTF-8''Bezpe%C4%8Dnostn%C3%A9%20varovanie_P123.pdf"
+                }
+            })
+
+            const mockLink = { href: '', download: '', click: vi.fn(), remove: vi.fn() }
+            vi.spyOn(document, 'createElement').mockReturnValue(mockLink)
+            vi.spyOn(document.body, 'appendChild').mockImplementation(() => {})
+            vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:url')
+            vi.spyOn(window.URL, 'revokeObjectURL').mockImplementation(() => {})
+
+            await ApiService.download('/export', {}, 'fallback.pdf')
+
+            expect(mockLink.download).toBe('Bezpečnostné varovanie_P123.pdf')
         })
 
         it('should use fallback filename when no content-disposition', async () => {
