@@ -393,16 +393,16 @@ wheels = [
 
 [[package]]
 name = "envelope"
-version = "2.4.2"
+version = "2.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "py3-validate-email" },
     { name = "python-gnupg" },
     { name = "python-magic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/db/8a/76e7cb56712e82b229103d48328bcfe4d2b17de057bb66d0fb8d114475c1/envelope-2.4.2.tar.gz", hash = "sha256:aa7333046195d4dcc9dd2cd5d90427f7367281b4e2bfd087fb4e06bc615e5d95", size = 43217, upload-time = "2026-10-05T14:35:02.469Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5c/e7/37504655eb11a7556b1e490c927894cf22e6efa3658b83936453f547e170/envelope-2.4.3.tar.gz", hash = "sha256:5e26dfa9f90794fb066ee8a24b49ceb6c24fb7f69bf537b88f5ea75f317335ea", size = 45823, upload-time = "2026-10-13T15:34:15.526Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/80/fb5e435cc4c431422bdb0b70f56eeb2f62d8ede78dc040c4b630af0d7c86/envelope-2.4.2-py3-none-any.whl", hash = "sha256:dfbc02325bed5cb4d80e4d8377a00a502650d3ba47fb6f7b3f48aa4adbb5978b", size = 46820, upload-time = "2026-10-05T14:35:01.418Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/3c/79ebd3083d9f5953c65afccbb4cf26cb52a3e614fd60fce5d6c8ac31864c/envelope-2.4.3-py3-none-any.whl", hash = "sha256:322102c4ddc62775553d20e9440e3519057ead7e095d6df4bea952131aae3678", size = 53868, upload-time = "2026-10-13T15:34:14.322Z" },
 ]
 
 [[package]]
@@ -964,7 +964,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = "==4.15.0" },
-    { name = "envelope", specifier = "==2.4.2" },
+    { name = "envelope", specifier = "==2.4.3" },
     { name = "flask", specifier = "==3.1.3" },
     { name = "flask-cors", specifier = "==6.0.5" },
     { name = "flask-restful", specifier = "==0.3.10" },

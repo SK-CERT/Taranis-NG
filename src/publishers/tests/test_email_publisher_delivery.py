@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from email import policy
 from email.parser import BytesParser
 from http import HTTPStatus
-from smtplib import SMTPServerDisconnected
+from smtplib import SMTPHeloError, SMTPServerDisconnected
 from typing import TYPE_CHECKING, ClassVar
 
 import pytest
@@ -61,6 +61,8 @@ class RecordingSMTP:
     refuse: ClassVar[dict[str, tuple[int, bytes]]] = {}
     refuse_connection: ClassVar[bool] = False
     connections: ClassVar[int] = 0
+    ehlo_calls: ClassVar[int] = 0
+    helo_calls: ClassVar[int] = 0
 
     def __init__(self, host: str = "", port: int = 0, *_args: object, **_kwargs: object) -> None:
         """Take the arguments ``SMTPHandler.connect()`` passes (local_hostname, timeout) and connect to nothing."""
@@ -69,6 +71,8 @@ class RecordingSMTP:
         RecordingSMTP.connected_to = (host, port)
         RecordingSMTP.connections += 1
         self.closed = False
+        self.ehlo_resp: tuple[int, bytes] | None = None
+        self.helo_resp: tuple[int, bytes] | None = None
 
     def starttls(self, *_args: object, **_kwargs: object) -> None:
         """Upgrade the imaginary connection."""
@@ -90,6 +94,43 @@ class RecordingSMTP:
         """End the session."""
         RecordingSMTP.quit_called = True
         self.closed = True
+
+    # The following methods are called by envelope
+    def sendmail(
+        self,
+        from_addr: str | None,
+        to_addrs: list[str] | None,
+        msg: bytes,
+        mail_options=(),  # noqa: ANN001, ARG002
+        rcpt_options=(),  # noqa: ANN001, ARG002
+    ) -> dict:
+        """Record the SMTP bytes and return the recipients refused by the server."""
+        if self.closed:
+            raise SMTPServerDisconnected
+        self.ehlo_or_helo_if_needed()
+        RecordingSMTP.sent.append((from_addr, to_addrs or [], msg))
+        return dict(RecordingSMTP.refuse)
+
+    def ehlo(self) -> tuple[int, bytes]:
+        """Accept an EHLO greeting."""
+        RecordingSMTP.ehlo_calls += 1
+        self.ehlo_resp = (250, b"OK")
+        return self.ehlo_resp
+
+    def helo(self) -> tuple[int, bytes]:
+        """Accept a HELO greeting if EHLO was not accepted."""
+        RecordingSMTP.helo_calls += 1
+        self.helo_resp = (250, b"OK")
+        return self.helo_resp
+
+    def ehlo_or_helo_if_needed(self) -> None:
+        """Greet the server once, preferring EHLO and falling back to HELO."""
+        if self.ehlo_resp is None and self.helo_resp is None:
+            code, response = self.ehlo()
+            if code != 250:
+                code, response = self.helo()
+            if code != 250:
+                raise SMTPHeloError(code, response)
 
 
 @dataclass(frozen=True)
@@ -117,6 +158,8 @@ def smtp_server(monkeypatch: pytest.MonkeyPatch) -> type[RecordingSMTP]:
     RecordingSMTP.refuse = {}
     RecordingSMTP.refuse_connection = False
     RecordingSMTP.connections = 0
+    RecordingSMTP.ehlo_calls = 0
+    RecordingSMTP.helo_calls = 0
     # SMTPHandler caches connections in a class-level dict keyed by the smtp settings, so
     # without this a neighbouring test's transport is reused instead of the one just built.
     smtp_handler.SMTPHandler._instances.clear()
@@ -162,6 +205,8 @@ def test_a_message_the_server_accepted_is_reported_as_sent(publish: Callable[...
     assert publication.message is not None, "nothing reached the SMTP server"
     assert publication.status == HTTPStatus.OK, f"delivered message reported as failed: {publication.response}"
     assert publication.response == {"message": "Email sent successfully"}
+    assert RecordingSMTP.ehlo_calls == 1
+    assert RecordingSMTP.helo_calls == 0
 
 
 def test_the_server_the_preset_names_is_the_one_we_talk_to(
@@ -472,7 +517,7 @@ def test_the_message_carries_the_headers_the_publisher_owns(publish: Callable[..
 
 def body_of(message: EmailMessage) -> str:
     """Return the plain text part of a delivered message, decoded."""
-    return message.get_body(preferencelist=("plain",)).get_content().rstrip("\n")
+    return message.get_body(preferencelist=("plain",)).get_content().rstrip("\r\n")
 
 
 def only_attachment(message: EmailMessage) -> EmailMessage:
