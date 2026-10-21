@@ -91,6 +91,10 @@ class RecordingSMTP:
         RecordingSMTP.quit_called = True
         self.closed = True
 
+    # The following method is called by envelope
+    def ehlo_or_helo_if_needed(self) -> None:
+        """This method calls ehlo() and/or helo() if there has been no previous EHLO or HELO command this session. It tries EHLO first."""
+
 
 @dataclass(frozen=True)
 class Publication:
