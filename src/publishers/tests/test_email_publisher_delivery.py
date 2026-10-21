@@ -101,7 +101,7 @@ class RecordingSMTP:
         rcpt_options=(),  # noqa: ANN001, ARG002
     ) -> dict:
         """Send mail."""
-        return RecordingSMTP.send_message(msg, from_addr, to_addrs)
+        return RecordingSMTP.send_message(self, msg, from_addr, to_addrs)
 
     def ehlo_or_helo_if_needed(self) -> None:
         """This method calls ehlo() and/or helo() if there has been no previous EHLO or HELO command this session. It tries EHLO first."""
