@@ -517,7 +517,7 @@ def test_the_message_carries_the_headers_the_publisher_owns(publish: Callable[..
 
 def body_of(message: EmailMessage) -> str:
     """Return the plain text part of a delivered message, decoded."""
-    return message.get_body(preferencelist=("plain",)).get_content().rstrip("\n")
+    return message.get_body(preferencelist=("plain",)).get_content().rstrip("\r\n")
 
 
 def only_attachment(message: EmailMessage) -> EmailMessage:
