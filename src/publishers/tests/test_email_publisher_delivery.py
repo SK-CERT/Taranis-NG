@@ -91,7 +91,10 @@ class RecordingSMTP:
         RecordingSMTP.quit_called = True
         self.closed = True
 
-    # The following method is called by envelope
+    # The following methods are called by envelope
+    def sendmail(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
+        """Send mail."""
+
     def ehlo_or_helo_if_needed(self) -> None:
         """This method calls ehlo() and/or helo() if there has been no previous EHLO or HELO command this session. It tries EHLO first."""
 
