@@ -7,7 +7,7 @@
 # ../shared, but that is a uv PROJECT-API feature (uv sync / uv lock) - `uv pip
 # install` ignores it and goes to the registry, where the package does not exist.
 # So the wheel is built here and offered to the resolver via --find-links below.
-FROM python:3.13-alpine3.22 AS build_shared
+FROM python:3.14-alpine3.22 AS build_shared
 
 WORKDIR /build_shared/
 
@@ -16,7 +16,7 @@ COPY ./src/shared/. .
 RUN uv build
 
 
-FROM python:3.13-alpine3.22 AS production
+FROM python:3.14-alpine3.22 AS production
 
 ARG HTTP_PROXY=""
 ARG HTTPS_PROXY=""
