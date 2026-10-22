@@ -336,6 +336,15 @@
                             >
                                 {{ $t('product.preview') }}
                             </v-btn>
+                            <v-btn
+                                class="ms-2"
+                                :prepend-icon="ICONS.DOWNLOAD"
+                                color="primary"
+                                variant="flat"
+                                @click="handleDownload"
+                            >
+                                {{ $t('common.download') }}
+                            </v-btn>
                         </v-col>
                         <v-col
                             cols="12"
@@ -376,6 +385,7 @@
     import { useI18n } from 'vue-i18n'
     import { useAuthStore } from '@/stores/auth'
     import { usePublishStore } from '@/stores/publish'
+    import ApiService from '@/services/api_service'
     import { ICONS } from '@/config/ui-constants'
     import { createProduct, updateProduct, publishProduct, previewProduct, getProductById } from '@/api/publish'
     import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
@@ -734,7 +744,10 @@
         }
     }
 
-    function prepareProduct(): void {
+    async function prepareProduct(): Promise<boolean> {
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
+        if (!valid) return false
+
         showError.value = false
         product.value.product_type_id = selectedType.value?.id
         product.value.report_items = reportItems.value.map((item) => ({ id: item.id }))
@@ -742,6 +755,7 @@
         product.value.links = productLinks.value
             .map((link) => ({ key: String(link.value_description ?? ''), url: String(link.value ?? '').trim() }))
             .filter((link) => link.url)
+        return true
     }
 
     async function handlePublicWebSelectionChange(): Promise<void> {
@@ -781,14 +795,7 @@
     }
 
     async function handleSave(): Promise<boolean> {
-        const validate = formRef.value?.validate
-        if (!validate) {
-            return false
-        }
-        const { valid } = (await validate()) || { valid: false }
-        if (!valid) return false
-
-        prepareProduct()
+        if (!(await prepareProduct())) return false
 
         try {
             if (product.value.id === -1) {
@@ -832,10 +839,7 @@
     async function handleUpdateRecord(): Promise<void> {
         if (!isEditMode.value || product.value.id === -1) return
 
-        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
-        if (!valid) return
-
-        prepareProduct()
+        if (!(await prepareProduct())) return
 
         try {
             await updateProduct(product.value)
@@ -886,10 +890,8 @@
     async function handlePublish(): Promise<void> {
         showPublishConfirmation.value = false
 
-        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
-        if (!valid) return
+        if (!(await prepareProduct())) return
 
-        prepareProduct()
         const selectedPublisherIds: any = getSelectedPublisherIds()
 
         try {
@@ -941,13 +943,11 @@
         const ctrl = Boolean(event?.ctrlKey || event?.metaKey)
 
         try {
-            const { valid } = (await formRef.value?.validate?.()) || { valid: false }
-            if (!valid) {
+            if (!(await prepareProduct())) {
                 previewWindow?.close()
                 return
             }
 
-            prepareProduct()
             const response = await previewProduct(product.value, ctrl, authStore.jwt)
             const token = response.data.token
 
@@ -957,6 +957,26 @@
         } catch (error: unknown) {
             previewWindow?.close()
             console.error('Preview failed:', error)
+            showError.value = true
+        }
+    }
+
+    async function handleDownload(event?: MouseEvent): Promise<void> {
+        const ctrl = Boolean(event?.ctrlKey || event?.metaKey)
+
+        if (!(await prepareProduct())) return
+
+        try {
+            const response = await previewProduct(product.value, ctrl, authStore.jwt)
+            const downloaded = await ApiService.download(
+                `/publish/products/preview/${response.data.token}`,
+                undefined,
+                product.value.title || 'product',
+                'GET'
+            )
+            if (!downloaded) showError.value = true
+        } catch (error: unknown) {
+            console.error('Download failed:', error)
             showError.value = true
         }
     }
