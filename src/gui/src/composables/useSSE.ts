@@ -17,12 +17,8 @@ const RECONNECT_MAX_DELAY = 30000
  */
 const RECONNECT_ATTEMPTS_BEFORE_SLOWDOWN = 10
 const RECONNECT_IDLE_DELAY = 300000
-
-/**
- * How long the tab has to have been in the background before returning to it triggers a
- * resync. Short switches are ignored - the stream almost certainly stayed alive.
- */
-const HIDDEN_RESYNC_THRESHOLD = 15000
+const SSE_HEARTBEAT_TIMEOUT = 45000
+const SSE_WATCHDOG_INTERVAL = 5000
 
 /**
  * Composable for Server-Sent Events (SSE) connection
@@ -42,8 +38,9 @@ export function useSSE() {
     const stopped = ref(false)
     // Whether a live stream existed at some point - tells a first connect from a re-connect.
     const wasConnected = ref(false)
-    const hiddenAt = ref<number | null>(null)
     const resyncHandlers = ref(new Set<() => void>())
+    let heartbeatWatchdog: ReturnType<typeof setInterval> | null = null
+    let lastHeartbeatAt = 0
 
     /**
      * Get SSE URL from environment
@@ -88,7 +85,33 @@ export function useSSE() {
         }
     }
 
+    const startHeartbeatWatchdog = (eventSource: EventSource): void => {
+        if (heartbeatWatchdog) {
+            clearInterval(heartbeatWatchdog)
+        }
+
+        lastHeartbeatAt = Date.now()
+        eventSource.addEventListener('heartbeat', () => {
+            lastHeartbeatAt = Date.now()
+        })
+
+        heartbeatWatchdog = setInterval(() => {
+            if (Date.now() - lastHeartbeatAt < SSE_HEARTBEAT_TIMEOUT) {
+                return
+            }
+
+            console.warn('[SSE] Heartbeat timed out - reconnecting')
+            closeConnection(false)
+            scheduleReconnect()
+        }, SSE_WATCHDOG_INTERVAL)
+    }
+
     const closeConnection = (clearHandlers = false): void => {
+        if (heartbeatWatchdog) {
+            clearInterval(heartbeatWatchdog)
+            heartbeatWatchdog = null
+        }
+
         if (sseConnection.value) {
             sseConnection.value.close()
             sseConnection.value = null
@@ -165,6 +188,7 @@ export function useSSE() {
                     console.log('[SSE] Connected')
                     sseConnection.value = eventSource
                     connected.value = true
+                    startHeartbeatWatchdog(eventSource)
 
                     const missedEvents = wasConnected.value
                     wasConnected.value = true
@@ -264,21 +288,9 @@ export function useSSE() {
         return connect()
     }
 
-    /**
-     * A stream can die without ever firing onerror (the OS suspends, a proxy drops an idle
-     * connection), so a tab returning to the foreground re-checks the connection and, if it
-     * was away long enough to have missed something, asks listeners to resync.
-     */
+    /** Reconnect on return to the foreground if the stream has already dropped. */
     const handleVisibilityChange = (): void => {
-        if (document.visibilityState !== 'visible') {
-            hiddenAt.value = Date.now()
-            return
-        }
-
-        const hiddenFor = hiddenAt.value === null ? 0 : Date.now() - hiddenAt.value
-        hiddenAt.value = null
-
-        if (stopped.value) {
+        if (document.visibilityState !== 'visible' || stopped.value) {
             return
         }
 
@@ -292,8 +304,6 @@ export function useSSE() {
             clearReconnectTimer()
             reconnectAttempt.value = 0
             connect().catch(() => {})
-        } else if (hiddenFor > HIDDEN_RESYNC_THRESHOLD) {
-            notifyResync()
         }
     }
 
