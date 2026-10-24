@@ -317,8 +317,8 @@ class ReportItem(VulnerabilityReportPart):
         return reformat_date(date)
 
     def get_exposure_date(self) -> str | None:
-        """Get the exposure date of the report item."""
-        date = self._attr_first("exposure_date", required=True)
+        """Get the exposure date of the report item, or None when it has none."""
+        date = self._attr_first("exposure_date")
         if not date or len(date.split(".")) != 3:  # noqa: PLR2004
             return None
         return reformat_date(date)
