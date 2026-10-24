@@ -420,7 +420,9 @@
         "tlp_description_amber": "Ograniczone udostępnianie w organizacji odbiorcy i jej klientom zgodnie z zasadą wiedzy koniecznej.",
         "tlp_description_amber_strict": "Udostępnianie ograniczone wyłącznie do organizacji odbiorcy.",
         "tlp_description_red": "Nie udostępniać poza indywidualnymi odbiorcami.",
-        "tlp_description_unknown": "Nieznane oznaczenie TLP."
+        "tlp_description_unknown": "Nieznane oznaczenie TLP.",
+        "translate": "Tłumacz",
+        "translate_hint": "Raporty tłumaczą to pole na języki typu raportu"
     },
     "cvss_calculator": {
         "title": "Kalkulator CVSS",
@@ -768,6 +770,34 @@
             "take_theirs": "Odrzuć moją i zachowaj zapisaną",
             "keep_mine": "Nadpisz moją wartością",
             "unknown_user": "Inny użytkownik"
+        },
+        "translation": {
+            "source_language": "Język raportu",
+            "not_set": "Nie ustawiono",
+            "source_tab": "{language} (oryginał)",
+            "source_not_set": "Oryginał (język nie ustawiony)",
+            "translate_report": "Przetłumacz cały raport",
+            "progress": "Tłumaczenie: gotowe {done} z {total} języków",
+            "finished": "Tłumaczenie zakończone",
+            "finished_with_problems": "Tłumaczenie zakończone. Nieprzetłumaczone: {failed}; pominięte, bo ktoś je edytuje: {skipped}",
+            "intro": "Tłumaczenie na język: {language}. Pola, które nie są tłumaczone, pokazują oryginał.",
+            "translate_language": "Przetłumacz na język: {language}",
+            "translate_field": "Przetłumacz za pomocą SI",
+            "same_in_all_languages": "Takie samo we wszystkich językach",
+            "source": "Oryginał",
+            "overwrite_title": "Zastąpić twoje tłumaczenie?",
+            "overwrite_confirm": "Zastąp",
+            "overwrite_message": "To pole przetłumaczono ręcznie. Tłumaczenie SI je zastąpi.",
+            "field_locked": "Ktoś inny edytuje to pole, więc nie zostało przetłumaczone.",
+            "field_failed": "Nie udało się przetłumaczyć pola: {reason}",
+            "ai": "SI",
+            "ai_hint": "Przetłumaczone przez AI i jeszcze niesprawdzone",
+            "outdated": "Nieaktualne",
+            "outdated_hint": "Oryginał zmienił się po przetłumaczeniu",
+            "review": "Oznacz jako sprawdzone",
+            "review_all": "Oznacz tłumaczenia AI jako sprawdzone",
+            "reviewed": "Tłumaczenia AI oznaczone jako sprawdzone: {count}",
+            "review_locked": "Ktoś inny edytuje pole, więc nie zostało oznaczone jako sprawdzone."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "Zaktualizowano model AI",
             "error": "Nie udało się zapisać: model AI",
             "remove": "Usunięto model AI",
-            "removed_error": "Model AI jest używany i nie może zostać usunięty"
+            "removed_error": "Model AI jest używany i nie może zostać usunięty",
+            "max_tlp": "Najwyższy wysyłany TLP",
+            "max_tlp_hint": "Tekst raportów powyżej tego TLP nigdy nie jest wysyłany do tego dostawcy",
+            "max_tlp_none": "Bez limitu"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "Zaktualizowano typ elementu raportu",
             "removed_error": "Typ elementu raportu jest używany i nie może zostać usunięty",
             "removed": "Usunięto typ elementu raportu",
-            "total_count": "Brak typów raportów | {count} typ raportu | {count} typy raportów | {count} typów raportów"
+            "total_count": "Brak typów raportów | {count} typ raportu | {count} typy raportów | {count} typów raportów",
+            "languages": "Warianty językowe",
+            "languages_hint": "Raporty tego typu są tłumaczone na te języki",
+            "translation_ai_provider": "Dostawca SI do tłumaczenia",
+            "label_language": "Język etykiet",
+            "label_language_hint": "Język, w którym napisano powyższe nazwy i opisy",
+            "fields": "Pola",
+            "labels_tab": "Etykiety: {language}",
+            "labels_in": "Nazwy i opisy w języku: {language}. Pod każdym polem widać tekst oryginalny.",
+            "translate_labels": "Przetłumacz brakujące etykiety za pomocą SI",
+            "no_ai_provider": "Najpierw wybierz dostawcę SI do tłumaczenia",
+            "translate_labels_failed": "Nie udało się przetłumaczyć niektórych etykiet ({count})",
+            "labels_translated": "Etykiety przetłumaczone",
+            "copy_original": "Skopiuj oryginał"
         },
         "attributes": {
             "in_use": "Nie można usunąć atrybutu: jest używany przez {types}",

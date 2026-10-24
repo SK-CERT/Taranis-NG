@@ -188,6 +188,10 @@
             window.dispatchEvent(new CustomEvent('report-item-updated', { detail: data }))
         })
 
+        subscribe('report-item-translation-progress', (data) => {
+            window.dispatchEvent(new CustomEvent('report-item-translation-progress', { detail: data }))
+        })
+
         subscribe('report-item-locked', (data) => {
             // console.log('[SSE] Report item locked:', data)
             window.dispatchEvent(new CustomEvent('report-item-locked', { detail: data }))

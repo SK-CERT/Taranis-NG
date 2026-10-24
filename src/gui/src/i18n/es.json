@@ -420,7 +420,9 @@
         "tlp_description_amber": "Divulgación limitada dentro de la organización del destinatario y a sus clientes según la necesidad de conocer.",
         "tlp_description_amber_strict": "Divulgación limitada exclusivamente a la organización del destinatario.",
         "tlp_description_red": "No divulgar más allá de los destinatarios individuales.",
-        "tlp_description_unknown": "Marcado TLP desconocido."
+        "tlp_description_unknown": "Marcado TLP desconocido.",
+        "translate": "Traducir",
+        "translate_hint": "Los informes traducen este campo a los idiomas del tipo de informe"
     },
     "cvss_calculator": {
         "title": "Calculadora de CVSS",
@@ -768,6 +770,34 @@
             "take_theirs": "Descartar el mío y conservar el guardado",
             "keep_mine": "Sobrescribir con el mío",
             "unknown_user": "Otro usuario"
+        },
+        "translation": {
+            "source_language": "Idioma del informe",
+            "not_set": "Sin definir",
+            "source_tab": "{language} (texto original)",
+            "source_not_set": "Texto original (idioma sin definir)",
+            "translate_report": "Traducir todo el informe",
+            "progress": "Traduciendo: {done} de {total} idiomas terminados",
+            "finished": "Traducción terminada",
+            "finished_with_problems": "Traducción terminada. Sin traducir: {failed}; omitidos porque alguien los está editando: {skipped}",
+            "intro": "Traducción al {language}. Los campos que no se traducen muestran el texto original.",
+            "translate_language": "Traducir al {language}",
+            "translate_field": "Traducir con IA",
+            "same_in_all_languages": "Igual en todos los idiomas",
+            "source": "Texto original",
+            "overwrite_title": "¿Reemplazar su traducción?",
+            "overwrite_confirm": "Reemplazar",
+            "overwrite_message": "Este campo se tradujo a mano. La traducción de la IA lo reemplazará.",
+            "field_locked": "Otra persona está editando este campo, por eso no se tradujo.",
+            "field_failed": "No se pudo traducir el campo: {reason}",
+            "ai": "IA",
+            "ai_hint": "Traducido por IA y aún sin revisar",
+            "outdated": "Desactualizado",
+            "outdated_hint": "El texto original cambió después de traducirse",
+            "review": "Marcar como revisada",
+            "review_all": "Marcar las traducciones de IA como revisadas",
+            "reviewed": "Traducciones de IA marcadas como revisadas: {count}",
+            "review_locked": "Otra persona está editando un campo, por lo que no se marcó como revisado."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "El modelo de IA se actualizó correctamente",
             "error": "No se pudo guardar este modelo de IA",
             "remove": "El modelo de IA se eliminó correctamente",
-            "removed_error": "El modelo de IA está en uso y no se pudo eliminar"
+            "removed_error": "El modelo de IA está en uso y no se pudo eliminar",
+            "max_tlp": "TLP máximo enviado",
+            "max_tlp_hint": "El texto de los informes por encima de este TLP nunca se envía a este proveedor",
+            "max_tlp_none": "Sin límite"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "El tipo de elemento de informe se actualizó correctamente",
             "removed_error": "El tipo de elemento de informe está en uso y no se pudo eliminar",
             "removed": "El tipo de elemento de informe se eliminó correctamente",
-            "total_count": "{count} tipo de informe | {count} tipos de informe"
+            "total_count": "{count} tipo de informe | {count} tipos de informe",
+            "languages": "Variantes de idioma",
+            "languages_hint": "Los informes de este tipo se traducen a estos idiomas",
+            "translation_ai_provider": "Proveedor de IA para la traducción",
+            "label_language": "Idioma de las etiquetas",
+            "label_language_hint": "El idioma en que están escritos los nombres y las descripciones de arriba",
+            "fields": "Campos",
+            "labels_tab": "Etiquetas: {language}",
+            "labels_in": "Nombres y descripciones en {language}. Debajo de cada campo se muestra el texto original.",
+            "translate_labels": "Traducir con IA las etiquetas que faltan",
+            "no_ai_provider": "Elija primero un proveedor de IA para la traducción",
+            "translate_labels_failed": "Algunas etiquetas no se pudieron traducir ({count})",
+            "labels_translated": "Etiquetas traducidas",
+            "copy_original": "Copiar el original"
         },
         "attributes": {
             "in_use": "No se puede eliminar el atributo: lo utiliza {types}",

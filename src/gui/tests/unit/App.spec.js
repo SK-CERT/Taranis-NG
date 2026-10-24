@@ -154,6 +154,7 @@ describe('App SSE boot flow', () => {
             'news-items-updated',
             'report-items-updated',
             'report-item-updated',
+            'report-item-translation-progress',
             'report-item-locked',
             'report-item-unlocked'
         ])
@@ -264,7 +265,7 @@ describe('App SSE boot flow', () => {
 
         await vi.waitFor(() => {
             expect(mockConnect).toHaveBeenCalledTimes(1)
-            expect(mockSubscribe).toHaveBeenCalledTimes(5)
+            expect(mockSubscribe).toHaveBeenCalledTimes(6)
         })
     })
 

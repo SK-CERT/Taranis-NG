@@ -1,6 +1,7 @@
 """Report item type model."""
 
 import sqlalchemy
+from managers import content_language
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
@@ -13,6 +14,7 @@ from shared.schema.report_item_type import (
     ReportItemTypePresentationSchema,
 )
 from sqlalchemy import and_, or_, orm
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql.expression import cast
 
 
@@ -86,6 +88,9 @@ class AttributeGroupItem(db.Model):
         ai_provider_id (int): Local AI model id.
         ai_provider (AiProvider): Local AI model.
         ai_prompt (str): AI prompt.
+        translate (bool): Reports translate this item's values into the type's languages.
+            Only text attributes (string, text, rich text) are translated.
+        translations (dict): Label variants, ``{language: {"title": ..., "description": ...}}``.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -106,6 +111,9 @@ class AttributeGroupItem(db.Model):
     ai_provider = db.relationship(AiProvider, viewonly=True, lazy="joined")
     ai_prompt = db.Column(db.String())
 
+    translate = db.Column(db.Boolean, nullable=False, default=False, server_default=sqlalchemy.false())
+    translations = db.Column(JSONB, nullable=False, default=dict, server_default=sqlalchemy.text("'{}'"))
+
     # `id` shadows the builtin, but it is the schema field marshmallow unpacks into this
     # constructor, so renaming it would break deserialization.
     def __init__(
@@ -119,6 +127,8 @@ class AttributeGroupItem(db.Model):
         attribute_id: int,
         ai_provider_id: int | None,
         ai_prompt: str | None,
+        translate: bool = False,
+        translations: dict | None = None,
     ) -> None:
         """Initialize attribute group item."""
         if id is not None and id != -1:
@@ -134,6 +144,16 @@ class AttributeGroupItem(db.Model):
         self.attribute_id = attribute_id
         self.ai_provider_id = ai_provider_id
         self.ai_prompt = ai_prompt
+        self.translate = bool(translate)
+        self.translations = content_language.clean_label_translations(translations, content_language.ITEM_LABEL_FIELDS)
+
+    @property
+    def is_translated(self) -> bool:
+        """Tell whether reports translate this item's values: ticked, and a text type."""
+        attribute = self.attribute
+        if not self.translate or attribute is None or attribute.type is None:
+            return False
+        return attribute.type.name in content_language.TRANSLATABLE_TYPES
 
     @classmethod
     # `id` shadows the builtin; it is part of this classmethod's existing call signature.
@@ -185,11 +205,13 @@ class AttributeGroup(db.Model):
         report_item_type_id (int): Report item type id.
         report_item_type (ReportItemType): Report item type.
         attribute_group_items (list): Attribute group items.
+        translations (dict): Label variants, ``{language: {"title": ..., "description": ..., "section_title": ...}}``.
     """
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     description = db.Column(db.String())
+    translations = db.Column(JSONB, nullable=False, default=dict, server_default=sqlalchemy.text("'{}'"))
 
     section = db.Column(db.Integer)
     section_title = db.Column(db.String())
@@ -217,6 +239,7 @@ class AttributeGroup(db.Model):
         section_title: str | None,
         index: int,
         attribute_group_items: list["AttributeGroupItem"],
+        translations: dict | None = None,
     ) -> None:
         """Initialize attribute group."""
         if id is not None and id != -1:
@@ -230,6 +253,7 @@ class AttributeGroup(db.Model):
         self.section_title = section_title
         self.index = index
         self.attribute_group_items = attribute_group_items
+        self.translations = content_language.clean_label_translations(translations, content_language.GROUP_LABEL_FIELDS)
 
     def update(self, updated_attribute_group: "AttributeGroup") -> None:
         """Update attribute group.
@@ -242,6 +266,7 @@ class AttributeGroup(db.Model):
         self.section = updated_attribute_group.section
         self.section_title = updated_attribute_group.section_title
         self.index = updated_attribute_group.index
+        self.translations = updated_attribute_group.translations
 
         for updated_item in updated_attribute_group.attribute_group_items:
             found = False
@@ -255,6 +280,8 @@ class AttributeGroup(db.Model):
                     item.attribute_id = updated_item.attribute_id
                     item.ai_provider_id = updated_item.ai_provider_id
                     item.ai_prompt = updated_item.ai_prompt
+                    item.translate = updated_item.translate
+                    item.translations = updated_item.translations
                     found = True
                     break
 
@@ -304,6 +331,10 @@ class ReportItemType(db.Model):
         title (str): Title.
         description (str): Description.
         attribute_groups (list): Attribute groups.
+        languages (list): Language variants (ISO 639-1) its reports are translated into.
+        translation_ai_provider_id (int): AI provider that translates its reports.
+        label_language (str): Language its labels are written in; None while not stated.
+        translations (dict): Label variants, ``{language: {"title": ..., "description": ...}}``.
         subtitle (str): Subtitle.
         tag (str): Tag.
     """
@@ -311,6 +342,16 @@ class ReportItemType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     description = db.Column(db.String())
+
+    languages = db.Column(JSONB, nullable=False, default=list, server_default=sqlalchemy.text("'[]'"))
+    translation_ai_provider_id = db.Column(
+        db.Integer,
+        db.ForeignKey("ai_provider.id", ondelete="SET NULL", name="fk_report_item_type_translation_ai_provider_id"),
+        nullable=True,
+    )
+    translation_ai_provider = db.relationship(AiProvider, viewonly=True)
+    label_language = db.Column(db.String(8), nullable=True)
+    translations = db.Column(JSONB, nullable=False, default=dict, server_default=sqlalchemy.text("'{}'"))
 
     attribute_groups = db.relationship(
         "AttributeGroup",
@@ -322,12 +363,30 @@ class ReportItemType(db.Model):
 
     # `id` shadows the builtin, but it is the schema field marshmallow unpacks into this
     # constructor, so renaming it would break deserialization.
-    def __init__(self, id: int | None, title: str, description: str, attribute_groups: list["AttributeGroup"]) -> None:  # noqa: A002, ARG002
-        """Initialize report item type."""
+    def __init__(
+        self,
+        id: int | None,  # noqa: A002, ARG002
+        title: str,
+        description: str,
+        attribute_groups: list["AttributeGroup"],
+        languages: list[str] | None = None,
+        translation_ai_provider_id: int | None = None,
+        label_language: str | None = None,
+        translations: dict | None = None,
+    ) -> None:
+        """Initialize report item type.
+
+        Raises:
+            ValueError: If a language is not an ISO 639-1 code.
+        """
         self.id = None
         self.title = title
         self.description = description
         self.attribute_groups = attribute_groups
+        self.languages = content_language.clean_languages(languages)
+        self.translation_ai_provider_id = translation_ai_provider_id
+        self.label_language = content_language.clean_language(label_language)
+        self.translations = content_language.clean_label_translations(translations, content_language.TYPE_LABEL_FIELDS)
         self.subtitle = ""
         self.tag = ""
 
@@ -497,6 +556,10 @@ class ReportItemType(db.Model):
 
         report_type.title = updated_report_type.title
         report_type.description = updated_report_type.description
+        report_type.languages = updated_report_type.languages
+        report_type.translation_ai_provider_id = updated_report_type.translation_ai_provider_id
+        report_type.label_language = updated_report_type.label_language
+        report_type.translations = updated_report_type.translations
 
         for updated_attribute_group in updated_report_type.attribute_groups:
             found = False

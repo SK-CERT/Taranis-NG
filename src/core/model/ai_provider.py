@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+from managers import tlp
 from managers.db_manager import db
 from marshmallow import post_load
 
@@ -36,6 +37,7 @@ class AiProvider(db.Model):
         api_url (str): Local AI model API url.
         api_key (str): Local AI model API key.
         model (str): Local AI model.
+        max_tlp (str): Highest TLP of a report whose text may be sent to it; None means no limit.
         updated_by (str): User who last updated the record.
         updated_at (datetime): Timestamp of the last update.
     """
@@ -46,17 +48,23 @@ class AiProvider(db.Model):
     api_url = db.Column(db.String(), nullable=False)
     api_key = db.Column(db.String())
     model = db.Column(db.String())
+    max_tlp = db.Column(db.String(16), nullable=True)
     updated_by = db.Column(db.String())
     updated_at = db.Column(db.DateTime)
 
-    def __init__(self, name, api_type, api_url, api_key, model):
-        """Create a new local AI model."""
+    def __init__(self, name, api_type, api_url, api_key, model, max_tlp=None):
+        """Create a new local AI model.
+
+        Raises:
+            ValueError: If max_tlp is not a TLP level.
+        """
         # self.id = None
         self.name = name
         self.api_type = api_type
         self.api_url = api_url
         self.api_key = api_key
         self.model = model
+        self.max_tlp = tlp.clean_limit(max_tlp)
 
     @classmethod
     def find(cls, id):
@@ -146,6 +154,7 @@ class AiProvider(db.Model):
         old.api_url = new.api_url
         old.api_key = new.api_key
         old.model = new.model
+        old.max_tlp = tlp.clean_limit(new.max_tlp)
         old.updated_by = user_name
         old.updated_at = datetime.now()
         db.session.commit()

@@ -420,7 +420,9 @@
         "tlp_description_amber": "Omezené zveřejnění v organizaci příjemce a jejím klientům podle zásady nezbytné znalosti.",
         "tlp_description_amber_strict": "Omezené zveřejnění pouze v organizaci příjemce.",
         "tlp_description_red": "Informace nesmí být zveřejněna mimo jednotlivé příjemce.",
-        "tlp_description_unknown": "Neznámé označení TLP."
+        "tlp_description_unknown": "Neznámé označení TLP.",
+        "translate": "Překládat",
+        "translate_hint": "Reporty překládají toto pole do jazyků typu reportu"
     },
     "cvss_calculator": {
         "title": "CVSS Calculator",
@@ -768,6 +770,34 @@
             "take_theirs": "Zahodit moji, ponechat uloženou",
             "keep_mine": "Přepsat mojí verzí",
             "unknown_user": "Jiný uživatel"
+        },
+        "translation": {
+            "source_language": "Jazyk reportu",
+            "not_set": "Nenastaveno",
+            "source_tab": "{language} (originál)",
+            "source_not_set": "Originál (jazyk nenastaven)",
+            "translate_report": "Přeložit celý report",
+            "progress": "Překládá se: hotovo {done} z {total} jazyků",
+            "finished": "Překlad dokončen",
+            "finished_with_problems": "Překlad dokončen. Nepřeloženo: {failed}; přeskočeno, protože je někdo upravuje: {skipped}",
+            "intro": "Překlad do jazyka {language}. Pole, která se nepřekládají, ukazují originál.",
+            "translate_language": "Přeložit do jazyka {language}",
+            "translate_field": "Přeložit pomocí AI",
+            "same_in_all_languages": "Stejné ve všech jazycích",
+            "source": "Originál",
+            "overwrite_title": "Nahradit váš překlad?",
+            "overwrite_confirm": "Nahradit",
+            "overwrite_message": "Toto pole bylo přeloženo ručně. Překlad AI ho nahradí.",
+            "field_locked": "Toto pole právě upravuje někdo jiný, proto nebylo přeloženo.",
+            "field_failed": "Pole se nepodařilo přeložit: {reason}",
+            "ai": "UI",
+            "ai_hint": "Přeloženo pomocí AI a zatím nezkontrolováno",
+            "outdated": "Zastaralé",
+            "outdated_hint": "Originál se po přeložení změnil",
+            "review": "Označit jako zkontrolované",
+            "review_all": "Označit překlady AI jako zkontrolované",
+            "reviewed": "Překlady AI označené jako zkontrolované: {count}",
+            "review_locked": "Některé pole právě upravuje někdo jiný, proto nebylo označeno jako zkontrolované."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "AI model byl upraven",
             "error": "Nepodařilo se uložit tento AI model",
             "remove": "AI model byl smazán",
-            "removed_error": "AI model je používán a nelze jej smazat"
+            "removed_error": "AI model je používán a nelze jej smazat",
+            "max_tlp": "Nejvyšší odesílaný TLP",
+            "max_tlp_hint": "Text reportů nad tímto TLP se tomuto poskytovateli nikdy neodešle",
+            "max_tlp_none": "Bez omezení"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "Typ analýzy byl upraven",
             "removed_error": "Typ analýzy je používán a nemohl být smazán",
             "removed": "Typ analýzy byl smazán",
-            "total_count": "Žádné typy analýz | {count} typ analýzy | {count} typy analýz | {count} typů analýz"
+            "total_count": "Žádné typy analýz | {count} typ analýzy | {count} typy analýz | {count} typů analýz",
+            "languages": "Jazykové varianty",
+            "languages_hint": "Reporty tohoto typu se překládají do těchto jazyků",
+            "translation_ai_provider": "Poskytovatel AI pro překlad",
+            "label_language": "Jazyk popisků",
+            "label_language_hint": "Jazyk, ve kterém jsou napsané názvy a popisy výše",
+            "fields": "Pole",
+            "labels_tab": "Popisky: {language}",
+            "labels_in": "Názvy a popisy v jazyce {language}. Originál je uvedený pod každým polem.",
+            "translate_labels": "Přeložit chybějící popisky pomocí AI",
+            "no_ai_provider": "Nejprve vyberte poskytovatele AI pro překlad",
+            "translate_labels_failed": "Některé popisky se nepodařilo přeložit ({count})",
+            "labels_translated": "Popisky přeloženy",
+            "copy_original": "Zkopírovat originál"
         },
         "attributes": {
             "in_use": "Atribut nelze smazat: je použitý v {types}",

@@ -107,6 +107,14 @@ class SSEManager:
         """
         self.sse.publish(data, event="report-item-updated")
 
+    def report_item_translation_progress(self, data: dict) -> None:
+        """Publish how far an AI translation of a report item has got.
+
+        Args:
+            data (dict): report_item_id, done, total and the last language's result.
+        """
+        self.sse.publish(data, event="report-item-translation-progress")
+
     def remote_access_disconnect(self, data: dict) -> None:
         """Publish an event for remote access disconnection.
 

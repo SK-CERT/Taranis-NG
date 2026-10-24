@@ -191,10 +191,31 @@ export function updateAttachmentDescription(data) {
     })
 }
 
-export function aiGenerate(attribute_id, news_item_agreggate_ids) {
+// `context` lets core apply the AI provider's TLP limit: the saved report's id, or for a report
+// still being written the values of its TLP fields (omitted when its type has none).
+export function aiGenerate(attribute_id, news_item_agreggate_ids, context: { report_item_id?: number; tlp?: string[] } = {}) {
     return ApiService.post('/analyze/report-item-attributes/' + attribute_id + '/llm-generate', {
-        news_item_agreggate_ids
+        news_item_agreggate_ids,
+        ...context
     })
+}
+
+export type TranslateRequest = {
+    languages?: string[]
+    fields?: string[]
+    overwrite_manual?: boolean
+}
+
+// Fields of one language answer with the result; anything bigger starts a background job
+// (202) whose progress arrives as 'report-item-translation-progress'.
+export function translateReportItem(report_item_id: number, data: TranslateRequest) {
+    return ApiService.post('/analyze/report-items/' + report_item_id + '/translate', data)
+}
+
+// Marks the AI translations of one language as reviewed, keeping their text: the `fields`
+// named ("title", "title_prefix", attribute ids), or all of them.
+export function reviewReportItemTranslations(report_item_id: number, data: { language: string; fields?: string[] }) {
+    return ApiService.post('/analyze/report-items/' + report_item_id + '/translations/review', data)
 }
 
 export function getReportItemsByAggregate(aggregate_id) {

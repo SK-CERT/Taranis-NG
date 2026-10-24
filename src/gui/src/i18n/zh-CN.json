@@ -420,7 +420,9 @@
         "tlp_description_amber": "仅限在接收方组织及其有必要知悉的客户范围内披露。",
         "tlp_description_amber_strict": "仅限在接收方组织内披露。",
         "tlp_description_red": "不得向指定接收者以外的人员披露。",
-        "tlp_description_unknown": "未知 TLP 标记。"
+        "tlp_description_unknown": "未知 TLP 标记。",
+        "translate": "翻译",
+        "translate_hint": "报告会将此字段翻译为报告类型的各语言"
     },
     "cvss_calculator": {
         "title": "CVSS 计算器",
@@ -768,6 +770,34 @@
             "take_theirs": "放弃我的更改，保留已存储的值",
             "keep_mine": "用我的值覆盖",
             "unknown_user": "其他用户"
+        },
+        "translation": {
+            "source_language": "报告的语言",
+            "not_set": "未设置",
+            "source_tab": "{language}（原文）",
+            "source_not_set": "原文（未设置语言）",
+            "translate_report": "翻译整份报告",
+            "progress": "正在翻译：已完成 {done}/{total} 种语言",
+            "finished": "翻译已完成",
+            "finished_with_problems": "翻译已完成。未翻译：{failed}；因有人正在编辑而跳过：{skipped}",
+            "intro": "翻译为{language}。不翻译的字段显示原文。",
+            "translate_language": "翻译为{language}",
+            "translate_field": "用 AI 翻译",
+            "same_in_all_languages": "所有语言中相同",
+            "source": "原文",
+            "overwrite_title": "要替换你的译文吗？",
+            "overwrite_confirm": "替换",
+            "overwrite_message": "此字段是人工翻译的。AI 译文将替换它。",
+            "field_locked": "其他人正在编辑此字段，因此未翻译。",
+            "field_failed": "无法翻译该字段：{reason}",
+            "ai": "AI 译",
+            "ai_hint": "由 AI 翻译，尚未审核",
+            "outdated": "已过时",
+            "outdated_hint": "翻译后原文已更改",
+            "review": "标记为已审核",
+            "review_all": "将 AI 翻译标记为已审核",
+            "reviewed": "已标记为已审核的 AI 翻译：{count}",
+            "review_locked": "其他人正在编辑某个字段，因此未将其标记为已审核。"
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "已成功更新AI 模型",
             "error": "无法保存AI 模型",
             "remove": "已成功删除AI 模型",
-            "removed_error": "AI 模型正在使用，无法删除"
+            "removed_error": "AI 模型正在使用，无法删除",
+            "max_tlp": "发送的最高 TLP",
+            "max_tlp_hint": "高于此 TLP 的报告文本绝不会发送给此提供商",
+            "max_tlp_none": "无限制"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "已成功更新报告条目类型",
             "removed_error": "报告条目类型正在使用，无法删除",
             "removed": "已成功删除报告条目类型",
-            "total_count": "{count} 个报告类型 | {count} 个报告类型"
+            "total_count": "{count} 个报告类型 | {count} 个报告类型",
+            "languages": "语言版本",
+            "languages_hint": "此类型的报告会翻译为这些语言",
+            "translation_ai_provider": "用于翻译的 AI 提供商",
+            "label_language": "标签的语言",
+            "label_language_hint": "上方名称和说明所用的语言",
+            "fields": "字段",
+            "labels_tab": "标签：{language}",
+            "labels_in": "{language}的名称和说明。每个字段下方显示原文。",
+            "translate_labels": "用 AI 翻译缺失的标签",
+            "no_ai_provider": "请先选择用于翻译的 AI 提供商",
+            "translate_labels_failed": "部分标签未能翻译（{count}）",
+            "labels_translated": "标签已翻译",
+            "copy_original": "复制原文"
         },
         "attributes": {
             "in_use": "无法删除属性：{types} 正在使用它",

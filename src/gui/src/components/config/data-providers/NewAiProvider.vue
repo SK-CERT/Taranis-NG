@@ -81,8 +81,21 @@
                         :label="t('data_providers.ai.model')"
                         variant="outlined"
                         density="comfortable"
+                        class="mb-3"
                         :rules="[(v) => !!v || t('error.required')]"
                         :disabled="saving"
+                    />
+
+                    <v-select
+                        v-model="localItem.max_tlp"
+                        :items="tlpOptions"
+                        :label="t('data_providers.ai.max_tlp')"
+                        :hint="t('data_providers.ai.max_tlp_hint')"
+                        persistent-hint
+                        variant="outlined"
+                        density="comfortable"
+                        :disabled="saving"
+                        data-test="ai-provider-max-tlp"
                     />
                 </v-form>
 
@@ -137,6 +150,8 @@
         api_url: string
         api_key: string
         model: string
+        // Highest TLP of a report whose text may be sent to it; null means no limit.
+        max_tlp: string | null
         [key: string]: unknown
     }
 
@@ -172,10 +187,17 @@
         api_type: 'openai',
         api_url: '',
         api_key: '',
-        model: ''
+        model: '',
+        // A new provider only gets TLP:CLEAR reports until somebody decides otherwise.
+        max_tlp: 'CLEAR'
     }
 
     const localItem = ref<AiProviderItem>({ ...defaultItem })
+
+    const tlpOptions = computed(() => [
+        { title: t('data_providers.ai.max_tlp_none'), value: null },
+        ...['CLEAR', 'GREEN', 'AMBER', 'AMBER+STRICT', 'RED'].map((level) => ({ title: `TLP:${level}`, value: level }))
+    ])
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_AI_CREATE'))

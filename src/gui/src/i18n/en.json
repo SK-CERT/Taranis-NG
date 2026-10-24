@@ -420,7 +420,9 @@
         "tlp_description_amber": "Limited disclosure within the recipient's organization and its clients on a need-to-know basis.",
         "tlp_description_amber_strict": "Limited disclosure to the recipient's organization only.",
         "tlp_description_red": "Not for disclosure beyond the individual recipients.",
-        "tlp_description_unknown": "Unknown TLP marking."
+        "tlp_description_unknown": "Unknown TLP marking.",
+        "translate": "Translate",
+        "translate_hint": "Reports translate this field into the report type's languages"
     },
     "cvss_calculator": {
         "title": "CVSS Calculator",
@@ -768,6 +770,34 @@
             "take_theirs": "Discard mine, keep stored",
             "keep_mine": "Overwrite with mine",
             "unknown_user": "Another user"
+        },
+        "translation": {
+            "source_language": "Language of the report",
+            "not_set": "Not set",
+            "source_tab": "{language} (original)",
+            "source_not_set": "Original (language not set)",
+            "translate_report": "Translate whole report",
+            "progress": "Translating: {done} of {total} languages done",
+            "finished": "Translation finished",
+            "finished_with_problems": "Translation finished. Not translated: {failed}; skipped because somebody is editing them: {skipped}",
+            "intro": "Translation into {language}. Fields that are not translated show the original.",
+            "translate_language": "Translate into {language}",
+            "translate_field": "Translate with AI",
+            "same_in_all_languages": "Same in all languages",
+            "source": "Original",
+            "overwrite_title": "Replace your translation?",
+            "overwrite_confirm": "Replace",
+            "overwrite_message": "This field was translated by hand. The AI translation will replace it.",
+            "field_locked": "Somebody else is editing this field, so it was not translated.",
+            "field_failed": "The field could not be translated: {reason}",
+            "ai": "AI",
+            "ai_hint": "Translated by AI and not reviewed yet",
+            "outdated": "Outdated",
+            "outdated_hint": "The original changed after this was translated",
+            "review": "Mark as reviewed",
+            "review_all": "Mark AI translations as reviewed",
+            "reviewed": "AI translations marked as reviewed: {count}",
+            "review_locked": "Somebody else is editing a field, so it was not marked as reviewed."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "AI model was successfully updated",
             "error": "Could not save this AI model",
             "remove": "AI model was successfully deleted",
-            "removed_error": "AI model is in use and could not be deleted"
+            "removed_error": "AI model is in use and could not be deleted",
+            "max_tlp": "Highest TLP sent",
+            "max_tlp_hint": "Text of reports above this TLP is never sent to this provider",
+            "max_tlp_none": "No limit"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "Report item type was successfully updated",
             "removed_error": "Report item type is in use and could not be deleted",
             "removed": "Report item type was successfully deleted",
-            "total_count": "{count} report type | {count} report types"
+            "total_count": "{count} report type | {count} report types",
+            "languages": "Language variants",
+            "languages_hint": "Reports of this type are translated into these languages",
+            "translation_ai_provider": "AI provider for translation",
+            "label_language": "Language of the labels",
+            "label_language_hint": "The language the names and descriptions above are written in",
+            "fields": "Fields",
+            "labels_tab": "Labels: {language}",
+            "labels_in": "Names and descriptions in {language}. The original is shown under each field.",
+            "translate_labels": "Translate missing labels with AI",
+            "no_ai_provider": "Choose an AI provider for translation first",
+            "translate_labels_failed": "Some labels could not be translated ({count})",
+            "labels_translated": "Labels translated",
+            "copy_original": "Copy the original"
         },
         "attributes": {
             "in_use": "Attribute cannot be deleted: it is used by {types}",

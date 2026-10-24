@@ -21,7 +21,7 @@
                 <!-- Editable -->
                 <AttributeValueLayout
                     v-if="!readOnly && canModify && !value.remote"
-                    :del-button="true"
+                    :del-button="!language"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
                     :val-index="index"
@@ -96,11 +96,15 @@
             edit?: boolean
             modify?: boolean
             reportItemId: number | null
+            // A language variant of the report: the values are translations, edited in place,
+            // so values are neither added, deleted nor reordered here.
+            language?: string | null
         }>(),
         {
             readOnly: false,
             edit: false,
-            modify: false
+            modify: false,
+            language: null
         }
     )
 

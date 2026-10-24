@@ -46,7 +46,7 @@
 
                         <h2 class="report-card__title">
                             <i18n-t
-                                v-if="card.title_prefix"
+                                v-if="displayTitle.title_prefix"
                                 scope="global"
                                 keypath="analyze.title_with_prefix"
                             >
@@ -54,17 +54,17 @@
                                     <bdi
                                         dir="auto"
                                         class="report-card__prefix"
-                                        >{{ card.title_prefix }}</bdi
+                                        >{{ displayTitle.title_prefix }}</bdi
                                     >
                                 </template>
                                 <template #title>
-                                    <bdi dir="auto">{{ card.title }}</bdi>
+                                    <bdi dir="auto">{{ displayTitle.title }}</bdi>
                                 </template>
                             </i18n-t>
                             <bdi
                                 v-else
                                 dir="auto"
-                                >{{ card.title }}</bdi
+                                >{{ displayTitle.title }}</bdi
                             >
                         </h2>
 
@@ -143,7 +143,7 @@
             max-width="500px"
             @confirm="handleDelete"
         >
-            <bdi dir="auto">{{ card.title || '' }}</bdi>
+            <bdi dir="auto">{{ displayTitle.title }}</bdi>
         </ConfirmationDialog>
 
         <!-- Remove Confirmation Dialog -->
@@ -154,7 +154,7 @@
             max-width="500px"
             @confirm="handleRemove"
         >
-            <bdi dir="auto">{{ card.title || '' }}</bdi>
+            <bdi dir="auto">{{ displayTitle.title }}</bdi>
         </ConfirmationDialog>
     </div>
 </template>
@@ -175,11 +175,15 @@
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { notifyDeleteError } from '@/utils/deleteError'
+    import { useContentLanguages } from '@/composables/useContentLanguages'
 
     type AnalyzeCard = {
         id: number | string
         title?: string
         title_prefix?: string
+        // The report's own language and its name in the others, to show the GUI's language.
+        language?: string | null
+        title_translations?: Record<string, { title?: string; title_prefix?: string }> | null
         report_type_name?: string
         tag?: string
         news_items_count?: number
@@ -225,6 +229,9 @@
     const analyzeStore = useAnalyzeStore()
     const publishStore = usePublishStore()
     const { checkPermission } = useAuth()
+    const { titleOf } = useContentLanguages()
+    // The name in the GUI's language, else English, else the report's own.
+    const displayTitle = computed(() => titleOf(props.card))
     const isolateBidi = (value?: string): string => (value ? `\u2068${value}\u2069` : '')
 
     const showDeleteDialog = ref<boolean>(false)

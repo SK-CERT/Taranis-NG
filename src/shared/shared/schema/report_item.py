@@ -137,6 +137,8 @@ class ReportItemBaseSchema(Schema):
         created (DateTime): The date and time when the report item was created.
         last_updated (DateTime): The date and time when the report item was last updated.
         report_item_type_id (int): The ID of the report item type.
+        language (str): The language the report is written in (ISO 639-1), None while not set.
+            Dump only: core sets it from the author's settings and changes it on request.
     """
 
     class Meta:
@@ -152,6 +154,7 @@ class ReportItemBaseSchema(Schema):
     last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
     report_item_type_id = fields.Int(load_default=None, allow_none=True)
     state_id = fields.Int(allow_none=True)
+    language = fields.Str(dump_only=True, allow_none=True)
 
 
 class RemoteReportItemSchema(ReportItemBaseSchema, PresentationSchema):
@@ -229,6 +232,8 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
         user (UserSchemaBase): User who created the report item.
         updated_by (UserSchemaBase): User who last updated the report item.
         links (list): The report item's citable links ({key, url}), in display order.
+        title_translations (dict): The translated name and prefix per language,
+            ``{language: {"title": ..., "title_prefix": ...}}``, so lists can show the GUI's language.
     """
 
     remote_user = fields.Str(allow_none=True)
@@ -236,6 +241,7 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
     news_items_count = fields.Int()
     updated_by = fields.Str(allow_none=True)
     links = fields.Nested(LinkRefSchema, many=True, dump_only=True)
+    title_translations = fields.Dict(dump_only=True)
 
 
 class ReportItem:

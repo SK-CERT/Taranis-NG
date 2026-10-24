@@ -420,7 +420,9 @@
         "tlp_description_amber": "إفصاح محدود داخل مؤسسة المستلم وعملائها على أساس الحاجة إلى المعرفة.",
         "tlp_description_amber_strict": "إفصاح محدود على مؤسسة المستلم فقط.",
         "tlp_description_red": "يُحظر الإفصاح خارج نطاق المستلمين الأفراد.",
-        "tlp_description_unknown": "علامة TLP غير معروفة."
+        "tlp_description_unknown": "علامة TLP غير معروفة.",
+        "translate": "ترجمة",
+        "translate_hint": "تترجم التقارير هذا الحقل إلى لغات نوع التقرير"
     },
     "cvss_calculator": {
         "title": "حاسبة CVSS",
@@ -768,6 +770,34 @@
             "take_theirs": "تجاهل تغييري والاحتفاظ بالقيمة المحفوظة",
             "keep_mine": "استبدال القيمة المحفوظة بقيمتي",
             "unknown_user": "مستخدم آخر"
+        },
+        "translation": {
+            "source_language": "لغة التقرير",
+            "not_set": "غير محددة",
+            "source_tab": "{language} (الأصل)",
+            "source_not_set": "الأصل (اللغة غير محددة)",
+            "translate_report": "ترجمة التقرير كله",
+            "progress": "جارٍ الترجمة: اكتملت {done} من {total} لغات",
+            "finished": "اكتملت الترجمة",
+            "finished_with_problems": "اكتملت الترجمة. لم يُترجَم: {failed}؛ تُخطّي لأن أحدًا يحرّرها: {skipped}",
+            "intro": "الترجمة إلى {language}. الحقول التي لا تُترجَم تعرض النص الأصلي.",
+            "translate_language": "ترجمة إلى {language}",
+            "translate_field": "ترجمة بالذكاء الاصطناعي",
+            "same_in_all_languages": "متطابق في كل اللغات",
+            "source": "النص الأصلي",
+            "overwrite_title": "هل تريد استبدال ترجمتك؟",
+            "overwrite_confirm": "استبدال",
+            "overwrite_message": "تُرجم هذا الحقل يدويًا. ستحل ترجمة الذكاء الاصطناعي محله.",
+            "field_locked": "شخص آخر يحرّر هذا الحقل الآن، لذلك لم يُترجَم.",
+            "field_failed": "تعذّرت ترجمة الحقل: {reason}",
+            "ai": "ذكاء اصطناعي",
+            "ai_hint": "ترجمها الذكاء الاصطناعي ولم تُراجَع بعد",
+            "outdated": "قديم",
+            "outdated_hint": "تغيّر النص الأصلي بعد ترجمته",
+            "review": "وضع علامة كمراجَعة",
+            "review_all": "وضع علامة على ترجمات الذكاء الاصطناعي كمراجَعة",
+            "reviewed": "ترجمات الذكاء الاصطناعي المعلَّمة كمراجَعة: {count}",
+            "review_locked": "يحرّر شخص آخر أحد الحقول، لذا لم يُعلَّم كمراجَع."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "تم تحديث نموذج AI بنجاح",
             "error": "تعذّر حفظ نموذج AI هذا",
             "remove": "تم حذف نموذج AI بنجاح",
-            "removed_error": "نموذج AI قيد الاستخدام وتعذّر حذفه"
+            "removed_error": "نموذج AI قيد الاستخدام وتعذّر حذفه",
+            "max_tlp": "أعلى TLP يُرسَل",
+            "max_tlp_hint": "لا يُرسَل نص التقارير التي يتجاوز TLP الخاص بها هذا الحد إلى هذا المزوّد أبدًا",
+            "max_tlp_none": "بلا حد"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "حُدّث نوع عنصر التقرير بنجاح",
             "removed_error": "نوع عنصر التقرير قيد الاستخدام وتعذّر حذفه",
             "removed": "حُذف نوع عنصر التقرير بنجاح",
-            "total_count": "لا توجد أنواع تقارير ({count}) | نوع تقرير واحد ({count}) | نوعا تقرير ({count}) | {count} أنواع تقارير | {count} نوع تقرير | {count} نوع تقرير"
+            "total_count": "لا توجد أنواع تقارير ({count}) | نوع تقرير واحد ({count}) | نوعا تقرير ({count}) | {count} أنواع تقارير | {count} نوع تقرير | {count} نوع تقرير",
+            "languages": "المتغيرات اللغوية",
+            "languages_hint": "تُترجَم تقارير هذا النوع إلى هذه اللغات",
+            "translation_ai_provider": "مزوّد الذكاء الاصطناعي للترجمة",
+            "label_language": "لغة التسميات",
+            "label_language_hint": "اللغة التي كُتبت بها الأسماء والأوصاف أعلاه",
+            "fields": "الحقول",
+            "labels_tab": "التسميات: {language}",
+            "labels_in": "الأسماء والأوصاف باللغة {language}. يظهر النص الأصلي تحت كل حقل.",
+            "translate_labels": "ترجمة التسميات الناقصة بالذكاء الاصطناعي",
+            "no_ai_provider": "اختر أولًا مزوّد ذكاء اصطناعي للترجمة",
+            "translate_labels_failed": "تعذّرت ترجمة بعض التسميات ({count})",
+            "labels_translated": "تُرجمت التسميات",
+            "copy_original": "نسخ النص الأصلي"
         },
         "attributes": {
             "in_use": "لا يمكن حذف السمة: يتم استخدامها بواسطة {types}",

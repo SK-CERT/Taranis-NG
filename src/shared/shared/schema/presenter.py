@@ -4,7 +4,7 @@ Returns:
     _type_: _description_
 """
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.message_header import MessageHeaderSchema
 from shared.schema.parameter import ParameterSchema
@@ -87,6 +87,11 @@ class PresenterInputProductSchema(Schema):
     Args:
         Schema (Any): Base schema class.
     """
+
+    class Meta:
+        """Ignore fields this node does not know yet, so a newer core can add some."""
+
+        unknown = EXCLUDE
 
     title = fields.Str()
     description = fields.Str()
@@ -177,6 +182,11 @@ class PresenterInputSchema(Schema):
     Args:
         Schema (Any): Base schema class.
     """
+
+    class Meta:
+        """Ignore fields this node does not know yet, so a newer core can add some."""
+
+        unknown = EXCLUDE
 
     type = fields.Str()
     parameter_values = fields.List(fields.Nested(ParameterValueSchema))

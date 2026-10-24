@@ -198,7 +198,96 @@
                         :cols="verticalView ? 6 : 12"
                         style="height: 100%; overflow-y: auto"
                     >
+                        <!-- Languages: the report's own, and its report type's variants -->
+                        <div
+                            v-if="edit"
+                            class="d-flex align-center flex-wrap ga-2 px-4 pt-2"
+                            data-test="report-languages"
+                        >
+                            <v-tabs
+                                v-if="variantLanguages.length > 0"
+                                v-model="active_language"
+                                density="compact"
+                                data-test="report-language-tabs"
+                            >
+                                <v-tab value="source">{{ sourceTabLabel }}</v-tab>
+                                <v-tab
+                                    v-for="language in variantLanguages"
+                                    :key="language"
+                                    :value="language"
+                                    :disabled="!report_language"
+                                >
+                                    {{ languageName(language) }}
+                                </v-tab>
+                            </v-tabs>
+                            <v-spacer />
+                            <v-autocomplete
+                                :model-value="report_language"
+                                :items="languageOptions"
+                                item-title="txt"
+                                item-value="id"
+                                :label="t('report_item.translation.source_language')"
+                                :placeholder="t('report_item.translation.not_set')"
+                                persistent-placeholder
+                                density="compact"
+                                variant="outlined"
+                                hide-details
+                                style="max-width: 240px"
+                                :disabled="!canModify || readOnly"
+                                data-test="report-source-language"
+                                @update:model-value="changeSourceLanguage"
+                            />
+                            <v-btn
+                                v-if="canTranslate && variantLanguages.length > 0"
+                                color="primary"
+                                variant="tonal"
+                                prepend-icon="mdi-translate"
+                                :loading="translation_job.running"
+                                :disabled="translation_job.running"
+                                data-test="translate-report"
+                                @click="translateLanguages(variantLanguages)"
+                            >
+                                {{ t('report_item.translation.translate_report') }}
+                            </v-btn>
+                        </div>
+                        <div
+                            v-if="translation_job.running"
+                            class="px-4 pt-2"
+                            data-test="translation-progress"
+                        >
+                            <v-progress-linear
+                                :model-value="translation_job.total ? (100 * translation_job.done) / translation_job.total : 0"
+                                color="primary"
+                                height="6"
+                                rounded
+                            />
+                            <span class="text-caption">{{
+                                t('report_item.translation.progress', { done: translation_job.done, total: translation_job.total })
+                            }}</span>
+                        </div>
+
+                        <ReportItemTranslation
+                            v-if="edit && active_language !== 'source' && report_language && report_item.id"
+                            :key="active_language"
+                            :report-item-id="report_item.id"
+                            :language="active_language"
+                            :title="report_item.title"
+                            :title-prefix="report_item.title_prefix"
+                            :title-translations="translations[active_language] ?? {}"
+                            :attribute-groups="attribute_groups"
+                            :report-type="selected_type"
+                            :locks="report_locks"
+                            :can-modify="canModify && !readOnly"
+                            :modify="modify"
+                            :can-translate="canTranslate"
+                            :busy="translation_job.running"
+                            :revision="translation_revision"
+                            :spellcheck="spellcheck"
+                            @translate-language="(language: string) => translateLanguages([language])"
+                            @translations-updated="applyTranslations"
+                        />
                         <v-form
+                            v-show="active_language === 'source'"
                             ref="formRef"
                             class="pa-4"
                             @submit.prevent="addReportItem"
@@ -463,6 +552,7 @@
         getReportItemData,
         getReportItemLocks,
         aiGenerate,
+        translateReportItem,
         uploadAttachment
     } from '@/api/analyze'
     import { getEntityTypeStates } from '@/api/state'
@@ -470,6 +560,9 @@
     import { isLabelOnly } from '@/components/common/attribute/useAttributes'
     import NewsItemSelector from '@/components/analyze/NewsItemSelector.vue'
     import RemoteReportItemSelector from '@/components/analyze/RemoteReportItemSelector.vue'
+    import ReportItemTranslation from '@/components/analyze/ReportItemTranslation.vue'
+    import type { TranslationStateValue } from '@/components/analyze/TranslationState.vue'
+    import { useContentLanguages } from '@/composables/useContentLanguages'
     import StateSelector from '@/components/common/StateSelector.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { createLinkReferences, provideLinkReferences } from '@/composables/useLinkReferences'
@@ -520,6 +613,7 @@
     const settingsStore = useSettingsStore()
     const userStore = useUserStore()
     const { formatDateTime } = useLocaleFormatters()
+    const { languageOptions, languageName } = useContentLanguages()
 
     // Refs
     const formRef = ref<FormRef | null>(null)
@@ -564,6 +658,20 @@
     const showConflict = ref<boolean>(false)
     const conflict = ref<ConflictDetail | null>(null)
 
+    // Languages: the report's own (null while not set), its translated names per language, and
+    // the open tab. Translated attribute values live on each value as `translations`.
+    type TranslationsJson = {
+        translations: Record<string, Record<string, TranslationStateValue>>
+        attributes: Record<string, Record<string, TranslationStateValue>>
+    }
+    const report_language = ref<string | null>(null)
+    const translations = ref<Record<string, Record<string, TranslationStateValue>>>({})
+    const active_language = ref<string>('source')
+    // Bumped whenever translations were replaced from the server, so the open tab refills.
+    const translation_revision = ref<number>(0)
+    const report_locks = ref<Record<string, { user_id?: number }>>({})
+    const translation_job = reactive({ running: false, done: 0, total: 0 })
+
     const report_item = reactive<any>({
         id: null,
         uuid: null,
@@ -590,6 +698,19 @@
     })
 
     const spellcheck = computed(() => settingsStore.getSettingBoolean(Settings.SPELLCHECK, true))
+
+    // The report type's languages other than the report's own; all of them while it is not set.
+    const variantLanguages = computed<string[]>(() =>
+        ((selected_type.value?.languages as string[] | undefined) ?? []).filter((language) => language !== report_language.value)
+    )
+    const canTranslate = computed<boolean>(
+        () => canModify.value && !props.readOnly && !!report_language.value && !!selected_type.value?.translation_ai_provider_id
+    )
+    const sourceTabLabel = computed<string>(() =>
+        report_language.value
+            ? t('report_item.translation.source_tab', { language: languageName(report_language.value) })
+            : t('report_item.translation.source_not_set')
+    )
 
     // Link citations: the text attributes can cite the report's LINK values, numbered in form order.
     const attributeItemsOf = (types: readonly string[]) =>
@@ -629,6 +750,7 @@
         report_item.title = ''
         report_item.title_prefix = ''
         report_item.report_item_type_id = null
+        resetLanguages()
         selectDefaultState()
         focused_field.value = null
         field_baseline.title = report_item.title
@@ -913,7 +1035,8 @@
                 user: attribute.user,
                 version: attribute.version ?? 1,
                 locked: lockedByOthers(locksData[attribute.id]),
-                remote: false
+                remote: false,
+                translations: attribute.translations ?? {}
             })
         }
 
@@ -989,6 +1112,10 @@
                 applyRemoteField('state_id', data.state_id)
             }
 
+            // Saved as soon as they change, so a refresh takes them as they are.
+            report_language.value = data.language ?? null
+            translations.value = data.translations ?? {}
+
             edit.value = true
             overlay.value = false
             show_error.value = false
@@ -998,6 +1125,7 @@
 
             field_locks.title = lockedByOthers(locks_data.title)
             field_locks.title_prefix = lockedByOthers(locks_data.title_prefix)
+            report_locks.value = locks_data || {}
 
             // Refresh related data while preserving array identity during resync.
             if (rebuildForm) {
@@ -1070,6 +1198,12 @@
 
             // Preserve the top-level attribute_groups array.
             attribute_groups.value.splice(0, attribute_groups.value.length, ...refreshedGroups)
+
+            if (active_language.value !== 'source' && !variantLanguages.value.includes(active_language.value)) {
+                active_language.value = 'source'
+            }
+            // The language tab re-syncs in place; a name being edited there is kept.
+            translation_revision.value++
         } catch (error) {
             console.error('Error loading report item detail:', error)
             show_error.value = true
@@ -1122,6 +1256,115 @@
         }
     }
 
+    // ---- languages ---------------------------------------------------------------------
+    const resetLanguages = () => {
+        report_language.value = null
+        translations.value = {}
+        active_language.value = 'source'
+        report_locks.value = {}
+        translation_job.running = false
+        translation_job.done = 0
+        translation_job.total = 0
+    }
+
+    const notifyServerError = (error: unknown) => {
+        // Core names the reason (no provider, the provider's TLP limit, a language in use ...).
+        const message = (error as AxiosError<{ error?: string }>)?.response?.data?.error
+        window.dispatchEvent(
+            new CustomEvent('notification', {
+                detail: message ? { type: 'error', message } : { type: 'error', loc: 'common.error_saving' }
+            })
+        )
+    }
+
+    // Put translations fetched from the server in place: names here, values on each value.
+    const applyTranslations = (data: TranslationsJson) => {
+        translations.value = data.translations ?? {}
+        for (const group of attribute_groups.value) {
+            for (const item of group.attribute_group_items) {
+                for (const value of item.values) {
+                    if (value.remote) continue
+                    value.translations = data.attributes?.[String(value.id)] ?? {}
+                }
+            }
+        }
+        translation_revision.value++
+    }
+
+    const refreshTranslations = async () => {
+        if (!report_item.id) return
+        try {
+            const response = await getReportItem(report_item.id)
+            report_language.value = response.data.language ?? null
+            const attributes: TranslationsJson['attributes'] = {}
+            for (const attribute of response.data.attributes ?? []) {
+                attributes[String(attribute.id)] = attribute.translations ?? {}
+            }
+            applyTranslations({ translations: response.data.translations ?? {}, attributes })
+        } catch (error) {
+            console.error('Error refreshing translations:', error)
+        }
+    }
+
+    const changeSourceLanguage = async (language: string | null) => {
+        if (!language || language === report_language.value || !report_item.id) return
+        const previous = report_language.value
+        report_language.value = language
+        try {
+            await updateReportItem(report_item.id, { update: true, source_language: language })
+        } catch (error) {
+            report_language.value = previous
+            notifyServerError(error)
+        }
+    }
+
+    const translateLanguages = async (languages: string[]) => {
+        if (!report_item.id || translation_job.running) return
+        try {
+            const response = await translateReportItem(report_item.id, { languages })
+            if (response.status === 202) {
+                translation_job.running = true
+                translation_job.done = 0
+                translation_job.total = languages.length
+            }
+        } catch (error) {
+            notifyServerError(error)
+        }
+    }
+
+    type TranslationProgress = {
+        report_item_id?: number
+        done?: number
+        total?: number
+    }
+
+    const translationProgressEvent = (event: Event) => {
+        const data = (event as CustomEvent<TranslationProgress>).detail
+        if (!edit.value || data?.report_item_id !== report_item.id) return
+        translation_job.running = true
+        translation_job.done = data.done ?? translation_job.done
+        translation_job.total = data.total ?? translation_job.total
+    }
+
+    type TranslationResult = { failed?: Record<string, string>; skipped_locked?: string[]; skipped_manual?: string[] }
+
+    // A background translation finished (the event names no user): refill and say how it went.
+    const translationFinished = (results: TranslationResult[] | undefined) => {
+        translation_job.running = false
+        if (!results) return
+        const failed = results.reduce((count, result) => count + Object.keys(result.failed ?? {}).length, 0)
+        const skipped = results.reduce((count, result) => count + (result.skipped_locked?.length ?? 0), 0)
+        if (failed > 0 || skipped > 0) {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'warning', loc: 'report_item.translation.finished_with_problems', params: { failed, skipped } }
+                })
+            )
+        } else {
+            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'report_item.translation.finished' } }))
+        }
+    }
+
     const updateNewsItemAggregates = (items) => {
         news_item_aggregates.value = Array.isArray(items) ? [...items] : []
     }
@@ -1151,7 +1394,7 @@
         const news_item_aggregate_ids = news_item_aggregates.value.map((item) => item.id)
 
         try {
-            const response = await aiGenerate(attribute_group_item_id, news_item_aggregate_ids)
+            const response = await aiGenerate(attribute_group_item_id, news_item_aggregate_ids, aiContext())
             if (response.data.message) {
                 if (setAttributeGroupItemValue(attribute_group_item_id, response.data.message)) {
                     setAutoGenerateIcon(attribute_group_item_id, '')
@@ -1167,6 +1410,17 @@
             setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(axiosError.response?.data ?? fallbackMessage))
             setAutoGenerateIcon(attribute_group_item_id, 'error')
         }
+    }
+
+    // What core needs to apply the AI provider's TLP limit: the saved report, or for one still
+    // being written the values of its TLP fields (nothing when its type has none).
+    const aiContext = (): { report_item_id?: number; tlp?: string[] } => {
+        if (edit.value && report_item.id) return { report_item_id: report_item.id }
+        const tlpItems = attribute_groups.value.flatMap((group) =>
+            group.attribute_group_items.filter((item) => item.attribute_group_item?.attribute?.type === 'TLP')
+        )
+        if (tlpItems.length === 0) return {}
+        return { tlp: tlpItems.flatMap((item) => item.values.map((value) => String(value.value ?? ''))) }
     }
 
     const setAttributeGroupItemValue = (attribute_group_item_id, value) => {
@@ -1281,7 +1535,19 @@
 
     const reportItemUpdated = async (data_info) => {
         if (edit.value === true && report_item.id === data_info.report_item_id) {
+            if (data_info.translated) {
+                // AI translations were stored. A background job's event names no user.
+                if (data_info.user_id === undefined) translationFinished(data_info.results)
+                if (data_info.user_id !== getUserId()) await refreshTranslations()
+                return
+            }
+            // Translated fields are kept up to date by the language tab itself.
+            if (data_info.language) return
             if (data_info.user_id !== getUserId()) {
+                if (data_info.source_language !== undefined) {
+                    await refreshTranslations()
+                    return
+                }
                 try {
                     const response = await getReportItemData(report_item.id, data_info)
                     const data = response.data
@@ -1396,6 +1662,7 @@
         window.addEventListener('report-item-unlocked', reportItemUnlockedEvent)
         window.addEventListener('report-item-updated', reportItemUpdatedEvent)
         window.addEventListener('report-item-conflict', reportItemConflictEvent)
+        window.addEventListener('report-item-translation-progress', translationProgressEvent)
         window.addEventListener('sse-resync', requestResync)
     })
 
@@ -1408,6 +1675,7 @@
         window.removeEventListener('report-item-unlocked', reportItemUnlockedEvent)
         window.removeEventListener('report-item-updated', reportItemUpdatedEvent)
         window.removeEventListener('report-item-conflict', reportItemConflictEvent)
+        window.removeEventListener('report-item-translation-progress', translationProgressEvent)
         window.removeEventListener('sse-resync', requestResync)
     })
 

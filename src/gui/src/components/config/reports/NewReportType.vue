@@ -50,87 +50,175 @@
                         :disabled="saving"
                     />
 
-                    <!-- Attribute groups -->
-                    <div class="d-flex align-center mb-3">
-                        <h3 class="text-h6">
-                            {{ t('reports.types.attribute_groups') }}
-                        </h3>
-                        <v-spacer />
-                        <AddNewButton
-                            :disabled="saving || !canSave"
-                            @click="addGroup"
-                        />
-                    </div>
-
-                    <v-card
-                        v-for="(group, index) in localItem.attribute_groups"
-                        :key="group.id + '-' + index"
-                        variant="outlined"
-                        class="mb-4"
-                    >
-                        <v-toolbar
-                            color="grey-lighten-3"
-                            density="compact"
+                    <!-- Languages: the variants reports of this type are translated into -->
+                    <v-row dense>
+                        <v-col
+                            cols="12"
+                            md="6"
                         >
+                            <v-autocomplete
+                                v-model="localItem.languages"
+                                :items="languageOptions"
+                                item-title="txt"
+                                item-value="id"
+                                :label="t('reports.types.languages')"
+                                :hint="t('reports.types.languages_hint')"
+                                persistent-hint
+                                multiple
+                                chips
+                                closable-chips
+                                variant="outlined"
+                                density="comfortable"
+                                :disabled="saving || !canSave"
+                                data-test="report-type-languages"
+                            />
+                        </v-col>
+                        <v-col
+                            cols="12"
+                            md="3"
+                        >
+                            <v-select
+                                v-model="localItem.translation_ai_provider_id"
+                                :items="aiProviders"
+                                item-title="name"
+                                item-value="id"
+                                :label="t('reports.types.translation_ai_provider')"
+                                clearable
+                                variant="outlined"
+                                density="comfortable"
+                                :disabled="saving || !canSave"
+                                data-test="report-type-translation-provider"
+                            />
+                        </v-col>
+                        <v-col
+                            cols="12"
+                            md="3"
+                        >
+                            <v-autocomplete
+                                v-model="localItem.label_language"
+                                :items="languageOptions"
+                                item-title="txt"
+                                item-value="id"
+                                :label="t('reports.types.label_language')"
+                                :hint="t('reports.types.label_language_hint')"
+                                persistent-hint
+                                clearable
+                                variant="outlined"
+                                density="comfortable"
+                                :disabled="saving || !canSave"
+                                data-test="report-type-label-language"
+                            />
+                        </v-col>
+                    </v-row>
+
+                    <v-tabs
+                        v-if="labelLanguages.length > 0"
+                        v-model="labelTab"
+                        density="compact"
+                        class="mt-4 mb-3"
+                        data-test="report-type-label-tabs"
+                    >
+                        <v-tab value="fields">{{ t('reports.types.fields') }}</v-tab>
+                        <v-tab
+                            v-for="language in labelLanguages"
+                            :key="language"
+                            :value="language"
+                        >
+                            {{ t('reports.types.labels_tab', { language: languageName(language) }) }}
+                        </v-tab>
+                    </v-tabs>
+
+                    <ReportTypeLabelTranslations
+                        v-if="labelTab !== 'fields' && labelLanguages.includes(labelTab)"
+                        v-model="localItem"
+                        :language="labelTab"
+                        :source-language="localItem.label_language"
+                        :ai-provider-id="localItem.translation_ai_provider_id"
+                        :disabled="saving || !canSave"
+                    />
+                    <template v-else>
+                        <!-- Attribute groups -->
+                        <div class="d-flex align-center mb-3">
+                            <h3 class="text-h6">
+                                {{ t('reports.types.attribute_groups') }}
+                            </h3>
                             <v-spacer />
-                            <ActionButton
-                                icon="mdi-arrow-up-bold"
-                                :title="t('common.up')"
+                            <AddNewButton
                                 :disabled="saving || !canSave"
-                                @click="moveGroup(index, -1)"
+                                @click="addGroup"
                             />
-                            <ActionButton
-                                icon="mdi-arrow-down-bold"
-                                :title="t('common.down')"
-                                :disabled="saving || !canSave"
-                                @click="moveGroup(index, 1)"
-                            />
-                            <ActionButton
-                                action="delete"
-                                :title="t('common.delete')"
-                                :disabled="saving || !canSave"
-                                @click="deleteGroup(index)"
-                            />
-                        </v-toolbar>
+                        </div>
 
-                        <v-card-text>
-                            <v-text-field
-                                v-model="group.title"
-                                :spellcheck="spellcheck"
-                                :label="t('reports.types.name')"
-                                variant="outlined"
-                                density="comfortable"
-                                class="mb-3"
-                                :disabled="saving || !canSave"
-                            />
-                            <v-textarea
-                                v-model="group.description"
-                                :spellcheck="spellcheck"
-                                :label="t('reports.types.description')"
-                                variant="outlined"
-                                density="comfortable"
-                                rows="2"
-                                class="mb-3"
-                                :disabled="saving"
-                            />
-                            <v-text-field
-                                v-model="group.section_title"
-                                :spellcheck="spellcheck"
-                                :label="t('reports.types.section_title')"
-                                variant="outlined"
-                                density="comfortable"
-                                class="mb-3"
-                                :disabled="saving"
-                            />
+                        <v-card
+                            v-for="(group, index) in localItem.attribute_groups"
+                            :key="group.id + '-' + index"
+                            variant="outlined"
+                            class="mb-4"
+                        >
+                            <v-toolbar
+                                color="grey-lighten-3"
+                                density="compact"
+                            >
+                                <v-spacer />
+                                <ActionButton
+                                    icon="mdi-arrow-up-bold"
+                                    :title="t('common.up')"
+                                    :disabled="saving || !canSave"
+                                    @click="moveGroup(index, -1)"
+                                />
+                                <ActionButton
+                                    icon="mdi-arrow-down-bold"
+                                    :title="t('common.down')"
+                                    :disabled="saving || !canSave"
+                                    @click="moveGroup(index, 1)"
+                                />
+                                <ActionButton
+                                    action="delete"
+                                    :title="t('common.delete')"
+                                    :disabled="saving || !canSave"
+                                    @click="deleteGroup(index)"
+                                />
+                            </v-toolbar>
 
-                            <AttributeTable
-                                v-model="group.attribute_group_items"
-                                :attribute-templates="attributeTemplates"
-                                :ai-providers="aiProviders"
-                                :disabled="saving || !canSave"
-                            />
-                        </v-card-text>
-                    </v-card>
+                            <v-card-text>
+                                <v-text-field
+                                    v-model="group.title"
+                                    :spellcheck="spellcheck"
+                                    :label="t('reports.types.name')"
+                                    variant="outlined"
+                                    density="comfortable"
+                                    class="mb-3"
+                                    :disabled="saving || !canSave"
+                                />
+                                <v-textarea
+                                    v-model="group.description"
+                                    :spellcheck="spellcheck"
+                                    :label="t('reports.types.description')"
+                                    variant="outlined"
+                                    density="comfortable"
+                                    rows="2"
+                                    class="mb-3"
+                                    :disabled="saving"
+                                />
+                                <v-text-field
+                                    v-model="group.section_title"
+                                    :spellcheck="spellcheck"
+                                    :label="t('reports.types.section_title')"
+                                    variant="outlined"
+                                    density="comfortable"
+                                    class="mb-3"
+                                    :disabled="saving"
+                                />
+
+                                <AttributeTable
+                                    v-model="group.attribute_group_items"
+                                    :attribute-templates="attributeTemplates"
+                                    :ai-providers="aiProviders"
+                                    :disabled="saving || !canSave"
+                                />
+                            </v-card-text>
+                        </v-card>
+                    </template>
                 </v-form>
 
                 <v-alert
@@ -176,8 +264,12 @@
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import AttributeTable, { type AttributeGroupItem } from '@/components/config/reports/AttributeTable.vue'
+    import ReportTypeLabelTranslations from '@/components/config/reports/ReportTypeLabelTranslations.vue'
+    import { useContentLanguages } from '@/composables/useContentLanguages'
     import { useAuth } from '@/composables/useAuth'
     import { createNewReportItemType, updateReportItemType, getAllAttributes, getAllAiProviders } from '@/api/config'
+
+    type Translations = Record<string, Record<string, string>>
 
     type AttributeGroup = {
         id: number
@@ -187,6 +279,7 @@
         section_title: string
         index: number
         attribute_group_items: AttributeGroupItem[]
+        translations: Translations
     }
 
     type ReportTypeItem = {
@@ -194,6 +287,12 @@
         title: string
         description: string
         attribute_groups: AttributeGroup[]
+        // Languages reports of this type are translated into (ISO 639-1).
+        languages: string[]
+        translation_ai_provider_id: number | null
+        // Language the labels are written in; null while not stated.
+        label_language: string | null
+        translations: Translations
         [key: string]: unknown
     }
 
@@ -212,6 +311,8 @@
         attribute?: { id?: number; name?: string }
         ai_provider_id?: number | null
         ai_prompt?: string | null
+        translate?: boolean
+        translations?: Translations
     }
 
     type IncomingGroup = {
@@ -222,6 +323,7 @@
         section_title?: string | null
         index?: number
         attribute_group_items?: IncomingGroupItem[]
+        translations?: Translations
     }
 
     const props = withDefaults(
@@ -240,6 +342,7 @@
     const { t } = useI18n()
     const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
+    const { languageOptions, languageName } = useContentLanguages()
 
     const formRef = ref<any>(null)
     const showValidationError = ref(false)
@@ -247,17 +350,28 @@
     const saving = ref(false)
     const dialog = ref(false)
 
-    const attributeTemplates = ref<{ id: number; name: string }[]>([])
+    const attributeTemplates = ref<{ id: number; name: string; type?: string }[]>([])
     const aiProviders = ref<{ id: number; name: string }[]>([])
 
     const defaultItem = (): ReportTypeItem => ({
         id: null,
         title: '',
         description: '',
-        attribute_groups: []
+        attribute_groups: [],
+        languages: [],
+        translation_ai_provider_id: null,
+        label_language: null,
+        translations: {}
     })
 
     const localItem = ref<ReportTypeItem>(defaultItem())
+
+    // Label variants exist for every report language except the one the labels are written in.
+    const labelLanguages = computed(() => localItem.value.languages.filter((language) => language !== localItem.value.label_language))
+    const labelTab = ref<string>('fields')
+    watch(labelLanguages, (languages) => {
+        if (labelTab.value !== 'fields' && !languages.includes(labelTab.value)) labelTab.value = 'fields'
+    })
     const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission('CONFIG_REPORT_TYPE_CREATE'))
@@ -275,7 +389,8 @@
             section: -1,
             section_title: '',
             index: localItem.value.attribute_groups.length,
-            attribute_group_items: []
+            attribute_group_items: [],
+            translations: {}
         })
     }
 
@@ -296,12 +411,28 @@
         groups.splice(target, 0, moved)
     }
 
+    // The dialog edits a copy, so the list it came from changes only when saved.
+    const cloneTranslations = (translations?: Translations): Translations => JSON.parse(JSON.stringify(translations ?? {}))
+
     const mapIncoming = (incoming: Record<string, unknown>): ReportTypeItem => {
-        const src = incoming as { id?: number; title?: string; description?: string; attribute_groups?: IncomingGroup[] }
+        const src = incoming as {
+            id?: number
+            title?: string
+            description?: string
+            attribute_groups?: IncomingGroup[]
+            languages?: string[]
+            translation_ai_provider_id?: number | null
+            label_language?: string | null
+            translations?: Translations
+        }
         return {
             id: src.id ?? null,
             title: src.title ?? '',
             description: src.description ?? '',
+            languages: [...(src.languages ?? [])],
+            translation_ai_provider_id: src.translation_ai_provider_id ?? null,
+            label_language: src.label_language ?? null,
+            translations: cloneTranslations(src.translations),
             attribute_groups: (src.attribute_groups ?? []).map((group, gi) => ({
                 id: group.id ?? -1,
                 title: group.title ?? '',
@@ -309,6 +440,7 @@
                 section: group.section ?? -1,
                 section_title: group.section_title ?? '',
                 index: group.index ?? gi,
+                translations: cloneTranslations(group.translations),
                 attribute_group_items: (group.attribute_group_items ?? []).map((item, ii) => ({
                     id: item.id ?? -1,
                     index: item.index ?? ii,
@@ -319,7 +451,9 @@
                     min_occurrence: item.min_occurrence ?? 0,
                     max_occurrence: item.max_occurrence ?? 1,
                     ai_provider_id: item.ai_provider_id ?? null,
-                    ai_prompt: item.ai_prompt ?? ''
+                    ai_prompt: item.ai_prompt ?? '',
+                    translate: item.translate ?? false,
+                    translations: cloneTranslations(item.translations)
                 }))
             }))
         }
@@ -328,7 +462,7 @@
     const loadTemplates = async (): Promise<void> => {
         try {
             const [attrRes, aiRes] = await Promise.all([getAllAttributes({ search: '' }), getAllAiProviders({ search: '' })])
-            attributeTemplates.value = (attrRes as { data?: { items?: { id: number; name: string }[] } }).data?.items ?? []
+            attributeTemplates.value = (attrRes as { data?: { items?: { id: number; name: string; type?: string }[] } }).data?.items ?? []
             aiProviders.value = (aiRes as { data?: { items?: { id: number; name: string }[] } }).data?.items ?? []
         } catch (error) {
             console.error('Error loading attribute templates / AI providers:', error)
@@ -340,6 +474,10 @@
         id: localItem.value.id ?? -1,
         title: localItem.value.title,
         description: localItem.value.description,
+        languages: localItem.value.languages,
+        translation_ai_provider_id: localItem.value.translation_ai_provider_id,
+        label_language: localItem.value.label_language || null,
+        translations: localItem.value.translations,
         attribute_groups: localItem.value.attribute_groups.map((group, gi) => ({
             id: group.id,
             title: group.title,
@@ -347,6 +485,7 @@
             section: group.section,
             section_title: group.section_title,
             index: gi,
+            translations: group.translations,
             attribute_group_items: group.attribute_group_items.map((item, ii) => ({
                 id: item.id,
                 index: ii,
@@ -356,7 +495,9 @@
                 min_occurrence: Number(item.min_occurrence) || 0,
                 max_occurrence: Number(item.max_occurrence) || 0,
                 ai_provider_id: item.ai_provider_id,
-                ai_prompt: item.ai_prompt
+                ai_prompt: item.ai_prompt,
+                translate: Boolean(item.translate),
+                translations: item.translations ?? {}
             }))
         }))
     })
@@ -394,6 +535,11 @@
                     .map(([title, count]) => `${title} (${count})`)
                     .join(', ')
                 notify('error', 'reports.types.fields_in_use', { fields })
+            } else if ((error as { response?: { status?: number } })?.response?.status === 400) {
+                // An invalid language code or label translation: core says which.
+                const message = (error as { response?: { data?: { error?: string } } }).response?.data?.error
+                if (message) window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', message } }))
+                else notify('error', 'common.error_saving')
             } else {
                 notify('error', 'common.error_saving')
             }
@@ -409,6 +555,7 @@
         showError.value = false
         formRef.value?.reset()
         localItem.value = defaultItem()
+        labelTab.value = 'fields'
         dialog.value = false
     }
 

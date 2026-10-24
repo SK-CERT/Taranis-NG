@@ -22,6 +22,8 @@ from managers import (
     bots_manager,
     certificate_manager,
     collectors_manager,
+    content_language,
+    llm_manager,
     log_manager,
     notification_manager,
     presenters_manager,
@@ -277,6 +279,8 @@ class AiProvidersResource(Resource):
             record = ai_provider.AiProvider.add_new(request.json, user.name)
             schema = AiProviderSchema()
             return schema.dump(record), HTTPStatus.OK
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not create AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -404,6 +408,8 @@ class AiProviderResource(Resource):
             record = ai_provider.AiProvider.update(ai_provider_id, request.json, user.name)
             schema = AiProviderSchema()
             return schema.dump(record), HTTPStatus.OK
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -770,6 +776,9 @@ class ReportItemTypesConfigResource(Resource):
         """
         try:
             report_item_type.ReportItemType.add_report_item_type(request.json)
+        except ValueError as ex:
+            # A language code or label translation that is not valid.
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not create report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -797,6 +806,9 @@ class ReportItemTypeResource(Resource):
             msg = f"Fields still used by report items: {detail}"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg)
             return {"error": msg, "fields_in_use": ex.fields_in_use}, HTTPStatus.CONFLICT
+        except ValueError as ex:
+            # A language code or label translation that is not valid.
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -820,6 +832,43 @@ class ReportItemTypeResource(Resource):
             return {"error": msg, "report_item_count": ex.report_item_count}, HTTPStatus.CONFLICT
         except Exception as ex:
             return _delete_failed("Could not delete report type", ex)
+
+
+class ReportItemTypeLabelsTranslateResource(Resource):
+    """Translate the labels of a report type being edited, with AI."""
+
+    @auth_required(["CONFIG_REPORT_TYPE_CREATE", "CONFIG_REPORT_TYPE_UPDATE"])
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Translate label texts and return them; nothing is stored until the type is saved.
+
+        The body holds ``texts`` (key -> label), ``target_language``, ``source_language`` (may be
+        empty) and ``ai_provider_id``. Labels are configuration, not report content, so no TLP
+        limit applies.
+
+        Returns:
+            (dict, HTTPStatus): ``translations`` (key -> text) and ``failed`` (key -> reason).
+        """
+        body = request.json or {}
+        texts = body.get("texts")
+        if not isinstance(texts, dict) or not all(isinstance(key, str) and isinstance(text, str) for key, text in texts.items()):
+            return {"error": "texts must map keys to labels"}, HTTPStatus.BAD_REQUEST
+        try:
+            target = content_language.clean_language(body.get("target_language"))
+            source = content_language.clean_language(body.get("source_language"))
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        if target is None:
+            return {"error": "target_language is required"}, HTTPStatus.BAD_REQUEST
+        provider = ai_provider.AiProvider.find(body.get("ai_provider_id")) if body.get("ai_provider_id") else None
+        if provider is None:
+            return {"error": "Choose an AI provider for translation"}, HTTPStatus.BAD_REQUEST
+
+        try:
+            labels = {key: text for key, text in texts.items() if text.strip()}
+            translations, failed = llm_manager.translate_texts(provider, labels, source, target)
+        except llm_manager.LlmError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        return {"translations": translations, "failed": failed}, HTTPStatus.OK
 
 
 class ProductTypesResource(Resource):
@@ -2725,6 +2774,7 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
 
     api.add_resource(ReportItemTypesConfigResource, "/api/v1/config/report-item-types")
     api.add_resource(ReportItemTypeResource, "/api/v1/config/report-item-types/<int:type_id>")
+    api.add_resource(ReportItemTypeLabelsTranslateResource, "/api/v1/config/report-item-types/translate-labels")
 
     api.add_resource(ProductTypesResource, "/api/v1/config/product-types")
     api.add_resource(ProductTypeResource, "/api/v1/config/product-types/<int:type_id>")

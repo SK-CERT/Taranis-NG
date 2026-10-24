@@ -189,6 +189,16 @@ export function updateReportItemType(report_item_type) {
     return ApiService.put('/config/report-item-types/' + report_item_type.id, report_item_type)
 }
 
+// Translates labels of a report type being edited; nothing is stored until the type is saved.
+export function translateReportItemTypeLabels(data: {
+    texts: Record<string, string>
+    source_language: string | null
+    target_language: string
+    ai_provider_id: number | null
+}) {
+    return ApiService.post('/config/report-item-types/translate-labels', data)
+}
+
 export function getAllProductTypes(filter) {
     return ApiService.get('/config/product-types?search=' + filter.search)
 }

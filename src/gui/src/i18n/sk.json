@@ -420,7 +420,9 @@
         "tlp_description_amber": "Obmedzené zverejnenie v organizácii príjemcu a jej klientom podľa zásady nevyhnutnej znalosti.",
         "tlp_description_amber_strict": "Obmedzené zverejnenie iba v organizácii príjemcu.",
         "tlp_description_red": "Informácia sa nesmie zverejniť mimo jednotlivých príjemcov.",
-        "tlp_description_unknown": "Neznáme označenie TLP."
+        "tlp_description_unknown": "Neznáme označenie TLP.",
+        "translate": "Prekladať",
+        "translate_hint": "Reporty prekladajú toto pole do jazykov typu reportu"
     },
     "cvss_calculator": {
         "title": "CVSS Calculator",
@@ -768,6 +770,34 @@
             "take_theirs": "Zahodiť moju, ponechať uloženú",
             "keep_mine": "Prepísať mojou verziou",
             "unknown_user": "Iný používateľ"
+        },
+        "translation": {
+            "source_language": "Jazyk reportu",
+            "not_set": "Nenastavené",
+            "source_tab": "{language} (originál)",
+            "source_not_set": "Originál (jazyk nenastavený)",
+            "translate_report": "Preložiť celý report",
+            "progress": "Prekladá sa: hotovo {done} z {total} jazykov",
+            "finished": "Preklad dokončený",
+            "finished_with_problems": "Preklad dokončený. Nepreložené: {failed}; preskočené, lebo ich niekto upravuje: {skipped}",
+            "intro": "Preklad do jazyka {language}. Polia, ktoré sa neprekladajú, ukazujú originál.",
+            "translate_language": "Preložiť do jazyka {language}",
+            "translate_field": "Preložiť pomocou AI",
+            "same_in_all_languages": "Rovnaké vo všetkých jazykoch",
+            "source": "Originál",
+            "overwrite_title": "Nahradiť váš preklad?",
+            "overwrite_confirm": "Nahradiť",
+            "overwrite_message": "Toto pole bolo preložené ručne. Preklad AI ho nahradí.",
+            "field_locked": "Toto pole práve upravuje niekto iný, preto nebolo preložené.",
+            "field_failed": "Pole sa nepodarilo preložiť: {reason}",
+            "ai": "UI",
+            "ai_hint": "Preložené pomocou AI a zatiaľ neskontrolované",
+            "outdated": "Zastarané",
+            "outdated_hint": "Originál sa po preložení zmenil",
+            "review": "Označiť ako skontrolované",
+            "review_all": "Označiť preklady AI ako skontrolované",
+            "reviewed": "Preklady AI označené ako skontrolované: {count}",
+            "review_locked": "Niektoré pole práve upravuje niekto iný, preto nebolo označené ako skontrolované."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "AI model bol úspešne aktualizovaný",
             "error": "Nepodarilo sa uložiť AI model",
             "remove": "AI model bol úspešne odstránený",
-            "removed_error": "AI model sa používa a nie je možné ho odstrániť"
+            "removed_error": "AI model sa používa a nie je možné ho odstrániť",
+            "max_tlp": "Najvyšší odosielaný TLP",
+            "max_tlp_hint": "Text reportov nad týmto TLP sa tomuto poskytovateľovi nikdy neodošle",
+            "max_tlp_none": "Bez obmedzenia"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "Typ analýzy bol úspešne aktualizovaný",
             "removed_error": "Typ analýzy sa používa a nie je možné ho odstrániť",
             "removed": "Typ analýzy bol úspešne odstránený",
-            "total_count": "Žiadne typy analýz | {count} typ analýzy | {count} typy analýz | {count} typov analýz"
+            "total_count": "Žiadne typy analýz | {count} typ analýzy | {count} typy analýz | {count} typov analýz",
+            "languages": "Jazykové varianty",
+            "languages_hint": "Reporty tohto typu sa prekladajú do týchto jazykov",
+            "translation_ai_provider": "Poskytovateľ AI na preklad",
+            "label_language": "Jazyk popisov",
+            "label_language_hint": "Jazyk, v ktorom sú napísané názvy a popisy vyššie",
+            "fields": "Polia",
+            "labels_tab": "Popisy: {language}",
+            "labels_in": "Názvy a popisy v jazyku {language}. Originál je uvedený pod každým poľom.",
+            "translate_labels": "Preložiť chýbajúce popisy pomocou AI",
+            "no_ai_provider": "Najprv vyberte poskytovateľa AI na preklad",
+            "translate_labels_failed": "Niektoré popisy sa nepodarilo preložiť ({count})",
+            "labels_translated": "Popisy preložené",
+            "copy_original": "Skopírovať originál"
         },
         "attributes": {
             "in_use": "Atribút nie je možné odstrániť: používa sa v {types}",

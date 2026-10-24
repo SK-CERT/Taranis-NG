@@ -420,7 +420,9 @@
         "tlp_description_amber": "Chỉ tiết lộ trong tổ chức của người nhận và cho khách hàng cần biết.",
         "tlp_description_amber_strict": "Chỉ tiết lộ trong tổ chức của người nhận.",
         "tlp_description_red": "Không tiết lộ ngoài những người nhận cụ thể.",
-        "tlp_description_unknown": "Nhãn TLP không xác định."
+        "tlp_description_unknown": "Nhãn TLP không xác định.",
+        "translate": "Dịch",
+        "translate_hint": "Báo cáo dịch trường này sang các ngôn ngữ của loại báo cáo"
     },
     "cvss_calculator": {
         "title": "Máy tính CVSS",
@@ -768,6 +770,34 @@
             "take_theirs": "Hủy giá trị của tôi, giữ giá trị đã lưu",
             "keep_mine": "Ghi đè bằng giá trị của tôi",
             "unknown_user": "Người dùng khác"
+        },
+        "translation": {
+            "source_language": "Ngôn ngữ của báo cáo",
+            "not_set": "Chưa đặt",
+            "source_tab": "{language} (bản gốc)",
+            "source_not_set": "Bản gốc (chưa đặt ngôn ngữ)",
+            "translate_report": "Dịch toàn bộ báo cáo",
+            "progress": "Đang dịch: đã xong {done}/{total} ngôn ngữ",
+            "finished": "Đã dịch xong",
+            "finished_with_problems": "Đã dịch xong. Chưa dịch: {failed}; bỏ qua vì có người đang sửa: {skipped}",
+            "intro": "Bản dịch sang {language}. Các trường không dịch hiển thị bản gốc.",
+            "translate_language": "Dịch sang {language}",
+            "translate_field": "Dịch bằng AI",
+            "same_in_all_languages": "Giống nhau ở mọi ngôn ngữ",
+            "source": "Bản gốc",
+            "overwrite_title": "Thay bản dịch của bạn?",
+            "overwrite_confirm": "Thay",
+            "overwrite_message": "Trường này được dịch thủ công. Bản dịch của AI sẽ thay thế nó.",
+            "field_locked": "Người khác đang sửa trường này nên nó không được dịch.",
+            "field_failed": "Không dịch được trường: {reason}",
+            "ai": "AI dịch",
+            "ai_hint": "Do AI dịch và chưa được xem lại",
+            "outdated": "Đã cũ",
+            "outdated_hint": "Bản gốc đã thay đổi sau khi được dịch",
+            "review": "Đánh dấu đã xem lại",
+            "review_all": "Đánh dấu các bản dịch AI là đã xem lại",
+            "reviewed": "Bản dịch AI đã được đánh dấu là đã xem lại: {count}",
+            "review_locked": "Có người khác đang sửa một trường, nên trường đó chưa được đánh dấu là đã xem lại."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "Đã cập nhật mô hình AI thành công",
             "error": "Không thể lưu mô hình AI này",
             "remove": "Đã xóa mô hình AI thành công",
-            "removed_error": "Mô hình AI đang được sử dụng và không thể xóa"
+            "removed_error": "Mô hình AI đang được sử dụng và không thể xóa",
+            "max_tlp": "TLP cao nhất được gửi",
+            "max_tlp_hint": "Văn bản của báo cáo có TLP cao hơn mức này không bao giờ được gửi tới nhà cung cấp này",
+            "max_tlp_none": "Không giới hạn"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "Đã cập nhật loại mục báo cáo thành công",
             "removed_error": "Loại mục báo cáo đang được sử dụng và không thể xóa",
             "removed": "Đã xóa loại mục báo cáo thành công",
-            "total_count": "{count} loại báo cáo | {count} loại báo cáo"
+            "total_count": "{count} loại báo cáo | {count} loại báo cáo",
+            "languages": "Các phiên bản ngôn ngữ",
+            "languages_hint": "Báo cáo loại này được dịch sang các ngôn ngữ này",
+            "translation_ai_provider": "Nhà cung cấp AI để dịch",
+            "label_language": "Ngôn ngữ của nhãn",
+            "label_language_hint": "Ngôn ngữ dùng để viết các tên và mô tả ở trên",
+            "fields": "Trường",
+            "labels_tab": "Nhãn: {language}",
+            "labels_in": "Tên và mô tả bằng {language}. Bản gốc hiển thị dưới mỗi trường.",
+            "translate_labels": "Dịch các nhãn còn thiếu bằng AI",
+            "no_ai_provider": "Hãy chọn trước một nhà cung cấp AI để dịch",
+            "translate_labels_failed": "Không dịch được một số nhãn ({count})",
+            "labels_translated": "Đã dịch nhãn",
+            "copy_original": "Sao chép bản gốc"
         },
         "attributes": {
             "in_use": "Không thể xóa thuộc tính: thuộc tính đang được dùng bởi {types}",

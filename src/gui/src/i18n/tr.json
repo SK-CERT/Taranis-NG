@@ -420,7 +420,9 @@
         "tlp_description_amber": "Alıcının kuruluşu ve müşterileri içinde bilmesi gerekenler ilkesiyle sınırlı paylaşım.",
         "tlp_description_amber_strict": "Yalnızca alıcının kuruluşu içinde sınırlı paylaşım.",
         "tlp_description_red": "Bireysel alıcıların ötesinde paylaşılamaz.",
-        "tlp_description_unknown": "Bilinmeyen TLP işareti."
+        "tlp_description_unknown": "Bilinmeyen TLP işareti.",
+        "translate": "Çevir",
+        "translate_hint": "Raporlar bu alanı rapor türünün dillerine çevirir"
     },
     "cvss_calculator": {
         "title": "CVSS hesaplayıcı",
@@ -768,6 +770,34 @@
             "take_theirs": "Benimkini at, kayıtlı olanı koru",
             "keep_mine": "Benimkiyle üzerine yaz",
             "unknown_user": "Başka kullanıcı"
+        },
+        "translation": {
+            "source_language": "Raporun dili",
+            "not_set": "Ayarlanmadı",
+            "source_tab": "{language} (özgün)",
+            "source_not_set": "Özgün (dil ayarlanmadı)",
+            "translate_report": "Raporun tamamını çevir",
+            "progress": "Çevriliyor: {total} dilden {done} tanesi bitti",
+            "finished": "Çeviri tamamlandı",
+            "finished_with_problems": "Çeviri tamamlandı. Çevrilmeyen: {failed}; biri düzenlediği için atlanan: {skipped}",
+            "intro": "{language} diline çeviri. Çevrilmeyen alanlar özgün metni gösterir.",
+            "translate_language": "{language} diline çevir",
+            "translate_field": "YZ ile çevir",
+            "same_in_all_languages": "Tüm dillerde aynı",
+            "source": "Özgün metin",
+            "overwrite_title": "Çevirinizin yerine konsun mu?",
+            "overwrite_confirm": "Değiştir",
+            "overwrite_message": "Bu alan elle çevrildi. YZ çevirisi onun yerini alacak.",
+            "field_locked": "Bu alanı şu anda başka biri düzenliyor, bu yüzden çevrilmedi.",
+            "field_failed": "Alan çevrilemedi: {reason}",
+            "ai": "YZ",
+            "ai_hint": "Yapay zekâ tarafından çevrildi ve henüz gözden geçirilmedi",
+            "outdated": "Güncel değil",
+            "outdated_hint": "Özgün metin çeviriden sonra değişti",
+            "review": "Gözden geçirildi olarak işaretle",
+            "review_all": "Yapay zekâ çevirilerini gözden geçirildi olarak işaretle",
+            "reviewed": "Gözden geçirildi olarak işaretlenen yapay zekâ çevirileri: {count}",
+            "review_locked": "Bir alanı başka biri düzenliyor, bu yüzden gözden geçirildi olarak işaretlenmedi."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "Yapay zekâ modeli başarıyla güncellendi",
             "error": "Bu yapay zekâ modeli kaydedilemedi",
             "remove": "Yapay zekâ modeli başarıyla silindi",
-            "removed_error": "Yapay zekâ modeli kullanımda olduğundan silinemedi"
+            "removed_error": "Yapay zekâ modeli kullanımda olduğundan silinemedi",
+            "max_tlp": "Gönderilen en yüksek TLP",
+            "max_tlp_hint": "Bu TLP'nin üstündeki raporların metni bu sağlayıcıya asla gönderilmez",
+            "max_tlp_none": "Sınır yok"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "Rapor öğesi türü başarıyla güncellendi",
             "removed_error": "Rapor öğesi türü kullanımda olduğundan silinemedi",
             "removed": "Rapor öğesi türü başarıyla silindi",
-            "total_count": "Rapor türü yok | {count} rapor türü | {count} rapor türü"
+            "total_count": "Rapor türü yok | {count} rapor türü | {count} rapor türü",
+            "languages": "Dil varyantları",
+            "languages_hint": "Bu türdeki raporlar bu dillere çevrilir",
+            "translation_ai_provider": "Çeviri için YZ sağlayıcısı",
+            "label_language": "Etiketlerin dili",
+            "label_language_hint": "Yukarıdaki adların ve açıklamaların yazıldığı dil",
+            "fields": "Alanlar",
+            "labels_tab": "Etiketler: {language}",
+            "labels_in": "{language} dilinde adlar ve açıklamalar. Her alanın altında özgün metin gösterilir.",
+            "translate_labels": "Eksik etiketleri YZ ile çevir",
+            "no_ai_provider": "Önce çeviri için bir YZ sağlayıcısı seçin",
+            "translate_labels_failed": "Bazı etiketler çevrilemedi ({count})",
+            "labels_translated": "Etiketler çevrildi",
+            "copy_original": "Orijinali kopyala"
         },
         "attributes": {
             "in_use": "Öznitelik silinemiyor: {types} tarafından kullanılıyor",

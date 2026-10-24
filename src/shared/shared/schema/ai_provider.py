@@ -14,6 +14,7 @@ class AiProvider:
         api_url: str,
         api_key: str,
         model: str,
+        max_tlp: str | None = None,
     ) -> None:
         """Initialize an AiProvider instance.
 
@@ -24,6 +25,8 @@ class AiProvider:
             api_url (str): The endpoint URL.
             api_key (str): API key for authentication.
             model (str): Model name or identifier.
+            max_tlp (str | None): Highest TLP of a report whose text may be sent to this provider;
+                None means no limit.
         """
         self.id = id
         self.name = name
@@ -31,6 +34,7 @@ class AiProvider:
         self.api_url = api_url
         self.api_key = api_key
         self.model = model
+        self.max_tlp = max_tlp
         # updated_by and updated_at are set on the server
 
 
@@ -48,6 +52,7 @@ class AiProviderSchema(Schema):
     api_url = fields.Str()
     api_key = fields.Str()
     model = fields.Str()
+    max_tlp = fields.Str(allow_none=True, load_default=None)
     updated_by = fields.Str(dump_only=True)
     updated_at = fields.Str(dump_only=True)
 

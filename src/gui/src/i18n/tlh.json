@@ -420,7 +420,9 @@
         "tlp_description_amber": "Hevbogh yej qoDDaq, yej nobwI'pu'Daj je, SovnISbogh neH 'anglu'.",
         "tlp_description_amber_strict": "Hevbogh yej neH 'anglu'.",
         "tlp_description_red": "Hevbogh ghotpu' neH; latlh 'anglu'be'.",
-        "tlp_description_unknown": "TLP per Sovbe'lu'bogh."
+        "tlp_description_unknown": "TLP per Sovbe'lu'bogh.",
+        "translate": "mugh",
+        "translate_hint": "ja'ghachmey Segh Hol'e' mughlu'taH 'ay'vam"
     },
     "cvss_calculator": {
         "title": "CVSS toghwI'",
@@ -768,6 +770,34 @@
             "take_theirs": "wIjDaj yIwoD; pollu'bogh yIpol",
             "keep_mine": "wIjDaj yIlo'; yIghItlhqa'",
             "unknown_user": "lo'wI' latlh"
+        },
+        "translation": {
+            "source_language": "ja'ghach Hol",
+            "not_set": "lu'Dalu'be'",
+            "source_tab": "{language} (wa'DIch ghItlh)",
+            "source_not_set": "wa'DIch ghItlh (Hol lu'Dalu'be')",
+            "translate_report": "Hoch ja'ghach yImugh",
+            "progress": "mughtaH: {total} Holmey {done} rIn",
+            "finished": "mugh rInpu'",
+            "finished_with_problems": "mugh rInpu'. mughlu'be'bogh: {failed}; choHtaHmo' vay' Saw'lu'bogh: {skipped}",
+            "intro": "{language} Hol mugh. 'ay'mey mughlu'be'bogh wa'DIch ghItlh 'agh.",
+            "translate_language": "{language} Hol yImugh",
+            "translate_field": "De'wI' val yIlo' 'ej yImugh",
+            "same_in_all_languages": "Hoch Holmey rap",
+            "source": "wa'DIch ghItlh",
+            "overwrite_title": "mughmeyjaj DaSIgh'a'?",
+            "overwrite_confirm": "yIchoH",
+            "overwrite_message": "ghopvaD mughlu'pu' 'ay'vam. De'wI' val mugh tamlu'.",
+            "field_locked": "'ay'vam choHtaH latlh, vaj mughlu'be'.",
+            "field_failed": "'ay' vImughlaHbe': {reason}",
+            "ai": "De'wI' val",
+            "ai_hint": "De'wI' mughpu'; bejlu'be'",
+            "outdated": "ngo'",
+            "outdated_hint": "mughlu'DI' wa'DIch ghItlh choHlu'",
+            "review": "bejlu'pu' yIghItlh",
+            "review_all": "De'wI' mughmey bejlu'pu' yIghItlh",
+            "reviewed": "De'wI' mughmey bejlu'pu': {count}",
+            "review_locked": "latlh ghot mu' choHtaH; bejlu'pu' ghItlhbe'lu'."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "De'wI' val Hew choHlu'pu'. Qapla'!",
             "error": "De'wI' val Hewvam vIpollaHbe'",
             "remove": "De'wI' val Hew Qaw'lu'pu'. Qapla'!",
-            "removed_error": "De'wI' val Hew lo'lu'taH; vIQaw'laHbe'"
+            "removed_error": "De'wI' val Hew lo'lu'taH; vIQaw'laHbe'",
+            "max_tlp": "TLP tIn law' ngeHlu'bogh",
+            "max_tlp_hint": "TLPvam tIn law'bogh ja'ghachmey ghItlh not ngeHlu' nobwI'vamDaq",
+            "max_tlp_none": "veH Hutlh"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "ja'ghach Segh choHlu'pu'. Qapla'!",
             "removed_error": "ja'ghach Segh lo'lu'taH; vIQaw'laHbe'",
             "removed": "ja'ghach Segh Qaw'lu'pu'. Qapla'!",
-            "total_count": "pagh ja'ghach Segh | {count} ja'ghach Segh | {count} ja'ghach Segh"
+            "total_count": "pagh ja'ghach Segh | {count} ja'ghach Segh | {count} ja'ghach Segh",
+            "languages": "Hol choHmey",
+            "languages_hint": "Holmeyvam mughlu' ja'ghach Seghvam ja'ghachmey",
+            "translation_ai_provider": "mughmeH De'wI' val nobwI'",
+            "label_language": "per Hol",
+            "label_language_hint": "Dung pongmey Delghachmey je ghItlhmeH Hol",
+            "fields": "'ay'mey",
+            "labels_tab": "permey: {language}",
+            "labels_in": "{language} pongmey Delghachmey je. Hoch 'ay' bIngDaq wa'DIch ghItlh 'aghlu'.",
+            "translate_labels": "permey Dachbogh yImugh De'wI' valvaD",
+            "no_ai_provider": "wa'DIch mughmeH De'wI' val nobwI' yIwIv",
+            "translate_labels_failed": "'op permey vImughlaHbe' ({count})",
+            "labels_translated": "permey mughlu'pu'",
+            "copy_original": "Hal ghItlh yIlI'"
         },
         "attributes": {
             "in_use": "ngoD vIQaw'laHbe': lo' {types}",

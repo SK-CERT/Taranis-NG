@@ -420,7 +420,9 @@
         "tlp_description_amber": "Eingeschränkte Weitergabe innerhalb der Organisation des Empfängers und an deren Kunden nach dem Kenntnisprinzip.",
         "tlp_description_amber_strict": "Eingeschränkte Weitergabe ausschließlich innerhalb der Organisation des Empfängers.",
         "tlp_description_red": "Keine Weitergabe über die einzelnen Empfänger hinaus.",
-        "tlp_description_unknown": "Unbekannte TLP-Kennzeichnung."
+        "tlp_description_unknown": "Unbekannte TLP-Kennzeichnung.",
+        "translate": "Übersetzen",
+        "translate_hint": "Berichte übersetzen dieses Feld in die Sprachen des Berichtstyps"
     },
     "cvss_calculator": {
         "title": "CVSS-Rechner",
@@ -768,6 +770,34 @@
             "take_theirs": "Meine Änderung verwerfen, gespeicherten Wert beibehalten",
             "keep_mine": "Mit meinem Wert überschreiben",
             "unknown_user": "Anderer Benutzer"
+        },
+        "translation": {
+            "source_language": "Sprache des Berichts",
+            "not_set": "Nicht festgelegt",
+            "source_tab": "{language} (Ursprungstext)",
+            "source_not_set": "Ursprungstext (Sprache nicht festgelegt)",
+            "translate_report": "Ganzen Bericht übersetzen",
+            "progress": "Übersetzung läuft: {done} von {total} Sprachen fertig",
+            "finished": "Übersetzung abgeschlossen",
+            "finished_with_problems": "Übersetzung abgeschlossen. Nicht übersetzt: {failed}; übersprungen, weil jemand sie bearbeitet: {skipped}",
+            "intro": "Übersetzung auf {language}. Nicht übersetzte Felder zeigen den Ursprungstext.",
+            "translate_language": "Auf {language} übersetzen",
+            "translate_field": "Mit KI übersetzen",
+            "same_in_all_languages": "In allen Sprachen gleich",
+            "source": "Ursprungstext",
+            "overwrite_title": "Ihre Übersetzung ersetzen?",
+            "overwrite_confirm": "Ersetzen",
+            "overwrite_message": "Dieses Feld wurde von Hand übersetzt. Die KI-Übersetzung ersetzt es.",
+            "field_locked": "Jemand anderes bearbeitet dieses Feld, daher wurde es nicht übersetzt.",
+            "field_failed": "Das Feld konnte nicht übersetzt werden: {reason}",
+            "ai": "KI",
+            "ai_hint": "Von KI übersetzt und noch nicht geprüft",
+            "outdated": "Veraltet",
+            "outdated_hint": "Der Ursprungstext hat sich nach der Übersetzung geändert",
+            "review": "Als geprüft markieren",
+            "review_all": "KI-Übersetzungen als geprüft markieren",
+            "reviewed": "Als geprüft markierte KI-Übersetzungen: {count}",
+            "review_locked": "Jemand anderes bearbeitet ein Feld, daher wurde es nicht als geprüft markiert."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "Das KI-Modell wurde erfolgreich aktualisiert",
             "error": "Dieses KI-Modell konnte nicht gespeichert werden",
             "remove": "Das KI-Modell wurde erfolgreich gelöscht",
-            "removed_error": "Das KI-Modell wird verwendet und konnte nicht gelöscht werden"
+            "removed_error": "Das KI-Modell wird verwendet und konnte nicht gelöscht werden",
+            "max_tlp": "Höchstes gesendetes TLP",
+            "max_tlp_hint": "Text von Berichten über diesem TLP wird nie an diesen Anbieter gesendet",
+            "max_tlp_none": "Keine Grenze"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "Der Berichtselementtyp wurde erfolgreich aktualisiert",
             "removed_error": "Der Berichtselementtyp wird verwendet und konnte nicht gelöscht werden",
             "removed": "Der Berichtselementtyp wurde erfolgreich gelöscht",
-            "total_count": "{count} Berichtstyp | {count} Berichtstypen"
+            "total_count": "{count} Berichtstyp | {count} Berichtstypen",
+            "languages": "Sprachvarianten",
+            "languages_hint": "Berichte dieses Typs werden in diese Sprachen übersetzt",
+            "translation_ai_provider": "KI-Anbieter für die Übersetzung",
+            "label_language": "Sprache der Beschriftungen",
+            "label_language_hint": "Die Sprache, in der die Namen und Beschreibungen oben geschrieben sind",
+            "fields": "Felder",
+            "labels_tab": "Beschriftungen: {language}",
+            "labels_in": "Namen und Beschreibungen auf {language}. Unter jedem Feld steht der Ursprungstext.",
+            "translate_labels": "Fehlende Beschriftungen mit KI übersetzen",
+            "no_ai_provider": "Wählen Sie zuerst einen KI-Anbieter für die Übersetzung",
+            "translate_labels_failed": "Einige Beschriftungen konnten nicht übersetzt werden ({count})",
+            "labels_translated": "Beschriftungen übersetzt",
+            "copy_original": "Original kopieren"
         },
         "attributes": {
             "in_use": "Attribut kann nicht gelöscht werden: Es wird von {types} verwendet",

@@ -648,6 +648,7 @@
             "publishers.presets.parameters",
             "report_item.id_with_value",
             "reports.attributes.type",
+            "reports.types.labels_tab",
             "routing.header_name",
             "routing.served_days_left",
             "settings.dashboard_view",

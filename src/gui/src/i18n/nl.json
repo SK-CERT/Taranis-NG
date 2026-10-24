@@ -420,7 +420,9 @@
         "tlp_description_amber": "Beperkte openbaarmaking binnen de organisatie van de ontvanger en aan haar klanten op basis van noodzakelijke kennis.",
         "tlp_description_amber_strict": "Openbaarmaking uitsluitend binnen de organisatie van de ontvanger.",
         "tlp_description_red": "Niet openbaarmaken buiten de individuele ontvangers.",
-        "tlp_description_unknown": "Onbekende TLP-markering."
+        "tlp_description_unknown": "Onbekende TLP-markering.",
+        "translate": "Vertalen",
+        "translate_hint": "Rapporten vertalen dit veld naar de talen van het rapporttype"
     },
     "cvss_calculator": {
         "title": "CVSS-calculator",
@@ -768,6 +770,34 @@
             "take_theirs": "Mijn waarde negeren en opgeslagen waarde behouden",
             "keep_mine": "Overschrijven met mijn waarde",
             "unknown_user": "Andere gebruiker"
+        },
+        "translation": {
+            "source_language": "Taal van het rapport",
+            "not_set": "Niet ingesteld",
+            "source_tab": "{language} (oorspronkelijk)",
+            "source_not_set": "Oorspronkelijk (taal niet ingesteld)",
+            "translate_report": "Hele rapport vertalen",
+            "progress": "Bezig met vertalen: {done} van {total} talen klaar",
+            "finished": "Vertaling voltooid",
+            "finished_with_problems": "Vertaling voltooid. Niet vertaald: {failed}; overgeslagen omdat iemand ze bewerkt: {skipped}",
+            "intro": "Vertaling naar het {language}. Velden die niet worden vertaald, tonen de oorspronkelijke tekst.",
+            "translate_language": "Vertalen naar het {language}",
+            "translate_field": "Vertalen met KI",
+            "same_in_all_languages": "Gelijk in alle talen",
+            "source": "Oorspronkelijke tekst",
+            "overwrite_title": "Uw vertaling vervangen?",
+            "overwrite_confirm": "Vervangen",
+            "overwrite_message": "Dit veld is met de hand vertaald. De KI-vertaling vervangt het.",
+            "field_locked": "Iemand anders bewerkt dit veld, daarom is het niet vertaald.",
+            "field_failed": "Het veld kon niet worden vertaald: {reason}",
+            "ai": "KI",
+            "ai_hint": "Door AI vertaald en nog niet nagekeken",
+            "outdated": "Verouderd",
+            "outdated_hint": "De oorspronkelijke tekst is na het vertalen gewijzigd",
+            "review": "Markeren als nagekeken",
+            "review_all": "AI-vertalingen markeren als nagekeken",
+            "reviewed": "AI-vertalingen gemarkeerd als nagekeken: {count}",
+            "review_locked": "Iemand anders bewerkt een veld, daarom is het niet als nagekeken gemarkeerd."
         }
     },
     "product": {
@@ -1552,7 +1582,10 @@
             "successful_edit": "AI-model is bijgewerkt",
             "error": "Deze AI-model kon niet worden opgeslagen",
             "remove": "AI-model is verwijderd",
-            "removed_error": "De AI-model is in gebruik en kon niet worden verwijderd"
+            "removed_error": "De AI-model is in gebruik en kon niet worden verwijderd",
+            "max_tlp": "Hoogste verzonden TLP",
+            "max_tlp_hint": "Tekst van rapporten boven dit TLP wordt nooit naar deze aanbieder gestuurd",
+            "max_tlp_none": "Geen limiet"
         }
     },
     "word_lists": {
@@ -1610,7 +1643,20 @@
             "successful_edit": "Rapportitemtype is bijgewerkt",
             "removed_error": "De rapportitemtype is in gebruik en kon niet worden verwijderd",
             "removed": "Rapportitemtype is verwijderd",
-            "total_count": "{count} rapporttype | {count} rapporttypen"
+            "total_count": "{count} rapporttype | {count} rapporttypen",
+            "languages": "Taalvarianten",
+            "languages_hint": "Rapporten van dit type worden naar deze talen vertaald",
+            "translation_ai_provider": "KI-aanbieder voor vertaling",
+            "label_language": "Taal van de labels",
+            "label_language_hint": "De taal waarin de namen en beschrijvingen hierboven zijn geschreven",
+            "fields": "Velden",
+            "labels_tab": "Labels: {language}",
+            "labels_in": "Namen en beschrijvingen in het {language}. Onder elk veld staat de oorspronkelijke tekst.",
+            "translate_labels": "Ontbrekende labels met KI vertalen",
+            "no_ai_provider": "Kies eerst een KI-aanbieder voor vertaling",
+            "translate_labels_failed": "Sommige labels konden niet worden vertaald ({count})",
+            "labels_translated": "Labels vertaald",
+            "copy_original": "Origineel kopiëren"
         },
         "attributes": {
             "in_use": "Attribuut kan niet worden verwijderd: het wordt gebruikt door {types}",
