@@ -1712,6 +1712,22 @@
             "translate_missing": "Translate missing with AI",
             "translated_constants": "Constants translated: {count}",
             "translated_with_failures": "Constants translated: {translated}; not translated: {failed}"
+        },
+        "glossary": {
+            "tab": "Glossary",
+            "tab_description": "Terms the AI uses when it translates",
+            "title": "AI translation glossary",
+            "type_title": "Glossary of this report type",
+            "type_intro": "These terms apply to this type's reports and labels on top of the instance-wide glossary; for the same term, the one here wins.",
+            "add": "Add term",
+            "edit": "Edit term",
+            "empty": "No terms yet",
+            "keep": "Keep as written",
+            "keep_hint": "For names of products or organisations: the AI leaves the term unchanged in every language.",
+            "note": "Note",
+            "note_hint": "Context for the AI, for example where the term applies",
+            "add_language": "Add language",
+            "needs_terms": "Fill in the term in at least two languages, or one term to keep as written."
         }
     },
     "external_user": {

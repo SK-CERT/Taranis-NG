@@ -23,6 +23,7 @@ from managers.cache_manager import redis_client
 from managers.db_manager import db
 from managers.link_references import render_presenter_input
 from managers.log_manager import logger
+from model.glossary import GlossaryEntry
 from model.permission import Permission
 from model.product import Product
 from model.product_type import ProductType
@@ -591,6 +592,7 @@ class ProductTranslateTitle(Resource):
         refusal = llm_manager.tlp_refusal(provider, levels if has_tlp_field else None, "The product's reports")
         if refusal is not None:
             return {"error": refusal}, HTTPStatus.BAD_REQUEST
+        glossary = GlossaryEntry.for_report_types(item.report_item_type.id for item in report_items if item.report_item_type)
 
         translations: dict[str, str] = {}
         failed: dict[str, str] = {}
@@ -598,7 +600,7 @@ class ProductTranslateTitle(Resource):
             if target == source:
                 continue
             try:
-                done, problems = llm_manager.translate_texts(provider, {"title": title}, source, target)
+                done, problems = llm_manager.translate_texts(provider, {"title": title}, source, target, glossary=glossary)
             except llm_manager.LlmError as ex:
                 return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
             if "title" in done:

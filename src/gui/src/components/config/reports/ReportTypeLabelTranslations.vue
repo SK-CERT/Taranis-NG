@@ -152,7 +152,7 @@
     type Translations = Record<string, Record<string, string>>
     type Labelled = { translations?: Translations; [key: string]: unknown }
     type LabelledGroup = Labelled & { id: number; attribute_group_items: (Labelled & { id: number })[] }
-    type LabelledType = Labelled & { title: string; description: string; attribute_groups: LabelledGroup[] }
+    type LabelledType = Labelled & { id?: number | null; title: string; description: string; attribute_groups: LabelledGroup[] }
 
     const props = withDefaults(
         defineProps<{
@@ -240,7 +240,8 @@
                 texts: Object.fromEntries([...missing].map(([key, entry]) => [key, entry.text])),
                 source_language: props.sourceLanguage,
                 target_language: props.language,
-                ai_provider_id: props.aiProviderId
+                ai_provider_id: props.aiProviderId,
+                report_item_type_id: reportType.value.id ?? null
             })) as { data?: { translations?: Record<string, string>; failed?: Record<string, string> } }
             for (const [key, text] of Object.entries(response.data?.translations ?? {})) {
                 const entry = missing.get(key)

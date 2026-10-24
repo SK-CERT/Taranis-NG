@@ -1712,6 +1712,22 @@
             "translate_missing": "未翻訳のものを AI で翻訳",
             "translated_constants": "翻訳した定数: {count}",
             "translated_with_failures": "翻訳した定数: {translated}、翻訳できなかった定数: {failed}"
+        },
+        "glossary": {
+            "tab": "用語集",
+            "tab_description": "AI が翻訳時に使う用語",
+            "title": "AI 翻訳用語集",
+            "type_title": "このレポートタイプの用語集",
+            "type_intro": "これらの用語は、インスタンス全体の用語集に加えて、このタイプのレポートとラベルに適用されます。同じ用語ではここの用語が優先されます。",
+            "add": "用語を追加",
+            "edit": "用語を編集",
+            "empty": "まだ用語はありません",
+            "keep": "そのまま残す",
+            "keep_hint": "製品名や組織名向け: AI はどの言語でも用語を変更しません。",
+            "note": "メモ",
+            "note_hint": "AI への補足情報 (例: 用語が適用される場面)",
+            "add_language": "言語を追加",
+            "needs_terms": "用語を 2 つ以上の言語で入力するか、そのまま残す用語を 1 つ入力してください。"
         }
     },
     "external_user": {

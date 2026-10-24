@@ -107,7 +107,7 @@ def _call(app: Flask, resource: object, method: str, body: dict, *args: object) 
 
 
 def _report(provider: object, tlp: list | None = None) -> SimpleNamespace:
-    return SimpleNamespace(report_item_type=SimpleNamespace(translation_ai_provider=provider), tlp=tlp)
+    return SimpleNamespace(report_item_type=SimpleNamespace(id=9, translation_ai_provider=provider), tlp=tlp)
 
 
 @pytest.fixture
@@ -120,6 +120,7 @@ def app(monkeypatch: pytest.MonkeyPatch) -> Flask:
     }
     monkeypatch.setattr(publish_api.ReportItem, "find", classmethod(lambda _cls, item_id: reports.get(item_id)))
     monkeypatch.setattr(llm_manager, "report_tlp_levels", lambda report: report.tlp)
+    monkeypatch.setattr(publish_api.GlossaryEntry, "for_report_types", classmethod(lambda _cls, _type_ids: []))
     monkeypatch.setattr(publish_api.auth_manager, "get_user_from_jwt", lambda: USER)
     return Flask(__name__)
 
@@ -127,7 +128,7 @@ def app(monkeypatch: pytest.MonkeyPatch) -> Flask:
 def test_a_title_is_translated_with_the_first_report_types_provider(app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list = []
 
-    def translate(provider: object, texts: dict, source: str | None, target: str) -> tuple[dict, dict]:
+    def translate(provider: object, texts: dict, source: str | None, target: str, glossary: object = ()) -> tuple[dict, dict]:  # noqa: ARG001
         calls.append((provider.name, texts, source, target))
         return ({"title": f"[{target}] {texts['title']}"}, {}) if target != "de" else ({}, {"title": "came back empty"})
 
@@ -176,9 +177,11 @@ def test_constants_missing_a_language_are_translated_in_batches(monkeypatch: pyt
     monkeypatch.setattr(config_api.attribute.AttributeEnum, "for_attribute", classmethod(lambda _cls, _attribute_id: enums))
     monkeypatch.setattr(config_api.ai_provider.AiProvider, "find", classmethod(lambda _cls, _id: SimpleNamespace(name="Local")))
     monkeypatch.setattr(config_api, "CONSTANTS_PER_TRANSLATION", 1)
+    monkeypatch.setattr(config_api.attribute.Attribute, "content_languages", classmethod(lambda _cls, _id: {"report_item_type_ids": [9]}))
+    monkeypatch.setattr(config_api.GlossaryEntry, "for_report_types", classmethod(lambda _cls, _type_ids: []))
     sent: list = []
 
-    def translate(_provider: object, texts: dict, source: str | None, target: str) -> tuple[dict, dict]:
+    def translate(_provider: object, texts: dict, source: str | None, target: str, glossary: object = ()) -> tuple[dict, dict]:  # noqa: ARG001
         sent.append((texts, source, target))
         return {key: f"[{target}] {text}" for key, text in texts.items()}, {}
 

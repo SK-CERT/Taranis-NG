@@ -1712,6 +1712,22 @@
             "translate_missing": "Preložiť chýbajúce pomocou AI",
             "translated_constants": "Preložené konštanty: {count}",
             "translated_with_failures": "Preložené konštanty: {translated}; nepreložené: {failed}"
+        },
+        "glossary": {
+            "tab": "Glosár",
+            "tab_description": "Termíny, ktoré AI používa pri preklade",
+            "title": "Glosár pre preklad AI",
+            "type_title": "Glosár tohto typu reportu",
+            "type_intro": "Tieto termíny platia pre reporty a popisky tohto typu navyše ku glosáru celej inštancie; pri rovnakom termíne má prednosť ten tunajší.",
+            "add": "Pridať termín",
+            "edit": "Upraviť termín",
+            "empty": "Zatiaľ žiadne termíny",
+            "keep": "Ponechať bez zmeny",
+            "keep_hint": "Pre názvy produktov alebo organizácií: AI termín v žiadnom jazyku nezmení.",
+            "note": "Poznámka",
+            "note_hint": "Kontext pre AI, napríklad kde termín platí",
+            "add_language": "Pridať jazyk",
+            "needs_terms": "Vyplňte termín aspoň v dvoch jazykoch alebo jeden termín, ktorý sa má ponechať bez zmeny."
         }
     },
     "external_user": {

@@ -1712,6 +1712,22 @@
             "translate_missing": "누락된 항목을 AI로 번역",
             "translated_constants": "번역된 상수: {count}",
             "translated_with_failures": "번역된 상수: {translated}, 번역 안 됨: {failed}"
+        },
+        "glossary": {
+            "tab": "용어집",
+            "tab_description": "AI가 번역할 때 사용하는 용어",
+            "title": "AI 번역 용어집",
+            "type_title": "이 보고서 유형의 용어집",
+            "type_intro": "이 용어는 인스턴스 전체 용어집에 더해 이 유형의 보고서와 레이블에 적용됩니다. 같은 용어라면 여기의 용어가 우선합니다.",
+            "add": "용어 추가",
+            "edit": "용어 편집",
+            "empty": "아직 용어가 없습니다",
+            "keep": "그대로 유지",
+            "keep_hint": "제품 또는 조직 이름용: AI는 모든 언어에서 용어를 바꾸지 않습니다.",
+            "note": "메모",
+            "note_hint": "AI를 위한 맥락, 예: 용어가 적용되는 곳",
+            "add_language": "언어 추가",
+            "needs_terms": "용어를 두 개 이상의 언어로 입력하거나, 그대로 유지할 용어를 하나 입력하세요."
         }
     },
     "external_user": {

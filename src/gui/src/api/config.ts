@@ -203,11 +203,13 @@ export function updateReportItemType(report_item_type) {
 }
 
 // Translates labels of a report type being edited; nothing is stored until the type is saved.
+// A saved type's `report_item_type_id` adds its own glossary entries to the instance's.
 export function translateReportItemTypeLabels(data: {
     texts: Record<string, string>
     source_language: string | null
     target_language: string
     ai_provider_id: number | null
+    report_item_type_id?: number | null
 }) {
     return ApiService.post('/config/report-item-types/translate-labels', data)
 }
@@ -647,4 +649,23 @@ export function updateTagEntityType(link) {
 
 export function deleteTagEntityType(link) {
     return ApiService.delete('/config/tag-entity-types/' + link.id)
+}
+
+// AI translation glossary: the instance's entries, or a report type's own (Configuration › Reports)
+export type GlossaryEntryInput = { terms: Record<string, string>; keep: boolean; note: string }
+
+export function getGlossary(reportItemTypeId: number | null = null) {
+    return ApiService.get('/config/glossary' + (reportItemTypeId ? '?report_item_type_id=' + reportItemTypeId : ''))
+}
+
+export function createGlossaryEntry(entry: GlossaryEntryInput & { report_item_type_id: number | null }) {
+    return ApiService.post('/config/glossary', entry)
+}
+
+export function updateGlossaryEntry(id: number, entry: GlossaryEntryInput) {
+    return ApiService.put('/config/glossary/' + id, entry)
+}
+
+export function deleteGlossaryEntry(id: number) {
+    return ApiService.delete('/config/glossary/' + id)
 }

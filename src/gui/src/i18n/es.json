@@ -1712,6 +1712,22 @@
             "translate_missing": "Traducir con IA las que faltan",
             "translated_constants": "Constantes traducidas: {count}",
             "translated_with_failures": "Constantes traducidas: {translated}; sin traducir: {failed}"
+        },
+        "glossary": {
+            "tab": "Glosario",
+            "tab_description": "Términos que la IA usa al traducir",
+            "title": "Glosario de traducción con IA",
+            "type_title": "Glosario de este tipo de informe",
+            "type_intro": "Estos términos se aplican a los informes y etiquetas de este tipo además del glosario de toda la instancia; para el mismo término, prevalece el de aquí.",
+            "add": "Añadir término",
+            "edit": "Editar término",
+            "empty": "Aún no hay términos",
+            "keep": "Mantener tal cual",
+            "keep_hint": "Para nombres de productos u organizaciones: la IA deja el término sin cambios en todos los idiomas.",
+            "note": "Nota",
+            "note_hint": "Contexto para la IA, por ejemplo dónde se aplica el término",
+            "add_language": "Añadir idioma",
+            "needs_terms": "Escriba el término en al menos dos idiomas, o un término que deba mantenerse tal cual."
         }
     },
     "external_user": {

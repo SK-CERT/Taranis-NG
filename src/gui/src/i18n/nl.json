@@ -1712,6 +1712,22 @@
             "translate_missing": "Ontbrekende met KI vertalen",
             "translated_constants": "Vertaalde constanten: {count}",
             "translated_with_failures": "Vertaalde constanten: {translated}; niet vertaald: {failed}"
+        },
+        "glossary": {
+            "tab": "Woordenlijst",
+            "tab_description": "Termen die de AI gebruikt bij het vertalen",
+            "title": "Woordenlijst voor AI-vertaling",
+            "type_title": "Woordenlijst van dit rapporttype",
+            "type_intro": "Deze termen gelden voor rapporten en labels van dit type, naast de woordenlijst van de hele instantie; bij dezelfde term gaat die van hier voor.",
+            "add": "Term toevoegen",
+            "edit": "Term bewerken",
+            "empty": "Nog geen termen",
+            "keep": "Ongewijzigd laten",
+            "keep_hint": "Voor namen van producten of organisaties: de AI laat de term in elke taal ongewijzigd.",
+            "note": "Notitie",
+            "note_hint": "Context voor de AI, bijvoorbeeld waar de term van toepassing is",
+            "add_language": "Taal toevoegen",
+            "needs_terms": "Vul de term in ten minste twee talen in, of één term die ongewijzigd moet blijven."
         }
     },
     "external_user": {

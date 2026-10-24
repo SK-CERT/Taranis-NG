@@ -60,6 +60,7 @@ from model import (
     user,
     word_list,
 )
+from model.glossary import GlossaryEntry
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.state import StateDefinition, StateEntityType
@@ -312,8 +313,10 @@ class AttributeEnumsTranslateResource(Resource):
         batch = missing[:CONSTANTS_PER_TRANSLATION]
         texts = {f"{enum.id}.value": enum.value for enum in batch if enum.value}
         texts.update({f"{enum.id}.description": enum.description for enum in batch if enum.description})
+        # The constants are shared by the report types using the attribute: their glossaries apply.
+        glossary = GlossaryEntry.for_report_types(attribute.Attribute.content_languages(attribute_id)["report_item_type_ids"])
         try:
-            translations, failed = llm_manager.translate_texts(provider, texts, source, target)
+            translations, failed = llm_manager.translate_texts(provider, texts, source, target, glossary=glossary)
         except llm_manager.LlmError as ex:
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
 
@@ -923,7 +926,8 @@ class ReportItemTypeLabelsTranslateResource(Resource):
         """Translate label texts and return them; nothing is stored until the type is saved.
 
         The body holds ``texts`` (key -> label), ``target_language``, ``source_language`` (may be
-        empty) and ``ai_provider_id``. Labels are configuration, not report content, so no TLP
+        empty), ``ai_provider_id`` and, for a saved type, ``report_item_type_id``, whose glossary
+        applies on top of the instance's. Labels are configuration, not report content, so no TLP
         limit applies.
 
         Returns:
@@ -944,9 +948,11 @@ class ReportItemTypeLabelsTranslateResource(Resource):
         if provider is None:
             return {"error": "Choose an AI provider for translation"}, HTTPStatus.BAD_REQUEST
 
+        type_id = body.get("report_item_type_id")
+        glossary = GlossaryEntry.for_report_types([type_id] if isinstance(type_id, int) else [])
         try:
             labels = {key: text for key, text in texts.items() if text.strip()}
-            translations, failed = llm_manager.translate_texts(provider, labels, source, target)
+            translations, failed = llm_manager.translate_texts(provider, labels, source, target, glossary=glossary)
         except llm_manager.LlmError as ex:
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         return {"translations": translations, "failed": failed}, HTTPStatus.OK
@@ -2843,6 +2849,72 @@ class StateEntityTypeResource(Resource):
             return _delete_failed("Could not delete state-entity type association", ex)
 
 
+class GlossaryEntriesResource(Resource):
+    """AI translation glossary API endpoint: the instance's entries, or a report type's."""
+
+    @auth_required("CONFIG_REPORT_TYPE_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get the entries of the report type ``report_item_type_id`` names, or of the instance.
+
+        Returns:
+            (dict, int): ``{"total_count", "items"}``
+        """
+        type_id = request.args.get("report_item_type_id", type=int)
+        return GlossaryEntry.get_json(type_id), HTTPStatus.OK
+
+    @auth_required("CONFIG_REPORT_TYPE_UPDATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Add an entry to the instance glossary, or to the report type it names.
+
+        Returns:
+            (dict, int): The entry, or why it was refused
+        """
+        try:
+            return GlossaryEntry.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "Not a report type"}, HTTPStatus.BAD_REQUEST
+
+
+class GlossaryEntryResource(Resource):
+    """AI translation glossary entry API endpoint."""
+
+    @auth_required("CONFIG_REPORT_TYPE_UPDATE")
+    def put(self, entry_id: int) -> tuple[dict, HTTPStatus]:
+        """Change an entry's terms, whether they are kept, and its note.
+
+        Args:
+            entry_id (int): The entry ID
+        Returns:
+            (dict, int): The entry, or why it was refused
+        """
+        entry = db.session.get(GlossaryEntry, entry_id)
+        if entry is None:
+            return {"error": "Glossary entry not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return entry.update(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.OK
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_REPORT_TYPE_UPDATE")
+    def delete(self, entry_id: int) -> tuple[dict, HTTPStatus]:
+        """Remove an entry.
+
+        Args:
+            entry_id (int): The entry ID
+        Returns:
+            (dict, int): The result
+        """
+        entry = db.session.get(GlossaryEntry, entry_id)
+        if entry is None:
+            return {"error": "Glossary entry not found"}, HTTPStatus.NOT_FOUND
+        return entry.delete()
+
+
 class TagsResource(Resource):
     """Tags API endpoint: admin tags and the built-in ones."""
 
@@ -3081,6 +3153,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(StateResource, "/api/v1/config/state-definitions/<int:state_id>")
     api.add_resource(StateEntityTypesResource, "/api/v1/config/state-entity-types")
     api.add_resource(StateEntityTypeResource, "/api/v1/config/state-entity-types/<int:state_entity_type_id>")
+    api.add_resource(GlossaryEntriesResource, "/api/v1/config/glossary")
+    api.add_resource(GlossaryEntryResource, "/api/v1/config/glossary/<int:entry_id>")
     api.add_resource(TagsResource, "/api/v1/config/tags")
     api.add_resource(TagResource, "/api/v1/config/tags/<int:tag_id>")
     api.add_resource(TagEntityTypesResource, "/api/v1/config/tag-entity-types")

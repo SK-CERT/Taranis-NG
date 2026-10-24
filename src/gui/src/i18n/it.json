@@ -1712,6 +1712,22 @@
             "translate_missing": "Traduci con l'IA quelle mancanti",
             "translated_constants": "Costanti tradotte: {count}",
             "translated_with_failures": "Costanti tradotte: {translated}; non tradotte: {failed}"
+        },
+        "glossary": {
+            "tab": "Glossario",
+            "tab_description": "Termini che l'IA usa quando traduce",
+            "title": "Glossario per la traduzione IA",
+            "type_title": "Glossario di questo tipo di report",
+            "type_intro": "Questi termini valgono per i report e le etichette di questo tipo in aggiunta al glossario dell'intera istanza; per lo stesso termine prevale quello qui.",
+            "add": "Aggiungi termine",
+            "edit": "Modifica termine",
+            "empty": "Ancora nessun termine",
+            "keep": "Mantieni invariato",
+            "keep_hint": "Per nomi di prodotti o organizzazioni: l'IA lascia il termine invariato in ogni lingua.",
+            "note": "Nota",
+            "note_hint": "Contesto per l'IA, ad esempio dove si applica il termine",
+            "add_language": "Aggiungi lingua",
+            "needs_terms": "Inserisci il termine in almeno due lingue, oppure un termine da mantenere invariato."
         }
     },
     "external_user": {

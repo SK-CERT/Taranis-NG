@@ -1712,6 +1712,22 @@
             "translate_missing": "Eksikleri YZ ile çevir",
             "translated_constants": "Çevrilen sabitler: {count}",
             "translated_with_failures": "Çevrilen sabitler: {translated}; çevrilmeyen: {failed}"
+        },
+        "glossary": {
+            "tab": "Sözlük",
+            "tab_description": "Yapay zekânın çeviride kullandığı terimler",
+            "title": "Yapay zekâ çeviri sözlüğü",
+            "type_title": "Bu rapor türünün sözlüğü",
+            "type_intro": "Bu terimler, tüm örneğin sözlüğüne ek olarak bu türün raporları ve etiketleri için geçerlidir; aynı terim için buradaki önceliklidir.",
+            "add": "Terim ekle",
+            "edit": "Terimi düzenle",
+            "empty": "Henüz terim yok",
+            "keep": "Olduğu gibi bırak",
+            "keep_hint": "Ürün veya kuruluş adları için: yapay zekâ terimi her dilde değiştirmeden bırakır.",
+            "note": "Not",
+            "note_hint": "Yapay zekâ için bağlam, örneğin terimin nerede geçerli olduğu",
+            "add_language": "Dil ekle",
+            "needs_terms": "Terimi en az iki dilde ya da olduğu gibi bırakılacak tek bir terim olarak girin."
         }
     },
     "external_user": {

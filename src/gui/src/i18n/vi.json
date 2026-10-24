@@ -1712,6 +1712,22 @@
             "translate_missing": "Dịch phần còn thiếu bằng AI",
             "translated_constants": "Hằng số đã dịch: {count}",
             "translated_with_failures": "Hằng số đã dịch: {translated}; chưa dịch: {failed}"
+        },
+        "glossary": {
+            "tab": "Bảng thuật ngữ",
+            "tab_description": "Các thuật ngữ AI dùng khi dịch",
+            "title": "Bảng thuật ngữ dịch bằng AI",
+            "type_title": "Bảng thuật ngữ của loại báo cáo này",
+            "type_intro": "Các thuật ngữ này áp dụng cho báo cáo và nhãn của loại này, bổ sung cho bảng thuật ngữ của toàn bộ phiên bản; với cùng một thuật ngữ, thuật ngữ ở đây được ưu tiên.",
+            "add": "Thêm thuật ngữ",
+            "edit": "Sửa thuật ngữ",
+            "empty": "Chưa có thuật ngữ",
+            "keep": "Giữ nguyên",
+            "keep_hint": "Dành cho tên sản phẩm hoặc tổ chức: AI giữ nguyên thuật ngữ trong mọi ngôn ngữ.",
+            "note": "Ghi chú",
+            "note_hint": "Ngữ cảnh cho AI, ví dụ thuật ngữ áp dụng ở đâu",
+            "add_language": "Thêm ngôn ngữ",
+            "needs_terms": "Nhập thuật ngữ bằng ít nhất hai ngôn ngữ, hoặc một thuật ngữ cần giữ nguyên."
         }
     },
     "external_user": {

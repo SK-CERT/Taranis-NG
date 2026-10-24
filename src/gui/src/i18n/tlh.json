@@ -1712,6 +1712,22 @@
             "translate_missing": "Dachbogh yImugh De'wI' valvaD",
             "translated_constants": "mughlu'pu'bogh ngoDmey: {count}",
             "translated_with_failures": "mughlu'pu'bogh ngoDmey: {translated}; mughlu'be'bogh: {failed}"
+        },
+        "glossary": {
+            "tab": "mu'ghom",
+            "tab_description": "mughDI' De'wI' mu'mey lo'",
+            "title": "De'wI' mugh mu'ghom",
+            "type_title": "ja'chuq Segh mu'ghom",
+            "type_intro": "Segh ja'chuqmey permey je mu'meyvam lo'; Hoch mu'ghom lo'lu' je. mu' rap: naDev mu' Dun law'.",
+            "add": "mu' yIchel",
+            "edit": "mu' yIchoH",
+            "empty": "mu' tu'lu'be'",
+            "keep": "yIpol",
+            "keep_hint": "Doch pong, ghom pong: Hoch HolDaq mu' choHbe' De'wI'.",
+            "note": "QIn",
+            "note_hint": "De'wI'vaD ghu'",
+            "add_language": "Hol yIchel",
+            "needs_terms": "cha' HolDaq mu' yIghItlh, pagh wa' mu' polmeH yIghItlh."
         }
     },
     "external_user": {

@@ -1712,6 +1712,22 @@
             "translate_missing": "Fehlende mit KI übersetzen",
             "translated_constants": "Übersetzte Konstanten: {count}",
             "translated_with_failures": "Übersetzte Konstanten: {translated}; nicht übersetzt: {failed}"
+        },
+        "glossary": {
+            "tab": "Glossar",
+            "tab_description": "Begriffe, die die KI beim Übersetzen verwendet",
+            "title": "Glossar für KI-Übersetzungen",
+            "type_title": "Glossar dieses Berichtstyps",
+            "type_intro": "Diese Begriffe gelten für Berichte und Beschriftungen dieses Typs zusätzlich zum Glossar der gesamten Instanz; beim selben Begriff hat der hiesige Vorrang.",
+            "add": "Begriff hinzufügen",
+            "edit": "Begriff bearbeiten",
+            "empty": "Noch keine Begriffe",
+            "keep": "Unverändert lassen",
+            "keep_hint": "Für Namen von Produkten oder Organisationen: Die KI lässt den Begriff in jeder Sprache unverändert.",
+            "note": "Notiz",
+            "note_hint": "Kontext für die KI, zum Beispiel wo der Begriff gilt",
+            "add_language": "Sprache hinzufügen",
+            "needs_terms": "Geben Sie den Begriff in mindestens zwei Sprachen an oder einen Begriff, der unverändert bleiben soll."
         }
     },
     "external_user": {

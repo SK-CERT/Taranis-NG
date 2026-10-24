@@ -11,7 +11,7 @@ import { createApiContext } from '../helpers/api-cleanup'
  * language falls back on, and renders the open tab's language.
  *
  * Translation status shows as built-in tags on the cards, next to the tags admins define, and the
- * lists filter by both.
+ * lists filter by both. The AI glossary is kept in configuration, for the instance and per type.
  *
  * Translating with AI needs a language model, which the E2E stack does not have; core's and the
  * GUI's unit tests cover it.
@@ -46,6 +46,12 @@ async function purge(api) {
     // Tags go once no report carries them; their links go with them.
     for (const tag of mine(await list(api, '/config/tags?search='), 'display_name')) {
         await api.request.delete(`${CORE_API}/config/tags/${tag.id}`, { headers })
+    }
+    // A type's own glossary entries go with the type; the instance's are found by their terms.
+    for (const entry of await list(api, '/config/glossary')) {
+        if (Object.values(entry.terms).some((term) => String(term).startsWith(PREFIX))) {
+            await api.request.delete(`${CORE_API}/config/glossary/${entry.id}`, { headers })
+        }
     }
     for (const reportType of mine(await list(api, '/config/report-item-types?search='), 'title')) {
         await api.request.delete(`${CORE_API}/config/report-item-types/${reportType.id}`, { headers })
@@ -450,5 +456,41 @@ test.describe('Content languages', () => {
             'title',
             'Slovak: Translation outdated'
         )
+    })
+
+    test('the AI glossary is kept for the instance and for a report type', async ({ page }) => {
+        await page.goto('/config/reports')
+        await page.getByRole('tab', { name: 'Glossary' }).click()
+        const glossary = page.locator('[data-test="glossary"]')
+        await glossary.getByRole('button', { name: 'Add New' }).click()
+        const dialog = page.locator('.v-dialog.v-overlay--active').last()
+        await dialog.locator('[data-test="glossary-term-en"] input').fill(`${PREFIX} vulnerability`)
+
+        // One language is not enough for a term to translate.
+        await dialog.getByRole('button', { name: 'Save' }).click()
+        await expect(dialog).toContainText('Fill in the term in at least two languages')
+        await dialog.locator('[data-test="glossary-term-sk"] input').fill(`${PREFIX} zraniteľnosť`)
+        await dialog.getByRole('button', { name: 'Save' }).click()
+        await expect(glossary.locator('tbody')).toContainText(`${PREFIX} zraniteľnosť`)
+        await expect
+            .poll(async () => (await list(api, '/config/glossary')).some((entry) => entry.terms.sk === `${PREFIX} zraniteľnosť`))
+            .toBe(true)
+
+        // The type's own entry: a name kept as written in every language.
+        await page.getByRole('tab', { name: 'Report Types' }).click()
+        await page.getByText(TYPE_TITLE, { exact: true }).first().click()
+        await page.locator('[data-test="report-type-glossary-tab"]').click()
+        const typeGlossary = page.locator('.v-dialog.v-overlay--active [data-test="glossary"]')
+        await typeGlossary.getByRole('button', { name: 'Add New' }).click()
+        const entry = page.locator('.v-dialog.v-overlay--active').last()
+        await entry.locator('[data-test="glossary-keep"] input').check()
+        await entry.locator('[data-test="glossary-term-en"] input').fill(`${PREFIX} OpenSSL`)
+        await entry.getByRole('button', { name: 'Save' }).click()
+        await expect(typeGlossary.locator('tbody')).toContainText(`${PREFIX} OpenSSL`)
+        await expect
+            .poll(async () =>
+                (await list(api, `/config/glossary?report_item_type_id=${reportType.id}`)).map((item) => [item.terms, item.keep])
+            )
+            .toEqual([[{ en: `${PREFIX} OpenSSL` }, true]])
     })
 })

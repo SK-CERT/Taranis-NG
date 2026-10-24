@@ -112,7 +112,7 @@
                     </v-row>
 
                     <v-tabs
-                        v-if="labelLanguages.length > 0"
+                        v-if="labelLanguages.length > 0 || isEdit"
                         v-model="labelTab"
                         density="compact"
                         class="mt-4 mb-3"
@@ -126,10 +126,24 @@
                         >
                             {{ t('reports.types.labels_tab', { language: languageName(language) }) }}
                         </v-tab>
+                        <v-tab
+                            v-if="isEdit"
+                            value="glossary"
+                            data-test="report-type-glossary-tab"
+                        >
+                            {{ t('reports.glossary.tab') }}
+                        </v-tab>
                     </v-tabs>
 
+                    <!-- The type's own glossary entries; saved one by one, not with the form. -->
+                    <GlossaryTable
+                        v-if="labelTab === 'glossary' && localItem.id"
+                        :report-item-type-id="localItem.id"
+                        :languages="[...localItem.languages, localItem.label_language]"
+                    />
+
                     <ReportTypeLabelTranslations
-                        v-if="labelTab !== 'fields' && labelLanguages.includes(labelTab)"
+                        v-else-if="labelTab !== 'fields' && labelLanguages.includes(labelTab)"
                         v-model="localItem"
                         :language="labelTab"
                         :source-language="localItem.label_language"
@@ -265,6 +279,7 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import AttributeTable, { type AttributeGroupItem } from '@/components/config/reports/AttributeTable.vue'
     import ReportTypeLabelTranslations from '@/components/config/reports/ReportTypeLabelTranslations.vue'
+    import GlossaryTable from '@/components/config/reports/GlossaryTable.vue'
     import { useContentLanguages } from '@/composables/useContentLanguages'
     import { useAuth } from '@/composables/useAuth'
     import { createNewReportItemType, updateReportItemType, getAllAttributes, getAllAiProviders } from '@/api/config'
@@ -370,7 +385,7 @@
     const labelLanguages = computed(() => localItem.value.languages.filter((language) => language !== localItem.value.label_language))
     const labelTab = ref<string>('fields')
     watch(labelLanguages, (languages) => {
-        if (labelTab.value !== 'fields' && !languages.includes(labelTab.value)) labelTab.value = 'fields'
+        if (!['fields', 'glossary'].includes(labelTab.value) && !languages.includes(labelTab.value)) labelTab.value = 'fields'
     })
     const isEdit = computed(() => !!localItem.value.id)
 

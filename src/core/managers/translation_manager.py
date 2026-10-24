@@ -21,6 +21,7 @@ from managers import content_language, llm_manager
 from managers.cache_manager import redis_client
 from managers.db_manager import db
 from managers.sse_manager import sse_manager
+from model.glossary import GlossaryEntry
 from model.report_item import ReportItem
 from model.translation import ORIGIN_AI, ORIGIN_MANUAL, TITLE_FIELDS, ReportItemAttributeTranslation, ReportItemTranslation
 from model.user import User
@@ -244,7 +245,8 @@ def translate_language(
         if key not in TITLE_FIELDS and owner.attribute_group_item.attribute.type.name in content_language.HTML_TYPES
     ]
     provider = report_item.report_item_type.translation_ai_provider
-    translated, failed = llm_manager.translate_texts(provider, texts, report_item.language, language, html_keys)
+    glossary = GlossaryEntry.for_report_types([report_item.report_item_type_id])
+    translated, failed = llm_manager.translate_texts(provider, texts, report_item.language, language, html_keys, glossary)
     result.failed = failed
 
     # The texts may have changed or been locked while the provider worked: re-read before writing.

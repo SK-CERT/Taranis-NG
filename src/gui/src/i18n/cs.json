@@ -1712,6 +1712,22 @@
             "translate_missing": "Přeložit chybějící pomocí AI",
             "translated_constants": "Přeložené konstanty: {count}",
             "translated_with_failures": "Přeložené konstanty: {translated}; nepřeložené: {failed}"
+        },
+        "glossary": {
+            "tab": "Glosář",
+            "tab_description": "Termíny, které AI používá při překladu",
+            "title": "Glosář pro překlad AI",
+            "type_title": "Glosář tohoto typu reportu",
+            "type_intro": "Tyto termíny platí pro reporty a popisky tohoto typu navíc ke glosáři celé instance; u stejného termínu má přednost ten zdejší.",
+            "add": "Přidat termín",
+            "edit": "Upravit termín",
+            "empty": "Zatím žádné termíny",
+            "keep": "Ponechat beze změny",
+            "keep_hint": "Pro názvy produktů nebo organizací: AI termín v žádném jazyce nezmění.",
+            "note": "Poznámka",
+            "note_hint": "Kontext pro AI, například kde termín platí",
+            "add_language": "Přidat jazyk",
+            "needs_terms": "Vyplňte termín alespoň ve dvou jazycích, nebo jeden termín, který se má ponechat beze změny."
         }
     },
     "external_user": {

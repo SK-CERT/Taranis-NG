@@ -1712,6 +1712,22 @@
             "translate_missing": "Przetłumacz brakujące za pomocą SI",
             "translated_constants": "Przetłumaczone stałe: {count}",
             "translated_with_failures": "Przetłumaczone stałe: {translated}; nieprzetłumaczone: {failed}"
+        },
+        "glossary": {
+            "tab": "Słownik",
+            "tab_description": "Terminy, których AI używa przy tłumaczeniu",
+            "title": "Słownik tłumaczeń AI",
+            "type_title": "Słownik tego typu raportu",
+            "type_intro": "Te terminy dotyczą raportów i etykiet tego typu, oprócz słownika całej instancji; dla tego samego terminu pierwszeństwo ma ten tutaj.",
+            "add": "Dodaj termin",
+            "edit": "Edytuj termin",
+            "empty": "Brak terminów",
+            "keep": "Zachowaj bez zmian",
+            "keep_hint": "Dla nazw produktów lub organizacji: AI pozostawia termin bez zmian w każdym języku.",
+            "note": "Notatka",
+            "note_hint": "Kontekst dla AI, na przykład gdzie termin ma zastosowanie",
+            "add_language": "Dodaj język",
+            "needs_terms": "Wpisz termin w co najmniej dwóch językach albo jeden termin do zachowania bez zmian."
         }
     },
     "external_user": {

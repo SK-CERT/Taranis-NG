@@ -558,7 +558,8 @@ class Attribute(db.Model):
 
         Returns:
             dict: ``languages`` (union, in report type order), ``source_language`` (the first
-                stated label language) and ``ai_providers`` (the types' translation providers).
+                stated label language), ``ai_providers`` (the types' translation providers) and
+                ``report_item_type_ids`` (the types, in that order).
         """
         from model.report_item_type import AttributeGroup, AttributeGroupItem, ReportItemType  # noqa: PLC0415 - circular otherwise
 
@@ -587,6 +588,7 @@ class Attribute(db.Model):
             "languages": languages,
             "source_language": source_language,
             "ai_providers": [{"id": provider_id, "name": name} for provider_id, name in providers.items()],
+            "report_item_type_ids": [report_type.id for report_type in report_types],
         }
 
     @classmethod

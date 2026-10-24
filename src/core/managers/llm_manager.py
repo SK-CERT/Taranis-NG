@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from managers import content_language, tlp
+from managers.glossary import glossary_lines
 from managers.link_references import LINK_KEY_RE
 from shared.log_manager import logger
 
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from model.ai_provider import AiProvider
+    from model.glossary import GlossaryEntry
     from model.report_item import ReportItem
 
 # One request carries at most this much source text, and this many texts.
@@ -137,6 +139,7 @@ def translate_texts(
     source: str | None,
     target: str,
     html_keys: Iterable[str] = (),
+    glossary: Iterable[GlossaryEntry] = (),
 ) -> tuple[dict[str, str], dict[str, str]]:
     """Translate texts with an AI provider.
 
@@ -146,6 +149,8 @@ def translate_texts(
         source (str | None): The source language, None when not known.
         target (str): The target language.
         html_keys (Iterable[str]): Keys whose texts are HTML.
+        glossary (Iterable[GlossaryEntry]): The glossary entries that apply, most specific first;
+            those whose terms occur in a chunk go into its instructions.
 
     Returns:
         tuple[dict[str, str], dict[str, str]]: The translations that passed the checks, and
@@ -156,6 +161,7 @@ def translate_texts(
     """
     llm = build_chat_model(ai_provider)
     html = set(html_keys)
+    entries = list(glossary)
     translated: dict[str, str] = {}
     failed: dict[str, str] = {}
     for chunk in _chunks(texts):
@@ -165,6 +171,9 @@ def translate_texts(
             target=content_language.language_name(target),
             html_keys=", ".join(chunk_html) if chunk_html else "none",
         )
+        lines = glossary_lines(entries, chunk.values(), source, target)
+        if lines:
+            instructions += "\nGlossary - use these terms:\n" + "\n".join(f"- {line}" for line in lines)
         try:
             answer = llm.invoke([SystemMessage(content=instructions), HumanMessage(content=json.dumps(chunk, ensure_ascii=False))])
             values = parse_json_answer(answer.content)

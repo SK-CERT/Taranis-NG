@@ -1712,6 +1712,22 @@
             "translate_missing": "用 AI 翻译缺失的",
             "translated_constants": "已翻译的常量：{count}",
             "translated_with_failures": "已翻译的常量：{translated}；未翻译：{failed}"
+        },
+        "glossary": {
+            "tab": "术语表",
+            "tab_description": "AI 翻译时使用的术语",
+            "title": "AI 翻译术语表",
+            "type_title": "此报告类型的术语表",
+            "type_intro": "这些术语在整个实例的术语表之外，适用于此类型的报告和标签；同一术语以此处的为准。",
+            "add": "添加术语",
+            "edit": "编辑术语",
+            "empty": "暂无术语",
+            "keep": "保持原样",
+            "keep_hint": "用于产品或组织名称：AI 在所有语言中都不改动该术语。",
+            "note": "备注",
+            "note_hint": "供 AI 参考的上下文，例如术语适用的场合",
+            "add_language": "添加语言",
+            "needs_terms": "请至少用两种语言填写术语，或填写一个需保持原样的术语。"
         }
     },
     "external_user": {

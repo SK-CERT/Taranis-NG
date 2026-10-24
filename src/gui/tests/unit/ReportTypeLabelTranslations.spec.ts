@@ -11,6 +11,7 @@ vi.mock('@/api/config', () => ({
 }))
 
 const makeType = () => ({
+    id: 7,
     title: 'Vulnerability',
     description: '',
     translations: { cs: { title: 'Zranitelnost' } } as Record<string, Record<string, string>>,
@@ -52,7 +53,9 @@ describe('ReportTypeLabelTranslations', () => {
             texts: { 'g0.title': 'Main', 'g0.description': 'What happened', 'g0.i0.title': 'Description' },
             source_language: 'en',
             target_language: 'cs',
-            ai_provider_id: 3
+            ai_provider_id: 3,
+            // The type's own glossary entries apply on top of the instance's.
+            report_item_type_id: 7
         })
         expect(reportType.translations['cs']).toEqual({ title: 'Zranitelnost' })
         expect(reportType.attribute_groups[0]!.translations['cs']).toEqual({ title: 'Hlavní', description: 'Co se stalo' })
