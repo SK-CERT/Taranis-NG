@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from model.user import User
 
 
-import datetime
+import datetime as dt
 
 import sqlalchemy
 from managers import content_language
@@ -70,7 +70,7 @@ class ProductType(db.Model):
     title = db.Column(db.String(64), unique=True, nullable=False)
     description = db.Column(db.String(), nullable=False)
 
-    created = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
+    created = db.Column(db.DateTime, default=dt.datetime.now(dt.UTC))
 
     presenter_id = db.Column(db.String, db.ForeignKey("presenter.id"))
     presenter = db.relationship("Presenter")

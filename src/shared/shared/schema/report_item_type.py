@@ -1,9 +1,16 @@
 """This module defines Marshmallow schemas and data models for report item types and their related attribute groups and items."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.attribute import AttributeSchema
 from shared.schema.presentation import PresentationSchema
+
+if TYPE_CHECKING:
+    from shared.schema.attribute import Attribute
 
 
 class AttributeGroupItemSchema(Schema):
@@ -30,11 +37,12 @@ class AttributeGroupItemSchema(Schema):
     description_label = fields.Str(load_default=None, allow_none=True)
 
     @post_load
-    def make_attribute_group_item(self, data, **kwargs):
+    def make_attribute_group_item(self, data: dict, **kwargs) -> AttributeGroupItem:  # noqa: ANN003, ARG002
         """Create an AttributeGroupItem instance from deserialized data.
 
         Args:
             data (dict): The deserialized data.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             AttributeGroupItem: An instance of AttributeGroupItem.
@@ -47,20 +55,20 @@ class AttributeGroupItem:
 
     def __init__(
         self,
-        id,
-        title,
-        description,
-        index,
-        min_occurrence,
-        max_occurrence,
-        attribute,
-        ai_provider_id,
-        ai_prompt,
-        translate=False,
-        translations=None,
-        label=None,
-        description_label=None,
-    ):
+        id: int,  # noqa: A002
+        title: str,
+        description: str,
+        index: int,
+        min_occurrence: int,
+        max_occurrence: int,
+        attribute: Attribute,
+        ai_provider_id: int | None,
+        ai_prompt: str | None,
+        translate: bool = False,
+        translations: dict | None = None,
+        label: str | None = None,
+        description_label: str | None = None,
+    ) -> None:
         """Initialize an AttributeGroupItem instance.
 
         Args:
@@ -114,11 +122,12 @@ class AttributeGroupBaseSchema(Schema):
     section_label = fields.Str(load_default=None, allow_none=True)
 
     @post_load
-    def make_attribute_group(self, data, **kwargs):
+    def make_attribute_group(self, data: dict, **kwargs) -> AttributeGroup:  # noqa: ANN003, ARG002
         """Create an AttributeGroup instance from deserialized data.
 
         Args:
             data (dict): The deserialized data.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             AttributeGroup: An instance of AttributeGroup.
@@ -137,18 +146,18 @@ class AttributeGroup:
 
     def __init__(
         self,
-        id,
-        title,
-        description,
-        section,
-        section_title,
-        index,
-        attribute_group_items,
-        translations=None,
-        label=None,
-        description_label=None,
-        section_label=None,
-    ):
+        id: int,  # noqa: A002
+        title: str,
+        description: str,
+        section: int | None,
+        section_title: str | None,
+        index: int,
+        attribute_group_items: list[AttributeGroupItem],
+        translations: dict | None = None,
+        label: str | None = None,
+        description_label: str | None = None,
+        section_label: str | None = None,
+    ) -> None:
         """Initialize an AttributeGroup instance.
 
         Args:
@@ -203,11 +212,12 @@ class ReportItemTypeSchema(ReportItemTypeBaseSchema):
     attribute_groups = fields.Nested(AttributeGroupSchema, many=True)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> ReportItemType:  # noqa: ANN003, ARG002
         """Create a ReportItemType instance from deserialized data.
 
         Args:
             data (dict): The deserialized data.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             ReportItemType: An instance of ReportItemType.
@@ -224,17 +234,17 @@ class ReportItemType:
 
     def __init__(
         self,
-        id,
-        title,
-        description,
-        attribute_groups,
-        languages=None,
-        translation_ai_provider_id=None,
-        label_language=None,
-        translations=None,
-        label=None,
-        description_label=None,
-    ):
+        id: int,  # noqa: A002
+        title: str,
+        description: str,
+        attribute_groups: list[AttributeGroup],
+        languages: list[str] | None = None,
+        translation_ai_provider_id: int | None = None,
+        label_language: str | None = None,
+        translations: dict | None = None,
+        label: str | None = None,
+        description_label: str | None = None,
+    ) -> None:
         """Initialize a ReportItemType instance.
 
         Args:
@@ -272,11 +282,12 @@ class ReportItemTypeIdSchema(Schema):
     id = fields.Int()
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> ReportItemTypeId:  # noqa: ANN003, ARG002
         """Create a ReportItemTypeId instance from deserialized data.
 
         Args:
             data (dict): The deserialized data.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             ReportItemTypeId: An instance of ReportItemTypeId.
@@ -287,7 +298,7 @@ class ReportItemTypeIdSchema(Schema):
 class ReportItemTypeId:
     """Data model representing only the report item type ID."""
 
-    def __init__(self, id):
+    def __init__(self, id: int) -> None:  # noqa: A002
         """Initialize a ReportItemTypeId instance.
 
         Args:
