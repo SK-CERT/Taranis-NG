@@ -48,13 +48,23 @@
             </div>
         {%- endif -%}
 
+        {%- set shown_language = report.get_language() %}
+        {%- if shown_language and shown_language != current_language() %}
+            <div class="alert alert-info d-flex align-items-center" role="note">
+                <span class="mdi mdi-translate me-2 fs-4 flex-shrink-0" aria-hidden="true"></span>
+                <p class="m-0">
+                    {{ translate_ui("report_language_notice").format(language=language_name(shown_language)) }}
+                </p>
+            </div>
+        {%- endif %}
+
         <div class="d-flex flex-column flex-md-row mb-1">
-            <h4 class="text-body me-3">
+            <h4 class="text-body me-3"{{ macros.content_lang(report) }}>
                 {{ report.get_formatted_tlp(with_space=True) or '' }}{{ report.get_title() or translate_report(report, 'alternative_title') }}
             </h4>
         </div>
         {%- if report.get_one_description() -%}
-            <p class="mb-3 fw-normal h5 pre-wrap">
+            <p class="mb-3 fw-normal h5 pre-wrap"{{ macros.content_lang(report) }}>
                 {{- transform_link_references(report.get_one_description(), report.get_links()) | clean -}}
             </p>
         {%- endif -%}
@@ -79,7 +89,7 @@
                                     {%- else %}
                                         {% set item_name = translate_report(report, "vulnerability") + " " + (loop.index|string) %}
                                     {%- endif %}
-                                    <b class="fw-bolder me-4">{{ item_name }}</b>
+                                    <b class="fw-bolder me-4"{{ macros.content_lang(report) }}>{{ item_name }}</b>
                                     {{ macros.render_severity_badge(item.get_cvss_number(), False) }}
                                 </h5>
                             </div>
@@ -89,7 +99,7 @@
                              aria-labelledby="heading{{ loop.index }}">
                             <div class="accordion-body">
                                 {%- if item.get_description() %}
-                                    <p class="mt-1 mb-0 pre-wrap">
+                                    <p class="mt-1 mb-0 pre-wrap"{{ macros.content_lang(report) }}>
                                         {{- transform_link_references(item.get_description(), report.get_links()) | clean -}}
                                     </p>
                                 {%- endif %}
@@ -125,7 +135,7 @@
                                     {%- endif %}
                                 {%- endif %}
                                 {%- if item.get_recommendations() %}
-                                    <p class="mt-1 mb-0 pre-wrap">
+                                    <p class="mt-1 mb-0 pre-wrap"{{ macros.content_lang(report) }}>
                                         {{- transform_link_references(item.get_recommendations(), report.get_links()) | clean -}}
                                     </p>
                                 {%- endif %}

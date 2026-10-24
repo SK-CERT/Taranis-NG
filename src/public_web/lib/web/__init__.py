@@ -17,6 +17,20 @@ def current_language() -> str:
     return site.language if site is not None else config.default_language()
 
 
+def chosen_language() -> str | None:
+    """The language the visitor picked with ``?lang=``, which forms carry on; None otherwise."""
+    site = getattr(g, "site", None)
+    return site.language if site is not None and site.chosen else None
+
+
+def language_name(code: str) -> str:
+    """The name of a language in the current request's language.
+
+    The catalogs name the languages the public web has catalogs for; any other is shown as its code.
+    """
+    return config.get_translations(current_language()).get("languages", {}).get(code) or code
+
+
 def translate_report(report: VulnerabilityReport, key: str) -> str:  # noqa: ARG001
     """Get the phrase for ``key`` from the ``report`` section of the conf/i18n translations.
 

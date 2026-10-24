@@ -29,6 +29,9 @@
         {%- endif -%}
         {{ macros.services_warning(warning_seen) }}
         <form class="input-group search-form my-2">
+            {%- if chosen_language() %}
+                <input type="hidden" name="lang" value="{{ chosen_language() }}">
+            {%- endif %}
             <input type="text"
                    name="search"
                    value="{{ search_arg or '' }}"
@@ -58,7 +61,7 @@
                         </p>
                         <div class="d-flex flex-column w-100">
                             <div class="d-flex flex-column flex-md-row mt-1">
-                                <h5 class="m-0 me-2 mb-1">
+                                <h5 class="m-0 me-2 mb-1"{{ macros.content_lang(report) }}>
                                     {{ report.get_title() }}
                                 </h5>
                                 {{ macros.render_severity_badge(report.get_max_cvss_number(), True) }}
@@ -141,5 +144,5 @@
 {%- endmacro %}
 
 {% macro build_url(new_page) -%}
-    /{{ '?search=' + search_arg + '&' if search_arg else '?' }}page={{ new_page }}
+    {{ url_for('reports.home', search=search_arg or None, page=new_page) }}
 {%- endmacro %}

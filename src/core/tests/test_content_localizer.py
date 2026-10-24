@@ -1,4 +1,4 @@
-"""Rendering in a language: the fallback chain, templates, presenter input, and the publish check.
+"""Rendering in a language: the fallback chain, templates, presenter input, the publish check and the public web.
 
 Every text is looked up in the requested language, then English, then its own language; a
 language that is the text's own gives the original. Keys, titles and raw constants never change:
@@ -12,6 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from api import public_web
 from managers import content_language, content_localizer
 
 for _module in sorted((Path(__file__).parents[1] / "model").glob("*.py")):
@@ -249,3 +250,94 @@ def test_the_publish_check_names_what_falls_back(product: SimpleNamespace) -> No
     assert check["template_language"] == "cs"
 
     assert content_localizer.language_check(product, "cs")["missing"] == []
+
+
+# ---- public web ------------------------------------------------------------------------
+
+ADVISORY = "https://example.test/advisory"
+
+
+@pytest.fixture
+def published(product: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
+    """The fixture's product as the public web reads it: with an id, a cited link and no author."""
+    # A report's own links come from the database; this one has none.
+    monkeypatch.setattr(ReportItem, "links", property(lambda _report_item: []))
+    product.id = 3
+    product.description = "Souhrn [#ab12cd]"
+    product.links = [{"key": "ab12cd", "url": ADVISORY}]
+    product.created = None
+    product.user = None
+    return product
+
+
+def test_the_public_web_shows_a_language_and_keeps_what_it_compares(published: SimpleNamespace) -> None:
+    feed = public_web._serialize_product(published, "sk")
+
+    assert (feed["title"], feed["language"], feed["available_languages"]) == ("Bulletin (sk)", "sk", ["cs", "sk"])
+    # The product's description is not translated.
+    assert feed["description"] == "Souhrn [1]"
+    report = feed["report_items"][0]
+    assert (report["title"], report["title_prefix"]) == ("Kritická chyba (sk)", "ZRANITELNOST")
+    assert (report["type"], report["type_label"]) == ("Vulnerability Report", "Správa o zraniteľnosti")
+    text, severity, network, web, cve = report["attributes"]
+    # A translated text has its citations rendered like the original.
+    assert (text["key"], text["value"], text["label"]) == ("popis", "Útočník môže [1]", "Popis (sk)")
+    assert severity == {
+        "key": "závažnost",
+        "type": "ENUM",
+        "value": "Vysoká (sk)",
+        "source_value": "Vysoká",
+        "description": "",
+        "label": "Závažnost (sk)",
+    }
+    # Network has no Slovak, so English; each ticked value is an entry of its own.
+    assert [(entry["value"], entry["source_value"]) for entry in (network, web)] == [("Network", "Síť"), ("Web (sk)", "Web")]
+    assert cve == {"key": "cve", "type": "CVE", "value": "CVE-2026-1", "description": "", "label": "CVE (sk)"}
+
+
+def test_the_public_web_passes_over_outdated_translations(published: SimpleNamespace) -> None:
+    report_item = published.report_items[0]
+    report_item.title = "Kritická chyba v jádře"
+    report_item.attributes[0].value = "Útočník může cokoli [#ab12cd]"
+
+    feed = public_web._serialize_product(published, "sk")
+
+    report = feed["report_items"][0]
+    assert report["title"] == "Kritická chyba v jádře"
+    assert report["attributes"][0]["value"] == "Útočník může cokoli [1]"
+    # Nothing current in Slovak is left, so the reports are shown in Czech.
+    assert (feed["language"], feed["available_languages"]) == ("cs", ["cs"])
+
+
+def test_without_a_language_the_public_web_gets_the_product_as_written(published: SimpleNamespace) -> None:
+    feed = public_web._serialize_product(published)
+
+    assert "language" not in feed
+    assert "available_languages" not in feed
+    assert feed["title"] == "Bulletin"
+    report = feed["report_items"][0]
+    assert report["title"] == "Kritická chyba"
+    assert "type_label" not in report
+    assert report["attributes"][1] == {"key": "závažnost", "type": "ENUM", "value": "Vysoká", "description": ""}
+
+
+def test_reports_of_no_known_language_are_shown_without_naming_one(published: SimpleNamespace) -> None:
+    report_item = published.report_items[0]
+    report_item.language = None
+    report_item.translations.clear()
+    report_item.attributes[0].translations.clear()
+    published.language = None
+
+    feed = public_web._serialize_product(published, "sk")
+
+    assert (feed["language"], feed["available_languages"]) == (None, [])
+    assert feed["report_items"][0]["title"] == "Kritická chyba"
+
+
+def test_the_shown_language_follows_the_chain_through_what_is_available() -> None:
+    assert content_localizer.shown_language("sk", "cs", ["cs", "sk"]) == "sk"
+    assert content_localizer.shown_language("de", "cs", ["cs", "en", "sk"]) == "en"
+    # The original rather than another translation.
+    assert content_localizer.shown_language("de", "cs", ["cs", "sk"]) == "cs"
+    assert content_localizer.shown_language("de", None, ["sk"]) == "sk"
+    assert content_localizer.shown_language("de", None, []) is None

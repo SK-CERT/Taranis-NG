@@ -39,6 +39,7 @@
         "report": "Report",
         "report_incomplete_warning": "Zobrazujú sa iba tie položky z reportu, ktoré boli detekované na vašom stroji. Ak chcete zobraziť celý report, kliknite ",
         "report_here": "sem",
+        "report_language_notice": "Tento report nie je dostupný v tomto jazyku, preto sa zobrazuje v jazyku: {language}.",
         "give_feedback": "Dať spätnú väzbu",
         "feedback": "Spätná väzba k reportu",
         "form_yes": "Áno",
@@ -48,5 +49,10 @@
         "feedback_sent_success": "Spätná väzba úspešne odoslaná.",
         "feedback_sent_fail": "Pri odosielaní nastala chyba, skúste to prosím neskôr.",
         "reports": "Reporty"
+    },
+    "languages": {
+        "cs": "čeština",
+        "en": "angličtina",
+        "sk": "slovenčina"
     }
 }

@@ -8,6 +8,7 @@ resolved for that web+language (with the built-in presentation defaults from
 ``flask.g.site``.
 """
 
+import re
 from urllib.parse import urlparse
 
 from flask import g, request, url_for
@@ -26,6 +27,10 @@ _FEEDBACK_KEYS = ["question1", "question2", "question3", "comment"]
 
 IMAGE_KINDS = ("logo", "favicon", "preview")
 
+# What ``?lang=`` may hold: a language tag ("cs", "pt-BR"). It names a catalog file and is carried
+# into links, so nothing else is taken from the URL.
+_LANGUAGE_TAG = re.compile(r"[a-z]{2,3}(-[A-Za-z0-9]{2,8})*")
+
 
 def _pick(variants: dict[str, str] | str, language: str, default_language: str) -> str | None:
     """Pick the best value from a `{lang: value}` map (or a plain string)."""
@@ -39,11 +44,16 @@ def _pick(variants: dict[str, str] | str, language: str, default_language: str) 
 class SiteContext:
     """The web + language resolved for the current request."""
 
-    def __init__(self, web: dict | None, language: str) -> None:
-        """Initialize the site context with the resolved web and language."""
+    def __init__(self, web: dict | None, language: str, *, chosen: bool = False) -> None:
+        """Initialize the site context with the resolved web and language.
+
+        ``chosen`` tells that the visitor picked the language with ``?lang=``, so the page's own
+        links keep it; a language from Accept-Language or the default needs no carrying.
+        """
         self.web = web or {}
         self.cfg = self.web.get("config") or {}
         self.language = language
+        self.chosen = chosen
 
     # -- basics ------------------------------------------------------------
 
@@ -216,25 +226,28 @@ def _match_web(webs: list[dict], host: str) -> dict | None:
     return None
 
 
-def _select_language(web_cfg: dict) -> str:
-    """`?lang=` (if offered) → best Accept-Language match → default_language."""
+def _select_language(web_cfg: dict) -> tuple[str, bool]:
+    """`?lang=` (if offered) → best Accept-Language match → default_language.
+
+    Returns the language, and whether it was chosen with ``?lang=``.
+    """
     languages = web_cfg.get("languages") if isinstance(web_cfg.get("languages"), list) else []
     default = web_cfg.get("default_language") or config.default_language()
     requested = request.args.get("lang")
-    if requested and (not languages or requested in languages):
-        return requested
+    if requested and _LANGUAGE_TAG.fullmatch(requested) and (not languages or requested in languages):
+        return requested, True
     if languages:
         best = request.accept_languages.best_match(languages)
         if best:
-            return best
-    return default
+            return best, False
+    return default, False
 
 
 def load_site(webs: list[dict]) -> SiteContext:
     """Build the SiteContext for the current request from the cached webs list."""
     web = _match_web(webs, request.host)
-    language = _select_language(web.get("config") or {} if web else {})
-    site = SiteContext(web, language)
+    language, chosen = _select_language(web.get("config") or {} if web else {})
+    site = SiteContext(web, language, chosen=chosen)
     g.site = site
     return site
 

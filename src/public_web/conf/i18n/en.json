@@ -39,6 +39,7 @@
         "report": "Report",
         "report_incomplete_warning": "Only the report items that were detected on your machine are shown. To view the full report, click ",
         "report_here": "here",
+        "report_language_notice": "This report is not available in this language, so it is shown in {language}.",
         "give_feedback": "Give feedback",
         "feedback": "Report feedback",
         "form_yes": "Yes",
@@ -48,5 +49,10 @@
         "feedback_sent_success": "Feedback sent successfully.",
         "feedback_sent_fail": "An error occurred while sending, please try again later.",
         "reports": "Reports"
+    },
+    "languages": {
+        "cs": "Czech",
+        "en": "English",
+        "sk": "Slovak"
     }
 }

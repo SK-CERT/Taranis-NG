@@ -61,8 +61,6 @@ ALLOWED_LITERALS = {
     "Ubuntu ,",
     "Red Hat ,",
     "SUSE",
-    # Fragment of a paginated URL, not prose
-    "/ page=",
 }
 
 
@@ -116,6 +114,14 @@ def test_catalogs_do_not_drift_apart(locale: str) -> None:
     assert other == reference, (
         f"{locale}.json differs from {REFERENCE_LOCALE}.json - missing: {sorted(reference - other)}, extra: {sorted(other - reference)}"
     )
+
+
+@pytest.mark.parametrize("locale", _locales())
+def test_every_catalog_names_the_languages_offered(locale: str) -> None:
+    """A report shown in another language says which; every language with a catalog has a name."""
+    names = json.loads((CATALOGS / f"{locale}.json").read_text(encoding="utf-8"))["languages"]
+    assert sorted(names) == _locales()
+    assert all(str(name).strip() for name in names.values())
 
 
 @pytest.mark.parametrize("locale", _locales())

@@ -18,7 +18,7 @@ from managers import content_language
 from model.translation import TITLE_FIELDS
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Callable, Iterable, Mapping
 
     from model.product import Product
     from model.report_item import ReportItem
@@ -165,7 +165,13 @@ def label(
     return resolve(requested, source, original, _label_lookup(translations, field))[0]
 
 
-def product_title(product: Product, requested: str | None, translations: Mapping[str, str] | None = None) -> tuple[str, str | None]:
+def product_title(
+    product: Product,
+    requested: str | None,
+    translations: Mapping[str, str] | None = None,
+    *,
+    skip_outdated: bool = False,
+) -> tuple[str, str | None]:
     """The product's title in ``requested`` and the language it is in.
 
     Args:
@@ -173,14 +179,59 @@ def product_title(product: Product, requested: str | None, translations: Mapping
         requested (str | None): The language asked for.
         translations (Mapping[str, str] | None): Titles per language of a product not saved yet;
             a saved one uses its stored translations.
+        skip_outdated (bool): Pass over translations whose source changed since.
 
     Returns:
         tuple[str, str | None]: The title and its language.
     """
     if translations is not None:
         return resolve(requested, product.language, product.title, lambda language: translations.get(language) or None)
-    lookup = _row_lookup(product.title_translation_rows, product.title, skip_outdated=False, field="title")
+    lookup = _row_lookup(product.title_translation_rows, product.title, skip_outdated=skip_outdated, field="title")
     return resolve(requested, product.language, product.title, lookup)
+
+
+def available_languages(product: Product) -> list[str]:
+    """The languages a product's reports can be read in, for readers choosing one (the public web).
+
+    A report's own language counts, and so does a language it has a current translation into - the
+    same translations the public web shows, which passes over those whose source changed since.
+    The product's title alone does not make a language available.
+
+    Args:
+        product (Product): The product.
+
+    Returns:
+        list[str]: Sorted ISO 639-1 codes; empty when no report has a language set.
+    """
+    languages: set[str] = set()
+    for report_item in product.report_items:
+        if report_item.language:
+            languages.add(report_item.language)
+        languages.update(
+            row.language for row in report_item.translations if row.value and not row.is_outdated(getattr(report_item, row.field))
+        )
+        languages.update(
+            row.language
+            for attribute in report_item.attributes
+            if attribute.attribute_group_item is not None and attribute.attribute_group_item.is_translated
+            for row in attribute.translations
+            if row.value and not row.is_outdated(attribute.value)
+        )
+    return sorted(languages)
+
+
+def shown_language(requested: str | None, source: str | None, available: list[str]) -> str | None:
+    """The language a product is shown in when ``requested``: the first of the chain it is available in.
+
+    Args:
+        requested (str | None): The language asked for.
+        source (str | None): The product's own language, if set.
+        available (list[str]): What :func:`available_languages` gives.
+
+    Returns:
+        str | None: The language, or None when no language of the content is known.
+    """
+    return next((language for language in language_chain(requested, source) if language in available), available[0] if available else None)
 
 
 def resolve_language_templates(
@@ -215,8 +266,8 @@ def resolve_language_templates(
     return params, default_language
 
 
-def _constants_of(report_types: list) -> dict[int, dict[str, Mapping]]:
-    """Group item id -> {constant value -> its translations}, for choice attributes."""
+def constants_of(report_types: Iterable) -> dict[int, dict[str, Mapping]]:
+    """Group item id -> {constant value -> its translations}, for the choice attributes of ``report_types``."""
     constants: dict[int, dict[str, Mapping]] = {}
     for report_type in report_types:
         for group in report_type.attribute_groups:
@@ -260,7 +311,7 @@ def localize_presenter_input(
     payload["product"]["title"] = title
 
     report_types = {item.report_item_type.id: item.report_item_type for item in product.report_items if item.report_item_type}
-    constants = _constants_of(list(report_types.values()))
+    constants = constants_of(report_types.values())
     reports = {report_item.id: report_item for report_item in product.report_items}
 
     for report_data in payload.get("reports") or []:

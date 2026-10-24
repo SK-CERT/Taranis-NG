@@ -10,6 +10,13 @@
     </div>
 {% endmacro %}
 
+{#- A report shown in another language than the page's (it is not translated into this one)
+    marks its own text with that language. #}
+{%- macro content_lang(report) -%}
+    {%- set shown = report.get_language() -%}
+    {%- if shown and shown != current_language() %}{{ {"lang": shown} | xmlattr }}{% endif -%}
+{%- endmacro %}
+
 {% macro required() -%}
     <span class="text-danger">*</span>
 {%- endmacro %}

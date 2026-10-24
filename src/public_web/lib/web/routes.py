@@ -44,6 +44,17 @@ def _load_site() -> None:
         abort(503)
 
 
+@reports_bp.url_defaults
+def _keep_chosen_language(endpoint: str, values: dict) -> None:
+    """Carry a language picked with ``?lang=`` into the page's links, so it lasts beyond one page.
+
+    Branding images are the same in every language, so their URLs stay as they are.
+    """
+    site = current_site()
+    if site.chosen and endpoint != "reports.branding":
+        values.setdefault("lang", site.language)
+
+
 def _remove_link_references(text: str, links: list[str | None]) -> str:
     """Removes references ([1], [2]...) from text."""
     for i, _ in enumerate(links, start=1):
@@ -82,8 +93,9 @@ def homepage() -> str:
     except ValueError:
         abort(400)
 
-    limit = current_site().max_reports_homepage
-    reports = cache.get_all_reports(current_site().id)
+    site = current_site()
+    limit = site.max_reports_homepage
+    reports = cache.get_all_reports(site.id, site.language)
     if search_arg:
         # Filter per keyword search from arguments.
         reports = [report for report in reports if report.matches_keyword(search_arg)]
@@ -111,7 +123,7 @@ def rss() -> Response:
     fg.description(site.metadata.get("rss_description", ""))
     fg.link(href=site.hostname)
 
-    reports = cache.get_all_reports(site.id)
+    reports = cache.get_all_reports(site.id, site.language)
     item_count = min(site.max_reports_rss, len(reports))
 
     # add_entry() adds items in a reverse order (the first added item will be
@@ -153,7 +165,7 @@ def report_view(report_id: str) -> str:
     # Report ids are Taranis product ids (integers).
     if not report_id.isdigit():
         abort(400)
-    report = cache.get_report(report_id, current_site().id)
+    report = cache.get_report(report_id, current_site().id, current_site().language)
     if report is None:
         abort(404)
     try:
@@ -197,7 +209,7 @@ def feedback_view(report_id: str) -> tuple[str, int, dict[str, str]]:
     # Report ids are Taranis product ids (integers).
     if not report_id.isdigit():
         abort(400)
-    report = cache.get_report(report_id, current_site().id)
+    report = cache.get_report(report_id, site.id, site.language)
     if report is None:
         abort(404)
 

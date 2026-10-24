@@ -34,6 +34,11 @@ class VulnerabilityReportPart:
 
     Built from a report item dict with a flat list of attributes
     ({"key", "value", "description"}). Attributes with the same key are grouped into lists.
+
+    The report may be shown in a language other than it was written in: ``value`` is then what
+    to show, and a choice constant keeps the value it was written with in ``source_value``.
+    Whatever the app decides on (TLP, events, version parsing) reads ``source=True`` values, so
+    it decides the same in every language.
     """
 
     def __init__(self, item: dict[str, Any]) -> None:
@@ -48,7 +53,11 @@ class VulnerabilityReportPart:
         for attribute in item.get("attributes") or []:
             key = (attribute.get("key") or "").strip()
             self._attrs.setdefault(key, []).append(
-                {"value": attribute.get("value"), "description": attribute.get("description")},
+                {
+                    "value": attribute.get("value"),
+                    "source_value": attribute.get("source_value", attribute.get("value")),
+                    "description": attribute.get("description"),
+                },
             )
             if attribute.get("type") == "LINK":
                 self._links.append(attribute.get("value"))
@@ -86,25 +95,30 @@ class VulnerabilityReportPart:
             raise MissingFieldError(field, self)
         return self.item.get(field, invalid_value)
 
-    def _attr_values(self, key: str) -> list[str]:
+    def _attr_values(self, key: str, *, source: bool = False) -> list[str]:
         """Returns all values of the attribute with the given key.
 
-        Returns empty list if the attribute is not present.
+        Returns empty list if the attribute is not present. With ``source``, the values as
+        written rather than as shown.
         """
-        return [attr["value"] for attr in self._attrs.get(key, []) if attr["value"] is not None]
+        field = "source_value" if source else "value"
+        return [attr[field] for attr in self._attrs.get(key, []) if attr[field] is not None]
 
     def _attr_first(
         self,
         key: str,
         invalid_value: dict[str, Any] | None = None,
         required: bool = False,
+        *,
+        source: bool = False,
     ) -> dict[str, Any] | str | None:
         """Returns the first value of the attribute with the given key.
 
         'Invalid_value' specifies what to return if the attribute is missing.
         If required is True, Error is thrown if the attribute is missing.
+        With ``source``, the value as written rather than as shown.
         """
-        values = self._attr_values(key)
+        values = self._attr_values(key, source=source)
         if not values:
             if required:
                 raise MissingFieldError(key, self)
@@ -153,7 +167,7 @@ class VulnerabilityReportIntro(VulnerabilityReportPart):
 
     def should_generate_events(self) -> EventsGeneration:
         """Check if events should be generated from the intro."""
-        value = self._attr_first("generate_events")
+        value = self._attr_first("generate_events", source=True)
         if value == "generate":
             return EventsGeneration.GENERATE
         if value == "do not generate":
@@ -179,7 +193,7 @@ class ReportItem(VulnerabilityReportPart):
         If the version is not parsed, the app will not try to find the vulnerability in Sner.
         """
         # If the value is missing, assume that it should be parsed.
-        return self._attr_first("affected_versions_parsability", "Parse").lower() == "parse"
+        return self._attr_first("affected_versions_parsability", "Parse", source=True).lower() == "parse"
 
     def validate(self) -> None:
         """Basic report item validation from the input JSON.
@@ -213,8 +227,9 @@ class ReportItem(VulnerabilityReportPart):
             return False
 
         try:
-            for i in range(1, len(self.get_affected_systems()) + 1):
-                versions = self.get_versions(i)
+            # As written: whether the app searches Sner must not depend on the language shown.
+            for system in self._attr_values("affected_systems", source=True):
+                versions = self._versions_of(system)
                 if versions:
                     version_parser.parse(versions)  # check if it can be parsed
             return True
@@ -373,7 +388,11 @@ class ReportItem(VulnerabilityReportPart):
         if index < 1:
             msg = f"Index must start from one, but was {index}."
             raise ValueError(msg)
-        system = self.get_affected_system(index)
+        return self._versions_of(self.get_affected_system(index))
+
+    @staticmethod
+    def _versions_of(system: str | None) -> str | None:
+        """Get the version part of an affected system ("product; versions")."""
         # If no version was specified.
         if not system or not system.strip() or ";" not in system:
             return None
