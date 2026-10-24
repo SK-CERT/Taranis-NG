@@ -33,10 +33,10 @@
             prepend-icon="mdi-translate"
             :loading="translating"
             :disabled="translating"
-            data-test="translate-product-titles"
+            data-test="translate-product"
             @click="emit('translate-all')"
         >
-            {{ t('product.translate_titles') }}
+            {{ t('product.translate_product') }}
         </v-btn>
     </div>
 </template>

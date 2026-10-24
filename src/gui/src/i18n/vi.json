@@ -849,8 +849,6 @@
             "untitled": "Báo cáo chưa đặt tên"
         },
         "language": "Ngôn ngữ của sản phẩm",
-        "translate_titles": "Dịch tiêu đề sang mọi ngôn ngữ",
-        "title_not_translated": "Không dịch được tiêu đề sang một số ngôn ngữ",
         "language_in_use": "Sản phẩm đã có bản dịch sang ngôn ngữ đó",
         "publish_in": "Xuất bản bằng",
         "publish_in_language": "Xuất bản bằng: {language}",
@@ -861,7 +859,11 @@
             "outdated": "Các bản dịch sang {language} này đã cũ vì bản gốc thay đổi sau khi dịch:",
             "templates": "Loại sản phẩm không có mẫu cho {language}; dùng mẫu {used}.",
             "default_templates": "mặc định"
-        }
+        },
+        "texts_not_translated": "Không thể dịch tiêu đề hoặc mô tả sang một số ngôn ngữ",
+        "nothing_to_translate": "Không có gì để dịch: các bản dịch đã được cập nhật.",
+        "translate_product": "Dịch toàn bộ sản phẩm",
+        "translation_intro": "Bản dịch sang {language}. Chỉ tiêu đề và mô tả được dịch; phần còn lại hiển thị bản gốc."
     },
     "analyze": {
         "sort": "Sắp xếp theo",

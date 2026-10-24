@@ -9,9 +9,10 @@ import {
     getProductById,
     previewProduct,
     publishProduct,
-    translateProductTitle,
+    translateProduct,
     updateProduct
 } from '@/api/publish'
+import { getReportItem } from '@/api/analyze'
 import { useSettingsStore } from '@/stores/settings'
 import { openBlankTabWithoutOpener } from '@/utils/window'
 
@@ -24,8 +25,12 @@ vi.mock('@/api/publish', () => ({
     publishProduct: vi.fn(() => Promise.resolve({ data: { overall_success: true } })),
     previewProduct: vi.fn(() => Promise.resolve({ data: { token: 't' } })),
     getProductById: vi.fn(),
-    translateProductTitle: vi.fn(),
+    translateProduct: vi.fn(),
     checkProductLanguage: vi.fn()
+}))
+
+vi.mock('@/api/analyze', () => ({
+    getReportItem: vi.fn()
 }))
 
 vi.mock('@/api/user', () => ({
@@ -90,7 +95,7 @@ const ConfirmationDialogStub = {
 
 const NO_PROBLEMS = { missing: [], outdated: [], template_language: 'cs' }
 
-async function openProduct() {
+async function openProduct(overrides: Record<string, unknown> = {}) {
     const wrapper = mountWithPlugins(NewProduct, {
         global: {
             stubs: {
@@ -116,7 +121,8 @@ async function openProduct() {
             ],
             links: [],
             language: 'cs',
-            translations: { en: { title: { value: 'Bulletin (en)', origin: 'ai', version: 1, outdated: true } } }
+            translations: { en: { title: { value: 'Bulletin (en)', origin: 'ai', version: 1, outdated: true } } },
+            ...overrides
         },
         { modify: true, access: true }
     )
@@ -201,7 +207,7 @@ describe('NewProduct languages', () => {
 
         const saved = vi.mocked(updateProduct).mock.calls.at(-1)?.[0] as { title: string; translations: object }
         expect(saved.title).toBe('Bulletin')
-        expect(saved.translations).toEqual({ en: { title: 'Weekly bulletin', origin: 'manual' } })
+        expect(saved.translations).toEqual({ en: { title: { value: 'Weekly bulletin', origin: 'manual' } } })
     })
 
     it('takes a title a person typed as no longer the AIs, before it is saved', async () => {
@@ -226,29 +232,238 @@ describe('NewProduct languages', () => {
         await flushPromises()
 
         const saved = vi.mocked(updateProduct).mock.calls.at(-1)?.[0] as { translations: object }
-        expect(saved.translations).toEqual({ en: { title: 'Bulletin (en)', origin: 'manual' } })
+        expect(saved.translations).toEqual({ en: { title: { value: 'Bulletin (en)', origin: 'manual' } } })
         expect(wrapper.find('[data-test="translation-ai"]').exists()).toBe(false)
         expect(wrapper.find('[data-test="translation-outdated"]').exists()).toBe(false)
         expect(wrapper.vm.tabStatuses['en']).toBe('translation_done')
     })
 
-    it('stores AI titles as the AIs', async () => {
-        vi.mocked(translateProductTitle).mockResolvedValue({
-            data: { translations: { sk: 'Bulletin (sk)', de: 'Bulletin (de)' }, failed: {} }
-        } as never)
-        const wrapper = await openProduct()
-
-        await wrapper.get('[data-test="translate-product-titles"]').trigger('click')
+    it('edits the description of the open tab as a translation, keeping the original', async () => {
+        const wrapper = await openProduct({ description: 'Souhrn týdne' })
+        wrapper.vm.activeLanguage = 'en'
         await flushPromises()
 
-        expect(translateProductTitle).toHaveBeenCalledWith({
-            title: 'Bulletin',
+        const description = wrapper.get('[data-test="product-description"] textarea')
+        expect((description.element as HTMLTextAreaElement).value).toBe('')
+        await description.setValue('Summary of the week')
+        await description.trigger('blur')
+        await flushPromises()
+
+        const saved = vi.mocked(updateProduct).mock.calls.at(-1)?.[0] as { description: string; translations: Record<string, object> }
+        expect(saved.description).toBe('Souhrn týdne')
+        expect(saved.translations['en']).toEqual({
+            title: { value: 'Bulletin (en)', origin: 'ai' },
+            description: { value: 'Summary of the week', origin: 'manual' }
+        })
+        // Partly translated until the title, outdated, is brought up to date.
+        expect(wrapper.vm.tabStatuses['en']).toBe('translation_outdated')
+    })
+
+    it('translates what is missing or outdated into every language, title and description, and keeps what a person wrote', async () => {
+        vi.mocked(translateProduct).mockImplementation((({ texts, languages }: { texts: Record<string, string>; languages: string[] }) =>
+            Promise.resolve({
+                data: {
+                    translations: Object.fromEntries(
+                        languages.map((language) => [
+                            language,
+                            Object.fromEntries(Object.entries(texts).map(([field, text]) => [field, `[${language}] ${text}`]))
+                        ])
+                    ),
+                    failed: {}
+                }
+            })) as never)
+        const wrapper = await openProduct({
+            description: 'Souhrn',
+            translations: {
+                en: { title: { value: 'Bulletin (en)', origin: 'ai', version: 1, outdated: true } },
+                sk: { title: { value: 'Bulletin (sk)', origin: 'manual', version: 2, outdated: false } }
+            }
+        })
+
+        await wrapper.get('[data-test="translate-product"]').trigger('click')
+        await flushPromises()
+
+        // Language after language, each with what it is missing.
+        expect(vi.mocked(translateProduct).mock.calls.map(([request]) => [request.texts, request.languages])).toEqual([
+            [{ title: 'Bulletin', description: 'Souhrn' }, ['en']],
+            [{ description: 'Souhrn' }, ['sk']],
+            [{ title: 'Bulletin', description: 'Souhrn' }, ['de']]
+        ])
+        const saved = vi.mocked(updateProduct).mock.calls.at(-1)?.[0] as { translations: Record<string, object> }
+        expect(saved.translations['sk']).toEqual({
+            title: { value: 'Bulletin (sk)', origin: 'manual' },
+            description: { value: '[sk] Souhrn', origin: 'ai' }
+        })
+        expect(saved.translations['en']).toEqual({
+            title: { value: '[en] Bulletin', origin: 'ai' },
+            description: { value: '[en] Souhrn', origin: 'ai' }
+        })
+        expect(wrapper.vm.tabStatuses['de']).toBe('translation_ai')
+    })
+
+    it('shows the progress of the whole product, language by language, and says when it is done', async () => {
+        const notifications: CustomEvent[] = []
+        window.addEventListener('notification', (event) => notifications.push(event as CustomEvent))
+        let finish: (value: unknown) => void = () => {}
+        vi.mocked(translateProduct)
+            .mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)) as never)
+            .mockResolvedValue({ data: { translations: {}, failed: {} } } as never)
+        const wrapper = await openProduct()
+
+        await wrapper.get('[data-test="translate-product"]').trigger('click')
+        await flushPromises()
+        expect(wrapper.get('[data-test="product-translation-progress"]').text()).toBe('Translating: 0 of 3 languages done')
+
+        finish({ data: { translations: { en: { title: 'Bulletin (AI)' } }, failed: {} } })
+        await flushPromises()
+        expect(wrapper.find('[data-test="product-translation-progress"]').exists()).toBe(false)
+        expect(vi.mocked(updateProduct).mock.calls).toHaveLength(3)
+        expect(notifications.at(-1)?.detail).toEqual({ type: 'success', loc: 'report_item.translation.finished' })
+    })
+
+    it('translates the open tab, and marks its AI translations as reviewed at once', async () => {
+        const notifications: CustomEvent[] = []
+        window.addEventListener('notification', (event) => notifications.push(event as CustomEvent))
+        vi.mocked(translateProduct).mockResolvedValue({
+            data: { translations: { de: { title: 'Bulletin (de)', description: 'Inhalt' } }, failed: {} }
+        } as never)
+        const wrapper = await openProduct({ description: 'Souhrn' })
+        wrapper.vm.activeLanguage = 'de'
+        await flushPromises()
+
+        expect(wrapper.get('[data-test="product-translation-header"]').text()).toContain('Translate into German')
+        expect(wrapper.find('[data-test="review-product-language"]').exists()).toBe(false)
+        await wrapper.get('[data-test="translate-product-language"]').trigger('click')
+        await flushPromises()
+        expect(translateProduct).toHaveBeenLastCalledWith({
+            texts: { title: 'Bulletin', description: 'Souhrn' },
             source_language: 'cs',
-            languages: ['en', 'sk', 'de'],
+            languages: ['de'],
             report_item_ids: [1, 2]
         })
+
+        await wrapper.get('[data-test="review-product-language"]').trigger('click')
+        await flushPromises()
         const saved = vi.mocked(updateProduct).mock.calls.at(-1)?.[0] as { translations: Record<string, object> }
-        expect(saved.translations['sk']).toEqual({ title: 'Bulletin (sk)', origin: 'ai' })
+        expect(saved.translations['de']).toEqual({
+            title: { value: 'Bulletin (de)', origin: 'manual' },
+            description: { value: 'Inhalt', origin: 'manual' }
+        })
+        expect(notifications.at(-1)?.detail).toEqual({ type: 'success', loc: 'report_item.translation.reviewed', params: { count: 2 } })
+        expect(wrapper.find('[data-test="review-product-language"]').exists()).toBe(false)
+    })
+
+    it('shows a report changed while the product is open on its card, and stays unchanged itself', async () => {
+        const wrapper = await openProduct()
+        const status = { en: 'translation_missing', sk: 'translation_missing' }
+        vi.mocked(getProductById).mockResolvedValue({
+            data: {
+                report_items: [
+                    { id: 1, title: 'A', type_languages: ['cs', 'en', 'sk'], language: 'cs', translation_status: status },
+                    { id: 2, title: 'B renamed' }
+                ]
+            }
+        } as never)
+        await vi.advanceTimersByTimeAsync(400)
+        await flushPromises()
+        const checksBefore = vi.mocked(checkProductLanguage).mock.calls.length
+        const updated = (id: number) =>
+            new CustomEvent('report-item-updated', { detail: { report_item_id: id, user_id: 101, source_language: 'cs' } })
+
+        // A report the product does not have is none of its business.
+        window.dispatchEvent(updated(99))
+        await vi.advanceTimersByTimeAsync(600)
+        expect(getProductById).not.toHaveBeenCalled()
+
+        // Several updates in a row cause as many refreshes as one (other specs' dialogs listen too).
+        window.dispatchEvent(updated(1))
+        window.dispatchEvent(updated(1))
+        expect(getProductById).not.toHaveBeenCalled()
+        await vi.advanceTimersByTimeAsync(600)
+        await flushPromises()
+        const afterBurst = vi.mocked(getProductById).mock.calls.length
+        window.dispatchEvent(updated(1))
+        await vi.advanceTimersByTimeAsync(600)
+        await flushPromises()
+        expect(vi.mocked(getProductById).mock.calls.length).toBe(2 * afterBurst)
+
+        expect(wrapper.vm.reportItems[0]).toMatchObject({ id: 1, language: 'cs', translation_status: status })
+        expect(wrapper.vm.reportItems[1]).toMatchObject({ id: 2, title: 'B' })
+        expect(wrapper.vm.hasUnsavedChanges()).toBe(false)
+        expect(updateProduct).not.toHaveBeenCalled()
+        // The notices are asked again: the report's language changed what they say.
+        expect(vi.mocked(checkProductLanguage).mock.calls.length).toBeGreaterThan(checksBefore)
+    })
+
+    it('takes a changed report from its detail while the product is not saved yet', async () => {
+        const wrapper = await openNewProduct('cs')
+        wrapper.vm.reportItems = [{ id: 7, title: 'Old', language: null }]
+        await flushPromises()
+        vi.mocked(getReportItem).mockResolvedValue({
+            data: {
+                title: 'New',
+                title_prefix: '',
+                language: 'cs',
+                tags: [],
+                translation_status: { en: 'translation_missing' },
+                translations: { en: { title: { value: 'New (en)' } } }
+            }
+        } as never)
+
+        window.dispatchEvent(new CustomEvent('report-item-updated', { detail: { report_item_id: 7, user_id: 101 } }))
+        await vi.advanceTimersByTimeAsync(600)
+        await flushPromises()
+
+        expect(getReportItem).toHaveBeenCalledWith('7')
+        expect(wrapper.vm.reportItems[0]).toMatchObject({
+            id: 7,
+            title: 'New',
+            language: 'cs',
+            translation_status: { en: 'translation_missing' },
+            title_translations: { en: { title: 'New (en)' } }
+        })
+    })
+
+    it('says so when every language is already translated', async () => {
+        const notifications: CustomEvent[] = []
+        window.addEventListener('notification', (event) => notifications.push(event as CustomEvent))
+        const current = { value: 'x', origin: 'manual', version: 1, outdated: false }
+        const wrapper = await openProduct({ translations: { en: { title: current }, sk: { title: current }, de: { title: current } } })
+
+        await wrapper.get('[data-test="translate-product"]').trigger('click')
+        await flushPromises()
+
+        expect(translateProduct).not.toHaveBeenCalled()
+        expect(notifications.at(-1)?.detail).toEqual({ type: 'info', loc: 'product.nothing_to_translate' })
+    })
+
+    it('translates one text into the open tab, asking before it replaces a persons', async () => {
+        vi.mocked(translateProduct).mockResolvedValue({ data: { translations: { sk: { title: 'Bulletin (AI)' } }, failed: {} } } as never)
+        const wrapper = await openProduct({
+            description: 'Souhrn',
+            translations: { sk: { title: { value: 'Bulletin (sk)', origin: 'manual', version: 2, outdated: false } } }
+        })
+        wrapper.vm.activeLanguage = 'sk'
+        await flushPromises()
+
+        await wrapper.get('[data-test="translate-product-title"]').trigger('click')
+        await flushPromises()
+        expect(wrapper.find('[data-test="dialog-report_item.translation.overwrite_title"]').exists()).toBe(true)
+        expect(translateProduct).not.toHaveBeenCalled()
+
+        await wrapper.vm.runPendingField()
+        await flushPromises()
+        expect(translateProduct).toHaveBeenLastCalledWith({
+            texts: { title: 'Bulletin' },
+            source_language: 'cs',
+            languages: ['sk'],
+            report_item_ids: [1, 2]
+        })
+
+        // The description has no translation yet: no question asked.
+        await wrapper.get('[data-test="translate-product-description"]').trigger('click')
+        await flushPromises()
+        expect(vi.mocked(translateProduct).mock.calls.at(-1)?.[0].texts).toEqual({ description: 'Souhrn' })
     })
 
     it('previews in the open tabs language', async () => {

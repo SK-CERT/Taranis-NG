@@ -24,6 +24,9 @@ from sqlalchemy.orm import declared_attr
 ORIGIN_AI = "ai"
 ORIGIN_MANUAL = "manual"
 
+# The texts of a product that are translated.
+PRODUCT_FIELDS = ("title", "description")
+
 # The report fields that are translated besides attribute values.
 TITLE_FIELDS = ("title", "title_prefix")
 
@@ -156,7 +159,7 @@ class ReportItemAttributeTranslation(TranslationMixin, db.Model):
 
 
 class ProductTranslation(TranslationMixin, db.Model):
-    """The translated title of a product in one language."""
+    """A translated text of a product (``field``: one of PRODUCT_FIELDS) in one language."""
 
     __tablename__ = "product_translation"
     __table_args__ = (db.UniqueConstraint("product_id", "language", "field", name="uq_product_translation"),)

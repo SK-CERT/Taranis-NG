@@ -849,8 +849,6 @@
             "untitled": "Rapport sans titre"
         },
         "language": "Langue du produit",
-        "translate_titles": "Traduire le titre dans toutes les langues",
-        "title_not_translated": "Le titre n'a pas pu être traduit dans certaines langues",
         "language_in_use": "Le produit a déjà une traduction dans cette langue",
         "publish_in": "Publier en",
         "publish_in_language": "Publié en : {language}",
@@ -861,7 +859,11 @@
             "outdated": "Ces traductions en {language} sont obsolètes, car leur texte d'origine a changé après la traduction :",
             "templates": "Le type de produit n'a pas de modèles pour {language} ; les modèles « {used} » sont utilisés.",
             "default_templates": "par défaut"
-        }
+        },
+        "texts_not_translated": "Le titre ou la description n'a pas pu être traduit dans certaines langues",
+        "nothing_to_translate": "Rien à traduire : les traductions sont à jour.",
+        "translate_product": "Traduire tout le produit",
+        "translation_intro": "Traduction en {language}. Seuls le titre et la description sont traduits ; le reste affiche le texte d'origine."
     },
     "analyze": {
         "sort": "Trier par",

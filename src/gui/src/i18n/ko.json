@@ -849,8 +849,6 @@
             "untitled": "제목 없는 보고서"
         },
         "language": "제품 언어",
-        "translate_titles": "제목을 모든 언어로 번역",
-        "title_not_translated": "일부 언어로 제목을 번역하지 못했습니다",
         "language_in_use": "제품에 이미 그 언어의 번역이 있습니다",
         "publish_in": "게시 언어",
         "publish_in_language": "게시 언어: {language}",
@@ -861,7 +859,11 @@
             "outdated": "이 {language} 번역들은 번역 후 원문이 바뀌어 오래되었습니다:",
             "templates": "제품 유형에 {language} 템플릿이 없어 {used} 템플릿을 사용합니다.",
             "default_templates": "기본"
-        }
+        },
+        "texts_not_translated": "일부 언어로 제목 또는 설명을 번역하지 못했습니다",
+        "nothing_to_translate": "번역할 내용이 없습니다. 번역이 최신 상태입니다.",
+        "translate_product": "제품 전체 번역",
+        "translation_intro": "{language}(으)로 번역합니다. 제목과 설명만 번역되며 나머지는 원문을 표시합니다."
     },
     "analyze": {
         "sort": "정렬 기준",

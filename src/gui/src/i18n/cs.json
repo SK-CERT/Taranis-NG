@@ -849,8 +849,6 @@
             "untitled": "Report bez názvu"
         },
         "language": "Jazyk produktu",
-        "translate_titles": "Přeložit název do všech jazyků",
-        "title_not_translated": "Název se do některých jazyků nepodařilo přeložit",
         "language_in_use": "Produkt už má překlad do tohoto jazyka",
         "publish_in": "Publikovat v jazyce",
         "publish_in_language": "Publikuje se v jazyce: {language}",
@@ -861,7 +859,11 @@
             "outdated": "Tyto překlady do jazyka {language} jsou zastaralé, protože se jejich originál po přeložení změnil:",
             "templates": "Typ produktu nemá šablony pro jazyk {language}; použijí se šablony: {used}.",
             "default_templates": "výchozí"
-        }
+        },
+        "texts_not_translated": "Název nebo popis se do některých jazyků nepodařilo přeložit",
+        "nothing_to_translate": "Není co překládat, překlady jsou aktuální.",
+        "translate_product": "Přeložit celý produkt",
+        "translation_intro": "Překlad do jazyka {language}. Překládá se jen název a popis, ostatní ukazuje originál."
     },
     "analyze": {
         "sort": "Seřadit podle",

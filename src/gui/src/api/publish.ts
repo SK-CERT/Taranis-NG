@@ -85,14 +85,14 @@ export function publishProduct(product: unknown, publisher_ids: Array<number | s
     })
 }
 
-// Translates a title without storing it; it is saved with the product.
-export function translateProductTitle(data: {
-    title: string
+// Translates the product's title and description without storing them; they are saved with the product.
+export function translateProduct(data: {
+    texts: { title?: string; description?: string }
     source_language: string | null
     languages: string[]
     report_item_ids: Array<number | string>
 }) {
-    return ApiService.post('/publish/products/translate-title', data)
+    return ApiService.post('/publish/products/translate', data)
 }
 
 // What rendering in `language` falls back on: reports missing it, outdated translations, templates.

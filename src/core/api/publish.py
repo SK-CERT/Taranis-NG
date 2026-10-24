@@ -29,6 +29,7 @@ from model.product import Product
 from model.product_type import ProductType
 from model.publisher_preset import PublisherPreset
 from model.report_item import ReportItem
+from model.translation import PRODUCT_FIELDS
 from remote.presenters_api import PresentersApi
 from shared.schema.presenter import PresenterInput, PresenterInputSchema
 
@@ -225,12 +226,18 @@ def _reset_public_web_cache_if_published_changed(
         _notify_public_web_nodes()
 
 
-def _submitted_titles(product_data: dict) -> dict[str, str]:
-    """Titles per language of a product not saved yet, from its ``translations``."""
+def _submitted_translations(product_data: dict) -> dict[str, dict[str, str]]:
+    """Texts per language and field of a product not saved yet, from its ``translations``."""
     translations = product_data.get("translations") or {}
     if not isinstance(translations, dict):
         return {}
-    return {language: entry.get("title") for language, entry in translations.items() if isinstance(entry, dict) and entry.get("title")}
+    texts: dict[str, dict[str, str]] = {}
+    for language, entry in translations.items():
+        for field, text in entry.items() if isinstance(entry, dict) else ():
+            value = text.get("value") if isinstance(text, dict) else None
+            if field in PRODUCT_FIELDS and isinstance(value, str) and value:
+                texts.setdefault(language, {})[field] = value
+    return texts
 
 
 def load_product(product_data: dict, user: User, token: str) -> tuple[Product | None, dict | None]:
@@ -242,7 +249,7 @@ def load_product(product_data: dict, user: User, token: str) -> tuple[Product | 
         token (str): A unique token used as a temporary product id for previews.
 
     Returns:
-        tuple[Product | None, dict | None]: The product, and the titles per language of an unsaved one.
+        tuple[Product | None, dict | None]: The product, and the texts per language of an unsaved one.
     """
     product_id = product_data.get("id", -1)
     if product_id != -1:
@@ -263,7 +270,7 @@ def load_product(product_data: dict, user: User, token: str) -> tuple[Product | 
     )
     product.product_type = prod_type
     product.user = user
-    return product, _submitted_titles(product_data)
+    return product, _submitted_translations(product_data)
 
 
 def prepare_product(product_data: dict, user: User, token: str, language: str | None = None) -> tuple[dict, HTTPStatus, dict]:
@@ -283,7 +290,7 @@ def prepare_product(product_data: dict, user: User, token: str, language: str | 
         language = content_language.clean_language(language)
     except ValueError as ex:
         return {"error": str(ex)}, HTTPStatus.BAD_REQUEST, None
-    product, title_translations = load_product(product_data, user, token)
+    product, product_translations = load_product(product_data, user, token)
     if product is None:
         return {"error": "Product type not found"}, HTTPStatus.NOT_FOUND, None
 
@@ -305,7 +312,7 @@ def prepare_product(product_data: dict, user: User, token: str, language: str | 
     payload = input_schema.dump(input_data)
     # In the language asked for: texts translated, constants and labels as extra fields, and the
     # product type's templates for that language. Before the citations, which work on the texts.
-    content_localizer.localize_presenter_input(payload, language, product, title_translations)
+    content_localizer.localize_presenter_input(payload, language, product, product_translations)
     content_localizer.localize_templates(payload, product.product_type, language)
     # Presenters get the citations already numbered, never the link keys.
     presenter_input = render_presenter_input(payload, product.links)
@@ -555,25 +562,28 @@ class PublishPublicWebs(Resource):
         return {"total_count": len(items), "items": items}, HTTPStatus.OK
 
 
-class ProductTranslateTitle(Resource):
-    """Translate a product's title with AI; nothing is stored until the product is saved."""
+class ProductTranslate(Resource):
+    """Translate a product's title and description with AI; nothing is stored until the product is saved."""
 
     @auth_required(["PUBLISH_CREATE", "PUBLISH_UPDATE"])
     def post(self) -> tuple[dict, HTTPStatus]:
-        """Translate ``title`` into ``languages``.
+        """Translate ``texts`` (``title``, ``description``) into ``languages``.
 
-        The body holds ``title``, ``source_language``, ``languages`` and ``report_item_ids``. The
+        The body holds ``texts``, ``source_language``, ``languages`` and ``report_item_ids``. The
         provider is the translation provider of the first included report's type, and the
-        reports' TLP must be within its limit, as the title describes them.
+        reports' TLP must be within its limit, as the texts describe them.
 
         Returns:
-            (dict, HTTPStatus): ``translations`` (language -> title) and ``failed`` (language -> reason).
+            (dict, HTTPStatus): ``translations`` (language -> field -> text) and ``failed``
+                (language -> field -> reason).
         """
         body = request.json or {}
-        title = body.get("title")
+        submitted = body.get("texts")
+        texts = {field: text for field, text in (submitted.items() if isinstance(submitted, dict) else ()) if field in PRODUCT_FIELDS}
+        texts = {field: text for field, text in texts.items() if isinstance(text, str) and text.strip()}
         languages = body.get("languages")
-        if not isinstance(title, str) or not title.strip():
-            return {"error": "The product has no title to translate"}, HTTPStatus.BAD_REQUEST
+        if not texts:
+            return {"error": "The product has no text to translate"}, HTTPStatus.BAD_REQUEST
         try:
             source = content_language.clean_language(body.get("source_language"))
             targets = content_language.clean_languages(languages if isinstance(languages, list) else [])
@@ -594,19 +604,20 @@ class ProductTranslateTitle(Resource):
             return {"error": refusal}, HTTPStatus.BAD_REQUEST
         glossary = GlossaryEntry.for_report_types(item.report_item_type.id for item in report_items if item.report_item_type)
 
-        translations: dict[str, str] = {}
-        failed: dict[str, str] = {}
+        translations: dict[str, dict[str, str]] = {}
+        failed: dict[str, dict[str, str]] = {}
         for target in targets:
             if target == source:
                 continue
             try:
-                done, problems = llm_manager.translate_texts(provider, {"title": title}, source, target, glossary=glossary)
+                done, problems = llm_manager.translate_texts(provider, texts, source, target, glossary=glossary)
             except llm_manager.LlmError as ex:
                 return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
-            if "title" in done:
-                translations[target] = done["title"]
-            else:
-                failed[target] = problems.get("title", "not translated")
+            if done:
+                translations[target] = done
+            missing = {field: problems.get(field, "not translated") for field in texts if field not in done}
+            if missing:
+                failed[target] = missing
         return {"translations": translations, "failed": failed}, HTTPStatus.OK
 
 
@@ -649,7 +660,7 @@ def initialize(api: Api) -> None:
     api.add_resource(ProductGetPreview, "/api/v1/publish/products/preview/<string:token>")
     api.add_resource(PublishProduct, "/api/v1/publish/products/publish")
     api.add_resource(PublishPublicWebs, "/api/v1/publish/public-webs")
-    api.add_resource(ProductTranslateTitle, "/api/v1/publish/products/translate-title")
+    api.add_resource(ProductTranslate, "/api/v1/publish/products/translate")
     api.add_resource(ProductLanguageCheck, "/api/v1/publish/products/language-check")
 
     Permission.add("PUBLISH_ACCESS", "Publish access", "Access to publish module")

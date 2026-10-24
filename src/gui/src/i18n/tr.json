@@ -849,8 +849,6 @@
             "untitled": "Başlıksız rapor"
         },
         "language": "Ürünün dili",
-        "translate_titles": "Başlığı tüm dillere çevir",
-        "title_not_translated": "Başlık bazı dillere çevrilemedi",
         "language_in_use": "Ürünün bu dile zaten bir çevirisi var",
         "publish_in": "Yayımlama dili",
         "publish_in_language": "Yayımlama dili: {language}",
@@ -861,7 +859,11 @@
             "outdated": "Bu {language} çevirileri güncel değil, çünkü özgün metin çeviriden sonra değişti:",
             "templates": "Ürün türünün {language} için şablonu yok; {used} şablonları kullanılır.",
             "default_templates": "varsayılan"
-        }
+        },
+        "texts_not_translated": "Başlık veya açıklama bazı dillere çevrilemedi",
+        "nothing_to_translate": "Çevrilecek bir şey yok: çeviriler güncel.",
+        "translate_product": "Ürünün tamamını çevir",
+        "translation_intro": "{language} diline çeviri. Yalnızca başlık ve açıklama çevrilir; geri kalanı özgün metni gösterir."
     },
     "analyze": {
         "sort": "Sıralama ölçütü",

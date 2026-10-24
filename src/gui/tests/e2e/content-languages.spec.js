@@ -320,7 +320,7 @@ test.describe('Content languages', () => {
             data: {
                 id: -1,
                 title: productTitle,
-                description: '',
+                description: 'What changed this week',
                 product_type_id: productType.id,
                 state_id: null,
                 report_items: [{ id: reportId }],
@@ -347,6 +347,19 @@ test.describe('Content languages', () => {
                 return product.translations?.sk?.title?.value
             })
             .toBe('Týždenný bulletin')
+
+        // The description is translated in the same tab, next to its original.
+        const description = page.locator('[data-test="product-description"] textarea')
+        await description.fill('Čo sa zmenilo tento týždeň')
+        await description.blur()
+        await expect
+            .poll(async () => {
+                const product = await (
+                    await api.request.get(`${CORE_API}/publish/products/${productId}`, { headers: headersOf(api.token) })
+                ).json()
+                return [product.description, product.translations?.sk?.description?.value]
+            })
+            .toEqual(['What changed this week', 'Čo sa zmenilo tento týždeň'])
 
         // The report's Slovak name is outdated, and the product type has no Slovak templates.
         await expect(page.locator('[data-test="notice-outdated"]')).toContainText(`${reportTitle} (renamed)`)

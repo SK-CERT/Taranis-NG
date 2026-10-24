@@ -121,13 +121,21 @@ def _product() -> Product:
     return product
 
 
-def test_a_products_status_is_its_titles_in_the_languages_of_its_reports_types() -> None:
+def test_a_products_status_is_its_texts_in_the_languages_of_its_reports_types() -> None:
     product = _product()
     row = ProductTranslation(language="sk", field="title", value="", version=0)
     row.write("Bulletin (sk)", product.title, ORIGIN_AI, 1)
-    product.title_translation_rows.append(row)
+    product.translation_rows.append(row)
 
     assert translation_status.product_status(product) == {"en": TRANSLATION_MISSING, "sk": TRANSLATION_AI}
+
+    # A description counts once there is one: then Slovak is only partly translated.
+    product.description = "Novinky"
+    assert translation_status.product_status(product)["sk"] == TRANSLATION_PARTIAL
+    description = ProductTranslation(language="sk", field="description", value="", version=0)
+    description.write("Novinky (sk)", product.description, ORIGIN_MANUAL, 1)
+    product.translation_rows.append(description)
+    assert translation_status.product_status(product)["sk"] == TRANSLATION_AI
 
     product.title = "Weekly bulletin"
     assert translation_status.product_status(product)["sk"] == TRANSLATION_OUTDATED
@@ -164,10 +172,13 @@ def test_the_report_filters_compare_the_stored_fingerprint_with_the_current_text
     assert "NOT (EXISTS" not in unreviewed
 
 
-def test_the_product_filters_look_at_the_title() -> None:
+def test_the_product_filters_look_at_the_title_and_description() -> None:
     needs, needs_values = _compiled(Product.translation_condition("en", needs=True))
 
     assert "encode(sha256(convert_to(coalesce(product.title, " in needs
+    assert "encode(sha256(convert_to(coalesce(product.description, " in needs
+    assert "title" in needs_values
+    assert "description" in needs_values
     assert "NOT (EXISTS" in needs
     assert ["en"] in needs_values
     assert ORIGIN_AI in _compiled(Product.translation_condition("en", needs=False))[1]

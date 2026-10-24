@@ -849,8 +849,6 @@
             "untitled": "تقرير بلا عنوان"
         },
         "language": "لغة المنتج",
-        "translate_titles": "ترجمة العنوان إلى كل اللغات",
-        "title_not_translated": "تعذّرت ترجمة العنوان إلى بعض اللغات",
         "language_in_use": "للمنتج ترجمة إلى هذه اللغة بالفعل",
         "publish_in": "النشر باللغة",
         "publish_in_language": "النشر باللغة: {language}",
@@ -861,7 +859,11 @@
             "outdated": "هذه الترجمات إلى {language} قديمة، لأن نصها الأصلي تغيّر بعد ترجمتها:",
             "templates": "لا توجد لنوع المنتج قوالب للغة {language}؛ تُستخدم القوالب: {used}.",
             "default_templates": "الافتراضية"
-        }
+        },
+        "texts_not_translated": "تعذّرت ترجمة العنوان أو الوصف إلى بعض اللغات",
+        "nothing_to_translate": "لا شيء للترجمة: الترجمات محدّثة.",
+        "translate_product": "ترجمة المنتج كله",
+        "translation_intro": "الترجمة إلى {language}. يُترجَم العنوان والوصف فقط، ويعرض الباقي النص الأصلي."
     },
     "analyze": {
         "sort": "الترتيب حسب",

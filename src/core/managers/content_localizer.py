@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from managers import content_language
-from model.translation import TITLE_FIELDS
+from model.translation import PRODUCT_FIELDS, TITLE_FIELDS
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping
@@ -165,29 +165,32 @@ def label(
     return resolve(requested, source, original, _label_lookup(translations, field))[0]
 
 
-def product_title(
+def product_text(
     product: Product,
+    field: str,
     requested: str | None,
-    translations: Mapping[str, str] | None = None,
+    translations: Mapping[str, Mapping[str, str]] | None = None,
     *,
     skip_outdated: bool = False,
 ) -> tuple[str, str | None]:
-    """The product's title in ``requested`` and the language it is in.
+    """The product's title or description in ``requested`` and the language it is in.
 
     Args:
         product (Product): The product.
+        field (str): ``title`` or ``description``.
         requested (str | None): The language asked for.
-        translations (Mapping[str, str] | None): Titles per language of a product not saved yet;
-            a saved one uses its stored translations.
+        translations (Mapping[str, Mapping[str, str]] | None): Texts per language and field of a
+            product not saved yet; a saved one uses its stored translations.
         skip_outdated (bool): Pass over translations whose source changed since.
 
     Returns:
-        tuple[str, str | None]: The title and its language.
+        tuple[str, str | None]: The text and its language.
     """
+    original = getattr(product, field) or ""
     if translations is not None:
-        return resolve(requested, product.language, product.title, lambda language: translations.get(language) or None)
-    lookup = _row_lookup(product.title_translation_rows, product.title, skip_outdated=skip_outdated, field="title")
-    return resolve(requested, product.language, product.title, lookup)
+        return resolve(requested, product.language, original, lambda language: (translations.get(language) or {}).get(field) or None)
+    lookup = _row_lookup(product.translation_rows, original, skip_outdated=skip_outdated, field=field)
+    return resolve(requested, product.language, original, lookup)
 
 
 def available_languages(product: Product) -> list[str]:
@@ -283,12 +286,12 @@ def localize_presenter_input(
     payload: dict,
     language: str | None,
     product: Product,
-    title_translations: Mapping[str, str] | None = None,
+    product_translations: Mapping[str, Mapping[str, str]] | None = None,
 ) -> dict:
     """Put a dumped presenter input in ``language``, keeping every key and raw value.
 
-    - The product's title and the reports' names, prefixes and translatable texts are replaced
-      by their translations (free text is never compared in templates).
+    - The product's title and description and the reports' names, prefixes and translatable texts
+      are replaced by their translations (free text is never compared in templates).
     - Choice constants keep their raw value and gain ``value_label``.
     - Report types, groups and items keep their titles and gain ``label`` / ``description_label``
       (and ``section_label`` for groups).
@@ -298,7 +301,8 @@ def localize_presenter_input(
         payload (dict): ``PresenterInputSchema().dump()`` of the product.
         language (str | None): The language to render; None leaves the content as written.
         product (Product): The product the payload was made from (saved or not).
-        title_translations (Mapping[str, str] | None): Titles per language of a product not saved yet.
+        product_translations (Mapping[str, Mapping[str, str]] | None): Texts per language and field
+            of a product not saved yet.
 
     Returns:
         dict: The payload, changed in place.
@@ -307,8 +311,8 @@ def localize_presenter_input(
     if not language:
         return payload
 
-    title, _title_language = product_title(product, language, title_translations)
-    payload["product"]["title"] = title
+    for field in PRODUCT_FIELDS:
+        payload["product"][field] = product_text(product, field, language, product_translations)[0]
 
     report_types = {item.report_item_type.id: item.report_item_type for item in product.report_items if item.report_item_type}
     constants = constants_of(report_types.values())

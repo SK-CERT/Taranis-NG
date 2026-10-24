@@ -849,8 +849,6 @@
             "untitled": "Bericht ohne Titel"
         },
         "language": "Sprache des Produkts",
-        "translate_titles": "Titel in alle Sprachen übersetzen",
-        "title_not_translated": "Der Titel konnte in einige Sprachen nicht übersetzt werden",
         "language_in_use": "Das Produkt hat bereits eine Übersetzung in diese Sprache",
         "publish_in": "Veröffentlichen auf",
         "publish_in_language": "Veröffentlicht auf: {language}",
@@ -861,7 +859,11 @@
             "outdated": "Diese Übersetzungen auf {language} sind veraltet, weil sich ihr Ursprungstext nach der Übersetzung geändert hat:",
             "templates": "Der Produkttyp hat keine Vorlagen für {language}; es werden die Vorlagen „{used}“ verwendet.",
             "default_templates": "Standard"
-        }
+        },
+        "texts_not_translated": "Titel oder Beschreibung konnten in einige Sprachen nicht übersetzt werden",
+        "nothing_to_translate": "Nichts zu übersetzen: Die Übersetzungen sind aktuell.",
+        "translate_product": "Ganzes Produkt übersetzen",
+        "translation_intro": "Übersetzung auf {language}. Nur Titel und Beschreibung werden übersetzt, der Rest zeigt den Ursprungstext."
     },
     "analyze": {
         "sort": "Sortieren nach",

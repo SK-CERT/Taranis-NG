@@ -849,8 +849,6 @@
             "untitled": "无标题报告"
         },
         "language": "产品的语言",
-        "translate_titles": "将标题翻译为所有语言",
-        "title_not_translated": "部分语言的标题未能翻译",
         "language_in_use": "该产品已有这种语言的译文",
         "publish_in": "发布语言",
         "publish_in_language": "发布语言：{language}",
@@ -861,7 +859,11 @@
             "outdated": "这些{language}译文已过时，因为翻译后原文已更改：",
             "templates": "该产品类型没有{language}模板，将使用{used}模板。",
             "default_templates": "默认"
-        }
+        },
+        "texts_not_translated": "标题或描述无法翻译为某些语言",
+        "nothing_to_translate": "没有需要翻译的内容：译文均为最新。",
+        "translate_product": "翻译整个产品",
+        "translation_intro": "翻译为{language}。仅翻译标题和描述，其余显示原文。"
     },
     "analyze": {
         "sort": "排序方式",

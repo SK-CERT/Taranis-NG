@@ -849,8 +849,6 @@
             "untitled": "Informe sin título"
         },
         "language": "Idioma del producto",
-        "translate_titles": "Traducir el título a todos los idiomas",
-        "title_not_translated": "No se pudo traducir el título a algunos idiomas",
         "language_in_use": "El producto ya tiene una traducción a ese idioma",
         "publish_in": "Publicar en",
         "publish_in_language": "Se publica en: {language}",
@@ -861,7 +859,11 @@
             "outdated": "Estas traducciones al {language} están desactualizadas, porque su texto original cambió después de traducirse:",
             "templates": "El tipo de producto no tiene plantillas para {language}; se usan las plantillas: {used}.",
             "default_templates": "predeterminadas"
-        }
+        },
+        "texts_not_translated": "No se pudo traducir el título o la descripción a algunos idiomas",
+        "nothing_to_translate": "No hay nada que traducir: las traducciones están al día.",
+        "translate_product": "Traducir todo el producto",
+        "translation_intro": "Traducción al {language}. Solo se traducen el título y la descripción; el resto muestra el texto original."
     },
     "analyze": {
         "sort": "Ordenar por",

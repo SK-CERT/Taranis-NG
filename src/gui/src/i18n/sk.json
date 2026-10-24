@@ -849,8 +849,6 @@
             "untitled": "Analýza bez názvu"
         },
         "language": "Jazyk produktu",
-        "translate_titles": "Preložiť názov do všetkých jazykov",
-        "title_not_translated": "Názov sa do niektorých jazykov nepodarilo preložiť",
         "language_in_use": "Produkt už má preklad do tohto jazyka",
         "publish_in": "Publikovať v jazyku",
         "publish_in_language": "Publikuje sa v jazyku: {language}",
@@ -861,7 +859,11 @@
             "outdated": "Tieto preklady do jazyka {language} sú zastarané, lebo sa ich originál po preložení zmenil:",
             "templates": "Typ produktu nemá šablóny pre jazyk {language}; použijú sa šablóny: {used}.",
             "default_templates": "predvolené"
-        }
+        },
+        "texts_not_translated": "Názov alebo popis sa do niektorých jazykov nepodarilo preložiť",
+        "nothing_to_translate": "Nie je čo prekladať, preklady sú aktuálne.",
+        "translate_product": "Preložiť celý produkt",
+        "translation_intro": "Preklad do jazyka {language}. Prekladá sa len názov a popis, ostatné ukazuje originál."
     },
     "analyze": {
         "sort": "Zoradiť podľa",

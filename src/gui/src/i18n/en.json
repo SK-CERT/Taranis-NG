@@ -849,8 +849,6 @@
             "untitled": "Untitled report"
         },
         "language": "Language of the product",
-        "translate_titles": "Translate the title into all languages",
-        "title_not_translated": "The title could not be translated into some languages",
         "language_in_use": "The product already has a translation into that language",
         "publish_in": "Publish in",
         "publish_in_language": "Published in: {language}",
@@ -861,7 +859,11 @@
             "outdated": "These translations into {language} are outdated, because their original changed after they were translated:",
             "templates": "The product type has no templates for {language}; the {used} templates are used.",
             "default_templates": "default"
-        }
+        },
+        "texts_not_translated": "The title or description could not be translated into some languages",
+        "nothing_to_translate": "Nothing to translate: the translations are up to date.",
+        "translate_product": "Translate whole product",
+        "translation_intro": "Translation into {language}. Only the title and description are translated; the rest shows the original."
     },
     "analyze": {
         "sort": "Sort by",

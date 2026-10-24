@@ -197,7 +197,8 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
     }
     if language:
         available = content_localizer.available_languages(product)
-        result["title"] = content_localizer.product_title(product, language, skip_outdated=True)[0]
+        result["title"] = content_localizer.product_text(product, "title", language, skip_outdated=True)[0]
+        result["description"] = index.render(content_localizer.product_text(product, "description", language, skip_outdated=True)[0])
         result["language"] = content_localizer.shown_language(language, product.language, available)
         result["available_languages"] = available
     return result

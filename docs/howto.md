@@ -421,8 +421,12 @@ constants).
 - A product's language is chosen with **Language of the product** in the dialog's toolbar, next
   to the state; a new product starts in your default language.
 - The product has a tab for its own language and for each language of its reports' types, with
-  its title per tab. **Translate the title into all languages** fills the others with AI; the
-  check mark next to **AI** keeps an AI title as it is and marks it reviewed.
+  its title and description per tab, as in a report: **Translate whole product** in the toolbar
+  fills, with AI, the texts that have no translation or an outdated one the AI made, language
+  after language with a progress bar; in a language tab, **Translate into {language}** does the
+  same for that language, and **Mark AI translations as reviewed** keeps its AI texts as they are.
+  A translation a person wrote is replaced only from that text's own button, after confirming; the
+  check mark next to **AI** marks one text reviewed.
 - **Show product preview** and **Download** render the open tab's language. The publish dialog
   has a **Publish in** select; each publish uses one language, so publishing two languages takes
   two publishes.

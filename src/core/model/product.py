@@ -27,7 +27,7 @@ from model.state import (
     StateManager,
 )
 from model.tag import Tag, product_tag, set_item_tags
-from model.translation import ORIGIN_AI, ORIGIN_MANUAL, ProductTranslation, sql_source_hash
+from model.translation import ORIGIN_AI, ORIGIN_MANUAL, PRODUCT_FIELDS, ProductTranslation, sql_source_hash
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -79,7 +79,7 @@ class Product(db.Model):
         links: The product's own sources ([{"key", "url"}]) in citation order; the description
             cites them by key (see managers.link_references)
         language: The language the product is written in (ISO 639-1); None while not set
-        title_translation_rows: Its title translated into other languages
+        translation_rows: Its title and description translated into other languages
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -106,7 +106,7 @@ class Product(db.Model):
     report_items = db.relationship("ReportItem", secondary="product_report_item")
     public_webs = db.relationship(PublicWeb, secondary="product_public_web")
 
-    title_translation_rows = db.relationship(
+    translation_rows = db.relationship(
         ProductTranslation,
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -170,13 +170,16 @@ class Product(db.Model):
 
     @property
     def translations(self) -> dict[str, dict]:
-        """Translated titles for the edit form.
+        """Translated title and description for the edit form.
 
         Returns:
-            dict[str, dict]: ``{language: {"title": state}}``, each state holding value, origin,
+            dict[str, dict]: ``{language: {field: state}}``, each state holding value, origin,
                 version, outdated, user and last_updated.
         """
-        return {row.language: {row.field: row.to_dict(self.title)} for row in self.title_translation_rows}
+        translations: dict[str, dict] = {}
+        for row in self.translation_rows:
+            translations.setdefault(row.language, {})[row.field] = row.to_dict(getattr(self, row.field, None))
+        return translations
 
     @property
     def tag_ids(self) -> list[int]:
@@ -195,13 +198,14 @@ class Product(db.Model):
         Returns:
             dict[str, dict[str, str]]: ``{language: {"title": ...}}``.
         """
-        return {row.language: {"title": row.value} for row in self.title_translation_rows if row.value}
+        return {row.language: {"title": row.value} for row in self.translation_rows if row.field == "title" and row.value}
 
     def apply_translations(self, translations: dict | None, user_id: int | None) -> None:
-        """Store the submitted translated titles; a language left out or emptied is removed.
+        """Store the submitted translations; a language or field left out or emptied is removed.
 
         Args:
-            translations (dict | None): ``{language: {"title": ..., "origin": ...}}``; None keeps them.
+            translations (dict | None): ``{language: {field: {"value": ..., "origin": ...}}}`` for
+                the fields in PRODUCT_FIELDS; None keeps them.
             user_id (int | None): Who saves them.
 
         Raises:
@@ -210,31 +214,33 @@ class Product(db.Model):
         if translations is None:
             return
         if not isinstance(translations, dict):
-            msg = "Product translations must map languages to titles"
+            msg = "Product translations must map languages to texts"
             raise ValueError(msg)  # noqa: TRY004 - callers report ValueError as a bad request
-        wanted: dict[str, tuple[str, str]] = {}
+        wanted: dict[tuple[str, str], tuple[str, str]] = {}
         for code, entry in translations.items():
             language = content_language.clean_language(code)
-            title = (entry or {}).get("title") if isinstance(entry, dict) else None
-            if language is None or not isinstance(title, str) or not title.strip():
-                continue
-            if language == self.language:
-                msg = f"The product is written in {content_language.language_name(language)}; it cannot also be translated into it"
-                raise ValueError(msg)
-            origin = ORIGIN_AI if (entry or {}).get("origin") == ORIGIN_AI else ORIGIN_MANUAL
-            wanted[language] = (title.strip(), origin)
+            texts = {field: text for field, text in (entry.items() if isinstance(entry, dict) else ()) if field in PRODUCT_FIELDS}
+            for field, text in texts.items():
+                value = text.get("value") if isinstance(text, dict) else None
+                if language is None or not isinstance(value, str) or not value.strip():
+                    continue
+                if language == self.language:
+                    msg = f"The product is written in {content_language.language_name(language)}; it cannot also be translated into it"
+                    raise ValueError(msg)
+                origin = ORIGIN_AI if text.get("origin") == ORIGIN_AI else ORIGIN_MANUAL
+                wanted[language, field] = (value.strip(), origin)
 
-        for row in list(self.title_translation_rows):
-            if row.language not in wanted:
-                self.title_translation_rows.remove(row)
-        for language, (title, origin) in wanted.items():
-            row = next((row for row in self.title_translation_rows if row.language == language), None)
+        for row in list(self.translation_rows):
+            if (row.language, row.field) not in wanted:
+                self.translation_rows.remove(row)
+        for (language, field), (value, origin) in wanted.items():
+            row = next((row for row in self.translation_rows if row.language == language and row.field == field), None)
             if row is None:
-                row = ProductTranslation(language=language, field="title", value="", version=0)
-                self.title_translation_rows.append(row)
-            # An unchanged title keeps its source fingerprint, so it still shows as outdated.
-            if row.value != title or row.origin != origin or not row.version:
-                row.write(title, self.title, origin, user_id)
+                row = ProductTranslation(language=language, field=field, value="", version=0)
+                self.translation_rows.append(row)
+            # An unchanged text keeps its source fingerprint, so it still shows as outdated.
+            if row.value != value or row.origin != origin or not row.version:
+                row.write(value, getattr(self, field), origin, user_id)
 
     @classmethod
     def count_by_states(cls) -> dict:
@@ -422,10 +428,11 @@ class Product(db.Model):
 
     @staticmethod
     def translation_condition(language: str, *, needs: bool) -> sqlalchemy.ColumnElement[bool]:
-        """SQL for a product that one of its reports' types offers in ``language`` and whose title ...
+        """SQL for a product that one of its reports' types offers in ``language`` and whose texts ...
 
-        - with ``needs``: has no current translation into it (missing or outdated);
-        - otherwise: has a current translation into it that AI made and nobody has edited since.
+        - with ``needs``: have no current translation into it (missing or outdated): its title, or
+          its description when it has one;
+        - otherwise: have a current translation into it that AI made and nobody has reviewed since.
 
         Args:
             language (str): ISO 639-1 code.
@@ -448,16 +455,24 @@ class Product(db.Model):
                 report_type.languages.contains([language]),
             ),
         )
-        current = [
-            row.product_id == Product.id,
-            row.language == language,
-            row.field == "title",
-            func.coalesce(row.value, "") != "",
-            row.source_hash == sql_source_hash(Product.title),
-        ]
+
+        def current(field: str, source: sqlalchemy.ColumnElement) -> list:
+            return [
+                row.product_id == Product.id,
+                row.language == language,
+                row.field == field,
+                func.coalesce(row.value, "") != "",
+                row.source_hash == sql_source_hash(source),
+            ]
+
         if needs:
-            return and_(offered, ~sqlalchemy.exists().where(*current))
-        return and_(offered, sqlalchemy.exists().where(*current, row.origin == ORIGIN_AI))
+            untranslated_description = and_(
+                func.coalesce(Product.description, "") != "",
+                ~sqlalchemy.exists().where(*current("description", Product.description)),
+            )
+            return and_(offered, or_(~sqlalchemy.exists().where(*current("title", Product.title)), untranslated_description))
+        ai_made = [sqlalchemy.exists().where(*current(field, getattr(Product, field)), row.origin == ORIGIN_AI) for field in PRODUCT_FIELDS]
+        return and_(offered, or_(*ai_made))
 
     @classmethod
     def get_json(cls, filter: dict, offset: int, limit: int, user: User) -> dict:
@@ -680,7 +695,7 @@ class Product(db.Model):
         original_product.title = product.title
         original_product.description = product.description
         if product.language is not None and product.language != original_product.language:
-            translated = {row.language for row in original_product.title_translation_rows}
+            translated = {row.language for row in original_product.translation_rows}
             if product.submitted_translations is None and product.language in translated:
                 msg = f"The product is already translated into {content_language.language_name(product.language)}"
                 raise ValueError(msg)

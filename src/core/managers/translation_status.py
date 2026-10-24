@@ -2,7 +2,7 @@
 
 For each language an item can be read in besides its own, the fields that count are those with
 something to translate: a report's name, its prefix and its translatable fields (when not empty),
-a product's title. The status is the first that applies:
+a product's title and description (when not empty). The status is the first that applies:
 
 1. ``translation_missing`` - none of them has a translation;
 2. ``translation_outdated`` - a translation was made from an earlier original;
@@ -26,7 +26,7 @@ from model.tag import (
     TRANSLATION_OUTDATED,
     TRANSLATION_PARTIAL,
 )
-from model.translation import ORIGIN_AI, TITLE_FIELDS
+from model.translation import ORIGIN_AI, PRODUCT_FIELDS, TITLE_FIELDS
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -106,7 +106,9 @@ def product_languages(product: Product) -> list[str]:
 
 
 def product_status(product: Product) -> dict[str, str]:
-    """The status of a product's title in each of its languages besides its own.
+    """The status of a product's title and description in each of its languages besides its own.
+
+    The title counts, and the description when it is not empty.
 
     Args:
         product (Product): The product.
@@ -116,5 +118,8 @@ def product_status(product: Product) -> dict[str, str]:
     """
     if not product.language:
         return {NO_LANGUAGE: LANGUAGE_NOT_SET}
-    rows = {row.language: row for row in product.title_translation_rows if row.field == "title"}
-    return {language: status_of([(product.title, rows.get(language))]) for language in product_languages(product)}
+    rows = {(row.language, row.field): row for row in product.translation_rows}
+    sources = [(field, getattr(product, field)) for field in PRODUCT_FIELDS if getattr(product, field)]
+    return {
+        language: status_of([(source, rows.get((language, field))) for field, source in sources]) for language in product_languages(product)
+    }

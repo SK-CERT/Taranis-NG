@@ -849,8 +849,6 @@
             "untitled": "ja'ghach per Hutlhbogh"
         },
         "language": "Doch Hol",
-        "translate_titles": "Hoch Holmey pong yImugh",
-        "title_not_translated": "'op Holmey pong vImughlaHbe'",
         "language_in_use": "Holvam mugh ghaj Dochvam",
         "publish_in": "Holvam yIchenmoH",
         "publish_in_language": "chenmoHlu'bogh Hol: {language}",
@@ -861,7 +859,11 @@
             "outdated": "{language} mughmeyvam ngo', mughlu'DI' wa'DIch ghItlh choHlu'mo':",
             "templates": "{language} meghmey ghajbe' Doch Segh; {used} meghmey lo'lu'.",
             "default_templates": "motlh"
-        }
+        },
+        "texts_not_translated": "wa'logh Hol mugh, pagh Del mughlaHbe'lu'",
+        "nothing_to_translate": "mughnIS pagh: mughmey chu'.",
+        "translate_product": "Hoch ghItlh yImugh",
+        "translation_intro": "{language} Hol mugh. per Del je neH mughlu'; latlh wa'DIch ghItlh 'agh."
     },
     "analyze": {
         "sort": "yIngaQmoH",

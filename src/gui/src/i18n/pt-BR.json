@@ -849,8 +849,6 @@
             "untitled": "Relatório sem título"
         },
         "language": "Idioma do produto",
-        "translate_titles": "Traduzir o título para todos os idiomas",
-        "title_not_translated": "Não foi possível traduzir o título para alguns idiomas",
         "language_in_use": "O produto já tem uma tradução para esse idioma",
         "publish_in": "Publicar em",
         "publish_in_language": "Publicado em: {language}",
@@ -861,7 +859,11 @@
             "outdated": "Estas traduções para {language} estão desatualizadas, porque o texto original mudou depois da tradução:",
             "templates": "O tipo de produto não tem modelos para {language}; são usados os modelos: {used}.",
             "default_templates": "padrão"
-        }
+        },
+        "texts_not_translated": "Não foi possível traduzir o título ou a descrição para alguns idiomas",
+        "nothing_to_translate": "Nada a traduzir: as traduções estão atualizadas.",
+        "translate_product": "Traduzir o produto inteiro",
+        "translation_intro": "Tradução para {language}. Apenas o título e a descrição são traduzidos; o resto mostra o texto original."
     },
     "analyze": {
         "sort": "Ordenar por",

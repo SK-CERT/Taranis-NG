@@ -849,8 +849,6 @@
             "untitled": "Naamloos rapport"
         },
         "language": "Taal van het product",
-        "translate_titles": "Titel naar alle talen vertalen",
-        "title_not_translated": "De titel kon niet naar alle talen worden vertaald",
         "language_in_use": "Het product heeft al een vertaling naar die taal",
         "publish_in": "Publiceren in",
         "publish_in_language": "Gepubliceerd in het {language}",
@@ -861,7 +859,11 @@
             "outdated": "Deze vertalingen naar het {language} zijn verouderd, omdat de oorspronkelijke tekst na het vertalen is gewijzigd:",
             "templates": "Het producttype heeft geen sjablonen voor het {language}; de sjablonen ‘{used}’ worden gebruikt.",
             "default_templates": "standaard"
-        }
+        },
+        "texts_not_translated": "De titel of beschrijving kon niet naar sommige talen worden vertaald",
+        "nothing_to_translate": "Niets te vertalen: de vertalingen zijn actueel.",
+        "translate_product": "Hele product vertalen",
+        "translation_intro": "Vertaling naar het {language}. Alleen de titel en de beschrijving worden vertaald; de rest toont de oorspronkelijke tekst."
     },
     "analyze": {
         "sort": "Sorteren op",

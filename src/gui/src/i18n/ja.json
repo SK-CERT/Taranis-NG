@@ -849,8 +849,6 @@
             "untitled": "無題のレポート"
         },
         "language": "プロダクトの言語",
-        "translate_titles": "タイトルをすべての言語に翻訳",
-        "title_not_translated": "一部の言語にタイトルを翻訳できませんでした",
         "language_in_use": "このプロダクトにはその言語の翻訳がすでにあります",
         "publish_in": "公開する言語",
         "publish_in_language": "公開する言語: {language}",
@@ -861,7 +859,11 @@
             "outdated": "これらの{language}の翻訳は古くなっています。翻訳後に原文が変更されました:",
             "templates": "このプロダクト種別には{language}のテンプレートがありません。{used}のテンプレートが使われます。",
             "default_templates": "既定"
-        }
+        },
+        "texts_not_translated": "一部の言語にタイトルまたは説明を翻訳できませんでした",
+        "nothing_to_translate": "翻訳するものはありません。翻訳は最新です。",
+        "translate_product": "プロダクト全体を翻訳",
+        "translation_intro": "{language}への翻訳。翻訳されるのはタイトルと説明のみで、それ以外は原文が表示されます。"
     },
     "analyze": {
         "sort": "並べ替え",

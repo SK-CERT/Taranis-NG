@@ -130,6 +130,8 @@ def product() -> SimpleNamespace:
     attributes[0].translations.append(text_row)
     product_title = ProductTranslation(language="sk", field="title", value="", version=0)
     product_title.write("Bulletin (sk)", "Bulletin", ORIGIN_AI, 1)
+    product_description = ProductTranslation(language="sk", field="description", value="", version=0)
+    product_description.write("Súhrn [#ab12cd]", "Souhrn [#ab12cd]", ORIGIN_AI, 1)
     parameter_values = [SimpleNamespace(parameter=SimpleNamespace(key="BODY_TEMPLATE_PATH"), value="b_cz.txt")]
     product_type = SimpleNamespace(
         language="cs",
@@ -138,16 +140,17 @@ def product() -> SimpleNamespace:
     )
     return SimpleNamespace(
         title="Bulletin",
+        description="Souhrn [#ab12cd]",
         language="cs",
         report_items=[report],
-        title_translation_rows=[product_title],
+        translation_rows=[product_title, product_description],
         product_type=product_type,
     )
 
 
 def _payload() -> dict:
     return {
-        "product": {"title": "Bulletin"},
+        "product": {"title": "Bulletin", "description": "Souhrn [#ab12cd]"},
         "parameter_values": [{"parameter": {"key": "BODY_TEMPLATE_PATH"}, "value": "b_cz.txt"}],
         "reports": [
             {
@@ -178,7 +181,8 @@ def test_presenter_input_in_slovak_keeps_keys_titles_and_raw_constants(product: 
     payload = content_localizer.localize_presenter_input(_payload(), "sk", product)
     content_localizer.localize_templates(payload, product.product_type, "sk")
 
-    assert payload["product"] == {"title": "Bulletin (sk)", "language": "sk"}
+    # Citations stay keys here; rendering numbers them after the translation is in place.
+    assert payload["product"] == {"title": "Bulletin (sk)", "description": "Súhrn [#ab12cd]", "language": "sk"}
     report = payload["reports"][0]
     assert report["title"] == "Kritická chyba (sk)"
     # No Slovak or English prefix: the original.
@@ -201,7 +205,7 @@ def test_presenter_input_in_its_own_language_is_the_original(product: SimpleName
     payload = content_localizer.localize_presenter_input(_payload(), "cs", product)
     content_localizer.localize_templates(payload, product.product_type, "cs")
 
-    assert payload["product"]["title"] == "Bulletin"
+    assert (payload["product"]["title"], payload["product"]["description"]) == ("Bulletin", "Souhrn [#ab12cd]")
     assert payload["reports"][0]["title"] == "Kritická chyba"
     assert payload["reports"][0]["attributes"][1]["value_label"] == "Vysoká"
     assert payload["parameter_values"][0]["value"] == "b_cz.txt"
@@ -210,13 +214,14 @@ def test_presenter_input_in_its_own_language_is_the_original(product: SimpleName
 def test_without_a_language_the_input_is_unchanged(product: SimpleNamespace) -> None:
     payload = content_localizer.localize_presenter_input(_payload(), None, product)
 
-    assert payload == {**_payload(), "product": {"title": "Bulletin", "language": None}}
+    assert payload == {**_payload(), "product": {"title": "Bulletin", "description": "Souhrn [#ab12cd]", "language": None}}
 
 
-def test_an_unsaved_products_titles_come_from_the_form(product: SimpleNamespace) -> None:
-    payload = content_localizer.localize_presenter_input(_payload(), "sk", product, {"sk": "Bulletin z formulára"})
+def test_an_unsaved_products_texts_come_from_the_form(product: SimpleNamespace) -> None:
+    payload = content_localizer.localize_presenter_input(_payload(), "sk", product, {"sk": {"title": "Bulletin z formulára"}})
 
-    assert payload["product"]["title"] == "Bulletin z formulára"
+    # A text the form has no translation of falls back like any other.
+    assert (payload["product"]["title"], payload["product"]["description"]) == ("Bulletin z formulára", "Souhrn [#ab12cd]")
 
 
 def test_outdated_translations_are_skipped_when_asked(product: SimpleNamespace) -> None:
@@ -274,8 +279,8 @@ def test_the_public_web_shows_a_language_and_keeps_what_it_compares(published: S
     feed = public_web._serialize_product(published, "sk")
 
     assert (feed["title"], feed["language"], feed["available_languages"]) == ("Bulletin (sk)", "sk", ["cs", "sk"])
-    # The product's description is not translated.
-    assert feed["description"] == "Souhrn [1]"
+    # The description is translated too, its citations numbered like the original's.
+    assert feed["description"] == "Súhrn [1]"
     report = feed["report_items"][0]
     assert (report["title"], report["title_prefix"]) == ("Kritická chyba (sk)", "ZRANITELNOST")
     assert (report["type"], report["type_label"]) == ("Vulnerability Report", "Správa o zraniteľnosti")

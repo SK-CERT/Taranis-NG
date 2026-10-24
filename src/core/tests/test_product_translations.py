@@ -1,7 +1,8 @@
-"""Product titles in other languages, constant translation, and the publish endpoints that use them.
+"""Product titles and descriptions in other languages, constant translation, and the publish endpoints.
 
-Titles are saved with the product; one that did not change keeps its source fingerprint, so a
-changed original still marks it outdated. Models are built in memory; commits are stubbed.
+Translations are saved with the product, per language and field; one that did not change keeps its
+source fingerprint, so a changed original still marks it outdated. Models are built in memory;
+commits are stubbed.
 """
 
 from __future__ import annotations
@@ -35,32 +36,52 @@ def _no_commit(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(db.session, "rollback", lambda: None)
 
 
-def _product(language: str | None = "cs") -> Product:
-    return Product(-1, "Bulletin", "", 1, None, [], language=language)
+def _product(language: str | None = "cs", description: str = "") -> Product:
+    return Product(-1, "Bulletin", description, 1, None, [], language=language)
 
 
-def test_titles_are_stored_with_their_origin() -> None:
-    product = _product()
+def _text(value: str, origin: str | None = None) -> dict:
+    return {"value": value} | ({"origin": origin} if origin else {})
 
-    product.apply_translations({"en": {"title": "Bulletin (en)", "origin": ORIGIN_AI}, "sk": {"title": " Bulletin (sk) "}}, USER.id)
+
+def test_titles_and_descriptions_are_stored_with_their_origin() -> None:
+    product = _product(description="Novinky týdne [#ab12cd]")
+
+    product.apply_translations(
+        {
+            "en": {"title": _text("Bulletin (en)", ORIGIN_AI), "description": _text("News of the week [#ab12cd]", ORIGIN_AI)},
+            "sk": {"title": _text(" Bulletin (sk) "), "unknown": _text("ignored")},
+        },
+        USER.id,
+    )
 
     assert product.title_translations == {"en": {"title": "Bulletin (en)"}, "sk": {"title": "Bulletin (sk)"}}
     states = product.translations
+    assert set(states["en"]) == {"title", "description"}
+    assert set(states["sk"]) == {"title"}
     assert (states["en"]["title"]["origin"], states["sk"]["title"]["origin"]) == (ORIGIN_AI, ORIGIN_MANUAL)
-    assert states["en"]["title"]["outdated"] is False
+    assert states["en"]["description"] | {"user": None, "last_updated": None} == {
+        "value": "News of the week [#ab12cd]",
+        "origin": ORIGIN_AI,
+        "version": 1,
+        "outdated": False,
+        "user": None,
+        "last_updated": None,
+    }
 
 
-def test_an_unchanged_title_stays_outdated_after_the_original_changes() -> None:
-    product = _product()
-    product.apply_translations({"en": {"title": "Bulletin (en)", "origin": ORIGIN_AI}}, USER.id)
+def test_an_unchanged_text_stays_outdated_after_its_original_changes() -> None:
+    product = _product(description="Novinky")
+    translations = {"en": {"title": _text("Bulletin (en)", ORIGIN_AI), "description": _text("News", ORIGIN_AI)}}
+    product.apply_translations(translations, USER.id)
 
-    product.title = "Weekly bulletin"
-    product.apply_translations({"en": {"title": "Bulletin (en)", "origin": ORIGIN_AI}}, USER.id)
-    assert product.translations["en"]["title"]["outdated"] is True
+    product.description = "Novinky týdne"
+    product.apply_translations(translations, USER.id)
+    assert (product.translations["en"]["title"]["outdated"], product.translations["en"]["description"]["outdated"]) == (False, True)
 
-    product.apply_translations({"en": {"title": "Weekly bulletin (en)", "origin": ORIGIN_MANUAL}}, USER.id)
-    assert product.translations["en"]["title"] | {"user": None, "last_updated": None} == {
-        "value": "Weekly bulletin (en)",
+    product.apply_translations({"en": {"title": _text("Bulletin (en)", ORIGIN_AI), "description": _text("News of the week")}}, USER.id)
+    assert product.translations["en"]["description"] | {"user": None, "last_updated": None} == {
+        "value": "News of the week",
         "origin": ORIGIN_MANUAL,
         "version": 2,
         "outdated": False,
@@ -69,26 +90,30 @@ def test_an_unchanged_title_stays_outdated_after_the_original_changes() -> None:
     }
 
 
-def test_a_language_left_out_is_removed_and_none_keeps_everything() -> None:
-    product = _product()
-    product.apply_translations({"en": {"title": "Bulletin (en)"}, "sk": {"title": "Bulletin (sk)"}}, USER.id)
+def test_a_language_or_field_left_out_is_removed_and_none_keeps_everything() -> None:
+    product = _product(description="Novinky")
+    product.apply_translations(
+        {"en": {"title": _text("Bulletin (en)"), "description": _text("News")}, "sk": {"title": _text("Bulletin (sk)")}},
+        USER.id,
+    )
 
     product.apply_translations(None, USER.id)
-    assert set(product.title_translations) == {"en", "sk"}
+    assert {(row.language, row.field) for row in product.translation_rows} == {("en", "title"), ("en", "description"), ("sk", "title")}
 
-    product.apply_translations({"sk": {"title": "Bulletin (sk)"}, "en": {"title": ""}}, USER.id)
-    assert set(product.title_translations) == {"sk"}
+    emptied = {"sk": {"title": _text("Bulletin (sk)")}, "en": {"title": _text("Bulletin (en)"), "description": _text("")}}
+    product.apply_translations(emptied, USER.id)
+    assert {(row.language, row.field) for row in product.translation_rows} == {("en", "title"), ("sk", "title")}
 
 
 @pytest.mark.parametrize(
     ("translations", "error"),
     [
-        ({"cs": {"title": "Bulletin"}}, "The product is written in Czech; it cannot also be translated into it"),
-        ({"cz": {"title": "Bulletin"}}, "Unknown language code: cz"),
-        (["en"], "Product translations must map languages to titles"),
+        ({"cs": {"title": _text("Bulletin")}}, "The product is written in Czech; it cannot also be translated into it"),
+        ({"cz": {"title": _text("Bulletin")}}, "Unknown language code: cz"),
+        (["en"], "Product translations must map languages to texts"),
     ],
 )
-def test_titles_the_product_cannot_have_are_refused(translations: object, error: str) -> None:
+def test_translations_the_product_cannot_have_are_refused(translations: object, error: str) -> None:
     with pytest.raises(ValueError, match=error):
         _product().apply_translations(translations, USER.id)
 
@@ -125,47 +150,60 @@ def app(monkeypatch: pytest.MonkeyPatch) -> Flask:
     return Flask(__name__)
 
 
-def test_a_title_is_translated_with_the_first_report_types_provider(app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_title_and_description_are_translated_with_the_first_report_types_provider(app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list = []
 
     def translate(provider: object, texts: dict, source: str | None, target: str, glossary: object = ()) -> tuple[dict, dict]:  # noqa: ARG001
         calls.append((provider.name, texts, source, target))
-        return ({"title": f"[{target}] {texts['title']}"}, {}) if target != "de" else ({}, {"title": "came back empty"})
+        if target == "de":
+            return {"title": f"[de] {texts['title']}"}, {"description": "lost or changed its citations"}
+        return {field: f"[{target}] {text}" for field, text in texts.items()}, {}
 
     monkeypatch.setattr(llm_manager, "translate_texts", translate)
 
     payload, status = _call(
         app,
-        publish_api.ProductTranslateTitle(),
+        publish_api.ProductTranslate(),
         "post",
-        {"title": "Bulletin", "source_language": "cs", "languages": ["en", "cs", "de"], "report_item_ids": [1, 2]},
+        {
+            "texts": {"title": "Bulletin", "description": "Novinky [#ab12cd]", "subtitle": "ignored"},
+            "source_language": "cs",
+            "languages": ["en", "cs", "de"],
+            "report_item_ids": [1, 2],
+        },
     )
 
     assert status == HTTPStatus.OK
-    assert payload == {"translations": {"en": "[en] Bulletin"}, "failed": {"de": "came back empty"}}
+    assert payload == {
+        "translations": {"en": {"title": "[en] Bulletin", "description": "[en] Novinky [#ab12cd]"}, "de": {"title": "[de] Bulletin"}},
+        "failed": {"de": {"description": "lost or changed its citations"}},
+    }
     assert [call[3] for call in calls] == ["en", "de"]
+    assert calls[0][1] == {"title": "Bulletin", "description": "Novinky [#ab12cd]"}
 
 
-def test_a_title_is_not_sent_above_the_providers_tlp(app: Flask) -> None:
+def test_a_product_is_not_sent_above_the_providers_tlp(app: Flask) -> None:
     payload, status = _call(
         app,
-        publish_api.ProductTranslateTitle(),
+        publish_api.ProductTranslate(),
         "post",
-        {"title": "Bulletin", "languages": ["en"], "report_item_ids": [2, 3]},
+        {"texts": {"title": "Bulletin"}, "languages": ["en"], "report_item_ids": [2, 3]},
     )
 
     assert status == HTTPStatus.BAD_REQUEST
     assert payload["error"] == "The product's reports is TLP:RED, and the AI provider 'Local' only accepts up to TLP:GREEN"
 
 
-def test_a_title_needs_a_provider_and_languages(app: Flask) -> None:
-    resource = publish_api.ProductTranslateTitle()
+def test_a_product_translation_needs_a_text_a_provider_and_languages(app: Flask) -> None:
+    resource = publish_api.ProductTranslate()
 
-    assert _call(app, resource, "post", {"title": "B", "languages": ["en"], "report_item_ids": [1]})[0]["error"] == (
+    assert _call(app, resource, "post", {"texts": {"title": "B"}, "languages": ["en"], "report_item_ids": [1]})[0]["error"] == (
         "None of the product's report types has an AI provider for translation"
     )
-    assert _call(app, resource, "post", {"title": "B", "languages": []})[0]["error"] == "languages is required"
-    assert _call(app, resource, "post", {"title": " ", "languages": ["en"]})[0]["error"] == "The product has no title to translate"
+    assert _call(app, resource, "post", {"texts": {"description": "D"}, "languages": []})[0]["error"] == "languages is required"
+    assert _call(app, resource, "post", {"texts": {"title": " ", "description": ""}, "languages": ["en"]})[0]["error"] == (
+        "The product has no text to translate"
+    )
 
 
 def test_constants_missing_a_language_are_translated_in_batches(monkeypatch: pytest.MonkeyPatch) -> None:
