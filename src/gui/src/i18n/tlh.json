@@ -1188,7 +1188,15 @@
             "entity_type_required": "Doch Segh poQlu'"
         },
         "tags": {
-            "tab_description": "naDev permey DaSeHlaH."
+            "tab_description": "naDev permey DaSeHlaH.",
+            "system": {
+                "translation_missing": "mugh tu'lu'be'",
+                "translation_partial": "bID mughlu'pu'",
+                "translation_outdated": "mugh ngo'",
+                "translation_ai": "De'wI' mugh bejlu'be'",
+                "translation_done": "mughlu'pu'",
+                "language_not_set": "Hol wIvlu'be'"
+            }
         },
         "tag_workflow": {
             "tab_description": "naDev per rarghachmey DaSeHlaH."
@@ -2371,5 +2379,30 @@
         "product_hint": "Hal'a' ngu'laH Delghach. Delghach DelaHbogh Daq wa'DIch mI' lunob, ja'meymey rarwI'mey nI'.",
         "product_title": "rarwI'mey",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "permey",
+        "tag": "per",
+        "none_defined": "Doch Dochmeyvam per tu'lu'be'",
+        "built_in_hint": "Taranis per lan; pongDaj choHlaH, De'wI' Dub choHlaH, 'ach Qaw'laHbe'. per mIwDaq yIQotlh.",
+        "built_in_link_hint": "Taranis permey rarlu'taH; yIQotlh",
+        "add_new": "per chu' yIchel",
+        "edit": "per yIchoH",
+        "name": "pong",
+        "description": "Del",
+        "color": "nguv",
+        "icon": "mIllogh",
+        "in_use": "{count} ja'chuq ghap Doch per lanlu'; Qaw'laHbe'",
+        "add_link": "per rar yIchel",
+        "edit_link": "per rar yIchoH",
+        "status_in_language": "{language}: {status}",
+        "filter": "permey mughmo' yIwIv",
+        "translation": "mugh",
+        "translation_language": "Hol",
+        "translation_any": "Hoch",
+        "translation_needs": "mughnIS",
+        "translation_unreviewed": "De'wI' mugh bejlu'be'",
+        "translation_not_set": "Hol wIvlu'be'",
+        "clear_filter": "yIteq"
     }
 }

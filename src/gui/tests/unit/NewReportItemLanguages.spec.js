@@ -69,7 +69,28 @@ vi.mock('@/api/analyze', () => ({
     getReportItemLocks: vi.fn(() => Promise.resolve({ data: {} })),
     aiGenerate: vi.fn(),
     translateReportItem: vi.fn(),
+    setReportItemTags: vi.fn((_id, tagIds) => Promise.resolve({ data: { tags: tagIds } })),
     uploadAttachment: vi.fn()
+}))
+
+vi.mock('@/api/tags', () => ({
+    getEntityTypeTags: vi.fn(() =>
+        Promise.resolve({
+            data: {
+                tags: [
+                    { id: 1, display_name: 'Urgent', color: '#FF0000', icon: 'mdi-fire', system_key: null, sort_order: 0 },
+                    {
+                        id: 11,
+                        display_name: 'translation_partial',
+                        color: '#1E88E5',
+                        icon: 'mdi-circle-half-full',
+                        system_key: 'translation_partial',
+                        sort_order: 101
+                    }
+                ]
+            }
+        })
+    )
 }))
 
 const VDialogStub = { name: 'VDialog', props: ['modelValue'], template: '<div><slot /></div>' }
@@ -205,5 +226,44 @@ describe('NewReportItem languages', () => {
 
         expect(analyzeApi.getReportItemData).not.toHaveBeenCalled()
         expect(wrapper.html()).toContain('Kritická chyba')
+    })
+
+    it('puts tags on a saved report right away, and takes the ones another user puts on it', async () => {
+        const { wrapper, analyzeApi } = await openReport('cs')
+        expect(wrapper.find('[data-test="tag-picker"]').exists()).toBe(true)
+
+        await wrapper.vm.changeTags([1])
+        expect(analyzeApi.setReportItemTags).toHaveBeenCalledWith(7, [1])
+
+        window.dispatchEvent(new CustomEvent('report-item-updated', { detail: { report_item_id: 7, user_id: 5, tags: [] } }))
+        await flushPromises()
+        expect(wrapper.vm.report_tags).toEqual([])
+        expect(analyzeApi.getReportItemData).not.toHaveBeenCalled()
+    })
+
+    it('marks each language tab with its translation status', async () => {
+        // The name has an English translation, the description none yet.
+        const { wrapper } = await openReport('cs')
+
+        const english = wrapper.find('[data-test="report-language-tabs"]').findAll('.v-tab').at(1)
+        expect(english.find('[data-test="tab-status-translation_partial"]').exists()).toBe(true)
+    })
+
+    it('takes fresh translations and tags on a background refresh, without rebuilding the form', async () => {
+        const { wrapper, analyzeApi } = await openReport('cs')
+        const groups = wrapper.vm.attribute_groups
+        const fresh = reportDetail('cs')
+        fresh.tags = [1]
+        fresh.translations = { en: { title: { value: 'Critical flaw', origin: 'manual', version: 2, outdated: false } } }
+        fresh.attributes[0].translations = { en: { value: 'An attacker can', origin: 'manual', version: 1, outdated: false } }
+        vi.mocked(analyzeApi.getReportItem).mockResolvedValue({ data: fresh })
+
+        await wrapper.vm.showDetail({ id: 7 }, false)
+        await flushPromises()
+
+        expect(wrapper.vm.attribute_groups).toBe(groups)
+        expect(wrapper.vm.report_tags).toEqual([1])
+        expect(wrapper.vm.translations.en.title.value).toBe('Critical flaw')
+        expect(wrapper.vm.attribute_groups[0].attribute_group_items[0].values[0].translations.en.value).toBe('An attacker can')
     })
 })

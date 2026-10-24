@@ -1166,7 +1166,7 @@
             "removed_error": "De status is in gebruik en kon niet worden verwijderd"
         },
         "state_workflow": {
-            "tab_description": "Hier kunt u statuskoppelingen with entities beheren.",
+            "tab_description": "Hier kunt u koppelingen van statussen aan entiteiten beheren.",
             "state": "Status",
             "state_type": "Statustype",
             "entity_type": "Entiteitstype",
@@ -1188,10 +1188,18 @@
             "entity_type_required": "Entiteitstype vereist"
         },
         "tags": {
-            "tab_description": "Hier kunt u tags beheren."
+            "tab_description": "Hier kunt u tags beheren.",
+            "system": {
+                "translation_missing": "Vertaling ontbreekt",
+                "translation_partial": "Deels vertaald",
+                "translation_outdated": "Vertaling verouderd",
+                "translation_ai": "AI-vertaling niet nagekeken",
+                "translation_done": "Vertaald",
+                "language_not_set": "Taal niet ingesteld"
+            }
         },
         "tag_workflow": {
-            "tab_description": "Hier kunt u tag koppelingen with entities beheren."
+            "tab_description": "Hier kunt u koppelingen van tags aan entiteiten beheren."
         },
         "entity_types": {
             "report_item": "Rapportitem",
@@ -2371,5 +2379,30 @@
         "product_hint": "Bronnen die de productbeschrijving kan citeren. In het gepubliceerde product worden ze als eerste genummerd, vóór de koppelingen van de rapporten.",
         "product_title": "Koppelingen",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Tags",
+        "tag": "Tag",
+        "none_defined": "Voor deze items zijn geen tags gedefinieerd",
+        "built_in_hint": "Taranis zet deze tag; je kunt hem hernoemen en opmaken, maar niet verwijderen. Zet hem uit in de tagworkflow.",
+        "built_in_link_hint": "Ingebouwde tags blijven gekoppeld; zet ze in plaats daarvan uit",
+        "add_new": "Nieuwe tag toevoegen",
+        "edit": "Tag bewerken",
+        "name": "Naam",
+        "description": "Beschrijving",
+        "color": "Kleur",
+        "icon": "Pictogram",
+        "in_use": "De tag staat op {count} rapporten of producten en kan niet worden verwijderd",
+        "add_link": "Tagkoppeling toevoegen",
+        "edit_link": "Tagkoppeling bewerken",
+        "status_in_language": "{language}: {status}",
+        "filter": "Filteren op tags en vertaling",
+        "translation": "Vertaling",
+        "translation_language": "Taal",
+        "translation_any": "Alle",
+        "translation_needs": "Vertaling nodig",
+        "translation_unreviewed": "AI-vertaling niet nagekeken",
+        "translation_not_set": "Taal niet ingesteld",
+        "clear_filter": "Wissen"
     }
 }

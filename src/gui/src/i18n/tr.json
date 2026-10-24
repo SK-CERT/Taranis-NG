@@ -1188,7 +1188,15 @@
             "entity_type_required": "Varlık türü gerekli"
         },
         "tags": {
-            "tab_description": "Etiketleri buradan yönetebilirsiniz."
+            "tab_description": "Etiketleri buradan yönetebilirsiniz.",
+            "system": {
+                "translation_missing": "Çeviri yok",
+                "translation_partial": "Kısmen çevrildi",
+                "translation_outdated": "Çeviri güncel değil",
+                "translation_ai": "Yapay zekâ çevirisi gözden geçirilmedi",
+                "translation_done": "Çevrildi",
+                "language_not_set": "Dil ayarlanmadı"
+            }
         },
         "tag_workflow": {
             "tab_description": "Etiketlerin varlıklarla ilişkilerini buradan yönetebilirsiniz."
@@ -2371,5 +2379,30 @@
         "product_hint": "Ürün açıklamasının atıf yapabileceği kaynaklar. Yayımlanan üründe raporlarının bağlantılarından önce numaralandırılır.",
         "product_title": "Bağlantılar",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Etiketler",
+        "tag": "Etiket",
+        "none_defined": "Bu öğeler için tanımlı etiket yok",
+        "built_in_hint": "Bu etiketi Taranis koyar; yeniden adlandırılabilir ve görünümü değiştirilebilir, ancak silinemez. Etiket iş akışında kapatın.",
+        "built_in_link_hint": "Yerleşik etiketler bağlı kalır; bunun yerine kapatın",
+        "add_new": "Yeni etiket ekle",
+        "edit": "Etiketi düzenle",
+        "name": "Ad",
+        "description": "Açıklama",
+        "color": "Renk",
+        "icon": "Simge",
+        "in_use": "Etiket {count} rapor veya üründe bulunduğu için silinemez",
+        "add_link": "Etiket bağlantısı ekle",
+        "edit_link": "Etiket bağlantısını düzenle",
+        "status_in_language": "{language}: {status}",
+        "filter": "Etiketlere ve çeviriye göre filtrele",
+        "translation": "Çeviri",
+        "translation_language": "Dil",
+        "translation_any": "Herhangi biri",
+        "translation_needs": "Çeviri gerekiyor",
+        "translation_unreviewed": "Yapay zekâ çevirisi gözden geçirilmedi",
+        "translation_not_set": "Dil ayarlanmadı",
+        "clear_filter": "Temizle"
     }
 }

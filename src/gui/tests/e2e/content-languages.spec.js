@@ -10,6 +10,9 @@ import { createApiContext } from '../helpers/api-cleanup'
  * language where a person translates it, and a product gets a title per language, says what a
  * language falls back on, and renders the open tab's language.
  *
+ * Translation status shows as built-in tags on the cards, next to the tags admins define, and the
+ * lists filter by both.
+ *
  * Translating with AI needs a language model, which the E2E stack does not have; core's and the
  * GUI's unit tests cover it.
  */
@@ -20,6 +23,7 @@ const CORE_API = process.env.E2E_CORE_API || `http://127.0.0.1:${process.env.E2E
 const PREFIX = 'E2E Lang'
 const TYPE_TITLE = `${PREFIX} Advisory`
 const ATTRIBUTE_NAME = `${PREFIX} Severity`
+const TAG_NAME = `${PREFIX} Urgent`
 
 const headersOf = (token) => ({ Authorization: `Bearer ${token}` })
 
@@ -38,6 +42,10 @@ async function purge(api) {
     }
     for (const report of mine(await list(api, `/analyze/report-items?search=${search}`), 'title')) {
         await api.request.delete(`${CORE_API}/analyze/report-items/${report.id}`, { headers })
+    }
+    // Tags go once no report carries them; their links go with them.
+    for (const tag of mine(await list(api, '/config/tags?search='), 'display_name')) {
+        await api.request.delete(`${CORE_API}/config/tags/${tag.id}`, { headers })
     }
     for (const reportType of mine(await list(api, '/config/report-item-types?search='), 'title')) {
         await api.request.delete(`${CORE_API}/config/report-item-types/${reportType.id}`, { headers })
@@ -157,6 +165,15 @@ async function updateReport(api, reportId, data) {
 
 async function getReport(api, reportId) {
     return (await api.request.get(`${CORE_API}/analyze/report-items/${reportId}`, { headers: headersOf(api.token) })).json()
+}
+
+/** The card of a report in the Analyze list. */
+const reportCard = (page, title) => page.locator('.report-card').filter({ hasText: title }).first()
+
+/** Open the list's tag and translation filter menu. */
+async function openTagFilter(page) {
+    await page.locator('[data-test="tag-filter"]').first().click()
+    return page.locator('[data-test="tag-filter-menu"]')
 }
 
 /** The input whose hint shows ``original`` - a label translation field. */
@@ -351,5 +368,87 @@ test.describe('Content languages', () => {
         // A presenter with templates offers them per language again.
         await choose(page, dialog, 'Presenter', 'PDF')
         await expect(dialog.locator('[data-test="product-type-template-language"]')).toBeVisible()
+    })
+
+    test('a tag defined in configuration goes on a report and filters the list', async ({ page }) => {
+        const tagged = `${PREFIX} tagged flaw`
+        const untagged = `${PREFIX} untagged flaw`
+        const reportId = await createReport(api, reportType, tagged)
+        await createReport(api, reportType, untagged)
+
+        // Define the tag, then let reports use it.
+        await page.goto('/config/workflow')
+        await page.getByRole('tab', { name: 'Tags', exact: true }).click()
+        await page.getByRole('button', { name: 'Add New' }).first().click()
+        const tagDialog = page.locator('.v-dialog.v-overlay--active')
+        await tagDialog.locator('[data-test="tag-name"] input').fill(TAG_NAME)
+        await tagDialog.getByRole('button', { name: 'Save' }).click()
+        await expect(page.locator('[data-test="tags-table"]')).toContainText(TAG_NAME)
+        await page.getByRole('tab', { name: 'Tag Workflow' }).click()
+        await page.getByRole('button', { name: 'Add New' }).first().click()
+        const linkDialog = page.locator('.v-dialog.v-overlay--active')
+        await choose(page, linkDialog, 'Tag', TAG_NAME)
+        await linkDialog.getByRole('button', { name: 'Save' }).click()
+        await expect(page.locator('[data-test="tag-workflow-table"]')).toContainText(TAG_NAME)
+
+        // An analyst puts it on a report; it is saved at once.
+        await page.goto('/analyze/local')
+        await page.getByText(tagged).first().click()
+        await page.locator('[data-test="tag-picker"]').first().click()
+        await page.locator('.v-overlay--active .v-list-item').filter({ hasText: TAG_NAME }).first().click()
+        const tagId = (await list(api, '/config/tags?search=')).find((tag) => tag.display_name === TAG_NAME).id
+        await expect.poll(async () => (await getReport(api, reportId)).tags).toEqual([tagId])
+
+        // The card shows it, and the list filters by it.
+        await page.goto('/analyze/local')
+        await expect(reportCard(page, tagged).locator('[data-test="tag-chip"]')).toHaveText(TAG_NAME)
+        const menu = await openTagFilter(page)
+        await choose(page, menu, 'Tags', TAG_NAME)
+        await expect(reportCard(page, tagged)).toBeVisible()
+        await expect(page.locator('.report-card').filter({ hasText: untagged })).toHaveCount(0)
+    })
+
+    test('a report shows its translation status per language, and the list finds what still needs Slovak', async ({ page }) => {
+        const translated = `${PREFIX} translated flaw`
+        const pending = `${PREFIX} pending flaw`
+        const translatedId = await createReport(api, reportType, translated)
+        await createReport(api, reportType, pending)
+
+        // Translate the name and the description by hand; the severity is not translated.
+        await updateReport(api, translatedId, { language: 'sk', title: 'Preložená chyba' })
+        const description = (await getReport(api, translatedId)).attributes.find(
+            (attribute) => attribute.value === 'An attacker can run code.'
+        )
+        await updateReport(api, translatedId, { language: 'sk', attribute_id: description.id, attribute_value: 'Útočník môže spustiť kód.' })
+
+        await page.goto('/analyze/local')
+        await expect(reportCard(page, translated).locator('[data-test="translation-status-sk"]')).toHaveAttribute(
+            'title',
+            'Slovak: Translated'
+        )
+        await expect(reportCard(page, pending).locator('[data-test="translation-status-sk"]')).toHaveAttribute(
+            'title',
+            'Slovak: Translation missing'
+        )
+
+        const menu = await openTagFilter(page)
+        await choose(page, menu, 'Translation', 'Needs translation')
+        // Every language is offered; typing narrows the list.
+        await menu.locator('[data-test="filter-translation-language"] input').fill('Slovak')
+        await page
+            .locator('.v-overlay--active .v-list-item')
+            .filter({ hasText: /^Slovak$/ })
+            .first()
+            .click()
+        await expect(reportCard(page, pending)).toBeVisible()
+        await expect(page.locator('.report-card').filter({ hasText: translated })).toHaveCount(0)
+
+        // Renaming the original makes the Slovak name outdated.
+        await updateReport(api, translatedId, { title: `${translated} (renamed)` })
+        await page.goto('/analyze/local')
+        await expect(reportCard(page, `${translated} (renamed)`).locator('[data-test="translation-status-sk"]')).toHaveAttribute(
+            'title',
+            'Slovak: Translation outdated'
+        )
     })
 })

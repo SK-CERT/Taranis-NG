@@ -1188,7 +1188,15 @@
             "entity_type_required": "必须选择实体类型"
         },
         "tags": {
-            "tab_description": "您可以在此管理标签。"
+            "tab_description": "您可以在此管理标签。",
+            "system": {
+                "translation_missing": "缺少翻译",
+                "translation_partial": "部分已翻译",
+                "translation_outdated": "翻译已过时",
+                "translation_ai": "AI 翻译未审核",
+                "translation_done": "已翻译",
+                "language_not_set": "未设置语言"
+            }
         },
         "tag_workflow": {
             "tab_description": "您可以在此管理标签与实体的关联。"
@@ -2371,5 +2379,30 @@
         "product_hint": "产品描述可以引用的来源。在发布的产品中，它们先于其报告的链接编号。",
         "product_title": "链接",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "标签",
+        "tag": "标签",
+        "none_defined": "这些条目尚未定义标签",
+        "built_in_hint": "此标签由 Taranis 设置；可以重命名和更改样式，但不能删除。请在标签工作流中将其关闭。",
+        "built_in_link_hint": "内置标签保持关联；请改为将其关闭",
+        "add_new": "添加新标签",
+        "edit": "编辑标签",
+        "name": "名称",
+        "description": "描述",
+        "color": "颜色",
+        "icon": "图标",
+        "in_use": "该标签用于 {count} 个报告或产品，无法删除",
+        "add_link": "添加标签关联",
+        "edit_link": "编辑标签关联",
+        "status_in_language": "{language}：{status}",
+        "filter": "按标签和翻译筛选",
+        "translation": "翻译",
+        "translation_language": "语言",
+        "translation_any": "任意",
+        "translation_needs": "需要翻译",
+        "translation_unreviewed": "AI 翻译未审核",
+        "translation_not_set": "未设置语言",
+        "clear_filter": "清除"
     }
 }

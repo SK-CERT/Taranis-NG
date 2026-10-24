@@ -20,16 +20,18 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 
 import sqlalchemy
-from managers import content_language
+from managers import content_language, translation_status
 from managers.db_manager import db
 from managers.link_references import generate_link_key
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
+from model.attribute import Attribute
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
 from model.report_item_type import AttributeGroupItem, ReportItemType
 from model.setting import Setting
 from model.state import StateDefinition, StateEntityTypeEnum, StateEnum, StateManager
-from model.translation import ORIGIN_MANUAL, TITLE_FIELDS, ReportItemAttributeTranslation, ReportItemTranslation
+from model.tag import Tag, report_item_tag, set_item_tags
+from model.translation import ORIGIN_AI, ORIGIN_MANUAL, TITLE_FIELDS, ReportItemAttributeTranslation, ReportItemTranslation, sql_source_hash
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -311,6 +313,9 @@ class ReportItem(db.Model):
         lazy="selectin",
     )
 
+    # The admin tags people put on it; the built-in ones are worked out (see translation_status).
+    tags = db.relationship(Tag, secondary=report_item_tag, viewonly=True, lazy="selectin")
+
     def __init__(
         self,
         id: int,  # noqa: A002
@@ -378,6 +383,16 @@ class ReportItem(db.Model):
             if row.value:
                 result.setdefault(row.language, {})[row.field] = row.value
         return result
+
+    @property
+    def tag_ids(self) -> list[int]:
+        """The ids of the admin tags on the report."""
+        return [tag.id for tag in self.tags]
+
+    @property
+    def translation_status(self) -> dict[str, str]:
+        """Its translation status per language, as built-in tag keys (see managers/translation_status.py)."""
+        return translation_status.report_status(self)
 
     @property
     def type_languages(self) -> list[str]:
@@ -604,6 +619,8 @@ class ReportItem(db.Model):
                 else:
                     query = query.filter(or_(ReportItem.state_id != completed_state.id, ReportItem.state_id.is_(None)))
 
+        query = cls._filter_tags_and_translation(query, filter)
+
         if "range" in filter:
             date_limit = datetime.now(TZ)
             if filter["range"] == "TODAY":
@@ -631,6 +648,97 @@ class ReportItem(db.Model):
                 query = query.order_by(db.asc(ReportItem.created))
 
         return query.offset(offset).limit(limit).all(), query.count()
+
+    @classmethod
+    def _filter_tags_and_translation(cls, query: orm.Query, filter: dict) -> orm.Query:  # noqa: A002
+        """Narrow the list to reports with any of ``filter["tags"]``, and by translation status.
+
+        ``filter["translation"]`` is ``needs`` or ``unreviewed`` (with ``translation_language``),
+        or ``not_set`` for reports whose language is not set.
+        """
+        tag_ids = filter.get("tags")
+        if tag_ids:
+            query = query.filter(
+                sqlalchemy.exists().where(report_item_tag.c.report_item_id == ReportItem.id, report_item_tag.c.tag_id.in_(tag_ids)),
+            )
+        kind = filter.get("translation")
+        if kind == "not_set":
+            return query.filter(ReportItem.language.is_(None))
+        language = filter.get("translation_language")
+        if kind in ("needs", "unreviewed") and language:
+            query = query.filter(cls.translation_condition(language, needs=kind == "needs"))
+        return query
+
+    @staticmethod
+    def translation_condition(language: str, *, needs: bool) -> sqlalchemy.ColumnElement[bool]:
+        """SQL for a report that its type offers in ``language`` and that, in that language, ...
+
+        - with ``needs``: has a field without a current translation - its name, its prefix or a
+          translatable field with a value (missing, partly translated or outdated);
+        - otherwise: has a current translation that AI made and nobody has edited since.
+
+        Its tables are aliased, so it never correlates with the joins of the query it goes in.
+
+        Args:
+            language (str): ISO 639-1 code.
+            needs (bool): Which of the two.
+
+        Returns:
+            The condition.
+        """
+        report_type = orm.aliased(ReportItemType)
+        title_row = orm.aliased(ReportItemTranslation)
+        value = orm.aliased(ReportItemAttribute)
+        value_row = orm.aliased(ReportItemAttributeTranslation)
+        group_item = orm.aliased(AttributeGroupItem)
+        attribute = orm.aliased(Attribute)
+
+        def current_title(field: str) -> sqlalchemy.ColumnElement[bool]:
+            conditions = [
+                title_row.report_item_id == ReportItem.id,
+                title_row.language == language,
+                title_row.field == field,
+                func.coalesce(title_row.value, "") != "",
+                title_row.source_hash == sql_source_hash(getattr(ReportItem, field)),
+            ]
+            if not needs:
+                conditions.append(title_row.origin == ORIGIN_AI)
+            return sqlalchemy.exists().where(*conditions)
+
+        current_value = [
+            value_row.report_item_attribute_id == value.id,
+            value_row.language == language,
+            func.coalesce(value_row.value, "") != "",
+            value_row.source_hash == sql_source_hash(value.value),
+        ]
+        if not needs:
+            current_value.append(value_row.origin == ORIGIN_AI)
+        translatable = [
+            value.report_item_id == ReportItem.id,
+            func.coalesce(value.value, "") != "",
+            group_item.id == value.attribute_group_item_id,
+            group_item.translate.is_(True),
+            attribute.id == group_item.attribute_id,
+            attribute.type.in_([AttributeType[name] for name in content_language.TRANSLATABLE_TYPES]),
+        ]
+        offered = and_(
+            ReportItem.language.isnot(None),
+            ReportItem.language != language,
+            sqlalchemy.exists().where(report_type.id == ReportItem.report_item_type_id, report_type.languages.contains([language])),
+        )
+        if needs:
+            untranslated = or_(
+                ~current_title("title"),
+                and_(func.coalesce(ReportItem.title_prefix, "") != "", ~current_title("title_prefix")),
+                sqlalchemy.exists().where(*translatable, ~sqlalchemy.exists().where(*current_value)),
+            )
+            return and_(offered, untranslated)
+        by_ai = or_(
+            current_title("title"),
+            current_title("title_prefix"),
+            sqlalchemy.exists().where(*translatable, sqlalchemy.exists().where(*current_value)),
+        )
+        return and_(offered, by_ai)
 
     @classmethod
     def identical(cls, uuid: str) -> bool:
@@ -727,6 +835,8 @@ class ReportItem(db.Model):
         translations = report_item.translations_json()
         data["variant_languages"] = report_item.variant_languages()
         data["translations"] = translations["translations"]
+        data["tags"] = report_item.tag_ids
+        data["translation_status"] = report_item.translation_status
         for attribute in data.get("attributes", []):
             attribute["translations"] = translations["attributes"].get(attribute.get("id"), {})
         return data
@@ -833,10 +943,12 @@ class ReportItem(db.Model):
             tuple: A tuple containing the added report item and the HTTP status code.
 
         Raises:
-            ValueError: If ``language`` is not an ISO 639-1 code.
+            ValueError: If ``language`` is not an ISO 639-1 code, or ``tag_ids`` names a tag that
+                cannot be put on reports.
         """
-        # The language picked in the form, checked before anything is built; else the author's default.
+        # The language picked in the form, and its tags, checked before anything is built.
         language = content_language.clean_language(report_item_data.get("language"))
+        tag_ids = Tag.assignable(StateEntityTypeEnum.REPORT_ITEM.value, report_item_data.get("tag_ids"))
         report_item_schema = NewReportItemSchema()
         report_item = report_item_schema.load(report_item_data)
 
@@ -859,9 +971,32 @@ class ReportItem(db.Model):
         report_item.update_cpes()
 
         db.session.add(report_item)
+        if tag_ids:
+            db.session.flush()
+            set_item_tags(StateEntityTypeEnum.REPORT_ITEM.value, report_item.id, tag_ids, user.id)
         db.session.commit()
 
         return report_item, HTTPStatus.OK
+
+    @classmethod
+    def set_tags(cls, report_item_id: int, tag_ids: object, user: User) -> list[int]:
+        """Make ``tag_ids`` the admin tags of a report.
+
+        Args:
+            report_item_id (int): The report.
+            tag_ids (object): The submitted tag ids.
+            user (User): Who tags it.
+
+        Returns:
+            list[int]: Its tags now.
+
+        Raises:
+            ValueError: If one is not an admin tag offered for reports.
+        """
+        wanted = Tag.assignable(StateEntityTypeEnum.REPORT_ITEM.value, tag_ids)
+        set_item_tags(StateEntityTypeEnum.REPORT_ITEM.value, report_item_id, wanted, user.id)
+        db.session.commit()
+        return wanted
 
     @classmethod
     def add_remote_report_items(cls, report_item_data: list, remote_node_name: str) -> None:

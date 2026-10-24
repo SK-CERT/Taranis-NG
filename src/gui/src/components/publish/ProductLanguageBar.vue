@@ -17,6 +17,11 @@
                 :value="code"
                 :disabled="!language"
             >
+                <TranslationStatusIcon
+                    entity-type="product"
+                    :status="statuses[code]"
+                    class="me-1"
+                />
                 {{ languageName(code) }}
             </v-tab>
         </v-tabs>
@@ -39,6 +44,7 @@
 <script setup lang="ts">
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import TranslationStatusIcon from '@/components/common/tags/TranslationStatusIcon.vue'
     import { useContentLanguages } from '@/composables/useContentLanguages'
 
     /**
@@ -52,10 +58,12 @@
             modelValue: string
             language: string | null
             languages: string[]
+            // The title's translation status per language (built-in tag keys).
+            statuses?: Record<string, string>
             canModify?: boolean
             translating?: boolean
         }>(),
-        { canModify: false, translating: false }
+        { statuses: () => ({}), canModify: false, translating: false }
     )
 
     const emit = defineEmits<{

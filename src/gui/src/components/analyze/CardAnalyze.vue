@@ -91,6 +91,12 @@
                                 </bdi>
                             </v-chip>
 
+                            <TagChips
+                                entity-type="report_item"
+                                :tag-ids="card.tags"
+                                :translation-status="card.translation_status"
+                            />
+
                             <span
                                 v-if="card.news_items_count"
                                 class="report-card__source-count"
@@ -176,6 +182,7 @@
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { notifyDeleteError } from '@/utils/deleteError'
     import { useContentLanguages } from '@/composables/useContentLanguages'
+    import TagChips from '@/components/common/tags/TagChips.vue'
 
     type AnalyzeCard = {
         id: number | string
@@ -184,6 +191,9 @@
         // The report's own language and its name in the others, to show the GUI's language.
         language?: string | null
         title_translations?: Record<string, { title?: string; title_prefix?: string }> | null
+        // The tags people put on it, and its translation status per language (built-in tag keys).
+        tags?: number[]
+        translation_status?: Record<string, string>
         report_type_name?: string
         tag?: string
         news_items_count?: number

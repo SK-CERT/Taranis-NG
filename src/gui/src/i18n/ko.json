@@ -1188,7 +1188,15 @@
             "entity_type_required": "엔터티 유형 필수"
         },
         "tags": {
-            "tab_description": "여기에서 태그을(를) 관리할 수 있습니다."
+            "tab_description": "여기에서 태그을(를) 관리할 수 있습니다.",
+            "system": {
+                "translation_missing": "번역 없음",
+                "translation_partial": "일부 번역됨",
+                "translation_outdated": "번역이 오래됨",
+                "translation_ai": "AI 번역 검토 안 됨",
+                "translation_done": "번역됨",
+                "language_not_set": "언어 미설정"
+            }
         },
         "tag_workflow": {
             "tab_description": "여기에서 태그와 엔터티의 연결을 관리할 수 있습니다."
@@ -2371,5 +2379,30 @@
         "product_hint": "제품 설명에서 인용할 수 있는 출처입니다. 게시된 제품에서는 보고서의 링크보다 먼저 번호가 매겨집니다.",
         "product_title": "링크",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "태그",
+        "tag": "태그",
+        "none_defined": "이 항목에 정의된 태그가 없습니다",
+        "built_in_hint": "이 태그는 Taranis가 지정합니다. 이름과 모양은 바꿀 수 있지만 삭제할 수는 없습니다. 태그 워크플로에서 끄세요.",
+        "built_in_link_hint": "기본 제공 태그는 연결된 채로 유지됩니다. 대신 끄세요",
+        "add_new": "새 태그 추가",
+        "edit": "태그 편집",
+        "name": "이름",
+        "description": "설명",
+        "color": "색상",
+        "icon": "아이콘",
+        "in_use": "이 태그는 보고서 또는 제품 {count}개에 지정되어 있어 삭제할 수 없습니다",
+        "add_link": "태그 연결 추가",
+        "edit_link": "태그 연결 편집",
+        "status_in_language": "{language}: {status}",
+        "filter": "태그와 번역으로 필터링",
+        "translation": "번역",
+        "translation_language": "언어",
+        "translation_any": "전체",
+        "translation_needs": "번역 필요",
+        "translation_unreviewed": "AI 번역 검토 안 됨",
+        "translation_not_set": "언어 미설정",
+        "clear_filter": "지우기"
     }
 }

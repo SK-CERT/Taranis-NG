@@ -63,6 +63,7 @@ from model import (
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.state import StateDefinition, StateEntityType
+from model.tag import Tag, TagEntityType
 from shared.schema.ai_provider import AiProviderSchema
 from shared.schema.attribute_extraction_rule import AttributeExtractionRuleSchema
 from shared.schema.auth_provider import AuthProviderSchema
@@ -2842,6 +2843,136 @@ class StateEntityTypeResource(Resource):
             return _delete_failed("Could not delete state-entity type association", ex)
 
 
+class TagsResource(Resource):
+    """Tags API endpoint: admin tags and the built-in ones."""
+
+    @auth_required("CONFIG_WORKFLOW_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get every tag, the built-in ones last.
+
+        Returns:
+            (dict, int): ``{"total_count", "items"}``
+        """
+        return Tag.get_all_json(request.args.get("search")), HTTPStatus.OK
+
+    @auth_required("CONFIG_WORKFLOW_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create an admin tag.
+
+        Returns:
+            (dict, int): The tag, or why it was refused
+        """
+        try:
+            return Tag.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+
+class TagResource(Resource):
+    """Tag API endpoint."""
+
+    @auth_required("CONFIG_WORKFLOW_UPDATE")
+    def put(self, tag_id: int) -> tuple[dict, HTTPStatus]:
+        """Rename or restyle a tag; a built-in tag keeps its key.
+
+        Args:
+            tag_id (int): The tag ID
+        Returns:
+            (dict, int): The tag, or why it was refused
+        """
+        tag = db.session.get(Tag, tag_id)
+        if tag is None:
+            return {"error": "Tag not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return tag.update(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.OK
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_WORKFLOW_DELETE")
+    def delete(self, tag_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete an admin tag that no report or product carries.
+
+        Args:
+            tag_id (int): The tag ID
+        Returns:
+            (dict, int): The result; 403 for a built-in tag, 409 with the count for a tag in use
+        """
+        tag = db.session.get(Tag, tag_id)
+        if tag is None:
+            return {"error": "Tag not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return tag.delete()
+        except Exception as ex:
+            return _delete_failed("Could not delete tag", ex)
+
+
+class TagEntityTypesResource(Resource):
+    """Tag Workflow API endpoint: which tags reports and products use."""
+
+    @auth_required("CONFIG_WORKFLOW_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get every tag link, of one entity type when ``entity_type`` is given.
+
+        Returns:
+            (dict, int): ``{"total_count", "items"}``, each with its tag
+        """
+        return TagEntityType.get_all_json(request.args.get("entity_type")), HTTPStatus.OK
+
+    @auth_required("CONFIG_WORKFLOW_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Link a tag to reports or products.
+
+        Returns:
+            (dict, int): The link, or why it was refused
+        """
+        try:
+            return TagEntityType.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "The tag is already linked to that entity type"}, HTTPStatus.CONFLICT
+
+
+class TagEntityTypeResource(Resource):
+    """Tag Workflow link API endpoint."""
+
+    @auth_required("CONFIG_WORKFLOW_UPDATE")
+    def put(self, tag_entity_type_id: int) -> tuple[dict, HTTPStatus]:
+        """Change whether a link is active and its order.
+
+        Args:
+            tag_entity_type_id (int): The link ID
+        Returns:
+            (dict, int): The link, or why it was refused
+        """
+        link = db.session.get(TagEntityType, tag_entity_type_id)
+        if link is None:
+            return {"error": "Tag link not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return link.update(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.OK
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_WORKFLOW_DELETE")
+    def delete(self, tag_entity_type_id: int) -> tuple[dict, HTTPStatus]:
+        """Unlink an admin tag; a built-in tag's link can only be switched off.
+
+        Args:
+            tag_entity_type_id (int): The link ID
+        Returns:
+            (dict, int): The result
+        """
+        link = db.session.get(TagEntityType, tag_entity_type_id)
+        if link is None:
+            return {"error": "Tag link not found"}, HTTPStatus.NOT_FOUND
+        return link.delete()
+
+
 def initialize(api: Api) -> None:  # noqa: PLR0915
     """Initialize the API.
 
@@ -2950,6 +3081,10 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(StateResource, "/api/v1/config/state-definitions/<int:state_id>")
     api.add_resource(StateEntityTypesResource, "/api/v1/config/state-entity-types")
     api.add_resource(StateEntityTypeResource, "/api/v1/config/state-entity-types/<int:state_entity_type_id>")
+    api.add_resource(TagsResource, "/api/v1/config/tags")
+    api.add_resource(TagResource, "/api/v1/config/tags/<int:tag_id>")
+    api.add_resource(TagEntityTypesResource, "/api/v1/config/tag-entity-types")
+    api.add_resource(TagEntityTypeResource, "/api/v1/config/tag-entity-types/<int:tag_entity_type_id>")
 
     Permission.add("CONFIG_ACCESS", "Configuration access", "Access to Configuration module")
 

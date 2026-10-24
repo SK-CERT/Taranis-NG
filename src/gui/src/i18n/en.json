@@ -1188,7 +1188,15 @@
             "entity_type_required": "Entity Type Required"
         },
         "tags": {
-            "tab_description": "Here you can manage tags."
+            "tab_description": "Here you can manage tags.",
+            "system": {
+                "translation_missing": "Translation missing",
+                "translation_partial": "Partly translated",
+                "translation_outdated": "Translation outdated",
+                "translation_ai": "AI translation not reviewed",
+                "translation_done": "Translated",
+                "language_not_set": "Language not set"
+            }
         },
         "tag_workflow": {
             "tab_description": "Here you can manage tag associations with entities."
@@ -2371,5 +2379,30 @@
         "product_hint": "Sources the product description can cite. In the published product they are numbered first, before the links of its reports.",
         "product_title": "Links",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Tags",
+        "tag": "Tag",
+        "none_defined": "No tags are defined for these items",
+        "built_in_hint": "Taranis sets this tag; it can be renamed and restyled but not deleted. Switch it off in Tag Workflow.",
+        "built_in_link_hint": "Built-in tags stay linked; switch them off instead",
+        "add_new": "Add new tag",
+        "edit": "Edit tag",
+        "name": "Name",
+        "description": "Description",
+        "color": "Color",
+        "icon": "Icon",
+        "in_use": "The tag is on {count} reports or products and cannot be deleted",
+        "add_link": "Add tag link",
+        "edit_link": "Edit tag link",
+        "status_in_language": "{language}: {status}",
+        "filter": "Filter by tags and translation",
+        "translation": "Translation",
+        "translation_language": "Language",
+        "translation_any": "Any",
+        "translation_needs": "Needs translation",
+        "translation_unreviewed": "AI translation not reviewed",
+        "translation_not_set": "Language not set",
+        "clear_filter": "Clear"
     }
 }

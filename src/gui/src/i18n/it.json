@@ -1188,7 +1188,15 @@
             "entity_type_required": "Tipo di entità obbligatorio"
         },
         "tags": {
-            "tab_description": "Qui è possibile gestire i tag."
+            "tab_description": "Qui è possibile gestire i tag.",
+            "system": {
+                "translation_missing": "Traduzione mancante",
+                "translation_partial": "Tradotto in parte",
+                "translation_outdated": "Traduzione obsoleta",
+                "translation_ai": "Traduzione IA non revisionata",
+                "translation_done": "Tradotto",
+                "language_not_set": "Lingua non impostata"
+            }
         },
         "tag_workflow": {
             "tab_description": "Qui è possibile gestire le associazioni tra tag ed entità."
@@ -2371,5 +2379,30 @@
         "product_hint": "Fonti che la descrizione del prodotto può citare. Nel prodotto pubblicato sono numerate per prime, prima dei collegamenti dei suoi report.",
         "product_title": "Collegamenti",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Tag",
+        "tag": "Tag",
+        "none_defined": "Nessun tag definito per questi elementi",
+        "built_in_hint": "Taranis assegna questo tag; può essere rinominato e restilizzato, ma non eliminato. Disattivalo nel flusso dei tag.",
+        "built_in_link_hint": "I tag integrati restano collegati; disattivali invece",
+        "add_new": "Aggiungi tag",
+        "edit": "Modifica tag",
+        "name": "Nome",
+        "description": "Descrizione",
+        "color": "Colore",
+        "icon": "Icona",
+        "in_use": "Il tag è su {count} report o prodotti e non può essere eliminato",
+        "add_link": "Aggiungi collegamento tag",
+        "edit_link": "Modifica collegamento tag",
+        "status_in_language": "{language}: {status}",
+        "filter": "Filtra per tag e traduzione",
+        "translation": "Traduzione",
+        "translation_language": "Lingua",
+        "translation_any": "Qualsiasi",
+        "translation_needs": "Da tradurre",
+        "translation_unreviewed": "Traduzione IA non revisionata",
+        "translation_not_set": "Lingua non impostata",
+        "clear_filter": "Cancella"
     }
 }

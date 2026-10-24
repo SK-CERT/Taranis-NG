@@ -1188,7 +1188,15 @@
             "entity_type_required": "इकाई प्रकार आवश्यक है"
         },
         "tags": {
-            "tab_description": "यहाँ आप टैग प्रबंधित कर सकते हैं।"
+            "tab_description": "यहाँ आप टैग प्रबंधित कर सकते हैं।",
+            "system": {
+                "translation_missing": "अनुवाद नहीं है",
+                "translation_partial": "आंशिक रूप से अनूदित",
+                "translation_outdated": "अनुवाद पुराना है",
+                "translation_ai": "AI अनुवाद की समीक्षा नहीं हुई",
+                "translation_done": "अनूदित",
+                "language_not_set": "भाषा सेट नहीं है"
+            }
         },
         "tag_workflow": {
             "tab_description": "यहाँ आप टैग और इकाइयों के संबंध प्रबंधित कर सकते हैं।"
@@ -2371,5 +2379,30 @@
         "product_hint": "वे स्रोत जिन्हें उत्पाद विवरण उद्धृत कर सकता है। प्रकाशित उत्पाद में इन्हें उसकी रिपोर्टों के लिंक से पहले क्रमांकित किया जाता है।",
         "product_title": "लिंक",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "टैग",
+        "tag": "टैग",
+        "none_defined": "इन आइटमों के लिए कोई टैग परिभाषित नहीं है",
+        "built_in_hint": "यह टैग Taranis लगाता है; इसका नाम और रूप बदला जा सकता है, पर इसे हटाया नहीं जा सकता। इसे टैग वर्कफ़्लो में बंद करें।",
+        "built_in_link_hint": "अंतर्निहित टैग जुड़े रहते हैं; इसके बजाय उन्हें बंद करें",
+        "add_new": "नया टैग जोड़ें",
+        "edit": "टैग संपादित करें",
+        "name": "नाम",
+        "description": "विवरण",
+        "color": "रंग",
+        "icon": "आइकन",
+        "in_use": "यह टैग {count} रिपोर्टों या उत्पादों पर है और इसे हटाया नहीं जा सकता",
+        "add_link": "टैग लिंक जोड़ें",
+        "edit_link": "टैग लिंक संपादित करें",
+        "status_in_language": "{language}: {status}",
+        "filter": "टैग और अनुवाद से फ़िल्टर करें",
+        "translation": "अनुवाद",
+        "translation_language": "भाषा",
+        "translation_any": "कोई भी",
+        "translation_needs": "अनुवाद चाहिए",
+        "translation_unreviewed": "AI अनुवाद की समीक्षा नहीं हुई",
+        "translation_not_set": "भाषा सेट नहीं है",
+        "clear_filter": "साफ़ करें"
     }
 }

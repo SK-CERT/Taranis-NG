@@ -1188,7 +1188,15 @@
             "entity_type_required": "Typ encji jest wymagany"
         },
         "tags": {
-            "tab_description": "Tutaj możesz zarządzać tagami."
+            "tab_description": "Tutaj możesz zarządzać tagami.",
+            "system": {
+                "translation_missing": "Brak tłumaczenia",
+                "translation_partial": "Częściowo przetłumaczone",
+                "translation_outdated": "Nieaktualne tłumaczenie",
+                "translation_ai": "Tłumaczenie AI niesprawdzone",
+                "translation_done": "Przetłumaczone",
+                "language_not_set": "Język nieustawiony"
+            }
         },
         "tag_workflow": {
             "tab_description": "Tutaj możesz zarządzać powiązaniami tagów z encjami."
@@ -2371,5 +2379,30 @@
         "product_hint": "Źródła, które może cytować opis produktu. W opublikowanym produkcie są numerowane jako pierwsze, przed łączami jego raportów.",
         "product_title": "Łącza",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Tagi",
+        "tag": "Tag",
+        "none_defined": "Dla tych elementów nie zdefiniowano tagów",
+        "built_in_hint": "Ten tag ustawia Taranis; można zmienić jego nazwę i wygląd, ale nie można go usunąć. Wyłącz go w przepływie tagów.",
+        "built_in_link_hint": "Wbudowane tagi pozostają powiązane; zamiast tego je wyłącz",
+        "add_new": "Dodaj nowy tag",
+        "edit": "Edytuj tag",
+        "name": "Nazwa",
+        "description": "Opis",
+        "color": "Kolor",
+        "icon": "Ikona",
+        "in_use": "Tag jest przypisany do {count} raportów lub produktów i nie można go usunąć",
+        "add_link": "Dodaj powiązanie tagu",
+        "edit_link": "Edytuj powiązanie tagu",
+        "status_in_language": "{language}: {status}",
+        "filter": "Filtruj według tagów i tłumaczenia",
+        "translation": "Tłumaczenie",
+        "translation_language": "Język",
+        "translation_any": "Dowolne",
+        "translation_needs": "Wymaga tłumaczenia",
+        "translation_unreviewed": "Tłumaczenie AI niesprawdzone",
+        "translation_not_set": "Język nieustawiony",
+        "clear_filter": "Wyczyść"
     }
 }

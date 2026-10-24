@@ -1188,7 +1188,15 @@
             "entity_type_required": "Entitätstyp erforderlich"
         },
         "tags": {
-            "tab_description": "Hier können Sie Tags verwalten."
+            "tab_description": "Hier können Sie Tags verwalten.",
+            "system": {
+                "translation_missing": "Übersetzung fehlt",
+                "translation_partial": "Teilweise übersetzt",
+                "translation_outdated": "Übersetzung veraltet",
+                "translation_ai": "KI-Übersetzung nicht geprüft",
+                "translation_done": "Übersetzt",
+                "language_not_set": "Sprache nicht festgelegt"
+            }
         },
         "tag_workflow": {
             "tab_description": "Hier können Sie Tag-Zuordnungen zu Entitäten verwalten."
@@ -2371,5 +2379,30 @@
         "product_hint": "Quellen, die die Produktbeschreibung zitieren kann. Im veröffentlichten Produkt werden sie zuerst nummeriert, vor den Links seiner Berichte.",
         "product_title": "Links",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Tags",
+        "tag": "Tag",
+        "none_defined": "Für diese Elemente sind keine Tags definiert",
+        "built_in_hint": "Dieses Tag setzt Taranis; es kann umbenannt und umgestaltet, aber nicht gelöscht werden. Im Tag-Workflow lässt es sich ausschalten.",
+        "built_in_link_hint": "Integrierte Tags bleiben verknüpft; schalten Sie sie stattdessen aus",
+        "add_new": "Neues Tag hinzufügen",
+        "edit": "Tag bearbeiten",
+        "name": "Name",
+        "description": "Beschreibung",
+        "color": "Farbe",
+        "icon": "Symbol",
+        "in_use": "Das Tag ist an {count} Berichten oder Produkten und kann nicht gelöscht werden",
+        "add_link": "Tag-Verknüpfung hinzufügen",
+        "edit_link": "Tag-Verknüpfung bearbeiten",
+        "status_in_language": "{language}: {status}",
+        "filter": "Nach Tags und Übersetzung filtern",
+        "translation": "Übersetzung",
+        "translation_language": "Sprache",
+        "translation_any": "Beliebig",
+        "translation_needs": "Übersetzung nötig",
+        "translation_unreviewed": "KI-Übersetzung nicht geprüft",
+        "translation_not_set": "Sprache nicht festgelegt",
+        "clear_filter": "Zurücksetzen"
     }
 }

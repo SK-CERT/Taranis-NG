@@ -238,6 +238,9 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
         links (list): The report item's citable links ({key, url}), in display order.
         title_translations (dict): The translated name and prefix per language,
             ``{language: {"title": ..., "title_prefix": ...}}``, so lists can show the GUI's language.
+        tags (list): The ids of the tags people put on it.
+        translation_status (dict): Its translation status per language as built-in tag keys,
+            ``{language: "translation_outdated", ...}``, or ``{"": "language_not_set"}``.
     """
 
     remote_user = fields.Str(allow_none=True)
@@ -248,6 +251,8 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
     title_translations = fields.Dict(dump_only=True)
     # The languages of the report's type: a product including it can be rendered in them.
     type_languages = fields.List(fields.Str(), dump_only=True)
+    tags = fields.List(fields.Int(), attribute="tag_ids", dump_only=True)
+    translation_status = fields.Dict(keys=fields.Str(), values=fields.Str(), dump_only=True)
 
 
 class ReportItem:

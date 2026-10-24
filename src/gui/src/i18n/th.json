@@ -1188,7 +1188,15 @@
             "entity_type_required": "ต้องระบุประเภทเอนทิตี"
         },
         "tags": {
-            "tab_description": "คุณสามารถจัดการแท็กได้ที่นี่"
+            "tab_description": "คุณสามารถจัดการแท็กได้ที่นี่",
+            "system": {
+                "translation_missing": "ไม่มีคำแปล",
+                "translation_partial": "แปลบางส่วน",
+                "translation_outdated": "คำแปลล้าสมัย",
+                "translation_ai": "คำแปลจาก AI ยังไม่ได้ตรวจ",
+                "translation_done": "แปลแล้ว",
+                "language_not_set": "ยังไม่ได้ตั้งภาษา"
+            }
         },
         "tag_workflow": {
             "tab_description": "คุณสามารถจัดการการเชื่อมโยงแท็กกับเอนทิตีได้ที่นี่"
@@ -2371,5 +2379,30 @@
         "product_hint": "แหล่งข้อมูลที่คำอธิบายผลิตภัณฑ์อ้างอิงได้ ในผลิตภัณฑ์ที่เผยแพร่ แหล่งข้อมูลเหล่านี้จะได้รับหมายเลขก่อนลิงก์ของรายงาน",
         "product_title": "ลิงก์",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "แท็ก",
+        "tag": "แท็ก",
+        "none_defined": "ยังไม่มีแท็กสำหรับรายการเหล่านี้",
+        "built_in_hint": "Taranis เป็นผู้ตั้งแท็กนี้ เปลี่ยนชื่อและรูปลักษณ์ได้ แต่ลบไม่ได้ ปิดได้ในเวิร์กโฟลว์แท็ก",
+        "built_in_link_hint": "แท็กในตัวยังคงเชื่อมโยงอยู่ ให้ปิดแทน",
+        "add_new": "เพิ่มแท็กใหม่",
+        "edit": "แก้ไขแท็ก",
+        "name": "ชื่อ",
+        "description": "คำอธิบาย",
+        "color": "สี",
+        "icon": "ไอคอน",
+        "in_use": "แท็กนี้อยู่ในรายงานหรือผลิตภัณฑ์ {count} รายการจึงลบไม่ได้",
+        "add_link": "เพิ่มการเชื่อมโยงแท็ก",
+        "edit_link": "แก้ไขการเชื่อมโยงแท็ก",
+        "status_in_language": "{language}: {status}",
+        "filter": "กรองตามแท็กและการแปล",
+        "translation": "การแปล",
+        "translation_language": "ภาษา",
+        "translation_any": "ทั้งหมด",
+        "translation_needs": "ต้องแปล",
+        "translation_unreviewed": "คำแปลจาก AI ยังไม่ได้ตรวจ",
+        "translation_not_set": "ยังไม่ได้ตั้งภาษา",
+        "clear_filter": "ล้าง"
     }
 }

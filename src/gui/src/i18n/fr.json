@@ -1188,7 +1188,15 @@
             "entity_type_required": "Type d’entité obligatoire"
         },
         "tags": {
-            "tab_description": "Vous pouvez gérer ici les étiquettes."
+            "tab_description": "Vous pouvez gérer ici les étiquettes.",
+            "system": {
+                "translation_missing": "Traduction manquante",
+                "translation_partial": "Partiellement traduit",
+                "translation_outdated": "Traduction obsolète",
+                "translation_ai": "Traduction IA non relue",
+                "translation_done": "Traduit",
+                "language_not_set": "Langue non définie"
+            }
         },
         "tag_workflow": {
             "tab_description": "Vous pouvez gérer ici les associations entre étiquettes et entités."
@@ -2371,5 +2379,30 @@
         "product_hint": "Sources que la description du produit peut citer. Dans le produit publié, elles sont numérotées en premier, avant les liens de ses rapports.",
         "product_title": "Liens",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Étiquettes",
+        "tag": "Étiquette",
+        "none_defined": "Aucune étiquette n'est définie pour ces éléments",
+        "built_in_hint": "Taranis attribue cette étiquette ; elle peut être renommée et restylée, mais pas supprimée. Désactivez-la dans le flux des étiquettes.",
+        "built_in_link_hint": "Les étiquettes intégrées restent liées ; désactivez-les plutôt",
+        "add_new": "Ajouter une étiquette",
+        "edit": "Modifier l'étiquette",
+        "name": "Nom",
+        "description": "Description",
+        "color": "Couleur",
+        "icon": "Icône",
+        "in_use": "L'étiquette figure sur {count} rapports ou produits et ne peut pas être supprimée",
+        "add_link": "Ajouter un lien d'étiquette",
+        "edit_link": "Modifier le lien d'étiquette",
+        "status_in_language": "{language} : {status}",
+        "filter": "Filtrer par étiquettes et traduction",
+        "translation": "Traduction",
+        "translation_language": "Langue",
+        "translation_any": "Toutes",
+        "translation_needs": "Traduction nécessaire",
+        "translation_unreviewed": "Traduction IA non relue",
+        "translation_not_set": "Langue non définie",
+        "clear_filter": "Effacer"
     }
 }

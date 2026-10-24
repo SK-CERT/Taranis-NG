@@ -1142,8 +1142,8 @@
     "workflow": {
         "states_tab": "Stavy",
         "state_workflow_tab": "Workflow stavů",
-        "tags_tab": "Tagy",
-        "tag_workflow_tab": "Workflow stavů",
+        "tags_tab": "Štítky",
+        "tag_workflow_tab": "Workflow štítků",
         "states": {
             "tab_description": "Zde můžete spravovat stavy workflow.",
             "display_name": "Zobrazovaný název",
@@ -1188,7 +1188,15 @@
             "entity_type_required": "Typ entity je povinný"
         },
         "tags": {
-            "tab_description": "Zde můžete spravovat štítky."
+            "tab_description": "Zde můžete spravovat štítky.",
+            "system": {
+                "translation_missing": "Chybí překlad",
+                "translation_partial": "Částečně přeloženo",
+                "translation_outdated": "Zastaralý překlad",
+                "translation_ai": "Překlad AI nezkontrolován",
+                "translation_done": "Přeloženo",
+                "language_not_set": "Jazyk nenastaven"
+            }
         },
         "tag_workflow": {
             "tab_description": "Zde můžete spravovat přiřazení štítků k entitám."
@@ -2371,5 +2379,30 @@
         "product_hint": "Zdroje, které může citovat popis produktu. Ve zveřejněném produktu jsou očíslovány jako první, před odkazy jeho reportů.",
         "product_title": "Odkazy",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Štítky",
+        "tag": "Štítek",
+        "none_defined": "Pro tyto položky nejsou definovány žádné štítky",
+        "built_in_hint": "Tento štítek nastavuje Taranis; lze ho přejmenovat a změnit jeho vzhled, ale ne smazat. Vypnout ho lze v pracovním postupu štítků.",
+        "built_in_link_hint": "Vestavěné štítky zůstávají přiřazené; místo toho je vypněte",
+        "add_new": "Přidat nový štítek",
+        "edit": "Upravit štítek",
+        "name": "Název",
+        "description": "Popis",
+        "color": "Barva",
+        "icon": "Ikona",
+        "in_use": "Štítek je na {count} reportech nebo produktech a nelze ho smazat",
+        "add_link": "Přidat přiřazení štítku",
+        "edit_link": "Upravit přiřazení štítku",
+        "status_in_language": "{language}: {status}",
+        "filter": "Filtrovat podle štítků a překladu",
+        "translation": "Překlad",
+        "translation_language": "Jazyk",
+        "translation_any": "Jakýkoli",
+        "translation_needs": "Potřebuje překlad",
+        "translation_unreviewed": "Překlad AI nezkontrolován",
+        "translation_not_set": "Jazyk nenastaven",
+        "clear_filter": "Vymazat"
     }
 }

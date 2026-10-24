@@ -11,13 +11,14 @@ if TYPE_CHECKING:
 from datetime import datetime, timedelta
 
 import sqlalchemy
-from managers import content_language
+from managers import content_language, translation_status
 from managers.db_manager import db
 from managers.link_references import normalize_links
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.public_web import PublicWeb
 from model.report_item import ReportItem
+from model.report_item_type import ReportItemType
 from model.setting import Setting
 from model.state import (
     StateDefinition,
@@ -25,7 +26,8 @@ from model.state import (
     StateEnum,
     StateManager,
 )
-from model.translation import ORIGIN_AI, ORIGIN_MANUAL, ProductTranslation
+from model.tag import Tag, product_tag, set_item_tags
+from model.translation import ORIGIN_AI, ORIGIN_MANUAL, ProductTranslation, sql_source_hash
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -111,6 +113,9 @@ class Product(db.Model):
         lazy="selectin",
     )
 
+    # The admin tags people put on it; the built-in ones are worked out (see translation_status).
+    tags = db.relationship(Tag, secondary=product_tag, viewonly=True, lazy="selectin")
+
     def __init__(
         self,
         id: int,
@@ -172,6 +177,16 @@ class Product(db.Model):
                 version, outdated, user and last_updated.
         """
         return {row.language: {row.field: row.to_dict(self.title)} for row in self.title_translation_rows}
+
+    @property
+    def tag_ids(self) -> list[int]:
+        """The ids of the admin tags on the product."""
+        return [tag.id for tag in self.tags]
+
+    @property
+    def translation_status(self) -> dict[str, str]:
+        """Its title's translation status per language, as built-in tag keys (see managers/translation_status.py)."""
+        return translation_status.product_status(self)
 
     @property
     def title_translations(self) -> dict[str, dict[str, str]]:
@@ -376,6 +391,8 @@ class Product(db.Model):
 
             query = query.filter(Product.created >= date_limit)
 
+        query = cls._filter_tags_and_translation(query, filter)
+
         if "sort" in filter:
             if filter["sort"] == "DATE_DESC":
                 query = query.order_by(db.desc(Product.created))
@@ -384,6 +401,63 @@ class Product(db.Model):
                 query = query.order_by(db.asc(Product.created))
 
         return query.offset(offset).limit(limit).all(), query.count()
+
+    @classmethod
+    def _filter_tags_and_translation(cls, query: orm.Query, filter: dict) -> orm.Query:
+        """Narrow the list to products with any of ``filter["tags"]``, and by their title's translation status.
+
+        ``filter["translation"]`` is ``needs`` or ``unreviewed`` (with ``translation_language``),
+        or ``not_set`` for products whose language is not set.
+        """
+        tag_ids = filter.get("tags")
+        if tag_ids:
+            query = query.filter(sqlalchemy.exists().where(product_tag.c.product_id == Product.id, product_tag.c.tag_id.in_(tag_ids)))
+        kind = filter.get("translation")
+        if kind == "not_set":
+            return query.filter(Product.language.is_(None))
+        language = filter.get("translation_language")
+        if kind in ("needs", "unreviewed") and language:
+            query = query.filter(cls.translation_condition(language, needs=kind == "needs"))
+        return query
+
+    @staticmethod
+    def translation_condition(language: str, *, needs: bool) -> sqlalchemy.ColumnElement[bool]:
+        """SQL for a product that one of its reports' types offers in ``language`` and whose title ...
+
+        - with ``needs``: has no current translation into it (missing or outdated);
+        - otherwise: has a current translation into it that AI made and nobody has edited since.
+
+        Args:
+            language (str): ISO 639-1 code.
+            needs (bool): Which of the two.
+
+        Returns:
+            The condition.
+        """
+        link = orm.aliased(ProductReportItem)
+        report = orm.aliased(ReportItem)
+        report_type = orm.aliased(ReportItemType)
+        row = orm.aliased(ProductTranslation)
+        offered = and_(
+            Product.language.isnot(None),
+            Product.language != language,
+            sqlalchemy.exists().where(
+                link.product_id == Product.id,
+                report.id == link.report_item_id,
+                report_type.id == report.report_item_type_id,
+                report_type.languages.contains([language]),
+            ),
+        )
+        current = [
+            row.product_id == Product.id,
+            row.language == language,
+            row.field == "title",
+            func.coalesce(row.value, "") != "",
+            row.source_hash == sql_source_hash(Product.title),
+        ]
+        if needs:
+            return and_(offered, ~sqlalchemy.exists().where(*current))
+        return and_(offered, sqlalchemy.exists().where(*current, row.origin == ORIGIN_AI))
 
     @classmethod
     def get_json(cls, filter: dict, offset: int, limit: int, user: User) -> dict:
@@ -553,7 +627,11 @@ class Product(db.Model):
             user: User
         Returns:
             Product: New product
+
+        Raises:
+            ValueError: If ``tag_ids`` names a tag that cannot be put on products.
         """
+        tag_ids = Tag.assignable(StateEntityTypeEnum.PRODUCT.value, product_data.get("tag_ids"))
         product_schema = NewProductSchema()
         product = product_schema.load(product_data)
 
@@ -563,6 +641,9 @@ class Product(db.Model):
             product.language = cls._author_language(user)
         product.apply_translations(product.submitted_translations, user.id)
         db.session.add(product)
+        if tag_ids:
+            db.session.flush()
+            set_item_tags(StateEntityTypeEnum.PRODUCT.value, product.id, tag_ids, user.id)
         db.session.commit()
 
         # A product can be created straight in a FINAL state (e.g. published) with its reports
@@ -578,9 +659,15 @@ class Product(db.Model):
 
         Args:
             product_id: Product id
-            product_data: Product data
+            product_data: Product data; ``tag_ids`` left out keeps the product's tags
             user: User of who is updating
+
+        Raises:
+            ValueError: If ``tag_ids`` names a tag that cannot be put on products, or the
+                language is one the product is already translated into.
         """
+        # Left out, the tags stay as they are.
+        tag_ids = Tag.assignable(StateEntityTypeEnum.PRODUCT.value, product_data["tag_ids"]) if "tag_ids" in product_data else None
         product_schema = NewProductSchema()
         product = product_schema.load(product_data)
 
@@ -608,6 +695,8 @@ class Product(db.Model):
         original_product.public_webs.extend(product.public_webs)
         original_product.updated_at = datetime.now(TZ)
         original_product.updated_by = user.name
+        if tag_ids is not None:
+            set_item_tags(StateEntityTypeEnum.PRODUCT.value, product_id, tag_ids, user.id if user else None)
 
         db.session.commit()
 

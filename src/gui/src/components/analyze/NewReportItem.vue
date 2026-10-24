@@ -225,6 +225,11 @@
                                     :value="language"
                                     :disabled="!report_language"
                                 >
+                                    <TranslationStatusIcon
+                                        entity-type="report_item"
+                                        :status="tabStatuses[language]"
+                                        class="me-1"
+                                    />
                                     {{ languageName(language) }}
                                 </v-tab>
                             </v-tabs>
@@ -332,6 +337,20 @@
                                         @focus="onFocus('title')"
                                         @blur="saveReportItem('title')"
                                         @keyup="onKeyUp('title')"
+                                    />
+                                </v-col>
+                            </v-row>
+
+                            <v-row v-if="tagsStore.adminTags('report_item').length > 0">
+                                <v-col
+                                    cols="12"
+                                    class="pe-3"
+                                >
+                                    <TagPicker
+                                        entity-type="report_item"
+                                        :model-value="report_tags"
+                                        :disabled="!canModify || readOnly"
+                                        @update:model-value="changeTags"
                                     />
                                 </v-col>
                             </v-row>
@@ -545,6 +564,7 @@
         getReportItemLocks,
         aiGenerate,
         translateReportItem,
+        setReportItemTags,
         uploadAttachment
     } from '@/api/analyze'
     import { getEntityTypeStates } from '@/api/state'
@@ -554,9 +574,13 @@
     import RemoteReportItemSelector from '@/components/analyze/RemoteReportItemSelector.vue'
     import ReportItemTranslation from '@/components/analyze/ReportItemTranslation.vue'
     import type { TranslationStateValue } from '@/components/analyze/TranslationState.vue'
-    import { useContentLanguages } from '@/composables/useContentLanguages'
+    import { TRANSLATABLE_TYPES, useContentLanguages } from '@/composables/useContentLanguages'
     import StateSelector from '@/components/common/StateSelector.vue'
     import ContentLanguageSelect from '@/components/common/ContentLanguageSelect.vue'
+    import TagPicker from '@/components/common/tags/TagPicker.vue'
+    import TranslationStatusIcon from '@/components/common/tags/TranslationStatusIcon.vue'
+    import { useTagsStore } from '@/stores/tags'
+    import { translationStatus, type TranslationField } from '@/utils/translationStatus'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { createLinkReferences, provideLinkReferences } from '@/composables/useLinkReferences'
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
@@ -659,6 +683,9 @@
     }
     const report_language = ref<string | null>(null)
     const translations = ref<Record<string, Record<string, TranslationStateValue>>>({})
+    // The tags people put on the report.
+    const report_tags = ref<number[]>([])
+    const tagsStore = useTagsStore()
     const active_language = ref<string>('source')
     // Bumped whenever translations were replaced from the server, so the open tab refills.
     const translation_revision = ref<number>(0)
@@ -696,6 +723,28 @@
     const variantLanguages = computed<string[]>(() =>
         ((selected_type.value?.languages as string[] | undefined) ?? []).filter((language) => language !== report_language.value)
     )
+    // The translation status of each variant tab, from the translations this dialog holds
+    // (the rule core uses for the lists: src/core/managers/translation_status.py).
+    const tabStatuses = computed<Record<string, string>>(() => {
+        const statuses: Record<string, string> = {}
+        for (const language of variantLanguages.value) {
+            const fields: TranslationField[] = []
+            for (const field of ['title', 'title_prefix'] as const) {
+                if (report_item[field]) fields.push({ original: report_item[field], row: translations.value[language]?.[field] })
+            }
+            for (const group of attribute_groups.value) {
+                for (const item of group.attribute_group_items) {
+                    const definition = item.attribute_group_item
+                    if (!definition?.translate || !TRANSLATABLE_TYPES.includes(definition.attribute?.type)) continue
+                    for (const value of item.values) {
+                        if (!value.remote && value.value) fields.push({ original: value.value, row: value.translations?.[language] })
+                    }
+                }
+            }
+            statuses[language] = translationStatus(fields)
+        }
+        return statuses
+    })
     const canTranslate = computed<boolean>(
         () => canModify.value && !props.readOnly && !!report_language.value && !!selected_type.value?.translation_ai_provider_id
     )
@@ -860,7 +909,7 @@
 
         try {
             if (!report_item.id) {
-                const response = await createNewReportItem({ ...report_item, language: report_language.value })
+                const response = await createNewReportItem({ ...report_item, language: report_language.value, tag_ids: report_tags.value })
                 report_item.id = response.data
             }
 
@@ -1108,6 +1157,7 @@
             // Saved as soon as they change, so a refresh takes them as they are.
             report_language.value = data.language ?? null
             translations.value = data.translations ?? {}
+            report_tags.value = data.tags ?? []
 
             edit.value = true
             overlay.value = false
@@ -1254,6 +1304,7 @@
     const resetLanguages = () => {
         report_language.value = defaultContentLanguage.value
         translations.value = {}
+        report_tags.value = []
         active_language.value = 'source'
         report_locks.value = {}
         translation_job.running = false
@@ -1297,6 +1348,20 @@
             applyTranslations({ translations: response.data.translations ?? {}, attributes })
         } catch (error) {
             console.error('Error refreshing translations:', error)
+        }
+    }
+
+    // A saved report stores its tags right away; a new one sends them when it is created.
+    const changeTags = async (tagIds: number[]) => {
+        const previous = report_tags.value
+        report_tags.value = tagIds
+        if (!report_item.id) return
+        try {
+            const response = await setReportItemTags(report_item.id, tagIds)
+            report_tags.value = response.data?.tags ?? tagIds
+        } catch (error) {
+            report_tags.value = previous
+            notifyServerError(error)
         }
     }
 
@@ -1540,6 +1605,10 @@
                 if (data_info.user_id !== getUserId()) await refreshTranslations()
                 return
             }
+            if (data_info.tags !== undefined) {
+                if (data_info.user_id !== getUserId()) report_tags.value = data_info.tags
+                return
+            }
             // Translated fields are kept up to date by the language tab itself.
             if (data_info.language) return
             if (data_info.user_id !== getUserId()) {
@@ -1655,6 +1724,7 @@
     // Lifecycle
     onMounted(async () => {
         loadAvailableStates()
+        void tagsStore.load('report_item')
         await loadReportTypes()
 
         window.addEventListener('report-item-locked', reportItemLockedEvent)

@@ -206,6 +206,7 @@
                     v-model="activeLanguage"
                     :language="product.language"
                     :languages="productLanguages"
+                    :statuses="tabStatuses"
                     :can-modify="canModify"
                     :translating="translatingTitle"
                     @translate-all="translateTitles(productLanguages)"
@@ -220,6 +221,17 @@
                     @submit.prevent="handleSave"
                 >
                     <v-row>
+                        <v-col
+                            v-if="tagsStore.adminTags('product').length > 0"
+                            cols="12"
+                        >
+                            <TagPicker
+                                entity-type="product"
+                                :model-value="product.tag_ids"
+                                :disabled="!canModify"
+                                @update:model-value="changeTags"
+                            />
+                        </v-col>
                         <v-col
                             cols="12"
                             md="6"
@@ -483,6 +495,9 @@
     import { navigateReservedTabOrCurrentWindow, openBlankTabWithoutOpener } from '@/utils/window'
     import StateSelector from '@/components/common/StateSelector.vue'
     import ContentLanguageSelect from '@/components/common/ContentLanguageSelect.vue'
+    import TagPicker from '@/components/common/tags/TagPicker.vue'
+    import { useTagsStore } from '@/stores/tags'
+    import { translationStatus } from '@/utils/translationStatus'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
     import ProductLanguageBar from '@/components/publish/ProductLanguageBar.vue'
@@ -509,6 +524,8 @@
         language: string | null
         // Its title in other languages, saved with the product.
         translations: Record<string, { title: string; origin: 'ai' | 'manual' }>
+        // The tags people put on it, saved with the product.
+        tag_ids: number[]
     }
 
     /** A source of the product, cited from its description by key. */
@@ -576,10 +593,12 @@
         links?: ProductLink[]
         language?: string | null
         translations?: Record<string, { title?: TranslationStateValue }>
+        tags?: number[]
     }
 
     const { t } = useI18n()
     const { formatList } = useLocaleFormatters()
+    const tagsStore = useTagsStore()
     const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
     const authStore = useAuthStore()
@@ -609,7 +628,8 @@
         public_web_ids: [],
         links: [],
         language: null,
-        translations: {}
+        translations: {},
+        tag_ids: []
     })
 
     const selectedType = ref<ProductType | null>(null)
@@ -675,6 +695,19 @@
         }
         return languages
     })
+    // The title's translation status per tab: a stored outdated title stays outdated until edited.
+    const tabStatuses = computed<Record<string, string>>(() =>
+        Object.fromEntries(
+            productLanguages.value.map((language) => {
+                const local = product.value.translations[language]
+                const stored = titleStates.value[language]?.title
+                const row = local?.title
+                    ? { value: local.title, origin: local.origin, outdated: Boolean(stored?.outdated) && local.title === stored?.value }
+                    : null
+                return [language, translationStatus(product.value.title ? [{ original: product.value.title, row }] : [])]
+            })
+        )
+    )
     // The open tab's title as the form has it: typed by a person, it is no longer the AI's, nor outdated.
     const titleState = computed<TranslationStateValue | null>(() => {
         const stored = titleStates.value[activeLanguage.value]?.title
@@ -936,7 +969,8 @@
             links: [],
             // Written in the user's default language unless they pick another one.
             language: defaultContentLanguage.value,
-            translations: {}
+            translations: {},
+            tag_ids: []
         }
         resetLanguages()
         productLinks.value = []
@@ -1126,6 +1160,12 @@
             notifyServerError(error, 'product.error')
             return false
         }
+    }
+
+    // Saved with the product: right away once it exists, with the product when it is created.
+    function changeTags(tagIds: number[]): void {
+        product.value.tag_ids = tagIds
+        void handleUpdateRecord()
     }
 
     function handleStateChange(newStateId: number | string | null): void {
@@ -1374,7 +1414,8 @@
                 Object.entries((data as ProductDetailPayload).translations ?? {})
                     .filter(([, state]) => state.title?.value)
                     .map(([language, state]) => [language, { title: String(state.title?.value), origin: state.title?.origin ?? 'manual' }])
-            )
+            ),
+            tag_ids: (data as ProductDetailPayload).tags ?? []
         }
         resetLanguages()
         titleStates.value = (data as ProductDetailPayload).translations ?? {}
@@ -1418,6 +1459,7 @@
     }
 
     onMounted(() => {
+        void tagsStore.load('product')
         loadAvailableStates()
         loadProductTypes()
         loadPublisherPresets()

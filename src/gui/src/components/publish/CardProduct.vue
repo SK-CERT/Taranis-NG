@@ -73,6 +73,12 @@
                                 </bdi>
                             </v-chip>
 
+                            <TagChips
+                                entity-type="product"
+                                :tag-ids="card.tags"
+                                :translation-status="card.translation_status"
+                            />
+
                             <span
                                 v-if="card.report_items_count"
                                 class="product-card__report-count"
@@ -135,6 +141,7 @@
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { notifyDeleteError } from '@/utils/deleteError'
     import { useContentLanguages } from '@/composables/useContentLanguages'
+    import TagChips from '@/components/common/tags/TagChips.vue'
 
     type ProductCard = {
         id: number | string
@@ -142,6 +149,9 @@
         // The product's own language and its title in others, to show the GUI's language.
         language?: string | null
         title_translations?: Record<string, { title?: string }> | null
+        // The tags people put on it, and its title's translation status per language.
+        tags?: number[]
+        translation_status?: Record<string, string>
         subtitle?: string
         tag?: string
         product_type_name?: string

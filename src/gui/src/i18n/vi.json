@@ -1188,7 +1188,15 @@
             "entity_type_required": "Bắt buộc có loại thực thể"
         },
         "tags": {
-            "tab_description": "Tại đây, bạn có thể quản lý thẻ."
+            "tab_description": "Tại đây, bạn có thể quản lý thẻ.",
+            "system": {
+                "translation_missing": "Thiếu bản dịch",
+                "translation_partial": "Đã dịch một phần",
+                "translation_outdated": "Bản dịch đã cũ",
+                "translation_ai": "Bản dịch AI chưa được xem lại",
+                "translation_done": "Đã dịch",
+                "language_not_set": "Chưa đặt ngôn ngữ"
+            }
         },
         "tag_workflow": {
             "tab_description": "Tại đây, bạn có thể quản lý liên kết thẻ với thực thể."
@@ -2371,5 +2379,30 @@
         "product_hint": "Các nguồn mà mô tả sản phẩm có thể trích dẫn. Trong sản phẩm đã xuất bản, chúng được đánh số trước các liên kết của báo cáo.",
         "product_title": "Liên kết",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Thẻ",
+        "tag": "Thẻ",
+        "none_defined": "Chưa có thẻ nào cho các mục này",
+        "built_in_hint": "Taranis tự gắn thẻ này; có thể đổi tên và kiểu dáng nhưng không thể xóa. Hãy tắt nó trong quy trình thẻ.",
+        "built_in_link_hint": "Thẻ có sẵn vẫn được liên kết; thay vào đó hãy tắt chúng",
+        "add_new": "Thêm thẻ mới",
+        "edit": "Sửa thẻ",
+        "name": "Tên",
+        "description": "Mô tả",
+        "color": "Màu",
+        "icon": "Biểu tượng",
+        "in_use": "Thẻ đang gắn trên {count} báo cáo hoặc sản phẩm nên không thể xóa",
+        "add_link": "Thêm liên kết thẻ",
+        "edit_link": "Sửa liên kết thẻ",
+        "status_in_language": "{language}: {status}",
+        "filter": "Lọc theo thẻ và bản dịch",
+        "translation": "Bản dịch",
+        "translation_language": "Ngôn ngữ",
+        "translation_any": "Bất kỳ",
+        "translation_needs": "Cần dịch",
+        "translation_unreviewed": "Bản dịch AI chưa được xem lại",
+        "translation_not_set": "Chưa đặt ngôn ngữ",
+        "clear_filter": "Xóa bộ lọc"
     }
 }

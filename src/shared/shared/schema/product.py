@@ -47,6 +47,9 @@ class ProductPresentationSchema(ProductSchema, ACLEntryStatusSchema, Presentatio
         updated_by: User who last updated the product.
         translations: The title per language, with origin and whether it is outdated.
         title_translations: The title per language, ``{language: {"title": ...}}``.
+        tags: The ids of the tags people put on it.
+        translation_status: Its title's translation status per language as built-in tag keys,
+            or ``{"": "language_not_set"}``.
     """
 
     state = fields.Nested(StateDefinitionSchema, allow_none=True)
@@ -55,3 +58,5 @@ class ProductPresentationSchema(ProductSchema, ACLEntryStatusSchema, Presentatio
     # Translated titles: with their state for the edit form, and plain for lists.
     translations = fields.Dict(dump_only=True)
     title_translations = fields.Dict(dump_only=True)
+    tags = fields.List(fields.Int(), attribute="tag_ids", dump_only=True)
+    translation_status = fields.Dict(keys=fields.Str(), values=fields.Str(), dump_only=True)

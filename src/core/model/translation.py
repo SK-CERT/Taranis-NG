@@ -18,6 +18,7 @@ from datetime import datetime
 
 from managers.db_manager import db
 from shared.common import TZ
+from sqlalchemy import func
 from sqlalchemy.orm import declared_attr
 
 ORIGIN_AI = "ai"
@@ -37,6 +38,18 @@ def source_hash(text: str | None) -> str:
         str: The hex SHA-256 of the text.
     """
     return hashlib.sha256((text or "").encode("utf-8")).hexdigest()
+
+
+def sql_source_hash(text: object) -> object:
+    """:func:`source_hash` in SQL, so a query can tell a current translation from an outdated one.
+
+    Args:
+        text: The column or SQL expression holding the source text.
+
+    Returns:
+        The SQL expression of its hex SHA-256 (PostgreSQL 11 or later).
+    """
+    return func.encode(func.sha256(func.convert_to(func.coalesce(text, ""), "UTF8")), "hex")
 
 
 class TranslationMixin:

@@ -1188,7 +1188,15 @@
             "entity_type_required": "エンティティ種別は必須です"
         },
         "tags": {
-            "tab_description": "ここではタグを管理できます。"
+            "tab_description": "ここではタグを管理できます。",
+            "system": {
+                "translation_missing": "翻訳なし",
+                "translation_partial": "一部翻訳済み",
+                "translation_outdated": "翻訳が古い",
+                "translation_ai": "AI 翻訳が未確認",
+                "translation_done": "翻訳済み",
+                "language_not_set": "言語が未設定"
+            }
         },
         "tag_workflow": {
             "tab_description": "ここではタグとエンティティの関連付けを管理できます。"
@@ -2371,5 +2379,30 @@
         "product_hint": "製品の説明が引用できる情報源です。公開される製品では、レポートのリンクより先に番号が付けられます。",
         "product_title": "リンク",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "タグ",
+        "tag": "タグ",
+        "none_defined": "これらの項目に定義されたタグはありません",
+        "built_in_hint": "このタグは Taranis が付けます。名前と見た目は変更できますが、削除はできません。タグワークフローでオフにしてください。",
+        "built_in_link_hint": "組み込みタグはリンクされたままです。代わりにオフにしてください",
+        "add_new": "タグを追加",
+        "edit": "タグを編集",
+        "name": "名前",
+        "description": "説明",
+        "color": "色",
+        "icon": "アイコン",
+        "in_use": "このタグは {count} 件のレポートまたはプロダクトに付いているため削除できません",
+        "add_link": "タグのリンクを追加",
+        "edit_link": "タグのリンクを編集",
+        "status_in_language": "{language}: {status}",
+        "filter": "タグと翻訳で絞り込む",
+        "translation": "翻訳",
+        "translation_language": "言語",
+        "translation_any": "すべて",
+        "translation_needs": "翻訳が必要",
+        "translation_unreviewed": "AI 翻訳が未確認",
+        "translation_not_set": "言語が未設定",
+        "clear_filter": "クリア"
     }
 }

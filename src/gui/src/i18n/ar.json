@@ -1188,7 +1188,15 @@
             "entity_type_required": "نوع الكيان مطلوب"
         },
         "tags": {
-            "tab_description": "يمكنك هنا إدارة الوسوم."
+            "tab_description": "يمكنك هنا إدارة الوسوم.",
+            "system": {
+                "translation_missing": "الترجمة مفقودة",
+                "translation_partial": "مترجم جزئياً",
+                "translation_outdated": "الترجمة قديمة",
+                "translation_ai": "ترجمة الذكاء الاصطناعي غير مراجعة",
+                "translation_done": "مترجم",
+                "language_not_set": "اللغة غير محددة"
+            }
         },
         "tag_workflow": {
             "tab_description": "يمكنك هنا إدارة ارتباطات الوسوم بالكيانات."
@@ -2371,5 +2379,30 @@
         "product_hint": "المصادر التي يمكن لوصف المنتج الاستشهاد بها. في المنتج المنشور تُرقَّم أولًا، قبل روابط تقاريره.",
         "product_title": "الروابط",
         "url": "عنوان URL"
+    },
+    "tags": {
+        "tags": "الوسوم",
+        "tag": "وسم",
+        "none_defined": "لا توجد وسوم معرّفة لهذه العناصر",
+        "built_in_hint": "يضع Taranis هذا الوسم؛ يمكن إعادة تسميته وتغيير مظهره لكن لا يمكن حذفه. أوقفه في سير عمل الوسوم.",
+        "built_in_link_hint": "تبقى الوسوم المدمجة مرتبطة؛ أوقفها بدلاً من ذلك",
+        "add_new": "إضافة وسم جديد",
+        "edit": "تعديل الوسم",
+        "name": "الاسم",
+        "description": "الوصف",
+        "color": "اللون",
+        "icon": "الأيقونة",
+        "in_use": "الوسم موجود على {count} من التقارير أو المنتجات ولا يمكن حذفه",
+        "add_link": "إضافة ربط وسم",
+        "edit_link": "تعديل ربط الوسم",
+        "status_in_language": "اللغة {language}: {status}",
+        "filter": "التصفية حسب الوسوم والترجمة",
+        "translation": "الترجمة",
+        "translation_language": "اللغة",
+        "translation_any": "أي",
+        "translation_needs": "تحتاج إلى ترجمة",
+        "translation_unreviewed": "ترجمة الذكاء الاصطناعي غير مراجعة",
+        "translation_not_set": "اللغة غير محددة",
+        "clear_filter": "مسح"
     }
 }

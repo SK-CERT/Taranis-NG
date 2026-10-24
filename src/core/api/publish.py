@@ -14,6 +14,7 @@ import uuid
 from http import HTTPStatus
 from urllib.parse import quote
 
+from api import tag
 from flask import Response, request
 from flask_restful import Api, Resource
 from managers import auth_manager, content_language, content_localizer, llm_manager, log_manager, publishers_manager
@@ -69,6 +70,7 @@ class ProductsResource(Resource):
                 filters["date_from"] = request.args["date_from"]
             if request.args.get("date_to"):
                 filters["date_to"] = request.args["date_to"]
+            filters.update(tag.list_filter(request.args))
 
             offset = int(request.args.get("offset", 0))
             limit = min(int(request.args.get("limit", 50)), 200)
@@ -90,7 +92,7 @@ class ProductsResource(Resource):
         try:
             new_product = Product.add_product(request.json, user)
         except ValueError as ex:
-            # A language code or translated title that is not valid.
+            # A language code, translated title or tag that is not valid.
             db.session.rollback()
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         _reset_public_web_cache_if_published_changed(new_state_id=new_product.state_id)
@@ -129,7 +131,7 @@ class ProductResource(Resource):
         try:
             Product.update_product(product_id, request.json, user)
         except ValueError as ex:
-            # A language code or translated title that is not valid; nothing is stored.
+            # A language code, translated title or tag that is not valid; nothing is stored.
             db.session.rollback()
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         updated_product = Product.find(product_id)

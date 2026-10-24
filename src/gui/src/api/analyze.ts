@@ -1,4 +1,5 @@
 import ApiService from '@/services/api_service'
+import { tagFilterQuery } from '@/api/tags'
 
 function buildFilterQueryString(filter_data) {
     let filter = '?offset=' + encodeURIComponent(filter_data.offset || 0)
@@ -17,6 +18,7 @@ function buildFilterQueryString(filter_data) {
     if (filter_data.group) {
         filter += '&group=' + encodeURIComponent(filter_data.group)
     }
+    filter += tagFilterQuery(filter_data.filter)
     return filter
 }
 
@@ -128,10 +130,16 @@ export function createNewReportItem(data) {
         remote_report_items: data.remote_report_items || [],
         attributes: data.attributes || [],
         // The language it is written in; left out, core takes the author's default.
-        language: data.language || null
+        language: data.language || null,
+        tag_ids: data.tag_ids || []
     }
 
     return ApiService.post('/analyze/report-items', payload)
+}
+
+/** Make `tagIds` the report's tags. */
+export function setReportItemTags(report_item_id, tagIds) {
+    return ApiService.put('/analyze/report-items/' + report_item_id + '/tags', { tag_ids: tagIds })
 }
 
 export function deleteReportItem(report_item) {

@@ -40,6 +40,26 @@ vi.mock('@/api/user', () => ({
     getAllUserPublishersPresets: vi.fn().mockResolvedValue({ data: { items: [{ id: 8, name: 'Mailing list' }] } })
 }))
 
+vi.mock('@/api/tags', () => ({
+    getEntityTypeTags: vi.fn(() =>
+        Promise.resolve({
+            data: {
+                tags: [
+                    { id: 1, display_name: 'Urgent', color: '#FF0000', icon: 'mdi-fire', system_key: null, sort_order: 0 },
+                    {
+                        id: 11,
+                        display_name: 'translation_outdated',
+                        color: '#FB8C00',
+                        icon: 'mdi-alert',
+                        system_key: 'translation_outdated',
+                        sort_order: 102
+                    }
+                ]
+            }
+        })
+    )
+}))
+
 vi.mock('@/api/state', () => ({
     getEntityTypeStates: vi.fn().mockResolvedValue({ data: { states: [] } })
 }))
@@ -209,6 +229,7 @@ describe('NewProduct languages', () => {
         expect(saved.translations).toEqual({ en: { title: 'Bulletin (en)', origin: 'manual' } })
         expect(wrapper.find('[data-test="translation-ai"]').exists()).toBe(false)
         expect(wrapper.find('[data-test="translation-outdated"]').exists()).toBe(false)
+        expect(wrapper.vm.tabStatuses['en']).toBe('translation_done')
     })
 
     it('stores AI titles as the AIs', async () => {
@@ -355,5 +376,22 @@ describe('NewProduct languages', () => {
         await vi.advanceTimersByTimeAsync(400)
         await flushPromises()
         expect(wrapper.find('[data-test="notice-templates"]').exists()).toBe(false)
+    })
+
+    it('saves the tags put on a saved product with it', async () => {
+        const wrapper = await openProduct()
+        expect(wrapper.find('[data-test="tag-picker"]').exists()).toBe(true)
+
+        wrapper.vm.changeTags([1])
+        await flushPromises()
+
+        expect(vi.mocked(updateProduct).mock.calls.at(-1)?.[0]).toMatchObject({ id: 12, tag_ids: [1] })
+    })
+
+    it('marks a language tab whose title is outdated', async () => {
+        const wrapper = await openProduct()
+
+        const english = wrapper.get('[data-test="product-language-tabs"]').findAll('.v-tab').at(1)!
+        expect(english.find('[data-test="tab-status-translation_outdated"]').exists()).toBe(true)
     })
 })

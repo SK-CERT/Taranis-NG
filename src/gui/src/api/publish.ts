@@ -1,4 +1,5 @@
 import ApiService from '@/services/api_service'
+import { tagFilterQuery } from '@/api/tags'
 
 export function buildFilterQueryString(filter_data) {
     let filter = '?offset=' + encodeURIComponent(filter_data.offset)
@@ -14,6 +15,7 @@ export function buildFilterQueryString(filter_data) {
     if (filter_data.filter.range != 'ALL') {
         filter += '&range=' + encodeURIComponent(filter_data.filter.range)
     }
+    filter += tagFilterQuery(filter_data.filter)
     return filter
 }
 

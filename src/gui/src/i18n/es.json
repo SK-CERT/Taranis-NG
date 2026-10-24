@@ -1188,7 +1188,15 @@
             "entity_type_required": "El tipo de entidad es obligatorio"
         },
         "tags": {
-            "tab_description": "Aquí puede gestionar las etiquetas."
+            "tab_description": "Aquí puede gestionar las etiquetas.",
+            "system": {
+                "translation_missing": "Falta la traducción",
+                "translation_partial": "Traducida en parte",
+                "translation_outdated": "Traducción desactualizada",
+                "translation_ai": "Traducción de IA sin revisar",
+                "translation_done": "Traducida",
+                "language_not_set": "Idioma no establecido"
+            }
         },
         "tag_workflow": {
             "tab_description": "Aquí puede gestionar las asociaciones de etiquetas con entidades."
@@ -2371,5 +2379,30 @@
         "product_hint": "Fuentes que puede citar la descripción del producto. En el producto publicado se numeran primero, antes de los enlaces de sus informes.",
         "product_title": "Enlaces",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Etiquetas",
+        "tag": "Etiqueta",
+        "none_defined": "No hay etiquetas definidas para estos elementos",
+        "built_in_hint": "Taranis asigna esta etiqueta; se puede renombrar y cambiar su aspecto, pero no eliminar. Desactívela en el flujo de etiquetas.",
+        "built_in_link_hint": "Las etiquetas integradas siguen vinculadas; desactívelas en su lugar",
+        "add_new": "Añadir etiqueta",
+        "edit": "Editar etiqueta",
+        "name": "Nombre",
+        "description": "Descripción",
+        "color": "Color",
+        "icon": "Icono",
+        "in_use": "La etiqueta está en {count} informes o productos y no se puede eliminar",
+        "add_link": "Añadir vínculo de etiqueta",
+        "edit_link": "Editar vínculo de etiqueta",
+        "status_in_language": "{language}: {status}",
+        "filter": "Filtrar por etiquetas y traducción",
+        "translation": "Traducción",
+        "translation_language": "Idioma",
+        "translation_any": "Cualquiera",
+        "translation_needs": "Necesita traducción",
+        "translation_unreviewed": "Traducción de IA sin revisar",
+        "translation_not_set": "Idioma no establecido",
+        "clear_filter": "Borrar"
     }
 }

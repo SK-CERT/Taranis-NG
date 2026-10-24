@@ -3,12 +3,14 @@
 import io
 from http import HTTPStatus
 
+from api import tag
 from flask import jsonify, request, send_file
 from flask_restful import Api, Resource
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 from managers import asset_manager, auth_manager, llm_manager, tlp, translation_manager
 from managers.auth_manager import ACLCheck, auth_required
+from managers.db_manager import db
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
 from model.attribute import AttributeEnum
@@ -64,6 +66,7 @@ class ReportItems(Resource):
                 report_filter["range"] = request.args["range"]
             if request.args.get("sort"):
                 report_filter["sort"] = request.args["sort"]
+            report_filter.update(tag.list_filter(request.args))
 
             group = request.args.get("group")
             offset = request.args.get("offset", 0)
@@ -399,6 +402,32 @@ def _generate_tlp_refusal(ai_provider: object, body: dict) -> str | None:
     return None
 
 
+class ReportItemTags(Resource):
+    """The tags people put on a report item."""
+
+    @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
+    def put(self, report_item_id: int) -> tuple[dict, HTTPStatus]:
+        """Make ``tag_ids`` the report's tags.
+
+        Args:
+            report_item_id (int): The report item ID.
+
+        Returns:
+            (dict, int): ``{"tags"}``, or why they were refused.
+        """
+        if ReportItem.find(report_item_id) is None:
+            return {"error": "Report item not found"}, HTTPStatus.NOT_FOUND
+        user = auth_manager.get_user_from_jwt()
+        try:
+            tag_ids = ReportItem.set_tags(report_item_id, (request.json or {}).get("tag_ids"), user)
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        sse_manager.report_item_updated({"report_item_id": report_item_id, "user_id": user.id, "tags": tag_ids})
+        sse_manager.report_items_updated()
+        return {"tags": tag_ids}, HTTPStatus.OK
+
+
 class ReportItemTranslationReview(Resource):
     """Mark AI translations of a report item as reviewed, without changing them."""
 
@@ -629,6 +658,7 @@ def initialize(api: Api) -> None:
     api.add_resource(ReportItemLlmGenerate, "/api/v1/analyze/report-item-attributes/<int:attribute_id>/llm-generate")
     api.add_resource(ReportItemTranslate, "/api/v1/analyze/report-items/<int:report_item_id>/translate")
     api.add_resource(ReportItemTranslationReview, "/api/v1/analyze/report-items/<int:report_item_id>/translations/review")
+    api.add_resource(ReportItemTags, "/api/v1/analyze/report-items/<int:report_item_id>/tags")
 
     Permission.add("ANALYZE_ACCESS", "Analyze access", "Access to Analyze module")
     Permission.add("ANALYZE_CREATE", "Analyze create", "Create report item")

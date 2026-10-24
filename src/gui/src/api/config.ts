@@ -614,3 +614,37 @@ export function updateStateEntityType(association) {
 export function deleteStateEntityType(association) {
     return ApiService.delete('/config/state-entity-types/' + association.id)
 }
+
+// Tags: admin tags and the built-in ones (Configuration › Workflow › Tags)
+export function getAllTags(search = '') {
+    return ApiService.get('/config/tags?search=' + encodeURIComponent(search))
+}
+
+export function createTag(tag) {
+    return ApiService.post('/config/tags', tag)
+}
+
+export function updateTag(tag) {
+    return ApiService.put('/config/tags/' + tag.id, tag)
+}
+
+export function deleteTag(tag) {
+    return ApiService.delete('/config/tags/' + tag.id)
+}
+
+// Which tags reports and products use (Configuration › Workflow › Tag Workflow)
+export function getAllTagEntityTypes(entityType = '') {
+    return ApiService.get('/config/tag-entity-types' + (entityType ? '?entity_type=' + encodeURIComponent(entityType) : ''))
+}
+
+export function createTagEntityType(link) {
+    return ApiService.post('/config/tag-entity-types', link)
+}
+
+export function updateTagEntityType(link) {
+    return ApiService.put('/config/tag-entity-types/' + link.id, link)
+}
+
+export function deleteTagEntityType(link) {
+    return ApiService.delete('/config/tag-entity-types/' + link.id)
+}
