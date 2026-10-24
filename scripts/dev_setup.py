@@ -10,7 +10,9 @@ are independent uv projects, so ``uv sync`` run from a service directory would b
 *separate* ``src/<service>/.venv``. Their exported requirement sets are merged and
 installed additively into the one root environment instead. Where two services pin the
 same transitive package differently the newer wins, which is safe because this venv only
-runs tests — shipped images build from each service's own frozen ``uv.lock``.
+runs tests — shipped images build from each service's own frozen ``uv.lock``. The public
+web has no ``uv.lock`` (its image installs straight from its ``pyproject.toml``), so its
+exact pins are read from there and merged the same way.
 
 Exits non-zero if any step fails.
 
@@ -29,6 +31,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
 from typing import NoReturn
 
@@ -41,7 +44,15 @@ GUI_DIR = REPO_ROOT / "src" / "gui"
 # merged into the root .venv so the test suites can import them.
 SERVICES: tuple[str, ...] = ("bots", "collectors", "core", "presenters", "publishers")
 
-PIN_RE = re.compile(r"^([A-Za-z0-9._-]+)==([^ ;]+)(.*)$")
+# Services without a uv.lock; their direct `==` pins come from pyproject.toml instead and
+# uv resolves what those need.
+UNLOCKED_SERVICES: tuple[str, ...] = ("public_web",)
+
+# Installed editable on its own (see setup_python), so never taken from a service's pins.
+SHARED_PACKAGE = "taranis-ng-shared"
+
+# name, optional [extras], version, and whatever follows (environment markers).
+PIN_RE = re.compile(r"^([A-Za-z0-9._-]+)(?:\[([^\]]*)\])?==([^ ;]+)(.*)$")
 
 # The normalised PEP 440 subset uv emits in `uv export` pins, e.g. 1!2.3.4rc1.post2.dev3+local.
 VERSION_RE = re.compile(
@@ -56,6 +67,9 @@ PRE_RANK = {"a": 0, "b": 1, "rc": 2}
 
 # epoch, release, pre-release, post-release, dev-release, local — see version_key().
 VersionKey = tuple[int, tuple[int, ...], tuple[int, int], int, float, tuple[tuple[int, int, str], ...]]
+
+# The version chosen for one package so far: its order key, its text, and the extras asked for.
+Pin = tuple[VersionKey, str, frozenset[str]]
 
 
 def die(msg: str, code: int = 1) -> NoReturn:
@@ -132,13 +146,31 @@ def version_key(version: str) -> VersionKey:
     )
 
 
+def canonical_name(name: str) -> str:
+    """The PEP 503 form of a package name, so ``Flask`` and ``flask`` are one package."""
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def record_pin(pins: dict[str, Pin], name: str, version: str, extras: str | None) -> None:
+    """Keep the higher of two pins of one package, with the extras either asked for."""
+    name = canonical_name(name)
+    wanted = frozenset(part.strip() for part in (extras or "").split(",") if part.strip())
+    parsed = version_key(version)
+    if name in pins:
+        known_key, known_version, known_extras = pins[name]
+        wanted |= known_extras
+        if parsed <= known_key:
+            parsed, version = known_key, known_version
+    pins[name] = (parsed, version, wanted)
+
+
 def merge_service_requirements(uv: str, verbose: bool) -> Path:
     """Export every service's locked requirements and merge them into one file.
 
     Where two services pin the same package to different versions, the higher version
     wins — see the module docstring for why that is safe here.
     """
-    best: dict[str, tuple[VersionKey, str]] = {}
+    pins: dict[str, Pin] = {}
     for service in SERVICES:
         service_dir = REPO_ROOT / "src" / service
         exported = subprocess.run(
@@ -161,21 +193,33 @@ def merge_service_requirements(uv: str, verbose: bool) -> Path:
             match = PIN_RE.match(stripped)
             if match is None:
                 continue
-            name, version, remainder = match.group(1).lower(), match.group(2), match.group(3)
             # Drop environment-marker lines: this venv is one concrete platform, and the
             # markers are mostly win32/PyPy variants that would never install anyway.
-            if ";" in remainder:
+            if ";" in match.group(4):
                 continue
-            parsed = version_key(version)
-            if name not in best or parsed > best[name][0]:
-                best[name] = (parsed, f"{name}=={version}")
+            record_pin(pins, match.group(1), match.group(3), match.group(2))
+
+    for service in UNLOCKED_SERVICES:
+        pyproject = REPO_ROOT / "src" / service / "pyproject.toml"
+        with pyproject.open("rb") as handle:
+            dependencies = tomllib.load(handle)["project"]["dependencies"]
+        for requirement in dependencies:
+            match = PIN_RE.match(requirement.strip())
+            if match is None or match.group(4).strip():
+                die(f"src/{service}/pyproject.toml: {requirement!r} is not an exact `==` pin without markers")
+            if canonical_name(match.group(1)) != SHARED_PACKAGE:
+                record_pin(pins, match.group(1), match.group(3), match.group(2))
 
     if verbose:
-        print(f"dev_setup: merged {len(best)} pins from {len(SERVICES)} services")
+        print(f"dev_setup: merged {len(pins)} pins from {len(SERVICES) + len(UNLOCKED_SERVICES)} services")
 
+    lines = [
+        f"{name}[{','.join(sorted(extras))}]=={version}" if extras else f"{name}=={version}"
+        for name, (_, version, extras) in sorted(pins.items())
+    ]
     handle = tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False)  # noqa: SIM115
     with handle:
-        handle.write("\n".join(pin for _, pin in sorted(best.values(), key=lambda item: item[1])) + "\n")
+        handle.write("\n".join(lines) + "\n")
     return Path(handle.name)
 
 
