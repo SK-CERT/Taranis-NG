@@ -887,161 +887,189 @@
         }
     }
 
-    const showDetail = async (report_item_data) => {
-        initialFormState.value = null
-        resetAutoGenerate()
+    const attributeValuesFromData = (groupItem, data, locksData) => {
+        const values: any[] = []
+        const attributeType = groupItem.attribute.type
 
+        for (const attribute of data.attributes || []) {
+            if (attribute.attribute_group_item_id !== groupItem.id) continue
+
+            let value = attribute.value
+            if (attributeType === 'CPE') {
+                value = value.replaceAll('%', '*')
+            } else if (attributeType === 'BOOLEAN') {
+                value = value === 'true'
+            }
+
+            values.push({
+                id: attribute.id,
+                index: values.length,
+                value,
+                value_description: attribute.value_description,
+                binary_mime_type: attribute.binary_mime_type,
+                binary_size: attribute.binary_size,
+                binary_description: attribute.binary_description,
+                last_updated: attribute.last_updated,
+                user: attribute.user,
+                version: attribute.version ?? 1,
+                locked: lockedByOthers(locksData[attribute.id]),
+                remote: false
+            })
+        }
+
+        for (const remoteItem of data.remote_report_items || []) {
+            for (const attribute of remoteItem.attributes || []) {
+                if (attribute.attribute_group_item_title !== groupItem.title) continue
+
+                let value = attribute.value
+                if (attributeType === 'CPE') {
+                    value = value.replaceAll('%', '*')
+                } else if (attributeType === 'BOOLEAN') {
+                    value = value === 'true'
+                }
+
+                values.push({
+                    id: attribute.id,
+                    index: values.length,
+                    value,
+                    value_description: attribute.value_description,
+                    last_updated: attribute.last_updated,
+                    binary_mime_type: attribute.binary_mime_type,
+                    binary_size: attribute.binary_size,
+                    binary_description: attribute.binary_description,
+                    user: { name: remoteItem.remote_user },
+                    remote_report_item_id: remoteItem.id,
+                    locked: false,
+                    remote: true
+                })
+            }
+        }
+
+        return values
+    }
+
+    const showDetail = async (report_item_data, rebuild = true) => {
         try {
-            const response = await getReportItem(report_item_data.id)
+            const [response, locksResponse] = await Promise.all([getReportItem(report_item_data.id), getReportItemLocks(report_item_data.id)])
+
             const data = response.data
+            const locks_data = locksResponse.data
+
+            // A background refresh must not switch the dialog to another report.
+            if (!rebuild && data.id !== report_item.id) return
+
+            // Rebuild when explicitly requested or when the report type changed.
+            const rebuildForm = rebuild || data.report_item_type_id !== report_item.report_item_type_id
+
+            if (rebuildForm) {
+                initialFormState.value = null
+                resetAutoGenerate()
+
+                selected_type.value = null
+                attribute_groups.value = []
+
+                report_item.id = data.id
+                report_item.uuid = data.uuid
+                report_item.title = data.title
+                report_item.title_prefix = data.title_prefix
+                report_item.state_id = data.state_id
+                report_item.report_item_type_id = data.report_item_type_id
+
+                focused_field.value = null
+
+                field_baseline.title = data.title
+                field_baseline.title_prefix = data.title_prefix
+                field_baseline.state_id = data.state_id
+            } else {
+                // Refresh report metadata without rebuilding the form.
+                report_item.uuid = data.uuid
+
+                applyRemoteField('title', data.title)
+                applyRemoteField('title_prefix', data.title_prefix)
+                applyRemoteField('state_id', data.state_id)
+            }
 
             edit.value = true
             overlay.value = false
             show_error.value = false
-            modify.value = report_item_data.modify !== undefined ? report_item_data.modify : true
 
-            field_locks.title = false
-            field_locks.title_prefix = false
+            // Preserve the current mode during resync unless explicitly supplied.
+            modify.value = report_item_data.modify !== undefined ? report_item_data.modify : rebuildForm ? true : modify.value
 
-            selected_type.value = null
-            attribute_groups.value = []
-            news_item_aggregates.value = data.news_item_aggregates || []
-            remote_report_items.value = data.remote_report_items || []
+            field_locks.title = lockedByOthers(locks_data.title)
+            field_locks.title_prefix = lockedByOthers(locks_data.title_prefix)
 
-            report_item.id = data.id
-            report_item.uuid = data.uuid
-            report_item.title = data.title
-            report_item.title_prefix = data.title_prefix
-            report_item.report_item_type_id = data.report_item_type_id
-            report_item.state_id = data.state_id
+            // Refresh related data while preserving array identity during resync.
+            if (rebuildForm) {
+                news_item_aggregates.value = data.news_item_aggregates || []
+                remote_report_items.value = data.remote_report_items || []
+            } else {
+                news_item_aggregates.value.splice(0, news_item_aggregates.value.length, ...(data.news_item_aggregates || []))
 
-            focused_field.value = null
-            field_baseline.title = data.title
-            field_baseline.title_prefix = data.title_prefix
-            field_baseline.state_id = data.state_id
+                remote_report_items.value.splice(0, remote_report_items.value.length, ...(data.remote_report_items || []))
+            }
 
             if (!report_types.value || !report_types.value.length) {
                 await loadReportTypes()
             }
 
-            for (let i = 0; i < report_types.value.length; i++) {
-                if (report_types.value[i].id === report_item.report_item_type_id) {
-                    selected_type.value = report_types.value[i]
+            const matchingType = report_types.value.find((type) => type.id === data.report_item_type_id)
 
-                    expand_group_items.value = []
-                    for (let j = 0; j < selected_type.value.attribute_groups.length; j++) {
-                        expand_group_items.value.push({
-                            values: Array.from(Array(selected_type.value.attribute_groups[j].attribute_group_items.length).keys())
-                        })
-                    }
-                    break
-                }
+            if (matchingType && (rebuildForm || selected_type.value?.id !== matchingType.id)) {
+                selected_type.value = matchingType
+            }
+
+            if (rebuildForm && selected_type.value) {
+                expand_group_items.value = selected_type.value.attribute_groups.map((group) => ({
+                    values: Array.from(Array(group.attribute_group_items.length).keys())
+                }))
             }
 
             visible.value = true
 
-            // Load locks and populate attribute groups
-            const locksResponse = await getReportItemLocks(report_item.id)
-            const locks_data = locksResponse.data
+            const refreshedGroups: any[] = []
 
-            field_locks.title = lockedByOthers(locks_data.title)
-            field_locks.title_prefix = lockedByOthers(locks_data.title_prefix)
+            for (const groupDefinition of selected_type.value?.attribute_groups || []) {
+                const currentGroup = rebuildForm ? undefined : attribute_groups.value.find((group) => group.id === groupDefinition.id)
 
-            if (selected_type.value) {
-                for (let i = 0; i < selected_type.value.attribute_groups.length; i++) {
-                    const group: {
-                        id: unknown
-                        title: unknown
-                        attribute_group_items: Array<{ attribute_group_item: unknown; values: unknown[] }>
-                    } = {
-                        id: selected_type.value.attribute_groups[i].id,
-                        title: selected_type.value.attribute_groups[i].title,
-                        attribute_group_items: []
-                    }
-
-                    for (let j = 0; j < selected_type.value.attribute_groups[i].attribute_group_items.length; j++) {
-                        const values: Array<Record<string, unknown>> = []
-
-                        // Local attributes
-                        for (let k = 0; k < data.attributes.length; k++) {
-                            if (
-                                data.attributes[k].attribute_group_item_id ===
-                                selected_type.value.attribute_groups[i].attribute_group_items[j].id
-                            ) {
-                                let value = data.attributes[k].value
-                                const value_description = data.attributes[k].value_description
-                                const attrType = selected_type.value.attribute_groups[i].attribute_group_items[j].attribute.type
-
-                                if (attrType === 'CPE') {
-                                    value = value.replaceAll('%', '*')
-                                } else if (attrType === 'BOOLEAN') {
-                                    value = value === 'true'
-                                }
-
-                                const locked = lockedByOthers(locks_data[data.attributes[k].id])
-
-                                values.push({
-                                    id: data.attributes[k].id,
-                                    index: values.length,
-                                    value: value,
-                                    value_description: value_description,
-                                    binary_mime_type: data.attributes[k].binary_mime_type,
-                                    binary_size: data.attributes[k].binary_size,
-                                    binary_description: data.attributes[k].binary_description,
-                                    last_updated: data.attributes[k].last_updated,
-                                    user: data.attributes[k].user,
-                                    // Rows predating the version column report null; treat them as
-                                    // version 1 so concurrent-edit detection works for them too.
-                                    version: data.attributes[k].version ?? 1,
-                                    locked: locked,
-                                    remote: false
-                                })
-                            }
-                        }
-
-                        // Remote attributes
-                        for (let l = 0; l < (data.remote_report_items || []).length; l++) {
-                            for (let k = 0; k < data.remote_report_items[l].attributes.length; k++) {
-                                if (
-                                    data.remote_report_items[l].attributes[k].attribute_group_item_title ===
-                                    selected_type.value.attribute_groups[i].attribute_group_items[j].title
-                                ) {
-                                    let value = data.remote_report_items[l].attributes[k].value
-                                    const value_description = data.remote_report_items[l].attributes[k].value_description
-                                    const attrType = selected_type.value.attribute_groups[i].attribute_group_items[j].attribute.type
-
-                                    if (attrType === 'CPE') {
-                                        value = value.replaceAll('%', '*')
-                                    } else if (attrType === 'BOOLEAN') {
-                                        value = value === 'true'
-                                    }
-
-                                    values.push({
-                                        id: data.remote_report_items[l].attributes[k].id,
-                                        index: values.length,
-                                        value: value,
-                                        value_description: value_description,
-                                        last_updated: data.remote_report_items[l].attributes[k].last_updated,
-                                        binary_mime_type: data.remote_report_items[l].attributes[k].binary_mime_type,
-                                        binary_size: data.remote_report_items[l].attributes[k].binary_size,
-                                        binary_description: data.remote_report_items[l].attributes[k].binary_description,
-                                        user: { name: data.remote_report_items[l].remote_user },
-                                        locked: false,
-                                        remote: true
-                                    })
-                                }
-                            }
-                        }
-
-                        group.attribute_group_items.push({
-                            attribute_group_item: selected_type.value.attribute_groups[i].attribute_group_items[j],
-                            values: values
-                        })
-                    }
-
-                    attribute_groups.value.push(group)
+                const group = currentGroup || {
+                    id: groupDefinition.id,
+                    title: groupDefinition.title,
+                    attribute_group_items: []
                 }
+
+                group.title = groupDefinition.title
+
+                const refreshedItems = groupDefinition.attribute_group_items.map((groupItem) => {
+                    const currentItem = currentGroup?.attribute_group_items.find((item) => item.attribute_group_item.id === groupItem.id)
+
+                    const values = attributeValuesFromData(groupItem, data, locks_data)
+
+                    if (currentItem) {
+                        // Preserve the existing item and values array.
+                        // Attribute definitions are fixed, so no identity merge
+                        // is required for individual value objects.
+                        currentItem.attribute_group_item = groupItem
+
+                        currentItem.values.splice(0, currentItem.values.length, ...values)
+
+                        return currentItem
+                    }
+
+                    return {
+                        attribute_group_item: groupItem,
+                        values
+                    }
+                })
+
+                // Preserve the group's attribute_group_items array.
+                group.attribute_group_items.splice(0, group.attribute_group_items.length, ...refreshedItems)
+
+                refreshedGroups.push(group)
             }
+
+            // Preserve the top-level attribute_groups array.
+            attribute_groups.value.splice(0, attribute_groups.value.length, ...refreshedGroups)
         } catch (error) {
             console.error('Error loading report item detail:', error)
             show_error.value = true
@@ -1328,8 +1356,8 @@
     /**
      * Re-read the open report item after the live stream was down: updates published in the
      * meantime are not replayed, so without this the dialog would keep showing stale values
-     * and save them back over newer ones. Deferred while a field is focused, because
-     * reloading rebuilds the form and would drop whatever is being typed.
+     * and save them back over newer ones. Deferred while a field is focused so the refresh
+     * does not overwrite text that is still being edited.
      */
     const requestResync = () => {
         if (resync_timer.value) {
@@ -1347,8 +1375,7 @@
             resync_timer.value = setTimeout(requestResync, 3000)
             return
         }
-
-        showDetail({ id: report_item.id, modify: modify.value })
+        showDetail({ id: report_item.id, modify: modify.value }, false)
     }
 
     // Watchers

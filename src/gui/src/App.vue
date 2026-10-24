@@ -174,27 +174,27 @@
      */
     const setupSSEListeners = (): void => {
         subscribe('news-items-updated', (data) => {
-            console.log('[SSE] News items updated:', data)
+            // console.log('[SSE] News items updated:', data)
             window.dispatchEvent(new CustomEvent('news-items-updated', { detail: data }))
         })
 
         subscribe('report-items-updated', (data) => {
-            console.log('[SSE] Report items updated:', data)
+            // console.log('[SSE] Report items updated:', data)
             window.dispatchEvent(new CustomEvent('report-items-updated', { detail: data }))
         })
 
         subscribe('report-item-updated', (data) => {
-            console.log('[SSE] Report item updated:', data)
+            // console.log('[SSE] Report item updated:', data)
             window.dispatchEvent(new CustomEvent('report-item-updated', { detail: data }))
         })
 
         subscribe('report-item-locked', (data) => {
-            console.log('[SSE] Report item locked:', data)
+            // console.log('[SSE] Report item locked:', data)
             window.dispatchEvent(new CustomEvent('report-item-locked', { detail: data }))
         })
 
         subscribe('report-item-unlocked', (data) => {
-            console.log('[SSE] Report item unlocked:', data)
+            // console.log('[SSE] Report item unlocked:', data)
             window.dispatchEvent(new CustomEvent('report-item-unlocked', { detail: data }))
         })
     }

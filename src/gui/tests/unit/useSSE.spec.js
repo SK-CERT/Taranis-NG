@@ -188,6 +188,30 @@ describe('useSSE', () => {
             scope.stop()
         })
 
+        it('should reconnect when server heartbeats stop', async () => {
+            const { result, scope } = setupComposable()
+
+            const connectPromise = result.connect()
+            await flushMicrotasks()
+            const firstConnection = MockEventSource.instances[0]
+            firstConnection.onopen()
+            await connectPromise
+
+            expect(firstConnection.listeners.has('heartbeat')).toBe(true)
+
+            await vi.advanceTimersByTimeAsync(45000)
+            expect(firstConnection.close).toHaveBeenCalledTimes(1)
+            expect(result.sseConnection.value).toBeNull()
+
+            await vi.advanceTimersByTimeAsync(1000)
+            await flushMicrotasks()
+            expect(MockEventSource.instances).toHaveLength(2)
+
+            MockEventSource.instances[1].onopen()
+            await flushMicrotasks()
+            scope.stop()
+        })
+
         it('should notify resync handlers once the stream is back, since events are not replayed', async () => {
             const { result, scope } = setupComposable()
             const onResync = vi.fn()

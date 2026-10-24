@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 import json
 import socket
+import time
 from http import HTTPStatus
 
 from flask import Response, make_response, request, stream_with_context
@@ -20,6 +21,8 @@ from managers.cache_manager import redis_client
 from managers.log_manager import logger, sensitive_value
 from model.bots_node import BotsNode
 from model.remote import RemoteAccess
+
+SSE_HEARTBEAT_INTERVAL = 15
 
 
 class SseResource(Resource):
@@ -46,6 +49,7 @@ class SseResource(Resource):
             raise RuntimeError(msg) from ex
 
         buffer = ""
+        last_heartbeat = time.monotonic()
         try:
             data = b""
             while True:
@@ -53,10 +57,19 @@ class SseResource(Resource):
                     b = sock.recv(1)
                 except TimeoutError:
                     yield ":\n\n"
+                    b = None
+
+                if b == b"":
+                    break
+
+                now = time.monotonic()
+                if now - last_heartbeat >= SSE_HEARTBEAT_INTERVAL:
+                    yield "event: heartbeat\ndata: {}\n\n"
+                    last_heartbeat = now
+
+                if b is None:
                     continue
 
-                if not b:
-                    break
                 data += b
                 try:
                     char = data.decode("utf-8")

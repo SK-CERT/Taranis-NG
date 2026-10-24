@@ -38,5 +38,6 @@ class PresentersApi:
         Returns:
             tuple: A tuple containing the response JSON and status code.
         """
-        response = requests.post(self.api_url + "/api/v1/presenters", json=data, headers=self.headers, timeout=30)
+        # 60 seconds timeout because some presenters can take a long time to generate
+        response = requests.post(self.api_url + "/api/v1/presenters", json=data, headers=self.headers, timeout=60)
         return response.json(), response.status_code
