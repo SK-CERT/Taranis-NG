@@ -1,0 +1,202 @@
+{
+    "webs": [
+        {
+            "id": 1,
+            "name": "Vulnerability feed",
+            "hostname": "localhost",
+            "enabled": true,
+            "config": {
+                "languages": ["en", "cs"],
+                "default_language": "en",
+                "organization": "Example CERT",
+                "text": {
+                    "site_name": {"en": "Example feed"},
+                    "homepage_title": {"en": "Vulnerability reports", "cs": "Zranitelnosti"},
+                    "organization_url": {"en": "https://cert.example.org"}
+                }
+            },
+            "images": []
+        },
+        {
+            "id": 2,
+            "name": "Disinformation feed",
+            "hostname": "disinfo.localhost",
+            "enabled": true,
+            "config": {
+                "languages": ["en"],
+                "default_language": "en"
+            },
+            "images": []
+        }
+    ],
+    "products": [
+        {
+            "id": 101,
+            "title": "Critical  vulnerabilities in Apache products",
+            "description": "Several vulnerabilities were  published, see [1].",
+            "links": ["https://httpd.apache.org/security/", "https://nvd.nist.gov/vuln/detail/CVE-2025-1111", "https://tomcat.apache.org/security-10.html"],
+            "created": "2025-09-15T10:20:30",
+            "product_preset": {"id": 10, "title": "Vulnerability Report"},
+            "user": {"name": "Jan Novak", "username": "jnovak"},
+            "report_items": [
+                {
+                    "title": "Apache HTTP Server: request smuggling (CVE-2025-1111)",
+                    "title_prefix": "",
+                    "uuid": "vuln-101-1",
+                    "created": "2025-09-14T08:10:00",
+                    "last_updated": "2025-09-15T09:10:00",
+                    "type": "Vulnerability Report",
+                    "type_id": 2,
+                    "type_description": "Vulnerability",
+                    "attributes": [
+                        {"key": "description", "value": "an attacker can smuggle requests [2] and bypass ACLs [1].", "description": null, "label": "Description", "group": "Vulnerability", "attribute_type": "TEXT", "multiple": false, "order": [0, 0]},
+                        {"key": "recommendations", "value": "update to version 2.4.65 or later [1].", "description": null, "label": "Recommendations", "group": "Vulnerability", "attribute_type": "TEXT", "multiple": false, "order": [0, 1]},
+                        {"key": "affected_systems", "value": "linux:Apache HTTP Server; >=2.4.0, <2.4.65", "description": null, "label": "Affected systems", "group": "Vulnerability", "attribute_type": "STRING", "multiple": true, "order": [0, 2]},
+                        {"key": "affected_systems", "value": "Apache mod_proxy; <2.4.65; 3.0.0-beta", "description": null, "label": "Affected systems", "group": "Vulnerability", "attribute_type": "STRING", "multiple": true, "order": [0, 2]},
+                        {"key": "affected_systems", "value": "Apache Traffic Server;", "description": null, "label": "Affected systems", "group": "Vulnerability", "attribute_type": "STRING", "multiple": true, "order": [0, 2]},
+                        {"key": "cve", "value": "CVE-2025-1111", "description": null, "label": "CVE", "group": "Identifiers", "attribute_type": "CVE", "multiple": true, "order": [1, 0]},
+                        {"key": "cve", "value": "CVE-2025-1112", "description": null, "label": "CVE", "group": "Identifiers", "attribute_type": "CVE", "multiple": true, "order": [1, 0]},
+                        {"key": "cwe", "value": "444", "description": "Inconsistent Interpretation of HTTP Requests", "label": "CWE", "group": "Identifiers", "attribute_type": "CWE", "multiple": true, "order": [1, 1]},
+                        {"key": "cwe", "value": "20", "description": null, "label": "CWE", "group": "Identifiers", "attribute_type": "CWE", "multiple": true, "order": [1, 1]},
+                        {"key": "cvss", "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "description": null, "label": "CVSS", "group": "Identifiers", "attribute_type": "CVSS", "multiple": false, "order": [1, 2]},
+                        {"key": "ioc", "value": "198.51.100.7", "description": null, "label": "IOC", "group": "Identifiers", "attribute_type": "STRING", "multiple": true, "order": [1, 3]},
+                        {"key": "ioc", "value": "evil.example.net", "description": null, "label": "IOC", "group": "Identifiers", "attribute_type": "STRING", "multiple": true, "order": [1, 3]},
+                        {"key": "exposure_date", "value": "2025.09.10", "description": null, "label": "Exposure date", "group": "Dates", "attribute_type": "DATE", "multiple": false, "order": [2, 0]},
+                        {"key": "update_date", "value": "2025.09.12", "description": null, "label": "Update date", "group": "Dates", "attribute_type": "DATE", "multiple": false, "order": [2, 1]},
+                        {"key": "tlp", "value": "CLEAR", "description": null, "label": "TLP", "group": "Dates", "attribute_type": "TLP", "multiple": false, "order": [2, 2]},
+                        {"key": "links", "value": "https://nvd.nist.gov/vuln/detail/CVE-2025-1111", "description": null, "label": "Links", "group": "Dates", "attribute_type": "LINK", "multiple": true, "order": [2, 3]},
+                        {"key": "links", "value": "https://httpd.apache.org/security/", "description": null, "label": "Links", "group": "Dates", "attribute_type": "LINK", "multiple": true, "order": [2, 3]}
+                    ]
+                },
+                {
+                    "title": "Apache Tomcat information disclosure",
+                    "title_prefix": "",
+                    "uuid": "vuln-101-2",
+                    "created": "2025-09-14T08:20:00",
+                    "last_updated": null,
+                    "type": "Vulnerability Report",
+                    "type_id": 2,
+                    "type_description": "Vulnerability",
+                    "attributes": [
+                        {"key": "description", "value": "sensitive files may be read, see [3].", "description": null, "label": "Description", "group": "Vulnerability", "attribute_type": "TEXT", "multiple": false, "order": [0, 0]},
+                        {"key": "affected_systems", "value": "windows:Apache Tomcat; <10.1.40", "description": null, "label": "Affected systems", "group": "Vulnerability", "attribute_type": "STRING", "multiple": true, "order": [0, 2]},
+                        {"key": "cvss", "value": "5.3", "description": null, "label": "CVSS", "group": "Identifiers", "attribute_type": "CVSS", "multiple": false, "order": [1, 2]},
+                        {"key": "exposure_date", "value": "2025.09.11", "description": null, "label": "Exposure date", "group": "Dates", "attribute_type": "DATE", "multiple": false, "order": [2, 0]},
+                        {"key": "tlp", "value": "CLEAR", "description": null, "label": "TLP", "group": "Dates", "attribute_type": "TLP", "multiple": false, "order": [2, 2]},
+                        {"key": "links", "value": "https://tomcat.apache.org/security-10.html", "description": null, "label": "Links", "group": "Dates", "attribute_type": "LINK", "multiple": true, "order": [2, 3]}
+                    ]
+                }
+            ]
+        },
+        {
+            "id": 102,
+            "title": "OpenSSL denial of service",
+            "description": "A single issue in OpenSSL.",
+            "links": [],
+            "created": "2025-09-13T07:00:00",
+            "product_preset": {"id": 10, "title": "Vulnerability Report"},
+            "user": {"name": "Eva Svobodova", "username": "esvobodova"},
+            "report_items": [
+                {
+                    "title": "OpenSSL: crash on crafted certificate",
+                    "title_prefix": "",
+                    "uuid": "vuln-102-1",
+                    "created": "2025-09-13T06:00:00",
+                    "last_updated": null,
+                    "type": "Vulnerability Report",
+                    "type_id": 2,
+                    "type_description": "Vulnerability",
+                    "attributes": [
+                        {"key": "description", "value": "a crafted certificate crashes the parser.", "description": null, "label": "Description", "group": "Vulnerability", "attribute_type": "TEXT", "multiple": false, "order": [0, 0]},
+                        {"key": "recommendations", "value": "apply the vendor patch.", "description": null, "label": "Recommendations", "group": "Vulnerability", "attribute_type": "TEXT", "multiple": false, "order": [0, 1]},
+                        {"key": "affected_systems", "value": "OpenSSL; >=3.0.0, <3.0.17", "description": null, "label": "Affected systems", "group": "Vulnerability", "attribute_type": "STRING", "multiple": true, "order": [0, 2]},
+                        {"key": "cve", "value": "CVE-2025-2222", "description": null, "label": "CVE", "group": "Identifiers", "attribute_type": "CVE", "multiple": true, "order": [1, 0]},
+                        {"key": "cvss", "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H", "description": null, "label": "CVSS", "group": "Identifiers", "attribute_type": "CVSS", "multiple": false, "order": [1, 2]},
+                        {"key": "exposure_date", "value": "2025.09.12", "description": null, "label": "Exposure date", "group": "Dates", "attribute_type": "DATE", "multiple": false, "order": [2, 0]},
+                        {"key": "tlp", "value": "CLEAR", "description": null, "label": "TLP", "group": "Dates", "attribute_type": "TLP", "multiple": false, "order": [2, 2]}
+                    ]
+                }
+            ]
+        },
+        {
+            "id": 103,
+            "title": "Internal amber vulnerability",
+            "description": "Must never be shown.",
+            "links": [],
+            "created": "2025-09-12T07:00:00",
+            "product_preset": {"id": 10, "title": "Vulnerability Report"},
+            "user": {"name": "Eva Svobodova", "username": "esvobodova"},
+            "report_items": [
+                {
+                    "title": "Secret issue",
+                    "title_prefix": "",
+                    "uuid": "vuln-103-1",
+                    "created": "2025-09-12T06:00:00",
+                    "last_updated": null,
+                    "type": "Vulnerability Report",
+                    "type_id": 2,
+                    "type_description": "Vulnerability",
+                    "attributes": [
+                        {"key": "description", "value": "secret.", "description": null, "label": "Description", "group": "Vulnerability", "attribute_type": "TEXT", "multiple": false, "order": [0, 0]},
+                        {"key": "affected_systems", "value": "Secret product;", "description": null, "label": "Affected systems", "group": "Vulnerability", "attribute_type": "STRING", "multiple": true, "order": [0, 2]},
+                        {"key": "exposure_date", "value": "2025.09.12", "description": null, "label": "Exposure date", "group": "Dates", "attribute_type": "DATE", "multiple": false, "order": [2, 0]},
+                        {"key": "tlp", "value": "AMBER", "description": null, "label": "TLP", "group": "Dates", "attribute_type": "TLP", "multiple": false, "order": [2, 2]}
+                    ]
+                }
+            ]
+        },
+        {
+            "id": 201,
+            "title": "Disinformation overview",
+            "description": "Weekly disinformation overview.",
+            "links": ["https://social.example.com/post/1"],
+            "created": "2025-09-14T12:00:00",
+            "product_preset": {"id": 20, "title": "Disinformation"},
+            "user": {"name": "Petr Dvorak", "username": "pdvorak"},
+            "report_items": [
+                {
+                    "title": "Fake vaccine claims",
+                    "title_prefix": "",
+                    "uuid": "disinfo-201-1",
+                    "created": "2025-09-14T11:00:00",
+                    "last_updated": null,
+                    "type": "Disinformation from public source",
+                    "type_id": 5,
+                    "type_description": "Disinformation",
+                    "attributes": [
+                        {"key": "title", "value": "Vaccines <b>contain</b> chips", "description": null, "label": "Title", "group": "Disinformation", "attribute_type": "STRING", "multiple": false, "order": [0, 0]},
+                        {"key": "category", "value": "Health", "description": null, "label": "Category", "group": "Disinformation", "attribute_type": "MULTI_CHOICE", "multiple": false, "order": [0, 1]},
+                        {"key": "category", "value": "Science", "description": null, "label": "Category", "group": "Disinformation", "attribute_type": "MULTI_CHOICE", "multiple": false, "order": [0, 1]},
+                        {"key": "reach", "value": "120000", "description": null, "label": "Reach", "group": "Disinformation", "attribute_type": "NUMBER", "multiple": false, "order": [0, 2]},
+                        {"key": "source_(link)", "value": "https://social.example.com/post/1", "description": null, "label": "Source (link)", "group": "Disinformation", "attribute_type": "LINK", "multiple": true, "order": [0, 3]},
+                        {"key": "tlp", "value": "CLEAR", "description": null, "label": "TLP", "group": "Meta", "attribute_type": "TLP", "multiple": false, "order": [1, 0]}
+                    ]
+                }
+            ]
+        },
+        {
+            "id": 202,
+            "title": "Disinformation without TLP",
+            "description": "No TLP attribute at all.",
+            "links": [],
+            "created": "2025-09-13T12:00:00",
+            "product_preset": {"id": 20, "title": "Disinformation"},
+            "user": {"name": "Petr Dvorak", "username": "pdvorak"},
+            "report_items": [
+                {
+                    "title": "Forged statement",
+                    "title_prefix": "",
+                    "uuid": "disinfo-202-1",
+                    "created": "2025-09-13T11:00:00",
+                    "last_updated": null,
+                    "type": "Disinformation from public source",
+                    "type_id": 5,
+                    "type_description": "Disinformation",
+                    "attributes": [
+                        {"key": "title", "value": "Forged ministry statement", "description": null, "label": "Title", "group": "Disinformation", "attribute_type": "STRING", "multiple": false, "order": [0, 0]}
+                    ]
+                }
+            ]
+        }
+    ]
+}

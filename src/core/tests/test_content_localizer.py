@@ -291,6 +291,8 @@ def published(product: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> Simp
     product.links = [{"key": "ab12cd", "url": ADVISORY}]
     product.created = None
     product.user = None
+    product.product_preset.id = 5
+    product.product_preset.name = "Bulletin"
     return product
 
 
@@ -307,9 +309,9 @@ def test_the_public_web_shows_a_language_and_keeps_what_it_compares(published: S
     text, severity, network, web, cve = report["attributes"]
     # A translated text has its citations rendered like the original.
     assert (text["key"], text["value"], text["label"]) == ("popis", "Útočník môže [1]", "Popis (sk)")
-    assert severity == {
+    assert {key: severity[key] for key in ("key", "attribute_type", "value", "source_value", "description", "label")} == {
         "key": "závažnost",
-        "type": "ENUM",
+        "attribute_type": "ENUM",
         "value": "Vysoká (sk)",
         "source_value": "Vysoká",
         "description": "",
@@ -317,7 +319,8 @@ def test_the_public_web_shows_a_language_and_keeps_what_it_compares(published: S
     }
     # Network has no Slovak, so it stays as written - not English; each ticked value is an entry of its own.
     assert [(entry["value"], entry["source_value"]) for entry in (network, web)] == [("Síť", "Síť"), ("Web (sk)", "Web")]
-    assert cve == {"key": "cve", "type": "CVE", "value": "CVE-2026-1", "description": "", "label": "CVE (sk)"}
+    assert (cve["value"], cve["label"]) == ("CVE-2026-1", "CVE (sk)")
+    assert "source_value" not in cve
 
 
 def test_the_public_web_passes_over_outdated_translations(published: SimpleNamespace) -> None:
@@ -380,7 +383,9 @@ def test_without_a_language_the_public_web_gets_the_product_as_written(published
     report = feed["report_items"][0]
     assert report["title"] == "Kritická chyba"
     assert "type_label" not in report
-    assert report["attributes"][1] == {"key": "závažnost", "type": "ENUM", "value": "Vysoká", "description": ""}
+    severity = report["attributes"][1]
+    assert (severity["key"], severity["attribute_type"], severity["value"], severity["label"]) == ("závažnost", "ENUM", "Vysoká", "Závažnost")
+    assert "source_value" not in severity
 
 
 def test_the_public_web_says_when_it_shows_an_ai_translation_and_what_was_written(published: SimpleNamespace) -> None:

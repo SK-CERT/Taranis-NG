@@ -473,6 +473,32 @@ export function deletePublicWebImage(nodeId, webId, kind) {
     return ApiService.delete('/config/public-web-nodes/' + nodeId + '/webs/' + webId + '/images/' + kind)
 }
 
+export function getAllPublicWebTemplates(filter: { search?: string } = {}) {
+    return ApiService.get('/config/public-web-templates?search=' + (filter.search || ''))
+}
+
+export function createPublicWebTemplate(template) {
+    return ApiService.post('/config/public-web-templates', template)
+}
+
+export function updatePublicWebTemplate(template) {
+    return ApiService.put('/config/public-web-templates/' + template.id, template)
+}
+
+export function deletePublicWebTemplate(template) {
+    return ApiService.delete('/config/public-web-templates/' + template.id)
+}
+
+/** The built-in report templates (read-only), by the name `extends` and `import` use, and whether each is on. */
+export function getBuiltinPublicWebTemplates() {
+    return ApiService.get('/config/public-web-templates/builtin')
+}
+
+/** Switch a built-in report template on or off; the base layout and the macros cannot be. */
+export function setBuiltinPublicWebTemplateEnabled(name: string, enabled: boolean) {
+    return ApiService.put('/config/public-web-templates/builtin', { name, enabled })
+}
+
 export function testPublicWebEmail(nodeId, payload) {
     return ApiService.post('/config/public-web-nodes/' + nodeId + '/webs/test-email', payload)
 }

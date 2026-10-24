@@ -1315,7 +1315,8 @@
             "late": "Pomalá odozva",
             "unreachable": "Nedostupný",
             "never_seen": "Nikdy nepripojený",
-            "last_seen": "naposledy videný"
+            "last_seen": "naposledy videný",
+            "disabled": "Vypnuté"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Zobrazovať publikované produkty na verejnom webe",
         "public_web_ids": "Weby",
         "public_web_ids_hint": "Nič nevybraté: všetky weby.",
+        "public_web_template_hint": "Ak tento produkt nemá vlastnú šablónu reportu (Verejný web → Šablóny reportov), na webe sa zobrazia len reporty o zraniteľnostiach.",
         "needs_delivery": "Pridajte formát alebo zapnite zobrazenie na verejnom webe.",
         "successful": "Nový produkt bol pridaný",
         "successful_edit": "Produkt bol uložený",
@@ -2169,7 +2171,10 @@
             "name": "Názov",
             "tab_description": "Uzly public-web a weby, ktoré obsluhujú",
             "tab_title": "Uzly",
-            "total_count": "Žiadne uzly public-web | {count} uzol public-web | {count} uzly public-web | {count} uzlov public-web"
+            "total_count": "Žiadne uzly public-web | {count} uzol public-web | {count} uzly public-web | {count} uzlov public-web",
+            "enabled": "Povolené",
+            "enabled_hint": "Vypnuté: Taranis prestane uzol kontrolovať a obnovovať, nezverejní žiadny z jeho webov a nepošle mu žiadne reporty. Jeho weby a nastavenia zostanú zachované pre opätovné zapnutie.",
+            "disabled_notice": "Tento uzol je vypnutý: žiadny z jeho webov nie je zverejnený."
         },
         "webs": {
             "total_count": "Žiadne weby | {count} web | {count} weby | {count} webov",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Potvrdiť zmazanie",
         "confirm_delete_node": "Zmazať uzol public-web '{name}' a všetky jeho weby?",
-        "confirm_delete_web": "Zmazať web '{name}'?"
+        "confirm_delete_web": "Zmazať web '{name}'?",
+        "tabs": {
+            "nodes": "Uzly a weby",
+            "nodes_description": "Uzly public-web a weby, ktoré hostia",
+            "templates": "Šablóny reportov",
+            "templates_description": "Šablóny, ktorými verejné weby zobrazujú produkty"
+        },
+        "templates": {
+            "total_count": "Žiadne šablóny | {count} šablóna | {count} šablóny | {count} šablón",
+            "name": "Názov",
+            "kind": "Šablóna pre",
+            "kind_product": "Produkt",
+            "kind_item": "Typ reportu",
+            "target": "Platí pre",
+            "product_preset": "Produkt",
+            "report_item_type": "Typ reportu",
+            "target_hint": "Produkt alebo typ reportu môže mať jednu šablónu pre všetky weby a ďalšie pre vybrané weby.",
+            "require_tlp_clear": "Vyžaduje TLP:CLEAR",
+            "require_tlp_clear_hint": "Vypnuté: zobrazí sa aj produkt bez TLP. TLP, ktoré produkt má, musí byť vždy CLEAR.",
+            "updated": "Naposledy upravené",
+            "none": "Zatiaľ žiadne vlastné šablóny.",
+            "confirm_delete": "Odstrániť šablónu '{name}'? Nahradí ju vstavaná šablóna, ak nie je vypnutá.",
+            "edit": "Upraviť šablónu reportu",
+            "add_new": "Pridať šablónu reportu",
+            "source": "Šablóna (Jinja)",
+            "start_from": "Začať od",
+            "start_product_base": "Stránka rozširujúca základné rozloženie",
+            "start_product_vulnerability": "Rozloženie reportu o zraniteľnostiach",
+            "help_title": "Čo šablóna môže použiť",
+            "help_product": "Šablóna produktu rozširuje vstavané rozloženie a prepisuje jeho bloky: header, items a links (stránka reportu), summary (položka na úvodnej stránke) a rss (text RSS).",
+            "help_item": "Šablóna položky vykreslí jeden blok reportu na stránke reportu.",
+            "help_attrs": "Hodnoty tohto typu reportu:",
+            "help_more": "Hodnoty sa escapujú; filtre (clean, link_refs, cvss_score a ďalšie) opisuje README public-web. Šablónu, ktorá zlyhá, nahradí vstavaná.",
+            "help_ctx_product": "produkt: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "zdroje produktu; [n] v textoch je links[n - 1]",
+            "help_ctx_render_item": "vykreslí položku jej vlastnou šablónou",
+            "help_ctx_selected_items": "položky vybrané čitateľom (?items=); prázdne znamená všetky",
+            "help_ctx_t": "fráza z prekladov verejného webu",
+            "help_ctx_item": "položka reportu: name, type, attrs, attributes, fields",
+            "help_ctx_index": "poradie položky na stránke",
+            "builtin_title": "Vstavané šablóny",
+            "builtin_intro": "Verejný web ich používa pre produkty a reporty, ktoré nemajú vlastnú šablónu. Nedajú sa odstrániť, ale niektorú môžete vypnúť a používať tam len svoje vlastné šablóny.",
+            "builtin_in_use": "Používa sa",
+            "builtin_used_for": "Použitie",
+            "builtin_always_on": "Vždy zapnutá: vlastné šablóny z nej vychádzajú.",
+            "builtin_view": "Zobraziť šablónu",
+            "builtin_copy": "Kopírovať",
+            "builtin_copied": "Skopírované",
+            "builtin_copy_failed": "Kopírovanie zlyhalo. Označte text a skopírujte ho ručne.",
+            "builtin_none": "Hľadaniu nezodpovedá žiadna vstavaná šablóna.",
+            "builtin_use": {
+                "product_base": "Rozloženie, ktoré rozširuje každá šablóna produktu.",
+                "product_vulnerability": "Stránka reportov o zraniteľnostiach pri produktoch bez vlastnej šablóny.",
+                "item_vulnerability": "Reporty typu Vulnerability Report, ako ho vytvára Taranis, ktoré nemajú vlastnú šablónu.",
+                "item_generic": "Akýkoľvek iný report typu, ktorý nemá vlastnú šablónu.",
+                "macros": "Makrá, ktoré šablóny importujú."
+            },
+            "builtin_off": {
+                "product": "Vypnuté: na verejnom webe sa zobrazujú len produkty s vlastnou šablónou.",
+                "item_specific": "Vypnuté: tieto reporty použijú všeobecnú šablónu, alebo sa vynechajú, ak je vypnutá aj ona.",
+                "item_generic": "Vypnuté: reporty, ktorým nezostane žiadna šablóna, sa nezobrazia, a produkt, ktorému nezostane žiadny report, tiež nie."
+            },
+            "webs": "Weby",
+            "webs_hint": "Nič nevybrané: všetky weby. Web použije šablónu, ktorá ho uvádza, inak tú pre všetky weby.",
+            "every_web": "Všetky weby",
+            "web_taken": "Už v '{name}'",
+            "every_web_taken": "'{name}' je už jeho šablónou pre všetky weby: vyberte weby, pre ktoré je táto."
+        }
     },
     "routing": {
         "tab_title": "Smerovanie a TLS",

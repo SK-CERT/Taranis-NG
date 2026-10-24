@@ -1,79 +1,23 @@
-"""Custom Jinja2 filters for presenters."""
+"""Custom Jinja2 filters for presenters.
 
-import datetime
-import re
+The format-neutral filters (dates, regex, TLP colours) live in ``shared.jinja_filters``,
+because public-web's report templates use them too; they are re-exported here under
+their old names. What stays here is specific to presenter output, such as mail headers.
+"""
+
 from collections.abc import Iterable
 
-from shared.common import TZ
+from shared.jinja_filters import filter_regex_replace, filter_strfdate, filter_tlp_color, filter_truncate_on_symbol
 from shared.mail_headers import scrub_header_text
 
-
-def filter_strfdate(date: str, fmtin: str | None = None, fmtout: str | None = None) -> str:
-    """Convert a date string to a different format.
-
-    Args:
-        date (str): The date string to convert.
-        fmtin (str): The input format of the date string (default: "%Y.%m.%d").
-        fmtout (str): The output format of the date string (default: "%-d.%-m.%Y").
-
-    Returns:
-        str: The converted date string.
-
-    """
-    if not date:
-        return ""
-
-    formats = [fmtin] if fmtin else ["%Y-%m-%d", "%Y.%m.%d"]
-    for fmt in formats:
-        try:
-            native = datetime.datetime.strptime(date, fmt).replace(tzinfo=TZ)
-            break
-        except ValueError:
-            continue
-    else:
-        msg = f"Unsupported date format: {date!r}. Expected one of: {', '.join(formats)}"
-        raise ValueError(msg)
-
-    if not fmtout:
-        fmtout = "%-d.%-m.%Y"
-    return native.strftime(fmtout)
-
-
-def filter_regex_replace(text: str, pattern: str, replacement: str) -> str:
-    """Replace all occurrences of a pattern in a string with a replacement string.
-
-    Args:
-        pattern (str): The regex pattern to search for.
-        replacement (str): The string to replace the pattern with.
-        text (str): The input string.
-
-    Returns:
-        str: The modified string with the pattern replaced.
-
-    """
-    return re.sub(pattern, replacement, text)
-
-
-def filter_truncate_on_symbol(text: str, symbol: str) -> str:
-    """Truncate a string at the first occurrence of a specified symbol.
-
-    Args:
-        text (str): The input string.
-        symbol (str): The symbol to truncate at.
-
-    Returns:
-        str: The truncated string.
-
-    """
-    if symbol in text:
-        return text.split(symbol, maxsplit=1)[0]
-    return text
-
-
-def filter_tlp_color(tlp: str) -> str:
-    """Return color code for TLP value."""
-    mapping = {"CLEAR": "white", "WHITE": "white", "GREEN": "#33ff00", "AMBER": "#ffc000", "AMBER+STRICT": "#ffc000", "RED": "#ff2b2b"}
-    return mapping.get(tlp, "white")
+__all__ = [
+    "filter_collect_attrs",
+    "filter_header_value",
+    "filter_regex_replace",
+    "filter_strfdate",
+    "filter_tlp_color",
+    "filter_truncate_on_symbol",
+]
 
 
 def _attr_values(value: object) -> list[str]:

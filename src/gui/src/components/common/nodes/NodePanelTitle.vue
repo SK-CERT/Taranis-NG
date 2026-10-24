@@ -1,16 +1,40 @@
 <template>
     <v-expansion-panel-title>
         <v-icon
-            :icon="node.status === 'green' ? 'mdi-circle' : 'mdi-circle-outline'"
-            :color="statusColor"
+            :icon="disabled ? 'mdi-pause-circle-outline' : node.status === 'green' ? 'mdi-circle' : 'mdi-circle-outline'"
+            :color="disabled ? undefined : statusColor"
             size="x-small"
             class="me-2"
+            :class="{ 'text-medium-emphasis': disabled }"
             :title="statusTitle"
+            data-test="node-status"
         />
-        <span class="font-weight-medium">{{ node.name }}</span>
+        <span
+            class="font-weight-medium"
+            :class="{ 'text-medium-emphasis': disabled }"
+            >{{ node.name }}</span
+        >
         <span class="text-medium-emphasis ms-2">({{ count }})</span>
+        <v-chip
+            v-if="disabled"
+            size="x-small"
+            variant="tonal"
+            class="ms-2"
+            data-test="node-disabled"
+        >
+            {{ t('common.node_status.disabled') }}
+        </v-chip>
         <span class="text-medium-emphasis ms-2">{{ node.description }}</span>
         <v-spacer />
+        <!-- A switch the node can be turned on and off with, where it can be. -->
+        <span
+            v-if="$slots['toggle']"
+            class="me-6"
+            @click.stop
+            @keydown.stop
+        >
+            <slot name="toggle" />
+        </span>
         <!-- The panel title is itself a button, so anything interactive inside it has to stop the
              click travelling on - otherwise adding a child collapses the panel it belongs to. -->
         <span
@@ -60,8 +84,10 @@
             count?: number
             canUpdate?: boolean
             canDelete?: boolean
+            /** The node is switched off: shown greyed out, without a health colour (it is not checked). */
+            disabled?: boolean
         }>(),
-        { count: 0, canUpdate: false, canDelete: false }
+        { count: 0, canUpdate: false, canDelete: false, disabled: false }
     )
 
     const emit = defineEmits<{
@@ -77,6 +103,7 @@
     const statusColor = computed(() => (props.node.status === 'green' ? 'success' : props.node.status === 'orange' ? 'warning' : 'error'))
 
     const statusTitle = computed(() => {
+        if (props.disabled) return t('common.node_status.disabled')
         if (!props.node.last_seen) return t('common.node_status.never_seen')
         const key = props.node.status === 'green' ? 'alive' : props.node.status === 'orange' ? 'late' : 'unreachable'
         return `${t(`common.node_status.${key}`)} (${t('common.node_status.last_seen')}: ${props.node.last_seen})`

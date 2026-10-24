@@ -678,6 +678,8 @@
             "product.product_preset",
             "product.publish_confirmation_product_preset",
             "public_web.nodes.api_url",
+            "public_web.templates.kind_product",
+            "public_web.templates.product_preset",
             "public_web.webs.image_logo",
             "publishers.channels.parameters",
             "publishers.nodes.api_key",

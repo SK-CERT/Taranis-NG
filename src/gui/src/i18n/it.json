@@ -1315,7 +1315,8 @@
             "late": "Risponde lentamente",
             "unreachable": "Non raggiungibile",
             "never_seen": "Mai connesso",
-            "last_seen": "visto l'ultima volta"
+            "last_seen": "visto l'ultima volta",
+            "disabled": "Disattivato"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Mostra i suoi prodotti pubblicati sul web pubblico",
         "public_web_ids": "Siti web",
         "public_web_ids_hint": "Nessuno scelto: ogni web.",
+        "public_web_template_hint": "Se questo prodotto non ha un proprio modello di report (Public Web → Modelli di report), sul web compaiono solo i report di vulnerabilità.",
         "needs_delivery": "Aggiungere un formato o mostrare i prodotti sul web pubblico.",
         "successful": "Il nuovo prodotto è stato aggiunto",
         "successful_edit": "Il prodotto è stato salvato",
@@ -2169,7 +2171,10 @@
             "name": "Nome",
             "tab_description": "Nodi public-web e i siti che servono",
             "tab_title": "Nodi",
-            "total_count": "{count} nodo public-web | {count} nodi public-web"
+            "total_count": "{count} nodo public-web | {count} nodi public-web",
+            "enabled": "Abilitato",
+            "enabled_hint": "Disattivato: Taranis smette di controllare e aggiornare questo nodo, non pubblica nessuno dei suoi siti e non gli invia report. I suoi siti e le impostazioni restano per quando verrà riattivato.",
+            "disabled_notice": "Questo nodo è disattivato: nessuno dei suoi siti è pubblicato."
         },
         "webs": {
             "total_count": "{count} sito | {count} siti",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Conferma eliminazione",
         "confirm_delete_node": "Eliminare il nodo public-web '{name}' e tutti i suoi siti?",
-        "confirm_delete_web": "Eliminare il sito '{name}'?"
+        "confirm_delete_web": "Eliminare il sito '{name}'?",
+        "tabs": {
+            "nodes": "Nodi e web",
+            "nodes_description": "Nodi public-web e i web che ospitano",
+            "templates": "Modelli di report",
+            "templates_description": "Modelli con cui i web pubblici mostrano i prodotti"
+        },
+        "templates": {
+            "total_count": "{count} modello | {count} modelli",
+            "name": "Nome",
+            "kind": "Modello per",
+            "kind_product": "Prodotto",
+            "kind_item": "Tipo di elemento del report",
+            "target": "Si applica a",
+            "product_preset": "Prodotto",
+            "report_item_type": "Tipo di elemento del report",
+            "target_hint": "Un prodotto o un tipo di elemento del report può avere un modello per tutti i siti e altri per siti scelti.",
+            "require_tlp_clear": "Richiede TLP:CLEAR",
+            "require_tlp_clear_hint": "Disattivato: viene mostrato anche un prodotto senza TLP. Un TLP presente deve sempre essere CLEAR.",
+            "updated": "Ultima modifica",
+            "none": "Ancora nessun modello personalizzato.",
+            "confirm_delete": "Eliminare il modello '{name}'? Al suo posto si usa il modello integrato, se non è disattivato.",
+            "edit": "Modifica modello di report",
+            "add_new": "Aggiungi modello di report",
+            "source": "Modello (Jinja)",
+            "start_from": "Inizia da",
+            "start_product_base": "Una pagina che estende il layout di base",
+            "start_product_vulnerability": "Il layout dei report sulle vulnerabilità",
+            "help_title": "Cosa può usare un modello",
+            "help_product": "Un modello di prodotto estende un layout integrato e ne ridefinisce i blocchi: header, items e links (la pagina del report), summary (la voce della home page) e rss (il testo RSS).",
+            "help_item": "Un modello di elemento mostra un blocco di elemento del report nella pagina del report.",
+            "help_attrs": "Valori di questo tipo di elemento del report:",
+            "help_more": "I valori vengono sottoposti a escape; i filtri (clean, link_refs, cvss_score e altri) sono descritti nel README di public-web. Un modello che fallisce viene sostituito da quello integrato.",
+            "help_ctx_product": "il prodotto: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "le fonti del prodotto; [n] nei testi è links[n - 1]",
+            "help_ctx_render_item": "mostra un elemento con il suo modello",
+            "help_ctx_selected_items": "gli elementi scelti dal lettore (?items=); vuoto significa tutti",
+            "help_ctx_t": "una frase dalle traduzioni del web pubblico",
+            "help_ctx_item": "l'elemento del report: name, type, attrs, attributes, fields",
+            "help_ctx_index": "la posizione dell'elemento nella pagina",
+            "builtin_title": "Modelli integrati",
+            "builtin_intro": "Il web pubblico li usa per i prodotti e gli elementi del report senza un modello proprio. Non si possono eliminare, ma puoi disattivarne uno per usare lì solo i tuoi modelli.",
+            "builtin_in_use": "In uso",
+            "builtin_used_for": "Usato per",
+            "builtin_always_on": "Sempre attivo: i modelli personalizzati si basano su di esso.",
+            "builtin_view": "Mostra il modello",
+            "builtin_copy": "Copia",
+            "builtin_copied": "Copiato",
+            "builtin_copy_failed": "Copia non riuscita. Seleziona il testo e copialo a mano.",
+            "builtin_none": "Nessun modello integrato corrisponde alla ricerca.",
+            "builtin_use": {
+                "product_base": "Il layout che ogni modello di prodotto estende.",
+                "product_vulnerability": "La pagina dei report sulle vulnerabilità dei prodotti senza un modello proprio.",
+                "item_vulnerability": "Elementi del tipo Vulnerability Report come lo crea Taranis, senza un modello proprio.",
+                "item_generic": "Qualsiasi altro elemento del report di un tipo senza un modello proprio.",
+                "macros": "Macro importate dai modelli."
+            },
+            "builtin_off": {
+                "product": "Disattivato: sul web pubblico compaiono solo i prodotti con un modello proprio.",
+                "item_specific": "Disattivato: questi elementi usano il modello generico, o vengono omessi se è disattivato anche quello.",
+                "item_generic": "Disattivato: gli elementi del report rimasti senza modello non vengono mostrati, né un prodotto a cui non ne resta nessuno."
+            },
+            "webs": "Siti",
+            "webs_hint": "Nessuno scelto: tutti i siti. Un sito usa il modello che lo elenca, altrimenti quello per tutti i siti.",
+            "every_web": "Tutti i siti",
+            "web_taken": "Già in '{name}'",
+            "every_web_taken": "'{name}' è già il suo modello per tutti i siti: scegli i siti a cui si applica questo."
+        }
     },
     "routing": {
         "tab_title": "Routing e TLS",

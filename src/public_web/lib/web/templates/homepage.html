@@ -54,28 +54,17 @@
                 <span class="mdi mdi-help-circle fs-3" aria-hidden="true"></span>
             </span>
         </form>
-        {% if reports %}
+        {% if entries %}
             <div class="list-group border border-dark">
-                {% for report in reports %}
+                {#- Each entry's text comes from the product's report template ("summary" view). -#}
+                {% for report, summary in entries %}
                     <a class="list-group-item d-flex m-0"
-                       href="{{ url_for('reports.show', report_id=report.get_id()) }}">
+                       href="{{ url_for('reports.show', report_id=report['id']) }}">
                         <p class="me-3 ms-1 my-auto text-primary">
                             <span class="mdi mdi-file-table-outline fs-4" aria-hidden="true"></span>
                         </p>
                         <div class="d-flex flex-column w-100">
-                            <div class="d-flex flex-column flex-md-row mt-1">
-                                <h5 class="m-0 me-2 mb-1"{{ macros.content_lang(report) }}>
-                                    {{ report.get_title() }}
-                                </h5>
-                                {{ macros.render_severity_badge(report.get_max_cvss_number(), True) }}
-                            </div>
-                            {%- if report.get_publish_date() %}
-                                <div class="text-secondary me-4 mb-1">
-                                    {{ translate_ui('published') }}
-                                    {{ translate_ui('on_day') }}
-                                    {{ report.get_publish_date() }}.
-                                </div>
-                            {%- endif %}
+                            {{ summary }}
                         </div>
                     </a>
                 {% endfor %}
@@ -94,7 +83,7 @@
             </div>
         {% endif %}
         <div class="d-flex mt-3 justify-content-center">
-            {% if reports -%}
+            {% if entries -%}
                 <nav aria-label="Page navigation example">
                     <ul class="pagination">
                         <li class="page-item {{ 'disabled' if page == 1 else '' }}">

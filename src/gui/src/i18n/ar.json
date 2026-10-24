@@ -1315,7 +1315,8 @@
             "late": "بطيء الاستجابة",
             "unreachable": "يتعذَّر الوصول إليه",
             "never_seen": "لم يتصل قط",
-            "last_seen": "آخر ظهور"
+            "last_seen": "آخر ظهور",
+            "disabled": "معطّل"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "عرض منتجاته المنشورة على الويب العام",
         "public_web_ids": "المواقع",
         "public_web_ids_hint": "إن لم يُختر شيء: كل المواقع.",
+        "public_web_template_hint": "ما لم يكن لهذا المنتج قالب تقرير خاص به (الويب العام ← قوالب التقارير)، لا تظهر على الويب إلا تقارير الثغرات.",
         "needs_delivery": "أضف صيغة، أو اعرض المنتجات على الويب العام.",
         "successful": "أُضيف المنتج الجديد",
         "successful_edit": "حُفظ المنتج",
@@ -2169,7 +2171,10 @@
             "name": "الاسم",
             "tab_description": "عقد public-web والمواقع التي تخدمها",
             "tab_title": "العقد",
-            "total_count": "لا توجد عقد public-web ({count}) | عقدة public-web واحدة ({count}) | عقدتا public-web ({count}) | {count} عقد public-web | {count} عقدة public-web | {count} عقدة public-web"
+            "total_count": "لا توجد عقد public-web ({count}) | عقدة public-web واحدة ({count}) | عقدتا public-web ({count}) | {count} عقد public-web | {count} عقدة public-web | {count} عقدة public-web",
+            "enabled": "مفعّل",
+            "enabled_hint": "معطّل: يتوقف Taranis عن فحص هذه العقدة وتحديثها، ولا ينشر أيًا من مواقعها، ولا يرسل إليها تقارير. تُحفظ مواقعها وإعداداتها لحين إعادة تفعيلها.",
+            "disabled_notice": "هذه العقدة معطّلة: لا يُنشر أي من مواقعها."
         },
         "webs": {
             "total_count": "لا توجد مواقع ({count}) | موقع واحد ({count}) | موقعان ({count}) | {count} مواقع | {count} موقعًا | {count} موقع",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "تأكيد الحذف",
         "confirm_delete_node": "هل تريد حذف عقدة public-web '{name}' وجميع مواقعها؟",
-        "confirm_delete_web": "هل تريد حذف الموقع '{name}'؟"
+        "confirm_delete_web": "هل تريد حذف الموقع '{name}'؟",
+        "tabs": {
+            "nodes": "العقد والمواقع",
+            "nodes_description": "عقد public-web والمواقع التي تستضيفها",
+            "templates": "قوالب التقارير",
+            "templates_description": "القوالب التي تعرض بها المواقع العامة المنتجات"
+        },
+        "templates": {
+            "total_count": "لا توجد قوالب ({count}) | قالب واحد ({count}) | قالبان ({count}) | {count} قوالب | {count} قالبًا | {count} قالب",
+            "name": "الاسم",
+            "kind": "القالب مخصص لـ",
+            "kind_product": "المنتج",
+            "kind_item": "نوع عنصر التقرير",
+            "target": "ينطبق على",
+            "product_preset": "المنتج",
+            "report_item_type": "نوع عنصر التقرير",
+            "target_hint": "يمكن أن يكون للمنتج أو لنوع عنصر التقرير قالب واحد لكل المواقع وقوالب أخرى لمواقع مختارة.",
+            "require_tlp_clear": "يتطلب TLP:CLEAR",
+            "require_tlp_clear_hint": "عند الإيقاف: يُعرض أيضًا المنتج الذي لا يحمل أي TLP. ويجب أن يكون أي TLP يحمله المنتج CLEAR دائمًا.",
+            "updated": "آخر تحديث",
+            "none": "لا توجد قوالب مخصصة بعد.",
+            "confirm_delete": "هل تريد حذف القالب '{name}'؟ سيحل القالب المضمّن محله ما لم يكن معطّلًا.",
+            "edit": "تحرير قالب التقرير",
+            "add_new": "إضافة قالب تقرير",
+            "source": "القالب (Jinja)",
+            "start_from": "البدء من",
+            "start_product_base": "صفحة توسّع التخطيط الأساسي",
+            "start_product_vulnerability": "تخطيط تقرير الثغرات",
+            "help_title": "ما يمكن للقالب استخدامه",
+            "help_product": "يوسّع قالب المنتج تخطيطًا مضمّنًا ويعيد تعريف كتله: header وitems وlinks (صفحة التقرير)، وsummary (إدخال الصفحة الرئيسية)، وrss (نص RSS).",
+            "help_item": "يعرض قالب العنصر كتلة عنصر تقرير واحدة في صفحة التقرير.",
+            "help_attrs": "قيم هذا النوع من عناصر التقرير:",
+            "help_more": "تُهرَّب القيم؛ والمرشحات (clean وlink_refs وcvss_score وغيرها) موضحة في ملف README الخاص بـ public-web. ويُستبدل القالب الذي يفشل بالقالب المضمّن.",
+            "help_ctx_product": "المنتج: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "مصادر المنتج؛ و[n] في النصوص هو links[n - 1]",
+            "help_ctx_render_item": "يعرض العنصر بقالبه الخاص",
+            "help_ctx_selected_items": "العناصر التي اختارها القارئ (?items=)؛ وتعني القائمة الفارغة كل العناصر",
+            "help_ctx_t": "عبارة من ترجمات الموقع العام",
+            "help_ctx_item": "عنصر التقرير: name, type, attrs, attributes, fields",
+            "help_ctx_index": "موضع العنصر في الصفحة",
+            "builtin_title": "القوالب المضمّنة",
+            "builtin_intro": "يستخدمها الويب العام للمنتجات وعناصر التقارير التي ليس لها قالب خاص. لا يمكن حذفها، لكن يمكنك تعطيل أي منها لاستخدام قوالبك الخاصة فقط هناك.",
+            "builtin_in_use": "قيد الاستخدام",
+            "builtin_used_for": "يُستخدم لـ",
+            "builtin_always_on": "مفعّل دائمًا: تُبنى عليه القوالب المخصصة.",
+            "builtin_view": "عرض القالب",
+            "builtin_copy": "نسخ",
+            "builtin_copied": "تم النسخ",
+            "builtin_copy_failed": "تعذّر النسخ. حدّد النص وانسخه يدويًا.",
+            "builtin_none": "لا يوجد قالب مضمّن يطابق البحث.",
+            "builtin_use": {
+                "product_base": "التخطيط الذي يوسّعه كل قالب منتج.",
+                "product_vulnerability": "صفحة تقارير الثغرات للمنتجات التي ليس لها قالب خاص.",
+                "item_vulnerability": "عناصر النوع Vulnerability Report كما ينشئه Taranis، التي ليس لها قالب خاص.",
+                "item_generic": "أي عنصر تقرير آخر من نوع ليس له قالب خاص.",
+                "macros": "وحدات الماكرو التي تستوردها القوالب."
+            },
+            "builtin_off": {
+                "product": "معطّل: لا تظهر على الويب العام إلا المنتجات التي لها قالب خاص.",
+                "item_specific": "معطّل: تستخدم هذه العناصر القالب العام، أو تُحذف من الصفحة إن كان معطّلًا أيضًا.",
+                "item_generic": "معطّل: لا تُعرض عناصر التقارير التي لا يبقى لها قالب، ولا المنتج الذي لا يبقى له أي عنصر."
+            },
+            "webs": "المواقع",
+            "webs_hint": "لم يُختر شيء: كل المواقع. يستخدم الموقع القالب الذي يذكره، وإلا فالقالب الخاص بكل المواقع.",
+            "every_web": "كل المواقع",
+            "web_taken": "في '{name}'",
+            "every_web_taken": "'{name}' هو قالبه لكل المواقع بالفعل: اختر المواقع التي يخصها هذا القالب."
+        }
     },
     "routing": {
         "tab_title": "التوجيه وTLS",

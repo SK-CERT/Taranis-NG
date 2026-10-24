@@ -9,14 +9,11 @@ from flask import (
     request,
 )
 from lib import config
-from lib.report import get_cvss_severity
 from lib.web import (
     chosen_language,
     current_language,
-    do_clean,
     language_choices,
     language_name,
-    transform_link_references,
     translate_report,
     translate_ui,
 )
@@ -25,9 +22,10 @@ from lib.web.management import management_bp
 from lib.web.routes import reports_bp
 from lib.web.site import current_site
 
-# Flask application definition and the definition of jinja functions.
+# Flask application definition and the definition of jinja functions. These serve
+# the site's own page chrome; report content is rendered by lib.report.renderer in
+# its own sandboxed environment.
 app = Flask(__name__)
-app.jinja_env.filters["clean"] = do_clean
 app.jinja_env.globals.update(
     chosen_language=chosen_language,
     current_language=current_language,
@@ -35,8 +33,6 @@ app.jinja_env.globals.update(
     language_name=language_name,
     translate_report=translate_report,
     translate_ui=translate_ui,
-    transform_link_references=transform_link_references,
-    get_cvss_severity=get_cvss_severity,
 )
 
 register_error_handlers(app)

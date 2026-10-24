@@ -52,6 +52,7 @@ from model import (
     product_preset,
     public_web,
     public_web_node,
+    public_web_template,
     publishers_node,
     publishing_channel,
     remote,
@@ -2202,9 +2203,14 @@ class PublicWebNodeResource(Resource):
                 if problem:
                     return {"error": problem}, HTTPStatus.BAD_REQUEST
 
+            was_enabled = bool(node.enabled)
             public_web_node.PublicWebNode.update(node_id, data)
             if api_url and connection_changed:
                 node.update_last_seen()
+            if bool(node.enabled) != was_enabled:
+                # Switched off, the node stops serving its webs now rather than when its
+                # cache expires; switched on, it reads them again.
+                public_web_manager.reset_node(node)
         except Exception as ex:
             msg = "Could not update public-web node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2400,6 +2406,127 @@ class PublicWebImageResource(Resource):
             _notify_public_web_node(node_id)
         except Exception as ex:
             return _delete_failed("Could not delete public web image", ex)
+
+
+def _notify_all_public_web_nodes() -> None:
+    """Best-effort: push a cache reset to every node, so a template change shows now.
+
+    See :func:`_notify_public_web_node`; a template is not tied to one node.
+    """
+    try:
+        from managers import public_web_manager  # noqa: PLC0415 (avoid import cycle at load)
+
+        public_web_manager.notify_nodes(public_web_node.PublicWebNode.get_all())
+    except Exception as ex:
+        log_manager.store_data_error_activity(get_user_from_jwt(), "Could not notify public-web nodes", ex)
+
+
+class PublicWebTemplatesResource(Resource):
+    """The report templates of the public webs."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self) -> dict:
+        """Get all report templates.
+
+        Returns:
+            (dict): The templates
+        """
+        search = request.args.get("search")
+        return public_web_template.PublicWebTemplate.get_all_json(search)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create a report template.
+
+        Returns:
+            (dict, int): The id of the created template, or the reason it was refused
+        """
+        try:
+            template = public_web_template.PublicWebTemplate.add(request.json or {}, get_user_from_jwt().name)
+        except public_web_template.TemplateValidationError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not create report template"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        _notify_all_public_web_nodes()
+        return {"id": template.id}, HTTPStatus.OK
+
+
+class PublicWebTemplateResource(Resource):
+    """A single report template."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def put(self, template_id: int) -> tuple[dict, HTTPStatus]:
+        """Update a report template.
+
+        Args:
+            template_id (int): The template ID
+        Returns:
+            (dict, int): The result, or the reason it was refused
+        """
+        try:
+            template = public_web_template.PublicWebTemplate.update(template_id, request.json or {}, get_user_from_jwt().name)
+        except public_web_template.TemplateValidationError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not update report template"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        if template is None:
+            return {"error": "Template not found"}, HTTPStatus.NOT_FOUND
+        _notify_all_public_web_nodes()
+        return {"id": template.id}, HTTPStatus.OK
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def delete(self, template_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete a report template.
+
+        Args:
+            template_id (int): The template ID
+        """
+        try:
+            result = public_web_template.PublicWebTemplate.delete(template_id)
+        except Exception as ex:
+            return _delete_failed("Could not delete report template", ex)
+        _notify_all_public_web_nodes()
+        return result
+
+
+class PublicWebTemplateBuiltinResource(Resource):
+    """The built-in report templates: read-only, never deleted, but those public-web falls back on can be switched off."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self) -> dict:
+        """Get the built-in templates.
+
+        Returns:
+            (dict): ``{"items": [{"name", "source", "can_disable", "enabled", "updated_at", "updated_by"}]}``,
+            name being what ``extends``/``import`` refer to
+        """
+        return public_web_template.PublicWebBuiltinTemplate.get_all_json()
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def put(self) -> tuple[dict, HTTPStatus]:
+        """Switch a built-in template on or off: ``{"name": "builtin/<file>", "enabled": bool}``.
+
+        Returns:
+            (dict, int): The built-in's name and state, or the reason it was refused
+        """
+        data = request.json or {}
+        name, enabled = data.get("name"), data.get("enabled")
+        if not isinstance(name, str) or not isinstance(enabled, bool):
+            return {"error": "Send the built-in template's name and whether it is enabled."}, HTTPStatus.BAD_REQUEST
+        try:
+            row = public_web_template.PublicWebBuiltinTemplate.set_enabled(name, enabled, get_user_from_jwt().name)
+        except public_web_template.TemplateValidationError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not switch the built-in report template"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        _notify_all_public_web_nodes()
+        return {"name": row.name, "enabled": row.enabled}, HTTPStatus.OK
 
 
 class PublicWebEmailTestResource(Resource):
@@ -3344,6 +3471,9 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(RemoteAccessesResource, "/api/v1/config/remote-accesses")
     api.add_resource(RemoteAccessResource, "/api/v1/config/remote-accesses/<int:remote_access_id>")
 
+    api.add_resource(PublicWebTemplatesResource, "/api/v1/config/public-web-templates")
+    api.add_resource(PublicWebTemplateBuiltinResource, "/api/v1/config/public-web-templates/builtin")
+    api.add_resource(PublicWebTemplateResource, "/api/v1/config/public-web-templates/<int:template_id>")
     api.add_resource(PublicWebNodesResource, "/api/v1/config/public-web-nodes")
     api.add_resource(PublicWebNodeResource, "/api/v1/config/public-web-nodes/<int:node_id>")
     api.add_resource(PublicWebsResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs")

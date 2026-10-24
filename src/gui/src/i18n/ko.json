@@ -1315,7 +1315,8 @@
             "late": "응답이 느림",
             "unreachable": "연결 불가",
             "never_seen": "연결된 적 없음",
-            "last_seen": "마지막 확인"
+            "last_seen": "마지막 확인",
+            "disabled": "비활성화됨"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "게시된 제품을 공개 웹에 표시",
         "public_web_ids": "웹사이트",
         "public_web_ids_hint": "선택하지 않으면 모든 웹입니다.",
+        "public_web_template_hint": "이 제품에 자체 보고서 템플릿(Public Web → 보고서 템플릿)이 없으면 웹에는 취약점 보고서만 표시됩니다.",
         "needs_delivery": "형식을 추가하거나 제품을 공개 웹에 표시하세요.",
         "successful": "새 제품을 추가했습니다",
         "successful_edit": "제품을 저장했습니다",
@@ -2169,7 +2171,10 @@
             "name": "이름",
             "tab_description": "public-web 노드와 해당 노드가 제공하는 사이트",
             "tab_title": "노드",
-            "total_count": "public-web 노드 {count}개 | public-web 노드 {count}개"
+            "total_count": "public-web 노드 {count}개 | public-web 노드 {count}개",
+            "enabled": "활성화됨",
+            "enabled_hint": "꺼짐: Taranis가 이 노드의 확인과 새로 고침을 멈추고, 노드의 사이트를 게시하지 않으며, 보고서도 보내지 않습니다. 사이트와 설정은 다시 켤 때를 위해 유지됩니다.",
+            "disabled_notice": "이 노드는 꺼져 있습니다. 노드의 사이트가 하나도 게시되지 않습니다."
         },
         "webs": {
             "total_count": "사이트 {count}개 | 사이트 {count}개",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "삭제 확인",
         "confirm_delete_node": "public-web 노드 '{name}'과(와) 모든 사이트를 삭제할까요?",
-        "confirm_delete_web": "사이트 '{name}'을(를) 삭제할까요?"
+        "confirm_delete_web": "사이트 '{name}'을(를) 삭제할까요?",
+        "tabs": {
+            "nodes": "노드 및 웹",
+            "nodes_description": "public-web 노드와 해당 노드가 호스팅하는 웹",
+            "templates": "보고서 템플릿",
+            "templates_description": "공개 웹이 제품을 표시하는 템플릿"
+        },
+        "templates": {
+            "total_count": "템플릿 {count}개 | 템플릿 {count}개",
+            "name": "이름",
+            "kind": "템플릿 대상",
+            "kind_product": "제품",
+            "kind_item": "보고서 항목 유형",
+            "target": "적용 대상",
+            "product_preset": "제품",
+            "report_item_type": "보고서 항목 유형",
+            "target_hint": "제품 또는 보고서 항목 유형은 모든 사이트용 템플릿 하나와 선택한 사이트용 템플릿을 가질 수 있습니다.",
+            "require_tlp_clear": "TLP:CLEAR 필요",
+            "require_tlp_clear_hint": "끄기: TLP가 없는 제품도 표시됩니다. 제품에 있는 TLP는 항상 CLEAR여야 합니다.",
+            "updated": "마지막 수정",
+            "none": "아직 사용자 지정 템플릿이 없습니다.",
+            "confirm_delete": "템플릿 '{name}'을(를) 삭제하시겠습니까? 꺼져 있지 않으면 기본 제공 템플릿이 대신 사용됩니다.",
+            "edit": "보고서 템플릿 편집",
+            "add_new": "보고서 템플릿 추가",
+            "source": "템플릿 (Jinja)",
+            "start_from": "시작점",
+            "start_product_base": "기본 레이아웃을 확장하는 페이지",
+            "start_product_vulnerability": "취약점 보고서 레이아웃",
+            "help_title": "템플릿에서 사용할 수 있는 항목",
+            "help_product": "제품 템플릿은 기본 제공 레이아웃을 확장하고 그 블록을 재정의합니다: header, items, links (보고서 페이지), summary (홈페이지 항목), rss (RSS 텍스트).",
+            "help_item": "항목 템플릿은 보고서 페이지에 보고서 항목 블록 하나를 표시합니다.",
+            "help_attrs": "이 보고서 항목 유형의 값:",
+            "help_more": "값은 이스케이프됩니다. 필터(clean, link_refs, cvss_score 등)는 public-web README에 설명되어 있습니다. 실패한 템플릿은 기본 제공 템플릿으로 대체됩니다.",
+            "help_ctx_product": "제품: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "제품의 출처. 본문의 [n]은 links[n - 1]입니다",
+            "help_ctx_render_item": "항목을 자체 템플릿으로 표시합니다",
+            "help_ctx_selected_items": "독자가 선택한 항목(?items=). 비어 있으면 전체",
+            "help_ctx_t": "공개 웹 번역의 문구",
+            "help_ctx_item": "보고서 항목: name, type, attrs, attributes, fields",
+            "help_ctx_index": "페이지에서 항목의 위치",
+            "builtin_title": "기본 제공 템플릿",
+            "builtin_intro": "공개 웹은 자체 템플릿이 없는 제품과 보고서 항목에 이 템플릿을 사용합니다. 삭제할 수는 없지만, 끄면 그곳에서는 사용자 템플릿만 사용됩니다.",
+            "builtin_in_use": "사용 중",
+            "builtin_used_for": "용도",
+            "builtin_always_on": "항상 켜짐: 사용자 지정 템플릿이 이를 기반으로 합니다.",
+            "builtin_view": "템플릿 보기",
+            "builtin_copy": "복사",
+            "builtin_copied": "복사됨",
+            "builtin_copy_failed": "복사하지 못했습니다. 텍스트를 선택하여 직접 복사하세요.",
+            "builtin_none": "검색과 일치하는 기본 제공 템플릿이 없습니다.",
+            "builtin_use": {
+                "product_base": "모든 제품 템플릿이 확장하는 레이아웃입니다.",
+                "product_vulnerability": "자체 템플릿이 없는 제품의 취약점 보고서 페이지입니다.",
+                "item_vulnerability": "Taranis가 만든 그대로의 Vulnerability Report 유형 중 자체 템플릿이 없는 항목입니다.",
+                "item_generic": "자체 템플릿이 없는 유형의 그 밖의 보고서 항목입니다.",
+                "macros": "템플릿이 가져오는 매크로입니다."
+            },
+            "builtin_off": {
+                "product": "꺼짐: 공개 웹에는 자체 템플릿이 있는 제품만 표시됩니다.",
+                "item_specific": "꺼짐: 이 항목은 일반 템플릿을 사용하며, 그것도 꺼져 있으면 생략됩니다.",
+                "item_generic": "꺼짐: 남은 템플릿이 없는 보고서 항목은 표시되지 않으며, 남은 항목이 없는 제품도 표시되지 않습니다."
+            },
+            "webs": "사이트",
+            "webs_hint": "선택 안 함: 모든 사이트. 사이트는 자신을 지정한 템플릿을 사용하고, 없으면 모든 사이트용 템플릿을 사용합니다.",
+            "every_web": "모든 사이트",
+            "web_taken": "'{name}'에서 사용 중",
+            "every_web_taken": "'{name}'이(가) 이미 모든 사이트용 템플릿입니다. 이 템플릿을 사용할 사이트를 선택하세요."
+        }
     },
     "routing": {
         "tab_title": "라우팅 및 TLS",

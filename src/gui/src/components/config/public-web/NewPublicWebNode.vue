@@ -46,6 +46,18 @@
                         :disabled="saving"
                     />
 
+                    <v-switch
+                        v-model="localItem.enabled"
+                        :label="t('public_web.nodes.enabled')"
+                        :hint="t('public_web.nodes.enabled_hint')"
+                        persistent-hint
+                        color="primary"
+                        density="comfortable"
+                        class="mb-3"
+                        :disabled="saving"
+                        data-test="node-enabled-field"
+                    />
+
                     <v-text-field
                         v-model="localItem.api_url"
                         :label="t('public_web.nodes.api_url')"
@@ -125,6 +137,7 @@
         api_url: string
         api_key: string
         cert_resolver: string
+        enabled: boolean
         [key: string]: unknown
     }
 
@@ -165,7 +178,7 @@
         return /^[A-Za-z0-9_-]{1,64}$/.test(value.trim()) || t('routing.cert_resolver_invalid')
     }
 
-    const defaultItem: NodeItem = { id: null, name: '', description: '', api_url: '', api_key: '', cert_resolver: '' }
+    const defaultItem: NodeItem = { id: null, name: '', description: '', api_url: '', api_key: '', cert_resolver: '', enabled: true }
     const localItem = ref<NodeItem>({ ...defaultItem })
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_PUBLIC_WEB_NODE_CREATE'))
@@ -215,7 +228,7 @@
         () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                localItem.value = { ...defaultItem, ...newItem }
+                localItem.value = { ...defaultItem, ...newItem, enabled: newItem.enabled !== false }
                 dialog.value = true
             } else {
                 localItem.value = { ...defaultItem }

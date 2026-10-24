@@ -31,9 +31,24 @@
                     :count="(websByNode[node.id] || []).length"
                     :can-update="canUpdate"
                     :can-delete="canDelete"
+                    :disabled="node.enabled === false"
                     @edit="editNode(node)"
                     @delete="askDeleteNode(node)"
                 >
+                    <template #toggle>
+                        <v-switch
+                            :model-value="node.enabled !== false"
+                            color="primary"
+                            density="compact"
+                            hide-details
+                            :disabled="!canUpdate || togglingNode === node.id"
+                            :loading="togglingNode === node.id"
+                            :title="t('public_web.nodes.enabled')"
+                            :aria-label="t('public_web.nodes.enabled')"
+                            data-test="node-enabled"
+                            @update:model-value="(val) => toggleNodeEnabled(node, val)"
+                        />
+                    </template>
                     <template #add>
                         <NewPublicWeb
                             :node-id="node.id"
@@ -44,6 +59,16 @@
                 </NodePanelTitle>
 
                 <v-expansion-panel-text>
+                    <v-alert
+                        v-if="node.enabled === false"
+                        type="info"
+                        variant="tonal"
+                        density="compact"
+                        class="mb-2"
+                        data-test="node-disabled-notice"
+                    >
+                        {{ t('public_web.nodes.disabled_notice') }}
+                    </v-alert>
                     <v-table density="compact">
                         <thead>
                             <tr>
@@ -140,7 +165,7 @@
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
-    import { getPublicWebs, deletePublicWebNode, deletePublicWeb, updatePublicWeb } from '@/api/config'
+    import { getPublicWebs, deletePublicWebNode, deletePublicWeb, updatePublicWeb, updatePublicWebNode } from '@/api/config'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import NewPublicWebNode from '@/components/config/public-web/NewPublicWebNode.vue'
     import NodePanelTitle from '@/components/common/nodes/NodePanelTitle.vue'
@@ -154,6 +179,7 @@
         description?: string
         status?: string
         last_seen?: string
+        enabled?: boolean
         [key: string]: unknown
     }
     type WebItem = {
@@ -175,8 +201,10 @@
     const nodeEditItem = ref<NodeItem | null>(null)
     const webEditItems = ref<Record<number, any>>({})
 
-    // The busy row while a switch is saving; the composable owns it.
+    // The busy row while a switch is saving; the composable owns it. Nodes and webs each have
+    // their own, as a node and a web may share an id.
     const { busyId: togglingWeb, toggle } = useOptimisticToggle()
+    const { busyId: togglingNode, toggle: toggleNode } = useOptimisticToggle()
 
     const canUpdate = computed(() => checkPermission('CONFIG_PUBLIC_WEB_NODE_UPDATE'))
     const canDelete = computed(() => checkPermission('CONFIG_PUBLIC_WEB_NODE_DELETE'))
@@ -234,6 +262,20 @@
             save: (enabled) => updatePublicWeb(nodeId, { ...web, enabled }),
             reload: () => loadWebs(nodeId),
             onError: (error) => console.error('Error toggling web:', error)
+        })
+    }
+
+    // A whole node on or off, the same way. Off, core publishes none of its webs and serves it
+    // nothing; the webs keep their own switches for when it is back.
+    async function toggleNodeEnabled(node: NodeItem, value: boolean | null): Promise<void> {
+        await toggleNode(node, value !== false, {
+            save: (enabled) => updatePublicWebNode({ ...node, enabled }),
+            // Only the nodes: their webs are as they were, and the panels stay as the user left them.
+            reload: () => configStore.loadPublicWebNodes(filter.value),
+            onError: (error) => {
+                console.error('Error switching public-web node:', error)
+                window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: 'common.error_updating' } }))
+            }
         })
     }
 

@@ -1315,7 +1315,8 @@
             "late": "QIt jang",
             "unreachable": "Suchlu'laHbe'",
             "never_seen": "not rar",
-            "last_seen": "legh Qav"
+            "last_seen": "legh Qav",
+            "disabled": "chu'Ha'lu'pu'"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "ghItlhmey lI'lu'pu'bogh HochvaD Daq yI'ang",
         "public_web_ids": "Daqmey",
         "public_web_ids_hint": "pagh wIvlu': Hoch Daq.",
+        "public_web_template_hint": "naQ ghajbe'chugh ghItlhvam (HochvaD Daq → ja'meymey naQmey), HochvaD Daq QIH ja'meyHey neH 'anglu'.",
         "needs_delivery": "Hal Segh yIchel, pagh ghItlhmey HochvaD Daq yI'ang.",
         "successful": "ghItlh chu' chellu'pu'. Qapla'!",
         "successful_edit": "ghItlh pollu'pu'. Qapla'!",
@@ -2169,7 +2171,10 @@
             "name": "pong",
             "tab_description": "HochvaD Daq Qu' Daqmey, Daqmey jabbogh je",
             "tab_title": "Daqmey",
-            "total_count": "pagh HochvaD Daq Qu' Daq | {count} HochvaD Daq Qu' Daq | {count} HochvaD Daq Qu' Daq"
+            "total_count": "pagh HochvaD Daq Qu' Daq | {count} HochvaD Daq Qu' Daq | {count} HochvaD Daq Qu' Daq",
+            "enabled": "chu'lu'pu'",
+            "enabled_hint": "chu'Ha'lu': Taranis Qu'vam nuDbe' 'ej chu'qa'moHbe', Daqmeyvetlh lalDanbe' 'ej ja'mey ngeHbe'. Daqmey, SeHlaw je pollu' chu'qa'lu'DI'.",
+            "disabled_notice": "Qu'vam chu'Ha'lu'pu': Daqmeyvetlh lalDanlu'be'."
         },
         "webs": {
             "total_count": "pagh Daq | {count} Daq | {count} Daq",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Qaw'ghach yI'ol",
         "confirm_delete_node": "HochvaD Daq Qu' Daq '{name}' Daqmeychaj Hoch je DaQaw''a'?",
-        "confirm_delete_web": "Daq '{name}' DaQaw''a'?"
+        "confirm_delete_web": "Daq '{name}' DaQaw''a'?",
+        "tabs": {
+            "nodes": "choSmey 'ej De'wI' Daqmey",
+            "nodes_description": "public-web choSmey 'ej De'wI' Daqmey luDabbogh",
+            "templates": "ja'meymey naQmey",
+            "templates_description": "De'wI' Daqmey Hoch naQmey lu'aghmeH"
+        },
+        "templates": {
+            "total_count": "naQmey pagh | {count} naQ | {count} naQmey",
+            "name": "pong",
+            "kind": "naQ ghotvam'e'",
+            "kind_product": "ghItlh",
+            "kind_item": "ja' Doch Segh",
+            "target": "lo'lu'meH Daq",
+            "product_preset": "ghItlh",
+            "report_item_type": "ja' Doch Segh",
+            "target_hint": "Doch pagh ja' Doch Segh ghaj wa' naQ Hoch DaqvaD, latlh naQmey je Daqmey wIvlu'pu'bogh vaD.",
+            "require_tlp_clear": "TLP:CLEAR poQ",
+            "require_tlp_clear_hint": "chu'Ha'lu': TLP Hutlhbogh Doch 'aghlu' je. Doch TLP ghajbogh CLEAR moHlu'nIS reH.",
+            "updated": "Qav choHlu'pu'",
+            "none": "naQmey Daq pagh wej.",
+            "confirm_delete": "naQ '{name}' DaQaw''a'? naQ tlhab Daq lo'lu', chu'Ha'lu'be'chugh.",
+            "edit": "ja' naQ choH",
+            "add_new": "ja' naQ chel",
+            "source": "naQ (Jinja)",
+            "start_from": "Daq tagh",
+            "start_product_base": "nab'a' tlhab 'aghbogh nav",
+            "start_product_vulnerability": "ja' Qagh nab",
+            "help_title": "naQ lo'laH nuq",
+            "help_product": "Doch naQ nab tlhab 'aghtaH 'ej bloq choH: header, items 'ej links (ja' nav), summary (juH nav) 'ej rss (RSS ghItlh).",
+            "help_item": "Doch naQ ja' navDaq wa' ja' Doch bloq 'agh.",
+            "help_attrs": "ja' Doch Seghvam lo'laHghachmey:",
+            "help_more": "lo'laHghachmey So'lu'; tlhay'mey (clean, link_refs, cvss_score latlh je) public-web README Daq tu'lu'. naQ Qaghbogh naQ tlhab tam.",
+            "help_ctx_product": "Doch: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "Doch Hal'a'; ghItlhDaq [n] links[n - 1] 'oH",
+            "help_ctx_render_item": "Doch naQDaj lo'taHvIS Doch 'agh",
+            "help_ctx_selected_items": "laDwI' Doch wIvpu'bogh (?items=); chIm 'oHchugh, Hoch",
+            "help_ctx_t": "De'wI' Daq mughmeymo' mu'tlhegh",
+            "help_ctx_item": "ja' Doch: name, type, attrs, attributes, fields",
+            "help_ctx_index": "navDaq Doch Daq",
+            "builtin_title": "naQmey tlhab",
+            "builtin_intro": "naQ Daq ghajbe'bogh Dochmey ja' Dochmey je HochvaD Daq lo'. Qaw'laHbe'lu', 'ach wa' Dachu'Ha'laH, vaj naQmeylIj neH lo'lu'.",
+            "builtin_in_use": "lo'lu'taH",
+            "builtin_used_for": "lo'meH",
+            "builtin_always_on": "reH chu'lu': naQmey Daq bopbe'.",
+            "builtin_view": "naQ yIcha'",
+            "builtin_copy": "yIlab",
+            "builtin_copied": "lablu'pu'",
+            "builtin_copy_failed": "lablu'laHbe'. ghItlh yIwIv 'ej ghopDaj yIlab.",
+            "builtin_none": "naQ tlhab tu'lu'be' nejmeH.",
+            "builtin_use": {
+                "product_base": "Hoch Doch naQ nI'moHbogh mIw.",
+                "product_vulnerability": "naQ Daq ghajbe'bogh Dochmey QIHmey ja' nav.",
+                "item_vulnerability": "Taranis chenmoHbogh Vulnerability Report Segh ja' Dochmey, naQ Daq ghajbe'bogh.",
+                "item_generic": "naQ Daq ghajbe'bogh Segh latlh ja' Doch.",
+                "macros": "naQmey qengbogh macro."
+            },
+            "builtin_off": {
+                "product": "chu'Ha'lu': naQ Daq ghajbogh Dochmey neH HochvaD Daq 'aghlu'.",
+                "item_specific": "chu'Ha'lu': Dochmeyvam naQ motlh lo', pagh chu'Ha'lu'chugh je, chuvlu'.",
+                "item_generic": "chu'Ha'lu': naQ ghajbe'bogh ja' Dochmey 'aghlu'be', Doch ghajbe'bogh ja' Doch je 'aghlu'be'."
+            },
+            "webs": "Daqmey",
+            "webs_hint": "pagh wIvlu': Hoch Daq. Daq ghItlhbogh naQ lo' Daq, pagh Hoch Daq naQ lo'.",
+            "every_web": "Hoch Daq",
+            "web_taken": "'{name}' Daq",
+            "every_web_taken": "'{name}' Hoch Daq naQ moj: naQvam Daqmey yIwIv."
+        }
     },
     "routing": {
         "tab_title": "He TLS je",

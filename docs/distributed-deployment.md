@@ -499,6 +499,14 @@ A stopped worker stays registered, so Core shows it as an unreachable node
 rather than dropping it. That is usually what you want for maintenance; use
 `worker-remove.yml` when the worker is going away for good.
 
+A public-web node can also be switched off in Core, whether its worker runs or
+not: the switch in its panel under *Configuration → Public Web* (or in its edit
+dialog). Off, Core stops checking it and pushing cache resets to it, no Traefik
+routes any of its webs, the node is told its webs are disabled (it answers 503
+if reached directly), and its requests for products, templates and images are
+refused. Its webs and settings are kept, and an ansible run that registers the
+node again does not switch it back on.
+
 ### Removing a worker
 
 `worker-remove.yml` is the destructive counterpart. It deregisters from Core

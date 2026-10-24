@@ -1,0 +1,29 @@
+{#- Macros shared by the built-in report templates; custom templates may import them too:
+    {% import "builtin/_macros.html" as macros %} -#}
+
+{#- The lang attribute of a product's or a report item's text shown in another language than
+    the page's (it is not translated into the page's language); nothing otherwise. -#}
+{%- macro content_lang(part, lang) -%}
+    {%- if part.language and part.language != lang %}{{ {"lang": part.language} | xmlattr }}{% endif -%}
+{%- endmacro -%}
+
+{#- A CVSS base score as a coloured badge; nothing when there is no score. -#}
+{%- macro severity_badge(cvss, render_max=False) -%}
+    {% if cvss %}
+        {% set severity = cvss | cvss_severity %}
+        {%- set badge_colors = {
+            "low": "#ffc107",
+            "medium": "#fd7e14",
+            "high": "#dc3545",
+            "critical": "#b02a37"
+        } -%}
+        <h5 class="m-0 fw-normal">
+            <span class="badge"
+                  title="Common Vulnerability Scoring System Base Score"
+                  style="background-color: {{ badge_colors[severity|lower] }}; color: white;">
+                {%- if render_max %}Max {% endif -%}
+                CVSS {{ cvss }} ({{ severity }})
+            </span>
+        </h5>
+    {% endif %}
+{%- endmacro -%}

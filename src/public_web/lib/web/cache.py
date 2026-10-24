@@ -1,7 +1,7 @@
-"""Report, web, and image caching for the public-web service.
+"""Report, template, web, and image caching for the public-web service.
 
 Wraps cachelib's FileSystemCache and the Taranis API client to fetch, cache,
-and invalidate vulnerability reports and web branding with a TTL.
+and invalidate reports, report templates and web branding with a TTL.
 """
 
 import threading
@@ -11,7 +11,8 @@ from cachelib import FileSystemCache
 from flask import Response
 from lib import config
 from lib.logger import get_logger
-from lib.report.vulnerability_report import VulnerabilityReport
+from lib.report.product import InvalidProductError, build_product, displayable
+from lib.report.renderer import ReportRenderer, get_renderer
 from lib.web.taranis_client import TaranisClient, TaranisClientError
 
 logger = get_logger("web-cache", silent=True)
@@ -19,6 +20,7 @@ logger = get_logger("web-cache", silent=True)
 CACHE_KEY_ALL_REPORTS = "ALL_REPORTS"
 CACHE_KEY_RESET_AT = "RESET_AT"
 CACHE_KEY_RSS_RESPONSE = "RSS_RESPONSE"
+CACHE_KEY_TEMPLATES = "REPORT_TEMPLATES"
 CACHE_KEY_WEBS = "WEBS"
 
 # Products are loaded this many at a time (core serves at most 200).
@@ -47,7 +49,7 @@ class WebCache:
     """Cache for reports fetched from the Taranis-NG API for the public web feed.
 
     Reports are fetched from the Taranis-NG core public-web API on a cache miss
-    and cached with a TTL. This replaces the upstream file-based source.
+    and cached with a TTL, as template data (see ``lib.report.product``).
     """
 
     def __init__(self, client: TaranisClient | None = None) -> None:
@@ -82,21 +84,74 @@ class WebCache:
                 products.append(data)
         return products
 
-    def _fetch_all_reports(self, web_id: int | None = None, language: str | None = None) -> list[VulnerabilityReport]:
-        """Fetch every published product from Taranis, newest first, in ``language``.
+    def get_report_templates(self) -> dict[str, list]:
+        """Return the custom report templates and the built-ins switched off, from Taranis, cached with a TTL.
 
-        Products that are not a valid TLP:CLEAR vulnerability report are skipped
-        so one bad product cannot break the feed.
+        Returns ``{"items": [template], "disabled_builtins": [name]}``. No custom templates is
+        cached too (it is the common case). On an API failure, logs and returns no custom
+        templates and every built-in on, without caching, so every product falls back to the
+        built-in templates - which require TLP:CLEAR - until the next request retries.
         """
-        reports: list[VulnerabilityReport] = []
-        for data in self._fetch_all_products(web_id, language):
-            try:
-                reports.append(VulnerabilityReport.from_dict(data))
-            except (ValueError, TypeError) as exc:
-                logger.info("Skipping product %s: %s", data.get("id"), exc)
-        return reports
+        cached = self.cache.get(CACHE_KEY_TEMPLATES)
+        if isinstance(cached, dict):
+            return cached
+        try:
+            templates = self.client.get_report_templates()
+        except TaranisClientError as exc:
+            logger.exception("Could not fetch report templates from Taranis: %s", exc)
+            return {"items": [], "disabled_builtins": []}
+        self.cache.set(CACHE_KEY_TEMPLATES, templates)
+        return templates
 
-    def _load_reports(self, web_id: int | None, language: str | None, *, again: bool) -> list[VulnerabilityReport] | None:
+    def renderer(self, web_id: int | None = None) -> ReportRenderer:
+        """The renderer for a web's report templates (a template may be for chosen webs only)."""
+        templates = self.get_report_templates()
+        return get_renderer(templates["items"], templates["disabled_builtins"], web_id)
+
+    def _accept(self, data: dict, renderer: ReportRenderer | None = None) -> dict | None:
+        """Build a product's template data, or None if it must not be shown (logged).
+
+        Which webs get a product is decided in core, by its product preset and the product's own
+        choice of webs. Here: a product whose preset has no report template is shown only if it
+        is a vulnerability report, as public-web always did, and only while the built-in
+        vulnerability report template is on. Report items with no template to show them (their
+        built-ins are off) are left out, and a product left with none is not shown.
+        """
+        renderer = renderer or self.renderer()
+        try:
+            product = build_product(data, renderer.has_item_template)
+        except InvalidProductError as exc:
+            logger.info("Skipping product %s: %s", data.get("id"), exc)
+            return None
+        preset_id = product["product_preset"]["id"]
+        has_template = renderer.has_product_template(preset_id)
+        if not has_template and not renderer.has_builtin_product_template():
+            logger.info("Skipping product %s: its product preset has no report template, and the built-in one is off", product["id"])
+            return None
+        if product["items_left_out"] and not product["report_items"]:
+            logger.info("Skipping product %s: none of its report items has a template, and the built-ins are off", product["id"])
+            return None
+        shown, reason = displayable(
+            product,
+            vulnerability_only=not has_template,
+            require_tlp_clear=renderer.require_tlp_clear(preset_id),
+        )
+        if not shown:
+            logger.info("Skipping product %s: %s", product["id"], reason)
+            return None
+        return product
+
+    def _fetch_all_reports(self, web_id: int | None = None, language: str | None = None) -> list[dict]:
+        """Fetch every published product from Taranis, newest first, in ``language``, as template data.
+
+        Products that may not be shown (see ``displayable``) are skipped, so one bad
+        product cannot break the feed.
+        """
+        renderer = self.renderer(web_id)
+        accepted = (self._accept(data, renderer) for data in self._fetch_all_products(web_id, language))
+        return [product for product in accepted if product is not None]
+
+    def _load_reports(self, web_id: int | None, language: str | None, *, again: bool) -> list[dict] | None:
         """Load the reports of a web in a language from Taranis and cache them; None when Taranis fails.
 
         One load at a time: a caller that waited for another's load takes its reports, unless it
@@ -143,7 +198,7 @@ class WebCache:
             return
         threading.Thread(target=self._load_reports, args=(web_id, language), kwargs={"again": True}, daemon=True).start()
 
-    def get_all_reports(self, web_id: int | None = None, language: str | None = None) -> list[VulnerabilityReport]:
+    def get_all_reports(self, web_id: int | None = None, language: str | None = None) -> list[dict]:
         """Return every published report (newest first) in ``language``, fetched from Taranis and cached.
 
         Cached per web and language. Older than the TTL, they are still returned while they load
@@ -159,14 +214,14 @@ class WebCache:
             return entry["reports"]
         return self._load_reports(web_id, language, again=False) or []
 
-    def get_report(self, report_id: str, web_id: int | None = None, language: str | None = None) -> VulnerabilityReport | None:
+    def get_report(self, report_id: str, web_id: int | None = None, language: str | None = None) -> dict | None:
         """Return a single report by its Taranis product id, in ``language``.
 
         Looks in the cached list first, then fetches the product directly on a
-        miss. Returns None if it is not a valid displayable report.
+        miss. Returns None if it may not be shown.
         """
         for report in self.get_all_reports(web_id=web_id, language=language):
-            if str(report.get_id()) == str(report_id):
+            if str(report["id"]) == str(report_id):
                 return report
         try:
             product_id = int(report_id)
@@ -179,11 +234,7 @@ class WebCache:
             return None
         if data is None:
             return None
-        try:
-            return VulnerabilityReport.from_dict(data)
-        except (ValueError, TypeError) as exc:
-            logger.info("Product %s is not a displayable report: %s", report_id, exc)
-            return None
+        return self._accept(data, self.renderer(web_id))
 
     def get_rss_response(self) -> Response | None:
         """Returns cached RSS response, or None if the cache is empty/expired."""
@@ -194,7 +245,7 @@ class WebCache:
         self.cache.set(CACHE_KEY_RSS_RESPONSE, response)
 
     def clear(self) -> None:
-        """Drop everything (webs, images, reports) so the next requests refetch.
+        """Drop everything (webs, images, templates, reports) so the next requests refetch.
 
         Used by the management API when core pushes a cache reset after a config
         change. FileSystemCache is on disk, so this clears the shared cache. The reports

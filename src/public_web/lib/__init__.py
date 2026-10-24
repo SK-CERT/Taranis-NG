@@ -4,7 +4,6 @@ Common utilities and helpers for the public-web application.
 """
 
 import logging
-import traceback
 from argparse import ArgumentParser
 
 from envelope import Envelope
@@ -91,21 +90,3 @@ def send_mail(
         else:
             print(error_message)  # noqa: T201
         return False
-
-
-def handle_exception(
-    message: str,
-    subject: str,
-    logger: logging.Logger | None = None,
-    info: bool = True,  # noqa: ARG001
-    force_send: bool = True,
-) -> None:
-    """Log the exception and send it via e-mail."""
-    if logger:
-        # Called from inside an `except` block (it also formats the active traceback
-        # below), so .exception() is correct; ruff cannot see across the call.
-        logger.exception(message)  # noqa: LOG004
-
-    recipients = config.admin_mail()
-    mail_message = f"{message}\n\n{traceback.format_exc()}"
-    send_mail(mail_message, subject, recipients, logger, force_send=force_send)

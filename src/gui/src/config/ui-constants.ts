@@ -58,6 +58,7 @@ export const ICONS = Object.freeze({
     FILE_CHART_OUTLINE: 'mdi-file-chart-outline',
     FILE_DOCUMENT: 'mdi-file-document',
     FILE_DOCUMENT_OUTLINE: 'mdi-file-document-outline',
+    FILE_CODE_OUTLINE: 'mdi-file-code-outline',
     FILE_OUTLINE: 'mdi-file-outline',
     FILE_STAR_OUTLINE: 'mdi-file-star-outline',
     FILE_TABLE: 'mdi-file-table',

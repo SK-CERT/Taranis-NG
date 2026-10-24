@@ -21,7 +21,8 @@ vi.mock('@/api/config', () => ({
     getPublicWebs: vi.fn().mockResolvedValue({ data: { items: [] } }),
     deletePublicWebNode: vi.fn().mockResolvedValue({ data: {} }),
     deletePublicWeb: vi.fn().mockResolvedValue({ data: {} }),
-    updatePublicWeb: vi.fn().mockResolvedValue({ data: {} })
+    updatePublicWeb: vi.fn().mockResolvedValue({ data: {} }),
+    updatePublicWebNode: vi.fn().mockResolvedValue({ data: {} })
 }))
 
 vi.mock('@/composables/useAuth', () => ({
