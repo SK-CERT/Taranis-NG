@@ -24,6 +24,8 @@ class ProductSchemaBase(Schema):
     updated_at = fields.DateTime("%d.%m.%Y - %H:%M")
     product_type_id = fields.Int()
     state_id = fields.Int(allow_none=True)
+    # The language the product is written in (ISO 639-1); None while not set.
+    language = fields.Str(allow_none=True, load_default=None)
     public_web_ids = fields.List(fields.Int(), allow_none=True)
     # The product's own sources, in citation order; the description cites them by key.
     links = fields.Nested(LinkRefSchema, many=True, load_default=list)
@@ -43,8 +45,13 @@ class ProductPresentationSchema(ProductSchema, ACLEntryStatusSchema, Presentatio
         report_items_count: The count of report items in this product.
         user: User who created the product.
         updated_by: User who last updated the product.
+        translations: The title per language, with origin and whether it is outdated.
+        title_translations: The title per language, ``{language: {"title": ...}}``.
     """
 
     state = fields.Nested(StateDefinitionSchema, allow_none=True)
     report_items_count = fields.Int()
     updated_by = fields.Str()
+    # Translated titles: with their state for the edit form, and plain for lists.
+    translations = fields.Dict(dump_only=True)
+    title_translations = fields.Dict(dump_only=True)

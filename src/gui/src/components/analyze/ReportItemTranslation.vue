@@ -162,6 +162,7 @@
                             :modify="modify"
                             :report-item-id="reportItemId"
                             :read-only="true"
+                            :language="item.constants ? language : null"
                         />
                     </div>
                 </v-expansion-panel-text>
@@ -328,6 +329,8 @@
                     return {
                         label: labelOf(item.translations, item.title),
                         translated,
+                        // Choice constants read in this language (their translations are configured on the attribute).
+                        constants: ['ENUM', 'RADIO', 'MULTI_CHOICE'].includes(String(item.attribute?.type ?? '')),
                         html: item.attribute?.type === 'RICH_TEXT',
                         variantValues,
                         attributeItem: translated ? { attribute_group_item: item, values: variantValues } : entry

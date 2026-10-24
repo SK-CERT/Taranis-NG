@@ -87,9 +87,42 @@
                     </template>
                 </i18n-t>
             </div>
+            <v-select
+                v-if="renderLanguages.length > 1"
+                v-model="publishLanguage"
+                :items="renderLanguages.map((code) => ({ title: languageName(code), value: code }))"
+                :label="$t('product.publish_in')"
+                density="compact"
+                variant="outlined"
+                class="mt-3"
+                data-test="publish-language"
+            />
+            <div
+                v-else-if="publishLanguage"
+                class="mb-1"
+            >
+                {{ $t('product.publish_in_language', { language: languageName(publishLanguage) }) }}
+            </div>
+            <ProductLanguageNotices
+                :check="publishCheck"
+                :language="publishLanguage"
+            />
             <div class="text-body-2 text-grey mt-3">
                 {{ $t('product.publish_confirmation_message') }}
             </div>
+        </ConfirmationDialog>
+
+        <ConfirmationDialog
+            v-model="showOutdatedConfirmation"
+            title-key="product.outdated_confirmation"
+            confirm-label-key="product.outdated_continue"
+            max-width="500px"
+            @confirm="continueWithOutdated"
+        >
+            <ProductLanguageNotices
+                :check="outdatedCheck ? { ...outdatedCheck, missing: [], template_language: renderLanguage } : null"
+                :language="renderLanguage"
+            />
         </ConfirmationDialog>
 
         <v-dialog
@@ -139,6 +172,14 @@
                     {{ isEditMode ? $t('product.edit') : $t('product.add_new') }}
                 </v-toolbar-title>
                 <v-spacer />
+                <ContentLanguageSelect
+                    :model-value="product.language"
+                    :label="$t('product.language')"
+                    :disabled="!canModify"
+                    class="me-4"
+                    data-test="product-source-language"
+                    @update:model-value="changeLanguage"
+                />
                 <StateSelector
                     v-if="availableStates.length > 0"
                     :model-value="product.state_id ?? ''"
@@ -161,6 +202,18 @@
             </v-toolbar>
 
             <v-card-text class="pa-4 overflow-y-auto bg-background">
+                <ProductLanguageBar
+                    v-model="activeLanguage"
+                    :language="product.language"
+                    :languages="productLanguages"
+                    :can-modify="canModify"
+                    :translating="translatingTitle"
+                    @translate-all="translateTitles(productLanguages)"
+                />
+                <ProductLanguageNotices
+                    :check="currentCheck"
+                    :language="renderLanguage"
+                />
                 <v-form
                     ref="formRef"
                     validate-on="submit"
@@ -188,14 +241,41 @@
                             md="6"
                         >
                             <v-text-field
-                                v-model="product.title"
+                                v-model="titleModel"
                                 dir="auto"
                                 :spellcheck="spellcheck"
                                 :label="$t('product.title')"
-                                :rules="[requiredRule]"
+                                :hint="activeLanguage === 'source' ? '' : product.title"
+                                :persistent-hint="activeLanguage !== 'source'"
+                                :rules="activeLanguage === 'source' ? [requiredRule] : []"
                                 :disabled="!canModify"
+                                data-test="product-title"
                                 @blur="handleUpdateRecord"
-                            />
+                            >
+                                <template
+                                    v-if="activeLanguage !== 'source'"
+                                    #append-inner
+                                >
+                                    <TranslationState
+                                        :state="titleState"
+                                        :reviewable="canModify"
+                                        @review="reviewTitle"
+                                    />
+                                    <v-btn
+                                        v-if="canModify && product.title"
+                                        icon="mdi-translate"
+                                        variant="text"
+                                        density="compact"
+                                        size="small"
+                                        tabindex="-1"
+                                        :loading="translatingTitle"
+                                        :title="$t('report_item.translation.translate_field')"
+                                        data-test="translate-product-title"
+                                        @mousedown.stop
+                                        @click.stop="translateTitles([activeLanguage])"
+                                    />
+                                </template>
+                            </v-text-field>
                         </v-col>
                         <v-col cols="12">
                             <v-textarea
@@ -380,22 +460,35 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+    import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
     import { storeToRefs } from 'pinia'
     import { useI18n } from 'vue-i18n'
     import { useAuthStore } from '@/stores/auth'
     import { usePublishStore } from '@/stores/publish'
     import ApiService from '@/services/api_service'
     import { ICONS } from '@/config/ui-constants'
-    import { createProduct, updateProduct, publishProduct, previewProduct, getProductById } from '@/api/publish'
+    import {
+        createProduct,
+        updateProduct,
+        publishProduct,
+        previewProduct,
+        getProductById,
+        translateProductTitle,
+        checkProductLanguage
+    } from '@/api/publish'
     import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import { navigateReservedTabOrCurrentWindow, openBlankTabWithoutOpener } from '@/utils/window'
     import StateSelector from '@/components/common/StateSelector.vue'
+    import ContentLanguageSelect from '@/components/common/ContentLanguageSelect.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
+    import ProductLanguageBar from '@/components/publish/ProductLanguageBar.vue'
+    import ProductLanguageNotices, { type LanguageCheck } from '@/components/publish/ProductLanguageNotices.vue'
+    import TranslationState, { type TranslationStateValue } from '@/components/analyze/TranslationState.vue'
+    import { useContentLanguages } from '@/composables/useContentLanguages'
     import CiteMenu from '@/components/common/links/CiteMenu.vue'
     import LinkListEditor from '@/components/common/links/LinkListEditor.vue'
     import ReferencePreview from '@/components/common/links/ReferencePreview.vue'
@@ -412,6 +505,10 @@
         report_items: Array<{ id: number | string }>
         public_web_ids: Array<number | string>
         links: ProductLink[]
+        // The language the product is written in; null while not set.
+        language: string | null
+        // Its title in other languages, saved with the product.
+        translations: Record<string, { title: string; origin: 'ai' | 'manual' }>
     }
 
     /** A source of the product, cited from its description by key. */
@@ -429,6 +526,8 @@
         id: number | string
         title?: string
         links?: Array<{ key: string | null; url: string }>
+        // The languages of its report type.
+        type_languages?: string[]
         [key: string]: unknown
     }
 
@@ -475,6 +574,8 @@
         report_items?: ReportItem[]
         public_web_ids?: Array<number | string>
         links?: ProductLink[]
+        language?: string | null
+        translations?: Record<string, { title?: TranslationStateValue }>
     }
 
     const { t } = useI18n()
@@ -506,7 +607,9 @@
         state_id: undefined,
         report_items: [],
         public_web_ids: [],
-        links: []
+        links: [],
+        language: null,
+        translations: {}
     })
 
     const selectedType = ref<ProductType | null>(null)
@@ -544,6 +647,195 @@
             .filter((item) => (item.links || []).length > 0)
             .map((item) => ({ title: String(item.title || item.id), links: (item.links || []) as ExternalLink[] }))
     )
+
+    // ---- Languages ----
+    // The open tab is the language the product is previewed, downloaded and published in.
+    const { languageName, defaultContentLanguage } = useContentLanguages()
+    const activeLanguage = ref<string>('source')
+    const titleStates = ref<Record<string, { title?: TranslationStateValue }>>({})
+    const translatingTitle = ref<boolean>(false)
+    // The last language check, with what it was made for (see checkKey).
+    const languageCheck = ref<{ key: string; check: LanguageCheck | null } | null>(null)
+    const publishLanguage = ref<string | null>(null)
+    const publishCheck = ref<LanguageCheck | null>(null)
+    const showOutdatedConfirmation = ref<boolean>(false)
+    const pendingOutdatedAction = ref<(() => void) | null>(null)
+    // The check whose outdated translations the confirmation lists.
+    const outdatedCheck = ref<LanguageCheck | null>(null)
+    // Outdated translations were confirmed for these languages since the dialog opened.
+    const outdatedConfirmed = ref<Set<string>>(new Set())
+
+    /** The product's languages besides its own: those of its reports' types. */
+    const productLanguages = computed<string[]>(() => {
+        const languages: string[] = []
+        for (const item of reportItems.value) {
+            for (const language of item.type_languages ?? []) {
+                if (language !== product.value.language && !languages.includes(language)) languages.push(language)
+            }
+        }
+        return languages
+    })
+    // The open tab's title as the form has it: typed by a person, it is no longer the AI's, nor outdated.
+    const titleState = computed<TranslationStateValue | null>(() => {
+        const stored = titleStates.value[activeLanguage.value]?.title
+        const local = product.value.translations[activeLanguage.value]
+        if (!stored || !local?.title) return stored ?? null
+        return { ...stored, origin: local.origin, outdated: stored.outdated && local.title === stored.value }
+    })
+    const renderLanguage = computed<string | null>(() => (activeLanguage.value === 'source' ? product.value.language : activeLanguage.value))
+    const renderLanguages = computed<string[]>(() => [...(product.value.language ? [product.value.language] : []), ...productLanguages.value])
+
+    const titleModel = computed<string>({
+        get: () =>
+            activeLanguage.value === 'source' ? product.value.title : (product.value.translations[activeLanguage.value]?.title ?? ''),
+        set: (value: string) => {
+            if (activeLanguage.value === 'source') {
+                product.value.title = value
+                return
+            }
+            // Typed by a person: no longer the AI's.
+            product.value.translations = { ...product.value.translations, [activeLanguage.value]: { title: value, origin: 'manual' } }
+        }
+    })
+
+    function resetLanguages(): void {
+        activeLanguage.value = 'source'
+        titleStates.value = {}
+        languageCheck.value = null
+        outdatedConfirmed.value = new Set()
+    }
+
+    const notifyServerError = (error: unknown, fallback: string): void => {
+        const message = (error as { response?: { data?: { error?: string } } })?.response?.data?.error
+        window.dispatchEvent(
+            new CustomEvent('notification', { detail: message ? { type: 'error', message } : { type: 'error', loc: fallback } })
+        )
+    }
+
+    async function changeLanguage(language: string): Promise<void> {
+        if (language === product.value.language) return
+        if (product.value.translations[language]?.title) {
+            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: 'product.language_in_use' } }))
+            return
+        }
+        product.value.language = language
+        if (activeLanguage.value === language) activeLanguage.value = 'source'
+        await handleUpdateRecord()
+    }
+
+    // A person read the AI's title and keeps it: saved as theirs, checked against the current title.
+    async function reviewTitle(): Promise<void> {
+        const language = activeLanguage.value
+        const local = product.value.translations[language]
+        const stored = titleStates.value[language]?.title
+        if (language === 'source' || !local?.title) return
+        product.value.translations = { ...product.value.translations, [language]: { title: local.title, origin: 'manual' } }
+        if (stored) titleStates.value = { ...titleStates.value, [language]: { title: { ...stored, origin: 'manual', outdated: false } } }
+        await handleUpdateRecord()
+    }
+
+    async function translateTitles(languages: string[]): Promise<void> {
+        if (!product.value.title || languages.length === 0) return
+        translatingTitle.value = true
+        try {
+            const response = (await translateProductTitle({
+                title: product.value.title,
+                source_language: product.value.language,
+                languages,
+                report_item_ids: reportItems.value.map((item) => item.id)
+            })) as { data?: { translations?: Record<string, string>; failed?: Record<string, string> } }
+            const translated = response.data?.translations ?? {}
+            product.value.translations = {
+                ...product.value.translations,
+                ...Object.fromEntries(Object.entries(translated).map(([language, title]) => [language, { title, origin: 'ai' as const }]))
+            }
+            titleStates.value = {
+                ...titleStates.value,
+                ...Object.fromEntries(
+                    Object.entries(translated).map(([language, title]) => [
+                        language,
+                        { title: { value: title, origin: 'ai' as const, version: 0, outdated: false } }
+                    ])
+                )
+            }
+            if (Object.keys(response.data?.failed ?? {}).length > 0) {
+                window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'warning', loc: 'product.title_not_translated' } }))
+            }
+            await handleUpdateRecord()
+        } catch (error: unknown) {
+            notifyServerError(error, 'common.error_saving')
+        } finally {
+            translatingTitle.value = false
+        }
+    }
+
+    /** The product as the form has it, for the language check. */
+    const productPayload = () => ({
+        ...product.value,
+        product_type_id: selectedType.value?.id ?? product.value.product_type_id,
+        report_items: reportItems.value.map((item) => ({ id: item.id }))
+    })
+
+    async function fetchLanguageCheck(language: string | null): Promise<LanguageCheck | null> {
+        if (!language || !(selectedType.value?.id ?? product.value.product_type_id)) return null
+        try {
+            const response = (await checkProductLanguage(productPayload(), language)) as { data?: LanguageCheck }
+            return response.data ?? null
+        } catch (error: unknown) {
+            console.error('Language check failed:', error)
+            return null
+        }
+    }
+
+    // A check answers for one language, product type and set of reports. Once any of them
+    // changes, the last answer is neither shown nor acted on: it would name the previous
+    // type's templates or the previous tab's outdated translations.
+    const checkKey = computed<string>(() =>
+        JSON.stringify([renderLanguage.value, selectedType.value?.id ?? null, reportItems.value.map((item) => item.id)])
+    )
+    const checkIsCurrent = computed<boolean>(() => languageCheck.value?.key === checkKey.value)
+    const currentCheck = computed<LanguageCheck | null>(() => (checkIsCurrent.value ? (languageCheck.value?.check ?? null) : null))
+
+    let checkTimer: ReturnType<typeof setTimeout> | undefined
+
+    /** The check for what the form shows now, asked for at once (without waiting for the debounce). */
+    async function loadCurrentCheck(): Promise<LanguageCheck | null> {
+        clearTimeout(checkTimer)
+        if (checkIsCurrent.value) return currentCheck.value
+        const key = checkKey.value
+        const check = await fetchLanguageCheck(renderLanguage.value)
+        if (key === checkKey.value) languageCheck.value = { key, check }
+        return check
+    }
+
+    watch([visible, checkKey], () => {
+        clearTimeout(checkTimer)
+        if (visible.value) checkTimer = setTimeout(() => void loadCurrentCheck(), 300)
+    })
+
+    watch(publishLanguage, async (language) => {
+        publishCheck.value = null
+        const check = showPublishConfirmation.value ? await fetchLanguageCheck(language) : null
+        if (language === publishLanguage.value) publishCheck.value = check
+    })
+
+    /** Outdated translations in the rendered language need a confirmation before preview or download. */
+    function needsOutdatedConfirmation(check: LanguageCheck | null, action: () => void): boolean {
+        const language = renderLanguage.value
+        if (!language || !check?.outdated.length || outdatedConfirmed.value.has(language)) return false
+        outdatedCheck.value = check
+        pendingOutdatedAction.value = action
+        showOutdatedConfirmation.value = true
+        return true
+    }
+
+    function continueWithOutdated(): void {
+        if (renderLanguage.value) outdatedConfirmed.value = new Set([...outdatedConfirmed.value, renderLanguage.value])
+        showOutdatedConfirmation.value = false
+        const action = pendingOutdatedAction.value
+        pendingOutdatedAction.value = null
+        action?.()
+    }
 
     function insertProductLink(index: number): void {
         productLinks.value.splice(index, 0, { value: '', value_description: generateLinkKey(takenLinkKeys()) })
@@ -641,8 +933,12 @@
             state_id: undefined,
             report_items: [],
             public_web_ids: [],
-            links: []
+            links: [],
+            // Written in the user's default language unless they pick another one.
+            language: defaultContentLanguage.value,
+            translations: {}
         }
+        resetLanguages()
         productLinks.value = []
         selectedType.value = null
         isEditMode.value = false
@@ -801,6 +1097,13 @@
             if (product.value.id === -1) {
                 const response = await createProduct(product.value)
                 product.value.id = response.data
+                // The server sets a new product's language from the author's settings.
+                try {
+                    const created = await getProductById(product.value.id)
+                    product.value.language = (created.data as ProductDetailPayload | undefined)?.language ?? product.value.language
+                } catch (error: unknown) {
+                    console.error('Failed to read the new product back:', error)
+                }
                 window.dispatchEvent(
                     new CustomEvent('notification', {
                         detail: { type: 'success', loc: 'product.created_successfully' }
@@ -818,13 +1121,9 @@
             initialFormState.value = snapshotForm()
             await refreshReportItemStates()
             return true
-        } catch {
+        } catch (error: unknown) {
             showError.value = true
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'product.error' }
-                })
-            )
+            notifyServerError(error, 'product.error')
             return false
         }
     }
@@ -877,13 +1176,21 @@
         visible.value = false
     }
 
-    function handlePublishConfirmation(): void {
+    async function handlePublishConfirmation(): Promise<void> {
         if (!validatePublisherSelection()) return
 
+        const language = renderLanguage.value
+        publishLanguage.value = language
+        publishCheck.value = currentCheck.value
         if (!isEditMode.value && hasUnsavedChanges()) {
             showPublishUnsavedConfirmation.value = true
         } else {
             showPublishConfirmation.value = true
+        }
+        // The open tab's check is still on its way: the dialog lists it once it arrives.
+        if (!checkIsCurrent.value) {
+            const check = await loadCurrentCheck()
+            if (publishLanguage.value === language) publishCheck.value = check
         }
     }
 
@@ -895,7 +1202,7 @@
         const selectedPublisherIds: any = getSelectedPublisherIds()
 
         try {
-            const response = await publishProduct(product.value, selectedPublisherIds)
+            const response = await publishProduct(product.value, selectedPublisherIds, publishLanguage.value)
             if (response.data.overall_success) {
                 window.dispatchEvent(
                     new CustomEvent('notification', {
@@ -936,6 +1243,7 @@
     }
 
     async function handlePreview(event?: MouseEvent): Promise<void> {
+        if (needsOutdatedConfirmation(currentCheck.value, () => void handlePreview(event))) return
         // Reserve the tab before validation or the API request yields. Waiting
         // until either promise resolves loses browser user activation and may
         // cause the preview to be blocked as an unsolicited popup.
@@ -943,12 +1251,17 @@
         const ctrl = Boolean(event?.ctrlKey || event?.metaKey)
 
         try {
+            // The tab, type or reports just changed and their check is still on its way.
+            if (!checkIsCurrent.value && needsOutdatedConfirmation(await loadCurrentCheck(), () => void handlePreview(event))) {
+                previewWindow?.close()
+                return
+            }
             if (!(await prepareProduct())) {
                 previewWindow?.close()
                 return
             }
 
-            const response = await previewProduct(product.value, ctrl, authStore.jwt)
+            const response = await previewProduct(product.value, ctrl, authStore.jwt, renderLanguage.value)
             const token = response.data.token
 
             const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
@@ -962,12 +1275,13 @@
     }
 
     async function handleDownload(event?: MouseEvent): Promise<void> {
+        if (needsOutdatedConfirmation(await loadCurrentCheck(), () => void handleDownload(event))) return
         const ctrl = Boolean(event?.ctrlKey || event?.metaKey)
 
         if (!(await prepareProduct())) return
 
         try {
-            const response = await previewProduct(product.value, ctrl, authStore.jwt)
+            const response = await previewProduct(product.value, ctrl, authStore.jwt, renderLanguage.value)
             const downloaded = await ApiService.download(
                 `/publish/products/preview/${response.data.token}`,
                 undefined,
@@ -1054,8 +1368,16 @@
             state_id: data.state_id,
             report_items: data.report_items || [],
             public_web_ids: normalizePublicWebIds(data.public_web_ids),
-            links: data.links || []
+            links: data.links || [],
+            language: (data as ProductDetailPayload).language ?? null,
+            translations: Object.fromEntries(
+                Object.entries((data as ProductDetailPayload).translations ?? {})
+                    .filter(([, state]) => state.title?.value)
+                    .map(([language, state]) => [language, { title: String(state.title?.value), origin: state.title?.origin ?? 'manual' }])
+            )
         }
+        resetLanguages()
+        titleStates.value = (data as ProductDetailPayload).translations ?? {}
         productLinks.value = toLinkValues(data.links)
 
         reportItems.value = Array.isArray(data.report_items) ? [...data.report_items] : []

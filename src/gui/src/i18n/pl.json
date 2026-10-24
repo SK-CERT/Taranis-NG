@@ -847,6 +847,20 @@
             "confirm": "Dodaj raporty",
             "confirm_published": "Dodaj i ukończ",
             "untitled": "Raport bez tytułu"
+        },
+        "language": "Język produktu",
+        "translate_titles": "Przetłumacz tytuł na wszystkie języki",
+        "title_not_translated": "Nie udało się przetłumaczyć tytułu na niektóre języki",
+        "language_in_use": "Produkt ma już tłumaczenie na ten język",
+        "publish_in": "Opublikuj w języku",
+        "publish_in_language": "Publikacja w języku: {language}",
+        "outdated_confirmation": "Nieaktualne tłumaczenia",
+        "outdated_continue": "Kontynuuj mimo to",
+        "language_notice": {
+            "missing": "Te raporty nie mają tłumaczenia na język: {language}; używany jest angielski lub oryginał:",
+            "outdated": "Te tłumaczenia na język: {language} są nieaktualne, bo ich oryginał zmienił się po przetłumaczeniu:",
+            "templates": "Typ produktu nie ma szablonów dla języka: {language}; używane są szablony: {used}.",
+            "default_templates": "domyślne"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Łącze",
                 "collected": "Data zebrania",
                 "published": "Data publikacji"
-            }
+            },
+            "default_templates": "Domyślne",
+            "add_language": "Dodaj język",
+            "remove_language": "Usuń język: {language}",
+            "language_templates_hint": "Szablony dla języka: {language}. Puste pole używa szablonu domyślnego.",
+            "template_language": "Język szablonów",
+            "template_language_hint": "Język, w którym napisano szablony domyślne"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Edytuj stałą",
             "value": "Wartość",
             "error": "Nie udało się utworzyć tego atrybutu",
-            "total_count": "Brak atrybutów | {count} atrybut | {count} atrybuty | {count} atrybutów"
+            "total_count": "Brak atrybutów | {count} atrybut | {count} atrybuty | {count} atrybutów",
+            "constant_translations": "Tłumaczenia",
+            "no_languages": "Żaden typ raportu używający tego atrybutu nie ma innych języków.",
+            "constants_in": "Stałe w języku: {language}",
+            "translated_value": "Wartość w języku: {language}",
+            "edit_translation": "Edytuj tłumaczenie",
+            "translate_missing": "Przetłumacz brakujące za pomocą SI",
+            "translated_constants": "Przetłumaczone stałe: {count}",
+            "translated_with_failures": "Przetłumaczone stałe: {translated}; nieprzetłumaczone: {failed}"
         }
     },
     "external_user": {

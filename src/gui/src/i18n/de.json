@@ -847,6 +847,20 @@
             "confirm": "Berichte hinzufügen",
             "confirm_published": "Hinzufügen und abschließen",
             "untitled": "Bericht ohne Titel"
+        },
+        "language": "Sprache des Produkts",
+        "translate_titles": "Titel in alle Sprachen übersetzen",
+        "title_not_translated": "Der Titel konnte in einige Sprachen nicht übersetzt werden",
+        "language_in_use": "Das Produkt hat bereits eine Übersetzung in diese Sprache",
+        "publish_in": "Veröffentlichen auf",
+        "publish_in_language": "Veröffentlicht auf: {language}",
+        "outdated_confirmation": "Veraltete Übersetzungen",
+        "outdated_continue": "Trotzdem fortfahren",
+        "language_notice": {
+            "missing": "Diese Berichte haben keine Übersetzung auf {language}; für sie wird Englisch oder der Ursprungstext verwendet:",
+            "outdated": "Diese Übersetzungen auf {language} sind veraltet, weil sich ihr Ursprungstext nach der Übersetzung geändert hat:",
+            "templates": "Der Produkttyp hat keine Vorlagen für {language}; es werden die Vorlagen „{used}“ verwendet.",
+            "default_templates": "Standard"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Link",
                 "collected": "Erfassungsdatum",
                 "published": "Veröffentlichungsdatum"
-            }
+            },
+            "default_templates": "Standard",
+            "add_language": "Sprache hinzufügen",
+            "remove_language": "{language} entfernen",
+            "language_templates_hint": "Vorlagen für {language}. Ein leeres Feld verwendet die Standardvorlage.",
+            "template_language": "Sprache der Vorlagen",
+            "template_language_hint": "Die Sprache, in der die Standardvorlagen geschrieben sind"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Konstante bearbeiten",
             "value": "Wert",
             "error": "Dieses Attribut konnte nicht erstellt werden",
-            "total_count": "{count} Attribut | {count} Attribute"
+            "total_count": "{count} Attribut | {count} Attribute",
+            "constant_translations": "Übersetzungen",
+            "no_languages": "Kein Berichtstyp, der dieses Attribut verwendet, hat weitere Sprachen.",
+            "constants_in": "Konstanten auf {language}",
+            "translated_value": "Wert auf {language}",
+            "edit_translation": "Übersetzung bearbeiten",
+            "translate_missing": "Fehlende mit KI übersetzen",
+            "translated_constants": "Übersetzte Konstanten: {count}",
+            "translated_with_failures": "Übersetzte Konstanten: {translated}; nicht übersetzt: {failed}"
         }
     },
     "external_user": {

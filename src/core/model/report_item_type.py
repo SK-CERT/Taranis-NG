@@ -3,7 +3,7 @@
 import sqlalchemy
 from managers import content_language
 from managers.db_manager import db
-from marshmallow import fields, post_load
+from marshmallow import EXCLUDE, fields, post_load
 from model.acl_entry import ACLEntry
 from model.ai_provider import AiProvider
 from shared.schema.acl_entry import ItemType
@@ -54,6 +54,12 @@ class NewAttributeGroupItemSchema(AttributeGroupItemSchema):
     """
 
     attribute_id = fields.Integer()
+
+    class Meta:
+        """Labels in a rendered language are presenter input only, never stored."""
+
+        unknown = EXCLUDE
+        exclude = ("label", "description_label")
 
     @post_load
     def make_attribute_group_item(self, data: dict, **kwargs) -> "AttributeGroupItem":  # noqa: ANN003, ARG002
@@ -177,6 +183,12 @@ class NewAttributeGroupSchema(AttributeGroupBaseSchema):
     """
 
     attribute_group_items = fields.Nested("NewAttributeGroupItemSchema", many=True)
+
+    class Meta:
+        """Labels in a rendered language are presenter input only, never stored."""
+
+        unknown = EXCLUDE
+        exclude = ("label", "description_label", "section_label")
 
     @post_load
     def make_attribute_group(self, data: dict, **kwargs) -> "AttributeGroup":  # noqa: ANN003, ARG002
@@ -308,6 +320,12 @@ class NewReportItemTypeSchema(ReportItemTypeBaseSchema):
     """
 
     attribute_groups = fields.Nested("NewAttributeGroupSchema", many=True)
+
+    class Meta:
+        """Labels in a rendered language are presenter input only, never stored."""
+
+        unknown = EXCLUDE
+        exclude = ("label", "description_label")
 
     @post_load
     def make_report_item_type(self, data: dict, **kwargs) -> "ReportItemType":  # noqa: ANN003, ARG002

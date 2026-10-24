@@ -88,7 +88,7 @@ describe('ReportItemTranslation', () => {
         expect(containers).toHaveLength(2)
         expect(containers[0]!.props('language')).toBe('en')
         expect(containers[0]!.props('attributeItem').values[0]).toMatchObject({ id: 21, value: 'An attacker can', version: 1 })
-        expect(containers[1]!.props('language')).toBeUndefined()
+        expect(containers[1]!.props('language')).toBeNull()
         expect(containers[1]!.props('readOnly')).toBe(true)
         expect(wrapper.find('[data-test="translation-ai"]').exists()).toBe(true)
         expect(wrapper.find('[data-test="translation-outdated"]').exists()).toBe(true)

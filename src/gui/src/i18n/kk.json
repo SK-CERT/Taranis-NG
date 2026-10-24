@@ -847,6 +847,20 @@
             "confirm": "Есептерді қосу",
             "confirm_published": "Қосу және аяқтау",
             "untitled": "Атаусыз есеп"
+        },
+        "language": "Өнім тілі",
+        "translate_titles": "Атауды барлық тілге аудару",
+        "title_not_translated": "Атауды кейбір тілдерге аудару мүмкін болмады",
+        "language_in_use": "Өнімде бұл тілге аударма бар",
+        "publish_in": "Жариялау тілі",
+        "publish_in_language": "Жариялау тілі: {language}",
+        "outdated_confirmation": "Ескірген аудармалар",
+        "outdated_continue": "Бәрібір жалғастыру",
+        "language_notice": {
+            "missing": "Бұл есептерде {language} тіліне аударма жоқ; оларға ағылшын тілі немесе түпнұсқа қолданылады:",
+            "outdated": "{language} тіліне жасалған бұл аудармалар ескірген, себебі аударылғаннан кейін түпнұсқасы өзгерген:",
+            "templates": "Өнім түрінде {language} тіліне арналған үлгілер жоқ; мына үлгілер қолданылады: {used}.",
+            "default_templates": "әдепкі"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Сілтеме",
                 "collected": "Жиналған күні",
                 "published": "Жарияланған күні"
-            }
+            },
+            "default_templates": "Әдепкі",
+            "add_language": "Тіл қосу",
+            "remove_language": "Тілді жою: {language}",
+            "language_templates_hint": "{language} тіліне арналған үлгілер. Бос өріс әдепкі үлгіні пайдаланады.",
+            "template_language": "Үлгілер тілі",
+            "template_language_hint": "Әдепкі үлгілер жазылған тіл"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Тұрақты мәнді өңдеу",
             "value": "Мәні",
             "error": "Бұл атрибутты жасау мүмкін болмады",
-            "total_count": "Атрибуттар жоқ | {count} атрибут | {count} атрибут"
+            "total_count": "Атрибуттар жоқ | {count} атрибут | {count} атрибут",
+            "constant_translations": "Аудармалар",
+            "no_languages": "Бұл атрибутты пайдаланатын бірде-бір есеп түрінде басқа тілдер жоқ.",
+            "constants_in": "{language} тіліндегі тұрақтылар",
+            "translated_value": "{language} тіліндегі мән",
+            "edit_translation": "Аударманы өңдеу",
+            "translate_missing": "Жетіспейтіндерін ЖИ көмегімен аудару",
+            "translated_constants": "Аударылған тұрақтылар: {count}",
+            "translated_with_failures": "Аударылған тұрақтылар: {translated}; аударылмағаны: {failed}"
         }
     },
     "external_user": {

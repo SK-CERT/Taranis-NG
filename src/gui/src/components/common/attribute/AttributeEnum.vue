@@ -15,7 +15,7 @@
                     v-if="readOnly || value.remote"
                     class="enum-value"
                 >
-                    <v-chip size="small">{{ value.value }}</v-chip>
+                    <v-chip size="small">{{ constantLabel(attributeGroup, value.value, language) }}</v-chip>
                 </span>
 
                 <!-- Editable -->
@@ -62,7 +62,7 @@
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
     import { useAttributes } from './useAttributes'
-    import { enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup } from './enumOptions'
+    import { constantLabel, enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup } from './enumOptions'
 
     type AttributeValueItem = {
         index?: string | number
@@ -84,11 +84,14 @@
             edit?: boolean
             modify?: boolean
             reportItemId: number | null
+            // A language tab of the report: constants read in that language.
+            language?: string | null
         }>(),
         {
             readOnly: false,
             edit: false,
-            modify: false
+            modify: false,
+            language: null
         }
     )
 

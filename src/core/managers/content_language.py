@@ -130,3 +130,68 @@ def clean_label_translations(translations: object, fields: tuple[str, ...]) -> d
         if kept:
             result[language] = kept
     return result
+
+
+# Fields of a choice constant (attribute_enum) that have language variants.
+ENUM_TRANSLATION_FIELDS = ("value", "description")
+
+# Attribute types whose constants have language variants.
+CONSTANT_TYPES = ("RADIO", "ENUM", "MULTI_CHOICE")
+
+# Presenter parameters holding a template path end with this; only they vary per language.
+TEMPLATE_SUFFIX = "_TEMPLATE_PATH"
+
+
+def clean_enum_translations(translations: object) -> dict[str, dict[str, str]] | None:
+    """Validate the language variants of a choice constant, ``{language: {value, description}}``.
+
+    Args:
+        translations (object): The submitted variants; None when the client sent none.
+
+    Returns:
+        dict[str, dict[str, str]] | None: The variants without empty texts, or None for "not sent".
+
+    Raises:
+        ValueError: If the shape is wrong or a language is not an ISO 639-1 code.
+    """
+    if translations is None:
+        return None
+    return clean_label_translations(translations, ENUM_TRANSLATION_FIELDS)
+
+
+def clean_language_templates(templates: object, template_keys: Iterable[str]) -> dict[str, dict[str, str]]:
+    """Validate a product type's per-language templates, ``{language: {PARAM_TEMPLATE_PATH: path}}``.
+
+    Args:
+        templates (object): The submitted overrides.
+        template_keys (Iterable[str]): The template parameters the presenter has.
+
+    Returns:
+        dict[str, dict[str, str]]: The overrides without empty paths and without empty languages.
+
+    Raises:
+        ValueError: If the shape is wrong, a language is not an ISO 639-1 code, or a key is not
+            one of the presenter's template parameters.
+    """
+    if templates is None:
+        return {}
+    if not isinstance(templates, dict):
+        msg = "Language templates must map languages to template paths"
+        raise ValueError(msg)  # noqa: TRY004 - callers report ValueError as a bad request
+    allowed = set(template_keys)
+    result: dict[str, dict[str, str]] = {}
+    for code, paths in templates.items():
+        language = clean_language(code)
+        if language is None:
+            continue
+        if not isinstance(paths, dict):
+            msg = "Language templates must map languages to template paths"
+            raise ValueError(msg)  # noqa: TRY004 - callers report ValueError as a bad request
+        unknown = sorted(key for key in paths if key not in allowed)
+        if unknown:
+            msg = f"Not a template parameter of this presenter: {', '.join(unknown)}"
+            raise ValueError(msg)
+        kept = {key: path.strip() for key, path in paths.items() if isinstance(path, str) and path.strip()}
+        if kept:
+            result[language] = kept
+    return result

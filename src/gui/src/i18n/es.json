@@ -847,6 +847,20 @@
             "confirm": "Añadir informes",
             "confirm_published": "Añadir y completar",
             "untitled": "Informe sin título"
+        },
+        "language": "Idioma del producto",
+        "translate_titles": "Traducir el título a todos los idiomas",
+        "title_not_translated": "No se pudo traducir el título a algunos idiomas",
+        "language_in_use": "El producto ya tiene una traducción a ese idioma",
+        "publish_in": "Publicar en",
+        "publish_in_language": "Se publica en: {language}",
+        "outdated_confirmation": "Traducciones desactualizadas",
+        "outdated_continue": "Continuar de todos modos",
+        "language_notice": {
+            "missing": "Estos informes no tienen traducción al {language}; se usa el inglés o el texto original:",
+            "outdated": "Estas traducciones al {language} están desactualizadas, porque su texto original cambió después de traducirse:",
+            "templates": "El tipo de producto no tiene plantillas para {language}; se usan las plantillas: {used}.",
+            "default_templates": "predeterminadas"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Enlace",
                 "collected": "Fecha de recopilación",
                 "published": "Fecha de publicación"
-            }
+            },
+            "default_templates": "Predeterminado",
+            "add_language": "Añadir idioma",
+            "remove_language": "Quitar {language}",
+            "language_templates_hint": "Plantillas para {language}. Un campo vacío usa la plantilla predeterminada.",
+            "template_language": "Idioma de las plantillas",
+            "template_language_hint": "El idioma en que están escritas las plantillas predeterminadas"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Editar constante",
             "value": "Valor",
             "error": "No se pudo crear este atributo",
-            "total_count": "{count} atributo | {count} atributos"
+            "total_count": "{count} atributo | {count} atributos",
+            "constant_translations": "Traducciones",
+            "no_languages": "Ningún tipo de informe que use este atributo tiene otros idiomas.",
+            "constants_in": "Constantes en {language}",
+            "translated_value": "Valor en {language}",
+            "edit_translation": "Editar traducción",
+            "translate_missing": "Traducir con IA las que faltan",
+            "translated_constants": "Constantes traducidas: {count}",
+            "translated_with_failures": "Constantes traducidas: {translated}; sin traducir: {failed}"
         }
     },
     "external_user": {

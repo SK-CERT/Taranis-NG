@@ -379,6 +379,15 @@ class ReportItem(db.Model):
                 result.setdefault(row.language, {})[row.field] = row.value
         return result
 
+    @property
+    def type_languages(self) -> list[str]:
+        """The languages of the report's type, for products to offer as their language tabs.
+
+        Returns:
+            list[str]: ISO 639-1 codes.
+        """
+        return list(self.report_item_type.languages or []) if self.report_item_type is not None else []
+
     def variant_languages(self) -> list[str]:
         """The languages this report is translated into: its type's, minus its own.
 
@@ -816,12 +825,18 @@ class ReportItem(db.Model):
         It performs authorization checks to ensure that the user has the necessary permissions to add the report item.
 
         Args:
-            report_item_data (dict): The data for the report item.
+            report_item_data (dict): The data for the report item; ``language`` is the one it is
+                written in, the author's default language when left out.
             user (User): The user adding the report item.
 
         Returns:
             tuple: A tuple containing the added report item and the HTTP status code.
+
+        Raises:
+            ValueError: If ``language`` is not an ISO 639-1 code.
         """
+        # The language picked in the form, checked before anything is built; else the author's default.
+        language = content_language.clean_language(report_item_data.get("language"))
         report_item_schema = NewReportItemSchema()
         report_item = report_item_schema.load(report_item_data)
 
@@ -830,7 +845,7 @@ class ReportItem(db.Model):
 
         report_item.user_id = user.id
         report_item.updated_by = user.name
-        report_item.language = cls._author_language(user)
+        report_item.language = language or cls._author_language(user)
         for attribute in report_item.attributes:
             attribute.user_id = user.id
         report_item.ensure_link_keys()

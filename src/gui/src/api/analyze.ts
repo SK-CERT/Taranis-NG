@@ -126,7 +126,9 @@ export function createNewReportItem(data) {
         state_id: data.state_id,
         news_item_aggregates: data.news_item_aggregates || [],
         remote_report_items: data.remote_report_items || [],
-        attributes: data.attributes || []
+        attributes: data.attributes || [],
+        // The language it is written in; left out, core takes the author's default.
+        language: data.language || null
     }
 
     return ApiService.post('/analyze/report-items', payload)

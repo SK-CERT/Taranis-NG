@@ -28,7 +28,8 @@ describe('analyze api', () => {
             state_id: 2,
             news_item_aggregates: [{ id: 11 }],
             remote_report_items: [{ id: 22 }],
-            attributes: [{ id: -1, attribute_group_item_id: 5, value: 'test' }]
+            attributes: [{ id: -1, attribute_group_item_id: 5, value: 'test' }],
+            language: 'cs'
         }
 
         createNewReportItem(data)
@@ -41,7 +42,8 @@ describe('analyze api', () => {
             state_id: 2,
             news_item_aggregates: [{ id: 11 }],
             remote_report_items: [{ id: 22 }],
-            attributes: [{ id: -1, attribute_group_item_id: 5, value: 'test' }]
+            attributes: [{ id: -1, attribute_group_item_id: 5, value: 'test' }],
+            language: 'cs'
         })
     })
 

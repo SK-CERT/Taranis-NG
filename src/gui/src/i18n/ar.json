@@ -847,6 +847,20 @@
             "confirm": "إضافة التقارير",
             "confirm_published": "إضافة وإكمال",
             "untitled": "تقرير بلا عنوان"
+        },
+        "language": "لغة المنتج",
+        "translate_titles": "ترجمة العنوان إلى كل اللغات",
+        "title_not_translated": "تعذّرت ترجمة العنوان إلى بعض اللغات",
+        "language_in_use": "للمنتج ترجمة إلى هذه اللغة بالفعل",
+        "publish_in": "النشر باللغة",
+        "publish_in_language": "النشر باللغة: {language}",
+        "outdated_confirmation": "ترجمات قديمة",
+        "outdated_continue": "المتابعة على أي حال",
+        "language_notice": {
+            "missing": "لا توجد لهذه التقارير ترجمة إلى {language}؛ تُستخدم لها الإنجليزية أو النص الأصلي:",
+            "outdated": "هذه الترجمات إلى {language} قديمة، لأن نصها الأصلي تغيّر بعد ترجمتها:",
+            "templates": "لا توجد لنوع المنتج قوالب للغة {language}؛ تُستخدم القوالب: {used}.",
+            "default_templates": "الافتراضية"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "الرابط",
                 "collected": "تاريخ الجمع",
                 "published": "تاريخ النشر"
-            }
+            },
+            "default_templates": "الافتراضي",
+            "add_language": "إضافة لغة",
+            "remove_language": "إزالة {language}",
+            "language_templates_hint": "القوالب المستخدمة للغة {language}. الحقل الفارغ يستخدم القالب الافتراضي.",
+            "template_language": "لغة القوالب",
+            "template_language_hint": "اللغة التي كُتبت بها القوالب الافتراضية"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "تعديل الثابت",
             "value": "القيمة",
             "error": "تعذّر إنشاء هذه السمة",
-            "total_count": "لا توجد سمات ({count}) | سمة واحدة ({count}) | سمتان ({count}) | {count} سمات | {count} سمة | {count} سمة"
+            "total_count": "لا توجد سمات ({count}) | سمة واحدة ({count}) | سمتان ({count}) | {count} سمات | {count} سمة | {count} سمة",
+            "constant_translations": "الترجمات",
+            "no_languages": "لا يوجد نوع تقرير يستخدم هذه السمة وله لغات أخرى.",
+            "constants_in": "الثوابت باللغة {language}",
+            "translated_value": "القيمة باللغة {language}",
+            "edit_translation": "تحرير الترجمة",
+            "translate_missing": "ترجمة الناقص بالذكاء الاصطناعي",
+            "translated_constants": "الثوابت المترجمة: {count}",
+            "translated_with_failures": "الثوابت المترجمة: {translated}؛ غير المترجمة: {failed}"
         }
     },
     "external_user": {

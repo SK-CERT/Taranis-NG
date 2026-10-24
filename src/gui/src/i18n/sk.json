@@ -847,6 +847,20 @@
             "confirm": "Pridať analýzy",
             "confirm_published": "Pridať a dokončiť",
             "untitled": "Analýza bez názvu"
+        },
+        "language": "Jazyk produktu",
+        "translate_titles": "Preložiť názov do všetkých jazykov",
+        "title_not_translated": "Názov sa do niektorých jazykov nepodarilo preložiť",
+        "language_in_use": "Produkt už má preklad do tohto jazyka",
+        "publish_in": "Publikovať v jazyku",
+        "publish_in_language": "Publikuje sa v jazyku: {language}",
+        "outdated_confirmation": "Zastarané preklady",
+        "outdated_continue": "Napriek tomu pokračovať",
+        "language_notice": {
+            "missing": "Tieto reporty nemajú preklad do jazyka {language}; použije sa angličtina alebo originál:",
+            "outdated": "Tieto preklady do jazyka {language} sú zastarané, lebo sa ich originál po preložení zmenil:",
+            "templates": "Typ produktu nemá šablóny pre jazyk {language}; použijú sa šablóny: {used}.",
+            "default_templates": "predvolené"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Odkaz",
                 "collected": "Dátum zberu",
                 "published": "Dátum publikovania"
-            }
+            },
+            "default_templates": "Predvolené",
+            "add_language": "Pridať jazyk",
+            "remove_language": "Odstrániť jazyk {language}",
+            "language_templates_hint": "Šablóny pre jazyk {language}. Prázdne pole použije predvolenú šablónu.",
+            "template_language": "Jazyk šablón",
+            "template_language_hint": "Jazyk, v ktorom sú napísané predvolené šablóny"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Upraviť konštantu",
             "value": "Hodnota",
             "error": "Nepodarilo sa vytvoriť atribút",
-            "total_count": "Žiadne atribúty | {count} atribút | {count} atribúty | {count} atribútov"
+            "total_count": "Žiadne atribúty | {count} atribút | {count} atribúty | {count} atribútov",
+            "constant_translations": "Preklady",
+            "no_languages": "Žiadny typ reportu, ktorý tento atribút používa, nemá ďalšie jazyky.",
+            "constants_in": "Konštanty v jazyku {language}",
+            "translated_value": "Hodnota v jazyku {language}",
+            "edit_translation": "Upraviť preklad",
+            "translate_missing": "Preložiť chýbajúce pomocou AI",
+            "translated_constants": "Preložené konštanty: {count}",
+            "translated_with_failures": "Preložené konštanty: {translated}; nepreložené: {failed}"
         }
     },
     "external_user": {

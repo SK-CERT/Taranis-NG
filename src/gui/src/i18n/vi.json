@@ -847,6 +847,20 @@
             "confirm": "Thêm báo cáo",
             "confirm_published": "Thêm và hoàn tất",
             "untitled": "Báo cáo chưa đặt tên"
+        },
+        "language": "Ngôn ngữ của sản phẩm",
+        "translate_titles": "Dịch tiêu đề sang mọi ngôn ngữ",
+        "title_not_translated": "Không dịch được tiêu đề sang một số ngôn ngữ",
+        "language_in_use": "Sản phẩm đã có bản dịch sang ngôn ngữ đó",
+        "publish_in": "Xuất bản bằng",
+        "publish_in_language": "Xuất bản bằng: {language}",
+        "outdated_confirmation": "Bản dịch đã cũ",
+        "outdated_continue": "Vẫn tiếp tục",
+        "language_notice": {
+            "missing": "Các báo cáo này chưa có bản dịch sang {language}; dùng tiếng Anh hoặc bản gốc:",
+            "outdated": "Các bản dịch sang {language} này đã cũ vì bản gốc thay đổi sau khi dịch:",
+            "templates": "Loại sản phẩm không có mẫu cho {language}; dùng mẫu {used}.",
+            "default_templates": "mặc định"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Liên kết",
                 "collected": "Ngày thu thập",
                 "published": "Ngày phát hành"
-            }
+            },
+            "default_templates": "Mặc định",
+            "add_language": "Thêm ngôn ngữ",
+            "remove_language": "Xóa {language}",
+            "language_templates_hint": "Mẫu dùng cho {language}. Trường để trống dùng mẫu mặc định.",
+            "template_language": "Ngôn ngữ của mẫu",
+            "template_language_hint": "Ngôn ngữ dùng để viết các mẫu mặc định"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Chỉnh sửa hằng số",
             "value": "Giá trị",
             "error": "Không thể tạo thuộc tính này",
-            "total_count": "{count} thuộc tính | {count} thuộc tính"
+            "total_count": "{count} thuộc tính | {count} thuộc tính",
+            "constant_translations": "Bản dịch",
+            "no_languages": "Không loại báo cáo nào dùng thuộc tính này có ngôn ngữ khác.",
+            "constants_in": "Hằng số bằng {language}",
+            "translated_value": "Giá trị bằng {language}",
+            "edit_translation": "Sửa bản dịch",
+            "translate_missing": "Dịch phần còn thiếu bằng AI",
+            "translated_constants": "Hằng số đã dịch: {count}",
+            "translated_with_failures": "Hằng số đã dịch: {translated}; chưa dịch: {failed}"
         }
     },
     "external_user": {

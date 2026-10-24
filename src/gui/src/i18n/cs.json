@@ -847,6 +847,20 @@
             "confirm": "Přidat reporty",
             "confirm_published": "Přidat a dokončit",
             "untitled": "Report bez názvu"
+        },
+        "language": "Jazyk produktu",
+        "translate_titles": "Přeložit název do všech jazyků",
+        "title_not_translated": "Název se do některých jazyků nepodařilo přeložit",
+        "language_in_use": "Produkt už má překlad do tohoto jazyka",
+        "publish_in": "Publikovat v jazyce",
+        "publish_in_language": "Publikuje se v jazyce: {language}",
+        "outdated_confirmation": "Zastaralé překlady",
+        "outdated_continue": "Přesto pokračovat",
+        "language_notice": {
+            "missing": "Tyto reporty nemají překlad do jazyka {language}; použije se angličtina nebo originál:",
+            "outdated": "Tyto překlady do jazyka {language} jsou zastaralé, protože se jejich originál po přeložení změnil:",
+            "templates": "Typ produktu nemá šablony pro jazyk {language}; použijí se šablony: {used}.",
+            "default_templates": "výchozí"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Odkaz",
                 "collected": "Datum indexace",
                 "published": "Datum zveřejnění"
-            }
+            },
+            "default_templates": "Výchozí",
+            "add_language": "Přidat jazyk",
+            "remove_language": "Odebrat jazyk {language}",
+            "language_templates_hint": "Šablony pro jazyk {language}. Prázdné pole použije výchozí šablonu.",
+            "template_language": "Jazyk šablon",
+            "template_language_hint": "Jazyk, ve kterém jsou napsané výchozí šablony"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Upravit konstantu",
             "value": "Hodnota",
             "error": "Nepodařilo se vytvořit tento atribut",
-            "total_count": "Žádné atributy | {count} atribut | {count} atributy | {count} atributů"
+            "total_count": "Žádné atributy | {count} atribut | {count} atributy | {count} atributů",
+            "constant_translations": "Překlady",
+            "no_languages": "Žádný typ reportu, který tento atribut používá, nemá další jazyky.",
+            "constants_in": "Konstanty v jazyce {language}",
+            "translated_value": "Hodnota v jazyce {language}",
+            "edit_translation": "Upravit překlad",
+            "translate_missing": "Přeložit chybějící pomocí AI",
+            "translated_constants": "Přeložené konstanty: {count}",
+            "translated_with_failures": "Přeložené konstanty: {translated}; nepřeložené: {failed}"
         }
     },
     "external_user": {

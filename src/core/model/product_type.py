@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 import datetime
 
 import sqlalchemy
+from managers import content_language
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
@@ -22,6 +23,7 @@ from model.product import Product
 from shared.schema.acl_entry import ItemType
 from shared.schema.product_type import ProductTypePresentationSchema, ProductTypeSchema
 from sqlalchemy import and_, or_, orm
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql.expression import cast
 
 
@@ -59,6 +61,9 @@ class ProductType(db.Model):
         presenter_id: Presenter GUID
         presenter: Presenter
         parameter_values: List of parameter values
+        language: Language its default templates are written in; None while not stated
+        language_templates: Template paths per language, ``{language: {PARAM_TEMPLATE_PATH: path}}``;
+            a template a language does not name is taken from the default set
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -72,6 +77,9 @@ class ProductType(db.Model):
 
     parameter_values = db.relationship("ParameterValue", secondary="product_type_parameter_value", cascade="all")
 
+    language = db.Column(db.String(8), nullable=True)
+    language_templates = db.Column(JSONB, nullable=False, default=dict, server_default=sqlalchemy.text("'{}'"))
+
     def __init__(
         self,
         id: int,  # noqa: A002, ARG002
@@ -79,13 +87,22 @@ class ProductType(db.Model):
         description: str,
         presenter_id: str,
         parameter_values: list[ParameterValue],
+        language: str | None = None,
+        language_templates: dict | None = None,
     ) -> None:
-        """Initialize product type."""
+        """Initialize product type.
+
+        Raises:
+            ValueError: If the language is not an ISO 639-1 code.
+        """
         self.id = None
         self.title = title
         self.description = description
         self.presenter_id = presenter_id
         self.parameter_values = parameter_values
+        self.language = content_language.clean_language(language)
+        # Checked against the presenter's template parameters by add_new / update.
+        self.language_templates = language_templates or {}
         self.subtitle = ""
         self.tag = ""
 
@@ -198,8 +215,27 @@ class ProductType(db.Model):
         """
         new_product_type_schema = NewProductTypeSchema()
         product_type = new_product_type_schema.load(data)
+        presenter = db.session.get(Presenter, product_type.presenter_id) if product_type.presenter_id else None
+        product_type.language_templates = content_language.clean_language_templates(
+            product_type.language_templates,
+            cls.template_keys(presenter),
+        )
         db.session.add(product_type)
         db.session.commit()
+
+    @staticmethod
+    def template_keys(presenter: Presenter | None) -> list[str]:
+        """The presenter's parameters that hold a template path; only they vary per language.
+
+        Args:
+            presenter (Presenter | None): The presenter.
+
+        Returns:
+            list[str]: Parameter keys ending in ``_TEMPLATE_PATH``.
+        """
+        if presenter is None:
+            return []
+        return [parameter.key for parameter in presenter.parameters if parameter.key.endswith(content_language.TEMPLATE_SUFFIX)]
 
     @classmethod
     def delete(cls, product_type_id: int) -> None:
@@ -232,6 +268,13 @@ class ProductType(db.Model):
                 msg = f"Target presenter {updated_product_type.presenter_id} not found"
                 raise ValueError(msg)
             product_type.presenter_id = target_presenter.id
+
+        product_type.language = updated_product_type.language
+        presenter = db.session.get(Presenter, product_type.presenter_id) if product_type.presenter_id else None
+        product_type.language_templates = content_language.clean_language_templates(
+            updated_product_type.language_templates,
+            cls.template_keys(presenter),
+        )
 
         # existing parameters are updated
         for value in product_type.parameter_values:

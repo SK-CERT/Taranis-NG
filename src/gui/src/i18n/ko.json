@@ -847,6 +847,20 @@
             "confirm": "보고서 추가",
             "confirm_published": "추가 후 완료",
             "untitled": "제목 없는 보고서"
+        },
+        "language": "제품 언어",
+        "translate_titles": "제목을 모든 언어로 번역",
+        "title_not_translated": "일부 언어로 제목을 번역하지 못했습니다",
+        "language_in_use": "제품에 이미 그 언어의 번역이 있습니다",
+        "publish_in": "게시 언어",
+        "publish_in_language": "게시 언어: {language}",
+        "outdated_confirmation": "오래된 번역",
+        "outdated_continue": "그래도 계속",
+        "language_notice": {
+            "missing": "이 보고서들은 {language} 번역이 없어 영어 또는 원문을 사용합니다:",
+            "outdated": "이 {language} 번역들은 번역 후 원문이 바뀌어 오래되었습니다:",
+            "templates": "제품 유형에 {language} 템플릿이 없어 {used} 템플릿을 사용합니다.",
+            "default_templates": "기본"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "링크",
                 "collected": "수집일",
                 "published": "게시일"
-            }
+            },
+            "default_templates": "기본값",
+            "add_language": "언어 추가",
+            "remove_language": "{language} 제거",
+            "language_templates_hint": "{language}에 쓰는 템플릿입니다. 빈 필드는 기본 템플릿을 사용합니다.",
+            "template_language": "템플릿 언어",
+            "template_language_hint": "기본 템플릿이 작성된 언어"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "상수 편집",
             "value": "값",
             "error": "속성을(를) 저장할 수 없습니다",
-            "total_count": "속성 {count}개 | 속성 {count}개"
+            "total_count": "속성 {count}개 | 속성 {count}개",
+            "constant_translations": "번역",
+            "no_languages": "이 속성을 사용하는 보고서 유형 중 다른 언어가 있는 유형이 없습니다.",
+            "constants_in": "{language} 상수",
+            "translated_value": "{language} 값",
+            "edit_translation": "번역 편집",
+            "translate_missing": "누락된 항목을 AI로 번역",
+            "translated_constants": "번역된 상수: {count}",
+            "translated_with_failures": "번역된 상수: {translated}, 번역 안 됨: {failed}"
         }
     },
     "external_user": {

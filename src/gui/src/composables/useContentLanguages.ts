@@ -83,9 +83,13 @@ export function useContentLanguages() {
     const { locale } = useI18n()
     const settingsStore = useSettingsStore()
 
-    const configuredNames = computed<Record<string, string>>(() => {
+    const contentSetting = computed(() => {
         const settings = Array.isArray(settingsStore.getSettings) ? settingsStore.getSettings : []
-        const setting = settings.find((entry) => entry?.key === Settings.CONTENT_DEFAULT_LANGUAGE) as { options?: string } | undefined
+        return settings.find((entry) => entry?.key === Settings.CONTENT_DEFAULT_LANGUAGE) as { value?: string; options?: string } | undefined
+    })
+
+    const configuredNames = computed<Record<string, string>>(() => {
+        const setting = contentSetting.value
         try {
             const options = JSON.parse(setting?.options || '[]') as Array<{ id: string; txt: string }>
             return Object.fromEntries(options.map((option) => [String(option.id), String(option.txt)]))
@@ -114,5 +118,8 @@ export function useContentLanguages() {
 
     const titleOf = (item: TitledItem) => localizedTitle(item, String(locale.value))
 
-    return { languageOptions, languageName, titleOf }
+    /** The user's "Default language for reports/products", the one new content is written in; null while not set. */
+    const defaultContentLanguage = computed<string | null>(() => contentSetting.value?.value || null)
+
+    return { languageOptions, languageName, titleOf, defaultContentLanguage }
 }

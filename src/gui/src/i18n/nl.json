@@ -847,6 +847,20 @@
             "confirm": "Rapporten toevoegen",
             "confirm_published": "Toevoegen en voltooien",
             "untitled": "Naamloos rapport"
+        },
+        "language": "Taal van het product",
+        "translate_titles": "Titel naar alle talen vertalen",
+        "title_not_translated": "De titel kon niet naar alle talen worden vertaald",
+        "language_in_use": "Het product heeft al een vertaling naar die taal",
+        "publish_in": "Publiceren in",
+        "publish_in_language": "Gepubliceerd in het {language}",
+        "outdated_confirmation": "Verouderde vertalingen",
+        "outdated_continue": "Toch doorgaan",
+        "language_notice": {
+            "missing": "Deze rapporten hebben geen vertaling naar het {language}; Engels of de oorspronkelijke tekst wordt gebruikt:",
+            "outdated": "Deze vertalingen naar het {language} zijn verouderd, omdat de oorspronkelijke tekst na het vertalen is gewijzigd:",
+            "templates": "Het producttype heeft geen sjablonen voor het {language}; de sjablonen ‘{used}’ worden gebruikt.",
+            "default_templates": "standaard"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Koppeling",
                 "collected": "Verzameldatum",
                 "published": "Publicatiedatum"
-            }
+            },
+            "default_templates": "Standaard",
+            "add_language": "Taal toevoegen",
+            "remove_language": "{language} verwijderen",
+            "language_templates_hint": "Sjablonen voor het {language}. Een leeg veld gebruikt het standaardsjabloon.",
+            "template_language": "Taal van de sjablonen",
+            "template_language_hint": "De taal waarin de standaardsjablonen zijn geschreven"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Constante bewerken",
             "value": "Waarde",
             "error": "Dit kenmerk kon niet worden aangemaakt",
-            "total_count": "{count} kenmerk | {count} kenmerken"
+            "total_count": "{count} kenmerk | {count} kenmerken",
+            "constant_translations": "Vertalingen",
+            "no_languages": "Geen rapporttype dat dit attribuut gebruikt, heeft andere talen.",
+            "constants_in": "Constanten in het {language}",
+            "translated_value": "Waarde in het {language}",
+            "edit_translation": "Vertaling bewerken",
+            "translate_missing": "Ontbrekende met KI vertalen",
+            "translated_constants": "Vertaalde constanten: {count}",
+            "translated_with_failures": "Vertaalde constanten: {translated}; niet vertaald: {failed}"
         }
     },
     "external_user": {

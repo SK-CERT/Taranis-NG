@@ -75,6 +75,7 @@ class ReportItemAttribute:
         version: int,
         current: bool,
         user: str,
+        value_label: str | None = None,
     ) -> None:
         """Initialize a new instance of the ReportItem class."""
         self.id = id
@@ -90,6 +91,7 @@ class ReportItemAttribute:
         self.attribute_group_item_id = attribute_group_item_id
         self.attribute_group_item_title = attribute_group_item_title
         self.user = user
+        self.value_label = value_label
 
 
 class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
@@ -109,6 +111,8 @@ class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
     version = fields.Int()
     current = fields.Bool()
     user = fields.Nested(UserSchemaBase, exclude=("password",))
+    # A choice constant in the language rendered (presenter input); the value stays the original constant.
+    value_label = fields.Str(load_default=None, allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> ReportItemAttribute:  # noqa: ARG002, ANN003
@@ -242,6 +246,8 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
     updated_by = fields.Str(allow_none=True)
     links = fields.Nested(LinkRefSchema, many=True, dump_only=True)
     title_translations = fields.Dict(dump_only=True)
+    # The languages of the report's type: a product including it can be rendered in them.
+    type_languages = fields.List(fields.Str(), dump_only=True)
 
 
 class ReportItem:

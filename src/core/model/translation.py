@@ -140,3 +140,13 @@ class ReportItemAttributeTranslation(TranslationMixin, db.Model):
         nullable=False,
         index=True,
     )
+
+
+class ProductTranslation(TranslationMixin, db.Model):
+    """The translated title of a product in one language."""
+
+    __tablename__ = "product_translation"
+    __table_args__ = (db.UniqueConstraint("product_id", "language", "field", name="uq_product_translation"),)
+
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), nullable=False, index=True)
+    field = db.Column(db.String(16), nullable=False)

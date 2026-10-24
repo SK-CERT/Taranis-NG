@@ -847,6 +847,20 @@
             "confirm": "レポートを追加",
             "confirm_published": "追加して完了",
             "untitled": "無題のレポート"
+        },
+        "language": "プロダクトの言語",
+        "translate_titles": "タイトルをすべての言語に翻訳",
+        "title_not_translated": "一部の言語にタイトルを翻訳できませんでした",
+        "language_in_use": "このプロダクトにはその言語の翻訳がすでにあります",
+        "publish_in": "公開する言語",
+        "publish_in_language": "公開する言語: {language}",
+        "outdated_confirmation": "古い翻訳",
+        "outdated_continue": "このまま続ける",
+        "language_notice": {
+            "missing": "これらのレポートには{language}の翻訳がありません。英語または原文が使われます:",
+            "outdated": "これらの{language}の翻訳は古くなっています。翻訳後に原文が変更されました:",
+            "templates": "このプロダクト種別には{language}のテンプレートがありません。{used}のテンプレートが使われます。",
+            "default_templates": "既定"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "リンク",
                 "collected": "収集日",
                 "published": "公開日"
-            }
+            },
+            "default_templates": "既定",
+            "add_language": "言語を追加",
+            "remove_language": "{language}を削除",
+            "language_templates_hint": "{language}で使うテンプレート。空欄の項目は既定のテンプレートを使います。",
+            "template_language": "テンプレートの言語",
+            "template_language_hint": "既定のテンプレートが書かれている言語"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "定数を編集",
             "value": "値",
             "error": "属性を保存できませんでした",
-            "total_count": "属性 {count} 件 | 属性 {count} 件"
+            "total_count": "属性 {count} 件 | 属性 {count} 件",
+            "constant_translations": "翻訳",
+            "no_languages": "この属性を使うレポート種別に、ほかの言語はありません。",
+            "constants_in": "{language}の定数",
+            "translated_value": "{language}の値",
+            "edit_translation": "翻訳を編集",
+            "translate_missing": "未翻訳のものを AI で翻訳",
+            "translated_constants": "翻訳した定数: {count}",
+            "translated_with_failures": "翻訳した定数: {translated}、翻訳できなかった定数: {failed}"
         }
     },
     "external_user": {

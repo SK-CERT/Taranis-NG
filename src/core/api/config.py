@@ -254,6 +254,86 @@ class AttributeEnumResource(Resource):
             return _delete_failed("Could not delete attribute enum", ex)
 
 
+class AttributeLanguagesResource(Resource):
+    """The languages an attribute's constants are translated into."""
+
+    @auth_required("CONFIG_ATTRIBUTE_ACCESS")
+    def get(self, attribute_id: int) -> tuple[dict, HTTPStatus]:
+        """Get the languages of the report types using the attribute, and their AI providers.
+
+        Args:
+            attribute_id (int): The attribute ID
+        Returns:
+            (dict, HTTPStatus): languages, source_language and ai_providers
+        """
+        return attribute.Attribute.content_languages(attribute_id), HTTPStatus.OK
+
+
+# One request translates at most this many constants; the GUI asks again for the rest.
+CONSTANTS_PER_TRANSLATION = 100
+
+
+class AttributeEnumsTranslateResource(Resource):
+    """Translate an attribute's constants into a language with AI."""
+
+    @auth_required("CONFIG_ATTRIBUTE_UPDATE")
+    def post(self, attribute_id: int) -> tuple[dict, HTTPStatus]:
+        """Translate the constants that have no translation into ``language`` yet.
+
+        The body holds ``language``, ``ai_provider_id`` and optionally ``source_language``.
+        Constants are configuration, not report content, so no TLP limit applies.
+
+        Args:
+            attribute_id (int): The attribute ID
+        Returns:
+            (dict, HTTPStatus): translated, failed and remaining counts
+        """
+        body = request.json or {}
+        record = db.session.get(attribute.Attribute, attribute_id)
+        if record is None:
+            return {"error": "Attribute not found"}, HTTPStatus.NOT_FOUND
+        if record.type is None or record.type.name not in content_language.CONSTANT_TYPES:
+            return {"error": "Only radio, enumeration and multiple choice constants are translated"}, HTTPStatus.BAD_REQUEST
+        try:
+            target = content_language.clean_language(body.get("language"))
+            source = content_language.clean_language(body.get("source_language"))
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        if target is None:
+            return {"error": "language is required"}, HTTPStatus.BAD_REQUEST
+        provider = ai_provider.AiProvider.find(body.get("ai_provider_id")) if body.get("ai_provider_id") else None
+        if provider is None:
+            return {"error": "Choose an AI provider for translation"}, HTTPStatus.BAD_REQUEST
+
+        missing = [
+            enum for enum in attribute.AttributeEnum.for_attribute(attribute_id) if not (enum.translations or {}).get(target, {}).get("value")
+        ]
+        batch = missing[:CONSTANTS_PER_TRANSLATION]
+        texts = {f"{enum.id}.value": enum.value for enum in batch if enum.value}
+        texts.update({f"{enum.id}.description": enum.description for enum in batch if enum.description})
+        try:
+            translations, failed = llm_manager.translate_texts(provider, texts, source, target)
+        except llm_manager.LlmError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+        translated = 0
+        for enum in batch:
+            value = translations.get(f"{enum.id}.value")
+            if not value:
+                continue
+            variants = dict(enum.translations or {})
+            variants[target] = {"value": value, "description": translations.get(f"{enum.id}.description", "")}
+            enum.translations = content_language.clean_enum_translations(variants)
+            translated += 1
+        db.session.commit()
+        failed_constants = {key.split(".")[0] for key in failed}
+        return {
+            "translated": translated,
+            "failed": len(failed_constants),
+            "remaining": len(missing) - len(batch),
+        }, HTTPStatus.OK
+
+
 class AiProvidersResource(Resource):
     """AI models API endpoint."""
 
@@ -893,6 +973,10 @@ class ProductTypesResource(Resource):
         """
         try:
             product_type.ProductType.add_new(request.json)
+        except ValueError as ex:
+            # A language code or template override that is not valid.
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not create product type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -913,6 +997,10 @@ class ProductTypeResource(Resource):
         """
         try:
             product_type.ProductType.update(type_id, request.json)
+        except ValueError as ex:
+            # A language code or template override that is not valid; nothing is stored.
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update product type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2765,6 +2853,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(AttributeResource, "/api/v1/config/attributes/<int:attribute_id>")
     api.add_resource(AttributeEnumsResource, "/api/v1/config/attributes/<int:attribute_id>/enums")
     api.add_resource(AttributeEnumResource, "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>")
+    api.add_resource(AttributeEnumsTranslateResource, "/api/v1/config/attributes/<int:attribute_id>/enums/translate")
+    api.add_resource(AttributeLanguagesResource, "/api/v1/config/attributes/<int:attribute_id>/languages")
     api.add_resource(AiProvidersResource, "/api/v1/config/aiproviders")
     api.add_resource(AiProviderResource, "/api/v1/config/aiprovider/<int:ai_provider_id>")
     api.add_resource(AttributeExtractionRulesResource, "/api/v1/config/attribute-extraction-rules")

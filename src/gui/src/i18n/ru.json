@@ -847,6 +847,20 @@
             "confirm": "Добавить отчеты",
             "confirm_published": "Добавить и завершить",
             "untitled": "Отчет без названия"
+        },
+        "language": "Язык продукта",
+        "translate_titles": "Перевести название на все языки",
+        "title_not_translated": "Название не удалось перевести на некоторые языки",
+        "language_in_use": "У продукта уже есть перевод на этот язык",
+        "publish_in": "Опубликовать на языке",
+        "publish_in_language": "Публикация на языке: {language}",
+        "outdated_confirmation": "Устаревшие переводы",
+        "outdated_continue": "Всё равно продолжить",
+        "language_notice": {
+            "missing": "У этих отчётов нет перевода на язык «{language}»; для них используется английский или оригинал:",
+            "outdated": "Эти переводы на язык «{language}» устарели, потому что их оригинал изменился после перевода:",
+            "templates": "У типа продукта нет шаблонов для языка «{language}»; используются шаблоны: {used}.",
+            "default_templates": "по умолчанию"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Ссылка",
                 "collected": "Дата сбора",
                 "published": "Дата публикации"
-            }
+            },
+            "default_templates": "По умолчанию",
+            "add_language": "Добавить язык",
+            "remove_language": "Удалить язык «{language}»",
+            "language_templates_hint": "Шаблоны для языка «{language}». Пустое поле использует шаблон по умолчанию.",
+            "template_language": "Язык шаблонов",
+            "template_language_hint": "Язык, на котором написаны шаблоны по умолчанию"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Изменить константу",
             "value": "Значение",
             "error": "Не удалось создать атрибут",
-            "total_count": "Нет атрибутов | {count} атрибут | {count} атрибута | {count} атрибутов"
+            "total_count": "Нет атрибутов | {count} атрибут | {count} атрибута | {count} атрибутов",
+            "constant_translations": "Переводы",
+            "no_languages": "Ни у одного типа отчёта, использующего этот атрибут, нет других языков.",
+            "constants_in": "Константы на языке «{language}»",
+            "translated_value": "Значение на языке «{language}»",
+            "edit_translation": "Изменить перевод",
+            "translate_missing": "Перевести недостающие с помощью ИИ",
+            "translated_constants": "Переведено констант: {count}",
+            "translated_with_failures": "Переведено констант: {translated}; не переведено: {failed}"
         }
     },
     "external_user": {

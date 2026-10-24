@@ -168,6 +168,15 @@
 
                     <v-spacer />
 
+                    <ContentLanguageSelect
+                        :model-value="report_language"
+                        :label="t('report_item.translation.source_language')"
+                        :disabled="!canModify || readOnly"
+                        class="me-4"
+                        data-test="report-source-language"
+                        @update:model-value="changeSourceLanguage"
+                    />
+
                     <StateSelector
                         v-if="available_states.length > 0"
                         v-model="report_item.state_id"
@@ -198,14 +207,13 @@
                         :cols="verticalView ? 6 : 12"
                         style="height: 100%; overflow-y: auto"
                     >
-                        <!-- Languages: the report's own, and its report type's variants -->
+                        <!-- Languages: the report's own (chosen in the toolbar), and its report type's variants -->
                         <div
-                            v-if="edit"
+                            v-if="edit && variantLanguages.length > 0"
                             class="d-flex align-center flex-wrap ga-2 px-4 pt-2"
                             data-test="report-languages"
                         >
                             <v-tabs
-                                v-if="variantLanguages.length > 0"
                                 v-model="active_language"
                                 density="compact"
                                 data-test="report-language-tabs"
@@ -221,24 +229,8 @@
                                 </v-tab>
                             </v-tabs>
                             <v-spacer />
-                            <v-autocomplete
-                                :model-value="report_language"
-                                :items="languageOptions"
-                                item-title="txt"
-                                item-value="id"
-                                :label="t('report_item.translation.source_language')"
-                                :placeholder="t('report_item.translation.not_set')"
-                                persistent-placeholder
-                                density="compact"
-                                variant="outlined"
-                                hide-details
-                                style="max-width: 240px"
-                                :disabled="!canModify || readOnly"
-                                data-test="report-source-language"
-                                @update:model-value="changeSourceLanguage"
-                            />
                             <v-btn
-                                v-if="canTranslate && variantLanguages.length > 0"
+                                v-if="canTranslate"
                                 color="primary"
                                 variant="tonal"
                                 prepend-icon="mdi-translate"
@@ -564,6 +556,7 @@
     import type { TranslationStateValue } from '@/components/analyze/TranslationState.vue'
     import { useContentLanguages } from '@/composables/useContentLanguages'
     import StateSelector from '@/components/common/StateSelector.vue'
+    import ContentLanguageSelect from '@/components/common/ContentLanguageSelect.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { createLinkReferences, provideLinkReferences } from '@/composables/useLinkReferences'
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
@@ -613,7 +606,7 @@
     const settingsStore = useSettingsStore()
     const userStore = useUserStore()
     const { formatDateTime } = useLocaleFormatters()
-    const { languageOptions, languageName } = useContentLanguages()
+    const { languageName, defaultContentLanguage } = useContentLanguages()
 
     // Refs
     const formRef = ref<FormRef | null>(null)
@@ -867,7 +860,7 @@
 
         try {
             if (!report_item.id) {
-                const response = await createNewReportItem(report_item)
+                const response = await createNewReportItem({ ...report_item, language: report_language.value })
                 report_item.id = response.data
             }
 
@@ -1257,8 +1250,9 @@
     }
 
     // ---- languages ---------------------------------------------------------------------
+    // A new report: written in the user's default language unless they pick another one.
     const resetLanguages = () => {
-        report_language.value = null
+        report_language.value = defaultContentLanguage.value
         translations.value = {}
         active_language.value = 'source'
         report_locks.value = {}
@@ -1307,7 +1301,12 @@
     }
 
     const changeSourceLanguage = async (language: string | null) => {
-        if (!language || language === report_language.value || !report_item.id) return
+        if (!language || language === report_language.value) return
+        if (!report_item.id) {
+            // Not saved yet: the language goes with the new report.
+            report_language.value = language
+            return
+        }
         const previous = report_language.value
         report_language.value = language
         try {

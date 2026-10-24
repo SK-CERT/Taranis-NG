@@ -25,6 +25,8 @@ for _module in sorted((Path(__file__).parents[1] / "model").glob("*.py")):
 from model.attribute import Attribute  # noqa: E402 - after every mapper is registered
 from model.report_item import ReportItem, ReportItemAttribute  # noqa: E402
 from model.report_item_type import AttributeGroup, AttributeGroupItem, ReportItemType  # noqa: E402
+from model.setting import Setting  # noqa: E402
+from model.state import StateDefinition  # noqa: E402
 from model.translation import (  # noqa: E402
     ORIGIN_AI,
     ORIGIN_MANUAL,
@@ -426,6 +428,127 @@ def test_report_type_languages_must_be_language_codes() -> None:
     assert report_type.languages == ["cs", "en"]
     assert report_type.label_language is None
     assert report_type.translations == {"en": {"title": "T"}}
+
+
+def test_a_report_type_edit_loads_with_or_without_rendered_labels() -> None:
+    """Labels in a rendered language exist only in presenter input; an edit never stores them."""
+    from model.report_item_type import NewReportItemTypeSchema  # noqa: PLC0415 - next to the only test using it
+
+    payload = {
+        "id": 1,
+        "title": "Vulnerability",
+        "description": "",
+        "languages": ["cs", "en"],
+        "label_language": "en",
+        "translations": {"cs": {"title": "Zranitelnost"}},
+        "label": "ignored",
+        "attribute_groups": [
+            {
+                "id": 2,
+                "title": "Main",
+                "description": "",
+                "section": None,
+                "section_title": None,
+                "index": 0,
+                "section_label": "ignored",
+                "attribute_group_items": [
+                    {
+                        "id": 3,
+                        "title": "Description",
+                        "description": "",
+                        "index": 0,
+                        "min_occurrence": 0,
+                        "max_occurrence": 1,
+                        "attribute_id": 4,
+                        "ai_provider_id": None,
+                        "ai_prompt": None,
+                        "translate": True,
+                        "description_label": "ignored",
+                    },
+                ],
+            },
+        ],
+    }
+
+    report_type = NewReportItemTypeSchema().load(payload)
+    for key in ("label",):
+        payload.pop(key)
+    assert NewReportItemTypeSchema().load(payload).languages == ["cs", "en"]
+
+    item = report_type.attribute_groups[0].attribute_group_items[0]
+    assert (report_type.languages, report_type.label_language, item.translate) == (["cs", "en"], "en", True)
+    assert not hasattr(report_type, "label")
+
+
+def test_a_new_report_loads_without_presenter_only_fields() -> None:
+    """Creating a report goes through the shared schemas too; their presenter-only fields stay out."""
+    from model.report_item import NewReportItemSchema  # noqa: PLC0415 - next to the only test using it
+
+    report = NewReportItemSchema().load(
+        {
+            "id": None,
+            "uuid": None,
+            "title": "Kernel flaw",
+            "title_prefix": "VULN",
+            "report_item_type_id": None,
+            "state_id": None,
+            "news_item_aggregates": [],
+            "remote_report_items": [],
+            "attributes": [{"id": -1, "value": "x", "value_description": "", "attribute_group_item_id": 1, "value_label": "ignored"}],
+        },
+    )
+
+    assert report.attributes[0].value == "x"
+    assert not hasattr(report.attributes[0], "value_label")
+
+
+# ---- a new report's language ---------------------------------------------------------
+
+# What the report dialog sends for a new report.
+NEW_REPORT = {
+    "id": None,
+    "uuid": None,
+    "state_id": None,
+    "report_item_type_id": 9,
+    "title": "Kernel flaw",
+    "title_prefix": "",
+    "attributes": [],
+}
+
+
+@pytest.fixture
+def stored(monkeypatch: pytest.MonkeyPatch) -> list[ReportItem]:
+    """Reports created without a database, by an author whose default language is Czech."""
+    stored: list[ReportItem] = []
+    monkeypatch.setattr(ReportItemType, "allowed_with_acl", classmethod(lambda _cls, *_args, **_kwargs: True))
+    monkeypatch.setattr(StateDefinition, "get_initial_state", classmethod(lambda _cls, *_args: None))
+    monkeypatch.setattr(Setting, "get_setting", classmethod(lambda _cls, *_args: "cs"))
+    monkeypatch.setattr(ReportItem, "update_cpes", lambda _self: None)
+    monkeypatch.setattr(db.session, "add", stored.append)
+    return stored
+
+
+def test_a_new_report_is_written_in_the_language_picked_else_the_authors(stored: list[ReportItem]) -> None:
+    ReportItem.add_report_item({**NEW_REPORT, "language": "sk"}, USER)
+    ReportItem.add_report_item(NEW_REPORT, USER)
+
+    assert [report.language for report in stored] == ["sk", "cs"]
+
+
+def test_a_new_report_in_an_unknown_language_is_refused_before_anything_is_stored(app: Flask, stored: list[ReportItem]) -> None:
+    payload, status = _call(app, analyze_api.ReportItems(), "post", {**NEW_REPORT, "language": "cz"})
+
+    assert (payload, status) == ({"error": "Unknown language code: cz"}, HTTPStatus.BAD_REQUEST)
+    assert stored == []
+
+
+def test_a_new_report_of_a_type_without_access_says_so(app: Flask, stored: list[ReportItem], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(ReportItemType, "allowed_with_acl", classmethod(lambda _cls, *_args, **_kwargs: False))
+
+    payload, status = _call(app, analyze_api.ReportItems(), "post", NEW_REPORT)
+
+    assert (payload, status) == ({"error": "Unauthorized access to report item type"}, HTTPStatus.UNAUTHORIZED)
+    assert stored == []
 
 
 @pytest.mark.parametrize(

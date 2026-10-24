@@ -847,6 +847,20 @@
             "confirm": "Add Reports",
             "confirm_published": "Add and Complete",
             "untitled": "Untitled report"
+        },
+        "language": "Language of the product",
+        "translate_titles": "Translate the title into all languages",
+        "title_not_translated": "The title could not be translated into some languages",
+        "language_in_use": "The product already has a translation into that language",
+        "publish_in": "Publish in",
+        "publish_in_language": "Published in: {language}",
+        "outdated_confirmation": "Outdated translations",
+        "outdated_continue": "Continue anyway",
+        "language_notice": {
+            "missing": "These reports have no translation into {language}; English or the original is used for them:",
+            "outdated": "These translations into {language} are outdated, because their original changed after they were translated:",
+            "templates": "The product type has no templates for {language}; the {used} templates are used.",
+            "default_templates": "default"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Link",
                 "collected": "Collected Date",
                 "published": "Published Date"
-            }
+            },
+            "default_templates": "Default",
+            "add_language": "Add language",
+            "remove_language": "Remove {language}",
+            "language_templates_hint": "Templates used for {language}. An empty field uses the default template.",
+            "template_language": "Language of the templates",
+            "template_language_hint": "The language the default templates are written in"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Edit Constant",
             "value": "Value",
             "error": "Could not create this attribute",
-            "total_count": "{count} attribute | {count} attributes"
+            "total_count": "{count} attribute | {count} attributes",
+            "constant_translations": "Translations",
+            "no_languages": "No report type that uses this attribute has other languages.",
+            "constants_in": "Constants in {language}",
+            "translated_value": "Value in {language}",
+            "edit_translation": "Edit translation",
+            "translate_missing": "Translate missing with AI",
+            "translated_constants": "Constants translated: {count}",
+            "translated_with_failures": "Constants translated: {translated}; not translated: {failed}"
         }
     },
     "external_user": {

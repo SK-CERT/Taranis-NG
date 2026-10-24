@@ -34,6 +34,19 @@ export function updateAttributeEnum(attribute_id, enum_id, data) {
     return ApiService.put('/config/attributes/' + attribute_id + '/enums/' + enum_id, data)
 }
 
+// The languages an attribute's constants are translated into: those of the report types using it.
+export function getAttributeLanguages(attribute_id: number) {
+    return ApiService.get('/config/attributes/' + attribute_id + '/languages')
+}
+
+// Translates up to a batch of constants still missing `language`; `remaining` says how many are left.
+export function translateAttributeEnums(
+    attribute_id: number,
+    data: { language: string; ai_provider_id: number; source_language: string | null }
+) {
+    return ApiService.post('/config/attributes/' + attribute_id + '/enums/translate', data)
+}
+
 export function deleteAttributeEnum(attribute_id, attribute_enum_id) {
     return ApiService.delete('/config/attributes/' + attribute_id + '/enums/' + attribute_enum_id)
 }

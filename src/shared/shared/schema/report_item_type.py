@@ -25,6 +25,9 @@ class AttributeGroupItemSchema(Schema):
     ai_prompt = fields.Str(allow_none=True)
     translate = fields.Bool(load_default=False)
     translations = fields.Dict(keys=fields.Str(), values=fields.Dict(keys=fields.Str(), values=fields.Str()), load_default=dict)
+    # The labels in the language rendered (presenter input only); title and description stay as written.
+    label = fields.Str(load_default=None, allow_none=True)
+    description_label = fields.Str(load_default=None, allow_none=True)
 
     @post_load
     def make_attribute_group_item(self, data, **kwargs):
@@ -55,6 +58,8 @@ class AttributeGroupItem:
         ai_prompt,
         translate=False,
         translations=None,
+        label=None,
+        description_label=None,
     ):
         """Initialize an AttributeGroupItem instance.
 
@@ -84,6 +89,8 @@ class AttributeGroupItem:
         self.ai_prompt = ai_prompt
         self.translate = translate
         self.translations = translations or {}
+        self.label = label
+        self.description_label = description_label
 
 
 class AttributeGroupBaseSchema(Schema):
@@ -101,6 +108,10 @@ class AttributeGroupBaseSchema(Schema):
     section_title = fields.Str(allow_none=True)
     index = fields.Int()
     translations = fields.Dict(keys=fields.Str(), values=fields.Dict(keys=fields.Str(), values=fields.Str()), load_default=dict)
+    # The labels in the language rendered (presenter input only).
+    label = fields.Str(load_default=None, allow_none=True)
+    description_label = fields.Str(load_default=None, allow_none=True)
+    section_label = fields.Str(load_default=None, allow_none=True)
 
     @post_load
     def make_attribute_group(self, data, **kwargs):
@@ -134,6 +145,9 @@ class AttributeGroup:
         index,
         attribute_group_items,
         translations=None,
+        label=None,
+        description_label=None,
+        section_label=None,
     ):
         """Initialize an AttributeGroup instance.
 
@@ -158,6 +172,9 @@ class AttributeGroup:
         self.index = index
         self.attribute_group_items = attribute_group_items
         self.translations = translations or {}
+        self.label = label
+        self.description_label = description_label
+        self.section_label = section_label
 
 
 class ReportItemTypeBaseSchema(Schema):
@@ -175,6 +192,9 @@ class ReportItemTypeBaseSchema(Schema):
     translation_ai_provider_id = fields.Int(allow_none=True, load_default=None)
     label_language = fields.Str(allow_none=True, load_default=None)
     translations = fields.Dict(keys=fields.Str(), values=fields.Dict(keys=fields.Str(), values=fields.Str()), load_default=dict)
+    # The labels in the language rendered (presenter input only).
+    label = fields.Str(load_default=None, allow_none=True)
+    description_label = fields.Str(load_default=None, allow_none=True)
 
 
 class ReportItemTypeSchema(ReportItemTypeBaseSchema):
@@ -212,6 +232,8 @@ class ReportItemType:
         translation_ai_provider_id=None,
         label_language=None,
         translations=None,
+        label=None,
+        description_label=None,
     ):
         """Initialize a ReportItemType instance.
 
@@ -235,6 +257,8 @@ class ReportItemType:
         self.translation_ai_provider_id = translation_ai_provider_id
         self.label_language = label_language
         self.translations = translations or {}
+        self.label = label
+        self.description_label = description_label
 
 
 class ReportItemTypeIdSchema(Schema):

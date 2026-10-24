@@ -118,3 +118,20 @@ describe('CardProduct locale-safe composition', () => {
         expect(wrapper.find('.product-card__report-count').exists()).toBe(false)
     })
 })
+
+describe('CardProduct title in the GUI language', () => {
+    it('shows the translation into the GUI language, else English, else its own', () => {
+        const translated = mountCard({
+            title: 'Bulletin',
+            language: 'cs',
+            title_translations: { de: { title: 'Wochenbericht' }, en: { title: 'Weekly bulletin' } }
+        })
+        expect(translated.text()).toContain('Wochenbericht')
+
+        const english = mountCard({ title: 'Bulletin', language: 'cs', title_translations: { en: { title: 'Weekly bulletin' } } })
+        expect(english.text()).toContain('Weekly bulletin')
+
+        const own = mountCard({ title: 'Bulletin', language: 'cs', title_translations: {} })
+        expect(own.text()).toContain('Bulletin')
+    })
+})

@@ -83,11 +83,17 @@ class ReportItems(Resource):
             new_report_item.id (int): new report item ID
             status (int): status code
         """
-        new_report_item, status = ReportItem.add_report_item(request.json, auth_manager.get_user_from_jwt())
-        if status == HTTPStatus.OK:
-            asset_manager.report_item_changed(new_report_item)
-            sse_manager.remote_access_report_items_updated(new_report_item.report_item_type_id)
-            sse_manager.report_items_updated()
+        try:
+            new_report_item, status = ReportItem.add_report_item(request.json, auth_manager.get_user_from_jwt())
+        except ValueError as ex:
+            # A language that is not a language code; nothing was stored.
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        if status != HTTPStatus.OK:
+            # The reason, e.g. no access to the report type.
+            return {"error": new_report_item}, status
+        asset_manager.report_item_changed(new_report_item)
+        sse_manager.remote_access_report_items_updated(new_report_item.report_item_type_id)
+        sse_manager.report_items_updated()
 
         return new_report_item.id, status
 

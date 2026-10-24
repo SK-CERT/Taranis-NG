@@ -17,6 +17,7 @@ const mockSettingsStore = {
     getSettings: [
         {
             key: 'CONTENT_DEFAULT_LANGUAGE',
+            value: 'cs',
             options: JSON.stringify([
                 { id: 'cs', txt: 'Czech' },
                 { id: 'en', txt: 'English' }
@@ -122,6 +123,33 @@ describe('NewReportItem languages', () => {
         vi.clearAllMocks()
         mockAnalyzeStore.getReportItemTypes = { items: [reportType] }
         mockAnalyzeStore.loadReportItemTypes.mockResolvedValue({})
+    })
+
+    it('starts a new report in the users default language and creates it in the one picked', async () => {
+        const analyzeApi = await import('@/api/analyze')
+        vi.mocked(analyzeApi.createNewReportItem).mockResolvedValue({ data: 8 })
+        const wrapper = mountWithPlugins(NewReportItem, {
+            props: { showButton: false },
+            global: { stubs: { VDialog: VDialogStub, VOverlay: VOverlayStub } }
+        })
+        await flushPromises()
+        wrapper.vm.openDialog([])
+        await flushPromises()
+
+        const select = wrapper.findComponent('[data-test="report-source-language"]')
+        expect(select.props('modelValue')).toBe('cs')
+
+        select.vm.$emit('update:modelValue', 'en')
+        await flushPromises()
+        // Nothing to update yet: the language goes with the new report.
+        expect(analyzeApi.updateReportItem).not.toHaveBeenCalled()
+
+        wrapper.vm.selected_type = reportType
+        wrapper.vm.report_item.title = 'Kernel flaw'
+        await flushPromises()
+        await wrapper.vm.addReportItem()
+
+        expect(analyzeApi.createNewReportItem).toHaveBeenCalledWith(expect.objectContaining({ title: 'Kernel flaw', language: 'en' }))
     })
 
     it('offers a tab for each language of the type besides the report language', async () => {

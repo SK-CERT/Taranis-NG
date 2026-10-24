@@ -847,6 +847,20 @@
             "confirm": "เพิ่มรายงาน",
             "confirm_published": "เพิ่มและทำให้เสร็จ",
             "untitled": "รายงานไม่มีชื่อ"
+        },
+        "language": "ภาษาของผลิตภัณฑ์",
+        "translate_titles": "แปลชื่อเป็นทุกภาษา",
+        "title_not_translated": "แปลชื่อเป็นบางภาษาไม่ได้",
+        "language_in_use": "ผลิตภัณฑ์มีคำแปลเป็นภาษานั้นอยู่แล้ว",
+        "publish_in": "เผยแพร่เป็นภาษา",
+        "publish_in_language": "เผยแพร่เป็นภาษา: {language}",
+        "outdated_confirmation": "คำแปลที่ล้าสมัย",
+        "outdated_continue": "ดำเนินการต่อ",
+        "language_notice": {
+            "missing": "รายงานเหล่านี้ไม่มีคำแปลเป็น{language} จึงใช้ภาษาอังกฤษหรือต้นฉบับ:",
+            "outdated": "คำแปลเป็น{language}เหล่านี้ล้าสมัย เพราะต้นฉบับเปลี่ยนหลังจากแปลแล้ว:",
+            "templates": "ประเภทผลิตภัณฑ์ไม่มีเทมเพลตสำหรับ{language} จึงใช้เทมเพลต{used}",
+            "default_templates": "เริ่มต้น"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "ลิงก์",
                 "collected": "วันที่รวบรวม",
                 "published": "วันที่เผยแพร่"
-            }
+            },
+            "default_templates": "ค่าเริ่มต้น",
+            "add_language": "เพิ่มภาษา",
+            "remove_language": "นำ{language}ออก",
+            "language_templates_hint": "เทมเพลตที่ใช้สำหรับ{language} ฟิลด์ที่ว่างจะใช้เทมเพลตเริ่มต้น",
+            "template_language": "ภาษาของเทมเพลต",
+            "template_language_hint": "ภาษาที่ใช้เขียนเทมเพลตเริ่มต้น"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "แก้ไขค่าคงที่",
             "value": "ค่า",
             "error": "ไม่สามารถบันทึกแอตทริบิวต์",
-            "total_count": "ไม่มีแอตทริบิวต์ | แอตทริบิวต์ {count} รายการ | แอตทริบิวต์ {count} รายการ"
+            "total_count": "ไม่มีแอตทริบิวต์ | แอตทริบิวต์ {count} รายการ | แอตทริบิวต์ {count} รายการ",
+            "constant_translations": "คำแปล",
+            "no_languages": "ไม่มีประเภทรายงานที่ใช้แอตทริบิวต์นี้ที่มีภาษาอื่น",
+            "constants_in": "ค่าคงที่ใน{language}",
+            "translated_value": "ค่าใน{language}",
+            "edit_translation": "แก้ไขคำแปล",
+            "translate_missing": "แปลส่วนที่ขาดด้วย AI",
+            "translated_constants": "ค่าคงที่ที่แปลแล้ว: {count}",
+            "translated_with_failures": "ค่าคงที่ที่แปลแล้ว: {translated}; ไม่ได้แปล: {failed}"
         }
     },
     "external_user": {

@@ -847,6 +847,20 @@
             "confirm": "ja'ghachmey yIchel",
             "confirm_published": "yIchel 'ej yIrInmoH",
             "untitled": "ja'ghach per Hutlhbogh"
+        },
+        "language": "Doch Hol",
+        "translate_titles": "Hoch Holmey pong yImugh",
+        "title_not_translated": "'op Holmey pong vImughlaHbe'",
+        "language_in_use": "Holvam mugh ghaj Dochvam",
+        "publish_in": "Holvam yIchenmoH",
+        "publish_in_language": "chenmoHlu'bogh Hol: {language}",
+        "outdated_confirmation": "mughmey ngo'",
+        "outdated_continue": "yItaH",
+        "language_notice": {
+            "missing": "{language} mugh ghajbe' ja'ghachmeyvam; DIvI' Hol pagh wa'DIch ghItlh lo'lu':",
+            "outdated": "{language} mughmeyvam ngo', mughlu'DI' wa'DIch ghItlh choHlu'mo':",
+            "templates": "{language} meghmey ghajbe' Doch Segh; {used} meghmey lo'lu'.",
+            "default_templates": "motlh"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "rarwI'",
                 "collected": "boSghach jaj",
                 "published": "'angghach jaj"
-            }
+            },
+            "default_templates": "motlh",
+            "add_language": "Hol yIchel",
+            "remove_language": "{language} yIteq",
+            "language_templates_hint": "{language} Hol ghItlhmeH meghmey. 'ay' chImbogh motlh megh lo'.",
+            "template_language": "meghmey Hol",
+            "template_language_hint": "motlh meghmey ghItlhmeH Hol"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "choHbe'wI' yIchoH",
             "value": "lo'laHghach",
             "error": "ngoDvam vIchenmoHlaHbe'",
-            "total_count": "pagh ngoD | {count} ngoD | {count} ngoD"
+            "total_count": "pagh ngoD | {count} ngoD | {count} ngoD",
+            "constant_translations": "mughmey",
+            "no_languages": "latlh Holmey ghajbe' ngoDvam lo'bogh ja'ghach Segh.",
+            "constants_in": "{language} Hol ngoDmey",
+            "translated_value": "{language} Hol lo'laHghach",
+            "edit_translation": "mugh yIchoH",
+            "translate_missing": "Dachbogh yImugh De'wI' valvaD",
+            "translated_constants": "mughlu'pu'bogh ngoDmey: {count}",
+            "translated_with_failures": "mughlu'pu'bogh ngoDmey: {translated}; mughlu'be'bogh: {failed}"
         }
     },
     "external_user": {

@@ -11,18 +11,21 @@ if TYPE_CHECKING:
 from datetime import datetime, timedelta
 
 import sqlalchemy
+from managers import content_language
 from managers.db_manager import db
 from managers.link_references import normalize_links
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.public_web import PublicWeb
 from model.report_item import ReportItem
+from model.setting import Setting
 from model.state import (
     StateDefinition,
     StateEntityTypeEnum,
     StateEnum,
     StateManager,
 )
+from model.translation import ORIGIN_AI, ORIGIN_MANUAL, ProductTranslation
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -41,6 +44,8 @@ class NewProductSchema(ProductSchemaBase):
     """
 
     report_items = fields.Nested(ReportItemIdSchema, many=True)
+    # Translated titles, {language: {"title": ..., "origin": "ai" | "manual"}}; saved with the product.
+    translations = fields.Dict(load_default=None, allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> Product:  # noqa: ARG002, ANN003
@@ -71,6 +76,8 @@ class Product(db.Model):
         report_items: List of report items
         links: The product's own sources ([{"key", "url"}]) in citation order; the description
             cites them by key (see managers.link_references)
+        language: The language the product is written in (ISO 639-1); None while not set
+        title_translation_rows: Its title translated into other languages
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -78,6 +85,8 @@ class Product(db.Model):
     description = db.Column(db.String())
     # JSONB, not JSON: product queries use SELECT DISTINCT, and Postgres has no equality for json.
     links = db.Column(JSONB, nullable=False, default=list, server_default=sqlalchemy.text("'[]'"))
+
+    language = db.Column(db.String(8), nullable=True)
 
     created = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now)
@@ -95,6 +104,13 @@ class Product(db.Model):
     report_items = db.relationship("ReportItem", secondary="product_report_item")
     public_webs = db.relationship(PublicWeb, secondary="product_public_web")
 
+    title_translation_rows = db.relationship(
+        ProductTranslation,
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+
     def __init__(
         self,
         id: int,
@@ -105,8 +121,14 @@ class Product(db.Model):
         report_items: list[ReportItem],
         public_web_ids: list[int] | None = None,
         links: list[dict] | None = None,
+        language: str | None = None,
+        translations: dict | None = None,
     ) -> None:
-        """Initialize a product."""
+        """Initialize a product.
+
+        Raises:
+            ValueError: If the language is not an ISO 639-1 code.
+        """
         if id != -1:
             self.id = id
         else:
@@ -115,6 +137,9 @@ class Product(db.Model):
         self.title = title
         self.description = description
         self.links = normalize_links(links)
+        self.language = content_language.clean_language(language)
+        # Applied by add_product / update_product, which know who wrote them.
+        self.submitted_translations = translations
         self.product_type_id = product_type_id
         self.state_id = state_id
         self.subtitle = ""
@@ -136,6 +161,65 @@ class Product(db.Model):
         """Reconstruct a product."""
         self.subtitle = self.description
         self.tag = "mdi-file-pdf-outline"
+        self.submitted_translations = None
+
+    @property
+    def translations(self) -> dict[str, dict]:
+        """Translated titles for the edit form.
+
+        Returns:
+            dict[str, dict]: ``{language: {"title": state}}``, each state holding value, origin,
+                version, outdated, user and last_updated.
+        """
+        return {row.language: {row.field: row.to_dict(self.title)} for row in self.title_translation_rows}
+
+    @property
+    def title_translations(self) -> dict[str, dict[str, str]]:
+        """Translated titles per language, for lists that show the GUI's language.
+
+        Returns:
+            dict[str, dict[str, str]]: ``{language: {"title": ...}}``.
+        """
+        return {row.language: {"title": row.value} for row in self.title_translation_rows if row.value}
+
+    def apply_translations(self, translations: dict | None, user_id: int | None) -> None:
+        """Store the submitted translated titles; a language left out or emptied is removed.
+
+        Args:
+            translations (dict | None): ``{language: {"title": ..., "origin": ...}}``; None keeps them.
+            user_id (int | None): Who saves them.
+
+        Raises:
+            ValueError: If a language is not an ISO 639-1 code or is the product's own.
+        """
+        if translations is None:
+            return
+        if not isinstance(translations, dict):
+            msg = "Product translations must map languages to titles"
+            raise ValueError(msg)  # noqa: TRY004 - callers report ValueError as a bad request
+        wanted: dict[str, tuple[str, str]] = {}
+        for code, entry in translations.items():
+            language = content_language.clean_language(code)
+            title = (entry or {}).get("title") if isinstance(entry, dict) else None
+            if language is None or not isinstance(title, str) or not title.strip():
+                continue
+            if language == self.language:
+                msg = f"The product is written in {content_language.language_name(language)}; it cannot also be translated into it"
+                raise ValueError(msg)
+            origin = ORIGIN_AI if (entry or {}).get("origin") == ORIGIN_AI else ORIGIN_MANUAL
+            wanted[language] = (title.strip(), origin)
+
+        for row in list(self.title_translation_rows):
+            if row.language not in wanted:
+                self.title_translation_rows.remove(row)
+        for language, (title, origin) in wanted.items():
+            row = next((row for row in self.title_translation_rows if row.language == language), None)
+            if row is None:
+                row = ProductTranslation(language=language, field="title", value="", version=0)
+                self.title_translation_rows.append(row)
+            # An unchanged title keeps its source fingerprint, so it still shows as outdated.
+            if row.value != title or row.origin != origin or not row.version:
+                row.write(title, self.title, origin, user_id)
 
     @classmethod
     def count_by_states(cls) -> dict:
@@ -249,7 +333,16 @@ class Product(db.Model):
 
         if "search" in filter and filter["search"] != "":
             search_string = "%" + filter["search"] + "%"
-            query = query.filter(or_(Product.title.ilike(search_string), Product.description.ilike(search_string)))
+            query = query.filter(
+                or_(
+                    Product.title.ilike(search_string),
+                    Product.description.ilike(search_string),
+                    # A product is found by its title in any language.
+                    sqlalchemy.exists().where(
+                        and_(ProductTranslation.product_id == Product.id, ProductTranslation.value.ilike(search_string)),
+                    ),
+                ),
+            )
 
         if "published" in filter:
             published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
@@ -466,6 +559,9 @@ class Product(db.Model):
 
         product.user_id = user.id
         product.updated_by = user.name
+        if product.language is None:
+            product.language = cls._author_language(user)
+        product.apply_translations(product.submitted_translations, user.id)
         db.session.add(product)
         db.session.commit()
 
@@ -496,6 +592,13 @@ class Product(db.Model):
         existing_report_item_ids = {ri.id for ri in original_product.report_items} if original_product.report_items else set()
         original_product.title = product.title
         original_product.description = product.description
+        if product.language is not None and product.language != original_product.language:
+            translated = {row.language for row in original_product.title_translation_rows}
+            if product.submitted_translations is None and product.language in translated:
+                msg = f"The product is already translated into {content_language.language_name(product.language)}"
+                raise ValueError(msg)
+            original_product.language = product.language
+        original_product.apply_translations(product.submitted_translations, user.id if user else None)
         original_product.links = product.links
         original_product.product_type_id = product.product_type_id
         original_product.state_id = product.state_id
@@ -517,6 +620,21 @@ class Product(db.Model):
             cls._auto_complete_added_reports(product.state_id, user, added_report_item_ids)
         if user and old_state_id != product.state_id:
             cls._auto_complete_reports_on_publish(product_id, product.state_id, user)
+
+    @staticmethod
+    def _author_language(user: User) -> str | None:
+        """The language a new product of ``user`` is written in: their content language setting.
+
+        Args:
+            user (User): The author.
+
+        Returns:
+            str | None: ISO 639-1 code, or None when the setting holds no valid code.
+        """
+        try:
+            return content_language.clean_language(Setting.get_setting(user, "CONTENT_DEFAULT_LANGUAGE", ""))
+        except ValueError:
+            return None
 
     @classmethod
     def delete(cls, id: int) -> None:

@@ -847,6 +847,20 @@
             "confirm": "添加报告",
             "confirm_published": "添加并完成",
             "untitled": "无标题报告"
+        },
+        "language": "产品的语言",
+        "translate_titles": "将标题翻译为所有语言",
+        "title_not_translated": "部分语言的标题未能翻译",
+        "language_in_use": "该产品已有这种语言的译文",
+        "publish_in": "发布语言",
+        "publish_in_language": "发布语言：{language}",
+        "outdated_confirmation": "过时的译文",
+        "outdated_continue": "仍然继续",
+        "language_notice": {
+            "missing": "这些报告没有{language}译文，将使用英文或原文：",
+            "outdated": "这些{language}译文已过时，因为翻译后原文已更改：",
+            "templates": "该产品类型没有{language}模板，将使用{used}模板。",
+            "default_templates": "默认"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "链接",
                 "collected": "采集日期",
                 "published": "发布日期"
-            }
+            },
+            "default_templates": "默认",
+            "add_language": "添加语言",
+            "remove_language": "移除{language}",
+            "language_templates_hint": "用于{language}的模板。留空的字段使用默认模板。",
+            "template_language": "模板的语言",
+            "template_language_hint": "默认模板所用的语言"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "编辑常量",
             "value": "值",
             "error": "无法保存属性",
-            "total_count": "{count} 个属性 | {count} 个属性"
+            "total_count": "{count} 个属性 | {count} 个属性",
+            "constant_translations": "译文",
+            "no_languages": "使用此属性的报告类型都没有其他语言。",
+            "constants_in": "{language}常量",
+            "translated_value": "{language}的值",
+            "edit_translation": "编辑译文",
+            "translate_missing": "用 AI 翻译缺失的",
+            "translated_constants": "已翻译的常量：{count}",
+            "translated_with_failures": "已翻译的常量：{translated}；未翻译：{failed}"
         }
     },
     "external_user": {

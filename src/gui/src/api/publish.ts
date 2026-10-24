@@ -74,21 +74,39 @@ export function deleteProduct(product) {
     return ApiService.delete('/publish/products/' + product.id)
 }
 
-export function publishProduct(product: unknown, publisher_ids: Array<number | string>) {
+// `language` is the one the product is rendered in (the tab chosen in the publish dialog).
+export function publishProduct(product: unknown, publisher_ids: Array<number | string>, language: string | null = null) {
     return ApiService.post('/publish/products/publish', {
         product,
-        publisher_ids
+        publisher_ids,
+        language
     })
+}
+
+// Translates a title without storing it; it is saved with the product.
+export function translateProductTitle(data: {
+    title: string
+    source_language: string | null
+    languages: string[]
+    report_item_ids: Array<number | string>
+}) {
+    return ApiService.post('/publish/products/translate-title', data)
+}
+
+// What rendering in `language` falls back on: reports missing it, outdated translations, templates.
+export function checkProductLanguage(product: unknown, language: string | null) {
+    return ApiService.post('/publish/products/language-check', { product, language })
 }
 
 export function getPublishPublicWebs() {
     return ApiService.get('/publish/public-webs')
 }
 
-export function previewProduct(data, ctrl_key, jwt) {
+export function previewProduct(data, ctrl_key, jwt, language: string | null = null) {
     return ApiService.post('/publish/products/preview-ticket', {
         product: data,
         ctrl: ctrl_key,
-        jwt
+        jwt,
+        language
     })
 }

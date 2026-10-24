@@ -847,6 +847,20 @@
             "confirm": "रिपोर्टें जोड़ें",
             "confirm_published": "जोड़ें और पूर्ण करें",
             "untitled": "शीर्षकहीन रिपोर्ट"
+        },
+        "language": "उत्पाद की भाषा",
+        "translate_titles": "शीर्षक का सभी भाषाओं में अनुवाद करें",
+        "title_not_translated": "शीर्षक का कुछ भाषाओं में अनुवाद नहीं हो सका",
+        "language_in_use": "उत्पाद में इस भाषा का अनुवाद पहले से है",
+        "publish_in": "इस भाषा में प्रकाशित करें",
+        "publish_in_language": "प्रकाशन की भाषा: {language}",
+        "outdated_confirmation": "पुराने अनुवाद",
+        "outdated_continue": "फिर भी जारी रखें",
+        "language_notice": {
+            "missing": "इन रिपोर्टों का {language} में अनुवाद नहीं है; इनके लिए अंग्रेज़ी या मूल पाठ उपयोग होता है:",
+            "outdated": "{language} के ये अनुवाद पुराने हैं, क्योंकि अनुवाद के बाद इनका मूल पाठ बदल गया:",
+            "templates": "उत्पाद प्रकार में {language} के लिए टेम्पलेट नहीं हैं; {used} टेम्पलेट उपयोग होते हैं।",
+            "default_templates": "डिफ़ॉल्ट"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "लिंक",
                 "collected": "संग्रह तिथि",
                 "published": "प्रकाशन तिथि"
-            }
+            },
+            "default_templates": "डिफ़ॉल्ट",
+            "add_language": "भाषा जोड़ें",
+            "remove_language": "{language} हटाएँ",
+            "language_templates_hint": "{language} के लिए टेम्पलेट। खाली फ़ील्ड डिफ़ॉल्ट टेम्पलेट का उपयोग करता है।",
+            "template_language": "टेम्पलेट की भाषा",
+            "template_language_hint": "वह भाषा जिसमें डिफ़ॉल्ट टेम्पलेट लिखे गए हैं"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "स्थिरांक संपादित करें",
             "value": "मान",
             "error": "विशेषता सहेजा नहीं जा सका",
-            "total_count": "{count} विशेषता | {count} विशेषताएँ"
+            "total_count": "{count} विशेषता | {count} विशेषताएँ",
+            "constant_translations": "अनुवाद",
+            "no_languages": "इस विशेषता का उपयोग करने वाले किसी रिपोर्ट प्रकार में अन्य भाषाएँ नहीं हैं।",
+            "constants_in": "{language} में स्थिरांक",
+            "translated_value": "{language} में मान",
+            "edit_translation": "अनुवाद संपादित करें",
+            "translate_missing": "छूटे हुए का एआई से अनुवाद करें",
+            "translated_constants": "अनूदित स्थिरांक: {count}",
+            "translated_with_failures": "अनूदित स्थिरांक: {translated}; अनूदित नहीं: {failed}"
         }
     },
     "external_user": {

@@ -847,6 +847,20 @@
             "confirm": "Aggiungi rapporti",
             "confirm_published": "Aggiungi e completa",
             "untitled": "Rapporto senza titolo"
+        },
+        "language": "Lingua del prodotto",
+        "translate_titles": "Traduci il titolo in tutte le lingue",
+        "title_not_translated": "Non è stato possibile tradurre il titolo in alcune lingue",
+        "language_in_use": "Il prodotto ha già una traduzione in questa lingua",
+        "publish_in": "Pubblica in",
+        "publish_in_language": "Pubblicato in: {language}",
+        "outdated_confirmation": "Traduzioni non aggiornate",
+        "outdated_continue": "Continua comunque",
+        "language_notice": {
+            "missing": "Questi report non hanno una traduzione in {language}; si usa l'inglese o il testo originale:",
+            "outdated": "Queste traduzioni in {language} non sono aggiornate, perché il loro testo originale è cambiato dopo la traduzione:",
+            "templates": "Il tipo di prodotto non ha modelli per {language}; si usano i modelli: {used}.",
+            "default_templates": "predefiniti"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Collegamento",
                 "collected": "Data di raccolta",
                 "published": "Data di pubblicazione"
-            }
+            },
+            "default_templates": "Predefinito",
+            "add_language": "Aggiungi lingua",
+            "remove_language": "Rimuovi {language}",
+            "language_templates_hint": "Modelli usati per {language}. Un campo vuoto usa il modello predefinito.",
+            "template_language": "Lingua dei modelli",
+            "template_language_hint": "La lingua in cui sono scritti i modelli predefiniti"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Modifica costante",
             "value": "Valore",
             "error": "Impossibile creare questo attributo",
-            "total_count": "{count} attributo | {count} attributi"
+            "total_count": "{count} attributo | {count} attributi",
+            "constant_translations": "Traduzioni",
+            "no_languages": "Nessun tipo di report che usa questo attributo ha altre lingue.",
+            "constants_in": "Costanti in {language}",
+            "translated_value": "Valore in {language}",
+            "edit_translation": "Modifica traduzione",
+            "translate_missing": "Traduci con l'IA quelle mancanti",
+            "translated_constants": "Costanti tradotte: {count}",
+            "translated_with_failures": "Costanti tradotte: {translated}; non tradotte: {failed}"
         }
     },
     "external_user": {

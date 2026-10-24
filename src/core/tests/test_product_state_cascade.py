@@ -54,6 +54,9 @@ def _create(monkeypatch: pytest.MonkeyPatch, state_id: int) -> None:
     new_product = types.SimpleNamespace(
         state_id=state_id,
         report_items=[types.SimpleNamespace(id=3193), types.SimpleNamespace(id=3194)],
+        language="en",
+        submitted_translations=None,
+        apply_translations=lambda _translations, _user_id: None,
     )
     monkeypatch.setattr(product_module, "NewProductSchema", lambda: types.SimpleNamespace(load=lambda _data: new_product))
     Product.add_product({}, types.SimpleNamespace(id=1, name="Analyst"))

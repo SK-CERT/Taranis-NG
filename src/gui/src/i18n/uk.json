@@ -847,6 +847,20 @@
             "confirm": "Додати звіти",
             "confirm_published": "Додати й завершити",
             "untitled": "Звіт без назви"
+        },
+        "language": "Мова продукту",
+        "translate_titles": "Перекласти назву всіма мовами",
+        "title_not_translated": "Назву не вдалося перекласти деякими мовами",
+        "language_in_use": "Продукт уже має переклад цією мовою",
+        "publish_in": "Опублікувати мовою",
+        "publish_in_language": "Публікація мовою: {language}",
+        "outdated_confirmation": "Застарілі переклади",
+        "outdated_continue": "Однаково продовжити",
+        "language_notice": {
+            "missing": "Ці звіти не мають перекладу мовою «{language}»; для них використовується англійська або оригінал:",
+            "outdated": "Ці переклади мовою «{language}» застаріли, бо їхній оригінал змінився після перекладу:",
+            "templates": "Тип продукту не має шаблонів для мови «{language}»; використовуються шаблони: {used}.",
+            "default_templates": "типові"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Посилання",
                 "collected": "Дата збирання",
                 "published": "Дата публікації"
-            }
+            },
+            "default_templates": "Типово",
+            "add_language": "Додати мову",
+            "remove_language": "Вилучити мову «{language}»",
+            "language_templates_hint": "Шаблони для мови «{language}». Порожнє поле використовує типовий шаблон.",
+            "template_language": "Мова шаблонів",
+            "template_language_hint": "Мова, якою написано типові шаблони"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Редагувати константу",
             "value": "Значення",
             "error": "Не вдалося створити атрибут",
-            "total_count": "Немає атрибутів | {count} атрибут | {count} атрибути | {count} атрибутів"
+            "total_count": "Немає атрибутів | {count} атрибут | {count} атрибути | {count} атрибутів",
+            "constant_translations": "Переклади",
+            "no_languages": "Жоден тип звіту, що використовує цей атрибут, не має інших мов.",
+            "constants_in": "Константи мовою «{language}»",
+            "translated_value": "Значення мовою «{language}»",
+            "edit_translation": "Редагувати переклад",
+            "translate_missing": "Перекласти відсутні за допомогою ШІ",
+            "translated_constants": "Перекладено констант: {count}",
+            "translated_with_failures": "Перекладено констант: {translated}; не перекладено: {failed}"
         }
     },
     "external_user": {

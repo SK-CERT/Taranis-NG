@@ -45,7 +45,7 @@
                         </div>
 
                         <h2 class="product-card__title">
-                            <bdi dir="auto">{{ card.title }}</bdi>
+                            <bdi dir="auto">{{ displayTitle }}</bdi>
                         </h2>
 
                         <div class="product-card__details">
@@ -117,7 +117,7 @@
             max-width="500px"
             @confirm="handleDelete"
         >
-            <bdi dir="auto">{{ card.title || '' }}</bdi>
+            <bdi dir="auto">{{ displayTitle }}</bdi>
         </ConfirmationDialog>
     </div>
 </template>
@@ -134,10 +134,14 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { notifyDeleteError } from '@/utils/deleteError'
+    import { useContentLanguages } from '@/composables/useContentLanguages'
 
     type ProductCard = {
         id: number | string
         title?: string
+        // The product's own language and its title in others, to show the GUI's language.
+        language?: string | null
+        title_translations?: Record<string, { title?: string }> | null
         subtitle?: string
         tag?: string
         product_type_name?: string
@@ -167,6 +171,10 @@
             preselected: false
         }
     )
+
+    const { titleOf } = useContentLanguages()
+    // The title in the GUI's language, else English, else the product's own.
+    const displayTitle = computed(() => titleOf(props.card).title)
 
     const { t } = useI18n()
     const { formatDateTime, formatNumber } = useLocaleFormatters()

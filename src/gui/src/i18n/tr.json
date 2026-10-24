@@ -847,6 +847,20 @@
             "confirm": "Rapor ekle",
             "confirm_published": "Ekle ve tamamla",
             "untitled": "Başlıksız rapor"
+        },
+        "language": "Ürünün dili",
+        "translate_titles": "Başlığı tüm dillere çevir",
+        "title_not_translated": "Başlık bazı dillere çevrilemedi",
+        "language_in_use": "Ürünün bu dile zaten bir çevirisi var",
+        "publish_in": "Yayımlama dili",
+        "publish_in_language": "Yayımlama dili: {language}",
+        "outdated_confirmation": "Güncel olmayan çeviriler",
+        "outdated_continue": "Yine de devam et",
+        "language_notice": {
+            "missing": "Bu raporların {language} çevirisi yok; onlar için İngilizce ya da özgün metin kullanılır:",
+            "outdated": "Bu {language} çevirileri güncel değil, çünkü özgün metin çeviriden sonra değişti:",
+            "templates": "Ürün türünün {language} için şablonu yok; {used} şablonları kullanılır.",
+            "default_templates": "varsayılan"
         }
     },
     "analyze": {
@@ -1439,7 +1453,13 @@
                 "link": "Bağlantı",
                 "collected": "Toplanma tarihi",
                 "published": "Yayımlanma tarihi"
-            }
+            },
+            "default_templates": "Varsayılan",
+            "add_language": "Dil ekle",
+            "remove_language": "{language} dilini kaldır",
+            "language_templates_hint": "{language} için kullanılan şablonlar. Boş alan varsayılan şablonu kullanır.",
+            "template_language": "Şablonların dili",
+            "template_language_hint": "Varsayılan şablonların yazıldığı dil"
         }
     },
     "publishers": {
@@ -1675,7 +1695,15 @@
             "edit_constant": "Sabiti düzenle",
             "value": "Değer",
             "error": "Bu öznitelik oluşturulamadı",
-            "total_count": "Öznitelik yok | {count} öznitelik | {count} öznitelik"
+            "total_count": "Öznitelik yok | {count} öznitelik | {count} öznitelik",
+            "constant_translations": "Çeviriler",
+            "no_languages": "Bu özniteliği kullanan hiçbir rapor türünün başka dili yok.",
+            "constants_in": "{language} dilindeki sabitler",
+            "translated_value": "{language} dilindeki değer",
+            "edit_translation": "Çeviriyi düzenle",
+            "translate_missing": "Eksikleri YZ ile çevir",
+            "translated_constants": "Çevrilen sabitler: {count}",
+            "translated_with_failures": "Çevrilen sabitler: {translated}; çevrilmeyen: {failed}"
         }
     },
     "external_user": {
