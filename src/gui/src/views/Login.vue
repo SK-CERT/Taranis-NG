@@ -278,6 +278,7 @@
 </template>
 
 <script setup lang="ts">
+    import { HttpStatusCode } from 'axios'
     import { ref, computed, onMounted } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { useI18n } from 'vue-i18n'
@@ -695,7 +696,7 @@
             // (it now answers 204). Both mean the same thing here, and an expired
             // or already-used handle is deliberately indistinguishable from no
             // handle, so fall back to the provider chooser either way.
-            if (status !== 401) {
+            if (status !== HttpStatusCode.Unauthorized) {
                 console.error('[Login] Redirect redemption error:', error)
                 showError()
             }

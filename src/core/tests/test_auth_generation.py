@@ -121,6 +121,24 @@ def test_current_generation_is_accepted(generation_app: tuple[Flask, dict[str, i
     assert response.get_json() == {"ok": True}
 
 
+def test_malformed_jwt_is_returned_as_unauthorized(monkeypatch: pytest.MonkeyPatch) -> None:
+    app = Flask(__name__)
+    app.config["JWT_SECRET_KEY"] = "auth-generation-test-secret-with-sufficient-length"
+    JWTManager(app)
+
+    @app.get("/protected")
+    @auth_manager.jwt_token_required
+    def protected():  # noqa: ANN202
+        return jsonify(ok=True)
+
+    monkeypatch.setattr(auth_manager.log_manager, "store_auth_error_activity", lambda *_args: None)
+
+    response = app.test_client().get("/protected", headers=_authorization("malformed"))
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.get_json() == {"error": "authorization required"}
+
+
 def test_refresh_cannot_resurrect_a_stale_token(
     generation_app: tuple[Flask, dict[str, int], list[str]],
 ) -> None:

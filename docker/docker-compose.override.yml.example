@@ -2,9 +2,7 @@
 # compose loads it automatically when run from this directory.
 
 services:
-  gui:
+  core:
     environment:
-      # Example: prefer GET for deployments whose auth endpoints reject POST.
-      VITE_APP_TARANIS_NG_LOGIN_METHOD: "get"
-      VITE_APP_TARANIS_NG_LOGOUT_METHOD: "get"
-      VITE_APP_TARANIS_NG_SSE_INIT_METHOD: "get"
+      GUNICORN_WORKERS: 4
+      LOG_SENSITIVE_DATA: "no"
