@@ -30,7 +30,7 @@
         "@mdi/font": "^7.4.47",
         "@simplewebauthn/browser": "^14.0.0",
         "@tiptap/extensions": "^3.31.4",
-        "@tiptap/pm": "^3.31.4",
+        "@tiptap/pm": "^3.32.0",
         "@tiptap/starter-kit": "^3.31.4",
         "@tiptap/vue-3": "^3.31.4",
         "@types/d3-cloud": "^1.2.9",
