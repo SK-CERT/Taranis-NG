@@ -25,6 +25,7 @@ export const ICONS = Object.freeze({
     ARROW_UP: 'mdi-arrow-up',
     ARROW_UP_CIRCLE_OUTLINE: 'mdi-arrow-up-circle-outline',
     ASC: 'mdi-sort-ascending',
+    BOOK_ALPHABET: 'mdi-book-alphabet',
     CALCULATOR: 'mdi-calculator',
     CARD_SEARCH_OUTLINE: 'mdi-card-search-outline',
     CHART_BOX: 'mdi-chart-box',

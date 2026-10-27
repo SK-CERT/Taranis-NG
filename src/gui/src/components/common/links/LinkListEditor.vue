@@ -6,8 +6,8 @@
             class="link-list__readonly"
         >
             <li
-                v-for="(link, index) in values"
-                :key="rowKey(link, index)"
+                v-for="link in values"
+                :key="rowKey(link)"
                 class="link-list__readonly-row"
             >
                 <a
@@ -28,7 +28,7 @@
         <template v-else>
             <div
                 v-for="(link, index) in values"
-                :key="rowKey(link, index)"
+                :key="rowKey(link)"
                 class="link-list__row"
                 :class="{ 'drag-over': dragOverIndex === index, 'dragging': dragIndex === index }"
                 data-test="link-row"
@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref } from 'vue'
+    import { computed, ref, toRaw } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AttributeValueLayout from '@/components/common/attribute/AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
@@ -227,8 +227,20 @@
     const citations = (link: LinkValue): number =>
         typeof link.value_description === 'string' && link.value_description ? props.citationCount(link.value_description) : 0
 
-    const rowKey = (link: LinkValue, index: number): string =>
-        typeof link.value_description === 'string' && link.value_description ? link.value_description : `row-${index}`
+    // Rows are keyed by the link object, not by its link key: those can repeat in the list (links
+    // of attached remote report items, a refresh that caught the server half-way through a
+    // reorder), and a repeated v-for key leaves an orphaned row behind that edits another link.
+    const rowIds = new WeakMap<object, number>()
+    let nextRowId = 0
+    const rowKey = (link: LinkValue): number => {
+        const raw = toRaw(link)
+        let id = rowIds.get(raw)
+        if (id === undefined) {
+            id = nextRowId++
+            rowIds.set(raw, id)
+        }
+        return id
+    }
 
     // Removing a cited link asks first: its citations would be left out of the output.
     const confirmOpen = ref(false)

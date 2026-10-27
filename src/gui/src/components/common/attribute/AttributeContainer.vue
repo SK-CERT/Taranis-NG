@@ -9,6 +9,7 @@
         :edit="edit"
         :modify="modify"
         :report-item-id="reportItemId"
+        v-bind="language ? { language } : {}"
     />
 </template>
 
@@ -57,11 +58,14 @@
             edit?: boolean
             modify?: boolean
             reportItemId: number | null
+            // Set in a language tab of a report: only the text components take it.
+            language?: string | null
         }>(),
         {
             readOnly: false,
             edit: false,
-            modify: false
+            modify: false,
+            language: null
         }
     )
 

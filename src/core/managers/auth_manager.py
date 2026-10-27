@@ -1194,9 +1194,17 @@ def get_user_from_jwt() -> User:
     is not found in the JWT token, it falls back to retrieving the user information from the
     API key.
 
+    An endpoint reporting its own failed flush calls this for the error log
+    (``store_data_error_activity(get_user_from_jwt(), ...)``) before anything has rolled the
+    session back. The lookups below cannot run on such a session: they failed and logged bogus
+    "Authentication generation could not be verified" and "Missing JWT" errors next to the real
+    one. So that session is rolled back first; nothing in it could be committed anyway.
+
     Returns:
         The user object containing the identity and current permissions.
     """
+    if not db.session.is_active:
+        db.session.rollback()
     user = get_user_from_api_key()
     if user is None:
         user = get_user_from_jwt_token()

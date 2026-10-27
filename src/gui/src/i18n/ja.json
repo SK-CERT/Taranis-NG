@@ -420,7 +420,9 @@
         "tlp_description_amber": "知る必要がある場合に限り、受信者の組織およびその顧客に開示できます。",
         "tlp_description_amber_strict": "受信者の組織内に限り開示できます。",
         "tlp_description_red": "指定された受信者以外への開示は禁止されています。",
-        "tlp_description_unknown": "不明なTLPマーキングです。"
+        "tlp_description_unknown": "不明なTLPマーキングです。",
+        "translate": "翻訳する",
+        "translate_hint": "レポートはこの項目をレポート種別の言語に翻訳します"
     },
     "cvss_calculator": {
         "title": "CVSS計算ツール",
@@ -768,6 +770,34 @@
             "take_theirs": "自分の変更を破棄して保存済みの値を使用",
             "keep_mine": "自分の値で上書き",
             "unknown_user": "別のユーザー"
+        },
+        "translation": {
+            "source_language": "レポートの言語",
+            "not_set": "未設定",
+            "source_tab": "{language} (原文)",
+            "source_not_set": "原文 (言語未設定)",
+            "translate_report": "レポート全体を翻訳",
+            "progress": "翻訳中: {total} 言語のうち {done} 言語が完了",
+            "finished": "翻訳が完了しました",
+            "finished_with_problems": "翻訳が完了しました。未翻訳: {failed}、編集中のためスキップ: {skipped}",
+            "intro": "{language}への翻訳。翻訳しない項目には原文が表示されます。",
+            "translate_language": "{language}に翻訳",
+            "translate_field": "AI で翻訳",
+            "same_in_all_languages": "すべての言語で同じ",
+            "source": "原文",
+            "overwrite_title": "あなたの翻訳を置き換えますか？",
+            "overwrite_confirm": "置き換える",
+            "overwrite_message": "この項目は手動で翻訳されています。AI の翻訳で置き換えられます。",
+            "field_locked": "ほかの人がこの項目を編集中のため、翻訳しませんでした。",
+            "field_failed": "項目を翻訳できませんでした: {reason}",
+            "ai": "AI訳",
+            "ai_hint": "AI が翻訳し、まだ確認されていません",
+            "outdated": "古い",
+            "outdated_hint": "翻訳後に原文が変更されました",
+            "review": "確認済みにする",
+            "review_all": "AI 翻訳を確認済みにする",
+            "reviewed": "確認済みにした AI 翻訳: {count}",
+            "review_locked": "ほかのユーザーがフィールドを編集中のため、確認済みにしませんでした。"
         }
     },
     "product": {
@@ -817,7 +847,23 @@
             "confirm": "レポートを追加",
             "confirm_published": "追加して完了",
             "untitled": "無題のレポート"
-        }
+        },
+        "language": "プロダクトの言語",
+        "language_in_use": "このプロダクトにはその言語の翻訳がすでにあります",
+        "publish_in": "公開する言語",
+        "publish_in_language": "公開する言語: {language}",
+        "outdated_confirmation": "古い翻訳",
+        "outdated_continue": "このまま続ける",
+        "language_notice": {
+            "missing": "これらのレポートには{language}の翻訳がありません。英語または原文が使われます:",
+            "outdated": "これらの{language}の翻訳は古くなっています。翻訳後に原文が変更されました:",
+            "templates": "このプロダクト種別には{language}のテンプレートがありません。{used}のテンプレートが使われます。",
+            "default_templates": "既定"
+        },
+        "texts_not_translated": "一部の言語にタイトルまたは説明を翻訳できませんでした",
+        "nothing_to_translate": "翻訳するものはありません。翻訳は最新です。",
+        "translate_product": "プロダクト全体を翻訳",
+        "translation_intro": "{language}への翻訳。翻訳されるのはタイトルと説明のみで、それ以外は原文が表示されます。"
     },
     "analyze": {
         "sort": "並べ替え",
@@ -1144,7 +1190,15 @@
             "entity_type_required": "エンティティ種別は必須です"
         },
         "tags": {
-            "tab_description": "ここではタグを管理できます。"
+            "tab_description": "ここではタグを管理できます。",
+            "system": {
+                "translation_missing": "翻訳なし",
+                "translation_partial": "一部翻訳済み",
+                "translation_outdated": "翻訳が古い",
+                "translation_ai": "AI 翻訳が未確認",
+                "translation_done": "翻訳済み",
+                "language_not_set": "言語が未設定"
+            }
         },
         "tag_workflow": {
             "tab_description": "ここではタグとエンティティの関連付けを管理できます。"
@@ -1409,7 +1463,13 @@
                 "link": "リンク",
                 "collected": "収集日",
                 "published": "公開日"
-            }
+            },
+            "default_templates": "既定",
+            "add_language": "言語を追加",
+            "remove_language": "{language}を削除",
+            "language_templates_hint": "{language}で使うテンプレート。空欄の項目は既定のテンプレートを使います。",
+            "template_language": "テンプレートの言語",
+            "template_language_hint": "既定のテンプレートが書かれている言語"
         }
     },
     "publishers": {
@@ -1552,7 +1612,10 @@
             "successful_edit": "AIモデルを更新しました",
             "error": "AIモデルを保存できませんでした",
             "remove": "AIモデルを削除しました",
-            "removed_error": "AIモデルは使用中のため削除できませんでした"
+            "removed_error": "AIモデルは使用中のため削除できませんでした",
+            "max_tlp": "送信する最高 TLP",
+            "max_tlp_hint": "この TLP を超えるレポートの本文は、このプロバイダーには送信されません",
+            "max_tlp_none": "制限なし"
         }
     },
     "word_lists": {
@@ -1610,7 +1673,20 @@
             "successful_edit": "レポート項目種別を更新しました",
             "removed_error": "レポート項目種別は使用中のため削除できませんでした",
             "removed": "レポート項目種別を削除しました",
-            "total_count": "レポートタイプ {count} 件 | レポートタイプ {count} 件"
+            "total_count": "レポートタイプ {count} 件 | レポートタイプ {count} 件",
+            "languages": "言語バリエーション",
+            "languages_hint": "この種別のレポートはこれらの言語に翻訳されます",
+            "translation_ai_provider": "翻訳用の AI プロバイダー",
+            "label_language": "ラベルの言語",
+            "label_language_hint": "上の名前と説明が書かれている言語",
+            "fields": "項目",
+            "labels_tab": "ラベル: {language}",
+            "labels_in": "{language}の名前と説明。各項目の下に原文が表示されます。",
+            "translate_labels": "未翻訳のラベルを AI で翻訳",
+            "no_ai_provider": "先に翻訳用の AI プロバイダーを選択してください",
+            "translate_labels_failed": "一部のラベルを翻訳できませんでした ({count})",
+            "labels_translated": "ラベルを翻訳しました",
+            "copy_original": "原文をコピー"
         },
         "attributes": {
             "in_use": "属性を削除できません: {types} で使用されています",
@@ -1629,7 +1705,33 @@
             "edit_constant": "定数を編集",
             "value": "値",
             "error": "属性を保存できませんでした",
-            "total_count": "属性 {count} 件 | 属性 {count} 件"
+            "total_count": "属性 {count} 件 | 属性 {count} 件",
+            "constant_translations": "翻訳",
+            "no_languages": "この属性を使うレポート種別に、ほかの言語はありません。",
+            "constants_in": "{language}の定数",
+            "translated_value": "{language}の値",
+            "edit_translation": "翻訳を編集",
+            "translate_missing": "未翻訳のものを AI で翻訳",
+            "translated_constants": "翻訳した定数: {count}",
+            "translated_with_failures": "翻訳した定数: {translated}、翻訳できなかった定数: {failed}"
+        },
+        "glossary": {
+            "tab": "用語集",
+            "tab_description": "AI が翻訳時に使う用語",
+            "title": "AI 翻訳用語集",
+            "type_title": "このレポートタイプの用語集",
+            "type_intro": "これらの用語は、インスタンス全体の用語集に加えて、このタイプのレポートとラベルに適用されます。同じ用語ではここの用語が優先されます。",
+            "add": "用語を追加",
+            "edit": "用語を編集",
+            "empty": "まだ用語はありません",
+            "keep": "そのまま残す",
+            "keep_hint": "製品名や組織名向け: AI はどの言語でも用語を変更しません。",
+            "note": "メモ",
+            "note_hint": "AI への補足情報 (例: 用語が適用される場面)",
+            "terms": "用語",
+            "add_language": "言語を追加",
+            "remove_language": "{language}を削除",
+            "needs_terms": "用語を 2 つ以上の言語で入力するか、そのまま残す用語を 1 つ入力してください。"
         }
     },
     "external_user": {
@@ -2297,5 +2399,30 @@
         "product_hint": "製品の説明が引用できる情報源です。公開される製品では、レポートのリンクより先に番号が付けられます。",
         "product_title": "リンク",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "タグ",
+        "tag": "タグ",
+        "none_defined": "これらの項目に定義されたタグはありません",
+        "built_in_hint": "このタグは Taranis が付けます。見た目は変更できますが、名前の変更や削除はできません。タグワークフローでオフにしてください。",
+        "built_in_link_hint": "組み込みタグはリンクされたままです。代わりにオフにしてください",
+        "add_new": "タグを追加",
+        "edit": "タグを編集",
+        "name": "名前",
+        "description": "説明",
+        "color": "色",
+        "icon": "アイコン",
+        "in_use": "このタグは {count} 件のレポートまたはプロダクトに付いているため削除できません",
+        "add_link": "タグのリンクを追加",
+        "edit_link": "タグのリンクを編集",
+        "status_in_language": "{language}: {status}",
+        "filter": "タグと翻訳で絞り込む",
+        "translation": "翻訳",
+        "translation_language": "言語",
+        "translation_any": "すべて",
+        "translation_needs": "翻訳が必要",
+        "translation_unreviewed": "AI 翻訳が未確認",
+        "translation_not_set": "言語が未設定",
+        "clear_filter": "クリア"
     }
 }

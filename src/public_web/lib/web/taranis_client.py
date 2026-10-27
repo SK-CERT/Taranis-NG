@@ -10,7 +10,8 @@ public-web node endpoints:
 
 Core serializes the product directly from its database (no presenter involved):
 product info plus report items, each with a flat list of attributes
-({"key", "value", "description"}). ``VulnerabilityReport`` consumes this
+({"key", "value", "description"}), in the language asked for with ``lang``
+(see ``get_product``). ``VulnerabilityReport`` consumes this
 structure. Products that are not published are returned as 404 by core and
 skipped by the caller, so one bad product cannot break the feed.
 """
@@ -72,14 +73,22 @@ class TaranisClient:
         items = resp.json().get("items", [])
         return [item["id"] for item in items if "id" in item]
 
-    def get_product(self, product_id: int, web_id: int | None = None) -> dict[str, object] | None:
+    def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict[str, object] | None:
         """Return one published product (with report items and attributes).
+
+        With ``language``, core shows the product in it as far as it is translated (then English,
+        then as written) and says which language that is (``language``) and which the product can
+        be read in (``available_languages``); a core that does not know languages ignores it.
 
         Returns ``None`` (and logs) if the product does not exist or is not
         published (HTTP 404).
         """
-        params = {"web_id": web_id} if web_id is not None else None
-        resp = self._get(f"/api/v1/public-web/products/{product_id}", params=params)
+        params: dict[str, object] = {}
+        if web_id is not None:
+            params["web_id"] = web_id
+        if language:
+            params["lang"] = language
+        resp = self._get(f"/api/v1/public-web/products/{product_id}", params=params or None)
         if resp.status_code == HTTP_NOT_FOUND:
             logger.info("Skipping product %s: not found or not published.", product_id)
             return None

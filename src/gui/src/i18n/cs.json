@@ -420,7 +420,9 @@
         "tlp_description_amber": "Omezené zveřejnění v organizaci příjemce a jejím klientům podle zásady nezbytné znalosti.",
         "tlp_description_amber_strict": "Omezené zveřejnění pouze v organizaci příjemce.",
         "tlp_description_red": "Informace nesmí být zveřejněna mimo jednotlivé příjemce.",
-        "tlp_description_unknown": "Neznámé označení TLP."
+        "tlp_description_unknown": "Neznámé označení TLP.",
+        "translate": "Překládat",
+        "translate_hint": "Reporty překládají toto pole do jazyků typu reportu"
     },
     "cvss_calculator": {
         "title": "CVSS Calculator",
@@ -768,6 +770,34 @@
             "take_theirs": "Zahodit moji, ponechat uloženou",
             "keep_mine": "Přepsat mojí verzí",
             "unknown_user": "Jiný uživatel"
+        },
+        "translation": {
+            "source_language": "Jazyk reportu",
+            "not_set": "Nenastaveno",
+            "source_tab": "{language} (originál)",
+            "source_not_set": "Originál (jazyk nenastaven)",
+            "translate_report": "Přeložit celý report",
+            "progress": "Překládá se: hotovo {done} z {total} jazyků",
+            "finished": "Překlad dokončen",
+            "finished_with_problems": "Překlad dokončen. Nepřeloženo: {failed}; přeskočeno, protože je někdo upravuje: {skipped}",
+            "intro": "Překlad do jazyka {language}. Pole, která se nepřekládají, ukazují originál.",
+            "translate_language": "Přeložit do jazyka {language}",
+            "translate_field": "Přeložit pomocí AI",
+            "same_in_all_languages": "Stejné ve všech jazycích",
+            "source": "Originál",
+            "overwrite_title": "Nahradit váš překlad?",
+            "overwrite_confirm": "Nahradit",
+            "overwrite_message": "Toto pole bylo přeloženo ručně. Překlad AI ho nahradí.",
+            "field_locked": "Toto pole právě upravuje někdo jiný, proto nebylo přeloženo.",
+            "field_failed": "Pole se nepodařilo přeložit: {reason}",
+            "ai": "UI",
+            "ai_hint": "Přeloženo pomocí AI a zatím nezkontrolováno",
+            "outdated": "Zastaralé",
+            "outdated_hint": "Originál se po přeložení změnil",
+            "review": "Označit jako zkontrolované",
+            "review_all": "Označit překlady AI jako zkontrolované",
+            "reviewed": "Překlady AI označené jako zkontrolované: {count}",
+            "review_locked": "Některé pole právě upravuje někdo jiný, proto nebylo označeno jako zkontrolované."
         }
     },
     "product": {
@@ -817,7 +847,23 @@
             "confirm": "Přidat reporty",
             "confirm_published": "Přidat a dokončit",
             "untitled": "Report bez názvu"
-        }
+        },
+        "language": "Jazyk produktu",
+        "language_in_use": "Produkt už má překlad do tohoto jazyka",
+        "publish_in": "Publikovat v jazyce",
+        "publish_in_language": "Publikuje se v jazyce: {language}",
+        "outdated_confirmation": "Zastaralé překlady",
+        "outdated_continue": "Přesto pokračovat",
+        "language_notice": {
+            "missing": "Tyto reporty nemají překlad do jazyka {language}; použije se angličtina nebo originál:",
+            "outdated": "Tyto překlady do jazyka {language} jsou zastaralé, protože se jejich originál po přeložení změnil:",
+            "templates": "Typ produktu nemá šablony pro jazyk {language}; použijí se šablony: {used}.",
+            "default_templates": "výchozí"
+        },
+        "texts_not_translated": "Název nebo popis se do některých jazyků nepodařilo přeložit",
+        "nothing_to_translate": "Není co překládat, překlady jsou aktuální.",
+        "translate_product": "Přeložit celý produkt",
+        "translation_intro": "Překlad do jazyka {language}. Překládá se jen název a popis, ostatní ukazuje originál."
     },
     "analyze": {
         "sort": "Seřadit podle",
@@ -1098,8 +1144,8 @@
     "workflow": {
         "states_tab": "Stavy",
         "state_workflow_tab": "Workflow stavů",
-        "tags_tab": "Tagy",
-        "tag_workflow_tab": "Workflow stavů",
+        "tags_tab": "Štítky",
+        "tag_workflow_tab": "Workflow štítků",
         "states": {
             "tab_description": "Zde můžete spravovat stavy workflow.",
             "display_name": "Zobrazovaný název",
@@ -1144,7 +1190,15 @@
             "entity_type_required": "Typ entity je povinný"
         },
         "tags": {
-            "tab_description": "Zde můžete spravovat štítky."
+            "tab_description": "Zde můžete spravovat štítky.",
+            "system": {
+                "translation_missing": "Chybí překlad",
+                "translation_partial": "Částečně přeloženo",
+                "translation_outdated": "Zastaralý překlad",
+                "translation_ai": "Překlad AI nezkontrolován",
+                "translation_done": "Přeloženo",
+                "language_not_set": "Jazyk nenastaven"
+            }
         },
         "tag_workflow": {
             "tab_description": "Zde můžete spravovat přiřazení štítků k entitám."
@@ -1409,7 +1463,13 @@
                 "link": "Odkaz",
                 "collected": "Datum indexace",
                 "published": "Datum zveřejnění"
-            }
+            },
+            "default_templates": "Výchozí",
+            "add_language": "Přidat jazyk",
+            "remove_language": "Odebrat jazyk {language}",
+            "language_templates_hint": "Šablony pro jazyk {language}. Prázdné pole použije výchozí šablonu.",
+            "template_language": "Jazyk šablon",
+            "template_language_hint": "Jazyk, ve kterém jsou napsané výchozí šablony"
         }
     },
     "publishers": {
@@ -1552,7 +1612,10 @@
             "successful_edit": "AI model byl upraven",
             "error": "Nepodařilo se uložit tento AI model",
             "remove": "AI model byl smazán",
-            "removed_error": "AI model je používán a nelze jej smazat"
+            "removed_error": "AI model je používán a nelze jej smazat",
+            "max_tlp": "Nejvyšší odesílaný TLP",
+            "max_tlp_hint": "Text reportů nad tímto TLP se tomuto poskytovateli nikdy neodešle",
+            "max_tlp_none": "Bez omezení"
         }
     },
     "word_lists": {
@@ -1610,7 +1673,20 @@
             "successful_edit": "Typ analýzy byl upraven",
             "removed_error": "Typ analýzy je používán a nemohl být smazán",
             "removed": "Typ analýzy byl smazán",
-            "total_count": "Žádné typy analýz | {count} typ analýzy | {count} typy analýz | {count} typů analýz"
+            "total_count": "Žádné typy analýz | {count} typ analýzy | {count} typy analýz | {count} typů analýz",
+            "languages": "Jazykové varianty",
+            "languages_hint": "Reporty tohoto typu se překládají do těchto jazyků",
+            "translation_ai_provider": "Poskytovatel AI pro překlad",
+            "label_language": "Jazyk popisků",
+            "label_language_hint": "Jazyk, ve kterém jsou napsané názvy a popisy výše",
+            "fields": "Pole",
+            "labels_tab": "Popisky: {language}",
+            "labels_in": "Názvy a popisy v jazyce {language}. Originál je uvedený pod každým polem.",
+            "translate_labels": "Přeložit chybějící popisky pomocí AI",
+            "no_ai_provider": "Nejprve vyberte poskytovatele AI pro překlad",
+            "translate_labels_failed": "Některé popisky se nepodařilo přeložit ({count})",
+            "labels_translated": "Popisky přeloženy",
+            "copy_original": "Zkopírovat originál"
         },
         "attributes": {
             "in_use": "Atribut nelze smazat: je použitý v {types}",
@@ -1629,7 +1705,33 @@
             "edit_constant": "Upravit konstantu",
             "value": "Hodnota",
             "error": "Nepodařilo se vytvořit tento atribut",
-            "total_count": "Žádné atributy | {count} atribut | {count} atributy | {count} atributů"
+            "total_count": "Žádné atributy | {count} atribut | {count} atributy | {count} atributů",
+            "constant_translations": "Překlady",
+            "no_languages": "Žádný typ reportu, který tento atribut používá, nemá další jazyky.",
+            "constants_in": "Konstanty v jazyce {language}",
+            "translated_value": "Hodnota v jazyce {language}",
+            "edit_translation": "Upravit překlad",
+            "translate_missing": "Přeložit chybějící pomocí AI",
+            "translated_constants": "Přeložené konstanty: {count}",
+            "translated_with_failures": "Přeložené konstanty: {translated}; nepřeložené: {failed}"
+        },
+        "glossary": {
+            "tab": "Glosář",
+            "tab_description": "Termíny, které AI používá při překladu",
+            "title": "Glosář pro překlad AI",
+            "type_title": "Glosář tohoto typu reportu",
+            "type_intro": "Tyto termíny platí pro reporty a popisky tohoto typu navíc ke glosáři celé instance; u stejného termínu má přednost ten zdejší.",
+            "add": "Přidat termín",
+            "edit": "Upravit termín",
+            "empty": "Zatím žádné termíny",
+            "keep": "Ponechat beze změny",
+            "keep_hint": "Pro názvy produktů nebo organizací: AI termín v žádném jazyce nezmění.",
+            "note": "Poznámka",
+            "note_hint": "Kontext pro AI, například kde termín platí",
+            "terms": "Termíny",
+            "add_language": "Přidat jazyk",
+            "remove_language": "Odebrat jazyk {language}",
+            "needs_terms": "Vyplňte termín alespoň ve dvou jazycích, nebo jeden termín, který se má ponechat beze změny."
         }
     },
     "external_user": {
@@ -2297,5 +2399,30 @@
         "product_hint": "Zdroje, které může citovat popis produktu. Ve zveřejněném produktu jsou očíslovány jako první, před odkazy jeho reportů.",
         "product_title": "Odkazy",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Štítky",
+        "tag": "Štítek",
+        "none_defined": "Pro tyto položky nejsou definovány žádné štítky",
+        "built_in_hint": "Tento štítek nastavuje Taranis; lze změnit jeho vzhled, ale ne ho přejmenovat ani smazat. Vypnout ho lze v pracovním postupu štítků.",
+        "built_in_link_hint": "Vestavěné štítky zůstávají přiřazené; místo toho je vypněte",
+        "add_new": "Přidat nový štítek",
+        "edit": "Upravit štítek",
+        "name": "Název",
+        "description": "Popis",
+        "color": "Barva",
+        "icon": "Ikona",
+        "in_use": "Štítek je na {count} reportech nebo produktech a nelze ho smazat",
+        "add_link": "Přidat přiřazení štítku",
+        "edit_link": "Upravit přiřazení štítku",
+        "status_in_language": "{language}: {status}",
+        "filter": "Filtrovat podle štítků a překladu",
+        "translation": "Překlad",
+        "translation_language": "Jazyk",
+        "translation_any": "Jakýkoli",
+        "translation_needs": "Potřebuje překlad",
+        "translation_unreviewed": "Překlad AI nezkontrolován",
+        "translation_not_set": "Jazyk nenastaven",
+        "clear_filter": "Vymazat"
     }
 }

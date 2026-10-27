@@ -7,7 +7,7 @@
 
 {%- block content %}
     <div class="m-3">
-        <div class="d-flex justify-content-between mb-2">
+        <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
             <nav class="me-3">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
@@ -24,13 +24,16 @@
                     </li>
                 </ol>
             </nav>
-            <button id="feedback-button"
-                    type="button"
-                    class="btn btn-primary h-75"
-                    data-bs-toggle="modal"
-                    data-bs-target="#feedback-modal">
-                {{ translate_ui("give_feedback") }}
-            </button>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                {{ macros.language_picker() }}
+                <button id="feedback-button"
+                        type="button"
+                        class="btn btn-primary text-nowrap"
+                        data-bs-toggle="modal"
+                        data-bs-target="#feedback-modal">
+                    {{ translate_ui("give_feedback") }}
+                </button>
+            </div>
 
             {{ macros.feedback_modal(feedback_q) }}
         </div>
@@ -48,13 +51,23 @@
             </div>
         {%- endif -%}
 
+        {%- set shown_language = report.get_language() %}
+        {%- if shown_language and shown_language != current_language() %}
+            <div class="alert alert-info d-flex align-items-center" role="note">
+                <span class="mdi mdi-translate me-2 fs-4 flex-shrink-0" aria-hidden="true"></span>
+                <p class="m-0">
+                    {{ translate_ui("report_language_notice").format(language=language_name(shown_language)) }}
+                </p>
+            </div>
+        {%- endif %}
+
         <div class="d-flex flex-column flex-md-row mb-1">
-            <h4 class="text-body me-3">
+            <h4 class="text-body me-3"{{ macros.content_lang(report) }}>
                 {{ report.get_formatted_tlp(with_space=True) or '' }}{{ report.get_title() or translate_report(report, 'alternative_title') }}
             </h4>
         </div>
         {%- if report.get_one_description() -%}
-            <p class="mb-3 fw-normal h5 pre-wrap">
+            <p class="mb-3 fw-normal h5 pre-wrap"{{ macros.content_lang(report) }}>
                 {{- transform_link_references(report.get_one_description(), report.get_links()) | clean -}}
             </p>
         {%- endif -%}
@@ -63,7 +76,7 @@
         <div class="accordion my-3">
             {%- for item in report.get_report_items() %}
                 {%- if not items or loop.index in items %}
-                    <div class="accordion-item" id="accordionCVE-{{ loop.index }}">
+                    <div class="accordion-item" id="accordionCVE-{{ loop.index }}"{{ macros.content_lang(item) }}>
                         <div class="accordion-header" id="heading{{ loop.index }}">
                             <div class="accordion-button"
                                  role="button"
@@ -77,7 +90,7 @@
                                     {%- elif item.get_CVEs() %}
                                         {% set item_name = item.get_CVEs() | join(", ") %}
                                     {%- else %}
-                                        {% set item_name = translate_report(report, "vulnerability") + " " + (loop.index|string) %}
+                                        {% set item_name = translate_report(item, "vulnerability") + " " + (loop.index|string) %}
                                     {%- endif %}
                                     <b class="fw-bolder me-4">{{ item_name }}</b>
                                     {{ macros.render_severity_badge(item.get_cvss_number(), False) }}
@@ -97,7 +110,7 @@
                                     {%- if item.get_affected_systems()|length == 1 %}
                                         {%- if item.get_product_display(1) -%}
                                             <p class="mt-1 mb-0">
-                                                {{ translate_report(report, 'vulnerability_in') }} {{ translate_report(report, 'in_product') }}
+                                                {{ translate_report(item, 'vulnerability_in') }} {{ translate_report(item, 'in_product') }}
                                                 <span class="fw-light">{{ item.get_product_display(1) }}</span>
                                                 {%- if item.get_formatted_versions(1) %}
                                                     {{ render_versions(item, 1, dot=True) }}
@@ -108,7 +121,7 @@
                                         {%- endif %}
                                     {%- else %}
                                         <p class="mt-1 mb-0">
-                                            {{ translate_report(report, 'vulnerability_in') }} {{ translate_report(report, 'in_products') }}:
+                                            {{ translate_report(item, 'vulnerability_in') }} {{ translate_report(item, 'in_products') }}:
                                         </p>
                                         <ul class="m-0">
                                             {%- for system in item.get_affected_systems() %}
@@ -138,18 +151,18 @@
                                 {%- if item.get_iocs() %}
                                     <p class="mt-1 mb-0">
                                         <b data-bs-toggle="tooltip"
-                                           title="{{ translate_report(report, 'ioc_tooltip') }}">
-                                            {{ translate_report(report, 'ioc') }}:
+                                           title="{{ translate_report(item, 'ioc_tooltip') }}">
+                                            {{ translate_report(item, 'ioc') }}:
                                         </b> {{ item.get_iocs() }}
                                     </p>
                                 {%- endif %}
                                 <p class="mt-1 mb-0">
-                                    <b>{{ translate_report(report, 'more_info') }}:</b>
+                                    <b>{{ translate_report(item, 'more_info') }}:</b>
                                 </p>
                                 <ul class="m-0">
                                     {%- for cve in item.get_CVEs() %}
                                         <li>
-                                            {{ cve }} {{ translate_ui("reference_at") }}
+                                            {{ cve }} {{ translate_report(item, 'reference_at') }}
                                             <a href="https://cve.org/CVERecord?id={{ cve }}">cve.org</a>,
                                             <a href="https://nvd.nist.gov/vuln/detail/{{ cve }}">NVD</a>,
                                             <a href="https://github.com/advisories?query={{ cve }}">GitHub</a>,
@@ -166,7 +179,7 @@
                                                 {%- set cwe_name = item.get_cwe_name(loop.index) %}
                                                 <span>
                                                     CWE-{{ cwe }}{% if cwe_name %}: {{ cwe_name }}{% endif %}
-                                                </span> {{ translate_ui("reference_at") }}
+                                                </span> {{ translate_report(item, 'reference_at') }}
                                                 <a href="https://cwe.mitre.org/data/definitions/{{ cwe }}">
                                                     cwe.mitre.org
                                                 </a>
@@ -177,11 +190,11 @@
                                 {%- if item.get_exposure_date() or item.get_update_date() %}
                                     <p class="mt-3 mb-1 text-secondary">
                                         {%- if item.get_exposure_date() %}
-                                            {{ translate_report(report, 'vulnerability_exposed') }}
+                                            {{ translate_report(item, 'vulnerability_exposed') }}
                                             {{ item.get_exposure_date() }}.
                                         {%- endif %}
                                         {%- if item.get_update_date() %}
-                                            {{ translate_report(report, 'vulnerability_updated') }}
+                                            {{ translate_report(item, 'vulnerability_updated') }}
                                             {{ item.get_update_date() }}.
                                         {%- endif %}
                                     </p>
@@ -194,7 +207,7 @@
         </div>
 
         {%- if report.get_links() %}
-            <div class="my-4" id="links">
+            <div class="my-4" id="links"{{ macros.content_lang(report) }}>
                 <h5>
                     {{ translate_report(report, 'links') }}
                 </h5>
@@ -214,7 +227,7 @@
         <hr>
         <div class="d-flex flex-row">
             {%- if report.get_author() or report.get_publish_date() %}
-                <p class="m-0 me-4">
+                <p class="m-0 me-4"{{ macros.content_lang(report) }}>
                     {%- if report.get_author() %}
                         {{ translate_report(report, 'author_prefix') }} <a href="{{ content['organization_url'] }}" target="_blank">{{ content["organization"] }}</a>
                         {{ report.get_author() }}
@@ -231,12 +244,12 @@
 
 {%- macro render_versions(item, index, dot=False) -%}
     {% if item.get_versions(index) %}
-        {{ translate_report(report, 'in_versions') }}
+        {{ translate_report(item, 'in_versions') }}
         <span class="fw-light"
               data-bs-toggle="popover"
               data-bs-container="body"
               data-bs-placement="top"
-              title="{{ translate_report(report, 'original_version_format') }}"
+              title="{{ translate_report(item, 'original_version_format') }}"
               data-bs-content="{{ item.get_affected_system(index) }}">
             {{ item.get_formatted_versions(index) -}}
         </span>

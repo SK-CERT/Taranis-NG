@@ -35,6 +35,11 @@
                 >
                     <v-icon>{{ publishedFilterIcon }}</v-icon>
                 </v-chip>
+                <TagFilterMenu
+                    v-model="tagFilter"
+                    entity-type="product"
+                    @update:model-value="emitFilter"
+                />
             </div>
         </template>
     </BaseToolbarFilter>
@@ -73,6 +78,8 @@
     import { usePublishStore } from '@/stores/publish'
     import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
     import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
+    import TagFilterMenu from '@/components/common/tags/TagFilterMenu.vue'
+    import type { TagFilterState } from '@/api/tags'
 
     type PublishFilter = {
         search: string
@@ -114,6 +121,7 @@
     })
 
     const compactMode = ref(false)
+    const tagFilter = ref<TagFilterState>({ tags: [], translation: '', translation_language: null })
 
     const multiSelectActive = computed(() => publishStore.getMultiSelect)
 
@@ -160,6 +168,7 @@
             new CustomEvent('update-products-filter', {
                 detail: {
                     ...filter.value,
+                    ...tagFilter.value,
                     compact_mode: compactMode.value
                 }
             })

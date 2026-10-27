@@ -119,6 +119,7 @@
                     multiple
                     chips
                     closable-chips
+                    clear-on-select
                     variant="outlined"
                     density="comfortable"
                     class="mt-3"

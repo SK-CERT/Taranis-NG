@@ -284,9 +284,10 @@ def _recover_user() -> User | None:
     """Re-resolve the requesting user once the session is usable again.
 
     Callers pass ``get_user_from_jwt()``, which Python evaluates before this module gets to
-    roll back. On the error paths that matter, that lookup runs against a session poisoned by
-    the caller's own failed flush, hands back None, and the activity record loses its
-    attribution. Retrying after the rollback recovers it.
+    roll back. That lookup rolls back a session a failed flush left unusable, but a failed
+    query leaves the database transaction aborted while the session still looks usable, so
+    the lookup fails, hands back None, and the activity record loses its attribution.
+    Retrying after the rollback recovers it.
 
     Returns:
         User | None: The requesting user, or None if there is genuinely no session.

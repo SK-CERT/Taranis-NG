@@ -34,6 +34,19 @@ export function updateAttributeEnum(attribute_id, enum_id, data) {
     return ApiService.put('/config/attributes/' + attribute_id + '/enums/' + enum_id, data)
 }
 
+// The languages an attribute's constants are translated into: those of the report types using it.
+export function getAttributeLanguages(attribute_id: number) {
+    return ApiService.get('/config/attributes/' + attribute_id + '/languages')
+}
+
+// Translates up to a batch of constants still missing `language`; `remaining` says how many are left.
+export function translateAttributeEnums(
+    attribute_id: number,
+    data: { language: string; ai_provider_id: number; source_language: string | null }
+) {
+    return ApiService.post('/config/attributes/' + attribute_id + '/enums/translate', data)
+}
+
 export function deleteAttributeEnum(attribute_id, attribute_enum_id) {
     return ApiService.delete('/config/attributes/' + attribute_id + '/enums/' + attribute_enum_id)
 }
@@ -187,6 +200,18 @@ export function deleteReportItemType(report_item_type) {
 
 export function updateReportItemType(report_item_type) {
     return ApiService.put('/config/report-item-types/' + report_item_type.id, report_item_type)
+}
+
+// Translates labels of a report type being edited; nothing is stored until the type is saved.
+// A saved type's `report_item_type_id` adds its own glossary entries to the instance's.
+export function translateReportItemTypeLabels(data: {
+    texts: Record<string, string>
+    source_language: string | null
+    target_language: string
+    ai_provider_id: number | null
+    report_item_type_id?: number | null
+}) {
+    return ApiService.post('/config/report-item-types/translate-labels', data)
 }
 
 export function getAllProductTypes(filter) {
@@ -590,4 +615,57 @@ export function updateStateEntityType(association) {
 
 export function deleteStateEntityType(association) {
     return ApiService.delete('/config/state-entity-types/' + association.id)
+}
+
+// Tags: admin tags and the built-in ones (Configuration › Workflow › Tags)
+export function getAllTags(search = '') {
+    return ApiService.get('/config/tags?search=' + encodeURIComponent(search))
+}
+
+export function createTag(tag) {
+    return ApiService.post('/config/tags', tag)
+}
+
+export function updateTag(tag) {
+    return ApiService.put('/config/tags/' + tag.id, tag)
+}
+
+export function deleteTag(tag) {
+    return ApiService.delete('/config/tags/' + tag.id)
+}
+
+// Which tags reports and products use (Configuration › Workflow › Tag Workflow)
+export function getAllTagEntityTypes(entityType = '') {
+    return ApiService.get('/config/tag-entity-types' + (entityType ? '?entity_type=' + encodeURIComponent(entityType) : ''))
+}
+
+export function createTagEntityType(link) {
+    return ApiService.post('/config/tag-entity-types', link)
+}
+
+export function updateTagEntityType(link) {
+    return ApiService.put('/config/tag-entity-types/' + link.id, link)
+}
+
+export function deleteTagEntityType(link) {
+    return ApiService.delete('/config/tag-entity-types/' + link.id)
+}
+
+// AI translation glossary: the instance's entries, or a report type's own (Configuration › Reports)
+export type GlossaryEntryInput = { terms: Record<string, string>; keep: boolean; note: string }
+
+export function getGlossary(reportItemTypeId: number | null = null) {
+    return ApiService.get('/config/glossary' + (reportItemTypeId ? '?report_item_type_id=' + reportItemTypeId : ''))
+}
+
+export function createGlossaryEntry(entry: GlossaryEntryInput & { report_item_type_id: number | null }) {
+    return ApiService.post('/config/glossary', entry)
+}
+
+export function updateGlossaryEntry(id: number, entry: GlossaryEntryInput) {
+    return ApiService.put('/config/glossary/' + id, entry)
+}
+
+export function deleteGlossaryEntry(id: number) {
+    return ApiService.delete('/config/glossary/' + id)
 }

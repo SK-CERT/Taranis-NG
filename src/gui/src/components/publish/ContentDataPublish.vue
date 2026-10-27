@@ -76,6 +76,7 @@
     import { ref, onMounted, onUnmounted, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
+    import { tagFilterQuery, type TagFilterState } from '@/api/tags'
     import { usePublishStore } from '@/stores/publish'
     import { getAllUserProductTypes } from '@/api/user'
     import CardProduct from './CardProduct.vue'
@@ -96,7 +97,7 @@
         [key: string]: unknown
     }
 
-    type FilterState = {
+    type FilterState = TagFilterState & {
         search: string
         range: string
         published: boolean | string
@@ -237,7 +238,8 @@
             oldFilter.search !== newFilter.search ||
             oldFilter.range !== newFilter.range ||
             oldFilter.published !== newFilter.published ||
-            oldFilter.sort !== newFilter.sort
+            oldFilter.sort !== newFilter.sort ||
+            tagFilterQuery(oldFilter) !== tagFilterQuery(newFilter)
 
         filter.value = newFilter
         if (dataFilterChanged) {

@@ -199,6 +199,13 @@
                             />
                         </template>
                     </EditableEntityTable>
+
+                    <AttributeConstantTranslations
+                        v-if="isEdit && localItem.id !== null && translatableConstants"
+                        :key="localItem.id"
+                        :attribute-id="localItem.id"
+                        :can-update="canUpdate"
+                    />
                 </template>
 
                 <v-alert
@@ -254,6 +261,7 @@
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
     import AttributeConstantCsvImport from '@/components/config/reports/AttributeConstantCsvImport.vue'
+    import AttributeConstantTranslations from '@/components/config/reports/AttributeConstantTranslations.vue'
     import { mergeAttributeConstants, type AttributeConstantImport } from '@/utils/attribute-constant-csv'
     import { notifyDeleteError } from '@/utils/deleteError'
 
@@ -402,6 +410,8 @@
     // read back, so the table stays hidden for them.
     const constantTypes: AttributeType[] = ['RADIO', 'ENUM', 'MULTI_CHOICE', ...dictionaryTypes]
     const supportsConstants = computed(() => constantTypes.includes(localItem.value.type))
+    // Choice constants have language variants; dictionary entries (CPE/CVE/CWE) do not.
+    const translatableConstants = computed(() => (['RADIO', 'ENUM', 'MULTI_CHOICE'] as AttributeType[]).includes(localItem.value.type))
     const canImportConstants = computed(
         () => supportsConstants.value && (isEdit.value ? canUpdate.value && canCreate.value : canCreate.value)
     )

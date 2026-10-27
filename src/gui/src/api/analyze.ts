@@ -1,4 +1,5 @@
 import ApiService from '@/services/api_service'
+import { tagFilterQuery } from '@/api/tags'
 
 function buildFilterQueryString(filter_data) {
     let filter = '?offset=' + encodeURIComponent(filter_data.offset || 0)
@@ -17,6 +18,7 @@ function buildFilterQueryString(filter_data) {
     if (filter_data.group) {
         filter += '&group=' + encodeURIComponent(filter_data.group)
     }
+    filter += tagFilterQuery(filter_data.filter)
     return filter
 }
 
@@ -126,10 +128,18 @@ export function createNewReportItem(data) {
         state_id: data.state_id,
         news_item_aggregates: data.news_item_aggregates || [],
         remote_report_items: data.remote_report_items || [],
-        attributes: data.attributes || []
+        attributes: data.attributes || [],
+        // The language it is written in; left out, core takes the author's default.
+        language: data.language || null,
+        tag_ids: data.tag_ids || []
     }
 
     return ApiService.post('/analyze/report-items', payload)
+}
+
+/** Make `tagIds` the report's tags. */
+export function setReportItemTags(report_item_id, tagIds) {
+    return ApiService.put('/analyze/report-items/' + report_item_id + '/tags', { tag_ids: tagIds })
 }
 
 export function deleteReportItem(report_item) {
@@ -191,10 +201,31 @@ export function updateAttachmentDescription(data) {
     })
 }
 
-export function aiGenerate(attribute_id, news_item_agreggate_ids) {
+// `context` lets core apply the AI provider's TLP limit: the saved report's id, or for a report
+// still being written the values of its TLP fields (omitted when its type has none).
+export function aiGenerate(attribute_id, news_item_agreggate_ids, context: { report_item_id?: number; tlp?: string[] } = {}) {
     return ApiService.post('/analyze/report-item-attributes/' + attribute_id + '/llm-generate', {
-        news_item_agreggate_ids
+        news_item_agreggate_ids,
+        ...context
     })
+}
+
+export type TranslateRequest = {
+    languages?: string[]
+    fields?: string[]
+    overwrite_manual?: boolean
+}
+
+// Fields of one language answer with the result; anything bigger starts a background job
+// (202) whose progress arrives as 'report-item-translation-progress'.
+export function translateReportItem(report_item_id: number, data: TranslateRequest) {
+    return ApiService.post('/analyze/report-items/' + report_item_id + '/translate', data)
+}
+
+// Marks the AI translations of one language as reviewed, keeping their text: the `fields`
+// named ("title", "title_prefix", attribute ids), or all of them.
+export function reviewReportItemTranslations(report_item_id: number, data: { language: string; fields?: string[] }) {
+    return ApiService.post('/analyze/report-items/' + report_item_id + '/translations/review', data)
 }
 
 export function getReportItemsByAggregate(aggregate_id) {

@@ -82,6 +82,7 @@
                         multiple
                         chips
                         closable-chips
+                        clear-on-select
                         clearable
                         :loading="loadingSources"
                         :disabled="saving"
@@ -99,6 +100,7 @@
                         multiple
                         chips
                         closable-chips
+                        clear-on-select
                         clearable
                         :loading="loadingTypes"
                         :disabled="saving"

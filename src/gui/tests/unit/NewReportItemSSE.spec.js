@@ -272,8 +272,8 @@ describe('NewReportItem SSE collaboration', () => {
         )
         await flushPromises()
 
-        const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-        expect(textFields[1].props('disabled')).toBe(false)
+        const titleField = wrapper.findAllComponents({ name: 'VTextField' }).find((field) => field.props('modelValue') === 'Original title')
+        expect(titleField.props('disabled')).toBe(false)
     })
 
     it('localizes and isolates valid conflict metadata and both competing values', async () => {

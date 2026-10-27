@@ -59,6 +59,8 @@ class AttributeEnumSchema(Schema):
     index = fields.Integer(load_default=-1)
     value = fields.Str()
     description = fields.Str()
+    # Language variants, {language: {"value": ..., "description": ...}}; None when not sent.
+    translations = fields.Dict(load_default=None, allow_none=True)
 
     @post_load
     def make_attribute_enum(self, data: dict, **kwargs) -> "AttributeEnum":  # noqa: ANN003, ARG002
@@ -71,7 +73,7 @@ class AttributeEnum:
 
     # `id` shadows the builtin, but the name is the schema field marshmallow unpacks
     # into this constructor, so renaming it would break deserialization.
-    def __init__(self, id: int, index: int, value: str, description: str) -> None:  # noqa: A002
+    def __init__(self, id: int, index: int, value: str, description: str, translations: dict | None = None) -> None:  # noqa: A002
         """Initialize an Attribute object.
 
         Args:
@@ -79,11 +81,13 @@ class AttributeEnum:
             index (int): The index of the attribute.
             value (str): The value of the attribute.
             description (str): The description of the attribute.
+            translations (dict | None): Language variants of value and description.
         """
         self.id = id
         self.index = index
         self.value = value
         self.description = description
+        self.translations = translations or {}
 
 
 class AttributeBaseSchema(Schema):

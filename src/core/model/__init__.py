@@ -31,6 +31,7 @@ __all__ = [
     "role",
     "tag_cloud",
     "token_blacklist",
+    "translation",
     "user",
     "word_list",
 ]

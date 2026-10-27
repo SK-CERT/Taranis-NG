@@ -420,7 +420,9 @@
         "tlp_description_amber": "Chỉ tiết lộ trong tổ chức của người nhận và cho khách hàng cần biết.",
         "tlp_description_amber_strict": "Chỉ tiết lộ trong tổ chức của người nhận.",
         "tlp_description_red": "Không tiết lộ ngoài những người nhận cụ thể.",
-        "tlp_description_unknown": "Nhãn TLP không xác định."
+        "tlp_description_unknown": "Nhãn TLP không xác định.",
+        "translate": "Dịch",
+        "translate_hint": "Báo cáo dịch trường này sang các ngôn ngữ của loại báo cáo"
     },
     "cvss_calculator": {
         "title": "Máy tính CVSS",
@@ -768,6 +770,34 @@
             "take_theirs": "Hủy giá trị của tôi, giữ giá trị đã lưu",
             "keep_mine": "Ghi đè bằng giá trị của tôi",
             "unknown_user": "Người dùng khác"
+        },
+        "translation": {
+            "source_language": "Ngôn ngữ của báo cáo",
+            "not_set": "Chưa đặt",
+            "source_tab": "{language} (bản gốc)",
+            "source_not_set": "Bản gốc (chưa đặt ngôn ngữ)",
+            "translate_report": "Dịch toàn bộ báo cáo",
+            "progress": "Đang dịch: đã xong {done}/{total} ngôn ngữ",
+            "finished": "Đã dịch xong",
+            "finished_with_problems": "Đã dịch xong. Chưa dịch: {failed}; bỏ qua vì có người đang sửa: {skipped}",
+            "intro": "Bản dịch sang {language}. Các trường không dịch hiển thị bản gốc.",
+            "translate_language": "Dịch sang {language}",
+            "translate_field": "Dịch bằng AI",
+            "same_in_all_languages": "Giống nhau ở mọi ngôn ngữ",
+            "source": "Bản gốc",
+            "overwrite_title": "Thay bản dịch của bạn?",
+            "overwrite_confirm": "Thay",
+            "overwrite_message": "Trường này được dịch thủ công. Bản dịch của AI sẽ thay thế nó.",
+            "field_locked": "Người khác đang sửa trường này nên nó không được dịch.",
+            "field_failed": "Không dịch được trường: {reason}",
+            "ai": "AI dịch",
+            "ai_hint": "Do AI dịch và chưa được xem lại",
+            "outdated": "Đã cũ",
+            "outdated_hint": "Bản gốc đã thay đổi sau khi được dịch",
+            "review": "Đánh dấu đã xem lại",
+            "review_all": "Đánh dấu các bản dịch AI là đã xem lại",
+            "reviewed": "Bản dịch AI đã được đánh dấu là đã xem lại: {count}",
+            "review_locked": "Có người khác đang sửa một trường, nên trường đó chưa được đánh dấu là đã xem lại."
         }
     },
     "product": {
@@ -817,7 +847,23 @@
             "confirm": "Thêm báo cáo",
             "confirm_published": "Thêm và hoàn tất",
             "untitled": "Báo cáo chưa đặt tên"
-        }
+        },
+        "language": "Ngôn ngữ của sản phẩm",
+        "language_in_use": "Sản phẩm đã có bản dịch sang ngôn ngữ đó",
+        "publish_in": "Xuất bản bằng",
+        "publish_in_language": "Xuất bản bằng: {language}",
+        "outdated_confirmation": "Bản dịch đã cũ",
+        "outdated_continue": "Vẫn tiếp tục",
+        "language_notice": {
+            "missing": "Các báo cáo này chưa có bản dịch sang {language}; dùng tiếng Anh hoặc bản gốc:",
+            "outdated": "Các bản dịch sang {language} này đã cũ vì bản gốc thay đổi sau khi dịch:",
+            "templates": "Loại sản phẩm không có mẫu cho {language}; dùng mẫu {used}.",
+            "default_templates": "mặc định"
+        },
+        "texts_not_translated": "Không thể dịch tiêu đề hoặc mô tả sang một số ngôn ngữ",
+        "nothing_to_translate": "Không có gì để dịch: các bản dịch đã được cập nhật.",
+        "translate_product": "Dịch toàn bộ sản phẩm",
+        "translation_intro": "Bản dịch sang {language}. Chỉ tiêu đề và mô tả được dịch; phần còn lại hiển thị bản gốc."
     },
     "analyze": {
         "sort": "Sắp xếp theo",
@@ -1144,7 +1190,15 @@
             "entity_type_required": "Bắt buộc có loại thực thể"
         },
         "tags": {
-            "tab_description": "Tại đây, bạn có thể quản lý thẻ."
+            "tab_description": "Tại đây, bạn có thể quản lý thẻ.",
+            "system": {
+                "translation_missing": "Thiếu bản dịch",
+                "translation_partial": "Đã dịch một phần",
+                "translation_outdated": "Bản dịch đã cũ",
+                "translation_ai": "Bản dịch AI chưa được xem lại",
+                "translation_done": "Đã dịch",
+                "language_not_set": "Chưa đặt ngôn ngữ"
+            }
         },
         "tag_workflow": {
             "tab_description": "Tại đây, bạn có thể quản lý liên kết thẻ với thực thể."
@@ -1409,7 +1463,13 @@
                 "link": "Liên kết",
                 "collected": "Ngày thu thập",
                 "published": "Ngày phát hành"
-            }
+            },
+            "default_templates": "Mặc định",
+            "add_language": "Thêm ngôn ngữ",
+            "remove_language": "Xóa {language}",
+            "language_templates_hint": "Mẫu dùng cho {language}. Trường để trống dùng mẫu mặc định.",
+            "template_language": "Ngôn ngữ của mẫu",
+            "template_language_hint": "Ngôn ngữ dùng để viết các mẫu mặc định"
         }
     },
     "publishers": {
@@ -1552,7 +1612,10 @@
             "successful_edit": "Đã cập nhật mô hình AI thành công",
             "error": "Không thể lưu mô hình AI này",
             "remove": "Đã xóa mô hình AI thành công",
-            "removed_error": "Mô hình AI đang được sử dụng và không thể xóa"
+            "removed_error": "Mô hình AI đang được sử dụng và không thể xóa",
+            "max_tlp": "TLP cao nhất được gửi",
+            "max_tlp_hint": "Văn bản của báo cáo có TLP cao hơn mức này không bao giờ được gửi tới nhà cung cấp này",
+            "max_tlp_none": "Không giới hạn"
         }
     },
     "word_lists": {
@@ -1610,7 +1673,20 @@
             "successful_edit": "Đã cập nhật loại mục báo cáo thành công",
             "removed_error": "Loại mục báo cáo đang được sử dụng và không thể xóa",
             "removed": "Đã xóa loại mục báo cáo thành công",
-            "total_count": "{count} loại báo cáo | {count} loại báo cáo"
+            "total_count": "{count} loại báo cáo | {count} loại báo cáo",
+            "languages": "Các phiên bản ngôn ngữ",
+            "languages_hint": "Báo cáo loại này được dịch sang các ngôn ngữ này",
+            "translation_ai_provider": "Nhà cung cấp AI để dịch",
+            "label_language": "Ngôn ngữ của nhãn",
+            "label_language_hint": "Ngôn ngữ dùng để viết các tên và mô tả ở trên",
+            "fields": "Trường",
+            "labels_tab": "Nhãn: {language}",
+            "labels_in": "Tên và mô tả bằng {language}. Bản gốc hiển thị dưới mỗi trường.",
+            "translate_labels": "Dịch các nhãn còn thiếu bằng AI",
+            "no_ai_provider": "Hãy chọn trước một nhà cung cấp AI để dịch",
+            "translate_labels_failed": "Không dịch được một số nhãn ({count})",
+            "labels_translated": "Đã dịch nhãn",
+            "copy_original": "Sao chép bản gốc"
         },
         "attributes": {
             "in_use": "Không thể xóa thuộc tính: thuộc tính đang được dùng bởi {types}",
@@ -1629,7 +1705,33 @@
             "edit_constant": "Chỉnh sửa hằng số",
             "value": "Giá trị",
             "error": "Không thể tạo thuộc tính này",
-            "total_count": "{count} thuộc tính | {count} thuộc tính"
+            "total_count": "{count} thuộc tính | {count} thuộc tính",
+            "constant_translations": "Bản dịch",
+            "no_languages": "Không loại báo cáo nào dùng thuộc tính này có ngôn ngữ khác.",
+            "constants_in": "Hằng số bằng {language}",
+            "translated_value": "Giá trị bằng {language}",
+            "edit_translation": "Sửa bản dịch",
+            "translate_missing": "Dịch phần còn thiếu bằng AI",
+            "translated_constants": "Hằng số đã dịch: {count}",
+            "translated_with_failures": "Hằng số đã dịch: {translated}; chưa dịch: {failed}"
+        },
+        "glossary": {
+            "tab": "Bảng thuật ngữ",
+            "tab_description": "Các thuật ngữ AI dùng khi dịch",
+            "title": "Bảng thuật ngữ dịch bằng AI",
+            "type_title": "Bảng thuật ngữ của loại báo cáo này",
+            "type_intro": "Các thuật ngữ này áp dụng cho báo cáo và nhãn của loại này, bổ sung cho bảng thuật ngữ của toàn bộ phiên bản; với cùng một thuật ngữ, thuật ngữ ở đây được ưu tiên.",
+            "add": "Thêm thuật ngữ",
+            "edit": "Sửa thuật ngữ",
+            "empty": "Chưa có thuật ngữ",
+            "keep": "Giữ nguyên",
+            "keep_hint": "Dành cho tên sản phẩm hoặc tổ chức: AI giữ nguyên thuật ngữ trong mọi ngôn ngữ.",
+            "note": "Ghi chú",
+            "note_hint": "Ngữ cảnh cho AI, ví dụ thuật ngữ áp dụng ở đâu",
+            "terms": "Thuật ngữ",
+            "add_language": "Thêm ngôn ngữ",
+            "remove_language": "Xóa {language}",
+            "needs_terms": "Nhập thuật ngữ bằng ít nhất hai ngôn ngữ, hoặc một thuật ngữ cần giữ nguyên."
         }
     },
     "external_user": {
@@ -2297,5 +2399,30 @@
         "product_hint": "Các nguồn mà mô tả sản phẩm có thể trích dẫn. Trong sản phẩm đã xuất bản, chúng được đánh số trước các liên kết của báo cáo.",
         "product_title": "Liên kết",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Thẻ",
+        "tag": "Thẻ",
+        "none_defined": "Chưa có thẻ nào cho các mục này",
+        "built_in_hint": "Taranis tự gắn thẻ này; có thể đổi kiểu dáng nhưng không thể đổi tên hay xóa. Hãy tắt nó trong quy trình thẻ.",
+        "built_in_link_hint": "Thẻ có sẵn vẫn được liên kết; thay vào đó hãy tắt chúng",
+        "add_new": "Thêm thẻ mới",
+        "edit": "Sửa thẻ",
+        "name": "Tên",
+        "description": "Mô tả",
+        "color": "Màu",
+        "icon": "Biểu tượng",
+        "in_use": "Thẻ đang gắn trên {count} báo cáo hoặc sản phẩm nên không thể xóa",
+        "add_link": "Thêm liên kết thẻ",
+        "edit_link": "Sửa liên kết thẻ",
+        "status_in_language": "{language}: {status}",
+        "filter": "Lọc theo thẻ và bản dịch",
+        "translation": "Bản dịch",
+        "translation_language": "Ngôn ngữ",
+        "translation_any": "Bất kỳ",
+        "translation_needs": "Cần dịch",
+        "translation_unreviewed": "Bản dịch AI chưa được xem lại",
+        "translation_not_set": "Chưa đặt ngôn ngữ",
+        "clear_filter": "Xóa bộ lọc"
     }
 }

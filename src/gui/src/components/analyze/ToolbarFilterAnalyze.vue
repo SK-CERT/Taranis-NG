@@ -34,6 +34,11 @@
                 >
                     <v-icon>{{ completedFilterIcon }}</v-icon>
                 </v-chip>
+                <TagFilterMenu
+                    v-model="tagFilter"
+                    entity-type="report_item"
+                    @update:model-value="emitFilter"
+                />
             </div>
         </template>
     </BaseToolbarFilter>
@@ -73,6 +78,8 @@
     import { useAnalyzeStore } from '@/stores/analyze'
     import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
     import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
+    import TagFilterMenu from '@/components/common/tags/TagFilterMenu.vue'
+    import type { TagFilterState } from '@/api/tags'
 
     type AnalyzeFilter = {
         search: string
@@ -119,6 +126,7 @@
     })
 
     const compactMode = ref(false)
+    const tagFilter = ref<TagFilterState>({ tags: [], translation: '', translation_language: null })
 
     const multiSelectActive = computed(() => analyzeStore.getMultiSelectReport)
 
@@ -158,6 +166,7 @@
     const emitFilter = (): void => {
         emit('update-filter', {
             ...filter.value,
+            ...tagFilter.value,
             compact_mode: compactMode.value
         })
     }

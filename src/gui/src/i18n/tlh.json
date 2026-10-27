@@ -420,7 +420,9 @@
         "tlp_description_amber": "Hevbogh yej qoDDaq, yej nobwI'pu'Daj je, SovnISbogh neH 'anglu'.",
         "tlp_description_amber_strict": "Hevbogh yej neH 'anglu'.",
         "tlp_description_red": "Hevbogh ghotpu' neH; latlh 'anglu'be'.",
-        "tlp_description_unknown": "TLP per Sovbe'lu'bogh."
+        "tlp_description_unknown": "TLP per Sovbe'lu'bogh.",
+        "translate": "mugh",
+        "translate_hint": "ja'ghachmey Segh Hol'e' mughlu'taH 'ay'vam"
     },
     "cvss_calculator": {
         "title": "CVSS toghwI'",
@@ -768,6 +770,34 @@
             "take_theirs": "wIjDaj yIwoD; pollu'bogh yIpol",
             "keep_mine": "wIjDaj yIlo'; yIghItlhqa'",
             "unknown_user": "lo'wI' latlh"
+        },
+        "translation": {
+            "source_language": "ja'ghach Hol",
+            "not_set": "lu'Dalu'be'",
+            "source_tab": "{language} (wa'DIch ghItlh)",
+            "source_not_set": "wa'DIch ghItlh (Hol lu'Dalu'be')",
+            "translate_report": "Hoch ja'ghach yImugh",
+            "progress": "mughtaH: {total} Holmey {done} rIn",
+            "finished": "mugh rInpu'",
+            "finished_with_problems": "mugh rInpu'. mughlu'be'bogh: {failed}; choHtaHmo' vay' Saw'lu'bogh: {skipped}",
+            "intro": "{language} Hol mugh. 'ay'mey mughlu'be'bogh wa'DIch ghItlh 'agh.",
+            "translate_language": "{language} Hol yImugh",
+            "translate_field": "De'wI' val yIlo' 'ej yImugh",
+            "same_in_all_languages": "Hoch Holmey rap",
+            "source": "wa'DIch ghItlh",
+            "overwrite_title": "mughmeyjaj DaSIgh'a'?",
+            "overwrite_confirm": "yIchoH",
+            "overwrite_message": "ghopvaD mughlu'pu' 'ay'vam. De'wI' val mugh tamlu'.",
+            "field_locked": "'ay'vam choHtaH latlh, vaj mughlu'be'.",
+            "field_failed": "'ay' vImughlaHbe': {reason}",
+            "ai": "De'wI' val",
+            "ai_hint": "De'wI' mughpu'; bejlu'be'",
+            "outdated": "ngo'",
+            "outdated_hint": "mughlu'DI' wa'DIch ghItlh choHlu'",
+            "review": "bejlu'pu' yIghItlh",
+            "review_all": "De'wI' mughmey bejlu'pu' yIghItlh",
+            "reviewed": "De'wI' mughmey bejlu'pu': {count}",
+            "review_locked": "latlh ghot mu' choHtaH; bejlu'pu' ghItlhbe'lu'."
         }
     },
     "product": {
@@ -817,7 +847,23 @@
             "confirm": "ja'ghachmey yIchel",
             "confirm_published": "yIchel 'ej yIrInmoH",
             "untitled": "ja'ghach per Hutlhbogh"
-        }
+        },
+        "language": "Doch Hol",
+        "language_in_use": "Holvam mugh ghaj Dochvam",
+        "publish_in": "Holvam yIchenmoH",
+        "publish_in_language": "chenmoHlu'bogh Hol: {language}",
+        "outdated_confirmation": "mughmey ngo'",
+        "outdated_continue": "yItaH",
+        "language_notice": {
+            "missing": "{language} mugh ghajbe' ja'ghachmeyvam; DIvI' Hol pagh wa'DIch ghItlh lo'lu':",
+            "outdated": "{language} mughmeyvam ngo', mughlu'DI' wa'DIch ghItlh choHlu'mo':",
+            "templates": "{language} meghmey ghajbe' Doch Segh; {used} meghmey lo'lu'.",
+            "default_templates": "motlh"
+        },
+        "texts_not_translated": "wa'logh Hol mugh, pagh Del mughlaHbe'lu'",
+        "nothing_to_translate": "mughnIS pagh: mughmey chu'.",
+        "translate_product": "Hoch ghItlh yImugh",
+        "translation_intro": "{language} Hol mugh. per Del je neH mughlu'; latlh wa'DIch ghItlh 'agh."
     },
     "analyze": {
         "sort": "yIngaQmoH",
@@ -1144,7 +1190,15 @@
             "entity_type_required": "Doch Segh poQlu'"
         },
         "tags": {
-            "tab_description": "naDev permey DaSeHlaH."
+            "tab_description": "naDev permey DaSeHlaH.",
+            "system": {
+                "translation_missing": "mugh tu'lu'be'",
+                "translation_partial": "bID mughlu'pu'",
+                "translation_outdated": "mugh ngo'",
+                "translation_ai": "De'wI' mugh bejlu'be'",
+                "translation_done": "mughlu'pu'",
+                "language_not_set": "Hol wIvlu'be'"
+            }
         },
         "tag_workflow": {
             "tab_description": "naDev per rarghachmey DaSeHlaH."
@@ -1409,7 +1463,13 @@
                 "link": "rarwI'",
                 "collected": "boSghach jaj",
                 "published": "'angghach jaj"
-            }
+            },
+            "default_templates": "motlh",
+            "add_language": "Hol yIchel",
+            "remove_language": "{language} yIteq",
+            "language_templates_hint": "{language} Hol ghItlhmeH meghmey. 'ay' chImbogh motlh megh lo'.",
+            "template_language": "meghmey Hol",
+            "template_language_hint": "motlh meghmey ghItlhmeH Hol"
         }
     },
     "publishers": {
@@ -1552,7 +1612,10 @@
             "successful_edit": "De'wI' val Hew choHlu'pu'. Qapla'!",
             "error": "De'wI' val Hewvam vIpollaHbe'",
             "remove": "De'wI' val Hew Qaw'lu'pu'. Qapla'!",
-            "removed_error": "De'wI' val Hew lo'lu'taH; vIQaw'laHbe'"
+            "removed_error": "De'wI' val Hew lo'lu'taH; vIQaw'laHbe'",
+            "max_tlp": "TLP tIn law' ngeHlu'bogh",
+            "max_tlp_hint": "TLPvam tIn law'bogh ja'ghachmey ghItlh not ngeHlu' nobwI'vamDaq",
+            "max_tlp_none": "veH Hutlh"
         }
     },
     "word_lists": {
@@ -1610,7 +1673,20 @@
             "successful_edit": "ja'ghach Segh choHlu'pu'. Qapla'!",
             "removed_error": "ja'ghach Segh lo'lu'taH; vIQaw'laHbe'",
             "removed": "ja'ghach Segh Qaw'lu'pu'. Qapla'!",
-            "total_count": "pagh ja'ghach Segh | {count} ja'ghach Segh | {count} ja'ghach Segh"
+            "total_count": "pagh ja'ghach Segh | {count} ja'ghach Segh | {count} ja'ghach Segh",
+            "languages": "Hol choHmey",
+            "languages_hint": "Holmeyvam mughlu' ja'ghach Seghvam ja'ghachmey",
+            "translation_ai_provider": "mughmeH De'wI' val nobwI'",
+            "label_language": "per Hol",
+            "label_language_hint": "Dung pongmey Delghachmey je ghItlhmeH Hol",
+            "fields": "'ay'mey",
+            "labels_tab": "permey: {language}",
+            "labels_in": "{language} pongmey Delghachmey je. Hoch 'ay' bIngDaq wa'DIch ghItlh 'aghlu'.",
+            "translate_labels": "permey Dachbogh yImugh De'wI' valvaD",
+            "no_ai_provider": "wa'DIch mughmeH De'wI' val nobwI' yIwIv",
+            "translate_labels_failed": "'op permey vImughlaHbe' ({count})",
+            "labels_translated": "permey mughlu'pu'",
+            "copy_original": "Hal ghItlh yIlI'"
         },
         "attributes": {
             "in_use": "ngoD vIQaw'laHbe': lo' {types}",
@@ -1629,7 +1705,33 @@
             "edit_constant": "choHbe'wI' yIchoH",
             "value": "lo'laHghach",
             "error": "ngoDvam vIchenmoHlaHbe'",
-            "total_count": "pagh ngoD | {count} ngoD | {count} ngoD"
+            "total_count": "pagh ngoD | {count} ngoD | {count} ngoD",
+            "constant_translations": "mughmey",
+            "no_languages": "latlh Holmey ghajbe' ngoDvam lo'bogh ja'ghach Segh.",
+            "constants_in": "{language} Hol ngoDmey",
+            "translated_value": "{language} Hol lo'laHghach",
+            "edit_translation": "mugh yIchoH",
+            "translate_missing": "Dachbogh yImugh De'wI' valvaD",
+            "translated_constants": "mughlu'pu'bogh ngoDmey: {count}",
+            "translated_with_failures": "mughlu'pu'bogh ngoDmey: {translated}; mughlu'be'bogh: {failed}"
+        },
+        "glossary": {
+            "tab": "mu'ghom",
+            "tab_description": "mughDI' De'wI' mu'mey lo'",
+            "title": "De'wI' mugh mu'ghom",
+            "type_title": "ja'chuq Segh mu'ghom",
+            "type_intro": "Segh ja'chuqmey permey je mu'meyvam lo'; Hoch mu'ghom lo'lu' je. mu' rap: naDev mu' Dun law'.",
+            "add": "mu' yIchel",
+            "edit": "mu' yIchoH",
+            "empty": "mu' tu'lu'be'",
+            "keep": "yIpol",
+            "keep_hint": "Doch pong, ghom pong: Hoch HolDaq mu' choHbe' De'wI'.",
+            "note": "QIn",
+            "note_hint": "De'wI'vaD ghu'",
+            "terms": "mu'mey",
+            "add_language": "Hol yIchel",
+            "remove_language": "{language} yIteq",
+            "needs_terms": "cha' HolDaq mu' yIghItlh, pagh wa' mu' polmeH yIghItlh."
         }
     },
     "external_user": {
@@ -2297,5 +2399,30 @@
         "product_hint": "Hal'a' ngu'laH Delghach. Delghach DelaHbogh Daq wa'DIch mI' lunob, ja'meymey rarwI'mey nI'.",
         "product_title": "rarwI'mey",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "permey",
+        "tag": "per",
+        "none_defined": "Doch Dochmeyvam per tu'lu'be'",
+        "built_in_hint": "Taranis per lan; De'wI' Dub choHlaH, 'ach pongDaj choHlaHbe' 'ej Qaw'laHbe'. per mIwDaq yIQotlh.",
+        "built_in_link_hint": "Taranis permey rarlu'taH; yIQotlh",
+        "add_new": "per chu' yIchel",
+        "edit": "per yIchoH",
+        "name": "pong",
+        "description": "Del",
+        "color": "nguv",
+        "icon": "mIllogh",
+        "in_use": "{count} ja'chuq ghap Doch per lanlu'; Qaw'laHbe'",
+        "add_link": "per rar yIchel",
+        "edit_link": "per rar yIchoH",
+        "status_in_language": "{language}: {status}",
+        "filter": "permey mughmo' yIwIv",
+        "translation": "mugh",
+        "translation_language": "Hol",
+        "translation_any": "Hoch",
+        "translation_needs": "mughnIS",
+        "translation_unreviewed": "De'wI' mugh bejlu'be'",
+        "translation_not_set": "Hol wIvlu'be'",
+        "clear_filter": "yIteq"
     }
 }

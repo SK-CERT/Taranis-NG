@@ -85,6 +85,7 @@
     import CardAnalyze from './CardAnalyze.vue'
     import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
+    import { tagFilterQuery, type TagFilterState } from '@/api/tags'
     import { useSseResync } from '@/composables/useSseResync'
     import { getAnalyzeGroupName } from '@/utils/analyze-routing'
 
@@ -95,7 +96,7 @@
         [key: string]: unknown
     }
 
-    type FilterState = {
+    type FilterState = TagFilterState & {
         search: string
         range: string
         completed: boolean | string
@@ -271,7 +272,8 @@
             oldFilter.search !== newFilter.search ||
             oldFilter.range !== newFilter.range ||
             oldFilter.completed !== newFilter.completed ||
-            oldFilter.sort !== newFilter.sort
+            oldFilter.sort !== newFilter.sort ||
+            tagFilterQuery(oldFilter) !== tagFilterQuery(newFilter)
 
         filter.value = newFilter
         if (dataFilterChanged) {

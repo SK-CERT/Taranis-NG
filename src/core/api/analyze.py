@@ -3,13 +3,14 @@
 import io
 from http import HTTPStatus
 
+from api import tag
 from flask import jsonify, request, send_file
 from flask_restful import Api, Resource
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
-from langchain_openai import ChatOpenAI
-from managers import asset_manager, auth_manager
+from managers import asset_manager, auth_manager, llm_manager, tlp, translation_manager
 from managers.auth_manager import ACLCheck, auth_required
+from managers.db_manager import db
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
 from model.attribute import AttributeEnum
@@ -65,6 +66,7 @@ class ReportItems(Resource):
                 report_filter["range"] = request.args["range"]
             if request.args.get("sort"):
                 report_filter["sort"] = request.args["sort"]
+            report_filter.update(tag.list_filter(request.args))
 
             group = request.args.get("group")
             offset = request.args.get("offset", 0)
@@ -84,11 +86,17 @@ class ReportItems(Resource):
             new_report_item.id (int): new report item ID
             status (int): status code
         """
-        new_report_item, status = ReportItem.add_report_item(request.json, auth_manager.get_user_from_jwt())
-        if status == HTTPStatus.OK:
-            asset_manager.report_item_changed(new_report_item)
-            sse_manager.remote_access_report_items_updated(new_report_item.report_item_type_id)
-            sse_manager.report_items_updated()
+        try:
+            new_report_item, status = ReportItem.add_report_item(request.json, auth_manager.get_user_from_jwt())
+        except ValueError as ex:
+            # A language that is not a language code; nothing was stored.
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        if status != HTTPStatus.OK:
+            # The reason, e.g. no access to the report type.
+            return {"error": new_report_item}, status
+        asset_manager.report_item_changed(new_report_item)
+        sse_manager.remote_access_report_items_updated(new_report_item.report_item_type_id)
+        sse_manager.report_items_updated()
 
         return new_report_item.id, status
 
@@ -121,6 +129,9 @@ class ReportItemResource(Resource):
             # The value changed since the client read it; nothing was written. The client
             # decides whether to keep its version or take the stored one.
             return data, HTTPStatus.CONFLICT
+        if data.get("error") is not None:
+            # A translation or language change that is not allowed; nothing was written.
+            return data, HTTPStatus.BAD_REQUEST
 
         if modified is True:
             updated_report_item = ReportItem.find(report_item_id)
@@ -170,6 +181,8 @@ class ReportItemData(Resource):
                 "attribute_id",
                 "aggregate_ids",
                 "remote_report_item_ids",
+                "language",
+                "source_language",
             ]:
                 value = request.args.get(key)
                 # empty value '' also means: this field changed, refetch
@@ -364,6 +377,142 @@ class ReportItemDownloadAttachment(Resource):
         return response
 
 
+def _generate_tlp_refusal(ai_provider: object, body: dict) -> str | None:
+    """Explain why generating for this report may not use the provider, or return None.
+
+    A saved report is checked by its stored TLP; a report still being written sends the TLP
+    values of its form, as there is nothing stored yet.
+
+    Args:
+        ai_provider (AiProvider): The attribute's provider.
+        body (dict): The request: ``report_item_id``, or ``tlp`` (list of values, absent when
+            the report type has no TLP field).
+
+    Returns:
+        str | None: The refusal.
+    """
+    report_item_id = body.get("report_item_id")
+    if report_item_id:
+        report_item = ReportItem.find(report_item_id)
+        if report_item is not None:
+            return llm_manager.tlp_refusal(ai_provider, llm_manager.report_tlp_levels(report_item), "The report")
+    levels = body.get("tlp")
+    if isinstance(levels, list):
+        return llm_manager.tlp_refusal(ai_provider, [tlp.normalize(value) for value in levels], "The report")
+    return None
+
+
+class ReportItemTags(Resource):
+    """The tags people put on a report item."""
+
+    @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
+    def put(self, report_item_id: int) -> tuple[dict, HTTPStatus]:
+        """Make ``tag_ids`` the report's tags.
+
+        Args:
+            report_item_id (int): The report item ID.
+
+        Returns:
+            (dict, int): ``{"tags"}``, or why they were refused.
+        """
+        if ReportItem.find(report_item_id) is None:
+            return {"error": "Report item not found"}, HTTPStatus.NOT_FOUND
+        user = auth_manager.get_user_from_jwt()
+        try:
+            tag_ids = ReportItem.set_tags(report_item_id, (request.json or {}).get("tag_ids"), user)
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        sse_manager.report_item_updated({"report_item_id": report_item_id, "user_id": user.id, "tags": tag_ids})
+        sse_manager.report_items_updated()
+        return {"tags": tag_ids}, HTTPStatus.OK
+
+
+class ReportItemTranslationReview(Resource):
+    """Mark AI translations of a report item as reviewed, without changing them."""
+
+    @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
+    def post(self, report_item_id: int) -> tuple[dict, HTTPStatus]:
+        """Review the AI translations of one ``language``: the ``fields`` named, or all of them.
+
+        Args:
+            report_item_id (int): report item ID
+        Returns:
+            (dict, HTTPStatus): The keys reviewed and skipped for a lock, and the report's translations.
+        """
+        body = request.json or {}
+        report_item = ReportItem.find(report_item_id)
+        if report_item is None:
+            return {"error": "Report item not found"}, HTTPStatus.NOT_FOUND
+        language = body.get("language")
+        fields = body.get("fields")
+        if fields is not None and not isinstance(fields, list):
+            return {"error": "fields must be a list"}, HTTPStatus.BAD_REQUEST
+        if not report_item.language or language not in report_item.variant_languages():
+            return {"error": "The report is not translated into this language"}, HTTPStatus.BAD_REQUEST
+
+        user = auth_manager.get_user_from_jwt()
+        reviewed, skipped_locked = translation_manager.review_language(report_item, language, user, fields)
+        if reviewed:
+            # Other open dialogs reload the translations, and lists their status.
+            sse_manager.report_item_updated(
+                {"report_item_id": report_item_id, "translated": True, "languages": [language], "user_id": user.id},
+            )
+            sse_manager.report_items_updated()
+        translations = ReportItem.find(report_item_id).translations_json()
+        return {"reviewed": reviewed, "skipped_locked": skipped_locked, "translations": translations}, HTTPStatus.OK
+
+
+class ReportItemTranslate(Resource):
+    """Translate a report item into its report type's languages with AI."""
+
+    @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
+    def post(self, report_item_id: int) -> tuple[dict, HTTPStatus]:
+        """Translate fields, a language, or the whole report.
+
+        The body may name ``languages`` (default: all the report type's), ``fields`` (default:
+        every empty or outdated one) and ``overwrite_manual``. Fields of one language are
+        translated in the request; anything bigger runs in the background and reports progress
+        over SSE.
+
+        Args:
+            report_item_id (int): report item ID
+        Returns:
+            (dict, HTTPStatus): The result, or that the job started.
+        """
+        body = request.json or {}
+        user = auth_manager.get_user_from_jwt()
+        report_item = ReportItem.find(report_item_id)
+        if report_item is None:
+            return {"error": "Report item not found"}, HTTPStatus.NOT_FOUND
+
+        languages = body.get("languages") or report_item.variant_languages()
+        fields = body.get("fields")
+        overwrite_manual = bool(body.get("overwrite_manual"))
+        if not isinstance(languages, list) or (fields is not None and not isinstance(fields, list)):
+            return {"error": "languages and fields must be lists"}, HTTPStatus.BAD_REQUEST
+
+        error = translation_manager.check_translatable(report_item, languages)
+        if error is not None:
+            return {"error": error}, HTTPStatus.BAD_REQUEST
+        if translation_manager.job_running(report_item_id):
+            return {"error": "The report is already being translated"}, HTTPStatus.CONFLICT
+
+        if fields and len(languages) == 1:
+            try:
+                result = translation_manager.translate_language(report_item, languages[0], user, fields, overwrite_manual)
+            except llm_manager.LlmError as llm_error:
+                return {"error": str(llm_error)}, HTTPStatus.BAD_REQUEST
+            sse_manager.report_item_updated(
+                {"report_item_id": report_item_id, "translated": True, "languages": languages, "user_id": user.id},
+            )
+            return {"results": [result.to_dict()], "translations": ReportItem.find(report_item_id).translations_json()}, HTTPStatus.OK
+
+        if not translation_manager.start_job(report_item_id, languages, user, overwrite_manual):
+            return {"error": "The report is already being translated"}, HTTPStatus.CONFLICT
+        return {"started": True, "languages": languages}, HTTPStatus.ACCEPTED
+
+
 class ReportItemLlmGenerate(Resource):
     """Report item types API endpoint."""
 
@@ -377,6 +526,10 @@ class ReportItemLlmGenerate(Resource):
             ai_provider = attr.ai_provider
             if not ai_provider or not ai_prompt:
                 return {"message": f"Unknown AI model or empty AI prompt! (Attribute ID: {attribute_id})"}
+
+            refusal = _generate_tlp_refusal(ai_provider, request.json)
+            if refusal is not None:
+                return {"error": refusal}, HTTPStatus.FORBIDDEN
 
             documents_for_llm = []
             document_nr = 0
@@ -402,14 +555,9 @@ class ReportItemLlmGenerate(Resource):
 
             context_text = "\n\n".join(doc.page_content for doc in documents_for_llm)
 
-            if ai_provider.api_type == "openai":
-                llm = ChatOpenAI(
-                    model_name=ai_provider.model,
-                    api_key=ai_provider.api_key,
-                    base_url=ai_provider.api_url,
-                    reasoning_effort="none",
-                )
-            else:
+            try:
+                llm = llm_manager.build_chat_model(ai_provider)
+            except llm_manager.LlmError:
                 msg = f"LLM generate: unsupported local model type '{ai_provider.api_type}'"
                 logger.warning(msg)
                 return {"message": msg}, 400
@@ -508,6 +656,9 @@ def initialize(api: Api) -> None:
         "/api/v1/analyze/report-items/<int:report_item_id>/file-attributes/<int:attribute_id>/file",
     )
     api.add_resource(ReportItemLlmGenerate, "/api/v1/analyze/report-item-attributes/<int:attribute_id>/llm-generate")
+    api.add_resource(ReportItemTranslate, "/api/v1/analyze/report-items/<int:report_item_id>/translate")
+    api.add_resource(ReportItemTranslationReview, "/api/v1/analyze/report-items/<int:report_item_id>/translations/review")
+    api.add_resource(ReportItemTags, "/api/v1/analyze/report-items/<int:report_item_id>/tags")
 
     Permission.add("ANALYZE_ACCESS", "Analyze access", "Access to Analyze module")
     Permission.add("ANALYZE_CREATE", "Analyze create", "Create report item")

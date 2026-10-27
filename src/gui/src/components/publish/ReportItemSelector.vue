@@ -151,6 +151,7 @@
     import { useSettingsStore } from '@/stores/settings'
     import { Settings } from '@/types/settings'
     import { getEntityTypeStates } from '@/api/state'
+    import { useContentLanguages } from '@/composables/useContentLanguages'
 
     type ReportItem = {
         id: number | string
@@ -169,6 +170,7 @@
     }
 
     const { t } = useI18n()
+    const { titleOf } = useContentLanguages()
     const analyzeStore = useAnalyzeStore()
     const settingsStore = useSettingsStore()
 
@@ -332,7 +334,7 @@
         if (!pendingSelection.value) return []
         return pendingSelection.value
             .filter((item) => !isReportFinal(item))
-            .map((item) => item.title || item.report_type_name || t('product.add_incomplete_reports.untitled'))
+            .map((item) => titleOf(item).title || item.report_type_name || t('product.add_incomplete_reports.untitled'))
     })
 
     const confirmButton = computed(() => {

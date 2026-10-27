@@ -14,6 +14,7 @@ item and product preview.
 - [Management script - configure accounts, roles, nodes and dictionaries via commandline](#_toc5)
 - [Using AI in Taranis NG](#_toc6)
 - [Citing sources in reports and products](#_toc7)
+- [Reports and products in several languages](#_toc8)
 
 # <a id="_toc1"></a>Altering the roles
 
@@ -348,3 +349,130 @@ For a custom report type to support citations, give it an attribute of type **Li
 the positional `[n]` citations of existing reports and product descriptions into tokens. Core
 and public-web nodes must run the same version: a public-web node only shows the numbers core
 rendered.
+
+# <a id="_toc8"></a>Reports and products in several languages
+
+An analyst writes a report in one language. Taranis keeps its translations next to it, made by
+hand or by an AI model, and renders products and the public web in the language asked for. The
+original always stays as written; a translation never replaces it.
+
+Everything rendered in a language falls back the same way: the language asked for, then
+English, then the original, whatever language that is in. A language that *is* the original's
+language gets the original, never a translation.
+
+### Report types
+
+In **Configuration → Reports → Report Types**, edit a report type:
+
+- **Language variants**: every language reports of this type should exist in, including the
+  one they are usually written in.
+- **AI provider for translation**: optional; without one, translations are written by hand.
+- **Language of the labels**: the language the type's own texts (its name, description, group
+  and field names) are written in. Set it: without it, the original labels are only the last
+  fallback, so an English label translation would win over Czech labels on a Czech product.
+- **Translate** on a field: whether reports translate its values. Only String, Text and Rich
+  text fields can be translated; CVEs, dates, links, TLP and the other types read the same in
+  every language.
+- **Labels: {language}** tabs translate the type's own texts. The original is shown under each
+  field, and the copy button next to it copies the original in for names that read the same.
+  **Translate missing labels with AI** fills the empty ones.
+
+### Constants of choice attributes
+
+Enum, Radio and Multiple choice values are translated once, in configuration. In
+**Configuration → Reports → Attributes**, edit the attribute: its **Translations** section has a
+tab for each language of the report types using it (except their labels' language). Edit a
+constant's translation there, or use **Translate missing with AI**. Reports keep storing the
+original constant, so templates and filters that compare it keep working.
+
+### Writing and translating a report
+
+- A new report is written in your **Default language for reports/products** (user settings).
+  The **Language of the report** select in the dialog's toolbar shows it and can change it
+  before you save.
+- Once it is saved, the report has a tab for each other language of its type. In a tab, type a
+  translation, or use the AI buttons: per field, **Translate into {language}** for the tab, or
+  **Translate whole report** in the toolbar, which runs in the background and shows its
+  progress. A tab or the whole report gets only its empty and outdated fields filled; a
+  translation a person wrote is replaced only from that field's own button, after confirming.
+- A translation made by AI is marked **AI** until someone edits or reviews it. When it is right as
+  it is, the check mark next to **AI** marks it reviewed without changing it; **Mark AI
+  translations as reviewed** does so for the whole tab. A translation is marked **Outdated** when
+  its original changed after it was made; reviewing an outdated AI translation confirms it for
+  the current original. Fields another user is editing are not marked.
+- Fields are locked per language while someone edits them, and the AI job skips a field that
+  another user is editing.
+- The Analyze and Products lists show names in the GUI's language, with the same fallback.
+- Reports and products created before this feature have no language. They render exactly as
+  before. Set the language in the toolbar to enable their translation tabs; Taranis does not
+  guess it.
+
+### Limiting what is sent to an AI provider
+
+In **Configuration → Data providers → AI models**, **Highest TLP sent** limits which reports an
+AI model may see: report translation, product title translation and **Auto Generate** refuse a
+report above that TLP, or one whose TLP field is empty while a limit is set, and say why. New
+models default to CLEAR; models that existed before have no limit until you set one. Reports
+whose type has no TLP field are not checked, and neither are configuration texts (labels and
+constants).
+
+### Products
+
+- A product's language is chosen with **Language of the product** in the dialog's toolbar, next
+  to the state; a new product starts in your default language.
+- The product has a tab for its own language and for each language of its reports' types, with
+  its title and description per tab, as in a report: **Translate whole product** in the toolbar
+  fills, with AI, the texts that have no translation or an outdated one the AI made, language
+  after language with a progress bar; in a language tab, **Translate into {language}** does the
+  same for that language, and **Mark AI translations as reviewed** keeps its AI texts as they are.
+  A translation a person wrote is replaced only from that text's own button, after confirming; the
+  check mark next to **AI** marks one text reviewed.
+- **Show product preview** and **Download** render the open tab's language. The publish dialog
+  has a **Publish in** select; each publish uses one language, so publishing two languages takes
+  two publishes.
+- Notices under the tabs say what a language falls back on: reports without a translation into
+  it, outdated translations (preview, download and publish ask to confirm them first), and a
+  product type without templates for it.
+
+### Templates per language
+
+In **Configuration → Presenters → Product Types**, the **Default** tab holds all parameters and
+**Language of the templates**, the language the default templates are written in. **Add
+language** adds a tab with only the template paths for that language; a path left empty uses
+the default one. A product is rendered with the templates of its language, then English, then
+the default ones. A presenter without templates, such as JSON, has none of these settings.
+Existing per-language product types (for example `e-mail CZ` and `e-mail SK`) keep working; set
+their template language, and a product rendered in another language warns about it.
+
+For template authors, rendering in a language changes only additive fields, so existing
+templates keep producing the same output:
+
+- In the language rendered: `report_item.name`, `report_item.name_prefix`, the values of
+  translated fields in `report_item.attrs`, and `data.product.title`.
+- Unchanged: `report_item.type`, the `report_item.attrs` keys and the choice constants in it
+  (conditions such as `attrs.impact == 'High'` keep working).
+- New: `report_item.attrs_display` (the same keys with constants translated),
+  `report_item.labels` (each key's field name in the language), `report_item.type_label`,
+  `report_item.type_description_label` and `data.product.language`.
+
+The JSON presenter's output has the same keys in every language, plus these fields.
+
+### Public web
+
+A public web's pages are in the page's language: `?lang=`, else the browser's language, else the
+web's default (see **Languages** in **Configuration → Public Web**). Visitors switch to another of
+the web's languages in the language menu at the top of the homepage and of each report (a web with
+one language has none); the menu sets `?lang=`, which the page's links keep.
+
+The page's language changes a report only where the report is translated into it: what is not
+stays as written, with no English in between (unlike products and presenters), and outdated
+translations are skipped. When a report is shown in another language than the page's, the page
+says which. The report's own phrases (*More information*, *The vulnerability was publicly
+disclosed*, its labels) are in the language the report is shown in, so a report nobody translated
+reads entirely in the language it was written in, and only the page around it follows the visitor.
+A bulletin whose reports are in different languages shows each one in its own.
+
+### Upgrading
+
+Remote presenter nodes must be upgraded before core: core sends presenters fields that older
+nodes reject. Core and public-web nodes can be upgraded in either order.

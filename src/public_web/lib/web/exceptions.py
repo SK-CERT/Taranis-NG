@@ -1,7 +1,7 @@
 """Flask error handlers for the public-web service.
 
-Maps HTTP error codes to custom error templates and mails unexpected internal
-server errors to the configured admin recipients.
+Maps HTTP error codes to custom error templates, and logs unexpected internal
+server errors and mails them to the configured admin recipients.
 """
 
 from datetime import UTC, datetime
@@ -16,7 +16,10 @@ from lib import (
     config,
     send_mail,
 )
+from lib.logger import get_logger
 from werkzeug.exceptions import HTTPException
+
+logger = get_logger("web", silent=True)
 
 
 def register_error_handlers(app: Flask) -> None:
@@ -38,9 +41,11 @@ def register_error_handlers(app: Flask) -> None:
         """Handle errors and exceptions that occurred in the application.
 
         A custom web page is shown to the user (error template). Exceptions are
-        also mailed to admins.
+        also logged, and mailed to admins - the mail alone is lost when no mail
+        server is reachable.
         """
         code = e.code if (hasattr(e, "code") and e.code is not None) else 500
+        logger.error("Unexpected exception (HTTP %s) on %s", code, request.full_path, exc_info=e)
         traceback = "".join(TracebackException.from_exception(e).format())
         send_mail(
             f"Unexpected Exception (HTTP {code}) occurred on the "

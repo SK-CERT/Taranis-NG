@@ -341,6 +341,7 @@
             "routing.tls_title",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "tags.status_in_language",
             "theme_editor.tokens.onSurface",
             "themes.retro",
             "themes.vintage"
@@ -411,6 +412,10 @@
             "routing.tab_title",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "tags.name",
+            "tags.status_in_language",
+            "tags.tag",
+            "tags.tags",
             "theme_editor.groups.details",
             "theme_editor.groups.status",
             "theme_editor.tokens.info",
@@ -447,6 +452,8 @@
             "routing.served_days_left",
             "settings.language_name_with_code",
             "settings.tab_general",
+            "tags.color",
+            "tags.status_in_language",
             "theme_editor.tokens.error",
             "themes.aurora",
             "themes.retro",
@@ -524,6 +531,7 @@
             "settings.configuration_view",
             "settings.description",
             "settings.language_name_with_code",
+            "tags.description",
             "theme_editor.groups.surfaces",
             "theme_editor.tokens.accent",
             "theme_editor.tokens.info",
@@ -548,7 +556,8 @@
             "public_web.webs.smtp_url",
             "publishers.nodes.api_url",
             "report_item.id_with_value",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "tags.status_in_language"
         ],
         "it": [
             "bots.presets.bot",
@@ -574,6 +583,8 @@
             "report_item.id_with_value",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "tags.status_in_language",
+            "tags.tag",
             "theme_editor.tokens.info",
             "themes.aurora",
             "themes.vintage"
@@ -590,13 +601,15 @@
             "public_web.nodes.api_url",
             "public_web.webs.smtp_url",
             "publishers.nodes.api_url",
-            "report_item.id_with_value"
+            "report_item.id_with_value",
+            "tags.status_in_language"
         ],
         "kk": [
             "card_item.source_with_type",
             "data_providers.data.user_agent",
             "report_item.id_with_value",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "tags.status_in_language"
         ],
         "ko": [
             "bots.nodes.api_url",
@@ -609,7 +622,8 @@
             "public_web.nodes.api_url",
             "public_web.webs.smtp_url",
             "publishers.nodes.api_url",
-            "report_item.id_with_value"
+            "report_item.id_with_value",
+            "tags.status_in_language"
         ],
         "nl": [
             "attribute.status",
@@ -648,10 +662,14 @@
             "publishers.presets.parameters",
             "report_item.id_with_value",
             "reports.attributes.type",
+            "reports.types.labels_tab",
             "routing.header_name",
             "routing.served_days_left",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "tags.status_in_language",
+            "tags.tag",
+            "tags.tags",
             "theme_editor.groups.details",
             "theme_editor.groups.status",
             "theme_editor.tokens.accent",
@@ -687,6 +705,8 @@
             "report_item.id_with_value",
             "routing.served_days_left",
             "settings.language_name_with_code",
+            "tags.status_in_language",
+            "tags.tag",
             "themes.retro",
             "themes.vintage"
         ],
@@ -722,6 +742,9 @@
             "routing.served_days_left",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "tags.status_in_language",
+            "tags.tag",
+            "tags.tags",
             "theme_editor.groups.status",
             "themes.aurora",
             "themes.vintage",
@@ -743,7 +766,8 @@
             "presenters.types.presenter",
             "publishers.presets.publisher",
             "report_item.id_with_value",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "tags.status_in_language"
         ],
         "sk": [
             "assess.aggregate_info",
@@ -1064,6 +1088,7 @@
             "routing.tls_title",
             "settings.dashboard_view",
             "settings.language_name_with_code",
+            "tags.status_in_language",
             "theme_editor.tokens.onSurface",
             "themes.retro",
             "themes.vintage",
@@ -1075,7 +1100,8 @@
             "nav_menu.public_web",
             "public_web.webs.smtp_url",
             "report_item.id_with_value",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "tags.status_in_language"
         ],
         "tlh": [
             "bots.nodes.api_url",
@@ -1087,7 +1113,8 @@
             "presenters.nodes.api_url",
             "public_web.nodes.api_url",
             "publishers.nodes.api_url",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "tags.status_in_language"
         ],
         "tr": [
             "bots.nodes.api_key",
@@ -1108,6 +1135,7 @@
             "publishers.nodes.api_url",
             "report_item.id_with_value",
             "settings.language_name_with_code",
+            "tags.status_in_language",
             "themes.retro",
             "themes.vintage",
             "workflow.state_types.normal"
@@ -1126,7 +1154,8 @@
             "presenters.types.presenter",
             "publishers.presets.publisher",
             "report_item.id_with_value",
-            "settings.language_name_with_code"
+            "settings.language_name_with_code",
+            "tags.status_in_language"
         ],
         "vi": [
             "bots.presets.bot",
@@ -1144,6 +1173,7 @@
             "publishers.presets.publisher",
             "report_item.id_with_value",
             "settings.language_name_with_code",
+            "tags.status_in_language",
             "themes.retro",
             "themes.valentine",
             "themes.vintage"

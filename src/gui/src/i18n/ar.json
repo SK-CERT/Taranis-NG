@@ -420,7 +420,9 @@
         "tlp_description_amber": "إفصاح محدود داخل مؤسسة المستلم وعملائها على أساس الحاجة إلى المعرفة.",
         "tlp_description_amber_strict": "إفصاح محدود على مؤسسة المستلم فقط.",
         "tlp_description_red": "يُحظر الإفصاح خارج نطاق المستلمين الأفراد.",
-        "tlp_description_unknown": "علامة TLP غير معروفة."
+        "tlp_description_unknown": "علامة TLP غير معروفة.",
+        "translate": "ترجمة",
+        "translate_hint": "تترجم التقارير هذا الحقل إلى لغات نوع التقرير"
     },
     "cvss_calculator": {
         "title": "حاسبة CVSS",
@@ -768,6 +770,34 @@
             "take_theirs": "تجاهل تغييري والاحتفاظ بالقيمة المحفوظة",
             "keep_mine": "استبدال القيمة المحفوظة بقيمتي",
             "unknown_user": "مستخدم آخر"
+        },
+        "translation": {
+            "source_language": "لغة التقرير",
+            "not_set": "غير محددة",
+            "source_tab": "{language} (الأصل)",
+            "source_not_set": "الأصل (اللغة غير محددة)",
+            "translate_report": "ترجمة التقرير كله",
+            "progress": "جارٍ الترجمة: اكتملت {done} من {total} لغات",
+            "finished": "اكتملت الترجمة",
+            "finished_with_problems": "اكتملت الترجمة. لم يُترجَم: {failed}؛ تُخطّي لأن أحدًا يحرّرها: {skipped}",
+            "intro": "الترجمة إلى {language}. الحقول التي لا تُترجَم تعرض النص الأصلي.",
+            "translate_language": "ترجمة إلى {language}",
+            "translate_field": "ترجمة بالذكاء الاصطناعي",
+            "same_in_all_languages": "متطابق في كل اللغات",
+            "source": "النص الأصلي",
+            "overwrite_title": "هل تريد استبدال ترجمتك؟",
+            "overwrite_confirm": "استبدال",
+            "overwrite_message": "تُرجم هذا الحقل يدويًا. ستحل ترجمة الذكاء الاصطناعي محله.",
+            "field_locked": "شخص آخر يحرّر هذا الحقل الآن، لذلك لم يُترجَم.",
+            "field_failed": "تعذّرت ترجمة الحقل: {reason}",
+            "ai": "ذكاء اصطناعي",
+            "ai_hint": "ترجمها الذكاء الاصطناعي ولم تُراجَع بعد",
+            "outdated": "قديم",
+            "outdated_hint": "تغيّر النص الأصلي بعد ترجمته",
+            "review": "وضع علامة كمراجَعة",
+            "review_all": "وضع علامة على ترجمات الذكاء الاصطناعي كمراجَعة",
+            "reviewed": "ترجمات الذكاء الاصطناعي المعلَّمة كمراجَعة: {count}",
+            "review_locked": "يحرّر شخص آخر أحد الحقول، لذا لم يُعلَّم كمراجَع."
         }
     },
     "product": {
@@ -817,7 +847,23 @@
             "confirm": "إضافة التقارير",
             "confirm_published": "إضافة وإكمال",
             "untitled": "تقرير بلا عنوان"
-        }
+        },
+        "language": "لغة المنتج",
+        "language_in_use": "للمنتج ترجمة إلى هذه اللغة بالفعل",
+        "publish_in": "النشر باللغة",
+        "publish_in_language": "النشر باللغة: {language}",
+        "outdated_confirmation": "ترجمات قديمة",
+        "outdated_continue": "المتابعة على أي حال",
+        "language_notice": {
+            "missing": "لا توجد لهذه التقارير ترجمة إلى {language}؛ تُستخدم لها الإنجليزية أو النص الأصلي:",
+            "outdated": "هذه الترجمات إلى {language} قديمة، لأن نصها الأصلي تغيّر بعد ترجمتها:",
+            "templates": "لا توجد لنوع المنتج قوالب للغة {language}؛ تُستخدم القوالب: {used}.",
+            "default_templates": "الافتراضية"
+        },
+        "texts_not_translated": "تعذّرت ترجمة العنوان أو الوصف إلى بعض اللغات",
+        "nothing_to_translate": "لا شيء للترجمة: الترجمات محدّثة.",
+        "translate_product": "ترجمة المنتج كله",
+        "translation_intro": "الترجمة إلى {language}. يُترجَم العنوان والوصف فقط، ويعرض الباقي النص الأصلي."
     },
     "analyze": {
         "sort": "الترتيب حسب",
@@ -1144,7 +1190,15 @@
             "entity_type_required": "نوع الكيان مطلوب"
         },
         "tags": {
-            "tab_description": "يمكنك هنا إدارة الوسوم."
+            "tab_description": "يمكنك هنا إدارة الوسوم.",
+            "system": {
+                "translation_missing": "الترجمة مفقودة",
+                "translation_partial": "مترجم جزئياً",
+                "translation_outdated": "الترجمة قديمة",
+                "translation_ai": "ترجمة الذكاء الاصطناعي غير مراجعة",
+                "translation_done": "مترجم",
+                "language_not_set": "اللغة غير محددة"
+            }
         },
         "tag_workflow": {
             "tab_description": "يمكنك هنا إدارة ارتباطات الوسوم بالكيانات."
@@ -1409,7 +1463,13 @@
                 "link": "الرابط",
                 "collected": "تاريخ الجمع",
                 "published": "تاريخ النشر"
-            }
+            },
+            "default_templates": "الافتراضي",
+            "add_language": "إضافة لغة",
+            "remove_language": "إزالة {language}",
+            "language_templates_hint": "القوالب المستخدمة للغة {language}. الحقل الفارغ يستخدم القالب الافتراضي.",
+            "template_language": "لغة القوالب",
+            "template_language_hint": "اللغة التي كُتبت بها القوالب الافتراضية"
         }
     },
     "publishers": {
@@ -1552,7 +1612,10 @@
             "successful_edit": "تم تحديث نموذج AI بنجاح",
             "error": "تعذّر حفظ نموذج AI هذا",
             "remove": "تم حذف نموذج AI بنجاح",
-            "removed_error": "نموذج AI قيد الاستخدام وتعذّر حذفه"
+            "removed_error": "نموذج AI قيد الاستخدام وتعذّر حذفه",
+            "max_tlp": "أعلى TLP يُرسَل",
+            "max_tlp_hint": "لا يُرسَل نص التقارير التي يتجاوز TLP الخاص بها هذا الحد إلى هذا المزوّد أبدًا",
+            "max_tlp_none": "بلا حد"
         }
     },
     "word_lists": {
@@ -1610,7 +1673,20 @@
             "successful_edit": "حُدّث نوع عنصر التقرير بنجاح",
             "removed_error": "نوع عنصر التقرير قيد الاستخدام وتعذّر حذفه",
             "removed": "حُذف نوع عنصر التقرير بنجاح",
-            "total_count": "لا توجد أنواع تقارير ({count}) | نوع تقرير واحد ({count}) | نوعا تقرير ({count}) | {count} أنواع تقارير | {count} نوع تقرير | {count} نوع تقرير"
+            "total_count": "لا توجد أنواع تقارير ({count}) | نوع تقرير واحد ({count}) | نوعا تقرير ({count}) | {count} أنواع تقارير | {count} نوع تقرير | {count} نوع تقرير",
+            "languages": "المتغيرات اللغوية",
+            "languages_hint": "تُترجَم تقارير هذا النوع إلى هذه اللغات",
+            "translation_ai_provider": "مزوّد الذكاء الاصطناعي للترجمة",
+            "label_language": "لغة التسميات",
+            "label_language_hint": "اللغة التي كُتبت بها الأسماء والأوصاف أعلاه",
+            "fields": "الحقول",
+            "labels_tab": "التسميات: {language}",
+            "labels_in": "الأسماء والأوصاف باللغة {language}. يظهر النص الأصلي تحت كل حقل.",
+            "translate_labels": "ترجمة التسميات الناقصة بالذكاء الاصطناعي",
+            "no_ai_provider": "اختر أولًا مزوّد ذكاء اصطناعي للترجمة",
+            "translate_labels_failed": "تعذّرت ترجمة بعض التسميات ({count})",
+            "labels_translated": "تُرجمت التسميات",
+            "copy_original": "نسخ النص الأصلي"
         },
         "attributes": {
             "in_use": "لا يمكن حذف السمة: يتم استخدامها بواسطة {types}",
@@ -1629,7 +1705,33 @@
             "edit_constant": "تعديل الثابت",
             "value": "القيمة",
             "error": "تعذّر إنشاء هذه السمة",
-            "total_count": "لا توجد سمات ({count}) | سمة واحدة ({count}) | سمتان ({count}) | {count} سمات | {count} سمة | {count} سمة"
+            "total_count": "لا توجد سمات ({count}) | سمة واحدة ({count}) | سمتان ({count}) | {count} سمات | {count} سمة | {count} سمة",
+            "constant_translations": "الترجمات",
+            "no_languages": "لا يوجد نوع تقرير يستخدم هذه السمة وله لغات أخرى.",
+            "constants_in": "الثوابت باللغة {language}",
+            "translated_value": "القيمة باللغة {language}",
+            "edit_translation": "تحرير الترجمة",
+            "translate_missing": "ترجمة الناقص بالذكاء الاصطناعي",
+            "translated_constants": "الثوابت المترجمة: {count}",
+            "translated_with_failures": "الثوابت المترجمة: {translated}؛ غير المترجمة: {failed}"
+        },
+        "glossary": {
+            "tab": "مسرد المصطلحات",
+            "tab_description": "المصطلحات التي يستخدمها الذكاء الاصطناعي عند الترجمة",
+            "title": "مسرد الترجمة بالذكاء الاصطناعي",
+            "type_title": "مسرد نوع التقرير هذا",
+            "type_intro": "تنطبق هذه المصطلحات على تقارير هذا النوع وتسمياته إضافةً إلى مسرد المثيل بأكمله؛ وللمصطلح نفسه تكون الأولوية لما هنا.",
+            "add": "إضافة مصطلح",
+            "edit": "تعديل المصطلح",
+            "empty": "لا توجد مصطلحات بعد",
+            "keep": "الإبقاء كما هو",
+            "keep_hint": "لأسماء المنتجات أو المؤسسات: يترك الذكاء الاصطناعي المصطلح دون تغيير في كل اللغات.",
+            "note": "ملاحظة",
+            "note_hint": "سياق للذكاء الاصطناعي، مثل مواضع استخدام المصطلح",
+            "terms": "المصطلحات",
+            "add_language": "إضافة لغة",
+            "remove_language": "إزالة {language}",
+            "needs_terms": "أدخل المصطلح بلغتين على الأقل، أو مصطلحًا واحدًا يُبقى كما هو."
         }
     },
     "external_user": {
@@ -2297,5 +2399,30 @@
         "product_hint": "المصادر التي يمكن لوصف المنتج الاستشهاد بها. في المنتج المنشور تُرقَّم أولًا، قبل روابط تقاريره.",
         "product_title": "الروابط",
         "url": "عنوان URL"
+    },
+    "tags": {
+        "tags": "الوسوم",
+        "tag": "وسم",
+        "none_defined": "لا توجد وسوم معرّفة لهذه العناصر",
+        "built_in_hint": "يضع Taranis هذا الوسم؛ يمكن تغيير مظهره لكن لا يمكن إعادة تسميته أو حذفه. أوقفه في سير عمل الوسوم.",
+        "built_in_link_hint": "تبقى الوسوم المدمجة مرتبطة؛ أوقفها بدلاً من ذلك",
+        "add_new": "إضافة وسم جديد",
+        "edit": "تعديل الوسم",
+        "name": "الاسم",
+        "description": "الوصف",
+        "color": "اللون",
+        "icon": "الأيقونة",
+        "in_use": "الوسم موجود على {count} من التقارير أو المنتجات ولا يمكن حذفه",
+        "add_link": "إضافة ربط وسم",
+        "edit_link": "تعديل ربط الوسم",
+        "status_in_language": "اللغة {language}: {status}",
+        "filter": "التصفية حسب الوسوم والترجمة",
+        "translation": "الترجمة",
+        "translation_language": "اللغة",
+        "translation_any": "أي",
+        "translation_needs": "تحتاج إلى ترجمة",
+        "translation_unreviewed": "ترجمة الذكاء الاصطناعي غير مراجعة",
+        "translation_not_set": "اللغة غير محددة",
+        "clear_filter": "مسح"
     }
 }

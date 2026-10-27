@@ -420,7 +420,9 @@
         "tlp_description_amber": "Limited disclosure within the recipient's organization and its clients on a need-to-know basis.",
         "tlp_description_amber_strict": "Limited disclosure to the recipient's organization only.",
         "tlp_description_red": "Not for disclosure beyond the individual recipients.",
-        "tlp_description_unknown": "Unknown TLP marking."
+        "tlp_description_unknown": "Unknown TLP marking.",
+        "translate": "Translate",
+        "translate_hint": "Reports translate this field into the report type's languages"
     },
     "cvss_calculator": {
         "title": "CVSS Calculator",
@@ -768,6 +770,34 @@
             "take_theirs": "Discard mine, keep stored",
             "keep_mine": "Overwrite with mine",
             "unknown_user": "Another user"
+        },
+        "translation": {
+            "source_language": "Language of the report",
+            "not_set": "Not set",
+            "source_tab": "{language} (original)",
+            "source_not_set": "Original (language not set)",
+            "translate_report": "Translate whole report",
+            "progress": "Translating: {done} of {total} languages done",
+            "finished": "Translation finished",
+            "finished_with_problems": "Translation finished. Not translated: {failed}; skipped because somebody is editing them: {skipped}",
+            "intro": "Translation into {language}. Fields that are not translated show the original.",
+            "translate_language": "Translate into {language}",
+            "translate_field": "Translate with AI",
+            "same_in_all_languages": "Same in all languages",
+            "source": "Original",
+            "overwrite_title": "Replace your translation?",
+            "overwrite_confirm": "Replace",
+            "overwrite_message": "This field was translated by hand. The AI translation will replace it.",
+            "field_locked": "Somebody else is editing this field, so it was not translated.",
+            "field_failed": "The field could not be translated: {reason}",
+            "ai": "AI",
+            "ai_hint": "Translated by AI and not reviewed yet",
+            "outdated": "Outdated",
+            "outdated_hint": "The original changed after this was translated",
+            "review": "Mark as reviewed",
+            "review_all": "Mark AI translations as reviewed",
+            "reviewed": "AI translations marked as reviewed: {count}",
+            "review_locked": "Somebody else is editing a field, so it was not marked as reviewed."
         }
     },
     "product": {
@@ -817,7 +847,23 @@
             "confirm": "Add Reports",
             "confirm_published": "Add and Complete",
             "untitled": "Untitled report"
-        }
+        },
+        "language": "Language of the product",
+        "language_in_use": "The product already has a translation into that language",
+        "publish_in": "Publish in",
+        "publish_in_language": "Published in: {language}",
+        "outdated_confirmation": "Outdated translations",
+        "outdated_continue": "Continue anyway",
+        "language_notice": {
+            "missing": "These reports have no translation into {language}; English or the original is used for them:",
+            "outdated": "These translations into {language} are outdated, because their original changed after they were translated:",
+            "templates": "The product type has no templates for {language}; the {used} templates are used.",
+            "default_templates": "default"
+        },
+        "texts_not_translated": "The title or description could not be translated into some languages",
+        "nothing_to_translate": "Nothing to translate: the translations are up to date.",
+        "translate_product": "Translate whole product",
+        "translation_intro": "Translation into {language}. Only the title and description are translated; the rest shows the original."
     },
     "analyze": {
         "sort": "Sort by",
@@ -1144,7 +1190,15 @@
             "entity_type_required": "Entity Type Required"
         },
         "tags": {
-            "tab_description": "Here you can manage tags."
+            "tab_description": "Here you can manage tags.",
+            "system": {
+                "translation_missing": "Translation missing",
+                "translation_partial": "Partly translated",
+                "translation_outdated": "Translation outdated",
+                "translation_ai": "AI translation not reviewed",
+                "translation_done": "Translated",
+                "language_not_set": "Language not set"
+            }
         },
         "tag_workflow": {
             "tab_description": "Here you can manage tag associations with entities."
@@ -1409,7 +1463,13 @@
                 "link": "Link",
                 "collected": "Collected Date",
                 "published": "Published Date"
-            }
+            },
+            "default_templates": "Default",
+            "add_language": "Add language",
+            "remove_language": "Remove {language}",
+            "language_templates_hint": "Templates used for {language}. An empty field uses the default template.",
+            "template_language": "Language of the templates",
+            "template_language_hint": "The language the default templates are written in"
         }
     },
     "publishers": {
@@ -1552,7 +1612,10 @@
             "successful_edit": "AI model was successfully updated",
             "error": "Could not save this AI model",
             "remove": "AI model was successfully deleted",
-            "removed_error": "AI model is in use and could not be deleted"
+            "removed_error": "AI model is in use and could not be deleted",
+            "max_tlp": "Highest TLP sent",
+            "max_tlp_hint": "Text of reports above this TLP is never sent to this provider",
+            "max_tlp_none": "No limit"
         }
     },
     "word_lists": {
@@ -1610,7 +1673,20 @@
             "successful_edit": "Report item type was successfully updated",
             "removed_error": "Report item type is in use and could not be deleted",
             "removed": "Report item type was successfully deleted",
-            "total_count": "{count} report type | {count} report types"
+            "total_count": "{count} report type | {count} report types",
+            "languages": "Language variants",
+            "languages_hint": "Reports of this type are translated into these languages",
+            "translation_ai_provider": "AI provider for translation",
+            "label_language": "Language of the labels",
+            "label_language_hint": "The language the names and descriptions above are written in",
+            "fields": "Fields",
+            "labels_tab": "Labels: {language}",
+            "labels_in": "Names and descriptions in {language}. The original is shown under each field.",
+            "translate_labels": "Translate missing labels with AI",
+            "no_ai_provider": "Choose an AI provider for translation first",
+            "translate_labels_failed": "Some labels could not be translated ({count})",
+            "labels_translated": "Labels translated",
+            "copy_original": "Copy the original"
         },
         "attributes": {
             "in_use": "Attribute cannot be deleted: it is used by {types}",
@@ -1629,7 +1705,33 @@
             "edit_constant": "Edit Constant",
             "value": "Value",
             "error": "Could not create this attribute",
-            "total_count": "{count} attribute | {count} attributes"
+            "total_count": "{count} attribute | {count} attributes",
+            "constant_translations": "Translations",
+            "no_languages": "No report type that uses this attribute has other languages.",
+            "constants_in": "Constants in {language}",
+            "translated_value": "Value in {language}",
+            "edit_translation": "Edit translation",
+            "translate_missing": "Translate missing with AI",
+            "translated_constants": "Constants translated: {count}",
+            "translated_with_failures": "Constants translated: {translated}; not translated: {failed}"
+        },
+        "glossary": {
+            "tab": "Glossary",
+            "tab_description": "Terms the AI uses when it translates",
+            "title": "AI translation glossary",
+            "type_title": "Glossary of this report type",
+            "type_intro": "These terms apply to this type's reports and labels on top of the instance-wide glossary; for the same term, the one here wins.",
+            "add": "Add term",
+            "edit": "Edit term",
+            "empty": "No terms yet",
+            "keep": "Keep as written",
+            "keep_hint": "For names of products or organisations: the AI leaves the term unchanged in every language.",
+            "note": "Note",
+            "note_hint": "Context for the AI, for example where the term applies",
+            "terms": "Terms",
+            "add_language": "Add language",
+            "remove_language": "Remove {language}",
+            "needs_terms": "Fill in the term in at least two languages, or one term to keep as written."
         }
     },
     "external_user": {
@@ -2297,5 +2399,30 @@
         "product_hint": "Sources the product description can cite. In the published product they are numbered first, before the links of its reports.",
         "product_title": "Links",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Tags",
+        "tag": "Tag",
+        "none_defined": "No tags are defined for these items",
+        "built_in_hint": "Taranis sets this tag; it can be restyled but not renamed or deleted. Switch it off in Tag Workflow.",
+        "built_in_link_hint": "Built-in tags stay linked; switch them off instead",
+        "add_new": "Add new tag",
+        "edit": "Edit tag",
+        "name": "Name",
+        "description": "Description",
+        "color": "Color",
+        "icon": "Icon",
+        "in_use": "The tag is on {count} reports or products and cannot be deleted",
+        "add_link": "Add tag link",
+        "edit_link": "Edit tag link",
+        "status_in_language": "{language}: {status}",
+        "filter": "Filter by tags and translation",
+        "translation": "Translation",
+        "translation_language": "Language",
+        "translation_any": "Any",
+        "translation_needs": "Needs translation",
+        "translation_unreviewed": "AI translation not reviewed",
+        "translation_not_set": "Language not set",
+        "clear_filter": "Clear"
     }
 }
