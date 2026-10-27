@@ -282,6 +282,7 @@ def test_the_public_web_shows_a_language_and_keeps_what_it_compares(published: S
     # The description is translated too, its citations numbered like the original's.
     assert feed["description"] == "Súhrn [1]"
     report = feed["report_items"][0]
+    assert report["language"] == "sk"
     assert (report["title"], report["title_prefix"]) == ("Kritická chyba (sk)", "ZRANITELNOST")
     assert (report["type"], report["type_label"]) == ("Vulnerability Report", "Správa o zraniteľnosti")
     text, severity, network, web, cve = report["attributes"]
@@ -295,8 +296,8 @@ def test_the_public_web_shows_a_language_and_keeps_what_it_compares(published: S
         "description": "",
         "label": "Závažnost (sk)",
     }
-    # Network has no Slovak, so English; each ticked value is an entry of its own.
-    assert [(entry["value"], entry["source_value"]) for entry in (network, web)] == [("Network", "Síť"), ("Web (sk)", "Web")]
+    # Network has no Slovak, so it stays as written - not English; each ticked value is an entry of its own.
+    assert [(entry["value"], entry["source_value"]) for entry in (network, web)] == [("Síť", "Síť"), ("Web (sk)", "Web")]
     assert cve == {"key": "cve", "type": "CVE", "value": "CVE-2026-1", "description": "", "label": "CVE (sk)"}
 
 
@@ -310,8 +311,38 @@ def test_the_public_web_passes_over_outdated_translations(published: SimpleNames
     report = feed["report_items"][0]
     assert report["title"] == "Kritická chyba v jádře"
     assert report["attributes"][0]["value"] == "Útočník může cokoli [1]"
-    # Nothing current in Slovak is left, so the reports are shown in Czech.
+    # Nothing current in Slovak is left, so the reports are shown in Czech - their labels too.
     assert (feed["language"], feed["available_languages"]) == ("cs", ["cs"])
+    assert report["language"] == "cs"
+    assert (report["type_label"], report["attributes"][0]["label"]) == ("Vulnerability Report", "Popis")
+
+
+def test_a_report_nobody_translated_keeps_its_own_language_for_labels_and_constants(published: SimpleNamespace) -> None:
+    feed = public_web._serialize_product(published, "en")
+
+    report = feed["report_items"][0]
+    assert (feed["language"], report["language"]) == ("cs", "cs")
+    _text, severity, network, _web, _cve = report["attributes"]
+    # The constants have English, but the report around them is Czech.
+    assert (severity["value"], network["value"]) == ("Vysoká", "Síť")
+
+
+def test_the_public_web_shows_a_report_not_in_the_page_language_as_written_not_in_english(published: SimpleNamespace) -> None:
+    report_item = published.report_items[0]
+    english = ReportItemTranslation(language="en", field="title", value="", version=0)
+    english.write("Critical flaw", report_item.title, ORIGIN_AI, 1)
+    report_item.translations.append(english)
+
+    # German is only the language of the visitor's page: nothing is translated into it.
+    feed = public_web._serialize_product(published, "de")
+
+    report = feed["report_items"][0]
+    assert feed["available_languages"] == ["cs", "en", "sk"]
+    assert (feed["language"], feed["title"]) == ("cs", "Bulletin")
+    assert (report["language"], report["title"]) == ("cs", "Kritická chyba")
+    assert report["attributes"][1]["value"] == "Vysoká"
+    # In English, which it has, it is shown in English.
+    assert public_web._serialize_product(published, "en")["report_items"][0]["title"] == "Critical flaw"
 
 
 def test_without_a_language_the_public_web_gets_the_product_as_written(published: SimpleNamespace) -> None:
@@ -336,7 +367,7 @@ def test_reports_of_no_known_language_are_shown_without_naming_one(published: Si
     feed = public_web._serialize_product(published, "sk")
 
     assert (feed["language"], feed["available_languages"]) == (None, [])
-    assert feed["report_items"][0]["title"] == "Kritická chyba"
+    assert (feed["report_items"][0]["title"], feed["report_items"][0]["language"]) == ("Kritická chyba", None)
 
 
 def test_the_shown_language_follows_the_chain_through_what_is_available() -> None:
@@ -346,3 +377,6 @@ def test_the_shown_language_follows_the_chain_through_what_is_available() -> Non
     assert content_localizer.shown_language("de", "cs", ["cs", "sk"]) == "cs"
     assert content_localizer.shown_language("de", None, ["sk"]) == "sk"
     assert content_localizer.shown_language("de", None, []) is None
+    # Without English in between (the public web), the original.
+    assert content_localizer.shown_language("de", "cs", ["cs", "en", "sk"], via_english=False) == "cs"
+    assert content_localizer.language_chain("sk", "cs", via_english=False) == ["sk", "cs"]

@@ -9,10 +9,13 @@ purpose-built structure (product info + report items with their attributes); no
 presenter is involved. Link citations are rendered here, so a node only ever sees
 numbered ``[n]`` references and the merged ``links`` list they index.
 
-With ``?lang=`` the product is shown in that language (see ``managers/content_localizer.py``):
-names and translatable texts are translated, outdated translations are passed over, and
-labels arrive as extra fields. What a node compares - attribute keys, the report type's title,
-the raw value of a choice constant (``source_value``) - stays as written.
+With ``?lang=`` the product is shown in that language where it has been translated into it (see
+``managers/content_localizer.py``): names and translatable texts are translated, outdated
+translations are passed over, and labels arrive as extra fields. ``lang`` is the language of the
+visitor's page, so what is not translated into it stays as written - not English, as elsewhere.
+Each report says which language it is shown in, and its labels follow it, so a node can put its
+own words around a report in that language too. What a node compares - attribute keys, the report
+type's title, the raw value of a choice constant (``source_value``) - stays as written.
 """
 
 import io
@@ -90,13 +93,14 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, 
             group_item.title,
             rendering.language,
             rendering.label_language,
+            via_english=False,
         )
         constants = rendering.constants.get(attribute.attribute_group_item_id)
 
     def choice(value: str | None) -> dict:
         if constants is None:
             return {"value": value}
-        label = content_localizer.constant_label(value, constants, rendering.language, rendering.label_language)
+        label = content_localizer.constant_label(value, constants, rendering.language, rendering.label_language, via_english=False)
         return {"value": label, "source_value": value}
 
     if attribute_type == AttributeType.MULTI_CHOICE:
@@ -112,7 +116,13 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, 
 
     value = attribute.value
     if rendering is not None:
-        value = content_localizer.attribute_value(rendering.report_item, attribute, rendering.language, skip_outdated=True)
+        value = content_localizer.attribute_value(
+            rendering.report_item,
+            attribute,
+            rendering.language,
+            skip_outdated=True,
+            via_english=False,
+        )
     if type_name in CITING_TYPES:
         value = index.render(value, local_numbers)
     entry = {"key": key, "type": type_name, "value": value, "description": attribute.value_description, **localized}
@@ -122,10 +132,19 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, 
 
 
 def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: dict, language: str | None, constants: dict) -> dict:  # noqa: ANN001
-    """Serialize a report item with its attributes, in ``language`` when given."""
+    """Serialize a report item with its attributes, in ``language`` when given.
+
+    In a language, the report says which it is shown in (``language``, None when its own is not
+    known), and its labels and constants are in that one too, so that a report nobody translated
+    into ``language`` reads in a single language: the one it was written in.
+    """
     report_type = report_item.report_item_type
     rendering = None
+    shown = None
     if language:
+        available = content_localizer.report_languages(report_item)
+        shown = content_localizer.shown_language(language, report_item.language, available, via_english=False)
+        language = shown or language
         rendering = _Rendering(language, report_item, constants, report_type.label_language if report_type else None)
     entry = {
         "title": report_item.title,
@@ -141,17 +160,26 @@ def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: di
     }
     if rendering is None:
         return entry
+    entry["language"] = shown
     for field in ("title", "title_prefix"):
-        entry[field] = content_localizer.report_title(report_item, field, language, skip_outdated=True)
+        entry[field] = content_localizer.report_title(report_item, field, language, skip_outdated=True, via_english=False)
     if report_type is not None:
         source = report_type.label_language
-        entry["type_label"] = content_localizer.label(report_type.translations, "title", report_type.title, language, source)
+        entry["type_label"] = content_localizer.label(
+            report_type.translations,
+            "title",
+            report_type.title,
+            language,
+            source,
+            via_english=False,
+        )
         entry["type_description_label"] = content_localizer.label(
             report_type.translations,
             "description",
             report_type.description,
             language,
             source,
+            via_english=False,
         )
     return entry
 
@@ -197,9 +225,10 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
     }
     if language:
         available = content_localizer.available_languages(product)
-        result["title"] = content_localizer.product_text(product, "title", language, skip_outdated=True)[0]
-        result["description"] = index.render(content_localizer.product_text(product, "description", language, skip_outdated=True)[0])
-        result["language"] = content_localizer.shown_language(language, product.language, available)
+        result["title"] = content_localizer.product_text(product, "title", language, skip_outdated=True, via_english=False)[0]
+        description = content_localizer.product_text(product, "description", language, skip_outdated=True, via_english=False)[0]
+        result["description"] = index.render(description)
+        result["language"] = content_localizer.shown_language(language, product.language, available, via_english=False)
         result["available_languages"] = available
     return result
 

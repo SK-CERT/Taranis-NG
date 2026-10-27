@@ -131,6 +131,10 @@ class VulnerabilityReportPart:
             self._get("title", required=True),
         )
 
+    def get_language(self) -> str | None:
+        """The language the report part is shown in, or None when core does not know it."""
+        return self._get("language")
+
     def get_created(self) -> str | None:
         """Get the created date of the report part."""
         created = self.item.get("created")

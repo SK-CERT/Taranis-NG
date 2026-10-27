@@ -11,13 +11,16 @@
             <h3 class="text-primary mb-1 fw-bolder">
                 {{ content["homepage_title"] }}
             </h3>
-            <a href="{{ url_for('reports.feed') }}"
-               class="d-flex align-items-center ms-auto text-primary fw-normal h5 text-decoration-none">
-                <span class="mdi mdi-rss-box fs-4" aria-hidden="true"></span>
-                <p class="m-0 ms-1">
-                    RSS
-                </p>
-            </a>
+            <div class="d-flex align-items-center ms-auto gap-3">
+                {{ macros.language_picker() }}
+                <a href="{{ url_for('reports.feed') }}"
+                   class="d-flex align-items-center text-primary fw-normal h5 m-0 text-decoration-none">
+                    <span class="mdi mdi-rss-box fs-4" aria-hidden="true"></span>
+                    <p class="m-0 ms-1">
+                        RSS
+                    </p>
+                </a>
+            </div>
         </div>
         {%- if content["service_description_url"] and content["service_description_title"] -%}
             <p class="m-0 mb-2">
@@ -68,8 +71,8 @@
                             </div>
                             {%- if report.get_publish_date() %}
                                 <div class="text-secondary me-4 mb-1">
-                                    {{ translate_report(report, 'published') }}
-                                    {{ translate_report(report, 'on_day') }}
+                                    {{ translate_ui('published') }}
+                                    {{ translate_ui('on_day') }}
                                     {{ report.get_publish_date() }}.
                                 </div>
                             {%- endif %}

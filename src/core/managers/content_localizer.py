@@ -3,7 +3,8 @@
 Every text is looked up in the requested language, then English, then the language it was written
 in. A language that *is* the one the text was written in gives the text itself, so an English
 translation never replaces the original. A source whose language is not set is only the last
-resort.
+resort. The public web passes over English (``via_english=False``): there the language asked for is
+the page's, picked by the visitor, so a report not translated into it stays as written.
 
 What templates and the public web compare - attribute keys, the report type's title, the raw value
 of a choice constant - never changes: translations arrive as extra fields (``value_label``,
@@ -26,18 +27,19 @@ if TYPE_CHECKING:
 FALLBACK_LANGUAGE = "en"
 
 
-def language_chain(requested: str | None, source: str | None) -> list[str]:
+def language_chain(requested: str | None, source: str | None, *, via_english: bool = True) -> list[str]:
     """The languages to look in, in order: requested, English, the source.
 
     Args:
         requested (str | None): The language asked for.
         source (str | None): The language the text is written in, if known.
+        via_english (bool): Look in English before the source; off, only the two.
 
     Returns:
         list[str]: The chain without repeats and without unknown languages.
     """
     chain: list[str] = []
-    for language in (requested, FALLBACK_LANGUAGE, source):
+    for language in (requested, FALLBACK_LANGUAGE if via_english else None, source):
         if language and language not in chain:
             chain.append(language)
     return chain
@@ -48,6 +50,8 @@ def resolve(
     source: str | None,
     original: str | None,
     lookup: Callable[[str], str | None],
+    *,
+    via_english: bool = True,
 ) -> tuple[str, str | None]:
     """The text to show for ``requested``, and the language it is in.
 
@@ -56,11 +60,12 @@ def resolve(
         source (str | None): The language ``original`` is written in, if known.
         original (str | None): The text as written.
         lookup (Callable[[str], str | None]): The usable translation into a language, or None.
+        via_english (bool): Fall back to English before the original (see :func:`language_chain`).
 
     Returns:
         tuple[str, str | None]: The text, and its language (None for an original of unknown language).
     """
-    for language in language_chain(requested, source):
+    for language in language_chain(requested, source, via_english=via_english):
         if language == source:
             return original or "", source
         translated = lookup(language)
@@ -88,7 +93,7 @@ def _label_lookup(translations: Mapping[str, Mapping[str, str]] | None, field: s
     return lambda language: (translations or {}).get(language, {}).get(field) or None
 
 
-def report_title(report_item: ReportItem, field: str, requested: str | None, *, skip_outdated: bool = False) -> str:
+def report_title(report_item: ReportItem, field: str, requested: str | None, *, skip_outdated: bool = False, via_english: bool = True) -> str:
     """The report's name or name prefix in ``requested`` (see the module's fallback rule).
 
     Args:
@@ -96,16 +101,24 @@ def report_title(report_item: ReportItem, field: str, requested: str | None, *, 
         field (str): "title" or "title_prefix".
         requested (str | None): The language asked for.
         skip_outdated (bool): Pass over translations whose source changed since.
+        via_english (bool): Fall back to English before the original.
 
     Returns:
         str: The text.
     """
     original = getattr(report_item, field)
     lookup = _row_lookup(report_item.translations, original, skip_outdated=skip_outdated, field=field)
-    return resolve(requested, report_item.language, original, lookup)[0]
+    return resolve(requested, report_item.language, original, lookup, via_english=via_english)[0]
 
 
-def attribute_value(report_item: ReportItem, attribute: object, requested: str | None, *, skip_outdated: bool = False) -> str:
+def attribute_value(
+    report_item: ReportItem,
+    attribute: object,
+    requested: str | None,
+    *,
+    skip_outdated: bool = False,
+    via_english: bool = True,
+) -> str:
     """A translatable attribute's value in ``requested``; other attributes keep their value.
 
     Args:
@@ -113,6 +126,7 @@ def attribute_value(report_item: ReportItem, attribute: object, requested: str |
         attribute (ReportItemAttribute): The value.
         requested (str | None): The language asked for.
         skip_outdated (bool): Pass over translations whose source changed since.
+        via_english (bool): Fall back to English before the original.
 
     Returns:
         str: The text.
@@ -121,10 +135,17 @@ def attribute_value(report_item: ReportItem, attribute: object, requested: str |
     if group_item is None or not group_item.is_translated:
         return attribute.value
     lookup = _row_lookup(attribute.translations, attribute.value, skip_outdated=skip_outdated)
-    return resolve(requested, report_item.language, attribute.value, lookup)[0]
+    return resolve(requested, report_item.language, attribute.value, lookup, via_english=via_english)[0]
 
 
-def constant_label(value: str | None, constants: Mapping[str, Mapping], requested: str | None, source: str | None) -> str | None:
+def constant_label(
+    value: str | None,
+    constants: Mapping[str, Mapping],
+    requested: str | None,
+    source: str | None,
+    *,
+    via_english: bool = True,
+) -> str | None:
     """The label of a choice constant in ``requested``; MULTI_CHOICE values are newline-joined.
 
     Args:
@@ -132,6 +153,7 @@ def constant_label(value: str | None, constants: Mapping[str, Mapping], requeste
         constants (Mapping[str, Mapping]): Constant value -> its translations ``{language: {"value": ...}}``.
         requested (str | None): The language asked for.
         source (str | None): The language the constants are written in (the report type's label language).
+        via_english (bool): Fall back to English before the original.
 
     Returns:
         str | None: The label(s), joined like the value; None for no value.
@@ -139,7 +161,10 @@ def constant_label(value: str | None, constants: Mapping[str, Mapping], requeste
     if value is None:
         return None
     parts = value.split("\n")
-    labels = [resolve(requested, source, part, _label_lookup(constants.get(part, {}), "value"))[0] if part else part for part in parts]
+    labels = [
+        resolve(requested, source, part, _label_lookup(constants.get(part, {}), "value"), via_english=via_english)[0] if part else part
+        for part in parts
+    ]
     return "\n".join(labels)
 
 
@@ -149,6 +174,8 @@ def label(
     original: str | None,
     requested: str | None,
     source: str | None,
+    *,
+    via_english: bool = True,
 ) -> str:
     """A report type label (name, description, section title) in ``requested``.
 
@@ -158,11 +185,12 @@ def label(
         original (str | None): The label as written.
         requested (str | None): The language asked for.
         source (str | None): The language the labels are written in, if stated.
+        via_english (bool): Fall back to English before the original.
 
     Returns:
         str: The label.
     """
-    return resolve(requested, source, original, _label_lookup(translations, field))[0]
+    return resolve(requested, source, original, _label_lookup(translations, field), via_english=via_english)[0]
 
 
 def product_text(
@@ -172,6 +200,7 @@ def product_text(
     translations: Mapping[str, Mapping[str, str]] | None = None,
     *,
     skip_outdated: bool = False,
+    via_english: bool = True,
 ) -> tuple[str, str | None]:
     """The product's title or description in ``requested`` and the language it is in.
 
@@ -182,22 +211,53 @@ def product_text(
         translations (Mapping[str, Mapping[str, str]] | None): Texts per language and field of a
             product not saved yet; a saved one uses its stored translations.
         skip_outdated (bool): Pass over translations whose source changed since.
+        via_english (bool): Fall back to English before the original.
 
     Returns:
         tuple[str, str | None]: The text and its language.
     """
     original = getattr(product, field) or ""
     if translations is not None:
-        return resolve(requested, product.language, original, lambda language: (translations.get(language) or {}).get(field) or None)
+        return resolve(
+            requested,
+            product.language,
+            original,
+            lambda language: (translations.get(language) or {}).get(field) or None,
+            via_english=via_english,
+        )
     lookup = _row_lookup(product.translation_rows, original, skip_outdated=skip_outdated, field=field)
-    return resolve(requested, product.language, original, lookup)
+    return resolve(requested, product.language, original, lookup, via_english=via_english)
+
+
+def report_languages(report_item: ReportItem) -> list[str]:
+    """The languages a report can be read in: its own, and those it has a current translation into.
+
+    These are the translations the public web shows, which passes over those whose source changed
+    since.
+
+    Args:
+        report_item (ReportItem): The report.
+
+    Returns:
+        list[str]: Sorted ISO 639-1 codes; empty when the report has no language set.
+    """
+    languages: set[str] = set()
+    if report_item.language:
+        languages.add(report_item.language)
+    languages.update(row.language for row in report_item.translations if row.value and not row.is_outdated(getattr(report_item, row.field)))
+    languages.update(
+        row.language
+        for attribute in report_item.attributes
+        if attribute.attribute_group_item is not None and attribute.attribute_group_item.is_translated
+        for row in attribute.translations
+        if row.value and not row.is_outdated(attribute.value)
+    )
+    return sorted(languages)
 
 
 def available_languages(product: Product) -> list[str]:
     """The languages a product's reports can be read in, for readers choosing one (the public web).
 
-    A report's own language counts, and so does a language it has a current translation into - the
-    same translations the public web shows, which passes over those whose source changed since.
     The product's title alone does not make a language available.
 
     Args:
@@ -206,35 +266,23 @@ def available_languages(product: Product) -> list[str]:
     Returns:
         list[str]: Sorted ISO 639-1 codes; empty when no report has a language set.
     """
-    languages: set[str] = set()
-    for report_item in product.report_items:
-        if report_item.language:
-            languages.add(report_item.language)
-        languages.update(
-            row.language for row in report_item.translations if row.value and not row.is_outdated(getattr(report_item, row.field))
-        )
-        languages.update(
-            row.language
-            for attribute in report_item.attributes
-            if attribute.attribute_group_item is not None and attribute.attribute_group_item.is_translated
-            for row in attribute.translations
-            if row.value and not row.is_outdated(attribute.value)
-        )
-    return sorted(languages)
+    return sorted({language for report_item in product.report_items for language in report_languages(report_item)})
 
 
-def shown_language(requested: str | None, source: str | None, available: list[str]) -> str | None:
-    """The language a product is shown in when ``requested``: the first of the chain it is available in.
+def shown_language(requested: str | None, source: str | None, available: list[str], *, via_english: bool = True) -> str | None:
+    """The language a product or a report is shown in when ``requested``: the first of the chain it is available in.
 
     Args:
         requested (str | None): The language asked for.
-        source (str | None): The product's own language, if set.
-        available (list[str]): What :func:`available_languages` gives.
+        source (str | None): The product's or report's own language, if set.
+        available (list[str]): What :func:`available_languages` or :func:`report_languages` gives.
+        via_english (bool): Prefer English to the source (see :func:`language_chain`).
 
     Returns:
         str | None: The language, or None when no language of the content is known.
     """
-    return next((language for language in language_chain(requested, source) if language in available), available[0] if available else None)
+    chain = language_chain(requested, source, via_english=via_english)
+    return next((language for language in chain if language in available), available[0] if available else None)
 
 
 def resolve_language_templates(

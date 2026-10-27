@@ -1,7 +1,8 @@
 """The public feed's templates and its translation catalogs must agree.
 
 public-web carries its own small i18n system - ``conf/i18n/{en,cs,sk}.json`` read
-through ``translate_ui`` - entirely separate from the GUI's catalogs. Nothing checked
+through ``translate_ui`` (the page, its ``interface`` section) and ``translate_report`` (a
+report's own phrases, its ``report`` section) - entirely separate from the GUI's catalogs. Nothing checked
 that the templates and those files matched, and two bugs of the same shape slipped in:
 a key defined in all three catalogs that no template ever asked for
 (``homepage_service_description``), and the Czech sentence hardcoded in its place, so
@@ -25,6 +26,9 @@ REFERENCE_LOCALE = "en"
 
 # translate_ui("key") / translate_ui('key'), in templates and in Python.
 TRANSLATE_CALL = re.compile(r"""translate_ui\(\s*['"]([^'"]+)['"]""")
+# translate_report(report, "key") / translate_report(item, 'key'): what each catalog section is asked for.
+TRANSLATE_REPORT_CALL = re.compile(r"""translate_report\(\s*\w+,\s*['"]([^'"]+)['"]""")
+SECTION_CALLS = {"interface": TRANSLATE_CALL, "report": TRANSLATE_REPORT_CALL}
 
 # Stripped before looking for stray text: script/style bodies are code, Jinja
 # expressions are substitutions, and tags are markup.
@@ -64,19 +68,19 @@ ALLOWED_LITERALS = {
 }
 
 
-def _catalog(locale: str) -> dict[str, str]:
-    return json.loads((CATALOGS / f"{locale}.json").read_text(encoding="utf-8"))["interface"]
+def _catalog(locale: str, section: str = "interface") -> dict[str, str]:
+    return json.loads((CATALOGS / f"{locale}.json").read_text(encoding="utf-8"))[section]
 
 
 def _locales() -> list[str]:
     return sorted(path.stem for path in CATALOGS.glob("*.json"))
 
 
-def _used_keys() -> set[str]:
-    """Every key the application actually asks ``translate_ui`` for."""
+def _used_keys(section: str = "interface") -> set[str]:
+    """Every key the application actually asks for from ``section``."""
     keys: set[str] = set()
     for path in [*TEMPLATES.rglob("*.html"), *(PUBLIC_WEB / "lib").rglob("*.py")]:
-        keys |= set(TRANSLATE_CALL.findall(path.read_text(encoding="utf-8")))
+        keys |= set(SECTION_CALLS[section].findall(path.read_text(encoding="utf-8")))
     return {key.lower() for key in keys}
 
 
@@ -87,32 +91,38 @@ def _bare_text(template: Path) -> set[str]:
     return {" ".join(line.split()) for line in source.splitlines() if HAS_WORD.search(line)}
 
 
-def test_the_application_asks_for_something() -> None:
-    """Guards the regex itself: a silent zero would make every other test vacuous."""
-    assert len(_used_keys()) > 10
+@pytest.mark.parametrize("section", SECTION_CALLS)
+def test_the_application_asks_for_something(section: str) -> None:
+    """Guards the regexes themselves: a silent zero would make every other test vacuous."""
+    assert len(_used_keys(section)) > 10
 
 
+@pytest.mark.parametrize("section", SECTION_CALLS)
 @pytest.mark.parametrize("locale", _locales())
-def test_every_key_the_templates_use_is_translated(locale: str) -> None:
+def test_every_key_the_templates_use_is_translated(locale: str, section: str) -> None:
     """A missing key renders as None, so the page shows a hole rather than a word."""
-    missing = sorted(_used_keys() - set(_catalog(locale)))
-    assert not missing, f"{locale}.json is missing {len(missing)} key(s) the templates ask for: {missing}"
+    missing = sorted(_used_keys(section) - set(_catalog(locale, section)))
+    assert not missing, f"{locale}.json is missing {len(missing)} {section} key(s) the templates ask for: {missing}"
 
 
-def test_no_catalog_key_is_unreferenced() -> None:
+@pytest.mark.parametrize("section", SECTION_CALLS)
+def test_no_catalog_key_is_unreferenced(section: str) -> None:
     """An unused key means the template hardcoded the text instead - the original bug."""
-    unused = sorted(set(_catalog(REFERENCE_LOCALE)) - _used_keys())
+    unused = sorted(set(_catalog(REFERENCE_LOCALE, section)) - _used_keys(section))
     assert not unused, (
-        f"{len(unused)} key(s) defined but never asked for: {unused}. Either a template hardcodes the text, or the key is dead and should go."
+        f"{len(unused)} {section} key(s) defined but never asked for: {unused}. "
+        "Either a template hardcodes the text, or the key is dead and should go."
     )
 
 
+@pytest.mark.parametrize("section", SECTION_CALLS)
 @pytest.mark.parametrize("locale", [loc for loc in _locales() if loc != REFERENCE_LOCALE])
-def test_catalogs_do_not_drift_apart(locale: str) -> None:
+def test_catalogs_do_not_drift_apart(locale: str, section: str) -> None:
     """Every catalogue holds the same key set, so no language quietly loses a phrase."""
-    reference, other = set(_catalog(REFERENCE_LOCALE)), set(_catalog(locale))
+    reference, other = set(_catalog(REFERENCE_LOCALE, section)), set(_catalog(locale, section))
     assert other == reference, (
-        f"{locale}.json differs from {REFERENCE_LOCALE}.json - missing: {sorted(reference - other)}, extra: {sorted(other - reference)}"
+        f"{locale}.json differs from {REFERENCE_LOCALE}.json in {section} - "
+        f"missing: {sorted(reference - other)}, extra: {sorted(other - reference)}"
     )
 
 
@@ -124,10 +134,11 @@ def test_every_catalog_names_the_languages_offered(locale: str) -> None:
     assert all(str(name).strip() for name in names.values())
 
 
+@pytest.mark.parametrize("section", SECTION_CALLS)
 @pytest.mark.parametrize("locale", _locales())
-def test_no_translation_is_blank(locale: str) -> None:
+def test_no_translation_is_blank(locale: str, section: str) -> None:
     """A blank value is worse than a missing one: it renders as nothing at all."""
-    blank = sorted(key for key, value in _catalog(locale).items() if not str(value).strip())
+    blank = sorted(key for key, value in _catalog(locale, section).items() if not str(value).strip())
     assert not blank, f"{locale}.json has blank translations: {blank}"
 
 

@@ -459,10 +459,18 @@ The JSON presenter's output has the same keys in every language, plus these fiel
 
 ### Public web
 
-A public web shows reports in the page's language: `?lang=`, else the browser's language, else
-the web's default (see **Languages** in **Configuration → Public Web**). A language picked with
-`?lang=` is kept in the page's links. Reports fall back to English, then the original; outdated
-translations are skipped. When a report is shown in another language, the page says which.
+A public web's pages are in the page's language: `?lang=`, else the browser's language, else the
+web's default (see **Languages** in **Configuration → Public Web**). Visitors switch to another of
+the web's languages in the language menu at the top of the homepage and of each report (a web with
+one language has none); the menu sets `?lang=`, which the page's links keep.
+
+The page's language changes a report only where the report is translated into it: what is not
+stays as written, with no English in between (unlike products and presenters), and outdated
+translations are skipped. When a report is shown in another language than the page's, the page
+says which. The report's own phrases (*More information*, *The vulnerability was publicly
+disclosed*, its labels) are in the language the report is shown in, so a report nobody translated
+reads entirely in the language it was written in, and only the page around it follows the visitor.
+A bulletin whose reports are in different languages shows each one in its own.
 
 ### Upgrading
 

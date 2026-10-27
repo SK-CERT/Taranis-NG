@@ -14,6 +14,7 @@ from lib.web import (
     chosen_language,
     current_language,
     do_clean,
+    language_choices,
     language_name,
     transform_link_references,
     translate_report,
@@ -30,6 +31,7 @@ app.jinja_env.filters["clean"] = do_clean
 app.jinja_env.globals.update(
     chosen_language=chosen_language,
     current_language=current_language,
+    language_choices=language_choices,
     language_name=language_name,
     translate_report=translate_report,
     translate_ui=translate_ui,
