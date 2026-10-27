@@ -102,8 +102,99 @@
                             </v-btn>
                         </div>
 
+                        <!-- Templates per language: the default set, and other languages' templates.
+                             A presenter without templates (JSON) has nothing that depends on a language. -->
+                        <div
+                            v-if="hasTemplates"
+                            class="d-flex align-center flex-wrap ga-2 mb-3"
+                        >
+                            <v-tabs
+                                v-model="parameterTab"
+                                density="compact"
+                                data-test="product-type-language-tabs"
+                            >
+                                <v-tab value="default">{{ t('presenters.types.default_templates') }}</v-tab>
+                                <v-tab
+                                    v-for="code in templateLanguages"
+                                    :key="code"
+                                    :value="code"
+                                >
+                                    {{ languageName(code) }}
+                                </v-tab>
+                            </v-tabs>
+                            <v-spacer />
+                            <v-autocomplete
+                                v-if="canSave"
+                                v-model="addedLanguage"
+                                :items="addableLanguages"
+                                item-title="txt"
+                                item-value="id"
+                                :label="t('presenters.types.add_language')"
+                                prepend-inner-icon="mdi-plus"
+                                variant="outlined"
+                                density="compact"
+                                hide-details
+                                class="add-language"
+                                :disabled="saving"
+                                data-test="add-template-language"
+                                @update:model-value="addTemplateLanguage"
+                            />
+                        </div>
+
+                        <div
+                            v-if="parameterTab !== 'default'"
+                            data-test="language-templates"
+                        >
+                            <p class="text-body-2 text-medium-emphasis mb-3">
+                                {{ t('presenters.types.language_templates_hint', { language: languageName(parameterTab) }) }}
+                            </p>
+                            <v-text-field
+                                v-for="param in templateParameters"
+                                :key="String(param.key)"
+                                :model-value="localItem.language_templates[parameterTab]?.[String(param.key)] ?? ''"
+                                :spellcheck="false"
+                                :label="String(param.name || param.key || '')"
+                                :placeholder="defaultParameterValue(param)"
+                                persistent-placeholder
+                                variant="outlined"
+                                density="comfortable"
+                                class="mb-3"
+                                :disabled="saving || !canSave"
+                                @update:model-value="(value: string) => setLanguageTemplate(String(param.key), value)"
+                            />
+                            <v-btn
+                                variant="text"
+                                color="error"
+                                size="small"
+                                prepend-icon="mdi-delete"
+                                :disabled="saving || !canSave"
+                                data-test="remove-template-language"
+                                @click="removeTemplateLanguage(parameterTab)"
+                            >
+                                {{ t('presenters.types.remove_language', { language: languageName(parameterTab) }) }}
+                            </v-btn>
+                        </div>
+
+                        <v-autocomplete
+                            v-if="hasTemplates"
+                            v-show="parameterTab === 'default'"
+                            v-model="localItem.language"
+                            :items="languageOptions"
+                            item-title="txt"
+                            item-value="id"
+                            :label="t('presenters.types.template_language')"
+                            :hint="t('presenters.types.template_language_hint')"
+                            persistent-hint
+                            clearable
+                            variant="outlined"
+                            density="comfortable"
+                            class="mb-3"
+                            :disabled="saving || !canSave"
+                            data-test="product-type-template-language"
+                        />
                         <div
                             v-for="(param, index) in selectedPresenter.parameters"
+                            v-show="parameterTab === 'default'"
                             :key="param.id ?? param.key ?? index"
                             class="mb-3"
                         >
@@ -270,6 +361,7 @@
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { useAuth } from '@/composables/useAuth'
+    import { useContentLanguages } from '@/composables/useContentLanguages'
     import { useConfigStore } from '@/stores/config'
     import { createNewProductType, updateProductType, getAllPresentersNodes } from '@/api/config'
     import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
@@ -313,6 +405,10 @@
         description: string
         presenter_id: string | number | null
         parameter_values: ParameterValue[]
+        // Language of the default templates; null while not stated.
+        language: string | null
+        // Template paths per language; a template a language leaves empty is the default one.
+        language_templates: Record<string, Record<string, string>>
         [key: string]: unknown
     }
 
@@ -398,10 +494,58 @@
         title: '',
         description: '',
         presenter_id: null,
-        parameter_values: []
+        parameter_values: [],
+        language: null,
+        language_templates: {}
     }
 
-    const localItem = ref<ProductTypeItem>({ ...defaultItem })
+    const localItem = ref<ProductTypeItem>({ ...defaultItem, language_templates: {} })
+
+    // ---- templates per language -------------------------------------------------------------
+    const { languageOptions, languageName } = useContentLanguages()
+    const parameterTab = ref<string>('default')
+    // Only template paths vary per language; everything else is shared.
+    const templateParameters = computed(() =>
+        (selectedPresenter.value?.parameters ?? []).filter((param) => String(param.key ?? '').endsWith('_TEMPLATE_PATH'))
+    )
+    const hasTemplates = computed(() => templateParameters.value.length > 0)
+    // A presenter without templates has no language tabs to stay on.
+    watch(hasTemplates, (value) => {
+        if (!value) parameterTab.value = 'default'
+    })
+    const templateLanguages = computed(() => Object.keys(localItem.value.language_templates ?? {}))
+    const addableLanguages = computed(() =>
+        languageOptions.value.filter((option) => option.id !== localItem.value.language && !templateLanguages.value.includes(option.id))
+    )
+
+    const defaultParameterValue = (param: PresenterParameter): string => {
+        const index = selectedPresenter.value?.parameters?.indexOf(param) ?? -1
+        return String((index >= 0 ? parameterValues.value[index] : '') || param.default_value || '')
+    }
+
+    const addedLanguage = ref<string | null>(null)
+    const addTemplateLanguage = (language: string | null): void => {
+        if (language) {
+            localItem.value.language_templates = { ...localItem.value.language_templates, [language]: {} }
+            parameterTab.value = language
+        }
+        // Cleared on the next tick, so the autocomplete takes the reset.
+        setTimeout(() => (addedLanguage.value = null))
+    }
+
+    const removeTemplateLanguage = (language: string): void => {
+        const { [language]: _removed, ...rest } = localItem.value.language_templates
+        localItem.value.language_templates = rest
+        parameterTab.value = 'default'
+    }
+
+    const setLanguageTemplate = (key: string, value: string | null): void => {
+        const language = parameterTab.value
+        const templates = { ...(localItem.value.language_templates[language] ?? {}) }
+        if (value && value.trim()) templates[key] = value
+        else delete templates[key]
+        localItem.value.language_templates = { ...localItem.value.language_templates, [language]: templates }
+    }
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_PRODUCT_TYPE_CREATE'))
@@ -454,7 +598,8 @@
     }
 
     const openCreateDialog = (): void => {
-        localItem.value = { ...defaultItem }
+        localItem.value = { ...defaultItem, language_templates: {} }
+        parameterTab.value = 'default'
         showValidationError.value = false
         showError.value = false
         syncPresenterSelection(null)
@@ -518,7 +663,10 @@
                     selectedPresenter.value.parameters?.map((param, index) => ({
                         value: String(parameterValues.value[index] ?? param.default_value ?? ''),
                         parameter: param
-                    })) || []
+                    })) || [],
+                // Template languages only mean something to a presenter with templates.
+                language: hasTemplates.value ? localItem.value.language || null : null,
+                language_templates: hasTemplates.value ? (localItem.value.language_templates ?? {}) : {}
             }
 
             if (isEdit.value) {
@@ -541,9 +689,11 @@
             emit('saved')
             return true
         } catch (error) {
+            // Core says why a language or template override was refused.
+            const message = (error as { response?: { data?: { error?: string } } })?.response?.data?.error
             window.dispatchEvent(
                 new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'common.error_saving' }
+                    detail: message ? { type: 'error', message } : { type: 'error', loc: 'common.error_saving' }
                 })
             )
             showError.value = true
@@ -567,7 +717,15 @@
         () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                localItem.value = { ...defaultItem, ...newItem }
+                const incoming = newItem as Partial<ProductTypeItem>
+                // A copy: the list keeps its row until the dialog saves.
+                localItem.value = {
+                    ...defaultItem,
+                    ...newItem,
+                    language: incoming.language ?? null,
+                    language_templates: JSON.parse(JSON.stringify(incoming.language_templates ?? {}))
+                }
+                parameterTab.value = 'default'
                 syncPresenterSelection(localItem.value.presenter_id)
                 dialog.value = true
             }
@@ -629,6 +787,10 @@
 </script>
 
 <style scoped>
+    .add-language {
+        flex: 0 0 240px;
+    }
+
     .tpl-line {
         font-family: monospace;
         color: rgba(var(--v-theme-on-surface), 0.6);

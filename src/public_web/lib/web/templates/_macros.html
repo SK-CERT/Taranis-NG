@@ -10,6 +10,43 @@
     </div>
 {% endmacro %}
 
+{#- A report, or one of its report items, shown in another language than the page's (it is not
+    translated into this one) marks its own text with that language; its phrases are in it too. #}
+{%- macro content_lang(part) -%}
+    {%- set shown = part.get_language() -%}
+    {%- if shown and shown != current_language() %}{{ {"lang": shown} | xmlattr }}{% endif -%}
+{%- endmacro %}
+
+{#- The languages the web offers, each opening this page in it; nothing when it offers one. #}
+{%- macro language_picker() -%}
+    {%- set choices = language_choices() -%}
+    {%- if choices %}
+        {%- set current = choices | selectattr("current") | first %}
+        <div class="dropdown" data-test="language-picker">
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="{{ translate_ui('language') }}">
+                <span class="mdi mdi-translate fs-5 me-1" aria-hidden="true"></span>
+                <span class="visually-hidden">{{ translate_ui('language') }}:</span>
+                {{ current.name if current else language_name(current_language()) }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                {%- for choice in choices %}
+                    <li>
+                        <a class="dropdown-item{% if choice.current %} active{% endif %}"
+                           href="{{ choice.url }}"
+                           hreflang="{{ choice.code }}"
+                           lang="{{ choice.code }}"
+                           {%- if choice.current %} aria-current="true"{% endif %}>{{ choice.name }}</a>
+                    </li>
+                {%- endfor %}
+            </ul>
+        </div>
+    {%- endif %}
+{%- endmacro %}
+
 {% macro required() -%}
     <span class="text-danger">*</span>
 {%- endmacro %}

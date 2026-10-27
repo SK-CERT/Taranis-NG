@@ -48,3 +48,18 @@ export function enumOptionValue(option: EnumOption): unknown {
     }
     return option
 }
+
+/**
+ * How a stored constant reads in `language`: its translation (configured on the attribute), or
+ * the constant itself. Reports always store the original constant.
+ */
+export function constantLabel(attributeGroup: EnumAttributeGroup | null | undefined, value: unknown, language?: string | null): string {
+    const raw = String(value ?? '')
+    if (!language) return raw
+    const option = enumOptionsOf(attributeGroup).find((candidate) => String(enumOptionValue(candidate)) === raw)
+    if (option && typeof option === 'object') {
+        const translations = option['translations'] as Record<string, { value?: string }> | undefined
+        return translations?.[language]?.value || raw
+    }
+    return raw
+}

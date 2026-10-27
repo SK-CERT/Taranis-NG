@@ -143,6 +143,7 @@
 <script setup lang="ts">
     import { ref, computed, onMounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { getLanguageName as languageDisplayName } from '@/composables/useContentLanguages'
     import { useAuth } from '@/composables/useAuth'
     import { useAppTheme } from '@/composables/useAppTheme'
     import { useSettingsStore } from '@/stores/settings'
@@ -303,24 +304,8 @@
         }
     }
 
-    const getLanguageName = (code: string, defaultName?: string, native = false): string => {
-        try {
-            // Try to use Intl.DisplayNames for multilingual support
-            if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
-                try {
-                    const displayNames = new Intl.DisplayNames(native ? [code, 'en'] : [locale.value, 'en'], { type: 'language' })
-                    return displayNames.of(code) || defaultName || code
-                } catch {
-                    // Fallback
-                }
-            }
-
-            // Simple fallback - return default name or code
-            return defaultName || code
-        } catch {
-            return defaultName || code
-        }
-    }
+    const getLanguageName = (code: string, defaultName?: string, native = false): string =>
+        languageDisplayName(code, locale.value, defaultName, native)
 
     const initRecords = (): void => {
         const allSettings = settingsStore.getSettings || []

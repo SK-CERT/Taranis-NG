@@ -126,3 +126,39 @@ describe('CardAnalyze locale-safe composition', () => {
         expect(wrapper.find('.report-card__source-count').exists()).toBe(false)
     })
 })
+
+describe('CardAnalyze names in the GUI language', () => {
+    const translated = {
+        title: 'Kritická chyba',
+        title_prefix: 'ZRANITELNOST',
+        language: 'cs',
+        title_translations: {
+            de: { title: 'Kritischer Fehler' },
+            en: { title: 'Critical bug', title_prefix: 'VULNERABILITY' }
+        }
+    }
+
+    it('shows the translation into the GUI language, falling back to English per field', () => {
+        const wrapper = mountCard(translated)
+
+        expect(wrapper.text()).toContain('Kritischer Fehler')
+        expect(wrapper.text()).toContain('VULNERABILITY')
+        expect(wrapper.text()).not.toContain('Kritická chyba')
+    })
+
+    it('follows a change of the GUI language', async () => {
+        const wrapper = mountCard(translated)
+
+        ;(wrapper.vm.$i18n as unknown as { locale: string }).locale = 'cs'
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.text()).toContain('Kritická chyba')
+        expect(wrapper.text()).toContain('ZRANITELNOST')
+    })
+
+    it('shows the report as written when nothing fits', () => {
+        const wrapper = mountCard({ ...translated, title_translations: {} })
+
+        expect(wrapper.text()).toContain('Kritická chyba')
+    })
+})

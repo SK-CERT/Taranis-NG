@@ -159,6 +159,13 @@
                                     <bdi dir="auto">{{ stateLabel }}</bdi>
                                 </v-chip>
 
+                                <TagChips
+                                    v-if="hasWorkflowState"
+                                    entity-type="report_item"
+                                    :tag-ids="card.tags"
+                                    :translation-status="card.translation_status"
+                                />
+
                                 <v-chip
                                     v-if="!hasWorkflowState && inProgressReportsCount > 0"
                                     color="orange"
@@ -259,11 +266,15 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import HighlightedText from '@/components/common/HighlightedText.vue'
     import { collectHighlightWords } from '@/utils/word-list-highlighting'
+    import TagChips from '@/components/common/tags/TagChips.vue'
 
     type CardData = {
         id?: string | number
         title?: string
         title_prefix?: string
+        // A report's tags and its translation status per language (built-in tag keys).
+        tags?: number[]
+        translation_status?: Record<string, string>
         name?: string
         subtitle?: string
         description?: string

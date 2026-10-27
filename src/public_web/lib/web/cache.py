@@ -33,8 +33,8 @@ class WebCache:
         )
         self.client = client or TaranisClient()
 
-    def _fetch_all_reports(self, web_id: int | None = None) -> list[VulnerabilityReport]:
-        """Fetch the latest published products from Taranis, newest first.
+    def _fetch_all_reports(self, web_id: int | None = None, language: str | None = None) -> list[VulnerabilityReport]:
+        """Fetch the latest published products from Taranis, newest first, in ``language``.
 
         Products that are not a valid TLP:CLEAR vulnerability report are skipped
         so one bad product cannot break the feed.
@@ -43,7 +43,7 @@ class WebCache:
         ids = self.client.list_published_product_ids(limit, web_id=web_id)
         reports: list[VulnerabilityReport] = []
         for product_id in ids:
-            data = self.client.get_product(product_id, web_id=web_id)
+            data = self.client.get_product(product_id, web_id=web_id, language=language)
             if data is None:
                 continue
             try:
@@ -52,18 +52,18 @@ class WebCache:
                 logger.info("Skipping product %s: %s", product_id, exc)
         return reports
 
-    def get_all_reports(self, web_id: int | None = None) -> list[VulnerabilityReport]:
-        """Return the latest reports (newest first), fetched from Taranis and cached.
+    def get_all_reports(self, web_id: int | None = None, language: str | None = None) -> list[VulnerabilityReport]:
+        """Return the latest reports (newest first) in ``language``, fetched from Taranis and cached.
 
-        Cached with a TTL. On an API failure, logs and returns an empty list
+        Cached with a TTL, per web and language. On an API failure, logs and returns an empty list
         without caching so the next request retries.
         """
-        cache_key = f"{CACHE_KEY_ALL_REPORTS}:{web_id}" if web_id is not None else CACHE_KEY_ALL_REPORTS
+        cache_key = f"{CACHE_KEY_ALL_REPORTS}:{web_id}:{language}"
         cached = self.cache.get(cache_key)
         if cached:
             return cached
         try:
-            reports = self._fetch_all_reports(web_id=web_id)
+            reports = self._fetch_all_reports(web_id=web_id, language=language)
         except TaranisClientError as exc:
             logger.exception("Could not fetch reports from Taranis: %s", exc)
             return []
@@ -74,13 +74,13 @@ class WebCache:
             self.cache.set(cache_key, reports)
         return reports
 
-    def get_report(self, report_id: str, web_id: int | None = None) -> VulnerabilityReport | None:
-        """Return a single report by its Taranis product id.
+    def get_report(self, report_id: str, web_id: int | None = None, language: str | None = None) -> VulnerabilityReport | None:
+        """Return a single report by its Taranis product id, in ``language``.
 
         Looks in the cached list first, then fetches the product directly on a
         miss. Returns None if it is not a valid displayable report.
         """
-        for report in self.get_all_reports(web_id=web_id):
+        for report in self.get_all_reports(web_id=web_id, language=language):
             if str(report.get_id()) == str(report_id):
                 return report
         try:
@@ -88,7 +88,7 @@ class WebCache:
         except (TypeError, ValueError):
             return None
         try:
-            data = self.client.get_product(product_id, web_id=web_id)
+            data = self.client.get_product(product_id, web_id=web_id, language=language)
         except TaranisClientError as exc:
             logger.exception("Could not fetch product %s from Taranis: %s", report_id, exc)
             return None

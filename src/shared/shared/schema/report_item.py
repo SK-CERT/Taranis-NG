@@ -75,6 +75,7 @@ class ReportItemAttribute:
         version: int,
         current: bool,
         user: str,
+        value_label: str | None = None,
     ) -> None:
         """Initialize a new instance of the ReportItem class."""
         self.id = id
@@ -90,6 +91,7 @@ class ReportItemAttribute:
         self.attribute_group_item_id = attribute_group_item_id
         self.attribute_group_item_title = attribute_group_item_title
         self.user = user
+        self.value_label = value_label
 
 
 class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
@@ -109,6 +111,8 @@ class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
     version = fields.Int()
     current = fields.Bool()
     user = fields.Nested(UserSchemaBase, exclude=("password",))
+    # A choice constant in the language rendered (presenter input); the value stays the original constant.
+    value_label = fields.Str(load_default=None, allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> ReportItemAttribute:  # noqa: ARG002, ANN003
@@ -137,6 +141,8 @@ class ReportItemBaseSchema(Schema):
         created (DateTime): The date and time when the report item was created.
         last_updated (DateTime): The date and time when the report item was last updated.
         report_item_type_id (int): The ID of the report item type.
+        language (str): The language the report is written in (ISO 639-1), None while not set.
+            Dump only: core sets it from the author's settings and changes it on request.
     """
 
     class Meta:
@@ -152,6 +158,7 @@ class ReportItemBaseSchema(Schema):
     last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
     report_item_type_id = fields.Int(load_default=None, allow_none=True)
     state_id = fields.Int(allow_none=True)
+    language = fields.Str(dump_only=True, allow_none=True)
 
 
 class RemoteReportItemSchema(ReportItemBaseSchema, PresentationSchema):
@@ -229,6 +236,11 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
         user (UserSchemaBase): User who created the report item.
         updated_by (UserSchemaBase): User who last updated the report item.
         links (list): The report item's citable links ({key, url}), in display order.
+        title_translations (dict): The translated name and prefix per language,
+            ``{language: {"title": ..., "title_prefix": ...}}``, so lists can show the GUI's language.
+        tags (list): The ids of the tags people put on it.
+        translation_status (dict): Its translation status per language as built-in tag keys,
+            ``{language: "translation_outdated", ...}``, or ``{"": "language_not_set"}``.
     """
 
     remote_user = fields.Str(allow_none=True)
@@ -236,6 +248,11 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
     news_items_count = fields.Int()
     updated_by = fields.Str(allow_none=True)
     links = fields.Nested(LinkRefSchema, many=True, dump_only=True)
+    title_translations = fields.Dict(dump_only=True)
+    # The languages of the report's type: a product including it can be rendered in them.
+    type_languages = fields.List(fields.Str(), dump_only=True)
+    tags = fields.List(fields.Int(), attribute="tag_ids", dump_only=True)
+    translation_status = fields.Dict(keys=fields.Str(), values=fields.Str(), dump_only=True)
 
 
 class ReportItem:

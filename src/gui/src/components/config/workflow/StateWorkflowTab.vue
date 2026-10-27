@@ -36,15 +36,7 @@
                 class="elevation-1"
             >
                 <template #item.entity_type="{ item }">
-                    <v-chip
-                        label
-                        :color="getEntityTypeColor(item.entity_type)"
-                    >
-                        <v-icon start>
-                            {{ getEntityTypeIcon(item.entity_type) }}
-                        </v-icon>
-                        {{ t(`workflow.entity_types.${item.entity_type}`) }}
-                    </v-chip>
+                    <EntityTypeChip :entity-type="item.entity_type" />
                 </template>
 
                 <template #item.state_name="{ item }">
@@ -214,6 +206,7 @@
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
+    import EntityTypeChip from '@/components/config/workflow/EntityTypeChip.vue'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
@@ -315,23 +308,6 @@
     const filteredRecords = computed<StateEntityTypeRecord[]>(() =>
         Array.isArray(configStore.stateEntityTypes.items) ? (configStore.stateEntityTypes.items as StateEntityTypeRecord[]) : []
     )
-
-    function getEntityTypeColor(entityType: EntityType): string {
-        const colors = {
-            // Data defaults for user-created entities, deliberately theme-independent.
-            report_item: '#2196F3',
-            product: '#4CAF50'
-        }
-        return colors[entityType as keyof typeof colors] || 'grey'
-    }
-
-    function getEntityTypeIcon(entityType: EntityType): string {
-        const icons = {
-            report_item: 'mdi-file-document',
-            product: 'mdi-package-variant'
-        }
-        return icons[entityType as keyof typeof icons] || 'mdi-help'
-    }
 
     function getStateTypeIcon(stateType: StateType): string {
         const icons = {

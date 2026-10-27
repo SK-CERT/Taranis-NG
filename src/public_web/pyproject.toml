@@ -22,7 +22,6 @@ requires = ["setuptools>=82.0.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-# Run from src/public_web (scripts/run_tests.py cds here). These tests read the
-# templates and catalogs as files and import nothing from the app, so the service's
-# own dependencies are not needed to run them.
+# Run from src/public_web (scripts/run_tests.py cds here). The tests import the app,
+# so scripts/dev_setup.py installs the dependencies above into the root .venv.
 testpaths = ["tests"]

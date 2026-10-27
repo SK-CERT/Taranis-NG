@@ -16,6 +16,7 @@ from api import (
     remote,
     sse,
     state,
+    tag,
     traefik,
     user,
 )
@@ -80,5 +81,6 @@ def initialize(app: object) -> None:
     remote.initialize(api)
     dashboard.initialize(api)
     state.initialize(api)
+    tag.initialize(api)
     traefik.initialize(api)
     notifications.initialize(api)

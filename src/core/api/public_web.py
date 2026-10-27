@@ -8,13 +8,23 @@ The product detail is serialized directly from the database models into a small,
 purpose-built structure (product info + report items with their attributes); no
 presenter is involved. Link citations are rendered here, so a node only ever sees
 numbered ``[n]`` references and the merged ``links`` list they index.
+
+With ``?lang=`` the product is shown in that language where it has been translated into it (see
+``managers/content_localizer.py``): names and translatable texts are translated, outdated
+translations are passed over, and labels arrive as extra fields. ``lang`` is the language of the
+visitor's page, so what is not translated into it stays as written - not English, as elsewhere.
+Each report says which language it is shown in, and its labels follow it, so a node can put its
+own words around a report in that language too. What a node compares - attribute keys, the report
+type's title, the raw value of a choice constant (``source_value``) - stays as written.
 """
 
 import io
+from dataclasses import dataclass
 from http import HTTPStatus
 
 from flask import request, send_file
 from flask_restful import Api, Resource
+from managers import content_language, content_localizer
 from managers.auth_manager import api_key_required
 from managers.db_manager import db
 from managers.link_references import CITING_TYPES, ReferenceIndex, build_index
@@ -42,7 +52,19 @@ def _attribute_type(attribute) -> AttributeType | None:  # noqa: ANN001
     return getattr(getattr(attribute.attribute_group_item, "attribute", None), "type", None)
 
 
-def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict) -> list[dict]:  # noqa: ANN001
+@dataclass(frozen=True)
+class _Rendering:
+    """A report rendered in a language: the language and what its lookups need."""
+
+    language: str
+    report_item: object
+    # Group item id -> {constant value -> its translations}, for choice attributes.
+    constants: dict
+    # The language the report type's labels and constants are written in.
+    label_language: str | None
+
+
+def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, rendering: _Rendering | None = None) -> list[dict]:  # noqa: ANN001
     """Serialize one report item attribute into zero or more entries.
 
     The key is derived from the attribute group item title ("Affected systems"
@@ -53,61 +75,146 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict) 
 
     Citing text has its link references rendered to ``[n]``. A link is reported by
     its URL alone (its citation key stays internal), and a link without URL is left out.
+
+    Rendered in a language, an entry gains ``label`` (the attribute's name in it), a translatable
+    text is translated, and a choice constant gives its translation as ``value`` and itself as
+    ``source_value``.
     """
     group_item = attribute.attribute_group_item
     key = group_item.title.lower().replace(" ", "_") if group_item and group_item.title else ""
     attribute_type = _attribute_type(attribute)
     type_name = attribute_type.name if attribute_type else None
+    localized = {}
+    constants = None
+    if rendering is not None and group_item is not None:
+        localized["label"] = content_localizer.label(
+            group_item.translations,
+            "title",
+            group_item.title,
+            rendering.language,
+            rendering.label_language,
+            via_english=False,
+        )
+        constants = rendering.constants.get(attribute.attribute_group_item_id)
+
+    def choice(value: str | None) -> dict:
+        if constants is None:
+            return {"value": value}
+        label = content_localizer.constant_label(value, constants, rendering.language, rendering.label_language, via_english=False)
+        return {"value": label, "source_value": value}
 
     if attribute_type == AttributeType.MULTI_CHOICE:
         return [
-            {"key": key, "type": type_name, "value": selected, "description": attribute.value_description}
+            {"key": key, "type": type_name, **choice(selected), "description": attribute.value_description, **localized}
             for selected in (attribute.value or "").split("\n")
             if selected
         ]
 
     if attribute_type == AttributeType.LINK:
         url = (attribute.value or "").strip()
-        return [{"key": key, "type": type_name, "value": url, "description": None}] if url else []
+        return [{"key": key, "type": type_name, "value": url, "description": None, **localized}] if url else []
 
     value = attribute.value
+    if rendering is not None:
+        value = content_localizer.attribute_value(
+            rendering.report_item,
+            attribute,
+            rendering.language,
+            skip_outdated=True,
+            via_english=False,
+        )
     if type_name in CITING_TYPES:
         value = index.render(value, local_numbers)
-    return [
-        {
-            "key": key,
-            "type": type_name,
-            "value": value,
-            "description": attribute.value_description,
-        },
-    ]
+    entry = {"key": key, "type": type_name, "value": value, "description": attribute.value_description, **localized}
+    if constants is not None:
+        entry.update(choice(attribute.value))
+    return [entry]
 
 
-def _serialize_product(product: Product) -> dict:
-    """Serialize a product with its report items and attributes for the public web feed."""
+def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: dict, language: str | None, constants: dict) -> dict:  # noqa: ANN001
+    """Serialize a report item with its attributes, in ``language`` when given.
+
+    In a language, the report says which it is shown in (``language``, None when its own is not
+    known), and its labels and constants are in that one too, so that a report nobody translated
+    into ``language`` reads in a single language: the one it was written in.
+    """
+    report_type = report_item.report_item_type
+    rendering = None
+    shown = None
+    if language:
+        available = content_localizer.report_languages(report_item)
+        shown = content_localizer.shown_language(language, report_item.language, available, via_english=False)
+        language = shown or language
+        rendering = _Rendering(language, report_item, constants, report_type.label_language if report_type else None)
+    entry = {
+        "title": report_item.title,
+        "title_prefix": report_item.title_prefix,
+        "uuid": report_item.uuid,
+        "created": report_item.created.isoformat() if report_item.created else None,
+        "last_updated": report_item.last_updated.isoformat() if report_item.last_updated else None,
+        "type": report_type.title if report_type else None,
+        "type_description": report_type.description if report_type else None,
+        "attributes": [
+            entry for attribute in report_item.attributes for entry in _serialize_attribute(attribute, index, local_numbers, rendering)
+        ],
+    }
+    if rendering is None:
+        return entry
+    entry["language"] = shown
+    for field in ("title", "title_prefix"):
+        entry[field] = content_localizer.report_title(report_item, field, language, skip_outdated=True, via_english=False)
+    if report_type is not None:
+        source = report_type.label_language
+        entry["type_label"] = content_localizer.label(
+            report_type.translations,
+            "title",
+            report_type.title,
+            language,
+            source,
+            via_english=False,
+        )
+        entry["type_description_label"] = content_localizer.label(
+            report_type.translations,
+            "description",
+            report_type.description,
+            language,
+            source,
+            via_english=False,
+        )
+    return entry
+
+
+def _serialize_product(product: Product, language: str | None = None) -> dict:
+    """Serialize a product with its report items and attributes for the public web feed.
+
+    Args:
+        product (Product): A published product.
+        language (str | None): The language to show it in; None shows it as written.
+
+    Returns:
+        dict: The product. In a language, it also says which language it is shown in
+            (``language``, None when no language of the content is known) and which it can be read
+            in (``available_languages``).
+    """
     index, local_numbers = build_index(
         product.links,
         [[(link["key"], link["url"]) for link in report_item.links] for report_item in product.report_items],
     )
-
-    report_items = []
-    for report_item, local in zip(product.report_items, local_numbers, strict=True):
-        report_type = report_item.report_item_type
-        report_items.append(
-            {
-                "title": report_item.title,
-                "title_prefix": report_item.title_prefix,
-                "uuid": report_item.uuid,
-                "created": report_item.created.isoformat() if report_item.created else None,
-                "last_updated": report_item.last_updated.isoformat() if report_item.last_updated else None,
-                "type": report_type.title if report_type else None,
-                "type_description": report_type.description if report_type else None,
-                "attributes": [entry for attribute in report_item.attributes for entry in _serialize_attribute(attribute, index, local)],
-            },
-        )
+    constants = {}
+    if language:
+        report_types = {
+            report_item.report_item_type.id: report_item.report_item_type
+            for report_item in product.report_items
+            if report_item.report_item_type
+        }
+        constants = content_localizer.constants_of(report_types.values())
+    report_items = [
+        _serialize_report_item(report_item, index, local, language, constants)
+        for report_item, local in zip(product.report_items, local_numbers, strict=True)
+    ]
 
     user = product.user
-    return {
+    result = {
         "id": product.id,
         "title": product.title,
         "description": index.render(product.description),
@@ -116,6 +223,14 @@ def _serialize_product(product: Product) -> dict:
         "user": {"name": user.name, "username": user.username} if user else None,
         "report_items": report_items,
     }
+    if language:
+        available = content_localizer.available_languages(product)
+        result["title"] = content_localizer.product_text(product, "title", language, skip_outdated=True, via_english=False)[0]
+        description = content_localizer.product_text(product, "description", language, skip_outdated=True, via_english=False)[0]
+        result["description"] = index.render(description)
+        result["language"] = content_localizer.shown_language(language, product.language, available, via_english=False)
+        result["available_languages"] = available
+    return result
 
 
 def _find_published(product_id: int, web_id: int | None = None) -> Product | None:
@@ -172,6 +287,10 @@ class PublicWebProduct(Resource):
     def get(self, product_id, public_web_node=None):  # noqa: ANN001, ANN201
         """Return a published product with its report items and attributes.
 
+        Query params:
+            web_id (int): The web asking; a product published to other webs only is not found.
+            lang (str): The language to show the product in (ISO 639-1); any other value is ignored.
+
         Args:
             product_id (int): The product id.
             public_web_node: The authenticated public-web node.
@@ -186,13 +305,16 @@ class PublicWebProduct(Resource):
             web_id = int(web_id_arg) if web_id_arg else None
         except (TypeError, ValueError):
             web_id = None
+        language = request.args.get("lang")
+        if not content_language.is_language(language):
+            language = None
 
         product = _find_published(product_id, web_id=web_id)
         if product is None:
             logger.debug(f"Public-web '{public_web_node.name}': product {product_id} not found or not published")
             return {"error": "Product not found or not published"}, HTTPStatus.NOT_FOUND
         logger.info(f"Public-web '{public_web_node.name}': serving product {product.id} '{product.title}'")
-        return _serialize_product(product), HTTPStatus.OK
+        return _serialize_product(product, language), HTTPStatus.OK
 
 
 class PublicWebWebs(Resource):

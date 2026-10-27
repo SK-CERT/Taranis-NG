@@ -20,7 +20,7 @@
                         :key="selected"
                         size="small"
                     >
-                        {{ selected }}
+                        {{ constantLabel(attributeGroup, selected, language) }}
                     </v-chip>
                 </span>
 
@@ -65,7 +65,7 @@
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import { useAttributes } from './useAttributes'
-    import { enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup, type EnumOption } from './enumOptions'
+    import { constantLabel, enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup, type EnumOption } from './enumOptions'
 
     type AttributeValueItem = {
         index?: string | number
@@ -89,11 +89,14 @@
             edit?: boolean
             modify?: boolean
             reportItemId: number | null
+            // A language tab of the report: constants read in that language.
+            language?: string | null
         }>(),
         {
             readOnly: false,
             edit: false,
-            modify: false
+            modify: false,
+            language: null
         }
     )
 

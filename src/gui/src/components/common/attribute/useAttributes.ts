@@ -57,6 +57,9 @@ type UseAttributesProps = {
     reportItemId: number | null
     attributeGroup?: AttributeGroup
     values: AttributeValue[]
+    // A language variant of the report: the values are its translations. They are saved with
+    // the language, locked per language, and never added, deleted or reordered.
+    language?: string | null
 }
 
 type EnumSelectedData = {
@@ -68,6 +71,7 @@ type EnumSelectedData = {
 type ReportEventData = {
     report_item_id: number
     user_id?: number | string
+    language?: string | null
     field_id?: number | string
     update?: unknown
     add?: unknown
@@ -93,6 +97,7 @@ type ReportItemDataResponse = {
 
 type DataUpdatePayload = {
     update: true
+    language?: string
     attribute_id?: number | string
     attribute_value?: unknown
     value_description?: string
@@ -143,6 +148,13 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
 
     const currentUserId = () => userStore.userId
 
+    // A translated value is locked per language, so editing the Czech text does not block the
+    // English one: `<attribute id>:<language>`.
+    const lockId = (value: AttributeValue): number | string | undefined => (props.language ? `${value.id}:${props.language}` : value.id)
+
+    // Events about another language's values (or about the source, in a language tab) are not ours.
+    const ownLanguage = (data: ReportEventData): boolean => (data.language ?? null) === (props.language ?? null)
+
     const canModify = computed(() => {
         if (props?.edit === false) {
             return AuthService.hasPermission(Permissions.ANALYZE_UPDATE) && props?.modify === true
@@ -151,7 +163,9 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
     })
 
     const addButtonVisible = computed(() => {
-        return props.values.length < (props.attributeGroup?.max_occurrence ?? Infinity) && !props.readOnly && canModify.value
+        return (
+            !props.language && props.values.length < (props.attributeGroup?.max_occurrence ?? Infinity) && !props.readOnly && canModify.value
+        )
     })
 
     const delButtonVisible = computed(() => {
@@ -221,7 +235,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
      * persists the value server-side and would resurrect what the user just deleted.
      */
     const addInitialValues = async () => {
-        if (props.readOnly || !canModify.value) {
+        if (props.readOnly || !canModify.value || props.language) {
             return
         }
 
@@ -289,7 +303,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
 
         if (props.edit === true) {
             try {
-                await lockReportItem(props.reportItemId, { field_id: fieldValue.id })
+                await lockReportItem(props.reportItemId, { field_id: lockId(fieldValue) })
             } catch (error) {
                 console.error('Failed to lock field:', error)
             }
@@ -315,7 +329,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 await onEdit(fieldIndex)
             }
             try {
-                await unlockReportItem(props.reportItemId, { field_id: fieldValue.id })
+                await unlockReportItem(props.reportItemId, { field_id: lockId(fieldValue) })
             } catch (error) {
                 console.error('Failed to unlock field:', error)
             }
@@ -335,7 +349,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 clearTimeout(keyTimeout.value)
             }
             keyTimeout.value = setTimeout(() => {
-                holdLockReportItem(props.reportItemId, { field_id: fieldValue.id }).catch((error: unknown) => {
+                holdLockReportItem(props.reportItemId, { field_id: lockId(fieldValue) }).catch((error: unknown) => {
                     console.error('Failed to hold lock:', error)
                 })
             }, 1000)
@@ -434,6 +448,9 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
             try {
                 const dataUpdate: DataUpdatePayload = {
                     update: true
+                }
+                if (props.language) {
+                    dataUpdate.language = props.language
                 }
 
                 if (value.id !== undefined) {
@@ -564,7 +581,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
             if (data.user_id !== currentUserId()) {
                 for (let index = 0; index < props.values.length; index++) {
                     const item = props.values[index]
-                    if (item && String(item.id) === String(data.field_id)) {
+                    if (item && String(lockId(item)) === String(data.field_id)) {
                         item.locked = true
                         break
                     }
@@ -578,7 +595,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
             if (data.user_id !== currentUserId()) {
                 for (let index = 0; index < props.values.length; index++) {
                     const item = props.values[index]
-                    if (item && String(item.id) === String(data.field_id)) {
+                    if (item && String(lockId(item)) === String(data.field_id)) {
                         item.locked = false
                         break
                     }
@@ -588,7 +605,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
     }
 
     const reportItemUpdated = async (dataInfo: ReportEventData) => {
-        if (props.edit === true && props.reportItemId === dataInfo.report_item_id) {
+        if (props.edit === true && props.reportItemId === dataInfo.report_item_id && ownLanguage(dataInfo)) {
             if (dataInfo.user_id !== currentUserId()) {
                 if (dataInfo.update !== undefined) {
                     // Attribute record ids are globally unique per report, so exactly one component

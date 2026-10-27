@@ -420,7 +420,9 @@
         "tlp_description_amber": "仅限在接收方组织及其有必要知悉的客户范围内披露。",
         "tlp_description_amber_strict": "仅限在接收方组织内披露。",
         "tlp_description_red": "不得向指定接收者以外的人员披露。",
-        "tlp_description_unknown": "未知 TLP 标记。"
+        "tlp_description_unknown": "未知 TLP 标记。",
+        "translate": "翻译",
+        "translate_hint": "报告会将此字段翻译为报告类型的各语言"
     },
     "cvss_calculator": {
         "title": "CVSS 计算器",
@@ -768,6 +770,34 @@
             "take_theirs": "放弃我的更改，保留已存储的值",
             "keep_mine": "用我的值覆盖",
             "unknown_user": "其他用户"
+        },
+        "translation": {
+            "source_language": "报告的语言",
+            "not_set": "未设置",
+            "source_tab": "{language}（原文）",
+            "source_not_set": "原文（未设置语言）",
+            "translate_report": "翻译整份报告",
+            "progress": "正在翻译：已完成 {done}/{total} 种语言",
+            "finished": "翻译已完成",
+            "finished_with_problems": "翻译已完成。未翻译：{failed}；因有人正在编辑而跳过：{skipped}",
+            "intro": "翻译为{language}。不翻译的字段显示原文。",
+            "translate_language": "翻译为{language}",
+            "translate_field": "用 AI 翻译",
+            "same_in_all_languages": "所有语言中相同",
+            "source": "原文",
+            "overwrite_title": "要替换你的译文吗？",
+            "overwrite_confirm": "替换",
+            "overwrite_message": "此字段是人工翻译的。AI 译文将替换它。",
+            "field_locked": "其他人正在编辑此字段，因此未翻译。",
+            "field_failed": "无法翻译该字段：{reason}",
+            "ai": "AI 译",
+            "ai_hint": "由 AI 翻译，尚未审核",
+            "outdated": "已过时",
+            "outdated_hint": "翻译后原文已更改",
+            "review": "标记为已审核",
+            "review_all": "将 AI 翻译标记为已审核",
+            "reviewed": "已标记为已审核的 AI 翻译：{count}",
+            "review_locked": "其他人正在编辑某个字段，因此未将其标记为已审核。"
         }
     },
     "product": {
@@ -817,7 +847,23 @@
             "confirm": "添加报告",
             "confirm_published": "添加并完成",
             "untitled": "无标题报告"
-        }
+        },
+        "language": "产品的语言",
+        "language_in_use": "该产品已有这种语言的译文",
+        "publish_in": "发布语言",
+        "publish_in_language": "发布语言：{language}",
+        "outdated_confirmation": "过时的译文",
+        "outdated_continue": "仍然继续",
+        "language_notice": {
+            "missing": "这些报告没有{language}译文，将使用英文或原文：",
+            "outdated": "这些{language}译文已过时，因为翻译后原文已更改：",
+            "templates": "该产品类型没有{language}模板，将使用{used}模板。",
+            "default_templates": "默认"
+        },
+        "texts_not_translated": "标题或描述无法翻译为某些语言",
+        "nothing_to_translate": "没有需要翻译的内容：译文均为最新。",
+        "translate_product": "翻译整个产品",
+        "translation_intro": "翻译为{language}。仅翻译标题和描述，其余显示原文。"
     },
     "analyze": {
         "sort": "排序方式",
@@ -1144,7 +1190,15 @@
             "entity_type_required": "必须选择实体类型"
         },
         "tags": {
-            "tab_description": "您可以在此管理标签。"
+            "tab_description": "您可以在此管理标签。",
+            "system": {
+                "translation_missing": "缺少翻译",
+                "translation_partial": "部分已翻译",
+                "translation_outdated": "翻译已过时",
+                "translation_ai": "AI 翻译未审核",
+                "translation_done": "已翻译",
+                "language_not_set": "未设置语言"
+            }
         },
         "tag_workflow": {
             "tab_description": "您可以在此管理标签与实体的关联。"
@@ -1409,7 +1463,13 @@
                 "link": "链接",
                 "collected": "采集日期",
                 "published": "发布日期"
-            }
+            },
+            "default_templates": "默认",
+            "add_language": "添加语言",
+            "remove_language": "移除{language}",
+            "language_templates_hint": "用于{language}的模板。留空的字段使用默认模板。",
+            "template_language": "模板的语言",
+            "template_language_hint": "默认模板所用的语言"
         }
     },
     "publishers": {
@@ -1552,7 +1612,10 @@
             "successful_edit": "已成功更新AI 模型",
             "error": "无法保存AI 模型",
             "remove": "已成功删除AI 模型",
-            "removed_error": "AI 模型正在使用，无法删除"
+            "removed_error": "AI 模型正在使用，无法删除",
+            "max_tlp": "发送的最高 TLP",
+            "max_tlp_hint": "高于此 TLP 的报告文本绝不会发送给此提供商",
+            "max_tlp_none": "无限制"
         }
     },
     "word_lists": {
@@ -1610,7 +1673,20 @@
             "successful_edit": "已成功更新报告条目类型",
             "removed_error": "报告条目类型正在使用，无法删除",
             "removed": "已成功删除报告条目类型",
-            "total_count": "{count} 个报告类型 | {count} 个报告类型"
+            "total_count": "{count} 个报告类型 | {count} 个报告类型",
+            "languages": "语言版本",
+            "languages_hint": "此类型的报告会翻译为这些语言",
+            "translation_ai_provider": "用于翻译的 AI 提供商",
+            "label_language": "标签的语言",
+            "label_language_hint": "上方名称和说明所用的语言",
+            "fields": "字段",
+            "labels_tab": "标签：{language}",
+            "labels_in": "{language}的名称和说明。每个字段下方显示原文。",
+            "translate_labels": "用 AI 翻译缺失的标签",
+            "no_ai_provider": "请先选择用于翻译的 AI 提供商",
+            "translate_labels_failed": "部分标签未能翻译（{count}）",
+            "labels_translated": "标签已翻译",
+            "copy_original": "复制原文"
         },
         "attributes": {
             "in_use": "无法删除属性：{types} 正在使用它",
@@ -1629,7 +1705,33 @@
             "edit_constant": "编辑常量",
             "value": "值",
             "error": "无法保存属性",
-            "total_count": "{count} 个属性 | {count} 个属性"
+            "total_count": "{count} 个属性 | {count} 个属性",
+            "constant_translations": "译文",
+            "no_languages": "使用此属性的报告类型都没有其他语言。",
+            "constants_in": "{language}常量",
+            "translated_value": "{language}的值",
+            "edit_translation": "编辑译文",
+            "translate_missing": "用 AI 翻译缺失的",
+            "translated_constants": "已翻译的常量：{count}",
+            "translated_with_failures": "已翻译的常量：{translated}；未翻译：{failed}"
+        },
+        "glossary": {
+            "tab": "术语表",
+            "tab_description": "AI 翻译时使用的术语",
+            "title": "AI 翻译术语表",
+            "type_title": "此报告类型的术语表",
+            "type_intro": "这些术语在整个实例的术语表之外，适用于此类型的报告和标签；同一术语以此处的为准。",
+            "add": "添加术语",
+            "edit": "编辑术语",
+            "empty": "暂无术语",
+            "keep": "保持原样",
+            "keep_hint": "用于产品或组织名称：AI 在所有语言中都不改动该术语。",
+            "note": "备注",
+            "note_hint": "供 AI 参考的上下文，例如术语适用的场合",
+            "terms": "术语",
+            "add_language": "添加语言",
+            "remove_language": "移除{language}",
+            "needs_terms": "请至少用两种语言填写术语，或填写一个需保持原样的术语。"
         }
     },
     "external_user": {
@@ -2297,5 +2399,30 @@
         "product_hint": "产品描述可以引用的来源。在发布的产品中，它们先于其报告的链接编号。",
         "product_title": "链接",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "标签",
+        "tag": "标签",
+        "none_defined": "这些条目尚未定义标签",
+        "built_in_hint": "此标签由 Taranis 设置；可以更改样式，但不能重命名或删除。请在标签工作流中将其关闭。",
+        "built_in_link_hint": "内置标签保持关联；请改为将其关闭",
+        "add_new": "添加新标签",
+        "edit": "编辑标签",
+        "name": "名称",
+        "description": "描述",
+        "color": "颜色",
+        "icon": "图标",
+        "in_use": "该标签用于 {count} 个报告或产品，无法删除",
+        "add_link": "添加标签关联",
+        "edit_link": "编辑标签关联",
+        "status_in_language": "{language}：{status}",
+        "filter": "按标签和翻译筛选",
+        "translation": "翻译",
+        "translation_language": "语言",
+        "translation_any": "任意",
+        "translation_needs": "需要翻译",
+        "translation_unreviewed": "AI 翻译未审核",
+        "translation_not_set": "未设置语言",
+        "clear_filter": "清除"
     }
 }

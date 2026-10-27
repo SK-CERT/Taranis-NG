@@ -22,6 +22,8 @@ from managers import (
     bots_manager,
     certificate_manager,
     collectors_manager,
+    content_language,
+    llm_manager,
     log_manager,
     notification_manager,
     presenters_manager,
@@ -58,9 +60,11 @@ from model import (
     user,
     word_list,
 )
+from model.glossary import GlossaryEntry
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.state import StateDefinition, StateEntityType
+from model.tag import Tag, TagEntityType
 from shared.schema.ai_provider import AiProviderSchema
 from shared.schema.attribute_extraction_rule import AttributeExtractionRuleSchema
 from shared.schema.auth_provider import AuthProviderSchema
@@ -252,6 +256,88 @@ class AttributeEnumResource(Resource):
             return _delete_failed("Could not delete attribute enum", ex)
 
 
+class AttributeLanguagesResource(Resource):
+    """The languages an attribute's constants are translated into."""
+
+    @auth_required("CONFIG_ATTRIBUTE_ACCESS")
+    def get(self, attribute_id: int) -> tuple[dict, HTTPStatus]:
+        """Get the languages of the report types using the attribute, and their AI providers.
+
+        Args:
+            attribute_id (int): The attribute ID
+        Returns:
+            (dict, HTTPStatus): languages, source_language and ai_providers
+        """
+        return attribute.Attribute.content_languages(attribute_id), HTTPStatus.OK
+
+
+# One request translates at most this many constants; the GUI asks again for the rest.
+CONSTANTS_PER_TRANSLATION = 100
+
+
+class AttributeEnumsTranslateResource(Resource):
+    """Translate an attribute's constants into a language with AI."""
+
+    @auth_required("CONFIG_ATTRIBUTE_UPDATE")
+    def post(self, attribute_id: int) -> tuple[dict, HTTPStatus]:
+        """Translate the constants that have no translation into ``language`` yet.
+
+        The body holds ``language``, ``ai_provider_id`` and optionally ``source_language``.
+        Constants are configuration, not report content, so no TLP limit applies.
+
+        Args:
+            attribute_id (int): The attribute ID
+        Returns:
+            (dict, HTTPStatus): translated, failed and remaining counts
+        """
+        body = request.json or {}
+        record = db.session.get(attribute.Attribute, attribute_id)
+        if record is None:
+            return {"error": "Attribute not found"}, HTTPStatus.NOT_FOUND
+        if record.type is None or record.type.name not in content_language.CONSTANT_TYPES:
+            return {"error": "Only radio, enumeration and multiple choice constants are translated"}, HTTPStatus.BAD_REQUEST
+        try:
+            target = content_language.clean_language(body.get("language"))
+            source = content_language.clean_language(body.get("source_language"))
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        if target is None:
+            return {"error": "language is required"}, HTTPStatus.BAD_REQUEST
+        provider = ai_provider.AiProvider.find(body.get("ai_provider_id")) if body.get("ai_provider_id") else None
+        if provider is None:
+            return {"error": "Choose an AI provider for translation"}, HTTPStatus.BAD_REQUEST
+
+        missing = [
+            enum for enum in attribute.AttributeEnum.for_attribute(attribute_id) if not (enum.translations or {}).get(target, {}).get("value")
+        ]
+        batch = missing[:CONSTANTS_PER_TRANSLATION]
+        texts = {f"{enum.id}.value": enum.value for enum in batch if enum.value}
+        texts.update({f"{enum.id}.description": enum.description for enum in batch if enum.description})
+        # The constants are shared by the report types using the attribute: their glossaries apply.
+        glossary = GlossaryEntry.for_report_types(attribute.Attribute.content_languages(attribute_id)["report_item_type_ids"])
+        try:
+            translations, failed = llm_manager.translate_texts(provider, texts, source, target, glossary=glossary)
+        except llm_manager.LlmError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+        translated = 0
+        for enum in batch:
+            value = translations.get(f"{enum.id}.value")
+            if not value:
+                continue
+            variants = dict(enum.translations or {})
+            variants[target] = {"value": value, "description": translations.get(f"{enum.id}.description", "")}
+            enum.translations = content_language.clean_enum_translations(variants)
+            translated += 1
+        db.session.commit()
+        failed_constants = {key.split(".")[0] for key in failed}
+        return {
+            "translated": translated,
+            "failed": len(failed_constants),
+            "remaining": len(missing) - len(batch),
+        }, HTTPStatus.OK
+
+
 class AiProvidersResource(Resource):
     """AI models API endpoint."""
 
@@ -277,6 +363,8 @@ class AiProvidersResource(Resource):
             record = ai_provider.AiProvider.add_new(request.json, user.name)
             schema = AiProviderSchema()
             return schema.dump(record), HTTPStatus.OK
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not create AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -404,6 +492,8 @@ class AiProviderResource(Resource):
             record = ai_provider.AiProvider.update(ai_provider_id, request.json, user.name)
             schema = AiProviderSchema()
             return schema.dump(record), HTTPStatus.OK
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -770,6 +860,9 @@ class ReportItemTypesConfigResource(Resource):
         """
         try:
             report_item_type.ReportItemType.add_report_item_type(request.json)
+        except ValueError as ex:
+            # A language code or label translation that is not valid.
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not create report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -797,6 +890,9 @@ class ReportItemTypeResource(Resource):
             msg = f"Fields still used by report items: {detail}"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg)
             return {"error": msg, "fields_in_use": ex.fields_in_use}, HTTPStatus.CONFLICT
+        except ValueError as ex:
+            # A language code or label translation that is not valid.
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -822,6 +918,46 @@ class ReportItemTypeResource(Resource):
             return _delete_failed("Could not delete report type", ex)
 
 
+class ReportItemTypeLabelsTranslateResource(Resource):
+    """Translate the labels of a report type being edited, with AI."""
+
+    @auth_required(["CONFIG_REPORT_TYPE_CREATE", "CONFIG_REPORT_TYPE_UPDATE"])
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Translate label texts and return them; nothing is stored until the type is saved.
+
+        The body holds ``texts`` (key -> label), ``target_language``, ``source_language`` (may be
+        empty), ``ai_provider_id`` and, for a saved type, ``report_item_type_id``, whose glossary
+        applies on top of the instance's. Labels are configuration, not report content, so no TLP
+        limit applies.
+
+        Returns:
+            (dict, HTTPStatus): ``translations`` (key -> text) and ``failed`` (key -> reason).
+        """
+        body = request.json or {}
+        texts = body.get("texts")
+        if not isinstance(texts, dict) or not all(isinstance(key, str) and isinstance(text, str) for key, text in texts.items()):
+            return {"error": "texts must map keys to labels"}, HTTPStatus.BAD_REQUEST
+        try:
+            target = content_language.clean_language(body.get("target_language"))
+            source = content_language.clean_language(body.get("source_language"))
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        if target is None:
+            return {"error": "target_language is required"}, HTTPStatus.BAD_REQUEST
+        provider = ai_provider.AiProvider.find(body.get("ai_provider_id")) if body.get("ai_provider_id") else None
+        if provider is None:
+            return {"error": "Choose an AI provider for translation"}, HTTPStatus.BAD_REQUEST
+
+        type_id = body.get("report_item_type_id")
+        glossary = GlossaryEntry.for_report_types([type_id] if isinstance(type_id, int) else [])
+        try:
+            labels = {key: text for key, text in texts.items() if text.strip()}
+            translations, failed = llm_manager.translate_texts(provider, labels, source, target, glossary=glossary)
+        except llm_manager.LlmError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        return {"translations": translations, "failed": failed}, HTTPStatus.OK
+
+
 class ProductTypesResource(Resource):
     """Product types API endpoint."""
 
@@ -844,6 +980,10 @@ class ProductTypesResource(Resource):
         """
         try:
             product_type.ProductType.add_new(request.json)
+        except ValueError as ex:
+            # A language code or template override that is not valid.
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not create product type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -864,6 +1004,10 @@ class ProductTypeResource(Resource):
         """
         try:
             product_type.ProductType.update(type_id, request.json)
+        except ValueError as ex:
+            # A language code or template override that is not valid; nothing is stored.
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update product type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2705,6 +2849,202 @@ class StateEntityTypeResource(Resource):
             return _delete_failed("Could not delete state-entity type association", ex)
 
 
+class GlossaryEntriesResource(Resource):
+    """AI translation glossary API endpoint: the instance's entries, or a report type's."""
+
+    @auth_required("CONFIG_REPORT_TYPE_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get the entries of the report type ``report_item_type_id`` names, or of the instance.
+
+        Returns:
+            (dict, int): ``{"total_count", "items"}``
+        """
+        type_id = request.args.get("report_item_type_id", type=int)
+        return GlossaryEntry.get_json(type_id), HTTPStatus.OK
+
+    @auth_required("CONFIG_REPORT_TYPE_UPDATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Add an entry to the instance glossary, or to the report type it names.
+
+        Returns:
+            (dict, int): The entry, or why it was refused
+        """
+        try:
+            return GlossaryEntry.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "Not a report type"}, HTTPStatus.BAD_REQUEST
+
+
+class GlossaryEntryResource(Resource):
+    """AI translation glossary entry API endpoint."""
+
+    @auth_required("CONFIG_REPORT_TYPE_UPDATE")
+    def put(self, entry_id: int) -> tuple[dict, HTTPStatus]:
+        """Change an entry's terms, whether they are kept, and its note.
+
+        Args:
+            entry_id (int): The entry ID
+        Returns:
+            (dict, int): The entry, or why it was refused
+        """
+        entry = db.session.get(GlossaryEntry, entry_id)
+        if entry is None:
+            return {"error": "Glossary entry not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return entry.update(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.OK
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_REPORT_TYPE_UPDATE")
+    def delete(self, entry_id: int) -> tuple[dict, HTTPStatus]:
+        """Remove an entry.
+
+        Args:
+            entry_id (int): The entry ID
+        Returns:
+            (dict, int): The result
+        """
+        entry = db.session.get(GlossaryEntry, entry_id)
+        if entry is None:
+            return {"error": "Glossary entry not found"}, HTTPStatus.NOT_FOUND
+        return entry.delete()
+
+
+class TagsResource(Resource):
+    """Tags API endpoint: admin tags and the built-in ones."""
+
+    @auth_required("CONFIG_WORKFLOW_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get every tag, the built-in ones last.
+
+        Returns:
+            (dict, int): ``{"total_count", "items"}``
+        """
+        return Tag.get_all_json(request.args.get("search")), HTTPStatus.OK
+
+    @auth_required("CONFIG_WORKFLOW_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create an admin tag.
+
+        Returns:
+            (dict, int): The tag, or why it was refused
+        """
+        try:
+            return Tag.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+
+class TagResource(Resource):
+    """Tag API endpoint."""
+
+    @auth_required("CONFIG_WORKFLOW_UPDATE")
+    def put(self, tag_id: int) -> tuple[dict, HTTPStatus]:
+        """Rename or restyle a tag; a built-in tag keeps its key.
+
+        Args:
+            tag_id (int): The tag ID
+        Returns:
+            (dict, int): The tag, or why it was refused
+        """
+        tag = db.session.get(Tag, tag_id)
+        if tag is None:
+            return {"error": "Tag not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return tag.update(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.OK
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_WORKFLOW_DELETE")
+    def delete(self, tag_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete an admin tag that no report or product carries.
+
+        Args:
+            tag_id (int): The tag ID
+        Returns:
+            (dict, int): The result; 403 for a built-in tag, 409 with the count for a tag in use
+        """
+        tag = db.session.get(Tag, tag_id)
+        if tag is None:
+            return {"error": "Tag not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return tag.delete()
+        except Exception as ex:
+            return _delete_failed("Could not delete tag", ex)
+
+
+class TagEntityTypesResource(Resource):
+    """Tag Workflow API endpoint: which tags reports and products use."""
+
+    @auth_required("CONFIG_WORKFLOW_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get every tag link, of one entity type when ``entity_type`` is given.
+
+        Returns:
+            (dict, int): ``{"total_count", "items"}``, each with its tag
+        """
+        return TagEntityType.get_all_json(request.args.get("entity_type")), HTTPStatus.OK
+
+    @auth_required("CONFIG_WORKFLOW_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Link a tag to reports or products.
+
+        Returns:
+            (dict, int): The link, or why it was refused
+        """
+        try:
+            return TagEntityType.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "The tag is already linked to that entity type"}, HTTPStatus.CONFLICT
+
+
+class TagEntityTypeResource(Resource):
+    """Tag Workflow link API endpoint."""
+
+    @auth_required("CONFIG_WORKFLOW_UPDATE")
+    def put(self, tag_entity_type_id: int) -> tuple[dict, HTTPStatus]:
+        """Change whether a link is active and its order.
+
+        Args:
+            tag_entity_type_id (int): The link ID
+        Returns:
+            (dict, int): The link, or why it was refused
+        """
+        link = db.session.get(TagEntityType, tag_entity_type_id)
+        if link is None:
+            return {"error": "Tag link not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return link.update(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.OK
+        except ValueError as ex:
+            db.session.rollback()
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_WORKFLOW_DELETE")
+    def delete(self, tag_entity_type_id: int) -> tuple[dict, HTTPStatus]:
+        """Unlink an admin tag; a built-in tag's link can only be switched off.
+
+        Args:
+            tag_entity_type_id (int): The link ID
+        Returns:
+            (dict, int): The result
+        """
+        link = db.session.get(TagEntityType, tag_entity_type_id)
+        if link is None:
+            return {"error": "Tag link not found"}, HTTPStatus.NOT_FOUND
+        return link.delete()
+
+
 def initialize(api: Api) -> None:  # noqa: PLR0915
     """Initialize the API.
 
@@ -2716,6 +3056,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(AttributeResource, "/api/v1/config/attributes/<int:attribute_id>")
     api.add_resource(AttributeEnumsResource, "/api/v1/config/attributes/<int:attribute_id>/enums")
     api.add_resource(AttributeEnumResource, "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>")
+    api.add_resource(AttributeEnumsTranslateResource, "/api/v1/config/attributes/<int:attribute_id>/enums/translate")
+    api.add_resource(AttributeLanguagesResource, "/api/v1/config/attributes/<int:attribute_id>/languages")
     api.add_resource(AiProvidersResource, "/api/v1/config/aiproviders")
     api.add_resource(AiProviderResource, "/api/v1/config/aiprovider/<int:ai_provider_id>")
     api.add_resource(AttributeExtractionRulesResource, "/api/v1/config/attribute-extraction-rules")
@@ -2725,6 +3067,7 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
 
     api.add_resource(ReportItemTypesConfigResource, "/api/v1/config/report-item-types")
     api.add_resource(ReportItemTypeResource, "/api/v1/config/report-item-types/<int:type_id>")
+    api.add_resource(ReportItemTypeLabelsTranslateResource, "/api/v1/config/report-item-types/translate-labels")
 
     api.add_resource(ProductTypesResource, "/api/v1/config/product-types")
     api.add_resource(ProductTypeResource, "/api/v1/config/product-types/<int:type_id>")
@@ -2810,6 +3153,12 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(StateResource, "/api/v1/config/state-definitions/<int:state_id>")
     api.add_resource(StateEntityTypesResource, "/api/v1/config/state-entity-types")
     api.add_resource(StateEntityTypeResource, "/api/v1/config/state-entity-types/<int:state_entity_type_id>")
+    api.add_resource(GlossaryEntriesResource, "/api/v1/config/glossary")
+    api.add_resource(GlossaryEntryResource, "/api/v1/config/glossary/<int:entry_id>")
+    api.add_resource(TagsResource, "/api/v1/config/tags")
+    api.add_resource(TagResource, "/api/v1/config/tags/<int:tag_id>")
+    api.add_resource(TagEntityTypesResource, "/api/v1/config/tag-entity-types")
+    api.add_resource(TagEntityTypeResource, "/api/v1/config/tag-entity-types/<int:tag_entity_type_id>")
 
     Permission.add("CONFIG_ACCESS", "Configuration access", "Access to Configuration module")
 

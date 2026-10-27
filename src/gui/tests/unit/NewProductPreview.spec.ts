@@ -89,7 +89,7 @@ describe('NewProduct preview', () => {
         finishValidation?.({ valid: true })
         await preview
 
-        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), true, '')
+        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), true, '', null)
         expect(navigateReservedTabOrCurrentWindow).toHaveBeenCalledWith(previewWindow, '/api/v1/publish/products/preview/ticket-123')
     })
 
@@ -127,7 +127,7 @@ describe('NewProduct preview', () => {
 
         await wrapper.vm.handleDownload({ ctrlKey: false } as MouseEvent)
 
-        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '')
+        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '', null)
         expect(ApiService.download).toHaveBeenCalledWith('/publish/products/preview/download-ticket', undefined, 'product', 'GET')
     })
 })

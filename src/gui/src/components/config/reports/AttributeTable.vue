@@ -60,6 +60,16 @@
                     />
                 </v-col>
             </v-row>
+            <v-checkbox
+                v-if="isTranslatable(item)"
+                v-model="item.translate"
+                :label="t('attribute.translate')"
+                :hint="t('attribute.translate_hint')"
+                persistent-hint
+                density="comfortable"
+                class="mb-3"
+                data-test="attribute-translate"
+            />
             <v-select
                 v-if="showAI"
                 v-model="item.ai_provider_id"
@@ -89,6 +99,7 @@
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useSpellcheck } from '@/composables/useSpellcheck'
+    import { TRANSLATABLE_TYPES } from '@/composables/useContentLanguages'
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
 
     export type AttributeGroupItem = {
@@ -102,12 +113,17 @@
         max_occurrence: number
         ai_provider_id: number | null
         ai_prompt: string
+        // Reports translate this field into the report type's languages (text types only).
+        translate: boolean
+        // Label variants, {language: {title, description}}.
+        translations: Record<string, Record<string, string>>
         [key: string]: unknown
     }
 
     type AttributeTemplate = {
         id: number
         name: string
+        type?: string
         [key: string]: unknown
     }
 
@@ -146,7 +162,9 @@
         min_occurrence: 0,
         max_occurrence: 1,
         ai_provider_id: null,
-        ai_prompt: ''
+        ai_prompt: '',
+        translate: false,
+        translations: {}
     })
 
     const headers = [
@@ -163,9 +181,16 @@
     // Prepend a "None" option so the AI provider can be cleared.
     const aiProviderOptions = computed(() => [{ id: null as number | null, name: 'None' }, ...props.aiProviders])
 
-    // Keep the denormalised attribute_name in sync with the selected template id.
+    const isTranslatable = (item: AttributeGroupItem): boolean => {
+        const type = props.attributeTemplates.find((a) => a.id === item.attribute_id)?.type
+        return (TRANSLATABLE_TYPES as readonly string[]).includes(String(type ?? ''))
+    }
+
+    // Keep the denormalised attribute_name in sync with the selected template id. Only text
+    // types are translated, so switching to another type drops the Translate tick.
     const selectAttribute = (item: AttributeGroupItem, id: number): void => {
         item.attribute_id = id
         item.attribute_name = props.attributeTemplates.find((a) => a.id === id)?.name ?? ''
+        if (!isTranslatable(item)) item.translate = false
     }
 </script>

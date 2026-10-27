@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11"
 
 [[package]]
@@ -392,26 +392,30 @@ wheels = [
 ]
 
 [[package]]
-name = "envelope"
-version = "2.4.3"
+name = "email-validator"
+version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "py3-validate-email" },
-    { name = "python-gnupg" },
-    { name = "python-magic" },
+    { name = "dnspython" },
+    { name = "idna" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5c/e7/37504655eb11a7556b1e490c927894cf22e6efa3658b83936453f547e170/envelope-2.4.3.tar.gz", hash = "sha256:5e26dfa9f90794fb066ee8a24b49ceb6c24fb7f69bf537b88f5ea75f317335ea", size = 45823, upload-time = "2026-10-13T15:34:15.526Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/22/900cb125c76b7aaa450ce02fd727f452243f2e91a61af068b40adba60ea9/email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426", size = 51238, upload-time = "2025-08-26T13:09:06.831Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/3c/79ebd3083d9f5953c65afccbb4cf26cb52a3e614fd60fce5d6c8ac31864c/envelope-2.4.3-py3-none-any.whl", hash = "sha256:322102c4ddc62775553d20e9440e3519057ead7e095d6df4bea952131aae3678", size = 53868, upload-time = "2026-10-13T15:34:14.322Z" },
+    { url = "https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl", hash = "sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4", size = 35604, upload-time = "2025-08-26T13:09:05.858Z" },
 ]
 
 [[package]]
-name = "filelock"
-version = "3.29.7"
+name = "envelope"
+version = "2.5.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/35/94/00f2059e4835eace3ae8fde680b932c496f8ec7bdc99168dfa53fb2e6b79/filelock-3.29.7.tar.gz", hash = "sha256:5b481979797ae69e72f0b389d89a80bdd585c260c5b3f1fb9c0a5ba9bb3f195d", size = 71521, upload-time = "2026-07-08T05:46:58.716Z" }
+dependencies = [
+    { name = "email-validator" },
+    { name = "python-gnupg" },
+    { name = "python-magic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/50/36/9d2b2aeb7b4f2d5af76d8ca6dbe2fc042952c5b3f8b8a1ea10ac8832b99c/envelope-2.5.0.tar.gz", hash = "sha256:02a29799f39320d7edf249384a255890fa9dff00d64ac6651ab52617cf185202", size = 45936, upload-time = "2026-10-23T15:39:25.134Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/60/02/be4a57b60c7149b55b9e3b3c13f609cd8eb5307c751f22bd8fb8d262e75b/filelock-3.29.7-py3-none-any.whl", hash = "sha256:987db6f789a3a2a59f55081801b2b3697cb97e2a736b5f1a9e99b559285fbc51", size = 46036, upload-time = "2026-07-08T05:46:57.53Z" },
+    { url = "https://files.pythonhosted.org/packages/62/ec/b7a9af3a026f5d8e884f4b584c5e67e7cd63378c99331957980abf429056/envelope-2.5.0-py3-none-any.whl", hash = "sha256:c61c3af8be6281f7dce4b5458364c329723ce2b33bb87090f7620ada0747e87a", size = 53971, upload-time = "2026-10-23T15:39:23.889Z" },
 ]
 
 [[package]]
@@ -759,7 +763,7 @@ wheels = [
 
 [[package]]
 name = "paramiko"
-version = "5.0.0"
+version = "5.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bcrypt" },
@@ -767,22 +771,9 @@ dependencies = [
     { name = "invoke" },
     { name = "pynacl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/62/93/dcc25d52f49022ae6175d15e6bd751f1acc99b98bc61fc55e5155a7be2e7/paramiko-5.0.0.tar.gz", hash = "sha256:36763b5b95c2a0dcfdf1abc48e48156ee425b21efe2f0e787c2dd5a95c0e5e79", size = 1548586, upload-time = "2026-05-09T18:28:52.256Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/cb/b1fde76618d84b1acf54d3d03d2b833ba5878afd12b9899346cc080f209d/paramiko-5.1.0.tar.gz", hash = "sha256:239b5f9b2a53006cd54f83cf8495ee742083708ead947882c8dd2786de79f39b", size = 1579549, upload-time = "2026-10-18T02:38:51.931Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/82/5b/eadf6d45de38d30ab603f49393b6cd2cbe7e233af8cf90197e32782b68a9/paramiko-5.0.0-py3-none-any.whl", hash = "sha256:b7044611c30140d9a75261653210e2002977b71a0497ff3ba0d98d7edbf62f7c", size = 208919, upload-time = "2026-05-09T18:28:50.295Z" },
-]
-
-[[package]]
-name = "py3-validate-email"
-version = "1.0.5.post2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dnspython" },
-    { name = "filelock" },
-    { name = "idna" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/ac/2b032c39f0f7dac58ab9f3e0636f3ce9862d4db15ff6fad91c9a2f08edc8/py3_validate_email-1.0.5.post2-py3-none-any.whl", hash = "sha256:5305f657451d4719471439fa153918b47fd8c350bba0828ebbbe6c4e8207ad48", size = 35615, upload-time = "2024-06-01T18:55:13.457Z" },
+    { url = "https://files.pythonhosted.org/packages/13/45/fa0e8d70cb25d2dae06bc238e580a84834f6ca53a4e2408cccc19a78db7b/paramiko-5.1.0-py3-none-any.whl", hash = "sha256:d9fe6d67a9d0bbf3eb85b051d26ab850b678c02d060f32915b944e5ca6d0d9e1", size = 211623, upload-time = "2026-10-18T02:38:49.903Z" },
 ]
 
 [[package]]
@@ -964,7 +955,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = "==4.15.0" },
-    { name = "envelope", specifier = "==2.4.3" },
+    { name = "envelope", specifier = "==2.5.0" },
     { name = "flask", specifier = "==3.1.3" },
     { name = "flask-cors", specifier = "==6.0.5" },
     { name = "flask-restful", specifier = "==0.3.10" },
@@ -973,7 +964,7 @@ requires-dist = [
     { name = "marshmallow", specifier = "==4.3.1" },
     { name = "mastodon-py", specifier = "==2.2.1" },
     { name = "packaging", specifier = "==26.3" },
-    { name = "paramiko", specifier = "==5.0.0" },
+    { name = "paramiko", specifier = "==5.1.0" },
     { name = "pymisp", specifier = "==2.5.34.4" },
     { name = "python-dotenv", specifier = "==1.2.4" },
     { name = "requests", specifier = "==2.34.2" },

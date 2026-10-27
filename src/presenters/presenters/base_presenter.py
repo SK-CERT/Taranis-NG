@@ -131,6 +131,10 @@ class BasePresenter:
 
             self.type = report_type.title
             self.type_description = report_type.description
+            # In the language rendered. `type` and the `attrs` keys stay as written: templates
+            # compare and look them up.
+            self.type_label = getattr(report_type, "label", None) or report_type.title
+            self.type_description_label = getattr(report_type, "description_label", None) or report_type.description
 
             # embedded news items
             self.news_items = []
@@ -139,6 +143,10 @@ class BasePresenter:
                     self.news_items.append(news_item["news_item_data"])
 
             self.attrs = BasePresenter.AttributesObject()
+            # The same keys with choice constants in the language rendered (`attrs` keeps the raw
+            # constants templates compare), and each key's label in that language.
+            self.attrs_display = BasePresenter.AttributesObject()
+            self.labels = {}
 
             attribute_group_items = {}
             attribute_groups = {}
@@ -163,29 +171,41 @@ class BasePresenter:
                 # max_occurrence below.
                 attr_definition = getattr(attr_type, "attribute", None)
 
-                if attr_key.startswith("cwe"):
-                    value_to_add = {attribute.value: attribute.value_description for attribute in attribute_group_item}
-                elif getattr(attr_definition, "type", None) == AttributeType.MULTI_CHOICE:
-                    # A multiple choice field keeps its ticked values newline-joined in one value,
-                    # so templates get the list regardless of how max_occurrence is configured.
-                    value_to_add = [
-                        selected for attribute in attribute_group_item for selected in (attribute.value or "").split("\n") if selected
-                    ]
-                else:
-                    max_occurrence = attr_type.max_occurrence
-                    value_to_add = (
-                        attribute_group_item[0].value
-                        if max_occurrence == 1 and attribute_group_item
-                        else [attribute.value for attribute in attribute_group_item]
-                    )
+                self.labels[attr_key] = getattr(attr_type, "label", None) or attr_type.title
+                value_to_add = self._attribute_value(attr_key, attr_type, attr_definition, attribute_group_item, "value")
+                display_to_add = self._attribute_value(attr_key, attr_type, attr_definition, attribute_group_item, "display")
 
                 how_many_with_the_same_name = len(attribute_groups[attr_key])
-                if how_many_with_the_same_name == 1:
-                    setattr(self.attrs, attr_key, value_to_add)
-                else:
-                    if not hasattr(self.attrs, attr_key):
-                        setattr(self.attrs, attr_key, [])
-                    getattr(self.attrs, attr_key).append(value_to_add)
+                for target, value in ((self.attrs, value_to_add), (self.attrs_display, display_to_add)):
+                    if how_many_with_the_same_name == 1:
+                        setattr(target, attr_key, value)
+                    else:
+                        if not hasattr(target, attr_key):
+                            setattr(target, attr_key, [])
+                        getattr(target, attr_key).append(value)
+
+        @staticmethod
+        def _attribute_value(attr_key: str, attr_type: any, attr_definition: any, attribute_group_item: list, kind: str) -> any:
+            """The template value of one attribute's values: raw (`value`) or as displayed (`display`).
+
+            A choice constant's display text is its `value_label` (core sets it in the language
+            rendered); every other value is the same either way.
+            """
+
+            def text(attribute: any) -> any:
+                if kind == "display" and getattr(attribute, "value_label", None) is not None:
+                    return attribute.value_label
+                return attribute.value
+
+            if attr_key.startswith("cwe"):
+                return {attribute.value: attribute.value_description for attribute in attribute_group_item}
+            if getattr(attr_definition, "type", None) == AttributeType.MULTI_CHOICE:
+                # A multiple choice field keeps its ticked values newline-joined in one value,
+                # so templates get the list regardless of how max_occurrence is configured.
+                return [selected for attribute in attribute_group_item for selected in (text(attribute) or "").split("\n") if selected]
+            if attr_type.max_occurrence == 1 and attribute_group_item:
+                return text(attribute_group_item[0])
+            return [text(attribute) for attribute in attribute_group_item]
 
     class InputDataObject:
         """Object holding all that we received from the CORE."""
@@ -340,6 +360,7 @@ class BasePresenter:
             """Update CVSS value."""
             if hasattr(report.attrs, "cvss"):
                 report.attrs.cvss = self.calculate_cvss(report.attrs.cvss)
+                report.attrs_display.cvss = report.attrs.cvss
 
     def get_info(self) -> dict:
         """Get info about the presenter.

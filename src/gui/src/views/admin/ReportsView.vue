@@ -43,6 +43,7 @@
     import { ICONS } from '@/config/ui-constants'
     import ReportTypesView from './ReportTypesView.vue'
     import AttributesTab from '@/components/config/reports/AttributesTab.vue'
+    import GlossaryTable from '@/components/config/reports/GlossaryTable.vue'
 
     const { t } = useI18n()
     const tabs = [
@@ -61,6 +62,14 @@
             icon: ICONS.APPLICATION_VARIABLE_OUTLINE,
             component: AttributesTab,
             permission: 'CONFIG_ATTRIBUTE_ACCESS'
+        },
+        {
+            value: 'glossary',
+            title: 'reports.glossary.tab',
+            description: 'reports.glossary.tab_description',
+            icon: ICONS.BOOK_ALPHABET,
+            component: GlossaryTable,
+            permission: 'CONFIG_REPORT_TYPE_ACCESS'
         }
     ] as const
 

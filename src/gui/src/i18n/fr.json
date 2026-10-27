@@ -420,7 +420,9 @@
         "tlp_description_amber": "Divulgation limitée à l’organisation du destinataire et à ses clients selon le principe du besoin d’en connaître.",
         "tlp_description_amber_strict": "Divulgation limitée à l’organisation du destinataire uniquement.",
         "tlp_description_red": "Aucune divulgation au-delà des destinataires individuels.",
-        "tlp_description_unknown": "Marquage TLP inconnu."
+        "tlp_description_unknown": "Marquage TLP inconnu.",
+        "translate": "Traduire",
+        "translate_hint": "Les rapports traduisent ce champ dans les langues du type de rapport"
     },
     "cvss_calculator": {
         "title": "Calculateur CVSS",
@@ -768,6 +770,34 @@
             "take_theirs": "Ignorer la mienne et conserver la valeur enregistrée",
             "keep_mine": "Remplacer par ma valeur",
             "unknown_user": "Autre utilisateur"
+        },
+        "translation": {
+            "source_language": "Langue du rapport",
+            "not_set": "Non définie",
+            "source_tab": "{language} (texte d'origine)",
+            "source_not_set": "Texte d'origine (langue non définie)",
+            "translate_report": "Traduire tout le rapport",
+            "progress": "Traduction en cours : {done} langues sur {total} terminées",
+            "finished": "Traduction terminée",
+            "finished_with_problems": "Traduction terminée. Non traduits : {failed} ; ignorés car quelqu'un les modifie : {skipped}",
+            "intro": "Traduction en {language}. Les champs non traduits affichent le texte d'origine.",
+            "translate_language": "Traduire en {language}",
+            "translate_field": "Traduire avec l'IA",
+            "same_in_all_languages": "Identique dans toutes les langues",
+            "source": "Texte d'origine",
+            "overwrite_title": "Remplacer votre traduction ?",
+            "overwrite_confirm": "Remplacer",
+            "overwrite_message": "Ce champ a été traduit à la main. La traduction de l'IA le remplacera.",
+            "field_locked": "Quelqu'un d'autre modifie ce champ ; il n'a donc pas été traduit.",
+            "field_failed": "Le champ n'a pas pu être traduit : {reason}",
+            "ai": "IA",
+            "ai_hint": "Traduit par l'IA et pas encore relu",
+            "outdated": "Obsolète",
+            "outdated_hint": "Le texte d'origine a changé après la traduction",
+            "review": "Marquer comme relue",
+            "review_all": "Marquer les traductions IA comme relues",
+            "reviewed": "Traductions IA marquées comme relues : {count}",
+            "review_locked": "Quelqu'un d'autre modifie un champ ; il n'a donc pas été marqué comme relu."
         }
     },
     "product": {
@@ -817,7 +847,23 @@
             "confirm": "Ajouter des rapports",
             "confirm_published": "Ajouter et terminer",
             "untitled": "Rapport sans titre"
-        }
+        },
+        "language": "Langue du produit",
+        "language_in_use": "Le produit a déjà une traduction dans cette langue",
+        "publish_in": "Publier en",
+        "publish_in_language": "Publié en : {language}",
+        "outdated_confirmation": "Traductions obsolètes",
+        "outdated_continue": "Continuer quand même",
+        "language_notice": {
+            "missing": "Ces rapports n'ont pas de traduction en {language} ; l'anglais ou le texte d'origine est utilisé :",
+            "outdated": "Ces traductions en {language} sont obsolètes, car leur texte d'origine a changé après la traduction :",
+            "templates": "Le type de produit n'a pas de modèles pour {language} ; les modèles « {used} » sont utilisés.",
+            "default_templates": "par défaut"
+        },
+        "texts_not_translated": "Le titre ou la description n'a pas pu être traduit dans certaines langues",
+        "nothing_to_translate": "Rien à traduire : les traductions sont à jour.",
+        "translate_product": "Traduire tout le produit",
+        "translation_intro": "Traduction en {language}. Seuls le titre et la description sont traduits ; le reste affiche le texte d'origine."
     },
     "analyze": {
         "sort": "Trier par",
@@ -1144,7 +1190,15 @@
             "entity_type_required": "Type d’entité obligatoire"
         },
         "tags": {
-            "tab_description": "Vous pouvez gérer ici les étiquettes."
+            "tab_description": "Vous pouvez gérer ici les étiquettes.",
+            "system": {
+                "translation_missing": "Traduction manquante",
+                "translation_partial": "Partiellement traduit",
+                "translation_outdated": "Traduction obsolète",
+                "translation_ai": "Traduction IA non relue",
+                "translation_done": "Traduit",
+                "language_not_set": "Langue non définie"
+            }
         },
         "tag_workflow": {
             "tab_description": "Vous pouvez gérer ici les associations entre étiquettes et entités."
@@ -1409,7 +1463,13 @@
                 "link": "Lien",
                 "collected": "Date de collecte",
                 "published": "Date de publication"
-            }
+            },
+            "default_templates": "Par défaut",
+            "add_language": "Ajouter une langue",
+            "remove_language": "Retirer {language}",
+            "language_templates_hint": "Modèles utilisés pour {language}. Un champ vide utilise le modèle par défaut.",
+            "template_language": "Langue des modèles",
+            "template_language_hint": "La langue dans laquelle sont rédigés les modèles par défaut"
         }
     },
     "publishers": {
@@ -1552,7 +1612,10 @@
             "successful_edit": "Le modèle d’IA a été mis à jour",
             "error": "Impossible d’enregistrer ce modèle d’IA",
             "remove": "Le modèle d’IA a été supprimé",
-            "removed_error": "Le modèle d’IA est utilisé et n’a pas pu être supprimé"
+            "removed_error": "Le modèle d’IA est utilisé et n’a pas pu être supprimé",
+            "max_tlp": "TLP maximal envoyé",
+            "max_tlp_hint": "Le texte des rapports au-dessus de ce TLP n'est jamais envoyé à ce fournisseur",
+            "max_tlp_none": "Aucune limite"
         }
     },
     "word_lists": {
@@ -1610,7 +1673,20 @@
             "successful_edit": "Le type d’élément de rapport a été mis à jour",
             "removed_error": "Le type d’élément de rapport est utilisé et n’a pas pu être supprimé",
             "removed": "Le type d’élément de rapport a été supprimé",
-            "total_count": "{count} type de rapport | {count} types de rapport"
+            "total_count": "{count} type de rapport | {count} types de rapport",
+            "languages": "Variantes linguistiques",
+            "languages_hint": "Les rapports de ce type sont traduits dans ces langues",
+            "translation_ai_provider": "Fournisseur d'IA pour la traduction",
+            "label_language": "Langue des libellés",
+            "label_language_hint": "La langue dans laquelle sont rédigés les noms et descriptions ci-dessus",
+            "fields": "Champs",
+            "labels_tab": "Libellés : {language}",
+            "labels_in": "Noms et descriptions en {language}. Le texte d'origine figure sous chaque champ.",
+            "translate_labels": "Traduire les libellés manquants avec l'IA",
+            "no_ai_provider": "Choisissez d'abord un fournisseur d'IA pour la traduction",
+            "translate_labels_failed": "Certains libellés n'ont pas pu être traduits ({count})",
+            "labels_translated": "Libellés traduits",
+            "copy_original": "Copier l'original"
         },
         "attributes": {
             "in_use": "Impossible de supprimer l'attribut : il est utilisé par {types}",
@@ -1629,7 +1705,33 @@
             "edit_constant": "Modifier la constante",
             "value": "Valeur",
             "error": "Impossible de créer cet attribut",
-            "total_count": "{count} attribut | {count} attributs"
+            "total_count": "{count} attribut | {count} attributs",
+            "constant_translations": "Traductions",
+            "no_languages": "Aucun type de rapport utilisant cet attribut n'a d'autres langues.",
+            "constants_in": "Constantes en {language}",
+            "translated_value": "Valeur en {language}",
+            "edit_translation": "Modifier la traduction",
+            "translate_missing": "Traduire les manquantes avec l'IA",
+            "translated_constants": "Constantes traduites : {count}",
+            "translated_with_failures": "Constantes traduites : {translated} ; non traduites : {failed}"
+        },
+        "glossary": {
+            "tab": "Glossaire",
+            "tab_description": "Termes que l'IA utilise pour traduire",
+            "title": "Glossaire de traduction IA",
+            "type_title": "Glossaire de ce type de rapport",
+            "type_intro": "Ces termes s'appliquent aux rapports et libellés de ce type en plus du glossaire de toute l'instance ; pour un même terme, celui d'ici l'emporte.",
+            "add": "Ajouter un terme",
+            "edit": "Modifier le terme",
+            "empty": "Aucun terme pour l'instant",
+            "keep": "Conserver tel quel",
+            "keep_hint": "Pour les noms de produits ou d'organisations : l'IA laisse le terme inchangé dans toutes les langues.",
+            "note": "Remarque",
+            "note_hint": "Contexte pour l'IA, par exemple où le terme s'applique",
+            "terms": "Termes",
+            "add_language": "Ajouter une langue",
+            "remove_language": "Retirer {language}",
+            "needs_terms": "Saisissez le terme dans au moins deux langues, ou un terme à conserver tel quel."
         }
     },
     "external_user": {
@@ -2297,5 +2399,30 @@
         "product_hint": "Sources que la description du produit peut citer. Dans le produit publié, elles sont numérotées en premier, avant les liens de ses rapports.",
         "product_title": "Liens",
         "url": "URL"
+    },
+    "tags": {
+        "tags": "Étiquettes",
+        "tag": "Étiquette",
+        "none_defined": "Aucune étiquette n'est définie pour ces éléments",
+        "built_in_hint": "Taranis attribue cette étiquette ; elle peut être restylée, mais ni renommée ni supprimée. Désactivez-la dans le flux des étiquettes.",
+        "built_in_link_hint": "Les étiquettes intégrées restent liées ; désactivez-les plutôt",
+        "add_new": "Ajouter une étiquette",
+        "edit": "Modifier l'étiquette",
+        "name": "Nom",
+        "description": "Description",
+        "color": "Couleur",
+        "icon": "Icône",
+        "in_use": "L'étiquette figure sur {count} rapports ou produits et ne peut pas être supprimée",
+        "add_link": "Ajouter un lien d'étiquette",
+        "edit_link": "Modifier le lien d'étiquette",
+        "status_in_language": "{language} : {status}",
+        "filter": "Filtrer par étiquettes et traduction",
+        "translation": "Traduction",
+        "translation_language": "Langue",
+        "translation_any": "Toutes",
+        "translation_needs": "Traduction nécessaire",
+        "translation_unreviewed": "Traduction IA non relue",
+        "translation_not_set": "Langue non définie",
+        "clear_filter": "Effacer"
     }
 }

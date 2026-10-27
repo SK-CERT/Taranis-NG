@@ -8,13 +8,12 @@
         "in_products": "in products",
         "in_versions": "in versions",
         "original_version_format": "Original version format",
-        "impact": "Impact",
         "ioc": "IOC",
         "ioc_tooltip": "Indicator of Compromise",
         "more_info": "More information",
+        "reference_at": "at",
         "vulnerability_exposed": "The vulnerability was publicly disclosed",
         "vulnerability_updated": "This report was last updated",
-        "published": "Published",
         "on_day": "on",
         "links": "Links",
         "author_prefix": "By"
@@ -34,11 +33,14 @@
         "search_help_other": "other report attributes such as <i>author</i>, <i>ID</i> or <i>TLP</i>",
         "homepage_no_reports": "No reports were found.",
         "homepage_no_reports_search": "No reports were found for this keyword. You can return to",
+        "published": "Published",
+        "on_day": "on",
         "homepage_service_description": "This service is described in more detail at",
-        "reference_at": "at",
         "report": "Report",
         "report_incomplete_warning": "Only the report items that were detected on your machine are shown. To view the full report, click ",
         "report_here": "here",
+        "report_language_notice": "This report is not available in this language, so it is shown in {language}.",
+        "language": "Language",
         "give_feedback": "Give feedback",
         "feedback": "Report feedback",
         "form_yes": "Yes",
@@ -48,5 +50,10 @@
         "feedback_sent_success": "Feedback sent successfully.",
         "feedback_sent_fail": "An error occurred while sending, please try again later.",
         "reports": "Reports"
+    },
+    "languages": {
+        "cs": "Czech",
+        "en": "English",
+        "sk": "Slovak"
     }
 }

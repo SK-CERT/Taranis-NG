@@ -10,11 +10,14 @@ from pathlib import Path
 # The dictionary files are large third-party XML downloads, so parse them with the
 # hardened iterparse: entity expansion and external references stay refused.
 from defusedxml.ElementTree import iterparse
+from managers import content_language
 from managers.db_manager import db
 from managers.log_manager import logger
 from marshmallow import fields, post_load
 from shared.schema.attribute import AttributeBaseSchema, AttributeEnumSchema, AttributePresentationSchema, AttributeType, AttributeValidator
 from sqlalchemy import and_, func, or_, orm
+from sqlalchemy import text as sqlalchemy_text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import noload
 from tqdm import tqdm
 
@@ -68,6 +71,8 @@ class AttributeEnum(db.Model):
         imported (bool): Indicates whether the attribute enum was imported.
         attribute_id (int): The ID of the attribute.
         attribute (Attribute): The attribute object
+        translations (dict): Language variants, ``{language: {"value": ..., "description": ...}}``.
+            Reports keep storing the original value; the variants are what rendering shows.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -75,14 +80,19 @@ class AttributeEnum(db.Model):
     value = db.Column(db.String(), nullable=False)
     description = db.Column(db.String())
     imported = db.Column(db.Boolean, default=False)
+    translations = db.Column(JSONB, nullable=False, default=dict, server_default=sqlalchemy_text("'{}'"))
 
     attribute_id = db.Column(db.Integer, db.ForeignKey("attribute.id"))
     attribute = db.relationship("Attribute", back_populates="attribute_enums")
 
     # `id` shadows the builtin, but it is the schema field marshmallow unpacks into
     # this constructor, so renaming it would break deserialization.
-    def __init__(self, id: int | None, index: int, value: str, description: str) -> None:  # noqa: A002
-        """Initialize the attribute enum."""
+    def __init__(self, id: int | None, index: int, value: str, description: str, translations: dict | None = None) -> None:  # noqa: A002
+        """Initialize the attribute enum.
+
+        Raises:
+            ValueError: If a translation's language is not an ISO 639-1 code.
+        """
         if id is not None and id != -1:
             self.id = id
         else:
@@ -91,6 +101,14 @@ class AttributeEnum(db.Model):
         self.index = index
         self.value = value
         self.description = description
+        # None means the client sent no translations: an update then keeps the stored ones.
+        self.submitted_translations = content_language.clean_enum_translations(translations)
+        self.translations = self.submitted_translations or {}
+
+    @orm.reconstructor
+    def reconstruct(self) -> None:
+        """Nothing was submitted for a constant loaded from the database."""
+        self.submitted_translations = None
 
     @classmethod
     def count_for_attribute(cls, attribute_id: int) -> int:
@@ -129,6 +147,18 @@ class AttributeEnum(db.Model):
         query = query.order_by(db.asc(AttributeEnum.index))
 
         return query.offset(offset).limit(limit).all(), query.count()
+
+    @classmethod
+    def for_attribute(cls, attribute_id: int) -> list["AttributeEnum"]:
+        """All constants of an attribute, in their order.
+
+        Args:
+            attribute_id (int): ID of the attribute.
+
+        Returns:
+            list[AttributeEnum]: The constants.
+        """
+        return cls.query.filter_by(attribute_id=attribute_id).order_by(db.asc(AttributeEnum.index)).all()
 
     @classmethod
     def find_by_value(cls, attribute_id: int, value: str) -> "AttributeEnum | None":
@@ -216,6 +246,8 @@ class AttributeEnum(db.Model):
             else:
                 original_attribute_enum.value = attribute_enum.value
                 original_attribute_enum.description = attribute_enum.description
+                if attribute_enum.submitted_translations is not None:
+                    original_attribute_enum.translations = attribute_enum.submitted_translations
 
         db.session.commit()
 
@@ -237,6 +269,8 @@ class AttributeEnum(db.Model):
             original_attribute_enum.value = attribute_enum.value
             original_attribute_enum.description = attribute_enum.description
             original_attribute_enum.imported = False
+            if attribute_enum.submitted_translations is not None:
+                original_attribute_enum.translations = attribute_enum.submitted_translations
 
         db.session.commit()
 
@@ -513,6 +547,49 @@ class Attribute(db.Model):
             .all()
         )
         return sorted(title for (title,) in titles)
+
+    @classmethod
+    # `id` shadows the builtin; it is part of this classmethod's existing call signature.
+    def content_languages(cls, id: int) -> dict:  # noqa: A002
+        """The languages the attribute's constants are translated into, from the report types using it.
+
+        Args:
+            id (int): The ID of the attribute.
+
+        Returns:
+            dict: ``languages`` (union, in report type order), ``source_language`` (the first
+                stated label language), ``ai_providers`` (the types' translation providers) and
+                ``report_item_type_ids`` (the types, in that order).
+        """
+        from model.report_item_type import AttributeGroup, AttributeGroupItem, ReportItemType  # noqa: PLC0415 - circular otherwise
+
+        report_types = (
+            db.session.query(ReportItemType)
+            .join(AttributeGroup, AttributeGroup.report_item_type_id == ReportItemType.id)
+            .join(AttributeGroupItem, AttributeGroupItem.attribute_group_id == AttributeGroup.id)
+            .filter(AttributeGroupItem.attribute_id == id)
+            .order_by(ReportItemType.title)
+            .distinct()
+            .all()
+        )
+        languages: list[str] = []
+        providers: dict[int, str] = {}
+        source_language = None
+        for report_type in report_types:
+            for language in report_type.languages or []:
+                if language not in languages:
+                    languages.append(language)
+            source_language = source_language or report_type.label_language
+            if report_type.translation_ai_provider is not None:
+                providers[report_type.translation_ai_provider.id] = report_type.translation_ai_provider.name
+        if source_language:
+            languages = [language for language in languages if language != source_language]
+        return {
+            "languages": languages,
+            "source_language": source_language,
+            "ai_providers": [{"id": provider_id, "name": name} for provider_id, name in providers.items()],
+            "report_item_type_ids": [report_type.id for report_type in report_types],
+        }
 
     @classmethod
     # `id` shadows the builtin; it is part of this classmethod's existing call signature.

@@ -43,7 +43,7 @@
                 <!-- Editable -->
                 <AttributeValueLayout
                     v-if="!readOnly && canModify && !value.remote"
-                    :del-button="true"
+                    :del-button="!language"
                     embed-delete
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -52,7 +52,7 @@
                 >
                     <template #col_left>
                         <div
-                            v-if="values.length > 1"
+                            v-if="values.length > 1 && !language"
                             class="reorder-controls d-flex align-center"
                         >
                             <v-icon
@@ -180,11 +180,15 @@
             edit?: boolean
             modify?: boolean
             reportItemId: number | null
+            // A language variant of the report: the values are translations, edited in place,
+            // so values are neither added, deleted nor reordered here.
+            language?: string | null
         }>(),
         {
             readOnly: false,
             edit: false,
-            modify: false
+            modify: false,
+            language: null
         }
     )
 

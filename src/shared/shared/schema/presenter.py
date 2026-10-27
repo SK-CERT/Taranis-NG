@@ -4,7 +4,7 @@ Returns:
     _type_: _description_
 """
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.message_header import MessageHeaderSchema
 from shared.schema.parameter import ParameterSchema
@@ -40,6 +40,7 @@ class PresenterInputProduct:
         user: UserSchemaBase,
         id: str,  # noqa: A002
         links: list[str] | None = None,
+        language: str | None = None,
     ) -> None:
         """Initialize the "presenter input product".
 
@@ -52,6 +53,8 @@ class PresenterInputProduct:
             id (str): Id.
             links (list[str]): All sources of the product, numbered by position: ``links[0]`` is
                 what ``[1]`` in the texts refers to. Core fills it in when it renders the citations.
+            language (str | None): The language the product is rendered in (ISO 639-1); None for
+                the content as written.
         """
         self.title = title
         self.description = description
@@ -60,6 +63,7 @@ class PresenterInputProduct:
         self.user = user
         self.id = id
         self.links = links
+        self.language = language
 
     @classmethod
     def make_from_product(cls, product: "PresenterInputProductSchema") -> "PresenterInputProduct":
@@ -88,6 +92,11 @@ class PresenterInputProductSchema(Schema):
         Schema (Any): Base schema class.
     """
 
+    class Meta:
+        """Ignore fields this node does not know yet, so a newer core can add some."""
+
+        unknown = EXCLUDE
+
     title = fields.Str()
     description = fields.Str()
     product_type = fields.Str()
@@ -95,6 +104,7 @@ class PresenterInputProductSchema(Schema):
     user = fields.Nested(UserSchemaBase, exclude=("password",))
     id = fields.Str()
     links = fields.List(fields.Str(), load_default=list, allow_none=True)
+    language = fields.Str(load_default=None, allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> PresenterInputProduct:  # noqa: ANN003, ARG002
@@ -177,6 +187,11 @@ class PresenterInputSchema(Schema):
     Args:
         Schema (Any): Base schema class.
     """
+
+    class Meta:
+        """Ignore fields this node does not know yet, so a newer core can add some."""
+
+        unknown = EXCLUDE
 
     type = fields.Str()
     parameter_values = fields.List(fields.Nested(ParameterValueSchema))
