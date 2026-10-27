@@ -1,3 +1,4 @@
+import { HttpStatusCode } from 'axios'
 import { ref, onUnmounted } from 'vue'
 import { initSSE } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -75,7 +76,7 @@ export function useSSE() {
      */
     const isAuthFailure = (error: unknown): boolean => {
         const status = (error as { response?: { status?: number } })?.response?.status
-        return status === 401 || status === 403
+        return status === HttpStatusCode.Unauthorized || status === HttpStatusCode.Forbidden
     }
 
     const clearReconnectTimer = (): void => {
