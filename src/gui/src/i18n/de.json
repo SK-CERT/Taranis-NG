@@ -1728,7 +1728,9 @@
             "keep_hint": "Für Namen von Produkten oder Organisationen: Die KI lässt den Begriff in jeder Sprache unverändert.",
             "note": "Notiz",
             "note_hint": "Kontext für die KI, zum Beispiel wo der Begriff gilt",
+            "terms": "Begriffe",
             "add_language": "Sprache hinzufügen",
+            "remove_language": "{language} entfernen",
             "needs_terms": "Geben Sie den Begriff in mindestens zwei Sprachen an oder einen Begriff, der unverändert bleiben soll."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Tags",
         "tag": "Tag",
         "none_defined": "Für diese Elemente sind keine Tags definiert",
-        "built_in_hint": "Dieses Tag setzt Taranis; es kann umbenannt und umgestaltet, aber nicht gelöscht werden. Im Tag-Workflow lässt es sich ausschalten.",
+        "built_in_hint": "Dieses Tag setzt Taranis; es kann umgestaltet, aber weder umbenannt noch gelöscht werden. Im Tag-Workflow lässt es sich ausschalten.",
         "built_in_link_hint": "Integrierte Tags bleiben verknüpft; schalten Sie sie stattdessen aus",
         "add_new": "Neues Tag hinzufügen",
         "edit": "Tag bearbeiten",

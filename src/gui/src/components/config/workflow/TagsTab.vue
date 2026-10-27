@@ -115,11 +115,10 @@
                         :disabled="!canSave"
                     >
                         <v-text-field
-                            v-model="editedItem.display_name"
+                            v-model="nameModel"
                             :spellcheck="spellcheck"
                             :label="t('tags.name')"
-                            :hint="editedItem.system_key ? tagName({ ...editedItem, display_name: editedItem.system_key }) : ''"
-                            persistent-hint
+                            :disabled="!!editedItem.system_key"
                             variant="outlined"
                             density="comfortable"
                             class="mb-3"
@@ -228,6 +227,16 @@
     // A data default stored on the new tag, not theme paint.
     const emptyTag = (): Tag => ({ id: -1, display_name: '', description: '', color: '#607D8B', icon: 'mdi-tag', system_key: null })
     const editedItem = ref<Tag>(emptyTag())
+    // A built-in tag is named by its key, translated, like a built-in state: only its look changes.
+    const nameModel = computed<string>({
+        get: () =>
+            editedItem.value.system_key
+                ? tagName({ ...editedItem.value, display_name: editedItem.value.system_key })
+                : editedItem.value.display_name,
+        set: (value: string) => {
+            if (!editedItem.value.system_key) editedItem.value.display_name = value
+        }
+    })
 
     const headers = [
         { title: t('tags.name'), key: 'shown_name' },

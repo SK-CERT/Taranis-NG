@@ -157,12 +157,17 @@ class Tag(db.Model):
         return tag
 
     def update(self, data: dict, user_name: str) -> Tag:
-        """Rename or restyle the tag; a system tag keeps its key.
+        """Rename or restyle an admin tag, or restyle a system tag.
+
+        A system tag is named by its key, which the GUI translates, so it is never renamed.
 
         Raises:
             ValueError: If the form is not valid (see :func:`clean_tag`).
         """
-        for field, value in clean_tag(data, system=self.is_system).items():
+        cleaned = clean_tag(data, system=self.is_system)
+        if self.is_system:
+            cleaned["display_name"] = self.system_key
+        for field, value in cleaned.items():
             setattr(self, field, value)
         self.updated_by = user_name
         self.updated_at = datetime.now(TZ)

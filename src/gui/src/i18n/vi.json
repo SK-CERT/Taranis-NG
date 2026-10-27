@@ -1728,7 +1728,9 @@
             "keep_hint": "Dành cho tên sản phẩm hoặc tổ chức: AI giữ nguyên thuật ngữ trong mọi ngôn ngữ.",
             "note": "Ghi chú",
             "note_hint": "Ngữ cảnh cho AI, ví dụ thuật ngữ áp dụng ở đâu",
+            "terms": "Thuật ngữ",
             "add_language": "Thêm ngôn ngữ",
+            "remove_language": "Xóa {language}",
             "needs_terms": "Nhập thuật ngữ bằng ít nhất hai ngôn ngữ, hoặc một thuật ngữ cần giữ nguyên."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Thẻ",
         "tag": "Thẻ",
         "none_defined": "Chưa có thẻ nào cho các mục này",
-        "built_in_hint": "Taranis tự gắn thẻ này; có thể đổi tên và kiểu dáng nhưng không thể xóa. Hãy tắt nó trong quy trình thẻ.",
+        "built_in_hint": "Taranis tự gắn thẻ này; có thể đổi kiểu dáng nhưng không thể đổi tên hay xóa. Hãy tắt nó trong quy trình thẻ.",
         "built_in_link_hint": "Thẻ có sẵn vẫn được liên kết; thay vào đó hãy tắt chúng",
         "add_new": "Thêm thẻ mới",
         "edit": "Sửa thẻ",

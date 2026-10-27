@@ -1728,7 +1728,9 @@
             "keep_hint": "Pre názvy produktov alebo organizácií: AI termín v žiadnom jazyku nezmení.",
             "note": "Poznámka",
             "note_hint": "Kontext pre AI, napríklad kde termín platí",
+            "terms": "Termíny",
             "add_language": "Pridať jazyk",
+            "remove_language": "Odstrániť jazyk {language}",
             "needs_terms": "Vyplňte termín aspoň v dvoch jazykoch alebo jeden termín, ktorý sa má ponechať bez zmeny."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Štítky",
         "tag": "Štítok",
         "none_defined": "Pre tieto položky nie sú definované žiadne štítky",
-        "built_in_hint": "Tento štítok nastavuje Taranis; možno ho premenovať a zmeniť jeho vzhľad, ale nie zmazať. Vypnúť ho možno v pracovnom postupe štítkov.",
+        "built_in_hint": "Tento štítok nastavuje Taranis; možno zmeniť jeho vzhľad, ale nie ho premenovať ani zmazať. Vypnúť ho možno v pracovnom postupe štítkov.",
         "built_in_link_hint": "Vstavané štítky zostávajú priradené; namiesto toho ich vypnite",
         "add_new": "Pridať nový štítok",
         "edit": "Upraviť štítok",

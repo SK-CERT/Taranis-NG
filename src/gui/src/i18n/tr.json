@@ -1728,7 +1728,9 @@
             "keep_hint": "Ürün veya kuruluş adları için: yapay zekâ terimi her dilde değiştirmeden bırakır.",
             "note": "Not",
             "note_hint": "Yapay zekâ için bağlam, örneğin terimin nerede geçerli olduğu",
+            "terms": "Terimler",
             "add_language": "Dil ekle",
+            "remove_language": "{language} dilini kaldır",
             "needs_terms": "Terimi en az iki dilde ya da olduğu gibi bırakılacak tek bir terim olarak girin."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Etiketler",
         "tag": "Etiket",
         "none_defined": "Bu öğeler için tanımlı etiket yok",
-        "built_in_hint": "Bu etiketi Taranis koyar; yeniden adlandırılabilir ve görünümü değiştirilebilir, ancak silinemez. Etiket iş akışında kapatın.",
+        "built_in_hint": "Bu etiketi Taranis koyar; görünümü değiştirilebilir, ancak yeniden adlandırılamaz ve silinemez. Etiket iş akışında kapatın.",
         "built_in_link_hint": "Yerleşik etiketler bağlı kalır; bunun yerine kapatın",
         "add_new": "Yeni etiket ekle",
         "edit": "Etiketi düzenle",

@@ -67,6 +67,7 @@
                                 multiple
                                 chips
                                 closable-chips
+                                clear-on-select
                                 variant="outlined"
                                 density="comfortable"
                                 :disabled="saving || !canSave"

@@ -1728,7 +1728,9 @@
             "keep_hint": "Para nomes de produtos ou organizações: a IA mantém o termo inalterado em todos os idiomas.",
             "note": "Observação",
             "note_hint": "Contexto para a IA, por exemplo onde o termo se aplica",
+            "terms": "Termos",
             "add_language": "Adicionar idioma",
+            "remove_language": "Remover {language}",
             "needs_terms": "Preencha o termo em pelo menos dois idiomas, ou um termo a ser mantido como está."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Tags",
         "tag": "Tag",
         "none_defined": "Nenhuma tag definida para estes itens",
-        "built_in_hint": "O Taranis define esta tag; ela pode ser renomeada e reestilizada, mas não excluída. Desative-a no fluxo de tags.",
+        "built_in_hint": "O Taranis define esta tag; ela pode ser reestilizada, mas não renomeada nem excluída. Desative-a no fluxo de tags.",
         "built_in_link_hint": "Tags integradas continuam vinculadas; desative-as em vez disso",
         "add_new": "Adicionar nova tag",
         "edit": "Editar tag",

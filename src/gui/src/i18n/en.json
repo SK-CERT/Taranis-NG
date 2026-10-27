@@ -1728,7 +1728,9 @@
             "keep_hint": "For names of products or organisations: the AI leaves the term unchanged in every language.",
             "note": "Note",
             "note_hint": "Context for the AI, for example where the term applies",
+            "terms": "Terms",
             "add_language": "Add language",
+            "remove_language": "Remove {language}",
             "needs_terms": "Fill in the term in at least two languages, or one term to keep as written."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Tags",
         "tag": "Tag",
         "none_defined": "No tags are defined for these items",
-        "built_in_hint": "Taranis sets this tag; it can be renamed and restyled but not deleted. Switch it off in Tag Workflow.",
+        "built_in_hint": "Taranis sets this tag; it can be restyled but not renamed or deleted. Switch it off in Tag Workflow.",
         "built_in_link_hint": "Built-in tags stay linked; switch them off instead",
         "add_new": "Add new tag",
         "edit": "Edit tag",

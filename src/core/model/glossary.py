@@ -96,14 +96,13 @@ class GlossaryEntry(db.Model):
     def get_json(cls, report_item_type_id: int | None) -> dict:
         """The entries of a report type, or of the instance when ``report_item_type_id`` is None.
 
-        ``languages`` are those the entries may need a term in: the report languages and label
-        languages of that type, or of every type, and any language an entry already has.
+        ``languages`` are those an entry starts with a field for: the report languages and label
+        languages of that type, or of every type. An entry's other languages are its own.
         """
         scope = cls.report_item_type_id.is_(None) if report_item_type_id is None else cls.report_item_type_id == report_item_type_id
         items = [entry.to_dict() for entry in cls.query.filter(scope).order_by(cls.id).all()]
         types = ReportItemType.get_all() if report_item_type_id is None else [db.session.get(ReportItemType, report_item_type_id)]
         languages = {code for report_type in types if report_type for code in [*(report_type.languages or []), report_type.label_language]}
-        languages.update(code for item in items for code in item["terms"])
         return {"total_count": len(items), "items": items, "languages": sorted(code for code in languages if code)}
 
     @classmethod

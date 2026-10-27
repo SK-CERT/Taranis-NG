@@ -1728,7 +1728,9 @@
             "keep_hint": "Dla nazw produktów lub organizacji: AI pozostawia termin bez zmian w każdym języku.",
             "note": "Notatka",
             "note_hint": "Kontekst dla AI, na przykład gdzie termin ma zastosowanie",
+            "terms": "Terminy",
             "add_language": "Dodaj język",
+            "remove_language": "Usuń język: {language}",
             "needs_terms": "Wpisz termin w co najmniej dwóch językach albo jeden termin do zachowania bez zmian."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Tagi",
         "tag": "Tag",
         "none_defined": "Dla tych elementów nie zdefiniowano tagów",
-        "built_in_hint": "Ten tag ustawia Taranis; można zmienić jego nazwę i wygląd, ale nie można go usunąć. Wyłącz go w przepływie tagów.",
+        "built_in_hint": "Ten tag ustawia Taranis; można zmienić jego wygląd, ale nie można zmienić jego nazwy ani go usunąć. Wyłącz go w przepływie tagów.",
         "built_in_link_hint": "Wbudowane tagi pozostają powiązane; zamiast tego je wyłącz",
         "add_new": "Dodaj nowy tag",
         "edit": "Edytuj tag",

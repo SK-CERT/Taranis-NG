@@ -609,4 +609,32 @@ describe('NewProduct languages', () => {
         const english = wrapper.get('[data-test="product-language-tabs"]').findAll('.v-tab').at(1)!
         expect(english.find('[data-test="tab-status-translation_outdated"]').exists()).toBe(true)
     })
+
+    it('marks a translation outdated as soon as its original changes, and not once it is changed back', async () => {
+        const wrapper = await openProduct({
+            translations: { en: { title: { value: 'Bulletin (en)', origin: 'manual', version: 1, outdated: false } } }
+        })
+        const english = () => wrapper.get('[data-test="product-language-tabs"]').findAll('.v-tab').at(1)!
+        expect(english().find('[data-test="tab-status-translation_outdated"]').exists()).toBe(false)
+
+        wrapper.vm.product.title = 'Weekly bulletin'
+        await flushPromises()
+        expect(english().find('[data-test="tab-status-translation_outdated"]').exists()).toBe(true)
+        expect(wrapper.vm.fieldState('en', 'title')?.outdated).toBe(true)
+
+        wrapper.vm.product.title = 'Bulletin'
+        await flushPromises()
+        expect(english().find('[data-test="tab-status-translation_outdated"]').exists()).toBe(false)
+    })
+
+    it('takes an AI translation made here as checked against the original it translated', async () => {
+        const wrapper = await openProduct()
+        wrapper.vm.product.title = 'Weekly bulletin'
+        vi.mocked(translateProduct).mockResolvedValueOnce({ data: { translations: { en: { title: 'Weekly bulletin (en)' } } } } as never)
+
+        await wrapper.vm.translateInto('en', ['title'])
+        await flushPromises()
+
+        expect(wrapper.vm.fieldState('en', 'title')).toMatchObject({ origin: 'ai', outdated: false })
+    })
 })

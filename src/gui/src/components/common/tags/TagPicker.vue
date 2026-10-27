@@ -8,6 +8,7 @@
         multiple
         chips
         closable-chips
+        clear-on-select
         density="compact"
         variant="outlined"
         hide-details

@@ -1728,7 +1728,9 @@
             "keep_hint": "Doch pong, ghom pong: Hoch HolDaq mu' choHbe' De'wI'.",
             "note": "QIn",
             "note_hint": "De'wI'vaD ghu'",
+            "terms": "mu'mey",
             "add_language": "Hol yIchel",
+            "remove_language": "{language} yIteq",
             "needs_terms": "cha' HolDaq mu' yIghItlh, pagh wa' mu' polmeH yIghItlh."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "permey",
         "tag": "per",
         "none_defined": "Doch Dochmeyvam per tu'lu'be'",
-        "built_in_hint": "Taranis per lan; pongDaj choHlaH, De'wI' Dub choHlaH, 'ach Qaw'laHbe'. per mIwDaq yIQotlh.",
+        "built_in_hint": "Taranis per lan; De'wI' Dub choHlaH, 'ach pongDaj choHlaHbe' 'ej Qaw'laHbe'. per mIwDaq yIQotlh.",
         "built_in_link_hint": "Taranis permey rarlu'taH; yIQotlh",
         "add_new": "per chu' yIchel",
         "edit": "per yIchoH",

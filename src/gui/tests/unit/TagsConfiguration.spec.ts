@@ -3,10 +3,10 @@ import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import TagsTab from '@/components/config/workflow/TagsTab.vue'
 import TagWorkflowTab from '@/components/config/workflow/TagWorkflowTab.vue'
-import { createTag, createTagEntityType, deleteTag } from '@/api/config'
+import { createTag, createTagEntityType, deleteTag, updateTag } from '@/api/config'
 
 // Configuration › Workflow: admins define tags and link them to reports and products. Built-in
-// tags (translation status, language not set) can be renamed and restyled, not deleted, and
+// tags (translation status, language not set) can be restyled, not renamed or deleted, and
 // their links can be switched off, not removed.
 
 const urgent = { id: 1, display_name: 'Urgent', description: '', color: '#FF0000', icon: 'mdi-fire', system_key: null }
@@ -86,6 +86,43 @@ describe('Tags configuration', () => {
         await flushPromises()
 
         expect(createTag).toHaveBeenCalledWith({ display_name: 'Needs review', description: '', color: '#607D8B', icon: 'mdi-tag' })
+    })
+
+    it("shows a built-in tag's translated name and restyles it without renaming it", async () => {
+        const wrapper = mountWithPlugins(TagsTab, { global: { stubs: { VDialog: VDialogStub } } })
+        await flushPromises()
+
+        wrapper.vm.$.setupState['editItem'](outdated)
+        await flushPromises()
+        const name = wrapper.get('[data-test="tag-name"]')
+        expect((name.get('input').element as HTMLInputElement).value).toBe('Translation outdated')
+        expect(name.get('input').attributes('disabled')).toBeDefined()
+
+        wrapper.vm.$.setupState['nameModel'] = 'Stale'
+        wrapper.vm.$.setupState['editedItem'].color = '#000000'
+        await wrapper.vm.$.setupState['saveAndClose']()
+        await flushPromises()
+
+        expect(updateTag).toHaveBeenCalledWith({
+            id: 11,
+            display_name: 'translation_outdated',
+            description: '',
+            color: '#000000',
+            icon: 'mdi-alert'
+        })
+    })
+
+    it('renames an admin tag', async () => {
+        const wrapper = mountWithPlugins(TagsTab, { global: { stubs: { VDialog: VDialogStub } } })
+        await flushPromises()
+
+        wrapper.vm.$.setupState['editItem'](urgent)
+        await flushPromises()
+        await wrapper.get('[data-test="tag-name"] input').setValue('Very urgent')
+        await wrapper.vm.$.setupState['saveAndClose']()
+        await flushPromises()
+
+        expect(updateTag).toHaveBeenCalledWith(expect.objectContaining({ id: 1, display_name: 'Very urgent' }))
     })
 
     it('says how many items still carry a tag it cannot delete', async () => {

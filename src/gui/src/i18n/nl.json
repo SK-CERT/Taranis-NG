@@ -1728,7 +1728,9 @@
             "keep_hint": "Voor namen van producten of organisaties: de AI laat de term in elke taal ongewijzigd.",
             "note": "Notitie",
             "note_hint": "Context voor de AI, bijvoorbeeld waar de term van toepassing is",
+            "terms": "Termen",
             "add_language": "Taal toevoegen",
+            "remove_language": "{language} verwijderen",
             "needs_terms": "Vul de term in ten minste twee talen in, of één term die ongewijzigd moet blijven."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Tags",
         "tag": "Tag",
         "none_defined": "Voor deze items zijn geen tags gedefinieerd",
-        "built_in_hint": "Taranis zet deze tag; je kunt hem hernoemen en opmaken, maar niet verwijderen. Zet hem uit in de tagworkflow.",
+        "built_in_hint": "Taranis zet deze tag; je kunt hem opmaken, maar niet hernoemen of verwijderen. Zet hem uit in de tagworkflow.",
         "built_in_link_hint": "Ingebouwde tags blijven gekoppeld; zet ze in plaats daarvan uit",
         "add_new": "Nieuwe tag toevoegen",
         "edit": "Tag bewerken",

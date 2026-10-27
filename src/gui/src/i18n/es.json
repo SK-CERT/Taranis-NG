@@ -1728,7 +1728,9 @@
             "keep_hint": "Para nombres de productos u organizaciones: la IA deja el término sin cambios en todos los idiomas.",
             "note": "Nota",
             "note_hint": "Contexto para la IA, por ejemplo dónde se aplica el término",
+            "terms": "Términos",
             "add_language": "Añadir idioma",
+            "remove_language": "Quitar {language}",
             "needs_terms": "Escriba el término en al menos dos idiomas, o un término que deba mantenerse tal cual."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Etiquetas",
         "tag": "Etiqueta",
         "none_defined": "No hay etiquetas definidas para estos elementos",
-        "built_in_hint": "Taranis asigna esta etiqueta; se puede renombrar y cambiar su aspecto, pero no eliminar. Desactívela en el flujo de etiquetas.",
+        "built_in_hint": "Taranis asigna esta etiqueta; se puede cambiar su aspecto, pero no renombrar ni eliminar. Desactívela en el flujo de etiquetas.",
         "built_in_link_hint": "Las etiquetas integradas siguen vinculadas; desactívelas en su lugar",
         "add_new": "Añadir etiqueta",
         "edit": "Editar etiqueta",

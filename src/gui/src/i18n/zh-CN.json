@@ -1728,7 +1728,9 @@
             "keep_hint": "用于产品或组织名称：AI 在所有语言中都不改动该术语。",
             "note": "备注",
             "note_hint": "供 AI 参考的上下文，例如术语适用的场合",
+            "terms": "术语",
             "add_language": "添加语言",
+            "remove_language": "移除{language}",
             "needs_terms": "请至少用两种语言填写术语，或填写一个需保持原样的术语。"
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "标签",
         "tag": "标签",
         "none_defined": "这些条目尚未定义标签",
-        "built_in_hint": "此标签由 Taranis 设置；可以重命名和更改样式，但不能删除。请在标签工作流中将其关闭。",
+        "built_in_hint": "此标签由 Taranis 设置；可以更改样式，但不能重命名或删除。请在标签工作流中将其关闭。",
         "built_in_link_hint": "内置标签保持关联；请改为将其关闭",
         "add_new": "添加新标签",
         "edit": "编辑标签",

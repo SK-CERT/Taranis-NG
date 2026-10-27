@@ -36,12 +36,21 @@
             @save="save"
             @delete="askDelete"
         >
-            <template
-                v-for="code in allLanguages"
-                :key="code"
-                #[`item.term_${code}`]="{ item }"
-            >
-                <bdi dir="auto">{{ item[`term_${code}`] }}</bdi>
+            <template #item.terms="{ item }">
+                <div class="d-flex flex-wrap column-gap-4 py-1">
+                    <span
+                        v-for="code in filledLanguages(item)"
+                        :key="code"
+                        :data-test="`glossary-cell-${code}`"
+                    >
+                        <span
+                            class="text-caption text-medium-emphasis me-1"
+                            :title="languageName(code)"
+                            >{{ code.toUpperCase() }}</span
+                        >
+                        <bdi dir="auto">{{ item[`term_${code}`] }}</bdi>
+                    </span>
+                </div>
             </template>
             <template #item.keep="{ item }">
                 <v-icon
@@ -66,7 +75,7 @@
                     data-test="glossary-keep"
                 />
                 <v-text-field
-                    v-for="code in allLanguages"
+                    v-for="code in formLanguages(item)"
                     :key="code"
                     v-model="item[`term_${code}`]"
                     :label="languageName(code)"
@@ -75,10 +84,23 @@
                     class="mb-1"
                     dir="auto"
                     :data-test="`glossary-term-${code}`"
-                />
+                >
+                    <template #append>
+                        <v-btn
+                            icon="mdi-close"
+                            variant="text"
+                            size="small"
+                            :title="t('reports.glossary.remove_language', { language: languageName(code) })"
+                            :aria-label="t('reports.glossary.remove_language', { language: languageName(code) })"
+                            :disabled="!canUpdate"
+                            :data-test="`glossary-remove-${code}`"
+                            @click="removeLanguage(item, code)"
+                        />
+                    </template>
+                </v-text-field>
                 <v-autocomplete
                     v-model="addedLanguage"
-                    :items="otherLanguages"
+                    :items="otherLanguages(item)"
                     item-title="txt"
                     item-value="id"
                     :label="t('reports.glossary.add_language')"
@@ -88,7 +110,7 @@
                     class="mb-1"
                     hide-details
                     data-test="glossary-add-language"
-                    @update:model-value="addLanguage"
+                    @update:model-value="(code: string | null) => addLanguage(item, code)"
                 />
                 <!-- Holds back Save, with the reason, until the entry has enough terms. -->
                 <v-input
@@ -131,8 +153,10 @@
 
     /**
      * The AI translation glossary: of the instance, or a report type's own entries
-     * (`reportItemTypeId`). One column and form field per language in use; each entry is saved
-     * at once. Terms sit in the row as `term_<code>`, so the dialog's copy of a row is a full copy.
+     * (`reportItemTypeId`). Each entry is saved at once, its terms in one column, each marked
+     * with its language. Terms sit in the row as `term_<code>`, so the dialog's copy of a row is a
+     * full copy; a `term_<code>` key, even empty, is a field the form shows. An entry offers a
+     * field for each report language, and its languages are added and removed one by one.
      */
 
     type Entry = { id: number; terms: Record<string, string>; keep: boolean; note: string }
@@ -153,7 +177,6 @@
 
     const entries = ref<Entry[]>([])
     const serverLanguages = ref<string[]>([])
-    const addedLanguages = ref<string[]>([])
     const addedLanguage = ref<string | null>(null)
     const search = ref('')
     const pageSize = ref(-1)
@@ -165,24 +188,38 @@
 
     const canUpdate = computed(() => checkPermission('CONFIG_REPORT_TYPE_UPDATE'))
 
-    const allLanguages = computed(() => [
-        ...new Set([...serverLanguages.value, ...props.languages.filter((code): code is string => !!code), ...addedLanguages.value])
+    // The report languages, each a field an entry starts with.
+    const suggestedLanguages = computed(() => [
+        ...new Set([...serverLanguages.value, ...props.languages.filter((code): code is string => !!code)])
     ])
-    const otherLanguages = computed(() => languageOptions.value.filter((option) => !allLanguages.value.includes(String(option.id))))
 
     const headers = computed(() => [
-        ...allLanguages.value.map((code) => ({ title: languageName(code), key: `term_${code}`, sortable: false })),
+        { title: t('reports.glossary.terms'), key: 'terms', sortable: false },
         { title: t('reports.glossary.keep'), key: 'keep', sortable: false, width: '80px' },
         { title: t('reports.glossary.note'), key: 'note', sortable: false },
         { title: t('settings.actions'), key: 'actions', align: 'end' as const, sortable: false }
     ])
 
+    const termKey = (code: string): string => `term_${code}`
+    const blankTerms = (): Record<string, string> => Object.fromEntries(suggestedLanguages.value.map((code) => [termKey(code), '']))
+
+    // The suggested languages first, then the entry's others; a language added later goes last.
     const toRow = (entry: Entry): Row => ({
         id: entry.id,
         keep: entry.keep,
         note: entry.note,
-        ...Object.fromEntries(Object.entries(entry.terms).map(([code, term]) => [`term_${code}`, term]))
+        ...blankTerms(),
+        ...Object.fromEntries(
+            Object.entries(entry.terms)
+                .sort(([left], [right]) => left.localeCompare(right))
+                .map(([code, term]) => [termKey(code), term])
+        )
     })
+
+    const formLanguages = (row: Row): string[] =>
+        Object.keys(row).flatMap((key) => (key.startsWith('term_') ? [key.slice('term_'.length)] : []))
+    const filledLanguages = (row: Row): string[] => formLanguages(row).filter((code) => String(row[termKey(code)] ?? '').trim())
+    const otherLanguages = (row: Row) => languageOptions.value.filter((option) => !(termKey(String(option.id)) in row))
     const rows = computed(() => entries.value.map(toRow))
     const shownRows = computed(() => {
         const needle = search.value.trim().toLocaleLowerCase()
@@ -192,7 +229,7 @@
             .map(toRow)
     })
 
-    const emptyRow = (): Row => ({ id: -1, keep: false, note: '' })
+    const emptyRow = (): Row => ({ id: -1, keep: false, note: '', ...blankTerms() })
 
     const termsOf = (row: Row): Record<string, string> =>
         Object.fromEntries(
@@ -224,10 +261,15 @@
         }
     }
 
-    function addLanguage(code: string | null): void {
-        if (code && !allLanguages.value.includes(code)) addedLanguages.value = [...addedLanguages.value, code]
+    function addLanguage(row: Row, code: string | null): void {
+        if (code && !(termKey(code) in row)) row[termKey(code)] = ''
         // Cleared on the next tick, so the autocomplete takes the reset.
         setTimeout(() => (addedLanguage.value = null))
+    }
+
+    // Drops the language from this entry only; its term goes with it on save.
+    function removeLanguage(row: Row, code: string): void {
+        Reflect.deleteProperty(row, termKey(code))
     }
 
     async function save(row: Row, { isNew }: { isNew: boolean }): Promise<void> {
@@ -265,5 +307,5 @@
 
     onMounted(load)
 
-    defineExpose({ load, entries, allLanguages, save, isComplete })
+    defineExpose({ load, entries, suggestedLanguages, save, isComplete, addLanguage, removeLanguage })
 </script>

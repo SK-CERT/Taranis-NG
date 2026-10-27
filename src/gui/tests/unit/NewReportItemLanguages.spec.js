@@ -86,7 +86,9 @@ vi.mock('@/api/tags', () => ({
                         icon: 'mdi-circle-half-full',
                         system_key: 'translation_partial',
                         sort_order: 101
-                    }
+                    },
+                    { id: 12, display_name: 'translation_ai', icon: 'mdi-robot', system_key: 'translation_ai', sort_order: 102 },
+                    { id: 13, display_name: 'translation_outdated', icon: 'mdi-update', system_key: 'translation_outdated', sort_order: 103 }
                 ]
             }
         })
@@ -247,6 +249,28 @@ describe('NewReportItem languages', () => {
 
         const english = wrapper.find('[data-test="report-language-tabs"]').findAll('.v-tab').at(1)
         expect(english.find('[data-test="tab-status-translation_partial"]').exists()).toBe(true)
+    })
+
+    it('marks a translation outdated as soon as its original changes, and not once it is changed back', async () => {
+        const { wrapper } = await openReport('cs')
+        const description = wrapper.vm.attribute_groups[0].attribute_group_items[0].values[0]
+        description.translations = { en: { value: 'An attacker can', origin: 'manual', version: 1, outdated: false } }
+        wrapper.vm.report_item.title_prefix = ''
+        await flushPromises()
+        const english = () => wrapper.find('[data-test="report-language-tabs"]').findAll('.v-tab').at(1)
+        expect(english().find('[data-test="tab-status-translation_ai"]').exists()).toBe(true)
+
+        wrapper.vm.report_item.title = 'Kritická chyba v jádře'
+        await flushPromises()
+        expect(wrapper.vm.translations.en.title.outdated).toBe(true)
+        expect(english().find('[data-test="tab-status-translation_outdated"]').exists()).toBe(true)
+
+        wrapper.vm.report_item.title = 'Kritická chyba'
+        description.value = 'Útočník může vzdáleně'
+        await flushPromises()
+        expect(wrapper.vm.translations.en.title.outdated).toBe(false)
+        expect(description.translations.en.outdated).toBe(true)
+        expect(english().find('[data-test="tab-status-translation_outdated"]').exists()).toBe(true)
     })
 
     it('takes fresh translations and tags on a background refresh, without rebuilding the form', async () => {

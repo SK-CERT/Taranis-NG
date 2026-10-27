@@ -55,7 +55,7 @@ class NewAttributeGroupItemSchema(AttributeGroupItemSchema):
 
     attribute_id = fields.Integer()
 
-    class Meta:
+    class Meta(AttributeGroupItemSchema.Meta):  # ty: ignore[invalid-attribute-override]  # astral-sh/ty#4711
         """Labels in a rendered language are presenter input only, never stored."""
 
         unknown = EXCLUDE
@@ -184,7 +184,7 @@ class NewAttributeGroupSchema(AttributeGroupBaseSchema):
 
     attribute_group_items = fields.Nested("NewAttributeGroupItemSchema", many=True)
 
-    class Meta:
+    class Meta(AttributeGroupBaseSchema.Meta):  # ty: ignore[invalid-attribute-override]  # astral-sh/ty#4711
         """Labels in a rendered language are presenter input only, never stored."""
 
         unknown = EXCLUDE
@@ -321,7 +321,7 @@ class NewReportItemTypeSchema(ReportItemTypeBaseSchema):
 
     attribute_groups = fields.Nested("NewAttributeGroupSchema", many=True)
 
-    class Meta:
+    class Meta(ReportItemTypeBaseSchema.Meta):  # ty: ignore[invalid-attribute-override]  # astral-sh/ty#4711
         """Labels in a rendered language are presenter input only, never stored."""
 
         unknown = EXCLUDE

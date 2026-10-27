@@ -4,9 +4,10 @@ import { mountWithPlugins } from '../helpers/mount-helpers'
 import GlossaryTable from '@/components/config/reports/GlossaryTable.vue'
 import { createGlossaryEntry, deleteGlossaryEntry, getGlossary, updateGlossaryEntry } from '@/api/config'
 
-// The AI translation glossary, of the instance or of a report type: a column per language in use,
-// entries saved one by one, and the server's rule (two languages, or one term to keep) mirrored
-// before anything is sent.
+// The AI translation glossary, of the instance or of a report type: an entry's terms in one column,
+// each marked with its language; an entry starts with a field per report language, and adds or
+// removes its own; entries saved one by one, and the server's rule (two languages, or one term to
+// keep) mirrored before anything is sent.
 
 const vulnerability = { id: 1, terms: { cs: 'zranitelnost', en: 'vulnerability' }, keep: false, note: '' }
 const product = { id: 2, terms: { en: 'Taranis NG' }, keep: true, note: 'our product' }
@@ -22,12 +23,28 @@ vi.mock('@/composables/useAuth', () => ({
     useAuth: () => ({ checkPermission: () => true })
 }))
 
+const VDialogStub = { name: 'VDialog', template: '<div><slot /></div>' }
+
 const table = (wrapper: ReturnType<typeof mountWithPlugins>) => wrapper.findComponent({ name: 'EditableEntityTable' })
+
+async function editFirstEntry() {
+    const wrapper = mountWithPlugins(GlossaryTable, { global: { stubs: { VDialog: VDialogStub } } })
+    await flushPromises()
+    await wrapper
+        .findAllComponents({ name: 'ActionButton' })
+        .find((button) => button.props('action') === 'edit')!
+        .trigger('click')
+    await flushPromises()
+    return wrapper
+}
+
+const termFields = (wrapper: ReturnType<typeof mountWithPlugins>) =>
+    wrapper.findAll('[data-test^="glossary-term-"]').map((field) => field.attributes('data-test')!.slice('glossary-term-'.length))
 
 describe('GlossaryTable', () => {
     beforeEach(() => vi.clearAllMocks())
 
-    it('lists the instance glossary with a column per language in use', async () => {
+    it("lists the instance glossary with each entry's terms in one column", async () => {
         const wrapper = mountWithPlugins(GlossaryTable)
         await flushPromises()
 
@@ -36,10 +53,12 @@ describe('GlossaryTable', () => {
         expect(wrapper.get('[data-test="glossary"]').classes()).toContain('px-4')
         expect(wrapper.find('.v-alert').exists()).toBe(false)
         const headers = wrapper.findAll('thead th').map((cell) => cell.text())
-        expect(headers.slice(0, 2)).toEqual(['Czech', 'English'])
+        expect(headers.slice(0, 2)).toEqual(['Terms', 'Keep as written'])
         const [first, second] = wrapper.findAll('tbody tr')
-        expect(first!.text()).toContain('zranitelnost')
-        expect(first!.text()).toContain('vulnerability')
+        expect(first!.get('[data-test="glossary-cell-cs"]').text()).toMatch(/^CS\s*zranitelnost$/)
+        expect(first!.get('[data-test="glossary-cell-en"]').text()).toMatch(/^EN\s*vulnerability$/)
+        // No empty marker for a language the entry has no term in.
+        expect(second!.find('[data-test="glossary-cell-cs"]').exists()).toBe(false)
         expect(second!.text()).toContain('our product')
     })
 
@@ -48,9 +67,40 @@ describe('GlossaryTable', () => {
         await flushPromises()
 
         expect(getGlossary).toHaveBeenCalledWith(9)
-        expect(wrapper.vm.allLanguages).toEqual(['cs', 'en', 'sk'])
+        expect(wrapper.vm.suggestedLanguages).toEqual(['cs', 'en', 'sk'])
         expect(wrapper.get('.v-alert').text()).toContain('instance-wide glossary')
         expect(wrapper.get('[data-test="glossary"]').classes()).not.toContain('px-4')
+    })
+
+    it("removes and adds an entry's languages, for that entry only", async () => {
+        const wrapper = await editFirstEntry()
+        expect(termFields(wrapper)).toEqual(['cs', 'en'])
+
+        await wrapper.get('[data-test="glossary-remove-cs"]').trigger('click')
+        await flushPromises()
+        expect(termFields(wrapper)).toEqual(['en'])
+
+        const dialog = wrapper.findAllComponents({ name: 'EditableEntityTable' })[0]!
+        wrapper.vm.addLanguage(dialog.vm.$.setupState['editedItem'], 'sk')
+        await flushPromises()
+        expect(termFields(wrapper)).toEqual(['en', 'sk'])
+        await wrapper.get('[data-test="glossary-term-sk"] input').setValue('zraniteľnosť')
+
+        wrapper.findComponent({ name: 'DialogToolbar' }).vm.$emit('save')
+        await flushPromises()
+
+        expect(updateGlossaryEntry).toHaveBeenCalledWith(1, { terms: { en: 'vulnerability', sk: 'zraniteľnosť' }, keep: false, note: '' })
+        // The table kept the entry as it was until the save reloaded it.
+        expect(wrapper.vm.entries[0]!.terms).toEqual({ cs: 'zranitelnost', en: 'vulnerability' })
+    })
+
+    it('starts a new entry with a field per report language', async () => {
+        const wrapper = mountWithPlugins(GlossaryTable, { global: { stubs: { VDialog: VDialogStub } } })
+        await flushPromises()
+        await wrapper.findComponent({ name: 'AddNewButton' }).trigger('click')
+        await flushPromises()
+
+        expect(termFields(wrapper)).toEqual(['cs', 'en'])
     })
 
     it('needs two languages, or one term to keep as written', async () => {

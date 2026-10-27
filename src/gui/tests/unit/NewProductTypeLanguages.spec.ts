@@ -3,6 +3,7 @@ import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewProductType from '@/components/config/presenters/NewProductType.vue'
 import { updateProductType } from '@/api/config'
+import { useSettingsStore } from '@/stores/settings'
 
 // A product type names the language of its default templates and adds other languages, each
 // with only the template paths; a template a language leaves empty is the default one.
@@ -95,6 +96,33 @@ describe('NewProductType languages', () => {
             sk: { BODY_TEMPLATE_PATH: 'body_sk.txt' },
             en: { TITLE_TEMPLATE_PATH: 'title_en.txt' }
         })
+    })
+
+    it('adds a language picked in the searchable field, which then clears', async () => {
+        const wrapper = await openEditor()
+        const languages = [
+            { id: 'cs', txt: 'Czech' },
+            { id: 'en', txt: 'English' },
+            { id: 'sk', txt: 'Slovak' }
+        ]
+        useSettingsStore().settings = [{ key: 'CONTENT_DEFAULT_LANGUAGE', value: 'en', options: JSON.stringify(languages) }] as never
+        await flushPromises()
+        const field = wrapper
+            .findAllComponents({ name: 'VAutocomplete' })
+            .find((component) => component.attributes('data-test') === 'add-template-language')!
+        // Neither the default templates' language nor one already added is offered again.
+        const offered = (field.props('items') as { id: string }[]).map((option) => option.id)
+        expect(offered).not.toContain('cs')
+        expect(offered).not.toContain('sk')
+        expect(offered).toContain('en')
+
+        field.vm.$emit('update:modelValue', 'en')
+        await new Promise((resolve) => setTimeout(resolve))
+        await flushPromises()
+
+        expect(Object.keys(wrapper.vm.localItem.language_templates)).toEqual(['sk', 'en'])
+        expect(wrapper.vm.parameterTab).toBe('en')
+        expect(wrapper.vm.addedLanguage).toBeNull()
     })
 
     it('drops a removed language', async () => {

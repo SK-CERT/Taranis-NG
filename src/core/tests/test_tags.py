@@ -1,8 +1,8 @@
 """Tags: what admins may define, what people may put on items, and the built-in tags.
 
 Built-in tags (the translation status, "language not set") are worked out by Taranis, so nobody
-can put them on an item or delete them; admins restyle them and switch them off instead. No
-database: lookups are stubbed.
+can put them on an item, rename or delete them; admins restyle them and switch them off instead.
+No database: lookups are stubbed.
 """
 
 from __future__ import annotations
@@ -53,11 +53,25 @@ def test_a_tag_needs_a_name_and_a_real_colour() -> None:
         clean_tag({"display_name": "Mine", "system_key": "translation_done"})
 
 
-def test_a_built_in_tag_keeps_its_key_when_renamed() -> None:
+def test_a_built_in_tag_is_restyled_but_never_renamed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(tag_module.db.session, "commit", lambda: None)
     tag = Tag(display_name="translation_done", system_key="translation_done")
 
-    assert clean_tag({"display_name": "Přeloženo", "system_key": "translation_done"}, system=True)["display_name"] == "Přeloženo"
+    tag.update({"display_name": "Přeloženo", "system_key": "translation_done", "color": "#00FF00"}, "Admin")
+
     assert tag.is_system
+    # Named by its key, which the GUI translates into every language.
+    assert tag.display_name == "translation_done"
+    assert tag.color == "#00FF00"
+
+
+def test_an_admin_tag_is_renamed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(tag_module.db.session, "commit", lambda: None)
+    tag = Tag(display_name="Urgnet")
+
+    tag.update({"display_name": "Urgent"}, "Admin")
+
+    assert tag.display_name == "Urgent"
 
 
 @pytest.fixture

@@ -123,32 +123,22 @@
                                 </v-tab>
                             </v-tabs>
                             <v-spacer />
-                            <v-menu v-if="canSave">
-                                <template #activator="{ props: menuProps }">
-                                    <v-btn
-                                        v-bind="menuProps"
-                                        variant="tonal"
-                                        size="small"
-                                        prepend-icon="mdi-plus"
-                                        :disabled="saving"
-                                        data-test="add-template-language"
-                                    >
-                                        {{ t('presenters.types.add_language') }}
-                                    </v-btn>
-                                </template>
-                                <v-list
-                                    density="compact"
-                                    max-height="320"
-                                >
-                                    <v-list-item
-                                        v-for="option in addableLanguages"
-                                        :key="option.id"
-                                        @click="addTemplateLanguage(option.id)"
-                                    >
-                                        <v-list-item-title>{{ option.txt }}</v-list-item-title>
-                                    </v-list-item>
-                                </v-list>
-                            </v-menu>
+                            <v-autocomplete
+                                v-if="canSave"
+                                v-model="addedLanguage"
+                                :items="addableLanguages"
+                                item-title="txt"
+                                item-value="id"
+                                :label="t('presenters.types.add_language')"
+                                prepend-inner-icon="mdi-plus"
+                                variant="outlined"
+                                density="compact"
+                                hide-details
+                                class="add-language"
+                                :disabled="saving"
+                                data-test="add-template-language"
+                                @update:model-value="addTemplateLanguage"
+                            />
                         </div>
 
                         <div
@@ -533,9 +523,14 @@
         return String((index >= 0 ? parameterValues.value[index] : '') || param.default_value || '')
     }
 
-    const addTemplateLanguage = (language: string): void => {
-        localItem.value.language_templates = { ...localItem.value.language_templates, [language]: {} }
-        parameterTab.value = language
+    const addedLanguage = ref<string | null>(null)
+    const addTemplateLanguage = (language: string | null): void => {
+        if (language) {
+            localItem.value.language_templates = { ...localItem.value.language_templates, [language]: {} }
+            parameterTab.value = language
+        }
+        // Cleared on the next tick, so the autocomplete takes the reset.
+        setTimeout(() => (addedLanguage.value = null))
     }
 
     const removeTemplateLanguage = (language: string): void => {
@@ -792,6 +787,10 @@
 </script>
 
 <style scoped>
+    .add-language {
+        flex: 0 0 240px;
+    }
+
     .tpl-line {
         font-family: monospace;
         color: rgba(var(--v-theme-on-surface), 0.6);

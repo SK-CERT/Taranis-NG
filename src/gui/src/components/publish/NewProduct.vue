@@ -764,8 +764,11 @@
     // The open tab is the language the product is previewed, downloaded and published in.
     const { languageName, defaultContentLanguage } = useContentLanguages()
     const activeLanguage = ref<string>('source')
-    // The translations as last stored, for their state (who wrote them, outdated or not).
-    const storedTranslations = ref<Record<string, Partial<Record<ProductField, TranslationStateValue>>>>({})
+    // The translations as last stored, for their state (who wrote them, outdated or not), each with
+    // the original it was checked against: core's when loaded, the form's when the AI made it or a
+    // person reviewed it here.
+    type StoredTranslation = TranslationStateValue & { original: string }
+    const storedTranslations = ref<Record<string, Partial<Record<ProductField, StoredTranslation>>>>({})
     // What the AI is translating for the open tab: its language, or one of its texts.
     const translatingKey = ref<'language' | ProductField | null>(null)
     // "Translate whole product": one language after another, each saved when it is done.
@@ -796,13 +799,16 @@
     })
     const sourceText = (field: ProductField): string => String(product.value[field] ?? '')
 
-    // A text's translation as the form has it: typed by a person, it is no longer the AI's, nor outdated.
+    // A text's translation as the form has it: typed by a person, it is no longer the AI's, nor
+    // outdated. Otherwise it is outdated as core found it, or once its original changes here, as
+    // core will see it when that is saved.
     const fieldState = (language: string, field: ProductField): TranslationStateValue | null => {
         const local = product.value.translations[language]?.[field]
         if (!local?.value) return null
         const stored = storedTranslations.value[language]?.[field]
         if (!stored) return { value: local.value, origin: local.origin, version: 0, outdated: false }
-        return { ...stored, value: local.value, origin: local.origin, outdated: stored.outdated && local.value === stored.value }
+        const outdated = (stored.outdated || sourceText(field) !== stored.original) && local.value === stored.value
+        return { ...stored, value: local.value, origin: local.origin, outdated }
     }
 
     // Each tab's translation status: the title, and the description when there is one.
@@ -826,8 +832,10 @@
         product.value.translations = { ...product.value.translations, [language]: { ...product.value.translations[language], [field]: text } }
     }
 
+    // Checked against the current original: the AI translated it, or a person reviewed it.
     const setStored = (language: string, field: ProductField, state: TranslationStateValue): void => {
-        storedTranslations.value = { ...storedTranslations.value, [language]: { ...storedTranslations.value[language], [field]: state } }
+        const checked = { ...state, original: sourceText(field) }
+        storedTranslations.value = { ...storedTranslations.value, [language]: { ...storedTranslations.value[language], [field]: checked } }
     }
 
     // The open tab's text: the original, or its translation (typed by a person: no longer the AI's).
@@ -1691,7 +1699,17 @@
             tag_ids: (data as ProductDetailPayload).tags ?? []
         }
         resetLanguages()
-        storedTranslations.value = (data as ProductDetailPayload).translations ?? {}
+        storedTranslations.value = Object.fromEntries(
+            Object.entries((data as ProductDetailPayload).translations ?? {}).map(([language, states]) => [
+                language,
+                Object.fromEntries(
+                    PRODUCT_FIELDS.filter((field) => states[field]).map((field) => [
+                        field,
+                        { ...states[field]!, original: String(data[field] ?? '') }
+                    ])
+                )
+            ])
+        )
         productLinks.value = toLinkValues(data.links)
 
         reportItems.value = Array.isArray(data.report_items) ? [...data.report_items] : []

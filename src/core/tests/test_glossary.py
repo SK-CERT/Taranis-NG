@@ -138,7 +138,7 @@ def test_a_report_types_own_entries_come_before_the_instances() -> None:
         del GlossaryEntry.query
 
 
-def test_the_instance_glossary_offers_every_report_and_label_language(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_instance_glossary_offers_every_report_and_label_language_only(monkeypatch: pytest.MonkeyPatch) -> None:
     types = [SimpleNamespace(languages=["sk", "en"], label_language="cs"), SimpleNamespace(languages=[], label_language=None)]
     monkeypatch.setattr(ReportItemType, "get_all", classmethod(lambda _cls: types))
     GlossaryEntry.query = _Query([_entry({"de": "Schwachstelle", "en": "vulnerability"})])
@@ -147,7 +147,8 @@ def test_the_instance_glossary_offers_every_report_and_label_language(monkeypatc
     finally:
         del GlossaryEntry.query
 
-    assert listed["languages"] == ["cs", "de", "en", "sk"]
+    # German is only that entry's: other entries are not offered it.
+    assert listed["languages"] == ["cs", "en", "sk"]
     assert [item["terms"] for item in listed["items"]] == [{"de": "Schwachstelle", "en": "vulnerability"}]
 
 

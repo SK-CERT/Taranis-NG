@@ -153,6 +153,28 @@ describe('AttributeLink', () => {
         expect(pairs(linkValues)).toEqual([[NVD, 'bbbbbb']])
     })
 
+    // Keys are not guaranteed unique in the list (links of attached remote report items, a
+    // refresh that catches the server half-way through a reorder), and rows keyed by them left
+    // an orphaned row behind that mirrored whatever was typed into another one.
+    it('keeps one row per link and edits only that link when two links share a key', async () => {
+        const { wrapper, linkValues } = mountForm({
+            links: [linkValue(1, VENDOR, 'aaaaaa'), linkValue(2, NVD, 'dupkey'), linkValue(3, NEWS, 'cccccc'), linkValue(4, NVD, 'dupkey')]
+        })
+
+        await wrapper.findAll('[data-test="link-insert"]')[1].trigger('click')
+        await flushPromises()
+
+        const inputs = () => wrapper.findAll('[data-test="link-row"] input')
+        expect(linkValues).toHaveLength(5)
+        expect(inputs()).toHaveLength(5)
+
+        await inputs()[1].setValue('https://typed.example/')
+        await flushPromises()
+
+        expect(linkValues.map((value) => value.value)).toEqual([VENDOR, 'https://typed.example/', NVD, NEWS, NVD])
+        expect(inputs().map((input) => input.element.value)).toEqual(linkValues.map((value) => value.value))
+    })
+
     it('adds the links of attached news items, filling an empty row first', async () => {
         const { wrapper, linkValues } = mountForm({
             links: [linkValue(1, VENDOR, 'aaaaaa'), linkValue(2, '', 'bbbbbb')],

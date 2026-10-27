@@ -2,8 +2,9 @@ import { useI18n } from 'vue-i18n'
 import type { OfferedTag } from '@/stores/tags'
 
 /**
- * A tag's name for people. A built-in tag is named by its key until an admin renames it, and the
- * key is translated (`workflow.tags.system.<key>`), the way system states are shown.
+ * A tag's name for people. A built-in tag is named by its key, translated
+ * (`workflow.tags.system.<key>`), the way system states are shown; one renamed before built-in
+ * names were locked keeps that name until it is saved again.
  */
 export function useTagLabels() {
     const { t, te } = useI18n()

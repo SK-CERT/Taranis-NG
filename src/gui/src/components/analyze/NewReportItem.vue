@@ -543,7 +543,7 @@
 
 <script setup lang="ts">
     import type { AxiosError } from 'axios'
-    import { ref, computed, watch, onMounted, onUnmounted, reactive } from 'vue'
+    import { ref, computed, watch, watchEffect, onMounted, onUnmounted, reactive, toRaw } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRoute, useRouter } from 'vue-router'
     import { useAuth } from '@/composables/useAuth'
@@ -723,6 +723,38 @@
     const variantLanguages = computed<string[]>(() =>
         ((selected_type.value?.languages as string[] | undefined) ?? []).filter((language) => language !== report_language.value)
     )
+    // Core marks a translation outdated against the original it had when it sent it. Each one
+    // remembers that original, and goes outdated as soon as the original here differs, as core
+    // will once the change is saved; the tabs and the language form show it without a reload.
+    const checkedTranslations = new WeakMap<object, { original: string; outdated: boolean }>()
+    const recheckTranslation = (row: TranslationStateValue | undefined, current: unknown, checkedAgainst: unknown): void => {
+        if (!row) return
+        let checked = checkedTranslations.get(toRaw(row))
+        if (!checked) {
+            checked = { original: String(checkedAgainst ?? ''), outdated: !!row.outdated }
+            checkedTranslations.set(toRaw(row), checked)
+        }
+        const outdated = checked.outdated || String(current ?? '') !== checked.original
+        if (row.outdated !== outdated) row.outdated = outdated
+    }
+    watchEffect(() => {
+        for (const rows of Object.values(translations.value)) {
+            // A name being typed is not what core checked; the one last saved is.
+            for (const field of ['title', 'title_prefix'] as const) {
+                recheckTranslation(rows?.[field], report_item[field], field_baseline[field])
+            }
+        }
+        for (const group of attribute_groups.value) {
+            for (const item of group.attribute_group_items) {
+                for (const value of item.values) {
+                    if (value.remote) continue
+                    const rows = (value.translations ?? {}) as Record<string, TranslationStateValue>
+                    for (const row of Object.values(rows)) recheckTranslation(row, value.value, value.value)
+                }
+            }
+        }
+    })
+
     // The translation status of each variant tab, from the translations this dialog holds
     // (the rule core uses for the lists: src/core/managers/translation_status.py).
     const tabStatuses = computed<Record<string, string>>(() => {

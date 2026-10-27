@@ -1728,7 +1728,9 @@
             "keep_hint": "Per nomi di prodotti o organizzazioni: l'IA lascia il termine invariato in ogni lingua.",
             "note": "Nota",
             "note_hint": "Contesto per l'IA, ad esempio dove si applica il termine",
+            "terms": "Termini",
             "add_language": "Aggiungi lingua",
+            "remove_language": "Rimuovi {language}",
             "needs_terms": "Inserisci il termine in almeno due lingue, oppure un termine da mantenere invariato."
         }
     },
@@ -2402,7 +2404,7 @@
         "tags": "Tag",
         "tag": "Tag",
         "none_defined": "Nessun tag definito per questi elementi",
-        "built_in_hint": "Taranis assegna questo tag; può essere rinominato e restilizzato, ma non eliminato. Disattivalo nel flusso dei tag.",
+        "built_in_hint": "Taranis assegna questo tag; può essere restilizzato, ma non rinominato né eliminato. Disattivalo nel flusso dei tag.",
         "built_in_link_hint": "I tag integrati restano collegati; disattivali invece",
         "add_new": "Aggiungi tag",
         "edit": "Modifica tag",
