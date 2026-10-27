@@ -30,6 +30,7 @@ from config import Config
 from flask import request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
 from flask_jwt_extended.exceptions import JWTExtendedException
+from jwt.exceptions import InvalidTokenError
 from managers import log_manager, login_throttle, notification_manager, totp_manager, webauthn_manager
 from managers.db_manager import db
 from model.apikey import ApiKey
@@ -1149,8 +1150,8 @@ def jwt_token_required(fn: Callable[..., Any]) -> Callable[..., Any]:
     def wrapper(*args, **kwargs) -> tuple[dict, HTTPStatus]:  # noqa: ANN002, ANN003
         try:
             verify_jwt_in_request()
-        except JWTExtendedException as ex:
-            log_manager.store_auth_error_activity("Missing JWT", ex)
+        except (JWTExtendedException, InvalidTokenError) as ex:
+            log_manager.store_auth_error_activity("Missing or malformed JWT", ex)
             return {"error": "authorization required"}, HTTPStatus.UNAUTHORIZED
 
         jwt_data = get_jwt()
