@@ -855,9 +855,9 @@
         "outdated_confirmation": "Traductions obsolètes",
         "outdated_continue": "Continuer quand même",
         "language_notice": {
-            "missing": "Ces rapports n'ont pas de traduction en {language} ; l'anglais ou le texte d'origine est utilisé :",
-            "outdated": "Ces traductions en {language} sont obsolètes, car leur texte d'origine a changé après la traduction :",
-            "templates": "Le type de produit n'a pas de modèles pour {language} ; les modèles « {used} » sont utilisés.",
+            "missing": "Ces rapports ne sont pas traduits en {language} ; leur langue d'origine est utilisée à la place :",
+            "outdated": "Ces traductions en {language} sont obsolètes, car le contenu d'origine a changé depuis leur traduction :",
+            "templates": "Le type de produit n'a pas de modèles pour {language} ; les modèles « {used} » seront utilisés à la place.",
             "default_templates": "par défaut"
         },
         "texts_not_translated": "Le titre ou la description n'a pas pu être traduit dans certaines langues",

@@ -855,9 +855,9 @@
         "outdated_confirmation": "古い翻訳",
         "outdated_continue": "このまま続ける",
         "language_notice": {
-            "missing": "これらのレポートには{language}の翻訳がありません。英語または原文が使われます:",
-            "outdated": "これらの{language}の翻訳は古くなっています。翻訳後に原文が変更されました:",
-            "templates": "このプロダクト種別には{language}のテンプレートがありません。{used}のテンプレートが使われます。",
+            "missing": "これらのレポートは{language}に翻訳されていないため、代わりに元の言語が使われます:",
+            "outdated": "これらの{language}の翻訳は、翻訳後に元の内容が変更されたため古くなっています:",
+            "templates": "このプロダクト種別には{language}用のテンプレートがありません。代わりに{used}のテンプレートが使われます。",
             "default_templates": "既定"
         },
         "texts_not_translated": "一部の言語にタイトルまたは説明を翻訳できませんでした",

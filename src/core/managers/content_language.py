@@ -139,7 +139,7 @@ ENUM_TRANSLATION_FIELDS = ("value", "description")
 CONSTANT_TYPES = ("RADIO", "ENUM", "MULTI_CHOICE")
 
 # Presenter parameters holding a template path end with this; only they vary per language.
-TEMPLATE_SUFFIX = "_TEMPLATE_PATH"
+TEMPLATE_SUFFIX = ("_TEMPLATE_PATH", "_FILE_NAME")
 
 
 def clean_enum_translations(translations: object) -> dict[str, dict[str, str]] | None:

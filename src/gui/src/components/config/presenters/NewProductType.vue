@@ -504,9 +504,11 @@
     // ---- templates per language -------------------------------------------------------------
     const { languageOptions, languageName } = useContentLanguages()
     const parameterTab = ref<string>('default')
-    // Only template paths vary per language; everything else is shared.
+    // Template paths and file names vary per language; everything else is shared.
     const templateParameters = computed(() =>
-        (selectedPresenter.value?.parameters ?? []).filter((param) => String(param.key ?? '').endsWith('_TEMPLATE_PATH'))
+        (selectedPresenter.value?.parameters ?? []).filter((param) =>
+            ['_TEMPLATE_PATH', '_FILE_NAME'].some((suffix) => String(param.key ?? '').endsWith(suffix))
+        )
     )
     const hasTemplates = computed(() => templateParameters.value.length > 0)
     // A presenter without templates has no language tabs to stay on.

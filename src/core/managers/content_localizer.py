@@ -294,8 +294,8 @@ def resolve_language_templates(
     """The template paths to render ``requested`` with, and the language they are written for.
 
     The chain is requested, English, then the default set. The default set counts as
-    ``default_language`` when that is stated. Only template parameters vary; an override missing
-    a template inherits the default one.
+    ``default_language`` when that is stated. Template paths and file-name templates vary; an
+    override missing a value inherits the default one.
 
     Args:
         default_params (Mapping[str, str]): The product type's parameters (key -> value).

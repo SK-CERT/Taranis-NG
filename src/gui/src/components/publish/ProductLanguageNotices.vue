@@ -3,6 +3,23 @@
         v-if="check && language"
         data-test="product-language-notices"
     >
+        <!-- Templates known to be in another language (e.g. "e-mail CZ" for Slovak) warn; default
+            templates whose language is not set only inform -->
+        <v-alert
+            v-if="check.template_language !== language"
+            :type="check.template_language ? 'warning' : 'info'"
+            variant="tonal"
+            density="compact"
+            class="mb-2"
+            data-test="notice-templates"
+        >
+            {{
+                t('product.language_notice.templates', {
+                    language: languageName(language),
+                    used: check.template_language ? languageName(check.template_language) : t('product.language_notice.default_templates')
+                })
+            }}
+        </v-alert>
         <v-alert
             v-if="check.missing.length > 0"
             type="info"
@@ -31,23 +48,6 @@
                     <bdi dir="auto">{{ entry.title }}</bdi> — <bdi dir="auto">{{ fieldName(entry.field) }}</bdi>
                 </li>
             </ul>
-        </v-alert>
-        <!-- Templates known to be in another language (e.g. "e-mail CZ" for Slovak) warn; default
-             templates whose language is not set only inform -->
-        <v-alert
-            v-if="check.template_language !== language"
-            :type="check.template_language ? 'warning' : 'info'"
-            variant="tonal"
-            density="compact"
-            class="mb-2"
-            data-test="notice-templates"
-        >
-            {{
-                t('product.language_notice.templates', {
-                    language: languageName(language),
-                    used: check.template_language ? languageName(check.template_language) : t('product.language_notice.default_templates')
-                })
-            }}
         </v-alert>
     </div>
 </template>

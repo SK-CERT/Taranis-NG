@@ -231,7 +231,7 @@ class ProductType(db.Model):
             presenter (Presenter | None): The presenter.
 
         Returns:
-            list[str]: Parameter keys ending in ``_TEMPLATE_PATH``.
+            list[str]: Parameter keys ending in a language-varying suffix.
         """
         if presenter is None:
             return []
