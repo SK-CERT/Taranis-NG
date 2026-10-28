@@ -1002,9 +1002,12 @@
         await translateInTab(field, [field])
     }
 
-    /** The product as the form has it, for the language check. */
+    // The product as the form has it, for the language check.
+    // For saved products, core ignored the submitted type and checked the saved database row; that could race the asynchronous type save and produce random warning on same selected type.
+    // Language checks now send id: -1, making core build the check from the current form’s selected type and report IDs.
     const productPayload = () => ({
         ...product.value,
+        id: -1,
         product_type_id: selectedType.value?.id ?? product.value.product_type_id,
         report_items: reportItems.value.map((item) => ({ id: item.id }))
     })

@@ -567,7 +567,10 @@ describe('NewProduct languages', () => {
         await vi.advanceTimersByTimeAsync(400)
         await flushPromises()
 
-        expect(checkProductLanguage).toHaveBeenLastCalledWith(expect.objectContaining({ id: 12 }), 'sk')
+        expect(checkProductLanguage).toHaveBeenLastCalledWith(
+            expect.objectContaining({ id: -1, product_type_id: 4, report_items: [{ id: 1 }, { id: 2 }] }),
+            'sk'
+        )
         expect(wrapper.get('[data-test="notice-missing"]').text()).toContain('B')
         const templates = wrapper.get('[data-test="notice-templates"]')
         expect(templates.text()).toContain('Czech')

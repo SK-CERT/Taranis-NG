@@ -6,7 +6,7 @@ import { updateProductType } from '@/api/config'
 import { useSettingsStore } from '@/stores/settings'
 
 // A product type names the language of its default templates and adds other languages, each
-// with only the template paths; a template a language leaves empty is the default one.
+// with only template paths and file names; an override a language leaves empty uses the default.
 
 const presenter = {
     id: 'p1',
@@ -14,7 +14,8 @@ const presenter = {
     parameters: [
         { id: 1, key: 'TITLE_TEMPLATE_PATH', name: 'Title template', default_value: '' },
         { id: 2, key: 'BODY_TEMPLATE_PATH', name: 'Body template', default_value: '' },
-        { id: 3, key: 'SENDER', name: 'Sender', default_value: '' }
+        { id: 3, key: 'ATTACHMENT_FILE_NAME', name: 'Attachment file name', default_value: '' },
+        { id: 4, key: 'SENDER', name: 'Sender', default_value: '' }
     ]
 }
 
@@ -51,7 +52,8 @@ const editItem = {
     parameter_values: [
         { value: 'title_cz.txt', parameter: presenter.parameters[0] },
         { value: 'body_cz.txt', parameter: presenter.parameters[1] },
-        { value: 'cert@example.test', parameter: presenter.parameters[2] }
+        { value: 'attachment_cz.pdf', parameter: presenter.parameters[2] },
+        { value: 'cert@example.test', parameter: presenter.parameters[3] }
     ],
     language: 'cs',
     language_templates: { sk: { BODY_TEMPLATE_PATH: 'body_sk.txt' } }
@@ -68,7 +70,7 @@ async function openEditor(item: object = editItem) {
 describe('NewProductType languages', () => {
     beforeEach(() => vi.clearAllMocks())
 
-    it('shows only the template paths of a language, with the default ones as placeholders', async () => {
+    it('shows language-varying template paths and file names with defaults as placeholders', async () => {
         const wrapper = await openEditor()
         const tabs = wrapper.get('[data-test="product-type-language-tabs"]').findAll('.v-tab')
         expect(tabs.map((tab) => tab.text())).toEqual(['Default', 'Slovak'])
@@ -77,9 +79,10 @@ describe('NewProductType languages', () => {
         await flushPromises()
 
         const fields = wrapper.get('[data-test="language-templates"]').findAll('input')
-        expect(fields).toHaveLength(2)
+        expect(fields).toHaveLength(3)
         expect((fields[0]!.element as HTMLInputElement).placeholder).toBe('title_cz.txt')
         expect((fields[1]!.element as HTMLInputElement).value).toBe('body_sk.txt')
+        expect((fields[2]!.element as HTMLInputElement).placeholder).toBe('attachment_cz.pdf')
     })
 
     it('saves the template language and the overrides of each language', async () => {

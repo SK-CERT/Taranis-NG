@@ -855,9 +855,9 @@
         "outdated_confirmation": "过时的译文",
         "outdated_continue": "仍然继续",
         "language_notice": {
-            "missing": "这些报告没有{language}译文，将使用英文或原文：",
-            "outdated": "这些{language}译文已过时，因为翻译后原文已更改：",
-            "templates": "该产品类型没有{language}模板，将使用{used}模板。",
+            "missing": "这些报告尚未翻译成{language}，将改用其原始语言：",
+            "outdated": "这些{language}译文已过时，因为翻译后原始内容已更改：",
+            "templates": "该产品类型没有{language}模板，将改用{used}模板。",
             "default_templates": "默认"
         },
         "texts_not_translated": "标题或描述无法翻译为某些语言",

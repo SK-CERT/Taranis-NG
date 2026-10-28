@@ -855,8 +855,8 @@
         "outdated_confirmation": "Zastarané preklady",
         "outdated_continue": "Napriek tomu pokračovať",
         "language_notice": {
-            "missing": "Tieto reporty nemajú preklad do jazyka {language}; použije sa angličtina alebo originál:",
-            "outdated": "Tieto preklady do jazyka {language} sú zastarané, lebo sa ich originál po preložení zmenil:",
+            "missing": "Tieto reporty nie sú preložené do jazyka {language}; použije sa ich pôvodný jazyk:",
+            "outdated": "Tieto preklady do jazyka {language} sú zastarané, pretože sa pôvodný obsah zmenil od ich preloženia:",
             "templates": "Typ produktu nemá šablóny pre jazyk {language}; použijú sa šablóny: {used}.",
             "default_templates": "predvolené"
         },

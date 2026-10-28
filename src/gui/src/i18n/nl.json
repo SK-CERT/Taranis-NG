@@ -855,9 +855,9 @@
         "outdated_confirmation": "Verouderde vertalingen",
         "outdated_continue": "Toch doorgaan",
         "language_notice": {
-            "missing": "Deze rapporten hebben geen vertaling naar het {language}; Engels of de oorspronkelijke tekst wordt gebruikt:",
-            "outdated": "Deze vertalingen naar het {language} zijn verouderd, omdat de oorspronkelijke tekst na het vertalen is gewijzigd:",
-            "templates": "Het producttype heeft geen sjablonen voor het {language}; de sjablonen ‘{used}’ worden gebruikt.",
+            "missing": "Deze rapporten zijn niet vertaald naar het {language}; in plaats daarvan wordt hun oorspronkelijke taal gebruikt:",
+            "outdated": "Deze vertalingen naar het {language} zijn verouderd, omdat de oorspronkelijke inhoud na het vertalen is gewijzigd:",
+            "templates": "Het producttype heeft geen sjablonen voor het {language}; in plaats daarvan worden de sjablonen ‘{used}’ gebruikt.",
             "default_templates": "standaard"
         },
         "texts_not_translated": "De titel of beschrijving kon niet naar sommige talen worden vertaald",

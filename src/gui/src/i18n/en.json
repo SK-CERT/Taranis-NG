@@ -855,9 +855,9 @@
         "outdated_confirmation": "Outdated translations",
         "outdated_continue": "Continue anyway",
         "language_notice": {
-            "missing": "These reports have no translation into {language}; English or the original is used for them:",
-            "outdated": "These translations into {language} are outdated, because their original changed after they were translated:",
-            "templates": "The product type has no templates for {language}; the {used} templates are used.",
+            "missing": "These reports are not translated into {language}; the original language is used instead:",
+            "outdated": "These translations into {language} are outdated because the original content has changed since they were translated:",
+            "templates": "The product type has no templates for {language}; the {used} templates will be used instead.",
             "default_templates": "default"
         },
         "texts_not_translated": "The title or description could not be translated into some languages",

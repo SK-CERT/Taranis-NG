@@ -855,9 +855,9 @@
         "outdated_confirmation": "mughmey ngo'",
         "outdated_continue": "yItaH",
         "language_notice": {
-            "missing": "{language} mugh ghajbe' ja'ghachmeyvam; DIvI' Hol pagh wa'DIch ghItlh lo'lu':",
-            "outdated": "{language} mughmeyvam ngo', mughlu'DI' wa'DIch ghItlh choHlu'mo':",
-            "templates": "{language} meghmey ghajbe' Doch Segh; {used} meghmey lo'lu'.",
+            "missing": "{language} HolDaq mughta'be' ja'ghachmeyvam; wa'DIch Hol lo'lu':",
+            "outdated": "{language} mughmeyvam ngo', mughlu'ta'DI' wa'DIch ghItlh choHlu'mo':",
+            "templates": "{language} HolvaD meghmey ghajbe' Doch Segh; {used} meghmey lo'lu'.",
             "default_templates": "motlh"
         },
         "texts_not_translated": "wa'logh Hol mugh, pagh Del mughlaHbe'lu'",
