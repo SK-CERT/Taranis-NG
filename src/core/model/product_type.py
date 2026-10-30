@@ -225,17 +225,17 @@ class ProductType(db.Model):
 
     @staticmethod
     def template_keys(presenter: Presenter | None) -> list[str]:
-        """The presenter's parameters that hold a template path; only they vary per language.
+        """The presenter's parameters enabled for language-specific values.
 
         Args:
             presenter (Presenter | None): The presenter.
 
         Returns:
-            list[str]: Parameter keys ending in a language-varying suffix.
+            list[str]: Keys of parameters marked translatable.
         """
         if presenter is None:
             return []
-        return [parameter.key for parameter in presenter.parameters if parameter.key.endswith(content_language.TEMPLATE_SUFFIX)]
+        return [parameter.key for parameter in presenter.parameters if parameter.translate]
 
     @classmethod
     def delete(cls, product_type_id: int) -> None:

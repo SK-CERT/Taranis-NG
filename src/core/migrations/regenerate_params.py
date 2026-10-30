@@ -1,5 +1,12 @@
 """Create, update and delete Collector, Bot, Presenter and Publisher parameters."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Connection
+
 from model import attribute  # noqa: F401  Don't remove this line otherwise relationship problems
 from model.bot import Bot, BotParameter
 from model.bot_preset import BotPreset, BotPresetParameterValue
@@ -15,41 +22,40 @@ from model.product_type import ProductType, ProductTypeParameterValue
 from model.publisher import Publisher, PublisherParameter
 from model.publisher_preset import PublisherPreset, PublisherPresetParameterValue
 from model.publishers_node import PublishersNode
-from sqlalchemy.orm import Session, declarative_base
-
 from shared.config_bot import ConfigBot
 from shared.config_collector import ConfigCollector
 from shared.config_presenter import ConfigPresenter
 from shared.config_publisher import ConfigPublisher
+from sqlalchemy.orm import Session, declarative_base
 
 Base = declarative_base()
 
 
-def regenerate_all(connection):
+def regenerate_all(connection: Connection) -> None:
     """Regenerate all nodes.
 
     Args:
         connection: Connection to DTB.
     """
     session = Session(bind=connection)
-    RegenerateParameters("bots", session)
-    RegenerateParameters("collectors", session)
-    RegenerateParameters("presenters", session)
-    RegenerateParameters("publishers", session)
-    print("Regenerated all nodes parameters", flush=True)
+    regenerate_parameters("bots", session)
+    regenerate_parameters("collectors", session)
+    regenerate_parameters("presenters", session)
+    regenerate_parameters("publishers", session)
+    print("Regenerated all nodes parameters", flush=True)  # noqa: T201
 
 
 # this allow us add new module/parameters to nodes without deleting and manually recreating it (we don't loose existing data)
 # existing objects like OSINT sources, Bots presets... that depend on these parameters stay untouched and need to be updated/recrated manually
-def RegenerateParameters(type, session):
+def regenerate_parameters(module_type: str, session: Session) -> None:  # noqa: PLR0912, PLR0915
     """Create new, update existing, and delete old Collector, Bot, Presenter and Publisher parameters.
 
     Args:
-        type (str): The type of module to regenerate. Valid values are "collectors", "bots", "presenters", and "publishers".
+        module_type (str): The type of module to regenerate. Valid values are "collectors", "bots", "presenters", and "publishers".
         session (sqlalchemy.orm.session.Session): The SQLAlchemy session to use for database operations.
     """
     try:
-        match type:
+        match module_type:
             case "collectors":
                 def_modules = ConfigCollector().modules
                 db_nodes = session.query(CollectorsNode).all()
@@ -67,18 +73,18 @@ def RegenerateParameters(type, session):
                 db_nodes = session.query(PublishersNode).all()
                 class_module = Publisher
             case _:
-                print(f"ERROR: Invalid module type '{type}' to regenerate", flush=True)
+                print(f"ERROR: Invalid module type '{module_type}' to regenerate", flush=True)  # noqa: T201
                 return
 
         for db_node in db_nodes:
-            print(f"Regenarating parameters for node: {db_node.name}", flush=True)
+            print(f"Regenarating parameters for node: {db_node.name}", flush=True)  # noqa: T201
             # create/update
             db_modules = session.query(class_module).filter_by(node_id=db_node.id).all()
             for def_mod in def_modules:
                 # create/update module
                 db_mod = next((m for m in db_modules if m.type == def_mod.type), None)
                 if not db_mod:
-                    print(f"+++  {def_mod.type}", flush=True)
+                    print(f"+++  {def_mod.type}", flush=True)  # noqa: T201
                     db_mod = class_module(name=def_mod.name, description=def_mod.description, type=def_mod.type, parameters=[])
                     db_mod.node_id = db_node.id
                     session.add(db_mod)
@@ -90,17 +96,25 @@ def RegenerateParameters(type, session):
                 for def_par in def_mod.parameters:
                     db_par = next((p for p in db_mod.parameters if p.key == def_par.key), None)
                     if not db_par:
-                        print(f"+++  {def_mod.type}.{def_par.key}", flush=True)
-                        db_par = Parameter(def_par.key, def_par.name, def_par.description, def_par.type.name, def_par.default_value)
+                        print(f"+++  {def_mod.type}.{def_par.key}", flush=True)  # noqa: T201
+                        db_par = Parameter(
+                            def_par.key,
+                            def_par.name,
+                            def_par.description,
+                            def_par.type.name,
+                            def_par.default_value,
+                            def_par.translate,
+                        )
                         session.add(db_par)
                         session.commit()
-                        db_mod_par = get_new_mod_param(type, db_mod.id, db_par.id)
+                        db_mod_par = get_new_mod_param(module_type, db_mod.id, db_par.id)
                         session.add(db_mod_par)
                     else:
                         db_par.name = def_par.name
                         db_par.description = def_par.description
                         db_par.type = def_par.type.name
                         db_par.default_value = def_par.default_value
+                        db_par.translate = def_par.translate
                     session.commit()
             # delete old module/parameters
             db_modules = session.query(class_module).filter_by(node_id=db_node.id).all()
@@ -108,22 +122,22 @@ def RegenerateParameters(type, session):
                 def_mod = next((m for m in def_modules if m.type == db_mod.type), None)
                 if not def_mod:
                     for db_par in db_mod.parameters:
-                        print(f"---  {db_mod.type}.{db_par.key}", flush=True)
+                        print(f"---  {db_mod.type}.{db_par.key}", flush=True)  # noqa: T201
                         # this delete via DB constraints also osint_source_parameter_value, bot_preset_parameter_value,
                         # publisher_preset_parameter_value, product_type_parameter_value tables
                         session.delete(db_par)
-                    print(f"---  {db_mod.type}", flush=True)
+                    print(f"---  {db_mod.type}", flush=True)  # noqa: T201
                     session.delete(db_mod)
                 else:
                     for db_par in db_mod.parameters:
                         if not any(m.key == db_par.key for m in def_mod.parameters):
-                            print(f"---  {db_mod.type}.{db_par.key}", flush=True)
+                            print(f"---  {db_mod.type}.{db_par.key}", flush=True)  # noqa: T201
                             session.delete(db_par)
             session.commit()
 
         # Add new parameter_values in depending objects, delete was processed up via db constraints
         added = 0
-        match type:
+        match module_type:
             case "collectors":
                 caption = "OSINT Sources"
                 query = session.query(Collector, OSINTSource)
@@ -139,7 +153,7 @@ def RegenerateParameters(type, session):
                         db_param_lookup = {param.key: param for _, _, param in results}
                         for def_par in def_mod.parameters:
                             if def_par.key not in db_param_lookup:
-                                print(f"+++  {def_par.key}: {osint.name}", flush=True)
+                                print(f"+++  {def_par.key}: {osint.name}", flush=True)  # noqa: T201
                                 db_param = next((p for p in col.parameters if p.key == def_par.key), None)
                                 if db_param:
                                     added += 1
@@ -160,7 +174,7 @@ def RegenerateParameters(type, session):
                         db_param_lookup = {param.key: param for _, _, param in results}
                         for def_par in def_mod.parameters:
                             if def_par.key not in db_param_lookup:
-                                print(f"+++  {def_par.key}: {preset.name}", flush=True)
+                                print(f"+++  {def_par.key}: {preset.name}", flush=True)  # noqa: T201
                                 db_param = next((p for p in bot.parameters if p.key == def_par.key), None)
                                 if db_param:
                                     added += 1
@@ -181,7 +195,7 @@ def RegenerateParameters(type, session):
                         db_param_lookup = {param.key: param for _, _, param in results}
                         for def_par in def_mod.parameters:
                             if def_par.key not in db_param_lookup:
-                                print(f"+++  {def_par.key}: {prod_type.title}", flush=True)
+                                print(f"+++  {def_par.key}: {prod_type.title}", flush=True)  # noqa: T201
                                 db_param = next((p for p in presenter.parameters if p.key == def_par.key), None)
                                 if db_param:
                                     added += 1
@@ -202,36 +216,41 @@ def RegenerateParameters(type, session):
                         db_param_lookup = {param.key: param for _, _, param in results}
                         for def_par in def_mod.parameters:
                             if def_par.key not in db_param_lookup:
-                                print(f"+++  {def_par.key}: {preset.name}", flush=True)
+                                print(f"+++  {def_par.key}: {preset.name}", flush=True)  # noqa: T201
                                 db_param = next((p for p in pub.parameters if p.key == def_par.key), None)
                                 if db_param:
                                     added += 1
                                     db_param_value = ParameterValue(def_par.default_value, db_param)
                                     preset.parameter_values.append(db_param_value)
             case _:
-                print(f"ERROR: Invalid module type '{type}' to refresh parameters in depending objects", flush=True)
+                print(f"ERROR: Invalid module type '{module_type}' to refresh parameters in depending objects", flush=True)  # noqa: T201
                 return
         session.commit()
-        print(f"{caption} parameters: {added} added", flush=True)
+        print(f"{caption} parameters: {added} added", flush=True)  # noqa: T201
 
     except Exception as e:
         session.rollback()
-        print(f"Regeneration error: {e}", flush=True)
-        raise Exception("Regeneration failed")  # don't allow migration process continue to next step
+        msg = "Regeneration failed"
+        print(f"{msg}: {e}", flush=True)  # noqa: T201
+        raise RuntimeError(msg) from e  # don't allow migration process continue to next step
 
 
-def get_new_mod_param(type, module_id, parameter_id):
+def get_new_mod_param(
+    module_type: str,
+    module_id: str,
+    parameter_id: int,
+) -> CollectorParameter | BotParameter | PresenterParameter | PublisherParameter | None:
     """Create a new module parameter based on the type.
 
     Args:
-        type (str): The type of module. Valid values are "collectors", "bots", "presenters", and "publishers".
+        module_type (str): The type of module. Valid values are "collectors", "bots", "presenters", and "publishers".
         module_id (int): The ID of the module.
         parameter_id (int): The ID of the parameter.
 
     Returns:
         An instance of the appropriate parameter class based on the type, or None if the type is invalid.
     """
-    match type:
+    match module_type:
         case "collectors":
             return CollectorParameter(collector_id=module_id, parameter_id=parameter_id)
         case "bots":
@@ -241,5 +260,5 @@ def get_new_mod_param(type, module_id, parameter_id):
         case "publishers":
             return PublisherParameter(publisher_id=module_id, parameter_id=parameter_id)
         case _:
-            print(f"ERROR: Invalid type '{type}' to create module parameter: {type}", flush=True)
+            print(f"ERROR: Invalid type '{module_type}' to create module parameter: {module_type}", flush=True)  # noqa: T201
             return None

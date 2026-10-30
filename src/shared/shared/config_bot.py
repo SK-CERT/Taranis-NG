@@ -2,16 +2,16 @@
 
 from shared.schema.parameter import ParameterType
 
-from .config_base import ConfigBase, module_type, param_type
+from .config_base import ConfigBase, ModuleType, ParamType
 
 
 class ConfigBot(ConfigBase):
     """Definition for bot modules."""
 
-    def add_default(self) -> list[param_type]:
+    def add_default(self) -> list[ParamType]:
         """Add default parameters."""
         return [
-            param_type(
+            ParamType(
                 "REFRESH_INTERVAL",
                 "Refresh interval in minutes (0 to disable)",
                 "How often and when is this bot doing its job. Examples:<ul><li>10 --- perform the task every 10 minutes</li><li>10:30"
@@ -23,44 +23,44 @@ class ConfigBot(ConfigBase):
 
     def __init__(self) -> None:
         """Initialize bot modules."""
-        self.modules: list[module_type] = []
+        self.modules: list[ModuleType] = []
 
-        mod = module_type("ANALYST_BOT", "Analyst Bot", "Bot for news items analysis")
+        mod = ModuleType("ANALYST_BOT", "Analyst Bot", "Bot for news items analysis")
         mod.parameters = self.add_default()
         mod.parameters.extend(
             [
-                param_type("SOURCE_GROUP", "Source Group", "OSINT Source group to inspect (not used)", ParameterType.STRING, "Default"),
-                param_type(
+                ParamType("SOURCE_GROUP", "Source Group", "OSINT Source group to inspect (not used)", ParameterType.STRING, "Default"),
+                ParamType(
                     "REGULAR_EXPRESSION",
                     "Regular Expression",
                     "Regular expression for data analysis",
                     ParameterType.STRING,
                     "CVE-\\d{4}-\\d+",
                 ),
-                param_type("ATTRIBUTE_NAME", "Attribute name", "Name of attribute for extracted data", ParameterType.STRING, "CVE"),
+                ParamType("ATTRIBUTE_NAME", "Attribute name", "Name of attribute for extracted data", ParameterType.STRING, "CVE"),
             ],
         )
         self.modules.append(mod)
 
-        mod = module_type("GROUPING_BOT", "Grouping Bot", "Bot for grouping news items into aggregates")
+        mod = ModuleType("GROUPING_BOT", "Grouping Bot", "Bot for grouping news items into aggregates")
         mod.parameters = self.add_default()
         mod.parameters.extend(
             [
-                param_type("SOURCE_GROUP", "Source Group", "OSINT Source group GUID to inspect", ParameterType.STRING),
-                param_type("REGULAR_EXPRESSION", "Regular Expression", "Regular expression for items matching", ParameterType.STRING),
+                ParamType("SOURCE_GROUP", "Source Group", "OSINT Source group GUID to inspect", ParameterType.STRING),
+                ParamType("REGULAR_EXPRESSION", "Regular Expression", "Regular expression for items matching", ParameterType.STRING),
             ],
         )
         self.modules.append(mod)
 
-        mod = module_type("WORDLIST_UPDATER_BOT", "Wordlist Updater Bot", "Bot for updating word lists")
+        mod = ModuleType("WORDLIST_UPDATER_BOT", "Wordlist Updater Bot", "Bot for updating word lists")
         mod.parameters = self.add_default()
         mod.parameters.extend(
             [
-                param_type("WORD_LIST_ID", "Word list ID", "ID of word list to update", ParameterType.NUMBER),
-                param_type("WORD_LIST_CATEGORY", "Word list category name", "Name of category of word entries", ParameterType.STRING),
-                param_type("DATA_URL", "Data URL or file path", "Source for words", ParameterType.STRING),
-                param_type("FORMAT", "Data format", "Format of words source", ParameterType.STRING),
-                param_type(
+                ParamType("WORD_LIST_ID", "Word list ID", "ID of word list to update", ParameterType.NUMBER),
+                ParamType("WORD_LIST_CATEGORY", "Word list category name", "Name of category of word entries", ParameterType.STRING),
+                ParamType("DATA_URL", "Data URL or file path", "Source for words", ParameterType.STRING),
+                ParamType("FORMAT", "Data format", "Format of words source", ParameterType.STRING),
+                ParamType(
                     "DELETE",
                     "Delete before update (yes or no)",
                     "Delete word entries before update, default yes",

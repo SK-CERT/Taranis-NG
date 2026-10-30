@@ -21,6 +21,39 @@ class ParameterType(Enum):
     LIST = auto()
 
 
+class Parameter:
+    """A class used to represent a Parameter."""
+
+    def __init__(
+        self,
+        id: int,  # noqa: A002
+        key: str,
+        name: str,
+        description: str,
+        type: ParameterType,  # noqa: A002
+        default_value: str,
+        translate: bool = False,
+    ) -> None:
+        """Initialize a new Parameter instance.
+
+        Args:
+            id (int): The unique identifier for the parameter.
+            key (str): The key associated with the parameter.
+            name (str): The name of the parameter.
+            description (str): A brief description of the parameter.
+            type (ParameterType): The type of the parameter.
+            default_value (str): The default value for the parameter.
+            translate (bool): Whether the parameter is translatable.
+        """
+        self.id = id
+        self.key = key
+        self.name = name
+        self.description = description
+        self.type = type
+        self.default_value = default_value
+        self.translate = translate
+
+
 class ParameterSchema(Schema):
     """ParameterSchema is a Marshmallow schema for serializing and deserializing Parameter objects.
 
@@ -31,6 +64,7 @@ class ParameterSchema(Schema):
         description (fields.Str): A brief description of the parameter.
         type (fields.Enum): The type of the parameter, which is an enumeration of ParameterType.
         default_value (fields.Str): Default value.
+        translate (fields.Bool): Whether the parameter is translatable.
 
     Methods:
         make_parameter(data, **kwargs):
@@ -43,9 +77,10 @@ class ParameterSchema(Schema):
     description = fields.Str()
     type = fields.Enum(ParameterType)
     default_value = fields.Str(allow_none=True)
+    translate = fields.Bool(load_default=False)
 
     @post_load
-    def make_parameter(self, data, **kwargs):
+    def make_parameter(self, data: dict, **kwargs) -> Parameter:  # noqa: ANN003, ARG002
         """Create a Parameter instance from the provided data.
 
         Args:
@@ -58,30 +93,23 @@ class ParameterSchema(Schema):
         return Parameter(**data)
 
 
-class Parameter:
-    """A class used to represent a Parameter.
+class ParameterExport:
+    """A class used to represent a Parameter Export.
+
+    Args:
+        key (str): The key associated with the parameter export.
 
     Methods:
-        __init__(self, id, key, name, description, type):
-            Initializes a new Parameter instance.
+        __init__(self, key): Initializes the ParameterExport with the given key.
     """
 
-    def __init__(self, id, key, name, description, type, default_value):
-        """Initialize a new Parameter instance.
+    def __init__(self, key: str) -> None:
+        """Initialize a Parameter instance with a given key.
 
         Args:
-            id (int): The unique identifier for the parameter.
             key (str): The key associated with the parameter.
-            name (str): The name of the parameter.
-            description (str): A brief description of the parameter.
-            type (str): The type of the parameter.
         """
-        self.id = id
         self.key = key
-        self.name = name
-        self.description = description
-        self.type = type
-        self.default_value = default_value
 
 
 class ParameterExportSchema(Schema):
@@ -98,7 +126,7 @@ class ParameterExportSchema(Schema):
     key = fields.Str()
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> ParameterExport:  # noqa: ANN003, ARG002
         """Create a ParameterExport instance from the provided data.
 
         Args:
@@ -109,22 +137,3 @@ class ParameterExportSchema(Schema):
             ParameterExport: An instance of ParameterExport initialized with the provided data.
         """
         return ParameterExport(**data)
-
-
-class ParameterExport:
-    """A class used to represent a Parameter Export.
-
-    Args:
-        key (str): The key associated with the parameter export.
-
-    Methods:
-        __init__(self, key): Initializes the ParameterExport with the given key.
-    """
-
-    def __init__(self, key):
-        """Initialize a Parameter instance with a given key.
-
-        Args:
-            key (str): The key associated with the parameter.
-        """
-        self.key = key

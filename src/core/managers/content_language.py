@@ -138,9 +138,6 @@ ENUM_TRANSLATION_FIELDS = ("value", "description")
 # Attribute types whose constants have language variants.
 CONSTANT_TYPES = ("RADIO", "ENUM", "MULTI_CHOICE")
 
-# Presenter parameters holding a template path end with this; only they vary per language.
-TEMPLATE_SUFFIX = ("_TEMPLATE_PATH", "_FILE_NAME")
-
 
 def clean_enum_translations(translations: object) -> dict[str, dict[str, str]] | None:
     """Validate the language variants of a choice constant, ``{language: {value, description}}``.

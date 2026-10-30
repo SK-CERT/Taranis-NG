@@ -855,7 +855,7 @@
         "outdated_confirmation": "Güncel olmayan çeviriler",
         "outdated_continue": "Yine de devam et",
         "language_notice": {
-            "missing": "Bu raporlar {language} diline çevrilmedi; bunun yerine özgün dilleri kullanılır:",
+            "missing": "Bu raporlar {language} diline çevrilmedi; bunun yerine İngilizce veya özgün dilleri kullanılır:",
             "outdated": "Bu {language} çevirileri güncel değil, çünkü özgün içerik çeviriden sonra değişti:",
             "templates": "Ürün türünde {language} için şablon yok; bunun yerine {used} şablonları kullanılır.",
             "default_templates": "varsayılan"

@@ -372,6 +372,7 @@
         name?: string
         description?: string
         default_value?: string
+        translate?: boolean
         required?: boolean
         [key: string]: unknown
     }
@@ -504,12 +505,8 @@
     // ---- templates per language -------------------------------------------------------------
     const { languageOptions, languageName } = useContentLanguages()
     const parameterTab = ref<string>('default')
-    // Template paths and file names vary per language; everything else is shared.
-    const templateParameters = computed(() =>
-        (selectedPresenter.value?.parameters ?? []).filter((param) =>
-            ['_TEMPLATE_PATH', '_FILE_NAME'].some((suffix) => String(param.key ?? '').endsWith(suffix))
-        )
-    )
+    // Only parameters explicitly marked translatable vary per language.
+    const templateParameters = computed(() => (selectedPresenter.value?.parameters ?? []).filter((param) => param.translate === true))
     const hasTemplates = computed(() => templateParameters.value.length > 0)
     // A presenter without templates has no language tabs to stay on.
     watch(hasTemplates, (value) => {

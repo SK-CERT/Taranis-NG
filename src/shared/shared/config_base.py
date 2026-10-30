@@ -6,7 +6,7 @@ from shared.schema.parameter import ParameterType
 
 
 @dataclass
-class param_type:
+class ParamType:
     """Parameter type definition.
 
     Attributes:
@@ -14,6 +14,7 @@ class param_type:
         name (str): Parameter name.
         description (str): Parameter description.
         type (ParameterType): Parameter type
+        translate (bool): Whether the parameter is translatable.
     """
 
     key: str
@@ -21,25 +22,31 @@ class param_type:
     description: str
     type: ParameterType
     default_value: str = ""
+    translate: bool = False
 
 
 @dataclass
-class module_type:
+class ModuleType:
     """Module type definition.
 
     Attributes:
         type (str): Module type.
         name (str): Module name.
         description (str): Module description.
-        parameters (List[param_type]): Module parameters.
+        parameters (List[ParamType]): Module parameters.
     """
 
     type: str
     name: str
     description: str
-    parameters: list[param_type]
+    parameters: list[ParamType]
 
-    def __init__(self, type, name, description):
+    def __init__(
+        self,
+        type: str,  # noqa: A002
+        name: str,
+        description: str,
+    ) -> None:
         """Initialize module type."""
         self.type = type
         self.name = name
@@ -49,16 +56,19 @@ class module_type:
 class ConfigBase:
     """Base definition for module types."""
 
-    def get_config_by_type(self, type: str) -> module_type | None:
+    def get_config_by_type(
+        self,
+        module_type: str,
+    ) -> ModuleType | None:
         """Get module configuration by type.
 
         Args:
-            type (str): Module type.
+            module_type (str): Module type.
 
         Returns:
-            module_type | None: Module configuration or None if not found.
+            ModuleType | None: Module configuration or None if not found.
         """
         for mod in self.modules:
-            if mod.type == type:
+            if mod.type == module_type:
                 return mod
         return None

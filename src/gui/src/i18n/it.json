@@ -855,7 +855,7 @@
         "outdated_confirmation": "Traduzioni non aggiornate",
         "outdated_continue": "Continua comunque",
         "language_notice": {
-            "missing": "Questi report non sono tradotti in {language}; viene usata la loro lingua originale:",
+            "missing": "Questi report non sono tradotti in {language}; viene usato l'inglese o la loro lingua originale:",
             "outdated": "Queste traduzioni in {language} non sono aggiornate, perché il contenuto originale è cambiato dopo la traduzione:",
             "templates": "Il tipo di prodotto non ha modelli per {language}; vengono usati invece i modelli {used}.",
             "default_templates": "predefiniti"

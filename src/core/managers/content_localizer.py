@@ -290,29 +290,33 @@ def resolve_language_templates(
     language_templates: Mapping[str, Mapping[str, str]] | None,
     default_language: str | None,
     requested: str | None,
+    translatable_keys: Iterable[str],
 ) -> tuple[dict[str, str], str | None]:
     """The template paths to render ``requested`` with, and the language they are written for.
 
     The chain is requested, English, then the default set. The default set counts as
     ``default_language`` when that is stated. Template paths and file-name templates vary; an
-    override missing a value inherits the default one.
+    override missing a value inherits the default one. Only parameters marked translatable can be
+    overridden.
 
     Args:
         default_params (Mapping[str, str]): The product type's parameters (key -> value).
         language_templates (Mapping[str, Mapping[str, str]] | None): Overrides per language.
         default_language (str | None): The language of the default templates, if stated.
         requested (str | None): The language rendered.
+        translatable_keys (Iterable[str]): Parameter keys enabled for language-specific values.
 
     Returns:
         tuple[dict[str, str], str | None]: The parameters to use, and the templates' language.
     """
     params = dict(default_params)
+    allowed = set(translatable_keys)
     for language in language_chain(requested, None):
         if language == default_language:
             return params, default_language
         overrides = (language_templates or {}).get(language)
         if overrides:
-            params.update({key: path for key, path in overrides.items() if key.endswith(content_language.TEMPLATE_SUFFIX) and path})
+            params.update({key: path for key, path in overrides.items() if key in allowed and path})
             return params, language
     return params, default_language
 
@@ -421,7 +425,14 @@ def localize_templates(payload: dict, product_type: object, language: str | None
     """
     values = payload.get("parameter_values") or []
     defaults = {value["parameter"]["key"]: value.get("value") for value in values if value.get("parameter")}
-    params, template_language = resolve_language_templates(defaults, product_type.language_templates, product_type.language, language)
+    translatable_keys = [parameter["key"] for value in values if (parameter := value.get("parameter")) and parameter.get("translate")]
+    params, template_language = resolve_language_templates(
+        defaults,
+        product_type.language_templates,
+        product_type.language,
+        language,
+        translatable_keys,
+    )
     for value in values:
         key = (value.get("parameter") or {}).get("key")
         if key in params:
@@ -474,8 +485,15 @@ def language_check(product: Product, language: str | None) -> dict:
     template_language = None
     if product_type is not None:
         defaults = {value.parameter.key: value.value for value in product_type.parameter_values if value.parameter}
-        if any(key.endswith(content_language.TEMPLATE_SUFFIX) for key in defaults):
-            template_language = resolve_language_templates(defaults, product_type.language_templates, product_type.language, language)[1]
+        translatable_keys = [value.parameter.key for value in product_type.parameter_values if value.parameter and value.parameter.translate]
+        if translatable_keys:
+            template_language = resolve_language_templates(
+                defaults,
+                product_type.language_templates,
+                product_type.language,
+                language,
+                translatable_keys,
+            )[1]
         else:
             template_language = language
     return {"missing": missing, "outdated": outdated, "template_language": template_language}
