@@ -5,7 +5,7 @@ export type DynamicParameterDefinition = {
 export type ValidationRule = (value: unknown) => true | string
 
 /**
- * Module parameters are declared in `src/shared/shared/config_*.py` via `param_type`,
+ * Module parameters are declared in `src/shared/shared/config_*.py` via `ParamType`,
  * which has no `required` field. Neither the Parameter model nor ParameterSchema carries
  * one, so the API never sends it and every parameter reaches the GUI with `required`
  * undefined.

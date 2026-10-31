@@ -855,7 +855,7 @@
         "outdated_confirmation": "mughmey ngo'",
         "outdated_continue": "yItaH",
         "language_notice": {
-            "missing": "{language} HolDaq mughta'be' ja'ghachmeyvam; wa'DIch Hol lo'lu':",
+            "missing": "{language} HolDaq mughta'be' ja'ghachmeyvam; English Hol pagh wa'DIch Hol lo'lu':",
             "outdated": "{language} mughmeyvam ngo', mughlu'ta'DI' wa'DIch ghItlh choHlu'mo':",
             "templates": "{language} HolvaD meghmey ghajbe' Doch Segh; {used} meghmey lo'lu'.",
             "default_templates": "motlh"

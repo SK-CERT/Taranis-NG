@@ -55,14 +55,25 @@ def test_the_original_wins_in_its_own_language() -> None:
 def test_templates_follow_the_chain_and_inherit_what_a_language_leaves_out() -> None:
     defaults = {"TITLE_TEMPLATE_PATH": "t_cz.txt", "BODY_TEMPLATE_PATH": "b_cz.txt", "SENDER": "cert@example.test"}
     overrides = {"sk": {"BODY_TEMPLATE_PATH": "b_sk.txt"}, "en": {"BODY_TEMPLATE_PATH": "b_en.txt", "TITLE_TEMPLATE_PATH": "t_en.txt"}}
+    translatable_keys = ["TITLE_TEMPLATE_PATH", "BODY_TEMPLATE_PATH"]
 
-    params, language = content_localizer.resolve_language_templates(defaults, overrides, "cs", "sk")
+    params, language = content_localizer.resolve_language_templates(defaults, overrides, "cs", "sk", translatable_keys)
     assert language == "sk"
     assert params == {"TITLE_TEMPLATE_PATH": "t_cz.txt", "BODY_TEMPLATE_PATH": "b_sk.txt", "SENDER": "cert@example.test"}
 
-    assert content_localizer.resolve_language_templates(defaults, overrides, "cs", "cs") == (defaults, "cs")
-    assert content_localizer.resolve_language_templates(defaults, overrides, "cs", "de")[1] == "en"
-    assert content_localizer.resolve_language_templates(defaults, {}, None, "de") == (defaults, None)
+    assert content_localizer.resolve_language_templates(defaults, overrides, "cs", "cs", translatable_keys) == (defaults, "cs")
+    assert content_localizer.resolve_language_templates(defaults, overrides, "cs", "de", translatable_keys)[1] == "en"
+    assert content_localizer.resolve_language_templates(defaults, {}, None, "de", translatable_keys) == (defaults, None)
+
+
+def test_template_overrides_follow_translate_flag_not_parameter_name() -> None:
+    defaults = {"CUSTOM_TEMPLATE": "default.txt", "OLD_TEMPLATE_PATH": "old.txt"}
+    overrides = {"sk": {"CUSTOM_TEMPLATE": "translated.txt", "OLD_TEMPLATE_PATH": "ignored.txt"}}
+
+    params, language = content_localizer.resolve_language_templates(defaults, overrides, "cs", "sk", ["CUSTOM_TEMPLATE"])
+
+    assert language == "sk"
+    assert params == {"CUSTOM_TEMPLATE": "translated.txt", "OLD_TEMPLATE_PATH": "old.txt"}
 
 
 def test_template_overrides_are_checked_against_the_presenter() -> None:
@@ -132,7 +143,7 @@ def product() -> SimpleNamespace:
     product_title.write("Bulletin (sk)", "Bulletin", ORIGIN_AI, 1)
     product_description = ProductTranslation(language="sk", field="description", value="", version=0)
     product_description.write("Súhrn [#ab12cd]", "Souhrn [#ab12cd]", ORIGIN_AI, 1)
-    parameter_values = [SimpleNamespace(parameter=SimpleNamespace(key="BODY_TEMPLATE_PATH"), value="b_cz.txt")]
+    parameter_values = [SimpleNamespace(parameter=SimpleNamespace(key="BODY_TEMPLATE_PATH", translate=True), value="b_cz.txt")]
     product_type = SimpleNamespace(
         language="cs",
         language_templates={"sk": {"BODY_TEMPLATE_PATH": "b_sk.txt"}},
@@ -151,7 +162,7 @@ def product() -> SimpleNamespace:
 def _payload() -> dict:
     return {
         "product": {"title": "Bulletin", "description": "Souhrn [#ab12cd]"},
-        "parameter_values": [{"parameter": {"key": "BODY_TEMPLATE_PATH"}, "value": "b_cz.txt"}],
+        "parameter_values": [{"parameter": {"key": "BODY_TEMPLATE_PATH", "translate": True}, "value": "b_cz.txt"}],
         "reports": [
             {
                 "id": 7,
@@ -234,7 +245,7 @@ def test_outdated_translations_are_skipped_when_asked(product: SimpleNamespace) 
 
 def test_a_presenter_without_templates_suits_every_language(product: SimpleNamespace) -> None:
     """A JSON product type has nothing that depends on a language, so nothing falls back."""
-    indent = SimpleNamespace(parameter=SimpleNamespace(key="JSON_INDENT"), value="4")
+    indent = SimpleNamespace(parameter=SimpleNamespace(key="JSON_INDENT", translate=False), value="4")
     product.product_type = SimpleNamespace(language=None, language_templates={}, parameter_values=[indent])
 
     assert content_localizer.language_check(product, "sk")["template_language"] == "sk"

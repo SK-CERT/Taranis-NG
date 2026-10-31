@@ -855,7 +855,7 @@
         "outdated_confirmation": "Veraltete Übersetzungen",
         "outdated_continue": "Trotzdem fortfahren",
         "language_notice": {
-            "missing": "Diese Berichte liegen nicht auf {language} vor; stattdessen wird ihre Originalsprache verwendet:",
+            "missing": "Diese Berichte liegen nicht auf {language} vor; stattdessen wird die englische Version oder ihre Originalsprache verwendet:",
             "outdated": "Diese Übersetzungen auf {language} sind veraltet, weil sich der Originalinhalt nach der Übersetzung geändert hat:",
             "templates": "Der Produkttyp hat keine Vorlagen für {language}; stattdessen werden die Vorlagen „{used}“ verwendet.",
             "default_templates": "Standard"

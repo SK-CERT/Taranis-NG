@@ -12,10 +12,10 @@ const presenter = {
     id: 'p1',
     type: 'MESSAGE_PRESENTER',
     parameters: [
-        { id: 1, key: 'TITLE_TEMPLATE_PATH', name: 'Title template', default_value: '' },
-        { id: 2, key: 'BODY_TEMPLATE_PATH', name: 'Body template', default_value: '' },
-        { id: 3, key: 'ATTACHMENT_FILE_NAME', name: 'Attachment file name', default_value: '' },
-        { id: 4, key: 'SENDER', name: 'Sender', default_value: '' }
+        { id: 1, key: 'TITLE_LAYOUT', name: 'Title template', default_value: '', translate: true },
+        { id: 2, key: 'BODY_TEMPLATE_PATH', name: 'Body template', default_value: '', translate: true },
+        { id: 3, key: 'ATTACHMENT_FILE_NAME', name: 'Attachment file name', default_value: '', translate: true },
+        { id: 4, key: 'SENDER_TEMPLATE_PATH', name: 'Sender', default_value: '', translate: false }
     ]
 }
 
@@ -88,7 +88,7 @@ describe('NewProductType languages', () => {
     it('saves the template language and the overrides of each language', async () => {
         const wrapper = await openEditor()
         wrapper.vm.addTemplateLanguage('en')
-        wrapper.vm.setLanguageTemplate('TITLE_TEMPLATE_PATH', 'title_en.txt')
+        wrapper.vm.setLanguageTemplate('TITLE_LAYOUT', 'title_en.txt')
         await flushPromises()
 
         await wrapper.vm.persist()
@@ -97,7 +97,7 @@ describe('NewProductType languages', () => {
         expect(payload.language).toBe('cs')
         expect(payload.language_templates).toEqual({
             sk: { BODY_TEMPLATE_PATH: 'body_sk.txt' },
-            en: { TITLE_TEMPLATE_PATH: 'title_en.txt' }
+            en: { TITLE_LAYOUT: 'title_en.txt' }
         })
     })
 

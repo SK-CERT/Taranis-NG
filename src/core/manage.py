@@ -343,7 +343,7 @@ def collector_management(
         for mod in modules:
             col = collector.Collector(mod.name, mod.description, mod.type, [])
             for par in mod.parameters:
-                col.parameters.append(parameter.Parameter(par.key, par.name, par.description, par.type, par.default_value))
+                col.parameters.append(parameter.Parameter(par.key, par.name, par.description, par.type, par.default_value, par.translate))
             node.collectors.append(col)
 
         db_manager.db.session.add(node)
@@ -493,7 +493,7 @@ def bot_management(
         for mod in modules:
             bott = bot.Bot(mod.name, mod.description, mod.type, [])
             for par in mod.parameters:
-                bott.parameters.append(parameter.Parameter(par.key, par.name, par.description, par.type, par.default_value))
+                bott.parameters.append(parameter.Parameter(par.key, par.name, par.description, par.type, par.default_value, par.translate))
             node.bots.append(bott)
 
         db_manager.db.session.add(node)

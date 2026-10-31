@@ -855,7 +855,7 @@
         "outdated_confirmation": "Zastaralé překlady",
         "outdated_continue": "Přesto pokračovat",
         "language_notice": {
-            "missing": "Tyto reporty nejsou přeloženy do jazyka {language}; použije se jejich původní jazyk:",
+            "missing": "Tyto reporty nejsou přeloženy do jazyka {language}; použije se anglická verze nebo jejich původní jazyk:",
             "outdated": "Tyto překlady do jazyka {language} jsou zastaralé, protože se jejich originál po přeložení změnil:",
             "templates": "Typ produktu nemá šablony pro jazyk {language}; místo nich se použijí šablony {used}.",
             "default_templates": "výchozí"

@@ -855,7 +855,7 @@
         "outdated_confirmation": "Bản dịch đã cũ",
         "outdated_continue": "Vẫn tiếp tục",
         "language_notice": {
-            "missing": "Các báo cáo này chưa được dịch sang {language}; thay vào đó sẽ dùng ngôn ngữ gốc:",
+            "missing": "Các báo cáo này chưa được dịch sang {language}; thay vào đó sẽ dùng tiếng Anh hoặc ngôn ngữ gốc:",
             "outdated": "Các bản dịch sang {language} này đã cũ vì nội dung gốc thay đổi sau khi dịch:",
             "templates": "Loại sản phẩm không có mẫu cho {language}; thay vào đó sẽ dùng các mẫu {used}.",
             "default_templates": "mặc định"

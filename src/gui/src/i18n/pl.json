@@ -855,7 +855,7 @@
         "outdated_confirmation": "Nieaktualne tłumaczenia",
         "outdated_continue": "Kontynuuj mimo to",
         "language_notice": {
-            "missing": "Te raporty nie są przetłumaczone na język {language}; zamiast tego używany jest ich język oryginalny:",
+            "missing": "Te raporty nie są przetłumaczone na język {language}; zamiast tego używany jest język angielski lub ich język oryginalny:",
             "outdated": "Te tłumaczenia na język {language} są nieaktualne, ponieważ oryginalna treść zmieniła się po ich wykonaniu:",
             "templates": "Typ produktu nie ma szablonów dla języka {language}; zamiast tego zostaną użyte szablony {used}.",
             "default_templates": "domyślne"

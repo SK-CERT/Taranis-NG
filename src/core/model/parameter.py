@@ -10,9 +10,8 @@ if TYPE_CHECKING:
 from managers.db_manager import db
 from managers.log_manager import logger
 from marshmallow import post_load
-from sqlalchemy.sql import exists
-
 from shared.schema.parameter import ParameterSchema, ParameterType
+from sqlalchemy.sql import exists
 
 
 class Parameter(db.Model):
@@ -25,6 +24,7 @@ class Parameter(db.Model):
         description (str): Description of parameter.
         type (ParameterType): Type of parameter.
         default_value (str): Default value.
+        translate (bool): Whether the parameter is translatable.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -33,6 +33,7 @@ class Parameter(db.Model):
     description = db.Column(db.String())
     type = db.Column(db.Enum(ParameterType))
     default_value = db.Column(db.String(), nullable=True)
+    translate = db.Column(db.Boolean(), nullable=True)
 
     def __init__(
         self,
@@ -41,6 +42,7 @@ class Parameter(db.Model):
         description: str,
         type: ParameterType,  # noqa: A002
         default_value: str,
+        translate: bool = False,
     ) -> None:
         """Initialize Parameter Model.
 
@@ -50,12 +52,14 @@ class Parameter(db.Model):
             description (str): Description of parameter.
             type (ParameterType): Type of parameter.
             default_value (str): Default value.
+            translate (bool): Whether the parameter is translatable.
         """
         self.key = key
         self.name = name
         self.description = description
         self.type = type
         self.default_value = default_value
+        self.translate = translate
 
     @classmethod
     def find(cls, parameter_id: int) -> Parameter:
