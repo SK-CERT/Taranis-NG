@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.14
+
 FROM python:3.13-alpine3.24 AS build_shared
 
 WORKDIR /build_shared/
@@ -80,7 +82,9 @@ RUN chmod +x /entrypoint.sh
 
 COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
 
-COPY ./src/presenters/. /app/
+# Normalize file permissions: directories stay traversable and files
+# readable by taranis.
+COPY --chmod=u=rwX,go=rX ./src/presenters/. /app/
 
 EXPOSE 80
 

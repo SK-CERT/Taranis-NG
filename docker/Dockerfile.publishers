@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.14
+
 FROM python:3.13-alpine3.24 AS build_shared
 
 WORKDIR /build_shared/
@@ -47,7 +49,9 @@ COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
 
 EXPOSE 80
 
-COPY ./src/publishers/. /app/
+# Normalize file permissions: directories stay traversable and files
+# readable by taranis.
+COPY --chmod=u=rwX,go=rX ./src/publishers/. /app/
 
 # setup environment variables
 ENV PYTHONPATH="/app"
