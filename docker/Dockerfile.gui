@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.14
 
 # metadata stage
 FROM node:26-alpine AS metadata-stage
@@ -27,7 +27,7 @@ COPY ./src/gui/eslint.config.js .
 COPY ./src/gui/vite.config.js .
 COPY ./VERSION.md .
 COPY ./src/gui/index.html .
-COPY ./src/gui/public /app/public
+COPY --chmod=u+rwX,go+rX,go-w ./src/gui/public /app/public
 COPY ./src/gui/src /app/src
 COPY --from=metadata-stage /app/git-info.json ./git-info.json
 
@@ -39,18 +39,17 @@ RUN npm --ignore-scripts run build
 FROM nginx:stable-alpine AS production-stage
 
 RUN rm /docker-entrypoint.d/30-tune-worker-processes.sh
-COPY ./src/gui/extras/30-envsubst-on-javascript.sh /docker-entrypoint.d/
-COPY ./src/gui/extras/40-connection-tuning.sh /docker-entrypoint.d/
-COPY ./src/gui/extras/50-logging.sh /docker-entrypoint.d/
-RUN chmod +x /docker-entrypoint.d/*.sh
+COPY --chmod=755 ./src/gui/extras/30-envsubst-on-javascript.sh /docker-entrypoint.d/
+COPY --chmod=755 ./src/gui/extras/40-connection-tuning.sh /docker-entrypoint.d/
+COPY --chmod=755 ./src/gui/extras/50-logging.sh /docker-entrypoint.d/
 
-COPY ./src/gui/extras/default.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=644 ./src/gui/extras/default.conf /etc/nginx/conf.d/default.conf
 # Included by default.conf at server level and inside the two location blocks that
 # declare their own add_header - nginx would otherwise drop the security headers there.
-COPY ./src/gui/extras/security-headers.inc /etc/nginx/conf.d/security-headers.inc
+COPY --chmod=644 ./src/gui/extras/security-headers.inc /etc/nginx/conf.d/security-headers.inc
 
-COPY --from=build-stage /app/dist /usr/share/nginx/html
-COPY ./VERSION.md /usr/share/nginx/html/VERSION.txt
+COPY --from=build-stage --chmod=u+rwX,go+rX,go-w /app/dist /usr/share/nginx/html
+COPY --chmod=644 ./VERSION.md /usr/share/nginx/html/VERSION.txt
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
