@@ -54,7 +54,7 @@ def test_source_publication_text_and_calendar_dates_are_preserved(value: str | N
 
 def test_schemas_emit_iso_utc_instead_of_display_strings() -> None:
     value = datetime(2026, 7, 10, 14, 30, tzinfo=timezone(timedelta(hours=2)))
-    assert NewsItemDataBaseSchema().dump({"published": "10.07.2026 - 12:30", "collected": value}) == {
+    assert NewsItemDataBaseSchema().dump({"published": "2026-07-10T14:30:00+02:00", "collected": value}) == {
         "published": "2026-07-10T12:30:00Z",
         "collected": "2026-07-10T12:30:00Z",
     }

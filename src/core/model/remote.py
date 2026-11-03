@@ -7,11 +7,12 @@ from managers.log_manager import logger
 from marshmallow import fields, post_load
 from model.osint_source import OSINTSource
 from model.report_item_type import ReportItemType
-from shared.datetime_utils import format_datetime, parse_datetime, utc_now
+from shared.datetime_utils import format_datetime, utc_now
+from shared.remote_protocol import default_legacy_timezone, parse_remote_timestamp
 from shared.schema.osint_source import OSINTSourceIdSchema
 from shared.schema.remote import RemoteAccessPresentationSchema, RemoteAccessSchema, RemoteNodePresentationSchema, RemoteNodeSchema
 from shared.schema.report_item_type import ReportItemTypeIdSchema
-from sqlalchemy import and_, or_, orm
+from sqlalchemy import and_, or_, orm, update
 
 
 class NewRemoteAccessSchema(RemoteAccessSchema):
@@ -63,6 +64,7 @@ class RemoteAccess(db.Model):
     description = db.Column(db.String())
 
     enabled = db.Column(db.Boolean)
+    legacy_timezone = db.Column(db.String(128), nullable=False, default=default_legacy_timezone, server_default="UTC")
     connected = db.Column(db.Boolean, default=False)
     api_key = db.Column(db.String(), unique=True)
 
@@ -73,12 +75,13 @@ class RemoteAccess(db.Model):
     last_synced_news_items = db.Column(db.DateTime(timezone=True), default=utc_now)
     last_synced_report_items = db.Column(db.DateTime(timezone=True), default=utc_now)
 
-    def __init__(self, id, name, description, enabled, api_key, osint_sources, report_item_types):
+    def __init__(self, id, name, description, enabled, api_key, osint_sources, report_item_types, legacy_timezone: str | None = None):
         """Initialize a new Remote Access object."""
         self.id = None
         self.name = name
         self.description = description
         self.enabled = enabled
+        self.legacy_timezone = legacy_timezone or default_legacy_timezone()
         self.api_key = api_key
         self.event_id = str(uuid_generator.uuid4())
         self.title = ""
@@ -240,8 +243,13 @@ class RemoteAccess(db.Model):
         remote_access.description = updated_remote_access.description
         remote_access.osint_sources = updated_remote_access.osint_sources
         remote_access.report_item_types = updated_remote_access.report_item_types
+        next_timezone = updated_remote_access.legacy_timezone if "legacy_timezone" in data else remote_access.legacy_timezone
+        timezone_changed = remote_access.legacy_timezone != next_timezone
+        remote_access.legacy_timezone = next_timezone
 
-        disconnect = False
+        disconnect = timezone_changed
+        if timezone_changed:
+            remote_access.connected = False
         event_id = remote_access.event_id
 
         if remote_access.enabled and not updated_remote_access.enabled:
@@ -295,22 +303,32 @@ class RemoteAccess(db.Model):
         db.session.commit()
         return {}
 
-    def update_news_items_sync(self, data):
+    def update_news_items_sync(self, data, *, api_version: int = 2):
         """Update the last time news items were synced.
 
         Args:
             data: Data containing the last sync time.
+            api_version: Protocol version defining how timezone-free cursors are interpreted.
         """
-        self.last_synced_news_items = parse_datetime(data["last_sync_time"])
+        self.last_synced_news_items = parse_remote_timestamp(
+            data["last_sync_time"],
+            version=api_version,
+            legacy_timezone=self.legacy_timezone,
+        )
         db.session.commit()
 
-    def update_report_items_sync(self, data):
+    def update_report_items_sync(self, data, *, api_version: int = 2):
         """Update the last time report items were synced.
 
         Args:
             data: Data containing the last sync time.
+            api_version: Protocol version defining how timezone-free cursors are interpreted.
         """
-        self.last_synced_report_items = parse_datetime(data["last_sync_time"])
+        self.last_synced_report_items = parse_remote_timestamp(
+            data["last_sync_time"],
+            version=api_version,
+            legacy_timezone=self.legacy_timezone,
+        )
         db.session.commit()
 
 
@@ -378,6 +396,7 @@ class RemoteNode(db.Model):
     description = db.Column(db.String())
 
     enabled = db.Column(db.Boolean)
+    legacy_timezone = db.Column(db.String(128), nullable=False, default=default_legacy_timezone, server_default="UTC")
     remote_url = db.Column(db.String())
     events_url = db.Column(db.String())
     api_key = db.Column(db.String())
@@ -402,6 +421,7 @@ class RemoteNode(db.Model):
         sync_news_items,
         sync_report_items,
         osint_source_group_id,
+        legacy_timezone: str | None = None,
     ):
         """Initialize a new Remote Node object."""
         self.id = None
@@ -410,6 +430,7 @@ class RemoteNode(db.Model):
         self.remote_url = remote_url
         self.events_url = events_url
         self.enabled = enabled
+        self.legacy_timezone = legacy_timezone or default_legacy_timezone()
         self.api_key = api_key
         self.sync_news_items = sync_news_items
         self.sync_report_items = sync_report_items
@@ -521,23 +542,37 @@ class RemoteNode(db.Model):
         remote_node.sync_news_items = updated_remote_node.sync_news_items
         remote_node.sync_report_items = updated_remote_node.sync_report_items
         remote_node.osint_source_group_id = updated_remote_node.osint_source_group_id
+        if "legacy_timezone" in data:
+            remote_node.legacy_timezone = updated_remote_node.legacy_timezone
         if remote_node.enabled is False:
             remote_node.event_id = None
         db.session.commit()
         return remote_node.enabled
 
-    def connect(self, access_info):
+    def connect(self, access_info, *, api_version: int = 2):
         """Connect to a Remote Node.
 
         Args:
             access_info: Information about the connection.
+            api_version: Negotiated remote protocol version.
         """
+        news_cursor = parse_remote_timestamp(access_info["last_synced_news_items"], version=api_version, legacy_timezone=self.legacy_timezone)
+        report_cursor = parse_remote_timestamp(
+            access_info["last_synced_report_items"],
+            version=api_version,
+            legacy_timezone=self.legacy_timezone,
+        )
         self.event_id = access_info["event_id"]
-        self.last_synced_news_items = parse_datetime(access_info["last_synced_news_items"])
-        self.last_synced_report_items = parse_datetime(access_info["last_synced_report_items"])
+        self.last_synced_news_items = news_cursor
+        self.last_synced_report_items = report_cursor
+        self.api_version = api_version
         db.session.commit()
 
     def disconnect(self):
         """Disconnect from a Remote Node."""
+        # SSE holds a detached instance after the originating Flask context ends.
+        # Update only connection state so stale peer settings are never merged back.
+        db.session.execute(update(RemoteNode).where(RemoteNode.id == self.id).values(event_id=None))
         self.event_id = None
+        self.api_version = None
         db.session.commit()

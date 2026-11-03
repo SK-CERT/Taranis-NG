@@ -2,6 +2,7 @@
 
 from marshmallow import EXCLUDE, Schema, fields
 
+from shared.remote_protocol import default_legacy_timezone, validate_legacy_timezone
 from shared.schema.datetime import UTCDateTime
 from shared.schema.osint_source import OSINTSourcePresentationSchema
 from shared.schema.presentation import PresentationSchema
@@ -21,6 +22,7 @@ class RemoteAccessSchema(Schema):
     description = fields.Str()
     api_key = fields.Str()
     enabled = fields.Bool()
+    legacy_timezone = fields.Str(load_default=default_legacy_timezone, validate=validate_legacy_timezone)
     osint_sources = fields.List(fields.Nested(OSINTSourcePresentationSchema))
     report_item_types = fields.List(fields.Nested(ReportItemTypePresentationSchema))
 
@@ -46,6 +48,7 @@ class RemoteNodeSchema(Schema):
     events_url = fields.Str()
     api_key = fields.Str()
     enabled = fields.Bool()
+    legacy_timezone = fields.Str(load_default=default_legacy_timezone, validate=validate_legacy_timezone)
     sync_news_items = fields.Bool()
     sync_report_items = fields.Bool()
     osint_source_group_id = fields.Str(load_default=None, allow_none=True)

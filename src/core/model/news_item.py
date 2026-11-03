@@ -26,6 +26,7 @@ from model.tag_cloud import TagCloud
 from shared.attribute_extraction import ExtractionRule, extract_attributes
 from shared.common import TZ, sanitize_content_html, smart_truncate, strip_html
 from shared.datetime_utils import format_datetime, normalize_timestamp, parse_datetime, utc_now
+from shared.remote_protocol import normalize_remote_publication
 from shared.schema.acl_entry import ItemType
 from shared.schema.news_item import (
     NewsItemAggregateSchema,
@@ -41,6 +42,7 @@ from sqlalchemy import and_, func, or_, orm, text
 # newer revision arrives these are replaced, not merged, so an item never shows two TLP labels
 # or the integrity result of a revision it no longer holds.
 VERSION_SCOPED_ATTRIBUTE_KEYS = frozenset({"TLP", "CSAF_HASH", "CSAF_SIGNATURE"})
+
 
 def _published_datetime(published: str | None) -> datetime | None:
     """Read an ISO or legacy publication timestamp, or None for unknown source text.
@@ -583,7 +585,7 @@ class NewsItemData(db.Model):
                 db.session.commit()
 
     @classmethod
-    def get_for_sync(cls, last_synced: datetime, osint_sources: list[OSINTSource]) -> tuple[dict, datetime]:
+    def get_for_sync(cls, last_synced: datetime, osint_sources: list[OSINTSource]) -> tuple[list[dict], datetime]:
         """Get news items for sync.
 
         Args:
@@ -1611,16 +1613,29 @@ class NewsItemAggregate(db.Model):
             db.session.commit()
 
     @classmethod
-    def add_remote_news_items(cls, news_items_data_list: list[dict], remote_node: RemoteNode, osint_source_group_id: str) -> None:
+    def add_remote_news_items(
+        cls,
+        news_items_data_list: list[dict],
+        remote_node: RemoteNode,
+        osint_source_group_id: str,
+        *,
+        api_version: int = 2,  # noqa: ARG003
+    ) -> None:
         """Add remote news items.
 
         Args:
             news_items_data_list (list[dict]): News items data list
             remote_node (RemoteNode): Remote node
             osint_source_group_id (str): OSINT source group GUID
+            api_version (int): Negotiated remote protocol; publication text stays source-owned in both versions.
         """
         news_item_data_schema = NewNewsItemDataSchema(many=True)
         news_items_data = news_item_data_schema.load(news_items_data_list)
+        for item, payload in zip(news_items_data, news_items_data_list, strict=True):
+            # Legacy RSS and other collectors used different naive publication zones.
+            # Preserve this source text unless its offset establishes a known instant.
+            if "published" in payload:
+                item.published = normalize_remote_publication(payload["published"])
         NewsItemData.lock_identities(news_items_data)
 
         news_item_data_ids = set()

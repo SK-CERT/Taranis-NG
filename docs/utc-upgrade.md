@@ -1,10 +1,11 @@
 # Upgrading to UTC timestamps
 
-Core and all satellite services now exchange timestamps as ISO 8601 UTC strings,
+Core and updated satellite services now exchange timestamps as ISO 8601 UTC strings,
 for example `2026-07-15T10:00:00Z`. The GUI formats these in the browser's local
 timezone. Numeric Unix timestamps and calendar-only values such as `2026-07-15`
 retain their existing meaning. External API clients must accept the new response
-format. Legacy timestamp input formats remain temporarily accepted and are
+format. Remote sharing retains its legacy v1 contract and negotiates explicit UTC
+v2 when both peers support it; see [Remote API versions](remote-api.md). Legacy timestamp input formats remain temporarily accepted and are
 interpreted as UTC when they contain no offset.
 
 Backend schedules, date boundaries, documents, and exports use UTC. Review daily
@@ -107,11 +108,13 @@ PostgreSQL restore procedure (`pg_restore`) and retain the upgraded database
 until rollback is verified. A backup restore discards writes made after the
 backup.
 
-When both UTC revisions are applied and the RSS repair is the current Alembic
-head, undo the RSS repair first, then the original UTC migration, using the
-**new** core image:
+When the remote-timezone revision `d8f7a401c952` is the current Alembic head,
+remove its timezone configuration first, then undo the RSS repair and original
+UTC migration, using the **new** core image:
 
 ```sh
+# Remove remote legacy-timezone configuration, RSS repair, then UTC storage.
+docker compose run --rm --no-deps core python db_migration.py downgrade
 docker compose run --rm --no-deps core python db_migration.py downgrade
 docker compose run --rm --no-deps core python db_migration.py downgrade
 ```

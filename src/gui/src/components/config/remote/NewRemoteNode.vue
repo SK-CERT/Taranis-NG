@@ -84,6 +84,18 @@
                         @click:append-inner="showApiKey = !showApiKey"
                     />
 
+                    <v-text-field
+                        v-model="localItem.legacy_timezone"
+                        :spellcheck="false"
+                        :label="t('remote.nodes.legacy_timezone')"
+                        :hint="t('remote.nodes.legacy_timezone_hint')"
+                        persistent-hint
+                        variant="outlined"
+                        density="comfortable"
+                        class="mb-3"
+                        :disabled="saving"
+                    />
+
                     <v-row class="mb-1">
                         <v-col
                             cols="12"
@@ -222,6 +234,7 @@
         remote_url: string
         events_url: string
         api_key: string
+        legacy_timezone?: string
         enabled: boolean
         sync_news_items: boolean
         sync_report_items: boolean
@@ -274,6 +287,7 @@
         remote_url: '',
         events_url: '',
         api_key: '',
+        legacy_timezone: '',
         enabled: true,
         sync_news_items: false,
         sync_report_items: false,
@@ -306,6 +320,14 @@
         }
     }
 
+    function buildPayload(): RemoteNodeItem {
+        const payload = { ...localItem.value }
+        const timezone = payload.legacy_timezone?.trim()
+        if (timezone) payload.legacy_timezone = timezone
+        else delete payload.legacy_timezone
+        return payload
+    }
+
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
         if (!canSave.value) return false
@@ -321,10 +343,10 @@
         saving.value = true
         try {
             if (isEdit.value) {
-                await updateRemoteNode(localItem.value)
+                await updateRemoteNode(buildPayload())
             } else {
                 // Backend requires an integer id even on create (ignored); null fails validation.
-                await createNewRemoteNode({ ...localItem.value, id: -1 })
+                await createNewRemoteNode({ ...buildPayload(), id: -1 })
             }
             emit('saved')
             return true
@@ -356,7 +378,7 @@
         connecting.value = true
         try {
             // Persist any pending edits, then ask the core to connect to the node.
-            await updateRemoteNode(localItem.value)
+            await updateRemoteNode(buildPayload())
             await connectRemoteNode(localItem.value)
             showConnectInfo.value = true
         } catch (error) {
