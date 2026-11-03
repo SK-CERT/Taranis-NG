@@ -165,7 +165,7 @@ class EventThread(threading.Thread):
                         elif event.event == "remote_access_report_items_updated" and self.remote_node.sync_report_items:
                             self._sync(news=False)
                     except Exception as ex:
-                        logger.exception("SSE processing failed: {ex}")
+                        logger.exception(f"SSE processing failed: {ex}")
             except Exception as ex:
                 logger.warning(f"Waiting for connection to SSE: {ex}. Attempt {attempt} of {retries}.")
             time.sleep(5)

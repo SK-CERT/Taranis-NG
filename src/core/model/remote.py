@@ -1,6 +1,9 @@
 """Remote Access and Remote Node models."""
 
+from __future__ import annotations
+
 import uuid as uuid_generator
+from typing import TYPE_CHECKING
 
 from managers.db_manager import db
 from managers.log_manager import logger
@@ -13,6 +16,12 @@ from shared.schema.osint_source import OSINTSourceIdSchema
 from shared.schema.remote import RemoteAccessPresentationSchema, RemoteAccessSchema, RemoteNodePresentationSchema, RemoteNodeSchema
 from shared.schema.report_item_type import ReportItemTypeIdSchema
 from sqlalchemy import and_, or_, orm, update
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    from shared.schema.osint_source import OSINTSourceId
+    from shared.schema.report_item_type import ReportItemTypeId
 
 
 class NewRemoteAccessSchema(RemoteAccessSchema):
@@ -30,11 +39,12 @@ class NewRemoteAccessSchema(RemoteAccessSchema):
     report_item_types = fields.Nested(ReportItemTypeIdSchema, many=True)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict[str, Any], **_kwargs: object) -> RemoteAccess:
         """Create a new Remote Access object from the schema data.
 
         Args:
-            data: Schema data.
+            data: Validated schema data passed to the model constructor.
+            **_kwargs: Marshmallow hook options, intentionally ignored.
 
         Returns:
             RemoteAccess: New Remote Access object.
@@ -75,8 +85,29 @@ class RemoteAccess(db.Model):
     last_synced_news_items = db.Column(db.DateTime(timezone=True), default=utc_now)
     last_synced_report_items = db.Column(db.DateTime(timezone=True), default=utc_now)
 
-    def __init__(self, id, name, description, enabled, api_key, osint_sources, report_item_types, legacy_timezone: str | None = None):
-        """Initialize a new Remote Access object."""
+    def __init__(
+        self,
+        id: int | None,  # noqa: A002, ARG002 - Preserve the schema's ID key; the database generates a new ID.
+        name: str,
+        description: str | None,
+        enabled: bool,
+        api_key: str,
+        osint_sources: list[OSINTSourceId],
+        report_item_types: list[ReportItemTypeId],
+        legacy_timezone: str | None = None,
+    ) -> None:
+        """Initialize a new Remote Access object.
+
+        Args:
+            id: Incoming schema identifier, ignored because the database generates the ID.
+            name: Display name of the remote access grant.
+            description: Optional description of the grant.
+            enabled: Whether the peer may use the grant.
+            api_key: Credential the remote consumer presents.
+            osint_sources: Source identifiers the consumer may synchronize.
+            report_item_types: Report type identifiers the consumer may synchronize.
+            legacy_timezone: IANA timezone for v1 responses; None uses the installation default.
+        """
         self.id = None
         self.name = name
         self.description = description
@@ -98,7 +129,7 @@ class RemoteAccess(db.Model):
             self.report_item_types.append(ReportItemType.find(report_item_type.id))
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the Remote Access object."""
         self.title = self.name
         self.subtitle = self.description
@@ -111,18 +142,18 @@ class RemoteAccess(db.Model):
             self.status = "orange"
 
     @classmethod
-    def get_by_api_key(cls, api_key):
+    def get_by_api_key(cls, api_key: str) -> RemoteAccess | None:
         """Get a node by API key.
 
         Args:
             api_key (str): The API key
         Returns:
-            (CollectorsNode): The CollectorsNode object
+            RemoteAccess | None: The matching grant, or None if its key is unknown.
         """
         return cls.query.filter_by(api_key=api_key).first()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str | None) -> tuple[list[RemoteAccess], int]:
         """Get all Remote Accesses.
 
         Args:
@@ -141,7 +172,7 @@ class RemoteAccess(db.Model):
         return query.order_by(db.asc(RemoteAccess.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str | None) -> dict[str, object]:
         """Get all Remote Accesses as JSON.
 
         Args:
@@ -155,7 +186,7 @@ class RemoteAccess(db.Model):
         return {"total_count": count, "items": schema.dump(remote_accesses)}
 
     @classmethod
-    def get_relevant_for_news_items(cls, osint_source_ids):
+    def get_relevant_for_news_items(cls, osint_source_ids: list[str]) -> list[str]:
         """Get Remote Accesses relevant for news items.
 
         Args:
@@ -177,7 +208,7 @@ class RemoteAccess(db.Model):
         return list(ids)
 
     @classmethod
-    def get_relevant_for_report_item(cls, report_type_id):
+    def get_relevant_for_report_item(cls, report_type_id: int) -> list[str]:
         """Get Remote Accesses relevant for a report item type.
 
         Args:
@@ -202,7 +233,7 @@ class RemoteAccess(db.Model):
         return list(ids)
 
     @classmethod
-    def add(cls, data):
+    def add(cls, data: dict[str, Any]) -> None:
         """Add a new Remote Access.
 
         Args:
@@ -214,7 +245,7 @@ class RemoteAccess(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, remote_access_id):
+    def delete(cls, remote_access_id: int) -> None:
         """Delete a Remote Access.
 
         Args:
@@ -225,7 +256,7 @@ class RemoteAccess(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, remote_access_id, data):
+    def update(cls, remote_access_id: int, data: dict[str, Any]) -> tuple[str, bool]:
         """Update a Remote Access.
 
         Args:
@@ -270,12 +301,12 @@ class RemoteAccess(db.Model):
 
         return event_id, disconnect
 
-    def connect(self):
+    def connect(self) -> dict[str, object] | tuple[dict[str, str], int]:
         """Remote Access is connecting.
 
         Returns:
-            dict: Information about the connection.
-            int: HTTP status code.
+            dict[str, object] | tuple[dict[str, str], int]: Connection metadata on success,
+                or an error body and HTTP status code when the grant cannot connect.
         """
         try:
             logger.info(f"Remote Access is connecting: {self.name}")
@@ -296,14 +327,18 @@ class RemoteAccess(db.Model):
             logger.exception(msg)
             return {"error": msg}, 400
 
-    def disconnect(self):
-        """Disconnecting Remote Access."""
+    def disconnect(self) -> dict[str, object]:
+        """Disconnect the remote consumer while retaining its synchronization cursors.
+
+        Returns:
+            dict[str, object]: Empty response body for the remote API.
+        """
         logger.info(f"Disconnecting Remote Access: {self.name}")
         self.connected = False
         db.session.commit()
         return {}
 
-    def update_news_items_sync(self, data, *, api_version: int = 2):
+    def update_news_items_sync(self, data: dict[str, str], *, api_version: int = 2) -> None:
         """Update the last time news items were synced.
 
         Args:
@@ -317,7 +352,7 @@ class RemoteAccess(db.Model):
         )
         db.session.commit()
 
-    def update_report_items_sync(self, data, *, api_version: int = 2):
+    def update_report_items_sync(self, data: dict[str, str], *, api_version: int = 2) -> None:
         """Update the last time report items were synced.
 
         Args:
@@ -360,11 +395,12 @@ class NewRemoteNodeSchema(RemoteNodeSchema):
     """Marshmallow schema for creating a new Remote Node."""
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict[str, Any], **_kwargs: object) -> RemoteNode:
         """Create a new Remote Node object from the schema data.
 
         Args:
-            data: Schema data.
+            data: Validated schema data passed to the model constructor.
+            **_kwargs: Marshmallow hook options, intentionally ignored.
 
         Returns:
             RemoteNode: New Remote Node object.
@@ -411,19 +447,33 @@ class RemoteNode(db.Model):
 
     def __init__(
         self,
-        id,
-        name,
-        description,
-        enabled,
-        remote_url,
-        events_url,
-        api_key,
-        sync_news_items,
-        sync_report_items,
-        osint_source_group_id,
+        id: int | None,  # noqa: A002, ARG002 - Preserve the schema's ID key; the database generates a new ID.
+        name: str,
+        description: str | None,
+        enabled: bool,
+        remote_url: str,
+        events_url: str,
+        api_key: str,
+        sync_news_items: bool,
+        sync_report_items: bool,
+        osint_source_group_id: str | None,
         legacy_timezone: str | None = None,
-    ):
-        """Initialize a new Remote Node object."""
+    ) -> None:
+        """Initialize a new Remote Node object.
+
+        Args:
+            id: Incoming schema identifier, ignored because the database generates the ID.
+            name: Display name of the provider.
+            description: Optional description of the provider.
+            enabled: Whether the provider should be connected at startup.
+            remote_url: Base URL used for synchronization requests.
+            events_url: URL of the provider's event stream.
+            api_key: Credential used to authenticate with the provider.
+            sync_news_items: Whether incoming news batches should be imported.
+            sync_report_items: Whether incoming report batches should be imported.
+            osint_source_group_id: Destination group for synchronized news, or None.
+            legacy_timezone: IANA timezone used by a v1 provider; None uses the installation default.
+        """
         self.id = None
         self.name = name
         self.description = description
@@ -441,7 +491,7 @@ class RemoteNode(db.Model):
         self.status = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the Remote Node object."""
         self.title = self.name
         self.subtitle = self.description
@@ -452,19 +502,19 @@ class RemoteNode(db.Model):
             self.status = "green"
 
     @classmethod
-    def find(cls, node_id):
+    def find(cls, node_id: int) -> RemoteNode | None:
         """Find a Remote Node by ID.
 
         Args:
             node_id: ID of the Remote Node to find.
 
         Returns:
-            RemoteNode: Remote Node object.
+            RemoteNode | None: Matching node, or None if the ID is unknown.
         """
         return db.session.get(cls, node_id)
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str | None) -> tuple[list[RemoteNode], int]:
         """Get all Remote Nodes.
 
         Args:
@@ -483,7 +533,7 @@ class RemoteNode(db.Model):
         return query.order_by(db.asc(RemoteNode.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str | None) -> dict[str, object]:
         """Get all Remote Nodes as JSON.
 
         Args:
@@ -497,7 +547,7 @@ class RemoteNode(db.Model):
         return {"total_count": count, "items": schema.dump(remote_nodes)}
 
     @classmethod
-    def add(cls, data):
+    def add(cls, data: dict[str, Any]) -> None:
         """Add a new Remote Node.
 
         Args:
@@ -509,7 +559,7 @@ class RemoteNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, remote_node_id):
+    def delete(cls, remote_node_id: int) -> None:
         """Delete a Remote Node.
 
         Args:
@@ -520,7 +570,7 @@ class RemoteNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, remote_node_id, data):
+    def update(cls, remote_node_id: int, data: dict[str, Any]) -> bool:
         """Update a Remote Node.
 
         Args:
@@ -549,7 +599,7 @@ class RemoteNode(db.Model):
         db.session.commit()
         return remote_node.enabled
 
-    def connect(self, access_info, *, api_version: int = 2):
+    def connect(self, access_info: dict[str, Any], *, api_version: int = 2) -> None:
         """Connect to a Remote Node.
 
         Args:
@@ -568,7 +618,7 @@ class RemoteNode(db.Model):
         self.api_version = api_version
         db.session.commit()
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect from a Remote Node."""
         # SSE holds a detached instance after the originating Flask context ends.
         # Update only connection state so stale peer settings are never merged back.

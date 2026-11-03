@@ -1,6 +1,6 @@
 """Module for Settings schema."""
 
-import datetime
+import datetime as dt
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
@@ -91,7 +91,7 @@ class Setting:
         description: str,
         is_global: bool,
         options: str,
-        updated_at: datetime,
+        updated_at: dt.datetime | None,
         updated_by: str,
     ) -> None:
         """Initialize a global Setting instance.

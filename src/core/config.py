@@ -72,12 +72,14 @@ class Config:
         DB_POOL_RECYCLE = os.getenv("DB_POOL_RECYCLE")
         DB_POOL_TIMEOUT = os.getenv("DB_POOL_TIMEOUT")
 
-        SQLALCHEMY_ENGINE_OPTIONS.update({
-            "pool_size": int(DB_POOL_SIZE),
-            "pool_recycle": int(DB_POOL_RECYCLE),
-            "pool_pre_ping": True,
-            "pool_timeout": int(DB_POOL_TIMEOUT),
-        })
+        SQLALCHEMY_ENGINE_OPTIONS.update(
+            {
+                "pool_size": int(DB_POOL_SIZE),
+                "pool_recycle": int(DB_POOL_RECYCLE),
+                "pool_pre_ping": True,
+                "pool_timeout": int(DB_POOL_TIMEOUT),
+            },
+        )
 
     JWT_SECRET_KEY = read_secret("jwt_secret_key")
     JWT_IDENTITY_CLAIM = "sub"

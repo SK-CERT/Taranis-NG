@@ -1,6 +1,6 @@
 """Module for News item schema."""
 
-import datetime
+import datetime as dt
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
@@ -87,7 +87,7 @@ class NewsItemData:
         link: str,
         published: str,
         author: str,
-        collected: datetime.datetime,
+        collected: dt.datetime,
         content: str,
         osint_source_id: str,
         attributes: list,
