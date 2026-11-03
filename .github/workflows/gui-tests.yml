@@ -15,6 +15,7 @@ on:
       - 'src/presenters/**'
       - 'src/publishers/**'
       - 'src/shared/**'
+      - '.gitattributes'
       - 'docker/**'
       - 'scripts/test-setup.sh'
       - '.github/workflows/gui-tests.yml'
@@ -27,6 +28,7 @@ on:
       - 'src/presenters/**'
       - 'src/publishers/**'
       - 'src/shared/**'
+      - '.gitattributes'
       - 'docker/**'
       - 'scripts/test-setup.sh'
       - '.github/workflows/gui-tests.yml'
@@ -138,11 +140,25 @@ jobs:
           done
           ls -1 docker/secrets/*.txt
 
+      - name: Inspect Docker builder
+        run: |
+          docker version
+          docker buildx version
+          docker buildx inspect --bootstrap
+
       # Start the stack in its OWN step rather than letting Playwright's webServer do
       # it. That webServer entry runs this same script but under a 120 s timeout, which
       # is nowhere near enough for `docker compose up --build` of the backend images.
       # Because the entry is `reuseExistingServer: true` with an isalive `url` probe,
       # Playwright finds the stack already up and skips re-running the script.
+
+      # Ensure runtime readability comes from the Dockerfiles, not checkout modes.
+      - name: Simulate a restrictive-umask checkout
+        working-directory: .
+        run: |
+          find src/core src/collectors src/presenters src/publishers src/shared docker \
+            -path docker/secrets -prune -o -exec chmod go-rwx {} +
+
       - name: Build and start the E2E backend stack
         working-directory: .
         timeout-minutes: 30

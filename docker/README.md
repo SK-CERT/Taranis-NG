@@ -13,6 +13,9 @@ final product preview succeeds.
 
 - Docker Engine with the Docker Compose v2 plugin (`docker compose`), or
   Docker Desktop on Windows and macOS
+- Building images locally requires Docker Engine **≥27.4+** with BuildKit **≥0.17+**
+  (or a Docker Desktop release with an equivalent builder). Older builders can
+  silently produce incorrect permissions for symbolic `COPY --chmod` modes.
 - at least 2 GB RAM, 2 CPU cores, and 5 GB free disk space
 - at least 20 GB free disk space when building the images locally
 

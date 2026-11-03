@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.14
+
 FROM python:3.13-alpine3.24 AS build_shared
 
 WORKDIR /build_shared/
@@ -61,9 +63,11 @@ COPY --chmod=755 ./docker/start.sh /start.sh
 COPY --chmod=755 ./docker/prestart.sh /app/prestart.sh
 COPY --chmod=755 ./docker/entrypoint.sh /entrypoint.sh
 
-COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
+COPY --chmod=644 ./docker/gunicorn_conf.py /gunicorn_conf.py
 
-COPY ./src/collectors/. /app/
+# Normalize file permissions: directories stay traversable and files
+# readable by taranis.
+COPY --chmod=u+rwX,go+rX,go-w ./src/collectors/. /app/
 
 EXPOSE 80
 

@@ -37,6 +37,19 @@ echo "Starting Taranis-NG backend services for E2E tests (project=taranis-e2e, c
 # and cannot touch a production stack's taranis-ng_* volumes.
 cd "$COMPOSE_DIR"
 
+# Detached startup and readiness failures should include the backend output in CI.
+print_failure_logs() {
+  local status=$?
+  if [ "$status" -ne 0 ]; then
+    echo "Backend setup failed (exit ${status}). Container status:"
+    docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e ps -a || true
+    echo "Recent backend logs:"
+    docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e logs --no-color --timestamps --tail=200 || true
+  fi
+  exit "$status"
+}
+trap print_failure_logs EXIT
+
 # The satellite API is authenticated, isalive included, so the readiness probes below
 # have to present the shared node key. Core's own /api/v1/isalive stays open - it backs
 # the container HEALTHCHECK and Playwright's webServer probe - so only the
