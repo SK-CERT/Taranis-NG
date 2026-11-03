@@ -33,6 +33,30 @@ nulls. Existing timezone-aware notification timestamps keep their original insta
 metadata and original changed text in `_utc_migration_state` for downgrade;
 retain this internal table.
 
+### Historical RSS publication dates
+
+The follow-up revision `b7e4d192a630` corrects legacy RSS publication strings.
+The old RSS collector formatted feedparser's UTC tuples as `DD.MM.YYYY - HH:MM`,
+without retaining the offset or seconds. Those publication strings must be
+interpreted as UTC, while collected timestamps and other local wall clocks still
+use the installation's original timezone.
+
+For installations that have already applied the UTC migration, deploy the updated
+core image and let startup run the follow-up revision with writers stopped as
+above. New installations/upgrades apply both revisions in sequence. The repair
+uses `_utc_migration_state` originals and the item's RSS collector association,
+including archived versions. It changes only values that still match the first
+migration's output; new articles, later edits, non-RSS sources, dates without a
+time, and timestamps with explicit offsets remain unchanged. Items whose source
+association is missing cannot be reliably identified and remain unchanged.
+Identification assumes the source has not been reassigned to a different collector
+since ingestion; the backup does not contain historical collector ownership.
+
+For example, the feed time `2026-11-03T10:00:07Z`, formerly stored as
+`03.11.2026 - 10:00`, becomes `2026-11-03T10:00:00Z` and displays as 11:00 in
+Bratislava. The old collector discarded seconds, so this repair cannot recover
+`:07` without retrieving the original feed entry.
+
 Historical daylight-saving overlaps and gaps use PostgreSQL's standard-time
 interpretation. For example, Bratislava's repeated `2026-10-25 02:30` becomes
 `2026-10-25T01:30:00Z`. A nonexistent `2026-03-29 02:30` also uses the standard
@@ -83,10 +107,12 @@ PostgreSQL restore procedure (`pg_restore`) and retain the upgraded database
 until rollback is verified. A backup restore discards writes made after the
 backup.
 
-When this UTC revision is the current Alembic head, it also supports a single
-revision downgrade using the **new** core image:
+When both UTC revisions are applied and the RSS repair is the current Alembic
+head, undo the RSS repair first, then the original UTC migration, using the
+**new** core image:
 
 ```sh
+docker compose run --rm --no-deps core python db_migration.py downgrade
 docker compose run --rm --no-deps core python db_migration.py downgrade
 ```
 

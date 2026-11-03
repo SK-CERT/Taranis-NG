@@ -172,7 +172,7 @@ def test_upgrade_and_downgrade_preserve_instants_and_original_text(
         assert restored_notification == notification
 
 
-def test_migration_covers_every_model_timestamp_column() -> None:
+def test_migration_covers_every_active_model_timestamp_column() -> None:
     models = {}
     expected = {}
     for path in (MIGRATION_PATH.parents[2] / "model").glob("*.py"):
@@ -224,5 +224,8 @@ def test_migration_covers_every_model_timestamp_column() -> None:
         columns = timestamp_columns(node)
         if columns:
             expected[table] = tuple(columns)
+    # This orphaned model is not imported by core and has no creating migration.
+    # The UTC migration deliberately excludes it after the startup failure it caused.
+    expected.pop("audit_record", None)
     migration = _migration()
     assert expected == migration.TIMESTAMP_COLUMNS | migration.PRESERVED_AWARE_COLUMNS
