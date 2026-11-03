@@ -34,6 +34,12 @@ def run(command: list[str], *, env: dict[str, str], timeout: int = 120, capture:
     return subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=capture, timeout=timeout)
 
 
+def run_logged(command: list[str], *, env: dict[str, str], log: Path, timeout: int = 120) -> None:
+    """Save noisy setup output to disk while preserving failures and deadlines."""
+    with log.open("w") as output:
+        subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, stdout=output, stderr=subprocess.STDOUT, timeout=timeout)
+
+
 def legacy_checkout(destination: Path, env: dict[str, str]) -> None:
     """Materialize the exact historical tree without modifying the current checkout."""
     try:
@@ -106,7 +112,19 @@ def run_lane(lane: str, python: Path, artifacts_root: Path) -> int:
     artifacts = artifacts_root / lane
     artifacts.mkdir(parents=True, exist_ok=True)
     # A successful local retry must not retain diagnostics from an earlier run.
-    for pattern in ("runner-error.txt", "junit.xml", "containers.log", "containers.json", "run.json", "a-*.json", "b-*.json"):
+    for pattern in (
+        "runner-error.txt",
+        "junit.xml",
+        "containers.log",
+        "containers.json",
+        "run.json",
+        "a-*.json",
+        "b-*.json",
+        "config.log",
+        "build.log",
+        "startup.log",
+        "cleanup.log",
+    ):
         for previous in artifacts.glob(pattern):
             if previous.is_file():
                 previous.unlink()
@@ -125,7 +143,7 @@ def run_lane(lane: str, python: Path, artifacts_root: Path) -> int:
             "REMOTE_TEST_B_TIMEZONE": "Europe/Bratislava" if lane == "mixed-bratislava" else "UTC",
         },
     )
-    print(f"Remote compatibility: {lane} (project {project})", flush=True)
+    print(f"Remote compatibility: {lane}", flush=True)
     result = 1
     with tempfile.TemporaryDirectory(prefix="taranis-remote-") as temporary:
         workspace = Path(temporary)
@@ -165,15 +183,29 @@ def run_lane(lane: str, python: Path, artifacts_root: Path) -> int:
                 )
                 + "\n",
             )
-            run([*compose, "config", "--quiet"], env=env)
-            run([*compose, "build"], env=env, timeout=2400)
-            run([*compose, "up", "--detach", "--wait", "--wait-timeout", "420"], env=env, timeout=480)
+            run_logged([*compose, "config", "--quiet"], env=env, log=artifacts / "config.log")
+            print("Building test images...", flush=True)
+            run_logged([*compose, "build"], env=env, log=artifacts / "build.log", timeout=2400)
+            print("Images built.", flush=True)
+            print("Starting test services...", flush=True)
+            run_logged(
+                [*compose, "up", "--detach", "--wait", "--wait-timeout", "420"],
+                env=env,
+                log=artifacts / "startup.log",
+                timeout=480,
+            )
             deadline = time.monotonic() + 60
             for node in ("a", "b"):
                 binding = run([*compose, "port", f"core-{node}", "80"], env=env, capture=True).stdout.strip()
                 url = f"http://{binding}"
                 env[f"REMOTE_TEST_{node.upper()}_URL"] = url
                 wait_http(url, deadline)
+            print("Containers started and ready.", flush=True)
+            print(
+                "Testing both synchronization directions: authentication, negotiation, news/reports, "
+                "acknowledgments, replay, incremental updates, sharing filters, timestamps, and disconnect.",
+                flush=True,
+            )
             completed = subprocess.run(
                 [
                     str(python),
@@ -183,6 +215,7 @@ def run_lane(lane: str, python: Path, artifacts_root: Path) -> int:
                     str(ROOT / "tests/integration/remote/pytest.ini"),
                     str(ROOT / "tests/integration/remote"),
                     "-v",
+                    "--no-header",
                     "--tb=short",
                     f"--junitxml={artifacts / 'junit.xml'}",
                 ],
@@ -194,6 +227,7 @@ def run_lane(lane: str, python: Path, artifacts_root: Path) -> int:
             result = completed.returncode
         except (OSError, RuntimeError, subprocess.SubprocessError) as error:
             print(f"Remote compatibility {lane} failed: {error}", file=sys.stderr)
+            print(f"Setup and service diagnostics: {artifacts}", file=sys.stderr)
             (artifacts / "runner-error.txt").write_text(str(error) + "\n")
         finally:
             # Preserve useful diagnostics even for a build/startup failure, before
@@ -213,7 +247,7 @@ def run_lane(lane: str, python: Path, artifacts_root: Path) -> int:
                 except (OSError, subprocess.SubprocessError) as error:
                     print(f"Could not collect {filename}: {error}", file=sys.stderr)
             try:
-                run([*compose, "down", "--volumes", "--remove-orphans", "--timeout", "5"], env=env)
+                run_logged([*compose, "down", "--volumes", "--remove-orphans", "--timeout", "5"], env=env, log=artifacts / "cleanup.log")
             except (OSError, subprocess.SubprocessError) as error:
                 print(f"Cleanup failed for {project}: {error}", file=sys.stderr)
                 result = 1
@@ -235,10 +269,12 @@ def main() -> int:
         # global interpreter and loses the environment's installed packages.
         python = args.python.expanduser().absolute()
         run([str(python), "-c", "import pytest, requests"], env=env)
-        run(["docker", "compose", "version"], env=env)
-        run(["docker", "info", "--format", "{{.ServerVersion}}"], env=env)
+        run(["docker", "compose", "version"], env=env, capture=True)
+        run(["docker", "info", "--format", "{{.ServerVersion}}"], env=env, capture=True)
     except (OSError, RuntimeError, subprocess.SubprocessError) as error:
         print(f"Remote test prerequisite failed: {error}\nRun python3 scripts/dev_setup.py --skip-gui and start Docker.", file=sys.stderr)
+        if isinstance(error, subprocess.CalledProcessError) and error.stderr:
+            print(error.stderr.strip(), file=sys.stderr)
         return 1
     lanes = LANES if args.lane == "all" else (args.lane,)
     results = [run_lane(lane, python, args.artifacts.resolve()) for lane in lanes]

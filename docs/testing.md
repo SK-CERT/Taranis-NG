@@ -74,9 +74,15 @@ project and disposable credentials and volumes, waits for readiness and synchron
 with deadlines, and removes its own stack after the run. Host-facing ports are allocated
 dynamically and bind only to loopback. JUnit XML, run metadata, database snapshots, and
 container diagnostics are written under `local/remote-tests/<lane>/`;
-CI uploads these artifacts with a 14-day retention period. Use `--artifacts PATH` to
-choose another output directory and `--python PATH` to select another interpreter
-containing pytest and requests. These integration tests are intentionally separate from
+CI uploads these artifacts with a 14-day retention period.
+
+Console output shows image build and container readiness status, the tested behaviors,
+and pytest results.
+Dependency installation and Docker build details (including legacy `uv build` and
+`uv export` output) stay in `setup.log` (CI), `build.log`, `startup.log`, and
+`cleanup.log` in the artifacts directory, including when setup fails.
+Use `--artifacts PATH` to choose another output directory and `--python PATH` to select
+another interpreter containing pytest and requests. These integration tests are intentionally separate from
 `scripts/run_tests.py`'s unit suites and are stored under `tests/integration/remote`,
 with their own pytest configuration so the core unit tests' stub config cannot affect
 running nodes. Replay tests temporarily reject acknowledgment writes in the disposable

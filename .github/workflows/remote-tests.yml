@@ -44,11 +44,16 @@ jobs:
         with:
           enable-cache: true
       - name: Install test environment
-        run: python3 scripts/dev_setup.py --skip-gui
+        run: |
+          mkdir -p local/remote-tests/contracts
+          if ! python3 scripts/dev_setup.py --skip-gui > local/remote-tests/contracts/setup.log 2>&1; then
+            echo "::error::Python test setup failed; see setup.log in the contract artifacts."
+            exit 1
+          fi
       - name: Run remote contract and migration tests
         run: |
           mkdir -p local/remote-tests/contracts
-          .venv/bin/python -m pytest -v \
+          .venv/bin/python -m pytest -v --no-header \
             src/core/tests/test_remote_api_versions.py \
             src/core/tests/test_remote_client_compat.py \
             src/core/tests/test_remote_model_compat.py \
@@ -84,7 +89,12 @@ jobs:
         with:
           enable-cache: true
       - name: Install test environment
-        run: python3 scripts/dev_setup.py --skip-gui
+        run: |
+          mkdir -p local/remote-tests/${{ matrix.lane }}
+          if ! python3 scripts/dev_setup.py --skip-gui > local/remote-tests/${{ matrix.lane }}/setup.log 2>&1; then
+            echo "::error::Python test setup failed; see setup.log in the synchronization artifacts."
+            exit 1
+          fi
       - name: Test real nodes in both directions
         run: python3 scripts/run_remote_tests.py --lane ${{ matrix.lane }}
       - name: Upload synchronization results and diagnostics
