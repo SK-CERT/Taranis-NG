@@ -62,7 +62,7 @@ dev = [
 # scripts/dev_setup.py installs it into the one root .venv. Never sync this group on its
 # own — `--group test` alone prunes .venv/bin/uv. See docs/testing.md.
 test = [
-    "pytest==9.1.1",
+    "pytest==9.2.0",
 ]
 # Ansible deployment tooling (see ansible/). Deliberately NOT in `dev`, which
 # scripts/check_tool_versions.py treats as the lockstep source for the
