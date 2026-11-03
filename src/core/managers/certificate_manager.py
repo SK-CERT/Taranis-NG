@@ -27,6 +27,7 @@ from datetime import UTC, datetime, timedelta
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519, rsa
 from managers.log_manager import logger
+from shared.datetime_utils import format_datetime
 
 # The Traefik container on the compose network. The hostname being asked about
 # travels in the SNI, so this never depends on how public DNS resolves.
@@ -107,7 +108,7 @@ def fetch_served_certificate(hostname: str) -> dict:
         "subject": subject,
         "issuer": issuer,
         "key_type": _key_description(certificate),
-        "not_after": not_after.isoformat(),
+        "not_after": format_datetime(not_after),
         "days_left": days_left,
         # When Traefik would renew an ACME certificate. Also the answer to "why has
         # my ACME change not taken effect yet" - it will, at this point.

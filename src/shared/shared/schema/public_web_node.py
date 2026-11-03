@@ -2,6 +2,7 @@
 
 from marshmallow import EXCLUDE, Schema, fields
 
+from shared.schema.datetime import UTCDateTime
 from shared.schema.presentation import PresentationSchema
 
 
@@ -32,5 +33,5 @@ class PublicWebNodePresentationSchema(PublicWebNodeSchema, PresentationSchema):
     """Schema for presenting a public-web node in the configuration UI."""
 
     status = fields.Str()
-    created = fields.DateTime("%d.%m.%Y - %H:%M:%S")
-    last_seen = fields.DateTime("%d.%m.%Y - %H:%M:%S")
+    created = UTCDateTime()
+    last_seen = UTCDateTime()

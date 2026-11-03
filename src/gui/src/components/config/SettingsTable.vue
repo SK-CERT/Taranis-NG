@@ -152,7 +152,7 @@
     import { Settings, type SettingKey } from '@/types/settings'
     import { checkSettingValue, type SettingType, type SettingValueProblem } from '@/utils/settingValue'
     import SearchField from '@/components/common/SearchField.vue'
-    import { format } from 'date-fns'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
     type SettingOption = {
         id: string | number
@@ -190,7 +190,7 @@
     const settingsStore = useSettingsStore()
 
     const search = ref('')
-    let date_format: string
+    const { formatDateTime } = useLocaleFormatters()
     const records = ref<SettingsRecord[]>([])
     const editDialog = ref(false)
     const editValue = ref('')
@@ -259,15 +259,7 @@
         return undefined
     }
 
-    const formatDate = (dateString?: string): string => {
-        if (!dateString) return ''
-        try {
-            const date = new Date(dateString)
-            return format(date, date_format)
-        } catch {
-            return dateString
-        }
-    }
+    const formatDate = (value?: string): string => (value ? formatDateTime(value) || value : '')
 
     const getDisplayOptions = (item: SettingsRecord): SettingOption[] => {
         if (item.key === Settings.UI_LANGUAGE) {
@@ -315,7 +307,6 @@
             records.value = []
             return
         }
-        date_format = settingsStore.getDateTimeFormat
 
         const settingsRecords = allSettings as SettingsRecord[]
         const filtered = settingsRecords.filter((item) => {

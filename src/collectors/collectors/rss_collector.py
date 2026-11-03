@@ -1,6 +1,6 @@
 """RSS collector module."""
 
-import datetime
+import datetime as dt
 import hashlib
 import urllib.request
 import uuid
@@ -10,6 +10,7 @@ import feedparser
 from bs4 import BeautifulSoup
 from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, text_to_simple_html
 from shared.config_collector import ConfigCollector
+from shared.datetime_utils import format_datetime, normalize_timestamp
 from shared.schema.news_item import NewsItemData
 
 from .base_collector import BaseCollector, not_modified
@@ -197,7 +198,7 @@ class RSSCollector(BaseCollector):
             link_for_article,
             date,
             author,
-            datetime.datetime.now(TZ),
+            dt.datetime.now(TZ),
             content,
             self.source.id,
             [],
@@ -222,14 +223,14 @@ class RSSCollector(BaseCollector):
     def _resolve_date(self, published_parsed: tuple, updated_parsed: tuple, published: str, updated: str) -> str:
         if published_parsed:
             self.source.logger.debug("Using parsed 'published' date")
-            return datetime.datetime(*published_parsed[:6], tzinfo=TZ).strftime("%d.%m.%Y - %H:%M")
+            return format_datetime(dt.datetime(*published_parsed[:6], tzinfo=dt.UTC))
         if updated_parsed:
             self.source.logger.debug("Using parsed 'updated' date")
-            return datetime.datetime(*updated_parsed[:6], tzinfo=TZ).strftime("%d.%m.%Y - %H:%M")
+            return format_datetime(dt.datetime(*updated_parsed[:6], tzinfo=dt.UTC))
         if published:
             self.source.logger.debug("Using 'published' date")
-            return published
+            return normalize_timestamp(published)
         if updated:
             self.source.logger.debug("Using 'updated' date")
-            return updated
+            return normalize_timestamp(updated)
         return ""

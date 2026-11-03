@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.collector import CollectorExportSchema, CollectorSchema
+from shared.schema.datetime import UTCDateTime
 from shared.schema.parameter_value import ParameterValueExportSchema, ParameterValueSchema
 from shared.schema.presentation import PresentationSchema
 from shared.schema.word_list import WordListSchema
@@ -238,8 +239,8 @@ class OSINTSourceSchema(Schema):
     word_lists = fields.List(fields.Nested(WordListSchema))
     description = fields.Str()
     collector_id = fields.Str()
-    last_attempted = fields.DateTime("%d.%m.%Y - %H:%M:%S", allow_none=True)
-    last_collected = fields.DateTime("%d.%m.%Y - %H:%M:%S", allow_none=True)
+    last_attempted = UTCDateTime(allow_none=True)
+    last_collected = UTCDateTime(allow_none=True)
     last_error_message = fields.Str(allow_none=True)
     # Loaded as well as dumped: the collector node needs to know whether to collect the source.
     # Defaulted so that a node reading from an older core keeps collecting everything.

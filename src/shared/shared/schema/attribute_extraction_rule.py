@@ -6,6 +6,7 @@ API, and the collectors fetch them to run against the text they have just collec
 
 from marshmallow import EXCLUDE, Schema, fields, post_load, validate
 
+from shared.schema.datetime import UTCDateTime
 from shared.schema.osint_source import OSINTSourceGroupIdSchema
 from shared.schema.presentation import PresentationSchema
 
@@ -68,7 +69,7 @@ class AttributeExtractionRuleSchema(Schema):
     osint_source_groups = fields.List(fields.Nested(OSINTSourceGroupIdSchema), load_default=list)
 
     updated_by = fields.Str(dump_only=True)
-    updated_at = fields.Str(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> AttributeExtractionRule:  # noqa: ANN003, ARG002

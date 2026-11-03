@@ -103,7 +103,7 @@
                                     {{ t('card_item.last_seen') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    <bdi dir="ltr">{{ card.last_seen || '' }}</bdi>
+                                    <bdi dir="auto">{{ timestampLabel(card.last_seen) }}</bdi>
                                 </div>
                             </v-col>
 
@@ -114,7 +114,7 @@
                                     {{ t('card_item.last_attempted') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    <bdi dir="ltr">{{ card.last_attempted || '' }}</bdi>
+                                    <bdi dir="auto">{{ timestampLabel(card.last_attempted) }}</bdi>
                                 </div>
                             </v-col>
 
@@ -123,7 +123,7 @@
                                     {{ t('card_item.last_collected') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    <bdi dir="ltr">{{ card.last_collected || '' }}</bdi>
+                                    <bdi dir="auto">{{ timestampLabel(card.last_collected) }}</bdi>
                                 </div>
                             </v-col>
 
@@ -258,6 +258,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { useAuth } from '@/composables/useAuth'
     import { useSettingsStore } from '@/stores/settings'
     import type { PermissionKey } from '@/types/permissions'
@@ -340,6 +341,8 @@
     const emit = defineEmits(['click', 'delete', 'edit', 'show-detail', 'selection-change'])
 
     const { t, te, n } = useI18n()
+    const { formatDateTime } = useLocaleFormatters()
+    const timestampLabel = (value?: string): string => (value ? formatDateTime(value) || value : '')
     const { checkPermission } = useAuth()
     const settingsStore = useSettingsStore()
 

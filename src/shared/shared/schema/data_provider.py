@@ -2,6 +2,8 @@
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
+from shared.schema.datetime import UTCDateTime
+
 
 class DataProvider:
     """Data model for Data Providers."""
@@ -53,7 +55,7 @@ class DataProviderSchema(Schema):
     user_agent = fields.Str()
     web_url = fields.Str()
     updated_by = fields.Str(dump_only=True)
-    updated_at = fields.Str(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)
 
     @post_load
     def make(self, data: dict, **kwargs: object) -> DataProvider:  # noqa: ARG002

@@ -17,6 +17,7 @@ from managers.log_manager import logger
 from marshmallow import post_load
 from model.parameter import Parameter
 from shared.common import TZ
+from shared.datetime_utils import parse_datetime, utc_now
 from shared.schema.collectors_node import CollectorsNodePresentationSchema, CollectorsNodeSchema
 from sqlalchemy import or_, orm
 
@@ -42,8 +43,8 @@ class CollectorsNode(db.Model):
     api_url = db.Column(db.String(), nullable=False)
     api_key = db.Column(db.String(), nullable=False)
 
-    created = db.Column(db.DateTime, default=datetime.now)
-    last_seen = db.Column(db.DateTime)
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
+    last_seen = db.Column(db.DateTime(timezone=True))
 
     collectors = db.relationship("Collector", back_populates="node", cascade="all")
 
@@ -173,10 +174,11 @@ class CollectorsNode(db.Model):
             #   orange (last ping late) < 300s
             #   red (no ping in a long time) > 300s
             try:
-                created = nodes[i].created.replace(tzinfo=TZ)
-                last_seen = nodes[i].last_seen.replace(tzinfo=TZ) if nodes[i].last_seen is not None else created
+                created = parse_datetime(nodes[i].created)
+                last_seen = parse_datetime(nodes[i].last_seen) if nodes[i].last_seen is not None else created
                 time_inactive = datetime.now(TZ) - max(created, last_seen)
-                items[i]["status"] = "green" if time_inactive.seconds < 60 else "orange" if time_inactive.seconds < 300 else "red"  # noqa: PLR2004
+                inactive_seconds = time_inactive.total_seconds()
+                items[i]["status"] = "green" if inactive_seconds < 60 else "orange" if inactive_seconds < 300 else "red"  # noqa: PLR2004
             except Exception as ex:
                 logger.exception(f"Cannot update collector status: {ex}")
                 # if never collected before

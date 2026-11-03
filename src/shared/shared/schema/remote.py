@@ -2,6 +2,7 @@
 
 from marshmallow import EXCLUDE, Schema, fields
 
+from shared.schema.datetime import UTCDateTime
 from shared.schema.osint_source import OSINTSourcePresentationSchema
 from shared.schema.presentation import PresentationSchema
 from shared.schema.report_item_type import ReportItemTypePresentationSchema
@@ -27,7 +28,7 @@ class RemoteAccessSchema(Schema):
 class RemoteAccessPresentationSchema(RemoteAccessSchema, PresentationSchema):
     """Schema for presenting remote access details."""
 
-    last_synced = fields.DateTime("%d.%m.%Y - %H:%M:%S")
+    last_synced = UTCDateTime()
 
 
 class RemoteNodeSchema(Schema):
@@ -53,5 +54,5 @@ class RemoteNodeSchema(Schema):
 class RemoteNodePresentationSchema(RemoteNodeSchema, PresentationSchema):
     """Schema for presenting remote node details."""
 
-    last_synced = fields.DateTime("%d.%m.%Y - %H:%M:%S")
+    last_synced = UTCDateTime()
     event_id = fields.Str()

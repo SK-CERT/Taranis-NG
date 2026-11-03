@@ -22,6 +22,7 @@ from model.parameter import Parameter
 from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.word_list import WordList
 from shared.common import TZ
+from shared.datetime_utils import parse_datetime, utc_now
 from shared.schema.acl_entry import ItemType
 from shared.schema.osint_source import (
     OSINTSourceGroupIdSchema,
@@ -68,9 +69,9 @@ class OSINTSource(db.Model):
 
     word_lists = db.relationship("WordList", secondary="osint_source_word_list")
 
-    modified = db.Column(db.DateTime, default=datetime.now(TZ))
-    last_collected = db.Column(db.DateTime, default=None)
-    last_attempted = db.Column(db.DateTime, default=None)
+    modified = db.Column(db.DateTime(timezone=True), default=utc_now)
+    last_collected = db.Column(db.DateTime(timezone=True), default=None)
+    last_attempted = db.Column(db.DateTime(timezone=True), default=None)
     state = db.Column(db.SmallInteger, default=0)
     last_error_message = db.Column(db.String, default=None)
     last_data = db.Column(JSON, default=None)
@@ -231,7 +232,7 @@ class OSINTSource(db.Model):
                     param.parameter.key == "WARNING_INTERVAL"
                     and param.value not in {"", "0"}
                     and source.last_collected
-                    and (source.last_collected.replace(tzinfo=TZ) + timedelta(days=int(param.value))) < datetime.now(TZ)
+                    and (parse_datetime(source.last_collected) + timedelta(days=int(param.value))) < datetime.now(TZ)
                 ):
                     source.status = "orange"
                 # don't break, we need to check also REFRESH_INTERVAL because has higher priority

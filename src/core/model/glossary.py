@@ -18,6 +18,7 @@ from managers import content_language
 from managers.db_manager import db
 from model.report_item_type import ReportItemType
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 from sqlalchemy.dialects.postgresql import JSONB
 
 if TYPE_CHECKING:
@@ -78,7 +79,7 @@ class GlossaryEntry(db.Model):
     keep = db.Column(db.Boolean, nullable=False, default=False, server_default=sqlalchemy.false())
     note = db.Column(db.String(_NOTE_LENGTH))
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     def to_dict(self) -> dict:
         """The entry for the configuration screens."""
@@ -89,7 +90,7 @@ class GlossaryEntry(db.Model):
             "keep": self.keep,
             "note": self.note or "",
             "updated_by": self.updated_by,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "updated_at": format_datetime(self.updated_at),
         }
 
     @classmethod

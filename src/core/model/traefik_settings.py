@@ -23,6 +23,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat,
 from managers import crypto_manager
 from managers.db_manager import db
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 from shared.schema.traefik_settings import TraefikSettingsSchema
 
 # The floor every deployment starts from, and what the GUI shows on first open.
@@ -146,7 +147,7 @@ class TraefikSettings(db.Model):
     backend_insecure_skip_verify = db.Column(db.Boolean(), nullable=False, default=False, server_default="false")
     backend_root_cas = db.Column(db.Text(), nullable=True)
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     @classmethod
     def get(cls) -> TraefikSettings:
@@ -443,4 +444,4 @@ def cert_subject(certificate: str | None) -> str:
 def cert_not_after(certificate: str | None) -> str:
     """Expiry of a PEM certificate, for display. Empty when there is none."""
     parsed = parse_cert(certificate)
-    return parsed.not_valid_after_utc.isoformat() if parsed else ""
+    return format_datetime(parsed.not_valid_after_utc) if parsed else ""

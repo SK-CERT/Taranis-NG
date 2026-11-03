@@ -156,7 +156,7 @@ def test_headers_become_the_news_item_metadata(collector: EmailCollector) -> Non
     # Parenthesised rather than "Name <address>", which sanitization would read as a tag.
     assert news_item.author == "Sender Name (sender@example.com)"
     assert news_item.source == "sender@example.com"
-    assert news_item.published == "01.04.2025 - 10:30"
+    assert news_item.published == "2025-04-01T10:30:00Z"
 
 
 def test_sender_without_a_display_name_is_the_bare_address(collector: EmailCollector) -> None:
@@ -261,3 +261,16 @@ def test_attachment_is_collected_alongside_an_html_body(collector: EmailCollecto
     assert "See the attached report." in news_item.content
     assert [attribute.key for attribute in news_item.attributes] == ["application/pdf"]
     assert news_item.attributes[0].value == "report.pdf"
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("Tue, 01 Apr 2025 00:30:00 +0200", "2025-03-31T22:30:00Z"),
+        ("Tue, 01 Apr 2025 20:30:00 -0500", "2025-04-02T01:30:00Z"),
+        ("Tue, 01 Apr 2025 10:30:00 -0000", "2025-04-01T10:30:00Z"),
+    ],
+)
+def test_publication_date_preserves_the_header_instant(collector: EmailCollector, value: str, expected: str) -> None:
+    (news_item,) = process(collector, build_email(plain="Body", date=value))
+    assert news_item.published == expected

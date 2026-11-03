@@ -1,10 +1,10 @@
 """Custom Jinja2 filters for presenters."""
 
-import datetime
+import datetime as dt
 import re
 from collections.abc import Iterable
 
-from shared.common import TZ
+from shared.datetime_utils import parse_datetime
 from shared.mail_headers import scrub_header_text
 
 
@@ -26,13 +26,17 @@ def filter_strfdate(date: str, fmtin: str | None = None, fmtout: str | None = No
     formats = [fmtin] if fmtin else ["%Y-%m-%d", "%Y.%m.%d"]
     for fmt in formats:
         try:
-            native = datetime.datetime.strptime(date, fmt).replace(tzinfo=TZ)
+            native = dt.datetime.strptime(date, fmt)  # noqa: DTZ007 - parse_datetime applies UTC to timezone-free values.
+            native = parse_datetime(native)
             break
         except ValueError:
             continue
     else:
-        msg = f"Unsupported date format: {date!r}. Expected one of: {', '.join(formats)}"
-        raise ValueError(msg)
+        if fmtin:
+            msg = f"Unsupported date format: {date!r}. Expected: {fmtin}"
+            raise ValueError(msg)
+        # API timestamps are ISO UTC; keep support for calendar and template formats.
+        native = parse_datetime(date)
 
     if not fmtout:
         fmtout = "%-d.%-m.%Y"

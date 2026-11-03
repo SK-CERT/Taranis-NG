@@ -2,6 +2,7 @@
 
 from marshmallow import EXCLUDE, Schema, fields
 
+from shared.schema.datetime import UTCDateTime
 from shared.schema.organization import OrganizationSchema
 from shared.schema.role import RoleSchema
 
@@ -36,7 +37,7 @@ class AuthProviderSchema(Schema):
     secret = fields.Str(load_only=True, load_default=None, allow_none=True)
     has_secret = fields.Bool(dump_only=True)
     updated_by = fields.Str(dump_only=True)
-    updated_at = fields.Str(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)
 
 
 class AuthProviderLoginSchema(Schema):

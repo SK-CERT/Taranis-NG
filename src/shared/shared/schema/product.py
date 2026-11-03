@@ -3,6 +3,7 @@
 from marshmallow import EXCLUDE, Schema, fields
 
 from shared.schema.acl_entry import ACLEntryStatusSchema
+from shared.schema.datetime import UTCDateTime
 from shared.schema.link import LinkRefSchema
 from shared.schema.presentation import PresentationSchema
 from shared.schema.report_item import ReportItemPresentationSchema
@@ -20,8 +21,8 @@ class ProductSchemaBase(Schema):
     id = fields.Int()
     title = fields.Str()
     description = fields.Str()
-    created = fields.DateTime("%d.%m.%Y - %H:%M")
-    updated_at = fields.DateTime("%d.%m.%Y - %H:%M")
+    created = UTCDateTime()
+    updated_at = UTCDateTime()
     product_type_id = fields.Int()
     state_id = fields.Int(allow_none=True)
     # The language the product is written in (ISO 639-1); None while not set.

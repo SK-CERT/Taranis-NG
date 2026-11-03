@@ -2,6 +2,8 @@
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
+from shared.schema.datetime import UTCDateTime
+
 
 class StateDefinition:
     """Data model for States."""
@@ -49,7 +51,7 @@ class StateDefinitionSchema(Schema):
     icon = fields.Str()
     editable = fields.Bool()
     updated_by = fields.Str(dump_only=True)
-    updated_at = fields.DateTime(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> StateDefinition:  # noqa: ARG002, ANN003
@@ -115,7 +117,7 @@ class StateEntityTypeSchema(Schema):
     editable = fields.Bool(load_default=True)
     sort_order = fields.Int(load_default=0)
     updated_by = fields.Str(dump_only=True)
-    updated_at = fields.DateTime(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)
     state = fields.Nested(StateDefinitionSchema)
 
     @post_load

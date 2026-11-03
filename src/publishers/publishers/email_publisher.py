@@ -4,6 +4,7 @@ import binascii
 import mimetypes
 from base64 import b64decode
 from datetime import datetime
+from email.utils import format_datetime as format_mail_datetime
 from http import HTTPStatus
 from pathlib import Path
 
@@ -106,6 +107,7 @@ class EMAILPublisher(BasePublisher):
                 raise unreadable_key_error(key_path, description, error) from error
 
         envelope = Envelope()
+        envelope.date(format_mail_datetime(datetime.now(TZ)))
 
         # if attachment data available from presenter
         if publisher_input.mime_type and publisher_input.data:

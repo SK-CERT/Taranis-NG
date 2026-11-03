@@ -98,7 +98,7 @@ services:
 {% if worker_type == "bots" %}
       TARANIS_NG_CORE_SSE: "{{ core_sse_url }}"
 {% endif %}
-      TZ: "{{ worker_tz }}"
+      TZ: "UTC"
       TARANIS_LOG_LEVEL: "{{ taranis_log_level }}"
       MODULES_LOG_LEVEL: "{{ modules_log_level }}"
 {% if worker_type == "presenters" %}

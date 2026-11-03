@@ -15,6 +15,7 @@ from http import HTTPStatus
 from managers.db_manager import db
 from marshmallow import post_load
 from shared.common import TZ
+from shared.datetime_utils import utc_now
 from shared.schema.bots_node import BotsNodePresentationSchema, BotsNodeSchema
 from sqlalchemy import or_, orm
 
@@ -38,8 +39,8 @@ class BotsNode(db.Model):
     api_url = db.Column(db.String(), nullable=False)
     api_key = db.Column(db.String(), nullable=False)
 
-    created = db.Column(db.DateTime, default=datetime.now)
-    last_seen = db.Column(db.DateTime)
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
+    last_seen = db.Column(db.DateTime(timezone=True))
 
     bots = db.relationship("Bot", back_populates="node", cascade="all")
 

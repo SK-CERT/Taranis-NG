@@ -1,11 +1,12 @@
 """Module for Base collector."""
 
-import datetime
+import datetime as dt
 import hashlib
 import threading
 import time
 import urllib.request
 import uuid
+from email.utils import format_datetime as format_http_datetime
 from http import HTTPStatus
 from typing import ClassVar
 from urllib.parse import urlparse
@@ -15,6 +16,7 @@ from dateutil.parser import parse as date_parse
 from remote.core_api import CoreApi
 from shared.attribute_extraction import ExtractionRule, extract_attributes
 from shared.common import TZ, sanitize_content_html, smart_truncate, strip_html
+from shared.datetime_utils import format_datetime, normalize_timestamp, parse_datetime
 from shared.log_manager import create_logger, logger
 from shared.schema import collector, news_item, osint_source
 from shared.time_manager import SchedulerManager
@@ -147,7 +149,7 @@ class BaseCollector:
             )
 
     @staticmethod
-    def history(interval: str | int) -> datetime.datetime:
+    def history(interval: str | int) -> dt.datetime:
         """Calculate the limit for retrieving historical data based on the given interval.
 
         Args:
@@ -155,19 +157,19 @@ class BaseCollector:
               (e.g., '1d' for 1 day, '1w' for 1 week) or an integer representing the number of minutes.
 
         Returns:
-            limit (datetime.datetime): The limit for retrieving historical data.
+            limit (dt.datetime): The limit for retrieving historical data.
         """
         minute = 60
         if interval[0].isdigit() and ":" in interval:
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=1)
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=1)
         elif interval[0].isalpha():
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(weeks=1)
+            limit = dt.datetime.now(TZ) - dt.timedelta(weeks=1)
         elif int(interval) > minute:
             hours = int(interval) // minute
             minutes = int(interval) - hours * minute
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=0, hours=hours, minutes=minutes)
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=0, hours=hours, minutes=minutes)
         else:
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=0, hours=0, minutes=int(interval))
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=0, hours=0, minutes=int(interval))
 
         return limit
 
@@ -224,8 +226,8 @@ class BaseCollector:
             "link": "",
             "author": "",
             "content": "",
-            "published": datetime.datetime.now(TZ),
-            "collected": datetime.datetime.now(TZ),
+            "published": dt.datetime.now(TZ),
+            "collected": dt.datetime.now(TZ),
             "osint_source_id": source.id,
             "attributes": [],
         }
@@ -236,6 +238,9 @@ class BaseCollector:
         if getattr(news_item, "hash", None) is None:
             for_hash = news_item.author + news_item.title + news_item.link
             news_item.hash = hashlib.sha256(for_hash.encode()).hexdigest()
+
+        news_item.published = normalize_timestamp(news_item.published)
+        news_item.collected = parse_datetime(news_item.collected)
 
         news_item.title = smart_truncate(strip_html(news_item.title), 200)
         news_item.review = smart_truncate(strip_html(news_item.review))
@@ -261,6 +266,9 @@ class BaseCollector:
         self.source.logger.debug(f"Collected {len(news_items)} news items")
         filtered_news_items = self.filter_by_word_list(news_items, self.source)
         filtered_news_items = self.extract_attributes(filtered_news_items, self.source)
+        for item in filtered_news_items:
+            item.published = normalize_timestamp(item.published)
+            item.collected = parse_datetime(item.collected)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
         return CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
 
@@ -582,7 +590,8 @@ class BaseCollector:
             jobs = SchedulerManager.get_jobs_by_tag(f"source:{source.id}")
             next_run = min((job.next_run for job in jobs if job.next_run), default=None)
             if next_run is not None:
-                due[source.id] = next_run.isoformat()
+                # schedule stores next_run in the process-local timezone.
+                due[source.id] = format_datetime(next_run.astimezone(dt.UTC))
         return due
 
     def _reload_sources(self) -> None:
@@ -600,9 +609,8 @@ class BaseCollector:
 
 def not_modified(source: object) -> bool:
     """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers."""
-    if source.last_collected.tzinfo is None:
-        source.last_collected = source.last_collected.replace(tzinfo=TZ)
-    last_collected_str = source.last_collected.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    source.last_collected = parse_datetime(source.last_collected)
+    last_collected_str = format_http_datetime(source.last_collected, usegmt=True)
     headers = {"If-Modified-Since": last_collected_str}
     if source.user_agent:
         headers["User-Agent"] = source.user_agent
@@ -628,7 +636,7 @@ def _not_modified_response(source: object, response: object, log_prefix: str, la
         source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str_fmt}")
         return True
     if last_modified:
-        last_modified_dt = date_parse(last_modified)
+        last_modified_dt = parse_datetime(date_parse(last_modified))
         last_modified_str = last_modified_dt.strftime("%Y-%m-%d %H:%M")
         if source.last_collected >= last_modified_dt:
             source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str_fmt} (Last-Modified: {last_modified_str})")

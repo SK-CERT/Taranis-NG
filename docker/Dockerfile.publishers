@@ -10,6 +10,8 @@ RUN uv build
 
 FROM python:3.13-alpine3.24 AS production
 
+ENV TZ="UTC"
+
 WORKDIR /app/
 
 # install common packages

@@ -13,6 +13,7 @@ from managers.db_manager import db
 from managers.log_manager import logger
 from marshmallow import post_load
 from shared.common import TZ
+from shared.datetime_utils import parse_datetime, utc_now
 from shared.schema.public_web_node import PublicWebNodePresentationSchema, PublicWebNodeSchema
 from sqlalchemy import or_, orm
 
@@ -67,10 +68,10 @@ class PublicWebNode(db.Model):
     # reset push). Empty means no core->node channel (the node still pulls).
     api_url = db.Column(db.String())
     api_key = db.Column(db.String(), nullable=False)
-    created = db.Column(db.DateTime, default=datetime.now)
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
     # Deliberately has no default: a node that has never been reached must not
     # look alive just because it was created a moment ago.
-    last_seen = db.Column(db.DateTime)
+    last_seen = db.Column(db.DateTime(timezone=True))
     # Ansible sends the name its worker template declares, so a deployed node arrives
     # self-consistent.
     cert_resolver = db.Column(db.String())
@@ -184,7 +185,7 @@ class PublicWebNode(db.Model):
         if self.last_seen is None:
             return None
         try:
-            return (datetime.now(TZ) - self.last_seen.replace(tzinfo=TZ)).total_seconds()
+            return (datetime.now(TZ) - parse_datetime(self.last_seen)).total_seconds()
         except Exception as ex:
             logger.exception(f"Cannot compute public-web node age: {ex}")
             return None

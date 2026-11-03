@@ -4,6 +4,8 @@ import datetime
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
+from shared.schema.datetime import UTCDateTime
+
 
 class SettingValue:
     """Class representing a setting value.
@@ -156,7 +158,7 @@ class SettingSchema(Schema):
     description = fields.Str()
     is_global = fields.Bool()
     options = fields.Str()
-    updated_at = fields.Str(load_default=None, allow_none=True)
+    updated_at = UTCDateTime(load_default=None, allow_none=True)
     updated_by = fields.Str()
 
     @post_load

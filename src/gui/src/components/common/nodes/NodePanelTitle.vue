@@ -44,6 +44,7 @@
      */
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
 
     type NodeItem = {
@@ -70,6 +71,7 @@
     }>()
 
     const { t } = useI18n()
+    const { formatDateTime } = useLocaleFormatters()
 
     // Health status dot: green (reachable) / orange (late) / red (unreachable). Driven by the
     // node's last_seen via the core periodic ping; a node that has never answered is red, never
@@ -79,6 +81,6 @@
     const statusTitle = computed(() => {
         if (!props.node.last_seen) return t('common.node_status.never_seen')
         const key = props.node.status === 'green' ? 'alive' : props.node.status === 'orange' ? 'late' : 'unreachable'
-        return `${t(`common.node_status.${key}`)} (${t('common.node_status.last_seen')}: ${props.node.last_seen})`
+        return `${t(`common.node_status.${key}`)} (${t('common.node_status.last_seen')}: ${formatDateTime(props.node.last_seen) || props.node.last_seen})`
     })
 </script>

@@ -262,13 +262,6 @@
         { immediate: true }
     )
 
-    const appendLeadingZeroes = (n: number): string | number => {
-        if (n <= 9) {
-            return '0' + n
-        }
-        return n
-    }
-
     const resetForm = (): void => {
         newsItem.value = {
             id: '',
@@ -342,8 +335,7 @@
             newsItem.value.language = locale.value || 'en'
 
             // Set timestamps
-            const d = new Date()
-            const timestamp = `${appendLeadingZeroes(d.getDate())}.${appendLeadingZeroes(d.getMonth() + 1)}.${d.getFullYear()} - ${appendLeadingZeroes(d.getHours())}:${appendLeadingZeroes(d.getMinutes())}`
+            const timestamp = new Date().toISOString()
             newsItem.value.collected = timestamp
             newsItem.value.published = timestamp
 

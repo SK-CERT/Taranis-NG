@@ -2,6 +2,7 @@
 
 from marshmallow import EXCLUDE, Schema, fields
 
+from shared.schema.datetime import UTCDateTime
 from shared.schema.presentation import PresentationSchema
 
 
@@ -51,4 +52,4 @@ class PublicWebPresentationSchema(PublicWebSchema, PresentationSchema):
     tls_cert_subject = fields.Str(dump_only=True)
     tls_cert_not_after = fields.Str(dump_only=True)
     images = fields.List(fields.Nested(PublicWebImageSchema))
-    created = fields.DateTime("%d.%m.%Y - %H:%M:%S")
+    created = UTCDateTime()

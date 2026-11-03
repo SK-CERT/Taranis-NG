@@ -18,6 +18,8 @@ RUN uv build
 
 FROM python:3.13-alpine3.22 AS production
 
+ENV TZ="UTC"
+
 ARG HTTP_PROXY=""
 ARG HTTPS_PROXY=""
 ENV HTTP_PROXY=${HTTP_PROXY} \

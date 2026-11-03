@@ -23,7 +23,7 @@ import sqlalchemy
 from managers import content_language, translation_status
 from managers.db_manager import db
 from managers.link_references import generate_link_key
-from marshmallow import fields, post_load
+from marshmallow import ValidationError, fields, post_load
 from model.acl_entry import ACLEntry
 from model.attribute import Attribute
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
@@ -33,6 +33,7 @@ from model.state import StateDefinition, StateEntityTypeEnum, StateEnum, StateMa
 from model.tag import Tag, report_item_tag, set_item_tags
 from model.translation import ORIGIN_AI, ORIGIN_MANUAL, TITLE_FIELDS, ReportItemAttributeTranslation, ReportItemTranslation, sql_source_hash
 from shared.common import TZ
+from shared.datetime_utils import format_datetime, utc_now
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
 from shared.schema.attribute import AttributeType
@@ -82,8 +83,8 @@ class ReportItemAttribute(db.Model):
     binary_data = orm.deferred(db.Column(db.LargeBinary))
     binary_size = db.Column(db.Integer)
     binary_description = db.Column(db.String())
-    created = db.Column(db.DateTime, default=datetime.now)
-    last_updated = db.Column(db.DateTime, default=datetime.now)
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
+    last_updated = db.Column(db.DateTime(timezone=True), default=utc_now)
 
     version = db.Column(db.Integer, default=1)
     current = db.Column(db.Boolean, default=True)
@@ -271,8 +272,8 @@ class ReportItem(db.Model):
     title_prefix = db.Column(db.String())
     language = db.Column(db.String(8), nullable=True)
 
-    created = db.Column(db.DateTime, default=datetime.now)
-    last_updated = db.Column(db.DateTime, default=datetime.now)
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
+    last_updated = db.Column(db.DateTime(timezone=True), default=utc_now)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     user = db.relationship("User", foreign_keys=[user_id], viewonly=True)
@@ -627,7 +628,7 @@ class ReportItem(db.Model):
                 date_limit = date_limit.replace(hour=0, minute=0, second=0, microsecond=0)
 
             if filter["range"] == "WEEK":
-                date_limit = date_limit.replace(day=date_limit.day - date_limit.weekday(), hour=0, minute=0, second=0, microsecond=0)
+                date_limit = (date_limit - timedelta(days=date_limit.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
 
             if filter["range"] == "MONTH":
                 date_limit = date_limit.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -1228,7 +1229,7 @@ class ReportItem(db.Model):
                     "current_version": current_version,
                     "current_value": row.value if row is not None else "",
                     "current_value_description": None,
-                    "last_updated": row.last_updated.strftime("%d.%m.%Y - %H:%M") if row is not None and row.last_updated else None,
+                    "last_updated": format_datetime(row.last_updated) if row is not None else None,
                     "user": row.user.name if row is not None and row.user else None,
                 }
                 return False, data
@@ -1312,7 +1313,7 @@ class ReportItem(db.Model):
             "current_version": current_version,
             "current_value": attribute.value,
             "current_value_description": attribute.value_description,
-            "last_updated": attribute.last_updated.strftime("%d.%m.%Y - %H:%M") if attribute.last_updated else None,
+            "last_updated": format_datetime(attribute.last_updated) if attribute.last_updated else None,
             "user": attribute.user.name if attribute.user else None,
         }
 
@@ -1496,7 +1497,7 @@ class ReportItem(db.Model):
                         if str(attribute.id) == data["attribute_id"]:
                             data["attribute_value"] = attribute.value
                             data["attribute_value_description"] = attribute.value_description
-                            data["attribute_last_updated"] = attribute.last_updated.strftime("%d.%m.%Y - %H:%M")
+                            data["attribute_last_updated"] = format_datetime(attribute.last_updated)
                             data["attribute_user"] = attribute.user.name
                             data["attribute_version"] = attribute.version or 1
                             break
@@ -1524,7 +1525,7 @@ class ReportItem(db.Model):
                             data["binary_mime_type"] = attribute.binary_mime_type
                             data["binary_size"] = attribute.binary_size
                             data["binary_description"] = attribute.binary_description
-                            data["attribute_last_updated"] = attribute.last_updated.strftime("%d.%m.%Y - %H:%M")
+                            data["attribute_last_updated"] = format_datetime(attribute.last_updated)
                             data["attribute_user"] = attribute.user.name
                             break
 
@@ -1796,3 +1797,18 @@ class ReportItemCpe(db.Model):
         """Initialize a ReportItemCpe object."""
         self.id = None
         self.value = value
+
+
+@sqlalchemy.event.listens_for(orm.Session, "before_flush")
+def _normalize_datetime_attributes(session: orm.Session, flush_context: object, instances: object) -> None:  # noqa: ARG001
+    """Keep DATE_TIME values canonical on all write paths, including imports and autosave."""
+    for attribute in session.new.union(session.dirty):
+        if not isinstance(attribute, ReportItemAttribute) or not attribute.value:
+            continue
+        group_item = session.get(AttributeGroupItem, attribute.attribute_group_item_id) if attribute.attribute_group_item_id else None
+        if group_item is None or group_item.attribute is None or group_item.attribute.type != AttributeType.DATE_TIME:
+            continue
+        try:
+            attribute.value = format_datetime(attribute.value)
+        except ValueError as exc:
+            raise ValidationError({"attribute_value": ["Invalid date-time value."]}) from exc

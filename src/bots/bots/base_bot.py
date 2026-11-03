@@ -7,12 +7,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from shared.schema.bot_preset import BotPreset
 
-import datetime
+import datetime as dt
 import time
 from http import HTTPStatus
 
 from remote.core_api import CoreApi
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 from shared.log_manager import create_logger, logger
 from shared.schema import bot, bot_preset
 from shared.time_manager import SchedulerManager
@@ -63,26 +64,22 @@ class BaseBot:
                 the format "X:Y" (where X is a number and Y is a unit of time) or an integer representing the number of minutes.
 
         Returns:
-            (str): The timestamp limit in the format "%d.%m.%Y - %H:%M".
+            (str): The timestamp limit as an ISO 8601 UTC string.
         """
         one_minute = 60
 
         if interval[0].isdigit() and ":" in interval:
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=1)
-            limit = limit.strftime("%d.%m.%Y - %H:%M")
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=1)
         elif interval[0].isalpha():
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(weeks=1)
-            limit = limit.strftime("%d.%m.%Y - %H:%M")
+            limit = dt.datetime.now(TZ) - dt.timedelta(weeks=1)
         elif int(interval) > one_minute:
             hours = int(interval) // one_minute
             minutes = int(interval) - hours * one_minute
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=0, hours=hours, minutes=minutes)
-            limit = limit.strftime("%d.%m.%Y - %H:%M")
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=0, hours=hours, minutes=minutes)
         else:
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=0, hours=0, minutes=int(interval))
-            limit = limit.strftime("%d.%m.%Y - %H:%M")
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=0, hours=0, minutes=int(interval))
 
-        return limit
+        return format_datetime(limit)
 
     def initialize(self) -> None:
         """Initialize the bot by retrieving bot presets and scheduling jobs based on the preset intervals."""

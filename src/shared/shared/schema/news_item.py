@@ -6,6 +6,7 @@ from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.common import clean_whitespace
 from shared.schema.acl_entry import ACLEntryStatusSchema
+from shared.schema.datetime import PublicationTimestamp, UTCDateTime
 
 
 class NewsItemAttributeBaseSchema(Schema):
@@ -64,9 +65,9 @@ class NewsItemDataBaseSchema(Schema):
     review = fields.Str()
     source = fields.Str()
     link = fields.Str()
-    published = fields.Str()
+    published = PublicationTimestamp()
     author = fields.Str()
-    collected = fields.DateTime("%d.%m.%Y - %H:%M")
+    collected = UTCDateTime()
     osint_source_id = fields.Str(load_default=None, allow_none=True)
     # The provider's own label for this revision of the item (e.g. a CSAF tracking version).
     # None for items that have no versions.
@@ -169,9 +170,9 @@ class NewsItemRemoteSchema(Schema):
     review = fields.Str()
     source = fields.Str()
     link = fields.Str()
-    published = fields.Str()
+    published = PublicationTimestamp()
     author = fields.Str()
-    collected = fields.DateTime("%d.%m.%Y - %H:%M")
+    collected = UTCDateTime()
     content = fields.Str()
     attributes = fields.Nested(NewsItemAttributeRemoteSchema, many=True)
     relevance = fields.Int()
@@ -188,10 +189,10 @@ class NewsItemDataVersionSchema(Schema):
     review = fields.Str()
     content = fields.Str()
     link = fields.Str()
-    published = fields.Str()
+    published = PublicationTimestamp()
     author = fields.Str()
-    collected = fields.DateTime("%d.%m.%Y - %H:%M")
-    superseded = fields.DateTime("%d.%m.%Y - %H:%M", allow_none=True)
+    collected = UTCDateTime()
+    superseded = UTCDateTime(allow_none=True)
     current = fields.Bool()
 
 
@@ -257,7 +258,7 @@ class NewsItemAggregateSchema(Schema):
     id = fields.Int()
     title = fields.Str()
     description = fields.Str()
-    created = fields.DateTime("%d.%m.%Y - %H:%M")
+    created = UTCDateTime()
     comments = fields.Str()
     likes = fields.Int()
     dislikes = fields.Int()

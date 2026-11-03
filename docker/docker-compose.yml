@@ -5,7 +5,7 @@ services:
     command:
       - "--loglevel notice" # Change this to 'debug', 'verbose', 'notice', 'warning'
     environment:
-      TZ: "${TZ}"
+      TZ: "UTC"
     volumes:
       - "redis_conf:/usr/local/etc/redis"
     logging:
@@ -21,9 +21,9 @@ services:
       POSTGRES_DB: "taranis-ng"
       POSTGRES_USER: "taranis-ng"
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      TZ: "${TZ}"
-      PGTZ: "${TZ}"
-    command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}"]
+      TZ: "UTC"
+      PGTZ: "UTC"
+    command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}", "-c", "timezone=UTC"]
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
     logging:
@@ -79,7 +79,9 @@ services:
       CPE_UPDATE_FILE: "${CPE_UPDATE_FILE}"
       CWE_UPDATE_FILE: "${CWE_UPDATE_FILE}"
 
-      TZ: "${TZ}"
+      TZ: "UTC"
+      # Previous timezone for the UTC data migration.
+      TARANIS_NG_LEGACY_TZ: "${TARANIS_NG_LEGACY_TZ:-${TZ:-UTC}}"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
       DEBUG_SQL: "false"
@@ -193,7 +195,7 @@ services:
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       TARANIS_NG_CORE_SSE: "http://core/sse"
-      TZ: "${TZ}"
+      TZ: "UTC"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
     logging:
@@ -225,7 +227,7 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      TZ: "${TZ}"
+      TZ: "UTC"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
     volumes:
@@ -259,7 +261,7 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      TZ: "${TZ}"
+      TZ: "UTC"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
       JINJA_TEMPLATES_ROOT: "${JINJA_TEMPLATES_ROOT}"
@@ -296,7 +298,7 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      TZ: "${TZ}"
+      TZ: "UTC"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
     logging:
@@ -334,7 +336,9 @@ services:
       DB_POOL_SIZE: 20
       DB_POOL_RECYCLE: 300
       DB_POOL_TIMEOUT: 30
-      TZ: "${TZ}"
+      TZ: "UTC"
+      # Previous timezone for the UTC data migration.
+      TARANIS_NG_LEGACY_TZ: "${TARANIS_NG_LEGACY_TZ:-${TZ:-UTC}}"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
       DEBUG_SQL: "false"
@@ -377,7 +381,7 @@ services:
       VITE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
       VITE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
       VITE_APP_TARANIS_NG_LOCALE: "${VITE_APP_TARANIS_NG_LOCALE}"
-      TZ: "${TZ}"
+      TZ: "UTC"
       NGINX_LOG_LEVEL: "warn" # Change this to 'debug', 'info', 'notice', 'warn', 'error', 'crit', 'alert', 'emerg'
       NGINX_ACCESS_LOG: "on" # Change this to 'off' or 'on'
     labels:
@@ -432,7 +436,7 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      TZ: "${TZ}"
+      TZ: "UTC"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
     secrets:
       - api_key
@@ -477,7 +481,7 @@ services:
     # source only (file, then flags, then environment), and a file would silently
     # make every variable here dead. Only dynamic/ is mounted below.
     environment:
-      - TZ=${TZ}
+      - TZ=UTC
 
       - TRAEFIK_ENTRYPOINTS_WEB_ADDRESS=:80
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS=:443

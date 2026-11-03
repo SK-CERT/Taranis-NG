@@ -18,6 +18,7 @@ from datetime import datetime
 from managers import crypto_manager
 from managers.db_manager import db
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 
 OUTBOX_STATUSES = ("pending", "sending", "sent", "failed")
 
@@ -119,7 +120,7 @@ class NotificationChannel(db.Model):
             "config": self.config or {},
             "has_secret": self.has_secret,
             "updated_by": self.updated_by,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "updated_at": format_datetime(self.updated_at),
         }
 
 
@@ -271,8 +272,8 @@ class NotificationOutbox(db.Model):
             "subject": self.subject,
             "status": self.status,
             "attempts": self.attempts,
-            "next_attempt_at": self.next_attempt_at.isoformat() if self.next_attempt_at else None,
+            "next_attempt_at": format_datetime(self.next_attempt_at),
             "last_error": self.last_error,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "sent_at": self.sent_at.isoformat() if self.sent_at else None,
+            "created_at": format_datetime(self.created_at),
+            "sent_at": format_datetime(self.sent_at),
         }

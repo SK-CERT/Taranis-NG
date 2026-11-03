@@ -1,10 +1,8 @@
 """API Key Model."""
 
-from datetime import datetime
-
 from managers.db_manager import db
 from marshmallow import post_load
-
+from shared.datetime_utils import utc_now
 from shared.schema.apikey import ApiKeySchema
 
 
@@ -41,9 +39,9 @@ class ApiKey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
     key = db.Column(db.String())  # length 40
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    expires_at = db.Column(db.DateTime, nullable=True, default=None)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=True, default=None)
 
     def __init__(self, name, key, created_at, user_id, expires_at):
         """Create a new API Key."""

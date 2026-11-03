@@ -13,7 +13,7 @@ Identity comes from inside the document, never from its file name:
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import hashlib
 import json
 import re
@@ -22,6 +22,7 @@ from html import escape
 from typing import TYPE_CHECKING
 
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 from shared.schema.news_item import NewsItemAttribute, NewsItemData
 
 from .csaf_sources import parse_datetime
@@ -100,7 +101,7 @@ def category(data: dict) -> str:
     return _text(_as_dict(data.get("document")).get("category"))
 
 
-def release_date(data: dict) -> datetime.datetime | None:
+def release_date(data: dict) -> dt.datetime | None:
     """When the revision held in the document was released."""
     return parse_datetime(_as_dict(_as_dict(data.get("document")).get("tracking")).get("current_release_date"))
 
@@ -392,7 +393,7 @@ def render_content(data: dict, document_url: str) -> str:
 
     revisions = sorted(
         (_as_dict(revision) for revision in _as_list(_as_dict(document.get("tracking")).get("revision_history"))),
-        key=lambda revision: parse_datetime(revision.get("date")) or datetime.datetime.min.replace(tzinfo=datetime.UTC),
+        key=lambda revision: parse_datetime(revision.get("date")) or dt.datetime.min.replace(tzinfo=dt.UTC),
         reverse=True,
     )
     if revisions:
@@ -488,9 +489,9 @@ def build_news_item(
         _review(data),
         getattr(source, "url", ""),
         _link_of(data, page_url or document_url),
-        released.astimezone(TZ).strftime("%d.%m.%Y - %H:%M") if released else "",
+        format_datetime(released) if released else "",
         _text(_as_dict(document.get("publisher")).get("name")),
-        datetime.datetime.now(TZ),
+        dt.datetime.now(TZ),
         render_content(data, document_url),
         getattr(source, "id", None),
         attributes(data, integrity),

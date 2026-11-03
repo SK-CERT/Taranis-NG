@@ -13,7 +13,7 @@ Intel, CISA, OPC Foundation).
 from __future__ import annotations
 
 import copy
-import datetime
+import datetime as dt
 import hashlib
 import json
 import re
@@ -38,6 +38,7 @@ from collectors.csaf_sources import (
     Response,
     RolieListing,
     directory_url,
+    parse_datetime,
     parse_github_url,
     rewrite_github_blob,
 )
@@ -50,7 +51,7 @@ from collectors import csaf_document, csaf_integrity
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-UTC = datetime.UTC
+UTC = dt.UTC
 
 
 class RecordingLogger:
@@ -550,8 +551,8 @@ def test_changes_csv_is_read_with_its_times(fetcher: FakeFetcher) -> None:
     result = DirectoryListing(BASE).list_changes(fetcher, (None, None))
     assert result.status == OK
     assert [(change.url, change.changed_at) for change in result.changes] == [
-        (BASE + "2026/b.json", datetime.datetime(2026, 9, 2, 10, tzinfo=UTC)),
-        (BASE + "2026/a.json", datetime.datetime(2026, 9, 1, 10, tzinfo=UTC)),
+        (BASE + "2026/b.json", dt.datetime(2026, 9, 2, 10, tzinfo=UTC)),
+        (BASE + "2026/a.json", dt.datetime(2026, 9, 1, 10, tzinfo=UTC)),
     ]
     assert result.etag == '"v1"'
     assert DirectoryListing(BASE).list_changes(fetcher, ('"v1"', None)).status == NOT_MODIFIED
@@ -620,7 +621,7 @@ def test_a_rolie_entry_names_its_hashes_best_first(fetcher: FakeFetcher) -> None
     assert change.hash_urls == ["https://example.com/2026/x.json.sha512", "https://example.com/2026/x.json.sha256"]
     assert change.signature_url == "https://example.com/2026/x.json.asc"
     assert change.category == "csaf_vex"
-    assert change.changed_at == datetime.datetime(2026, 9, 23, 4, 15, tzinfo=UTC)
+    assert change.changed_at == dt.datetime(2026, 9, 23, 4, 15, tzinfo=UTC)
 
 
 def test_an_rss_feed_links_its_documents(fetcher: FakeFetcher) -> None:
@@ -638,7 +639,7 @@ def test_an_rss_feed_links_its_documents(fetcher: FakeFetcher) -> None:
     )
     (change,) = FeedListing("https://example.com/alerts.xml").list_changes(fetcher, (None, None)).changes
     assert change.url == "https://example.com/docs/cpusep2026csaf.json"
-    assert change.changed_at == datetime.datetime(2026, 9, 15, 20, 0, tzinfo=UTC)
+    assert change.changed_at == dt.datetime(2026, 9, 15, 20, 0, tzinfo=UTC)
 
 
 def test_only_http_urls_are_fetched() -> None:
@@ -726,7 +727,7 @@ def test_a_csaf_20_document_becomes_a_news_item() -> None:
     assert item.version == "2"
     assert item.source == "example.com"
     assert item.osint_source_id == "source-1"
-    assert re.fullmatch(r"\d\d\.\d\d\.2026 - \d\d:\d\d", item.published)
+    assert item.published == "2026-09-05T08:30:00Z"
 
 
 def test_attributes_of_a_csaf_20_document() -> None:
@@ -1304,7 +1305,7 @@ def test_after_a_restart_the_commits_tell_what_changed(fetcher: FakeFetcher) -> 
     fetcher.add("https://api.github.com/repos/o/r/commits?*", [{"sha": "c1"}])
     fetcher.add("https://api.github.com/repos/o/r/commits/c1", {"files": [{"filename": "2026/1/1.json", "status": "modified"}]})
     source = make_source("https://github.com/o/r")
-    source.last_collected = datetime.datetime(2026, 9, 20, 10, 0)  # noqa: DTZ001 - loaded naive, as the source schema does
+    source.last_collected = dt.datetime(2026, 9, 20, 10, 0)  # noqa: DTZ001 - loaded naive, as the source schema does
 
     items = Harness(fetcher, source).run()
 
@@ -1315,10 +1316,23 @@ def test_after_a_restart_too_many_commits_fall_back_to_the_newest(fetcher: FakeF
     github_repository(fetcher, {"2026/1/1.json": (csaf("1"), "a"), "2026/2/2.json": (csaf("2"), "b")})
     fetcher.add("https://api.github.com/repos/o/r/commits?*", [{"sha": f"c{index}"} for index in range(31)])
     source = make_source("https://github.com/o/r", MAX_DOCUMENTS="1")
-    source.last_collected = datetime.datetime(2026, 9, 20, 10, 0)  # noqa: DTZ001 - loaded naive, as the source schema does
+    source.last_collected = dt.datetime(2026, 9, 20, 10, 0)  # noqa: DTZ001 - loaded naive, as the source schema does
     harness = Harness(fetcher, source)
 
     items = harness.run()
 
     assert [item.title.split(":")[0] for item in items] == ["2"]
     assert any("could not tell what changed" in message for message in harness.logger.messages["warning"])
+
+
+def test_offset_release_date_is_normalized_for_publication_and_content() -> None:
+    item = csaf_document.build_news_item(csaf(released="2026-09-05T00:30:00+02:00"), BASE + "x.json", SOURCE)
+    assert item.published == "2026-09-04T22:30:00Z"
+    assert "2026-09-04 22:30 UTC" in item.content
+
+
+@pytest.mark.parametrize("value", ["2026-09-05T00:30:00+02:00", "Fri, 04 Sep 2026 17:30:00 -0500"])
+def test_listing_dates_are_normalized_to_utc(value: str) -> None:
+    parsed = parse_datetime(value)
+    assert parsed == dt.datetime(2026, 9, 4, 22, 30, tzinfo=UTC)
+    assert parsed.tzinfo is UTC

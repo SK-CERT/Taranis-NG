@@ -5,6 +5,7 @@ import base64
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.acl_entry import ACLEntryStatusSchema
+from shared.schema.datetime import UTCDateTime
 from shared.schema.link import LinkRefSchema
 from shared.schema.news_item import NewsItemAggregateSchema
 from shared.schema.presentation import PresentationSchema
@@ -106,8 +107,8 @@ class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
         An instance of the ReportItemAttributeSchema class.
     """
 
-    created = fields.DateTime("%d.%m.%Y - %H:%M")
-    last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
+    created = UTCDateTime()
+    last_updated = UTCDateTime()
     version = fields.Int()
     current = fields.Bool()
     user = fields.Nested(UserSchemaBase, exclude=("password",))
@@ -154,8 +155,8 @@ class ReportItemBaseSchema(Schema):
     uuid = fields.Str(allow_none=True)
     title = fields.Str()
     title_prefix = fields.Str()
-    created = fields.DateTime("%d.%m.%Y - %H:%M")
-    last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
+    created = UTCDateTime()
+    last_updated = UTCDateTime()
     report_item_type_id = fields.Int(load_default=None, allow_none=True)
     state_id = fields.Int(allow_none=True)
     language = fields.Str(dump_only=True, allow_none=True)

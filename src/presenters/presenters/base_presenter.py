@@ -21,6 +21,7 @@ import jinja2
 from cvss import CVSS2, CVSS3, CVSS4
 from jinja2.sandbox import SandboxedEnvironment
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 from shared.log_manager import logger
 from shared.schema.attribute import AttributeType
 from shared.schema.presenter import PresenterSchema
@@ -53,7 +54,7 @@ class BasePresenter:
         return self.presenter_type
 
     @staticmethod
-    def json_default(value: any) -> dict:
+    def json_default(value: any) -> dict | str:
         """Serialize a value to JSON.
 
         Args:
@@ -63,6 +64,8 @@ class BasePresenter:
             dict: serialized value
 
         """
+        if isinstance(value, dt.datetime):
+            return format_datetime(value)
         if isinstance(value, dt.date):
             return {"year": value.year, "month": value.month, "day": value.day}
         if isinstance(value, types.MappingProxyType):
@@ -72,6 +75,8 @@ class BasePresenter:
     @staticmethod
     def to_template_data(value: any) -> any:
         """Convert presenter objects to plain template data without a JSON round trip."""
+        if isinstance(value, dt.datetime):
+            return format_datetime(value)
         if isinstance(value, dt.date):
             return {"year": value.year, "month": value.month, "day": value.day}
         if isinstance(value, types.MappingProxyType):
@@ -316,7 +321,7 @@ class BasePresenter:
 
             """
             self.product = presenter_input.product
-            self.product.date = dt.datetime.now(TZ)
+            self.product.date = dt.datetime.now(TZ).date()
 
             report_types = self._build_report_types(presenter_input.report_types)
             attribute_map = self._build_attribute_map(presenter_input.report_types)

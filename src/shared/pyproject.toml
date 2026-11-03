@@ -8,7 +8,8 @@ version = "26.10.1"
 description = "Taranis-NG Shared Classes"
 requires-python = ">=3.11"
 dependencies = [
-    "marshmallow==4.3.1"
+    "marshmallow==4.3.1",
+    "pytz==2026.2"
 ]
 
 # NOTE: no [dependency-groups] here, and none in the services either. pytest is declared

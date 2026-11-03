@@ -1,18 +1,17 @@
 """Remote Access and Remote Node models."""
 
 import uuid as uuid_generator
-from datetime import datetime
 
 from managers.db_manager import db
 from managers.log_manager import logger
 from marshmallow import fields, post_load
 from model.osint_source import OSINTSource
 from model.report_item_type import ReportItemType
-from sqlalchemy import and_, or_, orm
-
+from shared.datetime_utils import format_datetime, parse_datetime, utc_now
 from shared.schema.osint_source import OSINTSourceIdSchema
 from shared.schema.remote import RemoteAccessPresentationSchema, RemoteAccessSchema, RemoteNodePresentationSchema, RemoteNodeSchema
 from shared.schema.report_item_type import ReportItemTypeIdSchema
+from sqlalchemy import and_, or_, orm
 
 
 class NewRemoteAccessSchema(RemoteAccessSchema):
@@ -71,8 +70,8 @@ class RemoteAccess(db.Model):
     report_item_types = db.relationship("ReportItemType", secondary="remote_access_report_item_type")
 
     event_id = db.Column(db.String(64), unique=True)
-    last_synced_news_items = db.Column(db.DateTime, default=datetime.now())
-    last_synced_report_items = db.Column(db.DateTime, default=datetime.now())
+    last_synced_news_items = db.Column(db.DateTime(timezone=True), default=utc_now)
+    last_synced_report_items = db.Column(db.DateTime(timezone=True), default=utc_now)
 
     def __init__(self, id, name, description, enabled, api_key, osint_sources, report_item_types):
         """Initialize a new Remote Access object."""
@@ -277,8 +276,8 @@ class RemoteAccess(db.Model):
                 db.session.commit()
                 return {
                     "event_id": self.event_id,
-                    "last_synced_news_items": format(self.last_synced_news_items),
-                    "last_synced_report_items": format(self.last_synced_report_items),
+                    "last_synced_news_items": format_datetime(self.last_synced_news_items),
+                    "last_synced_report_items": format_datetime(self.last_synced_report_items),
                     "news_items_provided": len(self.osint_sources) > 0,
                     "report_items_provided": len(self.report_item_types) > 0,
                 }
@@ -302,7 +301,7 @@ class RemoteAccess(db.Model):
         Args:
             data: Data containing the last sync time.
         """
-        self.last_synced_news_items = datetime.strptime(data["last_sync_time"], "%Y-%m-%d %H:%M:%S.%f")
+        self.last_synced_news_items = parse_datetime(data["last_sync_time"])
         db.session.commit()
 
     def update_report_items_sync(self, data):
@@ -311,7 +310,7 @@ class RemoteAccess(db.Model):
         Args:
             data: Data containing the last sync time.
         """
-        self.last_synced_report_items = datetime.strptime(data["last_sync_time"], "%Y-%m-%d %H:%M:%S.%f")
+        self.last_synced_report_items = parse_datetime(data["last_sync_time"])
         db.session.commit()
 
 
@@ -388,8 +387,8 @@ class RemoteNode(db.Model):
     sync_report_items = db.Column(db.Boolean)
 
     event_id = db.Column(db.String(64), unique=True)
-    last_synced_news_items = db.Column(db.DateTime)
-    last_synced_report_items = db.Column(db.DateTime)
+    last_synced_news_items = db.Column(db.DateTime(timezone=True))
+    last_synced_report_items = db.Column(db.DateTime(timezone=True))
 
     def __init__(
         self,
@@ -534,8 +533,8 @@ class RemoteNode(db.Model):
             access_info: Information about the connection.
         """
         self.event_id = access_info["event_id"]
-        self.last_synced_news_items = datetime.strptime(access_info["last_synced_news_items"], "%Y-%m-%d %H:%M:%S.%f")
-        self.last_synced_report_items = datetime.strptime(access_info["last_synced_report_items"], "%Y-%m-%d %H:%M:%S.%f")
+        self.last_synced_news_items = parse_datetime(access_info["last_synced_news_items"])
+        self.last_synced_report_items = parse_datetime(access_info["last_synced_report_items"])
         db.session.commit()
 
     def disconnect(self):

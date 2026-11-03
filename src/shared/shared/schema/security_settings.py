@@ -2,6 +2,8 @@
 
 from marshmallow import EXCLUDE, Schema, fields
 
+from shared.schema.datetime import UTCDateTime
+
 
 class SecuritySettingsSchema(Schema):
     """Marshmallow schema for the site-wide security settings.
@@ -24,4 +26,4 @@ class SecuritySettingsSchema(Schema):
     rp_name = fields.Str(load_default="", allow_none=True)
     origins = fields.Str(load_default="", allow_none=True)
     updated_by = fields.Str(dump_only=True)
-    updated_at = fields.Str(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)

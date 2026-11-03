@@ -4,6 +4,7 @@ from flask import request
 from flask_restful import Resource
 from managers.auth_manager import api_key_required
 from model import news_item, report_item
+from shared.datetime_utils import format_datetime
 
 
 class RemoteConnect(Resource):
@@ -65,7 +66,7 @@ class RemoteSyncNewsItems(Resource):
             A dictionary containing the last sync time and the news items.
         """
         news_items, last_sync_time = news_item.NewsItemData.get_for_sync(remote_node.last_synced_news_items, remote_node.osint_sources)
-        return {"last_sync_time": format(last_sync_time), "news_items": news_items}
+        return {"last_sync_time": format_datetime(last_sync_time), "news_items": news_items}
 
     @api_key_required("remote")
     def put(self, remote_node=None):
@@ -102,7 +103,7 @@ class RemoteSyncReportItems(Resource):
             remote_node.last_synced_report_items,
             remote_node.report_item_types,
         )
-        return {"last_sync_time": format(last_sync_time), "report_items": report_items}
+        return {"last_sync_time": format_datetime(last_sync_time), "report_items": report_items}
 
     @api_key_required("remote")
     def put(self, remote_node=None):

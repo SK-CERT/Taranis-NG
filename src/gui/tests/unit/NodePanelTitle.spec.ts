@@ -68,6 +68,15 @@ describe('NodePanelTitle', () => {
         expect(title).toContain('04.09.2026 - 14:00:00')
     })
 
+    it('converts an API UTC timestamp to local time in the status tooltip', () => {
+        const lastSeen = '2026-07-14T23:30:00Z'
+        const wrapper = mountTitle({ node: node({ last_seen: lastSeen }) })
+        const expected = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastSeen))
+
+        expect(dot(wrapper).attributes('title')).toContain(expected)
+        expect(dot(wrapper).attributes('title')).not.toContain(lastSeen)
+    })
+
     it('emits edit and delete for the node it is showing', async () => {
         const wrapper = mountTitle()
         const buttons = wrapper.findAllComponents({ name: 'ActionButton' })

@@ -126,7 +126,7 @@ def parse_datetime(value: object) -> datetime | None:
         value (object): An ISO 8601 or RFC 2822 string.
 
     Returns:
-        The time, in UTC when it named no zone, or None when it cannot be read.
+        The time normalized to UTC, or None when it cannot be read.
     """
     if not isinstance(value, str) or not value.strip():
         return None
@@ -138,7 +138,7 @@ def parse_datetime(value: object) -> datetime | None:
             parsed = date_parse(text)
         except (ValueError, OverflowError):
             return None
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC) if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 @dataclass

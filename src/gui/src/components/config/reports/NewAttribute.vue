@@ -70,7 +70,9 @@
                             md="6"
                         >
                             <v-text-field
-                                v-model="localItem.default_value"
+                                v-model="defaultValueInput"
+                                :type="localItem.type === 'DATE_TIME' ? 'datetime-local' : 'text'"
+                                :step="localItem.type === 'DATE_TIME' ? 'any' : undefined"
                                 :spellcheck="false"
                                 :label="t('reports.attributes.default_value')"
                                 variant="outlined"
@@ -244,6 +246,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { fromLocalDateTime, toLocalDateTime } from '@/utils/dateTime'
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import { useAuth } from '@/composables/useAuth'
     import {
@@ -380,6 +383,13 @@
     }
 
     const localItem = ref<AttributeItem>({ ...defaultItem })
+    // API defaults remain UTC instants; datetime-local edits use the browser's wall clock.
+    const defaultValueInput = computed({
+        get: () => (localItem.value.type === 'DATE_TIME' ? toLocalDateTime(localItem.value.default_value) : localItem.value.default_value),
+        set: (value: string) => {
+            localItem.value.default_value = localItem.value.type === 'DATE_TIME' ? fromLocalDateTime(value) : value
+        }
+    })
     const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission('CONFIG_ATTRIBUTE_CREATE'))

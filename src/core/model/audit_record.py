@@ -1,11 +1,10 @@
-from datetime import datetime
-
 from managers.db_manager import db
+from shared.datetime_utils import utc_now
 
 
 class AuditRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, default=datetime.now)
+    timestamp = db.Column(db.DateTime(timezone=True), default=utc_now)
 
     ip_address = db.Column(db.String())
 

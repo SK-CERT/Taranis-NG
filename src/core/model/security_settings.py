@@ -51,7 +51,7 @@ class SecuritySettings(db.Model):
     rp_name = db.Column(db.String(), nullable=True)
     origins = db.Column(db.String(), nullable=True)
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     @classmethod
     def get(cls) -> SecuritySettings:

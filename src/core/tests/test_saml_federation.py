@@ -156,7 +156,7 @@ def test_verify_metadata_counts_usable_identity_providers(monkeypatch: pytest.Mo
     result = saml_federation.verify_metadata("https://metadata.example.org/aggregate", anchor)
 
     assert result["entity_count"] == 2
-    assert result["valid_until"] == "2099-01-01T00:00:00+00:00"
+    assert result["valid_until"] == "2099-01-01T00:00:00Z"
 
 
 def test_metadata_past_valid_until_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
