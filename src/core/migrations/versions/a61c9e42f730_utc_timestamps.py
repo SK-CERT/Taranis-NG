@@ -43,7 +43,6 @@ TIMESTAMP_COLUMNS = {
     "user_webauthn_credential": ("created_at", "last_used_at"),
     "report_item_attribute": ("created", "last_updated"),
     "report_item": ("created", "last_updated"),
-    "audit_record": ("timestamp",),
     "settings_user": ("updated_at",),
     "settings": ("updated_at",),
     "public_web_node": ("created", "last_seen"),

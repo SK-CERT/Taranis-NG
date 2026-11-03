@@ -8,7 +8,7 @@ from api.public_web import _serialize_product
 from managers.db_manager import db
 from marshmallow import ValidationError
 from model.attribute import Attribute
-from model.audit_record import AuditRecord
+from model.log_record import LogRecord
 from model.report_item import ReportItemAttribute, _normalize_datetime_attributes
 from shared.datetime_utils import format_datetime
 from shared.schema.attribute import AttributeType
@@ -21,12 +21,12 @@ def test_model_timestamp_columns_are_timezone_aware() -> None:
     columns = [column for table in db.metadata.tables.values() for column in table.columns if isinstance(column.type, db.DateTime)]
     assert columns
     assert all(column.type.timezone for column in columns)
-    assert "TIMESTAMP WITH TIME ZONE" in str(CreateTable(AuditRecord.__table__).compile(dialect=postgresql.dialect()))
+    assert "TIMESTAMP WITH TIME ZONE" in str(CreateTable(LogRecord.__table__).compile(dialect=postgresql.dialect()))
 
 
 def test_timestamp_defaults_are_evaluated_for_each_insert() -> None:
     engine = create_engine("sqlite://")
-    table = AuditRecord.__table__
+    table = LogRecord.__table__
     table.create(engine)
     with engine.begin() as connection:
         connection.execute(insert(table).values(id=1))
