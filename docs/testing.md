@@ -1,6 +1,6 @@
 # Testing
 
-Two commands cover everything.
+Two commands install dependencies and run the default suites.
 
 ```bash
 python3 scripts/dev_setup.py      # install (add --all for Playwright browsers + ansible)
@@ -28,6 +28,73 @@ python3 scripts/run_tests.py --suite pytest -- -k saml # extra args go to the to
 
 A suite whose tooling is not installed **skips** rather than fails, so a partial checkout
 can still commit. CI adds `--require`, which turns each skip into a failure.
+
+## Remote synchronization compatibility
+
+The separate **Remote Compatibility Tests** workflow
+(`.github/workflows/remote-tests.yml`) runs on pull requests, pushes to `main`, and manual
+dispatch. Its contract job runs the remote API, client, model, timezone migration, and
+shared protocol tests against a disposable PostgreSQL service. Its integration
+jobs build real core services from the current checkout and the unmodified v1-only
+release `26.10.1`, pinned to commit
+`53892ffeb2a0862bf2d995d2022d1d74e6357192`.
+
+| Lane | Nodes and timezones | Protocol and direction |
+| --- | --- | --- |
+| `mixed-utc` | Current UTC + legacy UTC | v1 in both directions |
+| `mixed-bratislava` | Current UTC + legacy Europe/Bratislava | v1 in both directions, with explicit peer timezone settings |
+| `current` | Two current UTC nodes | v2 in both directions |
+
+Each lane has two cores, independent PostgreSQL databases and Redis services, and real
+SSE forwarding. It does not start the GUI or collector, presenter, publisher, or bot
+services. The tests check database-backed news and report imports, acknowledgments,
+incremental updates, replay, sharing filters, authentication, and timestamp contracts.
+Report payload and persistence are covered; full report rendering is outside this suite.
+
+Run the same lanes locally from the repository root:
+
+```bash
+python3 scripts/dev_setup.py --skip-gui
+python3 scripts/run_remote_tests.py --lane mixed-utc
+python3 scripts/run_remote_tests.py --lane mixed-bratislava
+python3 scripts/run_remote_tests.py --lane current
+# Or run all three lanes (the default):
+python3 scripts/run_remote_tests.py
+```
+
+The runner requires Git, a working Docker engine with Compose v2, and the root `.venv`
+with pytest and requests. If the pinned legacy commit is absent from a shallow checkout,
+fetch it with `git fetch origin tag 26.10.1`. The runner archives that exact commit into
+a temporary directory; it does not patch the historical application. A read-only timezone
+data volume supplies the historical image with the IANA database needed for non-UTC
+deployments. The current build inputs are copied into a temporary context with readable
+permissions, preserving source bytes and leaving the checkout unchanged. Missing tooling
+or a failed historical build is a failure, never a skip. The runner uses a dedicated Compose
+project and disposable credentials and volumes, waits for readiness and synchronization
+with deadlines, and removes its own stack after the run. Host-facing ports are allocated
+dynamically and bind only to loopback. JUnit XML, run metadata, database snapshots, and
+container diagnostics are written under `local/remote-tests/<lane>/`;
+CI uploads these artifacts with a 14-day retention period. Use `--artifacts PATH` to
+choose another output directory and `--python PATH` to select another interpreter
+containing pytest and requests. These integration tests are intentionally separate from
+`scripts/run_tests.py`'s unit suites and are stored under `tests/integration/remote`,
+with their own pytest configuration so the core unit tests' stub config cannot affect
+running nodes. Replay tests temporarily reject acknowledgment writes in the disposable
+provider database, then retry the imported batch through the real SSE listener.
+
+For a quick contract-only check after installing the Python dependencies, run the
+following command. Set `TARANIS_TEST_POSTGRES_URL` to a disposable PostgreSQL database
+URL (`postgresql+psycopg://...`) to include the migration database cases; otherwise only
+those cases are skipped locally. CI always supplies this database.
+
+```bash
+.venv/bin/python -m pytest -v \
+  src/core/tests/test_remote_api_versions.py \
+  src/core/tests/test_remote_client_compat.py \
+  src/core/tests/test_remote_model_compat.py \
+  src/core/tests/test_remote_timezone_migration.py \
+  src/shared/tests/test_remote_protocol.py
+```
 
 ## Installation
 

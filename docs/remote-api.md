@@ -84,3 +84,11 @@ Check peers with differing timezones individually; one installation-wide default
 cannot describe every remote node. V1 retains its limitations: minute precision
 for collected dates and ambiguous wall clocks during daylight-saving overlaps.
 V2 avoids those ambiguities through explicit offsets.
+
+## Compatibility tests
+
+The Remote Compatibility Tests CI workflow exercises the unmodified v1-only release `26.10.1`
+against the current checkout in both provider/consumer directions, plus current peers
+using v2. The mixed-version lanes cover UTC and Europe/Bratislava legacy nodes. See
+[Remote synchronization compatibility](testing.md#remote-synchronization-compatibility)
+for the pinned historical commit, coverage, prerequisites, and local commands.
