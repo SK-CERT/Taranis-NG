@@ -1,4 +1,4 @@
-"""Loading the private key an SFTP preset names.
+"""Loading the private key an SFTP channel names.
 
 These drive the real ``SFTPPublisher.publish`` with paramiko's client replaced,
 so the assertions cover both the key loading and what the publisher then does
@@ -80,8 +80,8 @@ def ssh_client(monkeypatch: pytest.MonkeyPatch) -> type[FakeSSHClient]:
 
 
 @pytest.fixture
-def sftp_preset(publisher_input: Callable[..., object]) -> Callable[..., object]:
-    """Build an SFTP preset, overriding only what a test cares about."""
+def sftp_channel(publisher_input: Callable[..., object]) -> Callable[..., object]:
+    """Build an SFTP channel, overriding only what a test cares about."""
 
     def _build(**overrides: str) -> object:
         values = {
@@ -106,7 +106,7 @@ def sftp_preset(publisher_input: Callable[..., object]) -> Callable[..., object]
 def test_every_key_type_paramiko_still_supports_is_loaded(
     key_fixture: str,
     request: pytest.FixtureRequest,
-    sftp_preset: Callable[..., object],
+    sftp_channel: Callable[..., object],
     ssh_client: type[FakeSSHClient],
 ) -> None:
     """RSA, Ed25519 and ECDSA all authenticate.
@@ -118,7 +118,7 @@ def test_every_key_type_paramiko_still_supports_is_loaded(
     """
     key_path = request.getfixturevalue(key_fixture)
 
-    _, status = SFTPPublisher().publish(sftp_preset(SSH_KEY=str(key_path)))
+    _, status = SFTPPublisher().publish(sftp_channel(SSH_KEY=str(key_path)))
 
     assert status == HTTPStatus.OK
     assert "pkey" in ssh_client.last.connect_kwargs
@@ -126,13 +126,13 @@ def test_every_key_type_paramiko_still_supports_is_loaded(
 
 def test_encrypted_key_is_loaded_with_its_passphrase(
     encrypted_key_file: Path,
-    sftp_preset: Callable[..., object],
+    sftp_channel: Callable[..., object],
     ssh_client: type[FakeSSHClient],
 ) -> None:
-    """A passphrase-protected key works when the preset carries the passphrase."""
-    preset = sftp_preset(SSH_KEY=str(encrypted_key_file), SSH_KEY_PASSWORD=KEY_PASSPHRASE)
+    """A passphrase-protected key works when the channel carries the passphrase."""
+    channel = sftp_channel(SSH_KEY=str(encrypted_key_file), SSH_KEY_PASSWORD=KEY_PASSPHRASE)
 
-    _, status = SFTPPublisher().publish(preset)
+    _, status = SFTPPublisher().publish(channel)
 
     assert status == HTTPStatus.OK
     assert ssh_client.last.connect_kwargs["pkey"].get_name() == "ssh-ed25519"
@@ -140,7 +140,7 @@ def test_encrypted_key_is_loaded_with_its_passphrase(
 
 def test_encrypted_key_without_a_passphrase_says_so(
     encrypted_key_file: Path,
-    sftp_preset: Callable[..., object],
+    sftp_channel: Callable[..., object],
     ssh_client: type[FakeSSHClient],
 ) -> None:
     """Report the missing passphrase, not a complaint about the last key type.
@@ -148,7 +148,7 @@ def test_encrypted_key_without_a_passphrase_says_so(
     The OpenSSH envelope is decrypted before the key type inside it matters, so
     retrying the other classes only replaced this diagnosis with a worse one.
     """
-    body, status = SFTPPublisher().publish(sftp_preset(SSH_KEY=str(encrypted_key_file)))
+    body, status = SFTPPublisher().publish(sftp_channel(SSH_KEY=str(encrypted_key_file)))
 
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "encrypted" in body["error"]
@@ -158,10 +158,10 @@ def test_encrypted_key_without_a_passphrase_says_so(
 @pytest.mark.usefixtures("ssh_client")
 def test_a_file_that_is_not_a_key_names_the_supported_types(
     not_a_key_file: Path,
-    sftp_preset: Callable[..., object],
+    sftp_channel: Callable[..., object],
 ) -> None:
     """Say what the file is not, and what would have worked."""
-    body, status = SFTPPublisher().publish(sftp_preset(SSH_KEY=str(not_a_key_file)))
+    body, status = SFTPPublisher().publish(sftp_channel(SSH_KEY=str(not_a_key_file)))
 
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert str(not_a_key_file) in body["error"]
@@ -171,31 +171,31 @@ def test_a_file_that_is_not_a_key_names_the_supported_types(
 
 def test_an_unusable_key_never_falls_back_to_password_authentication(
     not_a_key_file: Path,
-    sftp_preset: Callable[..., object],
+    sftp_channel: Callable[..., object],
     ssh_client: type[FakeSSHClient],
 ) -> None:
-    """A preset naming a key must fail rather than quietly authenticate by password.
+    """A channel naming a key must fail rather than quietly authenticate by password.
 
     The loader used to return None when no key type matched, which sent the
-    caller down the ``else`` branch and connected with the preset's password. On
+    caller down the ``else`` branch and connected with the channel's password. On
     the pinned paramiko that return was unreachable - the missing DSSKey raised
     AttributeError first - so this guards the contract rather than a live bug:
-    a key the preset names is now either used or fatal, never skipped.
+    a key the channel names is now either used or fatal, never skipped.
     """
-    preset = sftp_preset(SSH_KEY=str(not_a_key_file), PASSWORD="a-password-that-must-not-be-used")
+    channel = sftp_channel(SSH_KEY=str(not_a_key_file), PASSWORD="a-password-that-must-not-be-used")
 
-    _, status = SFTPPublisher().publish(preset)
+    _, status = SFTPPublisher().publish(channel)
 
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert ssh_client.last is None or ssh_client.last.connect_kwargs is None
 
 
-def test_a_preset_with_no_key_still_authenticates_by_password(
-    sftp_preset: Callable[..., object],
+def test_a_channel_with_no_key_still_authenticates_by_password(
+    sftp_channel: Callable[..., object],
     ssh_client: type[FakeSSHClient],
 ) -> None:
-    """Password auth stays available for the presets that are configured for it."""
-    _, status = SFTPPublisher().publish(sftp_preset(PASSWORD="hunter2"))
+    """Password auth stays available for the channels that are configured for it."""
+    _, status = SFTPPublisher().publish(sftp_channel(PASSWORD="hunter2"))
 
     assert status == HTTPStatus.OK
     assert ssh_client.last.connect_kwargs["password"] == "hunter2"
@@ -204,14 +204,14 @@ def test_a_preset_with_no_key_still_authenticates_by_password(
 
 @pytest.mark.usefixtures("ssh_client")
 def test_a_relative_key_path_is_reported_as_the_absolute_one(
-    sftp_preset: Callable[..., object],
+    sftp_channel: Callable[..., object],
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The reported path has to be findable; ``crypto/taranis`` was not."""
     monkeypatch.chdir(tmp_path)
 
-    body, status = SFTPPublisher().publish(sftp_preset(SSH_KEY="crypto/taranis"))
+    body, status = SFTPPublisher().publish(sftp_channel(SSH_KEY="crypto/taranis"))
 
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert str(tmp_path / "crypto" / "taranis") in body["error"]
@@ -220,7 +220,7 @@ def test_a_relative_key_path_is_reported_as_the_absolute_one(
 @pytest.mark.usefixtures("ssh_client")
 def test_an_unreadable_key_explains_the_unprivileged_user(
     rsa_key_file: Path,
-    sftp_preset: Callable[..., object],
+    sftp_channel: Callable[..., object],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A key only root can read is the failure this whole path exists for.
@@ -234,7 +234,7 @@ def test_an_unreadable_key_explains_the_unprivileged_user(
 
     monkeypatch.setattr(paramiko.RSAKey, "__init__", deny)
 
-    body, status = SFTPPublisher().publish(sftp_preset(SSH_KEY=str(rsa_key_file)))
+    body, status = SFTPPublisher().publish(sftp_channel(SSH_KEY=str(rsa_key_file)))
 
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "Permission denied" in body["error"]

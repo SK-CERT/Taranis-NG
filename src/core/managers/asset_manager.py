@@ -5,7 +5,7 @@ import threading
 from managers import publishers_manager
 from managers.db_manager import db
 from model.asset import Asset
-from model.publisher_preset import PublisherPreset
+from model.publishing_channel import PublishingChannel
 from model.state import StateEnum, StateManager
 
 
@@ -30,8 +30,8 @@ def report_item_changed(report_item: object) -> None:
 
         db.session.commit()
 
-        publisher_preset = PublisherPreset.find_for_notifications()
-        if publisher_preset is not None:
+        publishing_channel = PublishingChannel.find_for_notifications()
+        if publishing_channel is not None:
 
             class NotificationThread(threading.Thread):
                 @classmethod
@@ -39,7 +39,7 @@ def report_item_changed(report_item: object) -> None:
                     for notification_group in notification_groups:
                         for template in notification_group.templates:
                             recipients = [recipient.email for recipient in template.recipients]
-                            publishers_manager.publish(publisher_preset, None, template.message_title, template.message_body, recipients)
+                            publishers_manager.publish(publishing_channel, None, template.message_title, template.message_body, recipients)
 
             notification_thread = NotificationThread()
             notification_thread.start()

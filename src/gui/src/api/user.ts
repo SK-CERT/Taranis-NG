@@ -20,12 +20,12 @@ export function updateUserWordLists(data) {
     return ApiService.put('/users/my-word-lists', data)
 }
 
-export function getAllUserProductTypes() {
-    return ApiService.get('/users/my-product-types')
+export function getAllUserProductPresets() {
+    return ApiService.get('/users/my-product-presets')
 }
 
-export function getAllUserPublishersPresets() {
-    return ApiService.get('/users/my-publisher-presets')
+export function getAllUserPublishingChannels() {
+    return ApiService.get('/users/my-publishing-channels')
 }
 
 export function getMyTotp() {

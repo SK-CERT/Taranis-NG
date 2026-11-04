@@ -583,8 +583,8 @@ and `-e '{"firewall_allowed_tcp_ports": [22, 80, 443]}'` to open more.
 ## Moving work items between nodes
 
 Once multiple nodes of a given type exist (e.g. two collectors nodes), you can
-move individual work items (OSINT sources, bot presets, product types,
-publisher presets) between them from the admin dialogs in the **GUI**
+move individual work items (OSINT sources, bot presets, product formats,
+publishing channels) between them from the admin dialogs in the **GUI**
 (`src/gui/`, served at `/`):
 
 1. Open the work item's edit dialog (e.g. *Configuration → OSINT Sources →

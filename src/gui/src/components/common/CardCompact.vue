@@ -296,7 +296,7 @@
         bot_id?: string
         item_name?: string
         report_type_name?: string
-        product_type_name?: string
+        product_preset_name?: string | null
         report_items_count?: number
         news_items_count?: number
         in_reports_count?: number
@@ -370,23 +370,23 @@
     // fallback when a value is empty.
     const isOsintSource = computed(() => props.card?.collector_id != null)
 
-    // Product type, publisher preset and bot preset cards each carry the id of the module they
+    // Product format, publishing channel and bot preset cards each carry the id of the module they
     // drive. Like OSINT sources they always render the description column: descriptions are
     // optional on these records, and an empty one would otherwise drop the whole labelled column
     // and leave the card looking unlike its siblings.
     const isModulePreset = computed(() => props.card?.presenter_id != null || props.card?.publisher_id != null || props.card?.bot_id != null)
 
     const isReviewCard = computed(() => {
-        return props.card?.report_type_name != null || props.card?.product_type_name != null || Array.isArray(props.card?.news_items)
+        return props.card?.report_type_name != null || props.card?.product_preset_name != null || Array.isArray(props.card?.news_items)
     })
     const highlightWords = computed(() => collectHighlightWords(settingsStore.getProfileWordLists))
     const isDenseList = computed(() => isReviewCard.value || props.listMode)
-    const hasWorkflowState = computed(() => props.card?.report_type_name != null || props.card?.product_type_name != null)
+    const hasWorkflowState = computed(() => props.card?.report_type_name != null || props.card?.product_preset_name != null)
     const reviewItemCount = computed(() =>
         Number(props.card?.report_items_count ?? props.card?.news_items_count ?? props.card?.news_items?.length ?? 0)
     )
     const reviewItemCountMessage = computed(() => {
-        const key = props.card?.product_type_name != null ? 'publish.report_items_count' : 'analyze.news_items_count'
+        const key = props.card?.product_preset_name != null ? 'publish.report_items_count' : 'analyze.news_items_count'
         return t(key, { count: n(reviewItemCount.value) }, reviewItemCount.value)
     })
     const completedReportsCount = computed(() => Number(props.card?.completed_reports_count ?? 0))
@@ -407,7 +407,7 @@
         if (isOsintSource.value) {
             return props.card.collector?.name || props.card.collector?.type || t('card_item.title')
         }
-        // Same for the module behind a product type (presenter_name) and behind a publisher or
+        // Same for the module behind a product format (presenter_name) and behind a publisher or
         // bot preset (item_name) — the backend presentation schemas expose the module name only.
         if (props.card?.presenter_name) {
             return props.card.presenter_name
@@ -418,8 +418,8 @@
         if (props.card?.report_type_name) {
             return props.card.report_type_name
         }
-        if (props.card?.product_type_name) {
-            return props.card.product_type_name
+        if (props.card?.product_preset_name) {
+            return props.card.product_preset_name
         }
         const sourceName =
             props.card?.news_items?.[0]?.news_item_data?.osint_source_name || props.card?.news_items?.[0]?.news_item_data?.source

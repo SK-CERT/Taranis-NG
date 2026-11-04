@@ -21,7 +21,10 @@ from shared.common import TZ
 from sqlalchemy import func
 from sqlalchemy.orm import declared_attr
 
+# Who wrote a translation: the AI (nobody has reviewed it yet), the AI and a person who reviewed
+# it, or a person. Only an unreviewed AI translation may be replaced without asking.
 ORIGIN_AI = "ai"
+ORIGIN_REVIEWED = "reviewed"
 ORIGIN_MANUAL = "manual"
 
 # The texts of a product that are translated.
@@ -93,7 +96,7 @@ class TranslationMixin:
         Args:
             value (str): The translated text.
             source (str | None): The source text it translates.
-            origin (str): ORIGIN_AI or ORIGIN_MANUAL.
+            origin (str): ORIGIN_AI, ORIGIN_REVIEWED or ORIGIN_MANUAL.
             user_id (int | None): Who wrote it, or asked the AI to.
         """
         self.value = value or ""
@@ -104,16 +107,16 @@ class TranslationMixin:
         self.version = (self.version or 0) + 1
 
     def review(self, source: str | None, user_id: int | None) -> None:
-        """Confirm the text as a person's translation of ``source``, unchanged.
+        """Confirm an AI translation of ``source``, unchanged.
 
-        A reviewed AI translation counts as written by ``user_id``, and was checked against the
-        current source, so it is no longer outdated either.
+        A reviewed AI translation stays the AI's text, but ``user_id`` answers for it (see
+        ORIGIN_REVIEWED). It was checked against the current source, so it is no longer outdated.
 
         Args:
             source (str | None): The current source text.
             user_id (int | None): Who reviewed it.
         """
-        self.write(self.value, source, ORIGIN_MANUAL, user_id)
+        self.write(self.value, source, ORIGIN_REVIEWED, user_id)
 
     def to_dict(self, source: str | None) -> dict:
         """Serialize for the GUI, with whether it went stale against ``source``.

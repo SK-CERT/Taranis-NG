@@ -23,7 +23,7 @@ from managers.db_manager import db
 from managers.sse_manager import sse_manager
 from model.glossary import GlossaryEntry
 from model.report_item import ReportItem
-from model.translation import ORIGIN_AI, ORIGIN_MANUAL, TITLE_FIELDS, ReportItemAttributeTranslation, ReportItemTranslation
+from model.translation import ORIGIN_AI, TITLE_FIELDS, ReportItemAttributeTranslation, ReportItemTranslation
 from model.user import User
 from shared.common import TZ
 from shared.log_manager import logger
@@ -163,7 +163,7 @@ def select_fields(
         row = _existing(report_item, key, language, owner)
         if wanted is None and row is not None and row.value and not row.is_outdated(source):
             continue
-        if row is not None and row.value and row.origin == ORIGIN_MANUAL and not overwrite_manual:
+        if row is not None and row.value and row.origin != ORIGIN_AI and not overwrite_manual:
             result.skipped_manual.append(key)
             continue
         if key in locked:
@@ -269,7 +269,7 @@ def translate_language(
             else:
                 row = ReportItemAttributeTranslation(language=language, value="", version=0)
                 owner.translations.append(row)
-        elif row.origin == ORIGIN_MANUAL and row.value and not overwrite_manual:
+        elif row.origin != ORIGIN_AI and row.value and not overwrite_manual:
             result.skipped_manual.append(key)
             continue
         row.write(value, texts[key], ORIGIN_AI, user.id)

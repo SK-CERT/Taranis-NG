@@ -63,8 +63,8 @@ def _input(*, translated: bool) -> dict:
     product = {
         "title": "Bulletin",
         "description": "",
-        "product_type": "MISP",
-        "product_type_description": "",
+        "product_format": "MISP",
+        "product_format_description": "",
         "user": {"name": "A"},
         "id": "7",
     }

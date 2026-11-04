@@ -45,7 +45,7 @@ const makeCard = (overrides: Record<string, unknown> = {}) => ({
     id: 1,
     title: 'Product title',
     subtitle: '',
-    product_type_name: 'Advisory',
+    product_preset_name: 'Advisory',
     updated_at: '2026-08-09T10:00:00Z',
     updated_by: '',
     report_items_count: 0,
@@ -72,7 +72,7 @@ describe('CardProduct locale-safe composition', () => {
         const wrapper = mountCard({
             title: 'عنوان المنتج',
             subtitle: 'وصف المنتج',
-            product_type_name: 'نشرة أمنية',
+            product_preset_name: 'نشرة أمنية',
             state: { display_name: 'قيد النشر', description: 'وصف الحالة' },
             updated_at: rawDate,
             updated_by: 'ناشر'

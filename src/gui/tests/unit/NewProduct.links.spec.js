@@ -3,7 +3,7 @@ import { defineComponent, h } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewProduct from '@/components/publish/NewProduct.vue'
-import { getProductById, getPublishPublicWebs, updateProduct } from '@/api/publish'
+import { getProductById, updateProduct } from '@/api/publish'
 
 vi.mock('@/api/publish', () => ({
     getAllProducts: vi.fn(),
@@ -11,18 +11,11 @@ vi.mock('@/api/publish', () => ({
     updateProduct: vi.fn(),
     publishProduct: vi.fn(),
     previewProduct: vi.fn(),
-    getProductById: vi.fn(),
-    getPublishPublicWebs: vi.fn()
-}))
-
-vi.mock('@/api/config', () => ({
-    getAllPublicWebNodes: vi.fn(),
-    getPublicWebs: vi.fn()
+    getProductById: vi.fn()
 }))
 
 vi.mock('@/api/user', () => ({
-    getAllUserProductTypes: vi.fn().mockResolvedValue({ data: { items: [] } }),
-    getAllUserPublishersPresets: vi.fn().mockResolvedValue({ data: { items: [] } })
+    getAllUserProductPresets: vi.fn().mockResolvedValue({ data: { items: [] } })
 }))
 
 vi.mock('@/api/state', () => ({
@@ -54,8 +47,7 @@ const productDetail = (overrides = {}) => ({
     id: 5,
     title: 'Bulletin',
     description: 'Intro',
-    product_type_id: 1,
-    public_web_ids: [],
+    product_preset_id: 1,
     links: [{ key: 'prod01', url: BLOG }],
     report_items: [
         {
@@ -99,7 +91,6 @@ const lastSaved = () => vi.mocked(updateProduct).mock.calls.at(-1)?.[0]
 describe('NewProduct links', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        vi.mocked(getPublishPublicWebs).mockResolvedValue({ data: { total_count: 0, items: [] } })
         vi.mocked(updateProduct).mockResolvedValue({ data: 5 })
     })
 

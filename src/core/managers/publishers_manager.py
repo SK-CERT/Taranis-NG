@@ -7,8 +7,8 @@ Returns:
 from http import HTTPStatus
 
 from model.publisher import Publisher
-from model.publisher_preset import PublisherPreset
 from model.publishers_node import PublishersNode
+from model.publishing_channel import PublishingChannel
 from remote.publishers_api import PublishersApi
 from shared.schema.publisher import PublisherInput, PublisherInputSchema
 from shared.schema.publishers_node import PublishersNode as PublishersNodeSchema
@@ -51,20 +51,20 @@ def update_publishers_node(node_id: int, data: dict) -> HTTPStatus:
     return status_code
 
 
-def add_publisher_preset(data: dict) -> None:
-    """Add publisher preset.
+def add_publishing_channel(data: dict) -> None:
+    """Add publishing channel.
 
     Args:
         data (dict): json
     """
-    PublisherPreset.add_new(data)
+    PublishingChannel.add_new(data)
 
 
-def publish(preset: PublisherPreset, data: dict, message_title: str, message_body: str, recipients: list) -> tuple[dict, HTTPStatus]:
+def publish(channel: PublishingChannel, data: dict, message_title: str, message_body: str, recipients: list) -> tuple[dict, HTTPStatus]:
     """Publish.
 
     Args:
-        preset (PublisherPreset): The publisher preset to use.
+        channel (PublishingChannel): The publishing channel to use.
         data (dict): The data to publish.
         message_title (str): The title of the message.
         message_body (str): The body of the message.
@@ -73,7 +73,7 @@ def publish(preset: PublisherPreset, data: dict, message_title: str, message_bod
     Returns:
         Response: The response from the publishing API.
     """
-    publisher = preset.publisher
+    publisher = channel.publisher
     node = publisher.node
     data_data = None
     data_mime = None
@@ -92,9 +92,9 @@ def publish(preset: PublisherPreset, data: dict, message_title: str, message_bod
         message_headers = data.get("message_headers")
 
     input_data = PublisherInput(
-        preset.name,
+        channel.name,
         publisher.type,
-        preset.parameter_values,
+        channel.parameter_values,
         data_mime,
         data_data,
         message_title,

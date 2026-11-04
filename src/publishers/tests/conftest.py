@@ -5,7 +5,7 @@ at import time (``config.Config``). Tests have no secrets, so a stub ``config``
 module is injected before any application import, exactly as the core and
 presenters suites do.
 
-Two publishers read a key file an operator names in a preset - the SFTP
+Two publishers read a key file an operator names in a channel - the SFTP
 publisher's private key and the email publisher's signing and encryption keys -
 and both are mounted in from the host. The fixtures here generate real key
 material so those paths are exercised for what they are, rather than mocked.
@@ -117,7 +117,7 @@ def publisher_input() -> Callable[..., types.SimpleNamespace]:
     """Build the input object a publisher's ``publish`` receives.
 
     Returns:
-        Callable: Takes the preset's parameter values as keyword arguments and
+        Callable: Takes the channel's parameter values as keyword arguments and
             returns the input, with the payload fields a presenter would fill in.
     """
 
@@ -125,7 +125,7 @@ def publisher_input() -> Callable[..., types.SimpleNamespace]:
         # The payload fields mirror shared.schema.publisher.PublisherInput, so a
         # publisher reading one the tests forgot fails here rather than silently.
         return types.SimpleNamespace(
-            name="test preset",
+            name="test channel",
             type="TEST_PUBLISHER",
             mime_type="application/json",
             data="eyJyZXBvcnQiOiAidGVzdCJ9",  # {"report": "test"}
@@ -141,9 +141,9 @@ def publisher_input() -> Callable[..., types.SimpleNamespace]:
     return _build
 
 
-# What an operator fills in for a working email preset. A test overrides the one or two
-# values it is about, so the rest of the preset stays out of the way of what it asserts.
-EMAIL_PRESET_VALUES = {
+# What an operator fills in for a working email channel. A test overrides the one or two
+# values it is about, so the rest of the channel stays out of the way of what it asserts.
+EMAIL_CHANNEL_VALUES = {
     "SMTP_SERVER": "smtp.example.org",
     "SMTP_SERVER_PORT": "587",
     "EMAIL_USERNAME": "taranis",
@@ -159,20 +159,20 @@ EMAIL_PRESET_VALUES = {
 
 
 @pytest.fixture
-def email_preset(publisher_input: Callable[..., types.SimpleNamespace]) -> Callable[..., types.SimpleNamespace]:
-    """Build an email preset, overriding only what a test cares about.
+def email_channel(publisher_input: Callable[..., types.SimpleNamespace]) -> Callable[..., types.SimpleNamespace]:
+    """Build an email channel, overriding only what a test cares about.
 
-    Preset parameters and payload fields are told apart by case, the way they are named in
+    Channel parameters and payload fields are told apart by case, the way they are named in
     the product: ``EMAIL_SUBJECT`` is what the operator configured, ``message_title`` is what
     core sent for this one publication.
 
     Returns:
-        Callable: Takes ``UPPERCASE`` preset parameters and lowercase ``PublisherInput``
+        Callable: Takes ``UPPERCASE`` channel parameters and lowercase ``PublisherInput``
             payload fields as keyword arguments, and returns the input object.
     """
 
     def _build(**overrides: object) -> types.SimpleNamespace:
-        values = dict(EMAIL_PRESET_VALUES)
+        values = dict(EMAIL_CHANNEL_VALUES)
         payload = {}
         for key, value in overrides.items():
             if key.isupper():
@@ -180,14 +180,14 @@ def email_preset(publisher_input: Callable[..., types.SimpleNamespace]) -> Calla
             else:
                 payload[key] = value
 
-        preset = publisher_input(**values)
+        channel = publisher_input(**values)
         for field, value in payload.items():
             # SimpleNamespace takes any attribute, so a typo would just sit there unread.
-            if not hasattr(preset, field):
+            if not hasattr(channel, field):
                 msg = f"{field!r} is not a PublisherInput payload field"
                 raise AttributeError(msg)
-            setattr(preset, field, value)
-        return preset
+            setattr(channel, field, value)
+        return channel
 
     return _build
 

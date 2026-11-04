@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from model.product_format import ProductFormat
     from model.user import User
 
 import base64
@@ -26,8 +27,7 @@ from managers.log_manager import logger
 from model.glossary import GlossaryEntry
 from model.permission import Permission
 from model.product import Product
-from model.product_type import ProductType
-from model.publisher_preset import PublisherPreset
+from model.product_preset import ProductPreset
 from model.report_item import ReportItem
 from model.translation import PRODUCT_FIELDS
 from remote.presenters_api import PresentersApi
@@ -40,6 +40,18 @@ PREVIEW_TICKET_TTL_SECONDS = 600
 # opened preview. Still capped, so a URL that leaks (proxy logs, browser history, a shared link)
 # can serve the report at most a couple more times, and only until the ticket expires.
 PREVIEW_TICKET_MAX_REDEMPTIONS = 3
+
+
+def _product_preset_refused(product_data: dict | None, user: User) -> tuple[dict, HTTPStatus] | None:
+    """Refuse a product whose product preset does not exist, or that the user may not use."""
+    product_preset_id = (product_data or {}).get("product_preset_id")
+    if not isinstance(product_preset_id, int) or ProductPreset.find(product_preset_id) is None:
+        return {"error": "Product preset not found"}, HTTPStatus.BAD_REQUEST
+    if not ProductPreset.allowed_with_acl(product_preset_id, user, see=False, access=True, modify=False):
+        err_msg = "Unauthorized access attempt to Product preset"
+        log_manager.store_auth_error_activity(err_msg)
+        return {"error": err_msg}, HTTPStatus.FORBIDDEN
+    return None
 
 
 class ProductsResource(Resource):
@@ -68,6 +80,8 @@ class ProductsResource(Resource):
                 filters["sort"] = request.args["sort"]
             if request.args.get("published"):
                 filters["published"] = request.args["published"]
+            if (request.args.get("product_preset_id") or "").isdigit():
+                filters["product_preset_id"] = request.args["product_preset_id"]
             if request.args.get("date_from"):
                 filters["date_from"] = request.args["date_from"]
             if request.args.get("date_to"):
@@ -84,13 +98,16 @@ class ProductsResource(Resource):
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @auth_required("PUBLISH_CREATE")
-    def post(self) -> Product:
+    def post(self) -> int | tuple[dict, HTTPStatus]:
         """Create a new product.
 
         Returns:
             The ID of the newly created product.
         """
         user = auth_manager.get_user_from_jwt()
+        refused = _product_preset_refused(request.json, user)
+        if refused:
+            return refused
         try:
             new_product = Product.add_product(request.json, user)
         except ValueError as ex:
@@ -108,7 +125,7 @@ class ProductResource(Resource):
         Resource -- The base class for API resources.
     """
 
-    @auth_required("PUBLISH_ACCESS", ACLCheck.PRODUCT_TYPE_ACCESS)
+    @auth_required("PUBLISH_ACCESS", ACLCheck.PRODUCT_PRESET_ACCESS)
     def get(self, product_id: int) -> dict:
         """Get the details of a product.
 
@@ -120,14 +137,17 @@ class ProductResource(Resource):
         """
         return Product.get_detail_json(product_id)
 
-    @auth_required("PUBLISH_UPDATE", ACLCheck.PRODUCT_TYPE_MODIFY)
-    def put(self, product_id: int) -> None:
+    @auth_required("PUBLISH_UPDATE", ACLCheck.PRODUCT_PRESET_MODIFY)
+    def put(self, product_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a product.
 
         Args:
             product_id (int): The ID of the product to be updated.
         """
         user = auth_manager.get_user_from_jwt()
+        refused = _product_preset_refused(request.json, user)
+        if refused:
+            return refused
         original_product = Product.find(product_id)
         original_state_id = original_product.state_id if original_product else None
         try:
@@ -141,7 +161,7 @@ class ProductResource(Resource):
         _reset_public_web_cache_if_published_changed(old_state_id=original_state_id, new_state_id=updated_state_id)
         return None
 
-    @auth_required("PUBLISH_DELETE", ACLCheck.PRODUCT_TYPE_MODIFY)
+    @auth_required("PUBLISH_DELETE", ACLCheck.PRODUCT_PRESET_MODIFY)
     def delete(self, product_id: int) -> None:
         """Delete a product.
 
@@ -240,91 +260,110 @@ def _submitted_translations(product_data: dict) -> dict[str, dict[str, str]]:
     return texts
 
 
-def load_product(product_data: dict, user: User, token: str) -> tuple[Product | None, dict | None]:
-    """The product to render: the saved one, or one built from the form (not saved).
-
-    Args:
-        product_data (dict): Source payload describing the product.
-        user (User): Authenticated user performing the operation.
-        token (str): A unique token used as a temporary product id for previews.
-
-    Returns:
-        tuple[Product | None, dict | None]: The product, and the texts per language of an unsaved one.
-    """
-    product_id = product_data.get("id", -1)
-    if product_id != -1:
-        return Product.find(product_id), None
-    prod_type = db.session.get(ProductType, product_data.get("product_type_id"))
-    if not prod_type:
-        return None, None
-    report_items_list = [item for item in (ReportItem.find(entry["id"]) for entry in product_data.get("report_items", [])) if item]
-    product = Product(
-        id=token,
-        title=product_data.get("title", ""),
-        description=product_data.get("description", ""),
-        product_type_id=prod_type.id,
-        state_id=product_data.get("state_id"),
-        report_items=report_items_list,
-        links=product_data.get("links"),
-        language=product_data.get("language"),
-    )
-    product.product_type = prod_type
-    product.user = user
-    return product, _submitted_translations(product_data)
-
-
-def prepare_product(product_data: dict, user: User, token: str, language: str | None = None) -> tuple[dict, HTTPStatus, dict]:
-    """Prepare a Product object and invoke the configured presenter to generate preview/publish data.
+def load_product(product_data: dict, user: User, token: str) -> tuple[dict, HTTPStatus, Product | None, dict | None]:
+    """The product to render: the stored one, or a temporary object for one not saved yet.
 
     Parameters:
         product_data (dict): Source payload describing the product.
         user (User): Authenticated user performing the operation (used for ACL checks).
         token (str): A unique token used as a temporary product id for previews.
-        language (str | None): The language to render (the open tab, or later a delivery's);
-            None renders the content as written.
 
     Returns:
-        tuple[dict, HTTPStatus, dict]
+        tuple[dict, HTTPStatus, Product | None, dict | None]: an error and its status, or the
+            product and, for one not saved yet, its texts per language.
     """
-    try:
-        language = content_language.clean_language(language)
-    except ValueError as ex:
-        return {"error": str(ex)}, HTTPStatus.BAD_REQUEST, None
-    product, product_translations = load_product(product_data, user, token)
-    if product is None:
-        return {"error": "Product type not found"}, HTTPStatus.NOT_FOUND, None
+    translations = None
+    product_id = product_data.get("id", -1)
+    if product_id == -1:
+        product_preset = ProductPreset.find(product_data.get("product_preset_id"))
+        if not product_preset:
+            return {"error": "Product preset not found"}, HTTPStatus.NOT_FOUND, None, None
 
-    if not ProductType.allowed_with_acl(product.product_type_id, user, see=False, access=True, modify=False):
-        err_msg = "Unauthorized access attempt to Product Type"
+        report_items_list = []
+        for item in product_data.get("report_items", []):
+            loaded_item = ReportItem.find(item["id"])
+            if loaded_item:
+                report_items_list.append(loaded_item)
+
+        # A temporary product object, never saved to the database.
+        product = Product(
+            id=token,
+            title=product_data.get("title", ""),
+            description=product_data.get("description", ""),
+            product_preset_id=product_preset.id,
+            state_id=product_data.get("state_id"),
+            report_items=report_items_list,
+            links=product_data.get("links"),
+            language=product_data.get("language"),
+        )
+        product.product_preset = product_preset
+        product.user = user
+        translations = _submitted_translations(product_data)
+    else:
+        product = Product.find(product_id)
+        if product is None:
+            return {"error": "Product not found"}, HTTPStatus.NOT_FOUND, None, None
+
+    if not ProductPreset.allowed_with_acl(product.product_preset_id, user, see=False, access=True, modify=False):
+        err_msg = "Unauthorized access attempt to Product preset"
         log_manager.store_auth_error_activity(err_msg)
-        return {"error": err_msg}, HTTPStatus.UNAUTHORIZED
+        return {"error": err_msg}, HTTPStatus.UNAUTHORIZED, None, None
 
-    presenter = product.product_type.presenter
+    return {}, HTTPStatus.OK, product, translations
+
+
+def render_product(
+    product: Product,
+    product_format: ProductFormat,
+    language: str | None = None,
+    translations: dict | None = None,
+) -> tuple[dict, HTTPStatus, dict | None]:
+    """Render a product in one product format through that format's presenter.
+
+    Args:
+        product (Product): The product.
+        product_format (ProductFormat): The format.
+        language (str | None): The language to render (the open tab, or the one published in);
+            None renders the content as written.
+        translations (dict | None): The texts per language of a product not saved yet.
+
+    Returns:
+        tuple[dict, HTTPStatus, dict | None]: an error and its status, or what the presenter generated.
+    """
+    presenter = product_format.presenter
     if not presenter:
-        return {"error": "Product type has no presenter configured"}, HTTPStatus.BAD_REQUEST, None
+        return {"error": f"Format '{product_format.title}' has no presenter configured"}, HTTPStatus.BAD_REQUEST, None
 
     node = presenter.node
     if not node:
         return {"error": "Presenter has no node configured"}, HTTPStatus.BAD_REQUEST, None
 
-    input_data = PresenterInput(presenter.type, product)
+    input_data = PresenterInput(presenter.type, product, product_format=product_format)
     input_schema = PresenterInputSchema()
     payload = input_schema.dump(input_data)
     # In the language asked for: texts translated, constants and labels as extra fields, and the
-    # product type's templates for that language. Before the citations, which work on the texts.
-    content_localizer.localize_presenter_input(payload, language, product, product_translations)
-    content_localizer.localize_templates(payload, product.product_type, language)
+    # format's templates for that language. Before the citations, which work on the texts.
+    content_localizer.localize_presenter_input(payload, language, product, translations)
+    content_localizer.localize_templates(payload, product_format, language)
     # Presenters get the citations already numbered, never the link keys.
     presenter_input = render_presenter_input(payload, product.links)
 
     generated_data, status_code = PresentersApi(node.api_url, node.api_key).generate(presenter_input)
 
     if status_code != HTTPStatus.OK:
-        err_msg = f"Failed to generate preview (status: {status_code})"
+        err_msg = f"Failed to render '{product_format.title}' (status: {status_code})"
         logger.error(f"{err_msg}, data: {generated_data}")
         return {"error": err_msg}, HTTPStatus.INTERNAL_SERVER_ERROR, None
 
     return {}, HTTPStatus.OK, generated_data
+
+
+def preview_format(product: Product, product_format_id: int | str | None) -> ProductFormat | None:
+    """The format to preview: the one asked for, which must be the product preset's, else its first."""
+    formats = product.product_preset.formats if product.product_preset else []
+    if product_format_id in (None, ""):
+        return formats[0] if formats else None
+    return next((product_format for product_format in formats if str(product_format.id) == str(product_format_id)), None)
 
 
 class ProductGetPreview(Resource):
@@ -433,7 +472,17 @@ class ProductSetPreview(Resource):
             product_data = request.json.get("product")
             token = str(uuid.uuid4())
 
-            msg, status, generated_data = prepare_product(product_data, user, token, request.json.get("language"))
+            try:
+                language = content_language.clean_language(request.json.get("language"))
+            except ValueError as ex:
+                return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+            msg, status, product, translations = load_product(product_data, user, token)
+            if status != HTTPStatus.OK:
+                return msg, status
+            product_format = preview_format(product, request.json.get("product_format_id"))
+            if product_format is None:
+                return {"error": "The product's product preset has no such format to preview"}, HTTPStatus.BAD_REQUEST
+            msg, status, generated_data = render_product(product, product_format, language, translations)
             if status != HTTPStatus.OK:
                 return msg, status
 
@@ -495,39 +544,56 @@ class PublishProduct(Resource):
             product_data = request_data.get("product")
             token = str(uuid.uuid4())
 
-            publisher_ids = request_data.get("publisher_ids", [])
-            if not publisher_ids:
-                return {"error": "No publishers specified"}, HTTPStatus.BAD_REQUEST
-
-            msg, status, generated_data = prepare_product(product_data, user, token, request_data.get("language"))
+            msg, status, product, translations = load_product(product_data, user, token)
             if status != HTTPStatus.OK:
                 return msg, status
 
-            # Publish to all selected publishers
+            # The deliveries to run: those asked for (all by default) that have a channel; a
+            # format without one is only previewed.
+            delivery_ids = request_data.get("delivery_ids")
+            deliveries = [
+                delivery
+                for delivery in product.product_preset.deliveries
+                if delivery.publishing_channel_id and (delivery_ids is None or delivery.id in delivery_ids)
+            ]
+            if not deliveries:
+                return {"error": "Nothing to publish: the product preset sends no format to any channel"}, HTTPStatus.BAD_REQUEST
+
+            # Each language of each format is rendered once, then sent to every channel it goes
+            # to. A delivery without a language renders the product in its own. One failing
+            # delivery does not stop the others.
+            rendered: dict[tuple[int, str | None], tuple[dict, HTTPStatus, dict | None]] = {}
             results = []
             all_success = True
-            for publisher_id in publisher_ids:
-                preset = PublisherPreset.find(publisher_id)
-                if not preset:
-                    results.append({"publisher_id": publisher_id, "success": False, "error": "Publisher preset not found"})
+            for delivery in deliveries:
+                language = delivery.language or product.language
+                key = (delivery.product_format_id, language)
+                if key not in rendered:
+                    rendered[key] = render_product(product, delivery.product_format, language, translations)
+                render_error, render_status, generated_data = rendered[key]
+                channel = delivery.publishing_channel
+                entry = {
+                    "delivery_id": delivery.id,
+                    "language": language,
+                    "format": delivery.product_format_title,
+                    "channel_name": channel.name,
+                }
+                what = f"'{product.title}' as {delivery.product_format_title} ({language or 'as written'}) to {channel.name}"
+                if render_status != HTTPStatus.OK:
+                    all_success = False
+                    results.append({**entry, "success": False, "status_code": render_status, "result": render_error})
                     continue
-
-                result, status = publishers_manager.publish(preset, generated_data, None, None, None)
-                if status == HTTPStatus.OK:
-                    logger.info(f"Published '{product_data.get('title')}' to {preset.name}")
+                try:
+                    result, publish_status = publishers_manager.publish(channel, generated_data, None, None, None)
+                except Exception as ex:
+                    logger.exception(f"Publish {what} failed")
+                    result, publish_status = {"error": str(ex)}, HTTPStatus.INTERNAL_SERVER_ERROR
+                if publish_status == HTTPStatus.OK:
+                    logger.info(f"Published {what}")
                 else:
                     all_success = False
-                    logger.error(f"Publish '{product_data.get('title')}' to {preset.name} failed: {result}")
-
-                results.append(
-                    {
-                        "publisher_id": publisher_id,
-                        "preset_name": preset.name,
-                        "success": status == HTTPStatus.OK,
-                        "status_code": status,
-                        "result": result,
-                    },
-                )
+                    logger.error(f"Publish {what} failed: {result}")
+                results.append({**entry, "success": publish_status == HTTPStatus.OK, "status_code": publish_status, "result": result})
 
             status = HTTPStatus.OK if all_success else HTTPStatus.INTERNAL_SERVER_ERROR
             return {"results": results, "overall_success": all_success}, status
@@ -536,30 +602,6 @@ class PublishProduct(Resource):
             msg = f"Publish failed: {ex}"
             logger.exception(msg)
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-class PublishPublicWebs(Resource):
-    """List the public webs a product can be targeted at.
-
-    The Publish view needs this to render its target selector, so it is scoped to
-    PUBLISH_ACCESS rather than the configuration permission - an ordinary
-    publishing user must be able to read it. An empty list is also how the GUI
-    learns that this deployment has no public-web feed and can skip the rest of
-    the feature.
-    """
-
-    @auth_required("PUBLISH_ACCESS")
-    def get(self) -> tuple[dict, HTTPStatus]:
-        """Return every public web as id/name pairs.
-
-        Returns:
-            (dict, HTTPStatus): ``{"total_count": int, "items": [...]}``.
-        """
-        from model.public_web import PublicWeb
-
-        webs = PublicWeb.query.order_by(db.asc(PublicWeb.name)).all()
-        items = [{"id": web.id, "name": web.name or str(web.id)} for web in webs]
-        return {"total_count": len(items), "items": items}, HTTPStatus.OK
 
 
 class ProductTranslate(Resource):
@@ -629,7 +671,7 @@ class ProductLanguageCheck(Resource):
         """Check the product (saved or from the form) against ``language``.
 
         Returns:
-            (dict, HTTPStatus): missing, outdated and template_language
+            (dict, HTTPStatus): missing, outdated and formats (each format's template language)
         """
         body = request.json or {}
         try:
@@ -637,14 +679,11 @@ class ProductLanguageCheck(Resource):
         except ValueError as ex:
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         user = auth_manager.get_user_from_jwt()
-        product, _texts = load_product(body.get("product") or {}, user, "language-check")
-        if product is None:
-            return {"error": "Product type not found"}, HTTPStatus.NOT_FOUND
-        # It names the product's reports: the same access to the product type as a preview needs.
-        if not ProductType.allowed_with_acl(product.product_type_id, user, see=False, access=True, modify=False):
-            err_msg = "Unauthorized access attempt to Product Type"
-            log_manager.store_auth_error_activity(err_msg)
-            return {"error": err_msg}, HTTPStatus.UNAUTHORIZED
+        # It names the product's reports: load_product asks for the same access to the
+        # product preset as a preview does.
+        msg, status, product, _texts = load_product(body.get("product") or {}, user, "language-check")
+        if status != HTTPStatus.OK:
+            return msg, status
         return content_localizer.language_check(product, language), HTTPStatus.OK
 
 
@@ -659,7 +698,6 @@ def initialize(api: Api) -> None:
     api.add_resource(ProductSetPreview, "/api/v1/publish/products/preview-ticket")
     api.add_resource(ProductGetPreview, "/api/v1/publish/products/preview/<string:token>")
     api.add_resource(PublishProduct, "/api/v1/publish/products/publish")
-    api.add_resource(PublishPublicWebs, "/api/v1/publish/public-webs")
     api.add_resource(ProductTranslate, "/api/v1/publish/products/translate")
     api.add_resource(ProductLanguageCheck, "/api/v1/publish/products/language-check")
 

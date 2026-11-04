@@ -1,6 +1,9 @@
 <template>
     <div class="mdi-icon-picker">
-        <div class="mdi-icon-picker__label text-caption mb-1">
+        <div
+            v-if="!hideLabel"
+            class="mdi-icon-picker__label text-caption mb-1"
+        >
             {{ label }}
         </div>
 
@@ -10,6 +13,7 @@
             block
             :disabled="disabled"
             :aria-label="`${label}: ${modelValue}`"
+            :title="hideLabel ? label : undefined"
             @click="openPicker"
         >
             <v-icon
@@ -102,9 +106,12 @@
             modelValue: string
             label: string
             disabled?: boolean
+            // Beside a field of the same height: the label is only the button's tooltip.
+            hideLabel?: boolean
         }>(),
         {
-            disabled: false
+            disabled: false,
+            hideLabel: false
         }
     )
 

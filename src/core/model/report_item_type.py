@@ -6,6 +6,7 @@ from managers.db_manager import db
 from marshmallow import EXCLUDE, fields, post_load
 from model.acl_entry import ACLEntry
 from model.ai_provider import AiProvider
+from model.tag import ICON_LENGTH, clean_icon
 from shared.schema.acl_entry import ItemType
 from shared.schema.report_item_type import (
     AttributeGroupBaseSchema,
@@ -341,6 +342,10 @@ class NewReportItemTypeSchema(ReportItemTypeBaseSchema):
         return ReportItemType(**data)
 
 
+# The icon a report item type and its reports show unless the type names another.
+DEFAULT_ICON = "mdi-file-table-outline"
+
+
 class ReportItemType(db.Model):
     """Report item type model.
 
@@ -353,13 +358,14 @@ class ReportItemType(db.Model):
         translation_ai_provider_id (int): AI provider that translates its reports.
         label_language (str): Language its labels are written in; None while not stated.
         translations (dict): Label variants, ``{language: {"title": ..., "description": ...}}``.
+        icon (str): The MDI icon it and its reports show; None for :data:`DEFAULT_ICON`.
         subtitle (str): Subtitle.
-        tag (str): Tag.
     """
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     description = db.Column(db.String())
+    icon = db.Column(db.String(ICON_LENGTH))
 
     languages = db.Column(JSONB, nullable=False, default=list, server_default=sqlalchemy.text("'[]'"))
     translation_ai_provider_id = db.Column(
@@ -391,6 +397,7 @@ class ReportItemType(db.Model):
         translation_ai_provider_id: int | None = None,
         label_language: str | None = None,
         translations: dict | None = None,
+        icon: str | None = None,
     ) -> None:
         """Initialize report item type.
 
@@ -405,14 +412,18 @@ class ReportItemType(db.Model):
         self.translation_ai_provider_id = translation_ai_provider_id
         self.label_language = content_language.clean_language(label_language)
         self.translations = content_language.clean_label_translations(translations, content_language.TYPE_LABEL_FIELDS)
+        self.icon = clean_icon(icon)
         self.subtitle = ""
-        self.tag = ""
 
     @orm.reconstructor
     def reconstruct(self) -> None:
         """Reconstruct."""
         self.subtitle = self.description
-        self.tag = "mdi-file-table-outline"
+
+    @property
+    def tag(self) -> str:
+        """The icon lists show for it and its reports."""
+        return self.icon or DEFAULT_ICON
 
     @classmethod
     # `id` shadows the builtin; it is part of this classmethod's existing call signature.
@@ -574,6 +585,7 @@ class ReportItemType(db.Model):
 
         report_type.title = updated_report_type.title
         report_type.description = updated_report_type.description
+        report_type.icon = updated_report_type.icon
         report_type.languages = updated_report_type.languages
         report_type.translation_ai_provider_id = updated_report_type.translation_ai_provider_id
         report_type.label_language = updated_report_type.label_language

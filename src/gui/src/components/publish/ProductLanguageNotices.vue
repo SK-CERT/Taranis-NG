@@ -3,20 +3,29 @@
         v-if="check && language"
         data-test="product-language-notices"
     >
-        <!-- Templates known to be in another language (e.g. "e-mail CZ" for Slovak) warn; default
-            templates whose language is not set only inform -->
+        <!-- Per format of the product preset: templates known to be in another language (e.g.
+             "e-mail CZ" for Slovak) warn; default templates whose language is not set only inform.
+             The format is named when the product preset has several. -->
         <v-alert
-            v-if="check.template_language !== language"
-            :type="check.template_language ? 'warning' : 'info'"
+            v-for="format in check.formats.filter((entry) => entry.template_language !== language)"
+            :key="format.product_format_id"
+            :type="format.template_language ? 'warning' : 'info'"
             variant="tonal"
             density="compact"
             class="mb-2"
             data-test="notice-templates"
         >
+            <template v-if="check.formats.length > 1">
+                <bdi
+                    dir="auto"
+                    class="font-weight-medium"
+                    >{{ format.title }}</bdi
+                >:
+            </template>
             {{
                 t('product.language_notice.templates', {
                     language: languageName(language),
-                    used: check.template_language ? languageName(check.template_language) : t('product.language_notice.default_templates')
+                    used: format.template_language ? languageName(format.template_language) : t('product.language_notice.default_templates')
                 })
             }}
         </v-alert>
@@ -62,7 +71,8 @@
     export type LanguageCheck = {
         missing: Array<{ id: number; title: string }>
         outdated: Array<{ report_item_id: number; title: string; field: string }>
-        template_language: string | null
+        /** The language of the templates each format of the product preset renders it with. */
+        formats: Array<{ product_format_id: number; title: string; template_language: string | null }>
     }
 
     defineProps<{

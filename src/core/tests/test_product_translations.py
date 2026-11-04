@@ -260,23 +260,23 @@ def test_a_constant_update_without_translations_keeps_them(monkeypatch: pytest.M
     assert stored.translations == {"sk": {"value": "Vysoká!"}}
 
 
-def test_the_language_check_needs_access_to_the_product_type(app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
-    product = SimpleNamespace(product_type_id=4)
-    monkeypatch.setattr(publish_api, "load_product", lambda _data, _user, _token: (product, None))
+def test_the_language_check_needs_access_to_the_product_preset(app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    product = SimpleNamespace(product_preset_id=4)
+    monkeypatch.setattr(publish_api.Product, "find", classmethod(lambda _cls, _product_id: product))
     monkeypatch.setattr(publish_api.content_localizer, "language_check", lambda _product, language: {"missing": [], "language": language})
     monkeypatch.setattr(publish_api.log_manager, "store_auth_error_activity", lambda _message: None)
     allowed: list = []
 
-    def refuse(_cls: object, type_id: int, _user: object, **access: bool) -> bool:
-        allowed.append((type_id, access))
+    def refuse(_cls: object, product_preset_id: int, _user: object, **access: bool) -> bool:
+        allowed.append((product_preset_id, access))
         return False
 
-    monkeypatch.setattr(publish_api.ProductType, "allowed_with_acl", classmethod(refuse))
+    monkeypatch.setattr(publish_api.ProductPreset, "allowed_with_acl", classmethod(refuse))
     resource = publish_api.ProductLanguageCheck()
 
     payload, status = _call(app, resource, "post", {"product": {"id": 5}, "language": "sk"})
-    assert (status, payload) == (HTTPStatus.UNAUTHORIZED, {"error": "Unauthorized access attempt to Product Type"})
+    assert (status, payload) == (HTTPStatus.UNAUTHORIZED, {"error": "Unauthorized access attempt to Product preset"})
     assert allowed == [(4, {"see": False, "access": True, "modify": False})]
 
-    monkeypatch.setattr(publish_api.ProductType, "allowed_with_acl", classmethod(lambda _cls, *_args, **_access: True))
+    monkeypatch.setattr(publish_api.ProductPreset, "allowed_with_acl", classmethod(lambda _cls, *_args, **_access: True))
     assert _call(app, resource, "post", {"product": {"id": 5}, "language": "sk"}) == ({"missing": [], "language": "sk"}, HTTPStatus.OK)

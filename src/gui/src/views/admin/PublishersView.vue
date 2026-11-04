@@ -42,17 +42,17 @@
     import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
     import PublishersNodesView from './PublishersNodesView.vue'
-    import PublisherPresetsView from './PublisherPresetsView.vue'
+    import PublishingChannelsView from './PublishingChannelsView.vue'
 
     const { t } = useI18n()
     const tabs = [
         {
-            value: 'presets',
-            title: 'nav_menu.publisher_presets',
-            description: 'publishers.presets.tab_description',
+            value: 'channels',
+            title: 'nav_menu.publishing_channels',
+            description: 'publishers.channels.tab_description',
             icon: ICONS.FILE_STAR_OUTLINE,
-            component: PublisherPresetsView,
-            permission: 'CONFIG_PUBLISHER_PRESET_ACCESS'
+            component: PublishingChannelsView,
+            permission: 'CONFIG_PUBLISHING_CHANNEL_ACCESS'
         },
         {
             value: 'nodes',
