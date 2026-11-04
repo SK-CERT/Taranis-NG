@@ -615,8 +615,14 @@
             if (isEdit.value) {
                 syncPresenterSelection(localItem.value.presenter_id)
             } else if (!selectedNode.value && nodes.value.length > 0) {
+                // "Add New" clicked before the nodes arrived: the dialog is open with no presenter,
+                // and choosing the first one (with its defaults) now is not the user's change - it
+                // made Cancel ask about unsaved changes on an untouched form.
+                const untouched = dialog.value && !isDirty()
                 selectedNode.value = nodes.value[0] ?? null
                 selectedPresenter.value = selectedNode.value?.presenters?.[0] ?? null
+                parameterValues.value = selectedPresenter.value?.parameters?.map((param) => String(param.default_value ?? '')) || []
+                if (untouched) capture()
             }
         } catch (error) {
             console.error('Error loading presenters nodes:', error)
@@ -706,7 +712,7 @@
         dialog.value = false
     }
 
-    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+    const { confirmVisible, capture, isDirty, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
         getState: () => ({ item: localItem.value, presenter: selectedPresenter.value?.id ?? null, params: parameterValues.value }),
         save: persist,
         close: closeDialog

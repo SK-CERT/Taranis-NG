@@ -397,9 +397,14 @@
             parameter: param
         })) ?? []
 
+    // The node a new source starts on: the one whose panel's Add New was clicked, otherwise the
+    // first, which is what a single Add New at the top of the page means.
+    const createModeNode = (): CollectorNode | null =>
+        (props.preselectNodeId != null ? nodes.value.find((node) => node.id === props.preselectNodeId) : undefined) ?? nodes.value[0] ?? null
+
     const syncCollectorSelection = (collectorId: string | number | null | undefined): void => {
         if (collectorId === undefined || collectorId === null) {
-            selectedNode.value = nodes.value[0] ?? null
+            selectedNode.value = createModeNode()
             selectedCollector.value = selectedNode.value?.collectors?.[0] ?? null
             // Initialize parameter values from the freshly-selected collector's defaults here, not
             // in the selectedCollector watcher. The watcher is queued AFTER the dialog watcher
@@ -449,15 +454,16 @@
                 data?: { items?: CollectorNode[] }
             }
             nodes.value = response.items || response.data?.items || []
+            // Add New (or a row's edit) clicked before the nodes arrived: the dialog is open with
+            // no node or collector, and that is what its baseline holds. Resolving them now is not
+            // the operator's change - it made Cancel ask about unsaved changes on an untouched form.
+            const untouched = dialog.value && !isDirty()
             if (isEdit.value) {
                 syncCollectorSelection(localItem.value.collector_id)
             } else if (!selectedNode.value && nodes.value.length > 0) {
-                // A per-node Add new says which node it belongs to; otherwise fall back to the
-                // first, which is what a single Add new at the top of the page means.
-                const preselected = props.preselectNodeId ? nodes.value.find((node) => node.id === props.preselectNodeId) : null
-                selectedNode.value = preselected ?? nodes.value[0] ?? null
-                selectedCollector.value = selectedNode.value?.collectors?.[0] ?? null
+                syncCollectorSelection(null)
             }
+            if (untouched) capture()
         } catch (error) {
             console.error('Error loading collectors nodes:', error)
         } finally {
@@ -579,7 +585,7 @@
         dialog.value = false
     }
 
-    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+    const { confirmVisible, capture, isDirty, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
         getState: () => ({
             item: localItem.value,
             collector: selectedCollector.value?.id ?? null,

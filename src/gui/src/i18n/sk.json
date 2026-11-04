@@ -234,7 +234,7 @@
         "metrics": {
             "news_items_summary": "Žiadne novinky | Spolu {count} novinka | Spolu {count} novinky | Spolu {count} noviniek",
             "report_items_summary": "Žiadne analýzy | Spolu {count} analýza | Spolu {count} analýzy | Spolu {count} analýz",
-            "products_summary": "Žiadne publikácie | Spolu {count} publikácia | Spolu {count} publikácie | Spolu {count} publikácií"
+            "products_summary": "Žiadne produkty | Spolu {count} produkt | Spolu {count} produkty | Spolu {count} produktov"
         },
         "assess": {
             "trending": "Aktuálne trendy",
@@ -255,9 +255,9 @@
             "total": "analýz spolu"
         },
         "publish": {
-            "status": "Stavy publikácií",
+            "status": "Stavy produktov",
             "products": "",
-            "total": "publikácií spolu"
+            "total": "produktov spolu"
         },
         "about": {
             "system": "Systém",
@@ -276,7 +276,7 @@
     "nav_menu": {
         "enter": "Vytvoriť novinku",
         "newsitems": "Novinky",
-        "products": "Publikácie",
+        "products": "Produkty",
         "favourites": "Obľúbené",
         "configuration": "Nastavenie",
         "collectors_nodes": "Inštancie kolektorov",
@@ -294,7 +294,7 @@
         "report_items": "Analýzy",
         "attributes": "Atribúty",
         "report_types": "Typy analýz",
-        "product_formats": "Formáty publikácií",
+        "product_formats": "Formáty produktov",
         "product_presets": "Produkty",
         "roles": "Role",
         "acls": "ACL",
@@ -802,9 +802,9 @@
         }
     },
     "product": {
-        "add_new": "Pridať novú publikáciu",
-        "edit": "Editovať publikáciu",
-        "error": "Nemôžem vytvoriť túto publikáciu",
+        "add_new": "Pridať nový produkt",
+        "edit": "Editovať produkt",
+        "error": "Nemôžem vytvoriť tento produkt",
         "title": "Meno",
         "name": "Názov",
         "description": "Popis",
@@ -817,39 +817,39 @@
         "public_web_all": "Po publikovaní sa zobrazí aj na všetkých verejných weboch.",
         "public_web_some": "Po publikovaní sa zobrazí aj na verejných weboch {webs}.",
         "public_web_targets": "Verejné weby",
-        "successful": "Nová publikácia bola úspešne vytvorená",
-        "successful_edit": "Publikácia bola úspešne uložená",
-        "created_successfully": "Nová publikácia bola úspešne vytvorená",
-        "updated_successfully": "Publikácia bola úspešne uložená",
-        "removed": "Publikácia bola úspešne zmazaná",
-        "removed_error": "Publikácia sa používa a nemôže byť zmazaná",
+        "successful": "Nový produkt bol úspešne vytvorený",
+        "successful_edit": "Produkt bol úspešne uložený",
+        "created_successfully": "Nový produkt bol úspešne vytvorený",
+        "updated_successfully": "Produkt bol úspešne uložený",
+        "removed": "Produkt bol úspešne zmazaný",
+        "removed_error": "Produkt sa používa a nemôže byť zmazaný",
         "preview": "Náhľad",
         "publish": "Zverejniť",
-        "publish_confirmation": "Ste si istý, že chcete zverejniť túto publikáciu?",
-        "publish_confirmation_message": "Naozaj chcete túto publikáciu zverejniť?",
+        "publish_confirmation": "Ste si istý, že chcete zverejniť tento produkt?",
+        "publish_confirmation_message": "Naozaj chcete tento produkt zverejniť?",
         "publish_confirmation_product_preset": "Produkt: {productPreset}",
         "publish_confirmation_deliveries": "Odosiela sa do: {deliveries}",
         "no_product_preset": "Nie je vybraný žiadny produkt",
-        "publish_successful": "Publikácia bola úspešne zverejnená",
-        "publish_failed": "Nepodarilo sa zverejniť publikáciu",
+        "publish_successful": "Produkt bol úspešne zverejnený",
+        "publish_failed": "Nepodarilo sa zverejniť produkt",
         "publish_failed_deliveries": "Nepodarilo sa odoslať do: {deliveries}",
         "publish_error": "Pri zverejňovaní nastala chyba",
         "no_delivery_selected": "Označte aspoň jeden kanál",
-        "total_count": "Žiadne publikácie | {count} publikácia | {count} publikácie | {count} publikácií",
+        "total_count": "Žiadne produkty | {count} produkt | {count} produkty | {count} produktov",
         "confirm_close": {
-            "message": "Máte neuložené zmeny. Naozaj chcete zavrieť túto publikáciu bez uloženia zmien?"
+            "message": "Máte neuložené zmeny. Naozaj chcete zavrieť tento produkt bez uloženia zmien?"
         },
         "publish_unsaved": {
-            "title": "Zverejniť neuloženú publikáciu",
-            "message": "Táto publikácia má neuložené zmeny. Ako chcete pokračovať?",
+            "title": "Zverejniť neuložený produkt",
+            "message": "Tento produkt má neuložené zmeny. Ako chcete pokračovať?",
             "close": "Zavrieť",
             "save_and_publish": "Uložiť a zverejniť",
             "publish_only": "Zverejniť bez uloženia"
         },
         "add_incomplete_reports": {
             "title": "Pridať nedokončené analýzy",
-            "message": "Pridávate analýzy, ktoré ešte nie sú dokončené. Dokončenie publikácie neskôr tieto analýzy automaticky označí ako dokončené. Chcete pokračovať?",
-            "message_published": "Táto publikácia je už zverejnená. Pridanie nedokončených analýz ich automaticky označí ako dokončené. Chcete pokračovať?",
+            "message": "Pridávate analýzy, ktoré ešte nie sú dokončené. Dokončenie produktu neskôr tieto analýzy automaticky označí ako dokončené. Chcete pokračovať?",
+            "message_published": "Tento produkt je už zverejnený. Pridanie nedokončených analýz ich automaticky označí ako dokončené. Chcete pokračovať?",
             "confirm": "Pridať analýzy",
             "confirm_published": "Pridať a dokončiť",
             "untitled": "Analýza bez názvu"
@@ -861,7 +861,7 @@
         "language_notice": {
             "missing": "Tieto reporty nie sú preložené do jazyka {language}; použije sa anglická verzia alebo ich pôvodný jazyk:",
             "outdated": "Tieto preklady do jazyka {language} sú zastarané, pretože sa pôvodný obsah zmenil od ich preloženia:",
-            "templates": "Formát publikácie nemá šablóny pre jazyk {language}; použijú sa šablóny: {used}.",
+            "templates": "Formát produktu nemá šablóny pre jazyk {language}; použijú sa šablóny: {used}.",
             "default_templates": "predvolené"
         },
         "texts_not_translated": "Názov alebo popis sa do niektorých jazykov nepodarilo preložiť",
@@ -902,10 +902,10 @@
             "select_all": "Vybrať všetko",
             "unselect_all": "Zrušiť výber",
             "delete_items": "Zmazať analýzy",
-            "publish_items": "Vytvoriť z analýzy publikáciu",
+            "publish_items": "Vytvoriť z analýzy produkt",
             "delete_item": "Zmazať analýzu",
             "remove_item": "Odstrániť analýzu",
-            "publish_item": "Vytvoriť publikáciu z analýzy"
+            "publish_item": "Vytvoriť produkt z analýzy"
         },
         "select_all_success": "Neboli vybrané žiadne analýzy | Vybraná {count} analýza | Vybrané {count} analýzy | Vybraných {count} analýz",
         "select": {
@@ -1024,12 +1024,12 @@
             "filter_published": "Aktuálne zobrazené: publikované",
             "filter_unpublished": "Aktuálne zobrazené: nepublikované",
             "range": {
-                "ALL": "Zobraziť všetky publikácie",
-                "TODAY": "Zobraziť dnešné publikácie",
-                "WEEK": "Zobraziť publikácie za posledný týždeň",
-                "MONTH": "Zobraziť publikácie za posledný mesiac",
-                "LAST_7_DAYS": "Zobraziť publikácie za posledných 7 dní",
-                "LAST_31_DAYS": "Zobraziť publikácie za posledných 31 dní"
+                "ALL": "Zobraziť všetky produkty",
+                "TODAY": "Zobraziť dnešné produkty",
+                "WEEK": "Zobraziť produkty za posledný týždeň",
+                "MONTH": "Zobraziť produkty za posledný mesiac",
+                "LAST_7_DAYS": "Zobraziť produkty za posledných 7 dní",
+                "LAST_31_DAYS": "Zobraziť produkty za posledných 31 dní"
             },
             "sort": {
                 "date": {
@@ -1038,14 +1038,14 @@
                 }
             },
             "compact_mode": "Prepnúť kompaktný režim",
-            "toggle_selection": "Režim výberu publikácií",
+            "toggle_selection": "Režim výberu produktov",
             "select_all": "Vybrať všetko",
             "unselect_all": "Zrušiť výber",
-            "delete_items": "Odstrániť publikácie",
-            "delete_item": "Odstrániť publikáciu"
+            "delete_items": "Odstrániť produkty",
+            "delete_item": "Odstrániť produkt"
         },
-        "select_all_success": "Neboli vybrané žiadne publikácie | Vybraná {count} publikácia | Vybrané {count} publikácie | Vybraných {count} publikácií",
-        "no_items": "Neboli nájdené žiadne publikácie",
+        "select_all_success": "Neboli vybrané žiadne produkty | Vybraný {count} produkt | Vybrané {count} produkty | Vybraných {count} produktov",
+        "no_items": "Neboli nájdené žiadne produkty",
         "all_products": "Všetky produkty"
     },
     "toolbar_filter": {
@@ -1095,7 +1095,7 @@
         "selection": "Výber",
         "group": "Zoskupiť",
         "ungroup": "Zrušiť zoskupenie",
-        "new_product": "Nová publikácia",
+        "new_product": "Nový produkt",
         "aggregate_open": "Otvoriť zlúčenú novinku",
         "enter_view_mode": "Vložte skratku pre 'view' mód",
         "enter_filter_mode": "Vložte skratku pre 'filter' mód",
@@ -1137,7 +1137,7 @@
         "HOTKEYS": "Povoliť klávesové skratky",
         "UI_LANGUAGE": "Jazyk používateľského rozhrania",
         "UI_THEME": "Motív používateľského rozhrania",
-        "CONTENT_DEFAULT_LANGUAGE": "Predvolený jazyk pre analýzy/publikácie",
+        "CONTENT_DEFAULT_LANGUAGE": "Predvolený jazyk pre analýzy/produkty",
         "REPORT_SELECTOR_READ_ONLY": "Otvoriť výber analýz v režime iba na čítanie",
         "SPELLCHECK": "Kontrolovať pravopis",
         "TAG_CLOUD_RETENTION_DAYS": "Uchovávanie oblaku značiek (dni)",
@@ -1210,7 +1210,7 @@
         },
         "entity_types": {
             "report_item": "Analýza",
-            "product": "Publikácia"
+            "product": "Produkt"
         },
         "state_types": {
             "normal": "Normálny",
@@ -1435,20 +1435,20 @@
             "total_count": "Žiadne uzly prezentérov | {count} uzol prezentéra | {count} uzly prezentérov | {count} uzlov prezentérov"
         },
         "formats": {
-            "tab_description": "Tu môžete spravovať formáty publikácií.",
-            "add_new": "Pridať nový formát publikácie",
-            "edit": "Upraviť formát publikácie",
+            "tab_description": "Tu môžete spravovať formáty produktov.",
+            "add_new": "Pridať nový formát produktu",
+            "edit": "Upraviť formát produktu",
             "node": "Inštancia prezentéra",
             "presenter": "Prezentér",
-            "error": "Nepodarilo sa vytvoriť formát publikácie.",
+            "error": "Nepodarilo sa vytvoriť formát produktu.",
             "name": "Názov",
             "description": "Popis",
             "parameters": "Parametre",
-            "successful": "Nový formát publikácie bol úspešne pridaný",
-            "successful_edit": "Formát publikácie bol úspešne aktualizovaný",
-            "removed": "Formát publikácie bol úspešne odstránený",
-            "removed_error": "Formát publikácie sa používa a nie je možné ho odstrániť",
-            "total_count": "Žiadne formáty publikácií | {count} formát publikácie | {count} formáty publikácií | {count} formátov publikácií",
+            "successful": "Nový formát produktu bol úspešne pridaný",
+            "successful_edit": "Formát produktu bol úspešne aktualizovaný",
+            "removed": "Formát produktu bol úspešne odstránený",
+            "removed_error": "Formát produktu sa používa a nie je možné ho odstrániť",
+            "total_count": "Žiadne formáty produktov | {count} formát produktu | {count} formáty produktov | {count} formátov produktov",
             "help": "Popis parametrov šablóny",
             "close": "Zavrieť",
             "choose_report_type": "Vyberte typ analýzy pre zobrazenie popisu parametrov",
@@ -1523,7 +1523,7 @@
         "deliveries": "Jazyky, formáty a kanály",
         "deliveries_hint": "Každý riadok je produkt v jednom jazyku a formáte a kanály, do ktorých sa odosiela. Kanál dostane každý jazyk a formát zvlášť, takže angličtina a čeština na jednu adresu sú dva e-maily. Riadok bez kanála slúži len na náhľad.",
         "language": "Jazyk",
-        "own_language": "Jazyk publikácie",
+        "own_language": "Jazyk produktu",
         "format": "Formát",
         "channels": "Kanály",
         "format_only": "Len formát",
@@ -1532,14 +1532,14 @@
         "move_down": "Posunúť nadol",
         "remove_format": "Odobrať formát",
         "public_web": "Verejný web",
-        "public_web_enabled": "Zobrazovať publikované publikácie na verejnom webe",
+        "public_web_enabled": "Zobrazovať publikované produkty na verejnom webe",
         "public_web_ids": "Weby",
         "public_web_ids_hint": "Nič nevybraté: všetky weby.",
         "needs_delivery": "Pridajte formát alebo zapnite zobrazenie na verejnom webe.",
         "successful": "Nový produkt bol pridaný",
         "successful_edit": "Produkt bol uložený",
         "removed": "Produkt bol zmazaný",
-        "removed_error": "Produkt používajú publikácie, a preto ho nemožno zmazať",
+        "removed_error": "Produkt sa používa, a preto ho nemožno zmazať",
         "error": "Produkt sa nepodarilo uložiť"
     },
     "bots": {
