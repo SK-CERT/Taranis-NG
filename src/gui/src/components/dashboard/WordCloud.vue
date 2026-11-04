@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
     import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-    import cloud, { type Word as D3CloudWord } from 'd3-cloud'
+    import CloudLayout from 'd3-cloud'
     import { useI18n } from 'vue-i18n'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 
@@ -61,7 +61,7 @@
         word_quantity: number
     }
 
-    type LayoutInput = D3CloudWord & {
+    type LayoutInput = {
         text: string
         quantity: number
         size: number
@@ -128,8 +128,8 @@
 
     let resizeObserver: { observe: (target: Element) => void; disconnect: () => void } | null = null
     let resizeFrame = 0
+    let layoutFrame = 0
     let layoutGeneration = 0
-    let activeLayout: { start: () => unknown; stop: () => unknown } | null = null
 
     const cloudWords = computed(() => {
         if (!Array.isArray(props.data)) return []
@@ -192,13 +192,13 @@
     const runLayout = (fontScale = 1, attempt = 0, generation = ++layoutGeneration): void => {
         const element = containerRef.value
         if (!element || cloudWords.value.length === 0) {
-            activeLayout?.stop()
+            window.cancelAnimationFrame(layoutFrame)
             layoutWords.value = []
             layingOut.value = false
             return
         }
 
-        activeLayout?.stop()
+        window.cancelAnimationFrame(layoutFrame)
         layingOut.value = true
 
         const width = Math.max(240, Math.floor(element.clientWidth))
@@ -207,31 +207,45 @@
         const randomSeed = stableHash(`${width}:${height}:${inputWords.map((word) => word.text).join('|')}`)
 
         layoutSize.value = { width, height }
-        activeLayout = cloud<LayoutInput>()
-            .size([width, height])
-            .words(inputWords)
-            .padding(fontScale < 0.55 ? 1 : 2)
-            .rotate((word) => word.rotate)
-            .font('Roboto, Arial, sans-serif')
-            .fontWeight((word) => word.weight)
-            .fontSize((word) => word.size)
-            .spiral('archimedean')
-            .random(seededRandom(randomSeed))
-            .on('end', (placedWords) => {
-                if (generation !== layoutGeneration) return
+        const layout = new CloudLayout().size([width, height]).overflow(false).random(seededRandom(randomSeed))
+        const placedWords: RenderWord[] = []
+        let wordIndex = 0
 
-                if (placedWords.length < inputWords.length && attempt < 7) {
-                    runLayout(fontScale * 0.78, attempt + 1, generation)
-                    return
-                }
+        const placeBatch = (): void => {
+            if (generation !== layoutGeneration) return
 
-                layoutWords.value = placedWords
-                    .filter((word): word is RenderWord => Number.isFinite(word.x) && Number.isFinite(word.y))
-                    .map((word) => ({ ...word, x: word.x, y: word.y }))
-                layingOut.value = false
-            })
+            const batchEnd = Math.min(wordIndex + 8, inputWords.length)
+            for (; wordIndex < batchEnd; wordIndex += 1) {
+                const word = inputWords[wordIndex]!
+                const sprite = layout.getSprite(word.text, {
+                    datum: word,
+                    font: 'Roboto, Arial, sans-serif',
+                    size: word.size,
+                    weight: word.weight,
+                    rotate: word.rotate,
+                    padding: fontScale < 0.55 ? 1 : 2
+                })
+                if (!sprite) continue
 
-        activeLayout.start()
+                const placement = layout.place(sprite)
+                if (placement) placedWords.push({ ...word, x: placement.x, y: placement.y })
+            }
+
+            if (wordIndex < inputWords.length) {
+                layoutFrame = window.requestAnimationFrame(placeBatch)
+                return
+            }
+
+            if (placedWords.length < inputWords.length && attempt < 7) {
+                runLayout(fontScale * 0.78, attempt + 1, generation)
+                return
+            }
+
+            layoutWords.value = placedWords
+            layingOut.value = false
+        }
+
+        placeBatch()
     }
 
     const scheduleLayout = (): void => {
@@ -252,8 +266,9 @@
 
     onBeforeUnmount(() => {
         resizeObserver?.disconnect()
-        activeLayout?.stop()
+        layoutGeneration += 1
         window.cancelAnimationFrame(resizeFrame)
+        window.cancelAnimationFrame(layoutFrame)
     })
 </script>
 
