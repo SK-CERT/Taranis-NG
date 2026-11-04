@@ -141,6 +141,15 @@ const kk: typeof en = {
             item: 'Рейтинг {0} / {1}'
         }
     },
+    rangeSlider: {
+        ariaLabel: {
+            start: 'Ең аз мән',
+            end: 'Ең көп мән'
+        }
+    },
+    splitBtn: {
+        menu: 'Қосымша опциялар'
+    },
     loading: 'Жүктелуде...',
     infiniteScroll: {
         loadMore: 'Тағы жүктеу',
@@ -181,12 +190,11 @@ const kk: typeof en = {
         shortcut: 'Пернелер тіркесімі: {0}',
         or: 'немесе'
     },
-    video: {
+    media: {
         play: 'Ойнату',
         pause: 'Кідірту',
         seek: 'Айналдыру',
         volume: 'Дыбыс деңгейі',
-        showVolume: 'Дыбыс реттегішін көрсету',
         mute: 'Дыбысын өшіру',
         unmute: 'Дыбысын қосу',
         enterFullscreen: 'Толық экран',

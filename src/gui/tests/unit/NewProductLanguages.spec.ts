@@ -574,7 +574,11 @@ describe('NewProduct languages', () => {
         expect(wrapper.get('[data-test="notice-missing"]').text()).toContain('B')
         const templates = wrapper.get('[data-test="notice-templates"]')
         expect(templates.text()).toContain('Czech')
-        expect(templates.classes()).toContain('text-warning')
+        const alert = wrapper
+            .findAllComponents({ name: 'VAlert' })
+            .find((component) => component.attributes('data-test') === 'notice-templates')
+        expect(alert?.props('variant')).toBe('tonal')
+        expect(alert?.props('type')).toBe('warning')
     })
 
     it('only informs about default templates of no stated language, and is quiet when the tab has its own', async () => {
@@ -588,7 +592,11 @@ describe('NewProduct languages', () => {
 
         const templates = wrapper.get('[data-test="notice-templates"]')
         expect(templates.text()).toContain('default')
-        expect(templates.classes()).toContain('text-info')
+        const alert = wrapper
+            .findAllComponents({ name: 'VAlert' })
+            .find((component) => component.attributes('data-test') === 'notice-templates')
+        expect(alert?.props('variant')).toBe('tonal')
+        expect(alert?.props('type')).toBe('info')
 
         wrapper.vm.activeLanguage = 'sk'
         await vi.advanceTimersByTimeAsync(400)
