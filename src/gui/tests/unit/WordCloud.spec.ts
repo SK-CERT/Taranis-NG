@@ -4,35 +4,29 @@ import { describe, expect, it, vi } from 'vitest'
 import WordCloud from '@/components/dashboard/WordCloud.vue'
 
 vi.mock('d3-cloud', () => ({
-    default: () => {
-        let words: Array<Record<string, unknown>> = []
-        let endLayout: (placedWords: Array<Record<string, unknown>>) => void = () => undefined
+    default: class {
+        private index = 0
 
-        const layout = {
-            size: () => layout,
-            words: (value: Array<Record<string, unknown>>) => {
-                words = value
-                return layout
-            },
-            padding: () => layout,
-            rotate: () => layout,
-            font: () => layout,
-            fontWeight: () => layout,
-            fontSize: () => layout,
-            spiral: () => layout,
-            random: () => layout,
-            on: (event: string, callback: (placedWords: Array<Record<string, unknown>>) => void) => {
-                if (event === 'end') endLayout = callback
-                return layout
-            },
-            start: () => {
-                endLayout(words.map((word, index) => ({ ...word, x: index * 10, y: index * 5 })))
-                return layout
-            },
-            stop: () => layout
+        size() {
+            return this
         }
 
-        return layout
+        overflow() {
+            return this
+        }
+
+        random() {
+            return this
+        }
+
+        getSprite(text: string, options: Record<string, unknown>) {
+            return { ...options, text }
+        }
+
+        place(sprite: Record<string, unknown>) {
+            const index = this.index++
+            return { ...sprite, x: index * 10, y: index * 5 }
+        }
     }
 }))
 

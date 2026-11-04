@@ -28,8 +28,8 @@ vi.mock('@/composables/useAuth', () => ({
 }))
 
 /** Mount the dialog and wait for its onMounted option loading to settle. */
-async function mountDialog(props = {}) {
-    const wrapper = mountWithPlugins(NewAuthProvider, { props })
+async function mountDialog(props = {}, global = {}) {
+    const wrapper = mountWithPlugins(NewAuthProvider, { props, global })
     await new Promise((resolve) => setTimeout(resolve, 0))
     await wrapper.vm.$nextTick()
     return wrapper
@@ -226,7 +226,7 @@ describe('NewAuthProvider dialog', () => {
     })
 
     it('uses a theme-aware top warning when LDAP TLS is disabled', async () => {
-        const wrapper = await mountDialog()
+        const wrapper = await mountDialog({}, { stubs: { VDialog: { template: '<div><slot /></div>' } } })
         await openEdit(wrapper, {
             ...SAML_PROVIDER,
             id: 4,
@@ -235,10 +235,10 @@ describe('NewAuthProvider dialog', () => {
         })
 
         expect(wrapper.vm.insecureConfigurationWarnings[0]).toContain('LDAP traffic is not protected by TLS')
-        const warning = document.body.querySelector('[data-test="auth-provider-insecure-warning"]')
-        expect(warning).not.toBeNull()
-        expect(warning?.classList).toContain('v-alert--variant-tonal')
-        expect(warning?.textContent).toContain('LDAP traffic is not protected by TLS')
+        const warning = wrapper.getComponent({ name: 'VAlert' })
+        expect(warning.props('variant')).toBe('tonal')
+        expect(warning.props('type')).toBe('warning')
+        expect(warning.text()).toContain('LDAP traffic is not protected by TLS')
     })
 
     it('warns about unencrypted authentication endpoints', async () => {
