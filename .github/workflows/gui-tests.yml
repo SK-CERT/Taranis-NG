@@ -107,7 +107,7 @@ jobs:
     # Building the four backend images (~2.3 GB) takes the bulk of this; the suite
     # itself is ~10 min for chromium and ~15 min for firefox on one worker (the
     # Playwright config pins workers: 1 because the specs share one backend).
-    timeout-minutes: 30
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
