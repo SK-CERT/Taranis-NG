@@ -15,6 +15,7 @@ item and product preview.
 - [Using AI in Taranis NG](#_toc6)
 - [Citing sources in reports and products](#_toc7)
 - [Reports and products in several languages](#_toc8)
+- [Products: what is published, in which languages, formats and channels](#_toc9)
 
 # <a id="_toc1"></a>Altering the roles
 
@@ -32,8 +33,9 @@ sources you've created into different groups.
 
 If you want to restrict the access, go to Configuration -> ACLs, and create
 a new ACL by clicking `Add new`. You can pick any particular item type
-(Collector, OSINT Source, OSINT Source Group, Product Type, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
-access types to everyone, selected users, or selected roles.
+(Collector, OSINT Source, OSINT Source Group, Product, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
+access types to everyone, selected users, or selected roles. An ACL on a product (a product
+preset, see [Products](#_toc9)) covers the products published with it.
 
 # <a id="_toc4"></a>Customizing stop lists
 
@@ -427,21 +429,20 @@ constants).
   same for that language, and **Mark AI translations as reviewed** keeps its AI texts as they are.
   A translation a person wrote is replaced only from that text's own button, after confirming; the
   check mark next to **AI** marks one text reviewed.
-- **Show product preview** and **Download** render the open tab's language. The publish dialog
-  has a **Publish in** select; each publish uses one language, so publishing two languages takes
-  two publishes.
+- **Show product preview** and **Download** render the open tab's language. **Publish** sends each
+  delivery of the product preset in its own language (see [Products](#_toc9)).
 - Notices under the tabs say what a language falls back on: reports without a translation into
-  it, outdated translations (preview, download and publish ask to confirm them first), and a
-  product type without templates for it.
+  it, outdated translations (preview, download and publish ask to confirm them first), and each
+  format of the product's preset that has no templates for it.
 
 ### Templates per language
 
-In **Configuration → Presenters → Product Types**, the **Default** tab holds all parameters and
+In **Configuration → Presenters → Product Formats**, the **Default** tab holds all parameters and
 **Language of the templates**, the language the default templates are written in. **Add
 language** adds a tab with only the template paths for that language; a path left empty uses
 the default one. A product is rendered with the templates of its language, then English, then
 the default ones. A presenter without templates, such as JSON, has none of these settings.
-Existing per-language product types (for example `e-mail CZ` and `e-mail SK`) keep working; set
+Existing per-language product formats (for example `e-mail CZ` and `e-mail SK`) keep working; set
 their template language, and a product rendered in another language warns about it.
 
 For template authors, rendering in a language changes only additive fields, so existing
@@ -476,3 +477,60 @@ A bulletin whose reports are in different languages shows each one in its own.
 
 Remote presenter nodes must be upgraded before core: core sends presenters fields that older
 nodes reject. Core and public-web nodes can be upgraded in either order.
+
+# <a id="_toc9"></a>Products: what is published, in which languages, formats and channels
+
+A **product** is the content: its title and description and the reports it collects. Three
+things decide how it is published:
+
+- a **product format** is a presenter and its template: an e-mail, a JSON file, a PDF, a
+  Mastodon post (Configuration -> Presenters -> Product Formats);
+- a **publishing channel** is where a rendered product goes: an e-mail address, an SFTP server,
+  a Mastodon account (Configuration -> Publishers -> Publishing Channels);
+- a **product preset**, shown as a product in Configuration -> Products, says which languages
+  of the product go in which formats to which channels, for example *Cyberfeed*.
+
+A product picks a product preset, and **Publish** runs it. Each row of a preset is a language
+and a format, and the channels they are sent to. *Cyberfeed* could have these rows:
+
+- Czech, *Mastodon post* -> *Mastodon CZ* and *Mastodon SK*, and the mailing list;
+- English, *Mastodon post* -> the mailing list;
+- Slovak, *PDF* -> SFTP;
+- Slovak, *HTML* -> SFTP.
+
+A row without a language publishes the product in the language it is written in. A channel gets
+each language and format on its own: the mailing list above gets two e-mails, one in Czech and
+one in English, and the SFTP server two files. A row without a channel is only previewed. Each
+language of each format is rendered once per publish, then sent to every channel it goes to. A
+channel that fails does not stop the others; the notification names the deliveries that failed.
+
+In the product dialog, every delivery of the chosen preset comes ticked, labelled with its
+language: untick one to leave it out of this publish; the preset stays as it is. The publish
+confirmation lists, for each language it sends, what that language falls back on (see
+[Reports and products in several languages](#_toc8)). **Show product preview** and **Download**
+render the open tab's language, with a menu of the formats when the preset has more than one.
+
+A product preset can also show its published products on the **public web**: on every web, or only
+on the webs it lists. Who may see, edit and publish products is set by ACLs on their preset
+(item type *Product*).
+
+A format or a channel that a preset uses, a web that one is restricted to, and a preset that
+products use cannot be deleted until nothing uses them any more.
+
+### Upgrading
+
+The `72f1a157e289` migration renames product types to product formats and publisher presets to
+publishing channels, and creates one preset per existing product format, named after it, with
+that format and no channel, shown on every public web. Products keep their content, and the webs
+they were limited to, and point at the preset of their old format. Which channels products used
+to be sent to was never recorded, so assign the channels once in Configuration -> Products; until
+then, **Publish** has nothing to send. Every delivery is in the product's own language until you
+pick another. ACL entries on product types became entries on the matching presets, and every role
+or user allowed to configure product types may configure presets. Roles and users keep their
+rights under the new permission names (`CONFIG_PRODUCT_FORMAT_*`, `CONFIG_PUBLISHING_CHANNEL_*`,
+`CONFIG_PRODUCT_PRESET_*`), ACL entries keep guarding the same presets (item type
+`PRODUCT_PRESET`), and the API is at `/api/v1/config/product-formats`,
+`/api/v1/config/publishing-channels` and `/api/v1/config/product-presets`. Presenter templates
+get the format a product is rendered in as `data.product.product_format` and
+`data.product.product_format_description`; custom templates that read `product_type` or
+`product_type_description` have to be changed.

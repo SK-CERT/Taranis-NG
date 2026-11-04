@@ -1,5 +1,5 @@
 /** ACL item types shared by the New ACL dialog and the ACL table. */
-export type ACLItemType = 'COLLECTOR' | 'OSINT_SOURCE' | 'OSINT_SOURCE_GROUP' | 'REPORT_ITEM_TYPE' | 'PRODUCT_TYPE' | 'WORD_LIST'
+export type ACLItemType = 'COLLECTOR' | 'OSINT_SOURCE' | 'OSINT_SOURCE_GROUP' | 'REPORT_ITEM_TYPE' | 'PRODUCT_PRESET' | 'WORD_LIST'
 
 export type ACLItemTypeOption = {
     title: string
@@ -11,7 +11,7 @@ export const ACL_ITEM_TYPES: ACLItemTypeOption[] = [
     { title: 'OSINT Source', value: 'OSINT_SOURCE' },
     { title: 'OSINT Source Group', value: 'OSINT_SOURCE_GROUP' },
     { title: 'Report Item Type', value: 'REPORT_ITEM_TYPE' },
-    { title: 'Product Type', value: 'PRODUCT_TYPE' },
+    { title: 'Product', value: 'PRODUCT_PRESET' },
     { title: 'Word List', value: 'WORD_LIST' }
 ]
 

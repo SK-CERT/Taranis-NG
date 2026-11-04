@@ -34,7 +34,7 @@ ENTITY_TYPES = (StateEntityTypeEnum.REPORT_ITEM.value, StateEntityTypeEnum.PRODU
 _COLOR = re.compile(r"#[0-9a-fA-F]{6}")
 _NAME_LENGTH = 100
 _DESCRIPTION_LENGTH = 500
-_ICON_LENGTH = 50
+ICON_LENGTH = 50
 
 report_item_tag = db.Table(
     "report_item_tag",
@@ -87,11 +87,16 @@ def clean_tag(data: object, *, system: bool = False) -> dict:
     if color and not _COLOR.fullmatch(color):
         msg = f"Not a colour: {color}"
         raise ValueError(msg)
-    icon = str(data.get("icon") or "").strip()[:_ICON_LENGTH]
+    icon = clean_icon(data.get("icon"))
     if data.get("system_key") and not system:
         msg = "System tags are built in"
         raise ValueError(msg)
-    return {"display_name": name, "description": description, "color": color or None, "icon": icon or None}
+    return {"display_name": name, "description": description, "color": color or None, "icon": icon}
+
+
+def clean_icon(value: object) -> str | None:
+    """An MDI icon name as it is stored: trimmed and cut to the column, None for none."""
+    return str(value or "").strip()[:ICON_LENGTH] or None
 
 
 class Tag(db.Model):
@@ -103,7 +108,7 @@ class Tag(db.Model):
     display_name = db.Column(db.String(_NAME_LENGTH), nullable=False)
     description = db.Column(db.String(_DESCRIPTION_LENGTH))
     color = db.Column(db.String(7))
-    icon = db.Column(db.String(_ICON_LENGTH))
+    icon = db.Column(db.String(ICON_LENGTH))
     system_key = db.Column(db.String(50), unique=True, nullable=True)
     updated_by = db.Column(db.String())
     updated_at = db.Column(db.DateTime)

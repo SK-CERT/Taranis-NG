@@ -44,15 +44,8 @@ const mockPublishStore = {
     getProducts: { total_count: 2, items: [] },
     loadProducts: vi.fn(),
     select: vi.fn(),
-    deselect: vi.fn(),
-    // The SSE resync handler re-fetches the publish store's public-web options,
-    // so webs created/deleted elsewhere are reflected without leaving the cache
-    // empty for the product dialog mounted alongside this view.
-    invalidatePublicWebOptions: vi.fn(),
-    refreshPublicWebOptions: vi.fn().mockResolvedValue(undefined)
+    deselect: vi.fn()
 }
-
-const mockGetAllUserProductTypes = vi.fn()
 
 vi.mock('vue-router', () => ({
     useRoute: () => mockRoute
@@ -68,10 +61,6 @@ vi.mock('@/stores/analyze', () => ({
 
 vi.mock('@/stores/publish', () => ({
     usePublishStore: () => mockPublishStore
-}))
-
-vi.mock('@/api/user', () => ({
-    getAllUserProductTypes: (...args) => mockGetAllUserProductTypes(...args)
 }))
 
 const commonStubs = {
@@ -121,16 +110,11 @@ describe('SSE consumer components', () => {
         mockPublishStore.getProducts = {
             total_count: 2,
             items: [
-                { id: 1, product_type_id: 20, title: 'Product 1' },
-                { id: 2, product_type_id: 20, title: 'Product 2' }
+                { id: 1, product_preset_id: 20, product_preset_name: 'Advisory', title: 'Product 1' },
+                { id: 2, product_preset_id: 20, product_preset_name: 'Advisory', title: 'Product 2' }
             ]
         }
         mockPublishStore.loadProducts.mockResolvedValue({ data: mockPublishStore.getProducts })
-        mockGetAllUserProductTypes.mockResolvedValue({
-            data: {
-                items: [{ id: 20, title: 'Product Type' }]
-            }
-        })
     })
 
     it('ContentDataAssess reloads on news-items-updated and stops after unmount', async () => {
@@ -234,23 +218,19 @@ describe('SSE consumer components', () => {
             await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
-            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(1)
 
             window.dispatchEvent(new CustomEvent('product-updated', { detail: {} }))
             await flushPromises()
 
             const productReloadCalls = mockPublishStore.loadProducts.mock.calls.length
-            const productTypeReloadCalls = mockGetAllUserProductTypes.mock.calls.length
 
             expect(productReloadCalls).toBeGreaterThan(1)
-            expect(productTypeReloadCalls).toBeGreaterThan(1)
 
             wrapper.unmount()
             window.dispatchEvent(new CustomEvent('product-updated', { detail: {} }))
             await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(productReloadCalls)
-            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(productTypeReloadCalls)
         } finally {
             wrapper?.unmount()
         }
@@ -285,7 +265,6 @@ describe('SSE consumer components', () => {
             expect(mockAnalyzeStore.loadReportItems).toHaveBeenCalledTimes(1)
             expect(mockAnalyzeStore.loadReportItemTypes).toHaveBeenCalledTimes(1)
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
-            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(1)
             expect(mockAssessStore.select).not.toHaveBeenCalled()
             expect(mockAssessStore.deselect).not.toHaveBeenCalled()
             expect(mockAnalyzeStore.selectReport).not.toHaveBeenCalled()

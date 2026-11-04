@@ -44,12 +44,13 @@
     import { useI18n } from 'vue-i18n'
 
     /**
-     * How a translation came about: written by the AI (until somebody edits or reviews it), and
+     * How a translation came about: written by the AI (until somebody edits or reviews it; a reviewed
+     * one shows like a person's), and
      * whether its source changed since. With `reviewable`, the AI chip offers to mark it reviewed.
      */
     export type TranslationStateValue = {
         value: string
-        origin: 'ai' | 'manual'
+        origin: 'ai' | 'reviewed' | 'manual'
         version: number
         outdated: boolean
         user?: string | null

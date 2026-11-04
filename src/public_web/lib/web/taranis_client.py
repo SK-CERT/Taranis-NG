@@ -73,6 +73,35 @@ class TaranisClient:
         items = resp.json().get("items", [])
         return [item["id"] for item in items if "id" in item]
 
+    def list_published_products(
+        self,
+        offset: int,
+        limit: int,
+        web_id: int | None = None,
+        language: str | None = None,
+    ) -> tuple[list[dict[str, object]], int]:
+        """Return a page of published products, newest first and each whole, and how many there are in all.
+
+        A core from before paging ignores ``offset`` and ``full``: its items have no ``report_items``,
+        and its count is that of the page.
+        """
+        params: dict[str, object] = {"offset": offset, "limit": limit, "full": 1}
+        if web_id is not None:
+            params["web_id"] = web_id
+        if language:
+            params["lang"] = language
+
+        resp = self._get("/api/v1/public-web/products", params=params)
+        if resp.status_code == HTTP_UNAUTHORIZED:
+            msg = "Taranis rejected the public-web ApiKey (401). Is the node registered in core with this key?"
+            raise TaranisClientError(msg)
+        if resp.status_code != HTTP_OK:
+            msg = f"Listing products failed (HTTP {resp.status_code}): {resp.text[:200]}"
+            raise TaranisClientError(msg)
+        body = resp.json()
+        items = body.get("items", [])
+        return items, int(body.get("total_count", len(items)))
+
     def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict[str, object] | None:
         """Return one published product (with report items and attributes).
 

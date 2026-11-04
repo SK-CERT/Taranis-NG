@@ -42,12 +42,17 @@ ATTRIBUTES = {
 }
 
 NAME_QUERIES = {
-    ("product_type", "title"): text("SELECT title FROM product_type WHERE title IN :expected"),
+    ("product_format", "title"): text("SELECT title FROM product_format WHERE title IN :expected"),
     ("report_item_type", "title"): text("SELECT title FROM report_item_type WHERE title IN :expected"),
     ("attribute", "name"): text("SELECT name FROM attribute WHERE name IN :expected"),
 }
 EXPECTED_GROUP_COUNT = 24
 EXPECTED_GROUP_ITEM_COUNT = 93
+# The legacy revision writes product formats under the names they had then (product types).
+LEGACY_VIEWS = {
+    "product_type": "SELECT * FROM product_format",
+    "product_type_parameter_value": "SELECT product_format_id AS product_type_id, parameter_value_id FROM product_format_parameter_value",
+}
 
 
 def _matching_names(connection: Connection, table: str, column: str, expected: set[str]) -> set[str]:
@@ -69,15 +74,31 @@ def _load_legacy_migration() -> ModuleType:
     return migration
 
 
+def _create_legacy_views(connection: Connection) -> None:
+    """Let the legacy revision reach the product formats through its own table names.
+
+    The views are temporary and live in this transaction: they are dropped after the install,
+    or rolled back with everything else when it fails.
+    """
+    for name, query in LEGACY_VIEWS.items():
+        connection.execute(text(f"CREATE TEMPORARY VIEW {name} AS {query}"))
+
+
+def _drop_legacy_views(connection: Connection) -> None:
+    """Drop the views made by _create_legacy_views."""
+    for name in LEGACY_VIEWS:
+        connection.execute(text(f"DROP VIEW pg_temp.{name}"))
+
+
 def _validate_bundle(connection: Connection) -> None:
     """Validate the objects and links created by the compatibility repair."""
     product_rows = connection.execute(
         text(
             """
             SELECT pt.title, presenter.type, parameter.key, parameter_value.value
-              FROM product_type AS pt
+              FROM product_format AS pt
               JOIN presenter ON presenter.id = pt.presenter_id
-              JOIN product_type_parameter_value AS link ON link.product_type_id = pt.id
+              JOIN product_format_parameter_value AS link ON link.product_format_id = pt.id
               JOIN parameter_value ON parameter_value.id = link.parameter_value_id
               JOIN parameter ON parameter.id = parameter_value.parameter_id
              WHERE pt.title IN :titles
@@ -162,7 +183,7 @@ def repair_distribution_bundle(
 ) -> None:
     """Install the wholly absent legacy bundle, or report that it is complete."""
     with engine.begin() as connection:
-        present_products = _matching_names(connection, "product_type", "title", set(PRODUCT_PATHS))
+        present_products = _matching_names(connection, "product_format", "title", set(PRODUCT_PATHS))
         present_reports = _matching_names(connection, "report_item_type", "title", REPORT_TYPES)
         present_attributes = _matching_names(connection, "attribute", "name", ATTRIBUTES)
 
@@ -179,8 +200,10 @@ def repair_distribution_bundle(
 
         presenter_id, parameter_html_id = _presenter_binding(connection, presenter_node_url)
         migration = _load_legacy_migration()
+        _create_legacy_views(connection)
         with orm.Session(bind=connection) as session:
             migration.install_distribution_bundle(session, presenter_id, parameter_html_id)
+        _drop_legacy_views(connection)
         _validate_bundle(connection)
 
     print("Distribution bundle repaired and validated.", flush=True)  # noqa: T201

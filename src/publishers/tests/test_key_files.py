@@ -1,4 +1,4 @@
-"""The shared diagnostic for a key file a preset names but the publisher cannot read.
+"""The shared diagnostic for a key file a channel names but the publisher cannot read.
 
 Both publishers that read a mounted key report the failure through
 ``unreadable_key_error``, so what an operator is told - which path was actually
@@ -27,7 +27,7 @@ def _not_found(path: str) -> FileNotFoundError:
 
 
 def test_relative_path_is_reported_as_the_absolute_one_opened() -> None:
-    """A preset's relative path means nothing outside the container; resolve it.
+    """A channel's relative path means nothing outside the container; resolve it.
 
     The failure that prompted this named ``crypto/taranis``, which exists
     nowhere the operator could look - it is ``/app/crypto/taranis`` inside the
@@ -60,7 +60,7 @@ def test_other_errors_do_not_claim_a_permission_problem() -> None:
 
 
 def test_description_identifies_which_configured_file_failed() -> None:
-    """A preset can name three key files; the message has to say which one."""
+    """A channel can name three key files; the message has to say which one."""
     path = "/app/crypto/sign.pem"
 
     assert "email signing key" in str(unreadable_key_error(path, "email signing key", _not_found(path)))

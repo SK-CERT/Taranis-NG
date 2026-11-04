@@ -27,7 +27,7 @@ from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.attribute import Attribute
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
-from model.report_item_type import AttributeGroupItem, ReportItemType
+from model.report_item_type import DEFAULT_ICON, AttributeGroupItem, ReportItemType
 from model.setting import Setting
 from model.state import StateDefinition, StateEntityTypeEnum, StateEnum, StateManager
 from model.tag import Tag, report_item_tag, set_item_tags
@@ -343,7 +343,6 @@ class ReportItem(db.Model):
         self.attributes = attributes
         self.report_item_cpes = []
         self.subtitle = ""
-        self.tag = ""
 
         self.news_item_aggregates = []
         for news_item_aggregate in news_item_aggregates:
@@ -357,7 +356,11 @@ class ReportItem(db.Model):
     def reconstruct(self) -> None:
         """Reconstructs the report item."""
         self.subtitle = ""
-        self.tag = "mdi-file-table-outline"
+
+    @property
+    def tag(self) -> str:
+        """The icon the report shows: its type's."""
+        return self.report_item_type.tag if self.report_item_type is not None else DEFAULT_ICON
 
     def title_translation(self, language: str, field: str) -> ReportItemTranslation | None:
         """The translation of the name or name prefix into ``language``, if there is one.

@@ -134,9 +134,9 @@ class _FakeSession:
         (
             presenters_node,
             presenters_node.PresentersNode,
-            types.SimpleNamespace(presenters=[types.SimpleNamespace(product_types=["product type"])]),
+            types.SimpleNamespace(presenters=[types.SimpleNamespace(product_formats=["product format"])]),
         ),
-        (publishers_node, publishers_node.PublishersNode, types.SimpleNamespace(publishers=[types.SimpleNamespace(presets=["preset"])])),
+        (publishers_node, publishers_node.PublishersNode, types.SimpleNamespace(publishers=[types.SimpleNamespace(channels=["channel"])])),
         (bots_node, bots_node.BotsNode, types.SimpleNamespace(bots=[types.SimpleNamespace(presets=["preset"])])),
     ],
 )

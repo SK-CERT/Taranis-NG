@@ -166,12 +166,12 @@ class PresentersNode(db.Model):
             node_id (str): Node GUID.
 
         Returns:
-            (dict, HTTPStatus): A 409 when product types still use the node's presenters.
+            (dict, HTTPStatus): A 409 when product formats still use the node's presenters.
         """
         node = db.session.get(cls, node_id)
         for presenter in node.presenters:
-            if len(presenter.product_types) > 0:
-                return {"error": "Product types still use this node's presenters"}, HTTPStatus.CONFLICT
+            if len(presenter.product_formats) > 0:
+                return {"error": "Product formats still use this node's presenters"}, HTTPStatus.CONFLICT
 
         db.session.delete(node)
         db.session.commit()

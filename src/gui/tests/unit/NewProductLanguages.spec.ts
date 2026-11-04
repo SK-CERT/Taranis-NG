@@ -17,7 +17,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { openBlankTabWithoutOpener } from '@/utils/window'
 
 // A product has a tab per language of its reports' types next to its own. The open tab is the
-// language it is previewed in; publishing names its language; outdated translations need a yes.
+// language it is previewed in; each delivery publishes in its own; outdated translations need a yes.
 
 vi.mock('@/api/publish', () => ({
     createProduct: vi.fn(),
@@ -34,15 +34,71 @@ vi.mock('@/api/analyze', () => ({
 }))
 
 vi.mock('@/api/user', () => ({
-    getAllUserProductTypes: vi.fn().mockResolvedValue({
+    getAllUserProductPresets: vi.fn().mockResolvedValue({
         data: {
             items: [
-                { id: 4, title: 'e-mail' },
-                { id: 5, title: 'JSON' }
+                {
+                    id: 4,
+                    name: 'Mailing',
+                    public_web_enabled: false,
+                    deliveries: [
+                        {
+                            id: 40,
+                            product_format_id: 4,
+                            product_format_title: 'e-mail',
+                            publishing_channel_id: '8',
+                            publishing_channel_name: 'Mailing list'
+                        }
+                    ]
+                },
+                {
+                    id: 5,
+                    name: 'Feed',
+                    public_web_enabled: false,
+                    deliveries: [
+                        {
+                            id: 50,
+                            product_format_id: 5,
+                            product_format_title: 'JSON',
+                            publishing_channel_id: null,
+                            publishing_channel_name: null
+                        }
+                    ]
+                },
+                {
+                    id: 6,
+                    name: 'Cyberfeed',
+                    public_web_enabled: false,
+                    deliveries: [
+                        {
+                            id: 60,
+                            language: null,
+                            product_format_id: 4,
+                            product_format_title: 'e-mail',
+                            publishing_channel_id: '8',
+                            publishing_channel_name: 'Mailing list'
+                        },
+                        {
+                            id: 61,
+                            language: 'sk',
+                            product_format_id: 7,
+                            product_format_title: 'PDF',
+                            publishing_channel_id: '9',
+                            publishing_channel_name: 'SFTP'
+                        },
+                        {
+                            id: 62,
+                            language: 'sk',
+                            product_format_id: 4,
+                            product_format_title: 'e-mail',
+                            publishing_channel_id: null,
+                            publishing_channel_name: null
+                        }
+                    ]
+                }
             ]
         }
-    }),
-    getAllUserPublishersPresets: vi.fn().mockResolvedValue({ data: { items: [{ id: 8, name: 'Mailing list' }] } })
+    })
 }))
 
 vi.mock('@/api/tags', () => ({
@@ -93,7 +149,9 @@ const ConfirmationDialogStub = {
     template: '<div v-if="modelValue" :data-test="`dialog-${titleKey}`"><slot /></div>'
 }
 
-const NO_PROBLEMS = { missing: [], outdated: [], template_language: 'cs' }
+// The product preset's one format, with the language of the templates it renders in.
+const templates = (language: string | null) => ({ formats: [{ product_format_id: 4, title: 'e-mail', template_language: language }] })
+const NO_PROBLEMS = { missing: [], outdated: [], ...templates('cs') }
 
 async function openProduct(overrides: Record<string, unknown> = {}) {
     const wrapper = mountWithPlugins(NewProduct, {
@@ -113,7 +171,7 @@ async function openProduct(overrides: Record<string, unknown> = {}) {
             id: 12,
             title: 'Bulletin',
             description: '',
-            product_type_id: 4,
+            product_preset_id: 4,
             state_id: undefined,
             report_items: [
                 { id: 1, title: 'A', type_languages: ['cs', 'en', 'sk'] },
@@ -223,7 +281,7 @@ describe('NewProduct languages', () => {
         expect(wrapper.find('[data-test="translation-outdated"]').exists()).toBe(false)
     })
 
-    it('marks the AI title as reviewed: kept as it is, saved as a persons and no longer outdated', async () => {
+    it('marks the AI title as reviewed: kept as it is, saved as reviewed and no longer outdated', async () => {
         const wrapper = await openProduct()
         wrapper.vm.activeLanguage = 'en'
         await flushPromises()
@@ -232,7 +290,7 @@ describe('NewProduct languages', () => {
         await flushPromises()
 
         const saved = vi.mocked(updateProduct).mock.calls.at(-1)?.[0] as { translations: object }
-        expect(saved.translations).toEqual({ en: { title: { value: 'Bulletin (en)', origin: 'manual' } } })
+        expect(saved.translations).toEqual({ en: { title: { value: 'Bulletin (en)', origin: 'reviewed' } } })
         expect(wrapper.find('[data-test="translation-ai"]').exists()).toBe(false)
         expect(wrapper.find('[data-test="translation-outdated"]').exists()).toBe(false)
         expect(wrapper.vm.tabStatuses['en']).toBe('translation_done')
@@ -346,8 +404,8 @@ describe('NewProduct languages', () => {
         await flushPromises()
         const saved = vi.mocked(updateProduct).mock.calls.at(-1)?.[0] as { translations: Record<string, object> }
         expect(saved.translations['de']).toEqual({
-            title: { value: 'Bulletin (de)', origin: 'manual' },
-            description: { value: 'Inhalt', origin: 'manual' }
+            title: { value: 'Bulletin (de)', origin: 'reviewed' },
+            description: { value: 'Inhalt', origin: 'reviewed' }
         })
         expect(notifications.at(-1)?.detail).toEqual({ type: 'success', loc: 'report_item.translation.reviewed', params: { count: 2 } })
         expect(wrapper.find('[data-test="review-product-language"]').exists()).toBe(false)
@@ -466,6 +524,22 @@ describe('NewProduct languages', () => {
         expect(vi.mocked(translateProduct).mock.calls.at(-1)?.[0].texts).toEqual({ description: 'Souhrn' })
     })
 
+    it('asks before the AI replaces a translation a person reviewed, as one they wrote', async () => {
+        const wrapper = await openProduct({
+            translations: { sk: { title: { value: 'Bulletin (sk)', origin: 'reviewed', version: 2, outdated: false } } }
+        })
+        wrapper.vm.activeLanguage = 'sk'
+        await flushPromises()
+
+        await wrapper.get('[data-test="translate-product-title"]').trigger('click')
+        await flushPromises()
+
+        expect(wrapper.find('[data-test="dialog-report_item.translation.overwrite_title"]').exists()).toBe(true)
+        expect(translateProduct).not.toHaveBeenCalled()
+        // Reviewed, it is no longer the AI's to review.
+        expect(wrapper.find('[data-test="translation-ai"]').exists()).toBe(false)
+    })
+
     it('previews in the open tabs language', async () => {
         const wrapper = await openProduct()
         wrapper.vm.activeLanguage = 'sk'
@@ -474,12 +548,12 @@ describe('NewProduct languages', () => {
         await wrapper.vm.handlePreview()
         await flushPromises()
 
-        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '', 'sk')
+        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '', undefined, 'sk')
     })
 
     it('asks before previewing outdated translations, once per language', async () => {
         vi.mocked(checkProductLanguage).mockResolvedValue({
-            data: { ...NO_PROBLEMS, template_language: 'en', outdated: [{ report_item_id: 1, title: 'A', field: 'title' }] }
+            data: { ...NO_PROBLEMS, ...templates('en'), outdated: [{ report_item_id: 1, title: 'A', field: 'title' }] }
         } as never)
         const wrapper = await openProduct()
         wrapper.vm.activeLanguage = 'en'
@@ -495,7 +569,7 @@ describe('NewProduct languages', () => {
             .find((dialog) => dialog.props('titleKey') === 'product.outdated_confirmation')!
             .vm.$emit('confirm')
         await flushPromises()
-        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '', 'en')
+        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '', undefined, 'en')
 
         vi.mocked(previewProduct).mockClear()
         await wrapper.vm.handlePreview()
@@ -503,32 +577,52 @@ describe('NewProduct languages', () => {
         expect(previewProduct).toHaveBeenCalledTimes(1)
     })
 
-    it('publishes in the language chosen in the publish dialog', async () => {
-        const wrapper = await openProduct()
-        wrapper.vm.activeLanguage = 'sk'
-        await flushPromises()
-        wrapper.vm.publisherPresets[0].selected = true
+    it('publishes each delivery in its own language, and says what each language falls back on', async () => {
+        vi.mocked(checkProductLanguage).mockImplementation(
+            (_product, language) =>
+                Promise.resolve({
+                    data: {
+                        missing: language === 'sk' ? [{ id: 2, title: 'B' }] : [],
+                        outdated: [],
+                        formats: [
+                            { product_format_id: 4, title: 'e-mail', template_language: 'en' },
+                            { product_format_id: 7, title: 'PDF', template_language: 'en' }
+                        ]
+                    }
+                }) as never
+        )
+        const wrapper = await openProduct({ product_preset_id: 6 })
 
         wrapper.vm.handlePublishConfirmation()
         await flushPromises()
-        expect(wrapper.vm.publishLanguage).toBe('sk')
-        wrapper.vm.publishLanguage = 'de'
+
+        const dialog = wrapper.get('[data-test="dialog-product.publish_confirmation"]')
+        // The delivery without a language goes out in the product's own, Czech.
+        expect(dialog.text()).toMatch(/Czech.*e-mail.*Mailing list/)
+        expect(dialog.text()).toMatch(/Slovak.*PDF.*SFTP/)
+        expect(wrapper.vm.publishChecks.map((entry: { language: string }) => entry.language)).toEqual(['cs', 'sk'])
+        // Each language names only the formats sent in it: the Slovak e-mail is only previewed.
+        const formatsOf = (index: number) =>
+            wrapper.vm.publishChecks[index].check.formats.map((format: { product_format_id: number }) => format.product_format_id)
+        expect([formatsOf(0), formatsOf(1)]).toEqual([[4], [7]])
+        expect(dialog.findAll('[data-test="notice-missing"]')).toHaveLength(1)
+
         await wrapper.vm.handlePublish()
         await flushPromises()
 
-        expect(publishProduct).toHaveBeenCalledWith(expect.any(Object), [8], 'de')
+        expect(publishProduct).toHaveBeenCalledWith(expect.any(Object), [60, 61])
     })
 
-    it('drops what the last check said as soon as the product type changes', async () => {
-        vi.mocked(checkProductLanguage).mockResolvedValue({ data: { ...NO_PROBLEMS, template_language: 'sk' } } as never)
+    it('drops what the last check said as soon as the product preset changes', async () => {
+        vi.mocked(checkProductLanguage).mockResolvedValue({ data: { ...NO_PROBLEMS, ...templates('sk') } } as never)
         const wrapper = await openProduct()
         wrapper.vm.activeLanguage = 'en'
         await vi.advanceTimersByTimeAsync(400)
         await flushPromises()
         expect(wrapper.find('[data-test="notice-templates"]').exists()).toBe(true)
 
-        // The other type's check has not answered yet; the first type's templates are not its.
-        wrapper.vm.selectedType = { id: 5, title: 'JSON' }
+        // The other product preset's check has not answered yet; the first one's templates are not its.
+        wrapper.vm.selectedProductPreset = wrapper.vm.productPresets[1]
         await flushPromises()
 
         expect(wrapper.find('[data-test="notice-templates"]').exists()).toBe(false)
@@ -540,7 +634,7 @@ describe('NewProduct languages', () => {
                 Promise.resolve({
                     data: {
                         ...NO_PROBLEMS,
-                        template_language: language,
+                        ...templates(language),
                         outdated: language === 'en' ? [{ report_item_id: 1, title: 'A', field: 'title' }] : []
                     }
                 }) as never
@@ -560,7 +654,7 @@ describe('NewProduct languages', () => {
 
     it('shows what the language falls back on', async () => {
         vi.mocked(checkProductLanguage).mockResolvedValue({
-            data: { missing: [{ id: 2, title: 'B' }], outdated: [], template_language: 'cs' }
+            data: { missing: [{ id: 2, title: 'B' }], outdated: [], ...templates('cs') }
         } as never)
         const wrapper = await openProduct()
         wrapper.vm.activeLanguage = 'sk'
@@ -568,22 +662,42 @@ describe('NewProduct languages', () => {
         await flushPromises()
 
         expect(checkProductLanguage).toHaveBeenLastCalledWith(
-            expect.objectContaining({ id: -1, product_type_id: 4, report_items: [{ id: 1 }, { id: 2 }] }),
+            expect.objectContaining({ id: -1, product_preset_id: 4, report_items: [{ id: 1 }, { id: 2 }] }),
             'sk'
         )
         expect(wrapper.get('[data-test="notice-missing"]').text()).toContain('B')
-        const templates = wrapper.get('[data-test="notice-templates"]')
-        expect(templates.text()).toContain('Czech')
-        const alert = wrapper
-            .findAllComponents({ name: 'VAlert' })
-            .find((component) => component.attributes('data-test') === 'notice-templates')
-        expect(alert?.props('variant')).toBe('tonal')
-        expect(alert?.props('type')).toBe('warning')
+        const notice = wrapper.get('[data-test="notice-templates"]')
+        expect(notice.text()).toContain('Czech')
+        expect(notice.text()).not.toContain('e-mail')
+        expect(notice.classes()).toContain('text-warning')
+    })
+
+    it('names the format of each templates notice when the product preset has several', async () => {
+        vi.mocked(checkProductLanguage).mockResolvedValue({
+            data: {
+                missing: [],
+                outdated: [],
+                formats: [
+                    { product_format_id: 4, title: 'e-mail CZ', template_language: 'cs' },
+                    { product_format_id: 5, title: 'JSON', template_language: 'sk' },
+                    { product_format_id: 6, title: 'PDF', template_language: null }
+                ]
+            }
+        } as never)
+        const wrapper = await openProduct()
+        wrapper.vm.activeLanguage = 'sk'
+        await vi.advanceTimersByTimeAsync(400)
+        await flushPromises()
+
+        const notices = wrapper.findAll('[data-test="notice-templates"]')
+        expect(notices.map((notice) => notice.text().split(':')[0])).toEqual(['e-mail CZ', 'PDF'])
+        expect(notices[0]!.classes()).toContain('text-warning')
+        expect(notices[1]!.classes()).toContain('text-info')
     })
 
     it('only informs about default templates of no stated language, and is quiet when the tab has its own', async () => {
         vi.mocked(checkProductLanguage).mockImplementation((_product, language) =>
-            Promise.resolve({ data: { ...NO_PROBLEMS, template_language: language === 'sk' ? 'sk' : null } } as never)
+            Promise.resolve({ data: { ...NO_PROBLEMS, ...templates(language === 'sk' ? 'sk' : null) } } as never)
         )
         const wrapper = await openProduct()
         wrapper.vm.activeLanguage = 'en'

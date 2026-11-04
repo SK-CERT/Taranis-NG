@@ -25,10 +25,11 @@ from model import (  # noqa: F401  Import the complete relationship graph before
     presenter,
     presenters_node,
     product,
-    product_type,
+    product_format,
+    product_preset,
     publisher,
-    publisher_preset,
     publishers_node,
+    publishing_channel,
     report_item,
     report_item_type,
 )

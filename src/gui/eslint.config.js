@@ -158,7 +158,7 @@ export default [
             '@intlify/vue-i18n/no-missing-keys': 'error',
             // ignorePattern covers markup that only
             // looks like copy: mdi icon names passed as slot content, punctuation-only nodes
-            // (":", "(", ")"), secret masks and the Jinja snippets in the product-type help.
+            // (":", "(", ")"), secret masks and the Jinja snippets in the product-format help.
             '@intlify/vue-i18n/no-raw-text': [
                 'error',
                 {

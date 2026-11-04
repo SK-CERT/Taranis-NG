@@ -4,7 +4,7 @@ Returns:
     _type_: _description_
 """
 
-from marshmallow import EXCLUDE, Schema, fields, post_load
+from marshmallow import EXCLUDE, Schema, fields, post_load, pre_load
 
 from shared.schema.message_header import MessageHeaderSchema
 from shared.schema.parameter import ParameterSchema
@@ -35,8 +35,8 @@ class PresenterInputProduct:
         self,
         title: str,
         description: str,
-        product_type: str,
-        product_type_description: str,
+        product_format: str,
+        product_format_description: str,
         user: UserSchemaBase,
         id: str,  # noqa: A002
         links: list[str] | None = None,
@@ -47,8 +47,8 @@ class PresenterInputProduct:
         Args:
             title (str): Title of the product.
             description (str): Description of the product.
-            product_type (str): Basicaly name of the product.
-            product_type_description (str): Product description.
+            product_format (str): Title of the format the product is rendered in.
+            product_format_description (str): Description of that format.
             user (UserSchemaBase): Data about the user who created the product.
             id (str): Id.
             links (list[str]): All sources of the product, numbered by position: ``links[0]`` is
@@ -58,19 +58,20 @@ class PresenterInputProduct:
         """
         self.title = title
         self.description = description
-        self.product_type = product_type
-        self.product_type_description = product_type_description
+        self.product_format = product_format
+        self.product_format_description = product_format_description
         self.user = user
         self.id = id
         self.links = links
         self.language = language
 
     @classmethod
-    def make_from_product(cls, product: "PresenterInputProductSchema") -> "PresenterInputProduct":
+    def make_from_product(cls, product: "PresenterInputProductSchema", product_format: object) -> "PresenterInputProduct":
         """Make a PresenterInputProduct object from a Product object.
 
         Args:
             product (PresenterInputProductSchema): Product object.
+            product_format: The format the product is rendered in (one of its product preset's).
 
         Returns:
             PresenterInputProduct: Object.
@@ -78,8 +79,8 @@ class PresenterInputProduct:
         return PresenterInputProduct(
             product.title,
             product.description,
-            product.product_type.title,
-            product.product_type.description,
+            product_format.title,
+            product_format.description,
             product.user,
             product.id,
         )
@@ -99,12 +100,28 @@ class PresenterInputProductSchema(Schema):
 
     title = fields.Str()
     description = fields.Str()
-    product_type = fields.Str()
-    product_type_description = fields.Str()
+    product_format = fields.Str()
+    product_format_description = fields.Str()
     user = fields.Nested(UserSchemaBase, exclude=("password",))
     id = fields.Str()
     links = fields.List(fields.Str(), load_default=list, allow_none=True)
     language = fields.Str(load_default=None, allow_none=True)
+
+    @pre_load
+    def read_product_type(self, data: dict, **kwargs) -> dict:  # noqa: ANN003, ARG002
+        """Take the format from the keys a core from before product formats sends.
+
+        Presenter nodes are upgraded before core, so for a while they get those keys.
+
+        Args:
+            data (dict): JSON data.
+            **kwargs: Additional arguments.
+
+        Returns:
+            dict: The data, with the format under its current keys.
+        """
+        legacy = {"product_format": "product_type", "product_format_description": "product_type_description"}
+        return {**{key: data[old] for key, old in legacy.items() if old in data}, **data}
 
     @post_load
     def make(self, data: dict, **kwargs) -> PresenterInputProduct:  # noqa: ANN003, ARG002
@@ -130,6 +147,7 @@ class PresenterInput:
         parameter_values: list | None = None,
         reports: list | None = None,
         report_types: list | None = None,
+        product_format: object | None = None,
     ) -> None:
         """Initialize the "presenter input".
 
@@ -139,6 +157,8 @@ class PresenterInput:
             parameter_values (list, optional): Arguments for the presenter (e.g. template path). Defaults to None.
             reports (list, optional): Report items themselves. Defaults to None.
             report_types (list, optional): Description of the report item types used. Defaults to None.
+            product_format (optional): When creating from objects, the format to render the product
+                in - a product is rendered once per format of its product preset.
         """
         # Creating from JSON data.
         if parameter_values is not None:
@@ -146,13 +166,13 @@ class PresenterInput:
             return
         # Creating from OBJECTS
         self.type = type
-        self.parameter_values = product.product_type.parameter_values
+        self.parameter_values = product_format.parameter_values
         self.reports = product.report_items
         report_types = {}
         for report in self.reports:
             report_types[report.report_item_type.id] = report.report_item_type
         self.report_types = list(report_types.values())
-        self.product = PresenterInputProduct.make_from_product(product)
+        self.product = PresenterInputProduct.make_from_product(product, product_format)
 
     def load(
         self,

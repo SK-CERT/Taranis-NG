@@ -26,10 +26,9 @@ from flask import request, send_file
 from flask_restful import Api, Resource
 from managers import content_language, content_localizer
 from managers.auth_manager import api_key_required
-from managers.db_manager import db
 from managers.link_references import CITING_TYPES, ReferenceIndex, build_index
 from managers.log_manager import logger
-from model.product import Product, ProductPublicWeb
+from model.product import Product
 from model.public_web import PublicWeb
 from model.state import StateDefinition, StateEnum
 from shared.schema.attribute import AttributeType
@@ -135,15 +134,16 @@ def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: di
     """Serialize a report item with its attributes, in ``language`` when given.
 
     In a language, the report says which it is shown in (``language``, None when its own is not
-    known), and its labels and constants are in that one too, so that a report nobody translated
-    into ``language`` reads in a single language: the one it was written in.
+    known): ``language``, else English, else the one it was written in, whichever it has first. Its
+    labels and constants are in that one too, and a text not translated into it is shown as
+    written, so that the report reads in a single language.
     """
     report_type = report_item.report_item_type
     rendering = None
     shown = None
     if language:
         available = content_localizer.report_languages(report_item)
-        shown = content_localizer.shown_language(language, report_item.language, available, via_english=False)
+        shown = content_localizer.shown_language(language, report_item.language, available)
         language = shown or language
         rendering = _Rendering(language, report_item, constants, report_type.label_language if report_type else None)
     entry = {
@@ -161,6 +161,9 @@ def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: di
     if rendering is None:
         return entry
     entry["language"] = shown
+    # Read, in part, from AI translations (reviewed or not); then readers learn what it was written in.
+    entry["ai_translation"] = content_localizer.report_ai_translation(report_item, shown)
+    entry["original_language"] = report_item.language
     for field in ("title", "title_prefix"):
         entry[field] = content_localizer.report_title(report_item, field, language, skip_outdated=True, via_english=False)
     if report_type is not None:
@@ -193,8 +196,10 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
 
     Returns:
         dict: The product. In a language, it also says which language it is shown in
-            (``language``, None when no language of the content is known) and which it can be read
-            in (``available_languages``).
+            (``language``, None when no language of the content is known), which it can be read
+            in (``available_languages``), whether any of it is read from an AI translation and if a
+            person reviewed them all (``ai_translation``: "unreviewed", "reviewed" or None), and what
+            it was written in (``original_language``).
     """
     index, local_numbers = build_index(
         product.links,
@@ -225,11 +230,26 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
     }
     if language:
         available = content_localizer.available_languages(product)
-        result["title"] = content_localizer.product_text(product, "title", language, skip_outdated=True, via_english=False)[0]
-        description = content_localizer.product_text(product, "description", language, skip_outdated=True, via_english=False)[0]
+        # Like a report: in ``language``, else English, else as written.
+        title, title_language = content_localizer.product_text(product, "title", language, skip_outdated=True)
+        description, description_language = content_localizer.product_text(product, "description", language, skip_outdated=True)
+        result["title"] = title
         result["description"] = index.render(description)
-        result["language"] = content_localizer.shown_language(language, product.language, available, via_english=False)
+        result["language"] = content_localizer.shown_language(language, product.language, available)
         result["available_languages"] = available
+        # Read, in part, from AI translations: the page says so, whether a person reviewed them,
+        # and what it was written in.
+        result["ai_translation"] = content_localizer.ai_translation(
+            [
+                content_localizer.product_text_ai_translation(product, "title", title_language),
+                content_localizer.product_text_ai_translation(product, "description", description_language),
+                *(item.get("ai_translation") for item in report_items),
+            ],
+        )
+        result["original_language"] = product.language or next(
+            (item["original_language"] for item in report_items if item.get("ai_translation")),
+            None,
+        )
     return result
 
 
@@ -241,12 +261,8 @@ def _find_published(product_id: int, web_id: int | None = None) -> Product | Non
     published = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
     if not published or product.state_id != published.id:
         return None
-    if web_id is not None:
-        has_any_target = db.session.query(ProductPublicWeb).filter_by(product_id=product_id).first() is not None
-        if has_any_target:
-            is_visible = db.session.query(ProductPublicWeb).filter_by(product_id=product_id, public_web_id=web_id).first() is not None
-            if not is_visible:
-                return None
+    if not product.shown_on_web(web_id):
+        return None
     return product
 
 
@@ -255,13 +271,19 @@ class PublicWebProducts(Resource):
 
     @api_key_required("public_web")
     def get(self, public_web_node=None):  # noqa: ANN001, ANN201
-        """Return the most recent published products (newest first).
+        """Return published products, newest first, a page at a time.
 
         Query params:
             limit (int): Max number of products (default 50, capped at 200).
+            offset (int): How many of the newest to skip (default 0).
+            web_id (int): The web asking; products published to other webs only are left out.
+            full (bool): Each product whole, as ``products/<id>`` serves it, so that a node can
+                load every product in a few requests.
+            lang (str): With ``full``, the language to show the products in (ISO 639-1).
 
         Returns:
-            dict: ``{"total_count": int, "items": [{"id", "title", "created"}]}``
+            dict: ``{"total_count": int, "items": [...]}``: how many products are published in
+                all, and this page of them, ``{"id", "title", "created"}`` each unless ``full``.
         """
         public_web_node.touch()
         try:
@@ -269,15 +291,26 @@ class PublicWebProducts(Resource):
         except (TypeError, ValueError):
             limit = 50
         try:
+            offset = max(int(request.args.get("offset", 0)), 0)
+        except (TypeError, ValueError):
+            offset = 0
+        try:
             web_id_arg = request.args.get("web_id")
             web_id = int(web_id_arg) if web_id_arg else None
         except (TypeError, ValueError):
             web_id = None
+        full = request.args.get("full", "").lower() in ("1", "true")
+        language = request.args.get("lang")
+        if not content_language.is_language(language):
+            language = None
 
-        products = Product.get_published(limit, web_id=web_id)
-        items = [{"id": p.id, "title": p.title, "created": p.created.isoformat() if p.created else None} for p in products]
-        logger.debug(f"Public-web '{public_web_node.name}': listed {len(items)} published products")
-        return {"total_count": len(items), "items": items}, HTTPStatus.OK
+        products, total = Product.get_published(limit, web_id=web_id, offset=offset, with_content=full)
+        if full:
+            items = [_serialize_product(product, language) for product in products]
+        else:
+            items = [{"id": p.id, "title": p.title, "created": p.created.isoformat() if p.created else None} for p in products]
+        logger.debug(f"Public-web '{public_web_node.name}': listed {len(items)} of {total} published products from {offset}")
+        return {"total_count": total, "items": items}, HTTPStatus.OK
 
 
 class PublicWebProduct(Resource):

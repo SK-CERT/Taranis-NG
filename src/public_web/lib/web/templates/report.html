@@ -61,6 +61,35 @@
             </div>
         {%- endif %}
 
+        {#- Read, in part, from an AI translation: say so, whether a person reviewed it, and offer the original. #}
+        {%- set ai_translation = report.get_ai_translation() %}
+        {%- if ai_translation in ("unreviewed", "reviewed") %}
+            {%- set original = report.get_original_language() %}
+            {%- set original_choice = language_choices() | selectattr("code", "equalto", original) | first %}
+            {%- set reviewed = ai_translation == "reviewed" %}
+            <div class="alert {{ 'alert-info' if reviewed else 'alert-warning' }} d-flex align-items-center"
+                 role="note"
+                 data-ai-translation="{{ ai_translation }}">
+                <span class="mdi {{ 'mdi-account-check-outline' if reviewed else 'mdi-robot-outline' }} me-2 fs-4 flex-shrink-0"
+                      aria-hidden="true"></span>
+                <p class="m-0">
+                    {%- if reviewed %}
+                        {{ translate_ui("report_ai_reviewed_notice") }}
+                    {%- else %}
+                        {{ translate_ui("report_ai_unreviewed_notice") }}
+                    {%- endif %}
+                    {%- if original %}
+                        {{ translate_ui("report_original_language") }}
+                        {% if original_choice -%}
+                            <a href="{{ original_choice.url }}" lang="{{ original }}">{{ language_name(original) }}</a>
+                        {%- else -%}
+                            {{ language_name(original) }}
+                        {%- endif -%}.
+                    {%- endif %}
+                </p>
+            </div>
+        {%- endif %}
+
         <div class="d-flex flex-column flex-md-row mb-1">
             <h4 class="text-body me-3"{{ macros.content_lang(report) }}>
                 {{ report.get_formatted_tlp(with_space=True) or '' }}{{ report.get_title() or translate_report(report, 'alternative_title') }}

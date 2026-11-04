@@ -201,11 +201,6 @@ class SiteContext:
         """Max reports shown on the homepage, falling back to the global default."""
         return int(self.cfg.get("max_reports_homepage") or config.max_reports_homepage())
 
-    @property
-    def max_reports_rss(self) -> int:
-        """Max reports included in the RSS feed, falling back to the global default."""
-        return int(self.cfg.get("max_reports_rss") or config.max_reports_rss())
-
     # -- images ------------------------------------------------------------
 
     def image_url(self, kind: str) -> str:

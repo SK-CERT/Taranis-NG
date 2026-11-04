@@ -17,7 +17,7 @@
 
         <v-card>
             <DialogToolbar
-                :title="isEdit ? t('presenters.types.edit') : t('presenters.types.add_new')"
+                :title="isEdit ? t('presenters.formats.edit') : t('presenters.formats.add_new')"
                 :saving="saving"
                 :save-disabled="!selectedPresenter"
                 :show-save="canSave"
@@ -38,7 +38,7 @@
                         item-title="name"
                         item-value="id"
                         return-object
-                        :label="t('presenters.types.node')"
+                        :label="t('presenters.formats.node')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -54,7 +54,7 @@
                         item-title="name"
                         item-value="id"
                         return-object
-                        :label="t('presenters.types.presenter')"
+                        :label="t('presenters.formats.presenter')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -66,7 +66,7 @@
                         v-if="selectedPresenter"
                         v-model="localItem.title"
                         :spellcheck="spellcheck"
-                        :label="t('presenters.types.name')"
+                        :label="t('presenters.formats.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -78,7 +78,7 @@
                         v-if="selectedPresenter"
                         v-model="localItem.description"
                         :spellcheck="spellcheck"
-                        :label="t('presenters.types.description')"
+                        :label="t('presenters.formats.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -89,7 +89,7 @@
                     <div v-if="selectedPresenter && selectedPresenter.parameters && selectedPresenter.parameters.length > 0">
                         <v-divider class="my-4" />
                         <div class="d-flex align-center mb-3">
-                            <h3 class="text-subtitle-1">{{ t('presenters.types.parameters') }}</h3>
+                            <h3 class="text-subtitle-1">{{ t('presenters.formats.parameters') }}</h3>
                             <v-spacer />
                             <v-btn
                                 color="primary"
@@ -98,7 +98,7 @@
                                 @click="helpDialog = true"
                             >
                                 <v-icon start>mdi-help-circle</v-icon>
-                                {{ t('presenters.types.help') }}
+                                {{ t('presenters.formats.help') }}
                             </v-btn>
                         </div>
 
@@ -111,9 +111,9 @@
                             <v-tabs
                                 v-model="parameterTab"
                                 density="compact"
-                                data-test="product-type-language-tabs"
+                                data-test="product-format-language-tabs"
                             >
-                                <v-tab value="default">{{ t('presenters.types.default_templates') }}</v-tab>
+                                <v-tab value="default">{{ t('presenters.formats.default_templates') }}</v-tab>
                                 <v-tab
                                     v-for="code in templateLanguages"
                                     :key="code"
@@ -129,7 +129,7 @@
                                 :items="addableLanguages"
                                 item-title="txt"
                                 item-value="id"
-                                :label="t('presenters.types.add_language')"
+                                :label="t('presenters.formats.add_language')"
                                 prepend-inner-icon="mdi-plus"
                                 variant="outlined"
                                 density="compact"
@@ -146,7 +146,7 @@
                             data-test="language-templates"
                         >
                             <p class="text-body-2 text-medium-emphasis mb-3">
-                                {{ t('presenters.types.language_templates_hint', { language: languageName(parameterTab) }) }}
+                                {{ t('presenters.formats.language_templates_hint', { language: languageName(parameterTab) }) }}
                             </p>
                             <v-text-field
                                 v-for="param in templateParameters"
@@ -171,7 +171,7 @@
                                 data-test="remove-template-language"
                                 @click="removeTemplateLanguage(parameterTab)"
                             >
-                                {{ t('presenters.types.remove_language', { language: languageName(parameterTab) }) }}
+                                {{ t('presenters.formats.remove_language', { language: languageName(parameterTab) }) }}
                             </v-btn>
                         </div>
 
@@ -182,15 +182,15 @@
                             :items="languageOptions"
                             item-title="txt"
                             item-value="id"
-                            :label="t('presenters.types.template_language')"
-                            :hint="t('presenters.types.template_language_hint')"
+                            :label="t('presenters.formats.template_language')"
+                            :hint="t('presenters.formats.template_language_hint')"
                             persistent-hint
                             clearable
                             variant="outlined"
                             density="comfortable"
                             class="mb-3"
                             :disabled="saving || !canSave"
-                            data-test="product-type-template-language"
+                            data-test="product-format-template-language"
                         />
                         <div
                             v-for="(param, index) in selectedPresenter.parameters"
@@ -242,7 +242,7 @@
                     closable
                     @click:close="showError = false"
                 >
-                    {{ t('presenters.types.error') }}
+                    {{ t('presenters.formats.error') }}
                 </v-alert>
 
                 <!-- Template variables help -->
@@ -253,7 +253,7 @@
                 >
                     <v-card>
                         <DialogToolbar
-                            :title="t('presenters.types.help')"
+                            :title="t('presenters.formats.help')"
                             :show-save="false"
                             @cancel="helpDialog = false"
                         />
@@ -263,7 +263,7 @@
                                 :items="reportTypes"
                                 item-title="title"
                                 return-object
-                                :label="t('presenters.types.choose_report_type')"
+                                :label="t('presenters.formats.choose_report_type')"
                                 variant="outlined"
                                 density="comfortable"
                                 class="mb-4"
@@ -275,7 +275,7 @@
                                     variant="outlined"
                                     class="mb-3"
                                 >
-                                    <v-card-title class="text-subtitle-1">{{ t('presenters.types.report_items') }}</v-card-title>
+                                    <v-card-title class="text-subtitle-1">{{ t('presenters.formats.report_items') }}</v-card-title>
                                     <v-card-text>
                                         <div class="tpl-line">{% for report_item in data.report_items %}</div>
                                         <div
@@ -283,7 +283,7 @@
                                             :key="key"
                                             class="tpl-row ml-4"
                                         >
-                                            <strong>{{ t('presenters.types.report_items_object.' + key) }}</strong
+                                            <strong>{{ t('presenters.formats.report_items_object.' + key) }}</strong
                                             >:
                                             <code class="tpl-var">{{ variableUsage(key) }}</code>
                                         </div>
@@ -296,7 +296,7 @@
                                     variant="outlined"
                                     class="mb-3"
                                 >
-                                    <v-card-title class="text-subtitle-1">{{ t('presenters.types.news_items') }}</v-card-title>
+                                    <v-card-title class="text-subtitle-1">{{ t('presenters.formats.news_items') }}</v-card-title>
                                     <v-card-text>
                                         <div class="tpl-line">{% for report_item in data.report_items %}</div>
                                         <div class="tpl-line ml-4">{% for news_item in report_item.news_items %}</div>
@@ -305,7 +305,7 @@
                                             :key="key"
                                             class="tpl-row ml-8"
                                         >
-                                            <strong>{{ t('presenters.types.news_items_object.' + key) }}</strong
+                                            <strong>{{ t('presenters.formats.news_items_object.' + key) }}</strong
                                             >:
                                             <code class="tpl-var">{{ variableUsageNewsItems(key) }}</code>
                                         </div>
@@ -363,7 +363,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { useContentLanguages } from '@/composables/useContentLanguages'
     import { useConfigStore } from '@/stores/config'
-    import { createNewProductType, updateProductType, getAllPresentersNodes } from '@/api/config'
+    import { createNewProductFormat, updateProductFormat, getAllPresentersNodes } from '@/api/config'
     import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
 
     type PresenterParameter = {
@@ -400,7 +400,7 @@
         [key: string]: unknown
     }
 
-    type ProductTypeItem = {
+    type ProductFormatItem = {
         id: string | number | null
         title: string
         description: string
@@ -440,7 +440,7 @@
 
     const props = withDefaults(
         defineProps<{
-            editItem?: Partial<ProductTypeItem> | null
+            editItem?: Partial<ProductFormatItem> | null
         }>(),
         {
             editItem: null
@@ -485,12 +485,12 @@
     const nodes = ref<PresenterNode[]>([])
     const selectedNode = ref<PresenterNode | null>(null)
     const selectedPresenter = ref<Presenter | null>(null)
-    // Presenter type this product type is bound to, captured when the dialog
+    // Presenter type this product format is bound to, captured when the dialog
     // opens; switching nodes uses it to find the equivalent presenter there.
     const boundPresenterType = ref<string | null>(null)
     const parameterValues = ref<string[]>([])
 
-    const defaultItem: ProductTypeItem = {
+    const defaultItem: ProductFormatItem = {
         id: null,
         title: '',
         description: '',
@@ -500,7 +500,7 @@
         language_templates: {}
     }
 
-    const localItem = ref<ProductTypeItem>({ ...defaultItem, language_templates: {} })
+    const localItem = ref<ProductFormatItem>({ ...defaultItem, language_templates: {} })
 
     // ---- templates per language -------------------------------------------------------------
     const { languageOptions, languageName } = useContentLanguages()
@@ -547,15 +547,15 @@
     }
 
     const isEdit = computed(() => !!localItem.value.id)
-    const canCreate = computed(() => checkPermission('CONFIG_PRODUCT_TYPE_CREATE'))
-    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_PRODUCT_TYPE_UPDATE' : 'CONFIG_PRODUCT_TYPE_CREATE'))
+    const canCreate = computed(() => checkPermission('CONFIG_PRODUCT_FORMAT_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_PRODUCT_FORMAT_UPDATE' : 'CONFIG_PRODUCT_FORMAT_CREATE'))
 
     const mapParameterValues = (presenter: Presenter, incomingValues: ParameterValue[] = []): string[] => {
         return (
             presenter.parameters?.map((param) => {
                 // Match by parameter.id first (same presenter, re-edit case)…
                 let paramValue = incomingValues.find((value) => value.parameter?.id === param.id)
-                // …then fall back to parameter.key (moving the product type to
+                // …then fall back to parameter.key (moving the product format to
                 // a presenter on a different node — same parameter set, different ids).
                 if (!paramValue && param.key) {
                     paramValue = incomingValues.find((value) => value.parameter?.key === param.key)
@@ -655,7 +655,7 @@
 
         saving.value = true
         try {
-            const payload: ProductTypeItem = {
+            const payload: ProductFormatItem = {
                 ...localItem.value,
                 presenter_id: selectedPresenter.value.id,
                 parameter_values:
@@ -669,18 +669,18 @@
             }
 
             if (isEdit.value) {
-                await updateProductType(payload)
+                await updateProductFormat(payload)
                 window.dispatchEvent(
                     new CustomEvent('notification', {
-                        detail: { type: 'success', loc: 'presenters.types.successful_edit' }
+                        detail: { type: 'success', loc: 'presenters.formats.successful_edit' }
                     })
                 )
             } else {
                 // Backend requires an integer id even on create (ignored); null fails validation.
-                await createNewProductType({ ...payload, id: -1 })
+                await createNewProductFormat({ ...payload, id: -1 })
                 window.dispatchEvent(
                     new CustomEvent('notification', {
-                        detail: { type: 'success', loc: 'presenters.types.successful' }
+                        detail: { type: 'success', loc: 'presenters.formats.successful' }
                     })
                 )
             }
@@ -716,7 +716,7 @@
         () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                const incoming = newItem as Partial<ProductTypeItem>
+                const incoming = newItem as Partial<ProductFormatItem>
                 // A copy: the list keeps its row until the dialog saves.
                 localItem.value = {
                     ...defaultItem,
