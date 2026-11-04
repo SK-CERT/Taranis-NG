@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewReportItem from '@/components/analyze/NewReportItem.vue'
@@ -76,6 +76,15 @@ vi.mock('@/components/common/attribute/AttributeContainer.vue', () => ({
         props: ['attributeItem', 'edit', 'modify', 'reportItemId', 'readOnly'],
         template: '<div class="attribute-container-stub" />'
     }
+}))
+
+// Attribute writes under way, as the attribute components report them.
+const writes = vi.hoisted(() => ({ pending: false, begun: 0 }))
+vi.mock('@/components/common/attribute/useAttributes', async (importOriginal) => ({
+    ...(await importOriginal()),
+    attributeWritesPending: () => writes.pending,
+    attributeWriteMark: () => writes.begun,
+    attributeWritesSince: (mark) => writes.begun !== mark
 }))
 
 vi.mock('@/api/state', () => ({
@@ -327,5 +336,65 @@ describe('NewReportItem SSE collaboration', () => {
         await flushPromises()
         expect(wrapper.get('p.mb-4').text()).toContain('Somebody changed this value')
         expect(wrapper.find('p.mb-4 bdi').exists()).toBe(false)
+    })
+
+    describe('resync after the live stream was down', () => {
+        // Each dialog listens for the resync; one left open would read the report as well.
+        const opened = []
+        const openEditor = async () => {
+            const wrapper = await mountOpenedEditor()
+            opened.push(wrapper)
+            return wrapper
+        }
+
+        beforeEach(() => {
+            writes.pending = false
+            writes.begun = 0
+            vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+        })
+
+        afterEach(() => {
+            opened.splice(0).forEach((wrapper) => wrapper.unmount())
+            vi.useRealTimers()
+        })
+
+        const resynced = () => ({ data: { ...makeReportItem(), title: 'Resynced title' } })
+
+        it('waits while an attribute value is still being written, then re-reads', async () => {
+            const wrapper = await openEditor()
+            vi.mocked(analyzeApi.getReportItem).mockClear().mockResolvedValue(resynced())
+            writes.pending = true
+
+            window.dispatchEvent(new CustomEvent('sse-resync'))
+            await flushPromises()
+            expect(analyzeApi.getReportItem).not.toHaveBeenCalled()
+
+            writes.pending = false
+            vi.advanceTimersByTime(3000)
+            await flushPromises()
+            expect(analyzeApi.getReportItem).toHaveBeenCalledOnce()
+            expect(wrapper.html()).toContain('Resynced title')
+        })
+
+        it('drops what it read before a write began meanwhile, and reads again', async () => {
+            const wrapper = await openEditor()
+            vi.mocked(analyzeApi.getReportItem)
+                .mockClear()
+                .mockImplementationOnce(async () => {
+                    // A value is added, and done, while the report is being read.
+                    writes.begun += 1
+                    return { data: { ...makeReportItem(), title: 'Read before the add' } }
+                })
+                .mockResolvedValue(resynced())
+
+            window.dispatchEvent(new CustomEvent('sse-resync'))
+            await flushPromises()
+            expect(wrapper.html()).not.toContain('Read before the add')
+
+            vi.advanceTimersByTime(3000)
+            await flushPromises()
+            expect(analyzeApi.getReportItem).toHaveBeenCalledTimes(2)
+            expect(wrapper.html()).toContain('Resynced title')
+        })
     })
 })

@@ -18,6 +18,8 @@ type AttributeValue = {
     binary_size?: unknown
     binary_description?: unknown
     locked?: boolean
+    // A value of an attached remote report item, listed among the report's own.
+    remote?: boolean
     last_updated?: unknown
     user?: AttributeUser
     // Version of the stored value this copy is based on; sent back on save so the server can
@@ -113,6 +115,39 @@ export function isLabelOnly(attributeGroup?: AttributeGroup | null): boolean {
     return (attributeGroup?.max_occurrence ?? Infinity) === 0
 }
 
+// Writes of attribute values this tab has under way - adds, saves, removals - across every
+// attribute. A report reloaded meanwhile (a resync) would show what they have not stored yet:
+// an added value twice, typed text as it was before.
+const pendingWrites = ref(0)
+// How many writes have begun: a reload read before one began is out of date, even if the write
+// is done by the time the reload arrives.
+let writesBegun = 0
+
+/** Whether an attribute value is still being added, saved or removed. */
+export function attributeWritesPending(): boolean {
+    return pendingWrites.value > 0
+}
+
+/** A mark to tell, with {@link attributeWritesSince}, whether a write began after it. */
+export function attributeWriteMark(): number {
+    return writesBegun
+}
+
+/** Whether an attribute write began after ``mark`` (see {@link attributeWriteMark}). */
+export function attributeWritesSince(mark: number): boolean {
+    return writesBegun !== mark
+}
+
+async function tracked<R>(write: () => Promise<R>): Promise<R> {
+    writesBegun++
+    pendingWrites.value++
+    try {
+        return await write()
+    } finally {
+        pendingWrites.value--
+    }
+}
+
 /**
  * Composable for shared attribute editing logic.
  * Handles add/delete operations, locking, and API synchronization.
@@ -155,6 +190,12 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
     // Events about another language's values (or about the source, in a language tab) are not ours.
     const ownLanguage = (data: ReportEventData): boolean => (data.language ?? null) === (props.language ?? null)
 
+    // A value can reach the list more than once: from this tab's add, from another user's add
+    // (announced to every copy of the attribute on the page), from a resync. Listed already,
+    // it is not added again.
+    const listed = (id: unknown): boolean =>
+        props.values.some((item) => item.remote !== true && item.id !== undefined && Number(item.id) === Number(id))
+
     const canModify = computed(() => {
         if (props?.edit === false) {
             return AuthService.hasPermission(Permissions.ANALYZE_UPDATE) && props?.modify === true
@@ -187,21 +228,27 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                     attribute_group_item_id: props.attributeGroup?.id
                 }
 
-                const updateResponse = await updateReportItem(props.reportItemId, data)
-                const response = await getReportItemData(props.reportItemId, (updateResponse as { data: unknown }).data)
-                const itemData = (response as ReportItemDataResponse).data
+                // Listed while still counted as pending, so no resync can come in between.
+                await tracked(async () => {
+                    const updateResponse = await updateReportItem(props.reportItemId, data)
+                    const response = await getReportItemData(props.reportItemId, (updateResponse as { data: unknown }).data)
+                    const itemData = (response as ReportItemDataResponse).data
+                    if (listed(itemData.attribute_id)) {
+                        return
+                    }
 
-                props.values.push({
-                    id: Number(itemData.attribute_id),
-                    index: props.values.length,
-                    // The server seeds a new value from the attribute's default_value, so take
-                    // what it stored rather than blanking the field the user is about to see.
-                    value: toLocalValue(itemData.attribute_value ?? ''),
-                    // A new link comes with the citation key the server gave it.
-                    value_description: String(itemData.attribute_value_description ?? ''),
-                    last_updated: itemData.attribute_last_updated,
-                    user: { name: String(itemData.attribute_user ?? '') },
-                    version: Number(itemData.attribute_version ?? 1)
+                    props.values.push({
+                        id: Number(itemData.attribute_id),
+                        index: props.values.length,
+                        // The server seeds a new value from the attribute's default_value, so take
+                        // what it stored rather than blanking the field the user is about to see.
+                        value: toLocalValue(itemData.attribute_value ?? ''),
+                        // A new link comes with the citation key the server gave it.
+                        value_description: String(itemData.attribute_value_description ?? ''),
+                        last_updated: itemData.attribute_last_updated,
+                        user: { name: String(itemData.attribute_user ?? '') },
+                        version: Number(itemData.attribute_version ?? 1)
+                    })
                 })
             } catch (error) {
                 console.error('Failed to add attribute value:', error)
@@ -260,15 +307,22 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
 
         if (props.edit === true) {
             try {
+                const value = props.values[index]
                 const data = {
                     delete: true,
                     report_item_id: props.reportItemId,
                     attribute_group_item_id: props.attributeGroup?.id,
-                    attribute_id: props.values[index].id
+                    attribute_id: value.id
                 }
 
-                await updateReportItem(props.reportItemId, data)
-                props.values.splice(index, 1)
+                await tracked(async () => {
+                    await updateReportItem(props.reportItemId, data)
+                    // Found again: the list may have changed while the server removed it.
+                    const at = props.values.indexOf(value)
+                    if (at !== -1) {
+                        props.values.splice(at, 1)
+                    }
+                })
             } catch (error) {
                 console.error('Failed to delete attribute value:', error)
             }
@@ -427,7 +481,8 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
             return Promise.resolve()
         }
         const key = String(value.id)
-        const save = (pendingSaves.get(key) ?? Promise.resolve()).then(() => persist(value))
+        // Counted from when it is queued, not only while it is sent.
+        const save = tracked(() => (pendingSaves.get(key) ?? Promise.resolve()).then(() => persist(value)))
         pendingSaves.set(key, save)
         // Only bookkeeping: the caller gets `save` itself, failures included.
         save.finally(() => {
@@ -655,6 +710,9 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                     if (dataInfo.attribute_group_item_id === props.attributeGroup?.id) {
                         const response = await getReportItemData(props.reportItemId, dataInfo)
                         const itemData = (response as ReportItemDataResponse).data
+                        if (listed(itemData.attribute_id)) {
+                            return
+                        }
 
                         props.values.push({
                             id: Number(itemData.attribute_id),
