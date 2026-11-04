@@ -55,8 +55,8 @@ describe('GlossaryTable', () => {
         const headers = wrapper.findAll('thead th').map((cell) => cell.text())
         expect(headers.slice(0, 2)).toEqual(['Terms', 'Keep as written'])
         const [first, second] = wrapper.findAll('tbody tr')
-        expect(first!.get('[data-test="glossary-cell-cs"]').text()).toMatch(/^CS\s*zranitelnost$/)
-        expect(first!.get('[data-test="glossary-cell-en"]').text()).toMatch(/^EN\s*vulnerability$/)
+        expect(first!.get('[data-test="glossary-cell-cs"]').text()).toMatch(/^CS:\s*zranitelnost$/)
+        expect(first!.get('[data-test="glossary-cell-en"]').text()).toMatch(/^EN:\s*vulnerability$/)
         // No empty marker for a language the entry has no term in.
         expect(second!.find('[data-test="glossary-cell-cs"]').exists()).toBe(false)
         expect(second!.text()).toContain('our product')

@@ -1725,7 +1725,7 @@
             "edit": "Editar termo",
             "empty": "Ainda não há termos",
             "keep": "Manter como está",
-            "keep_hint": "Para nomes de produtos ou organizações: a IA mantém o termo inalterado em todos os idiomas.",
+            "keep_hint": "Quando marcada, a IA preserva o termo original em todos os idiomas. Quando desmarcada, a IA adapta o termo ao idioma de destino.",
             "note": "Observação",
             "note_hint": "Contexto para a IA, por exemplo onde o termo se aplica",
             "terms": "Termos",

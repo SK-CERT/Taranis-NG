@@ -1717,21 +1717,21 @@
         },
         "glossary": {
             "tab": "Glosár",
-            "tab_description": "Termíny, ktoré AI používa pri preklade",
+            "tab_description": "Výrazy, ktoré AI používa pri preklade",
             "title": "Glosár pre preklad AI",
             "type_title": "Glosár tohto typu reportu",
-            "type_intro": "Tieto termíny platia pre reporty a popisky tohto typu navyše ku glosáru celej inštancie; pri rovnakom termíne má prednosť ten tunajší.",
-            "add": "Pridať termín",
-            "edit": "Upraviť termín",
-            "empty": "Zatiaľ žiadne termíny",
+            "type_intro": "Tieto výrazy platia pre reporty a popisky tohto typu navyše ku glosáru celej inštancie; pri rovnakom výraze má prednosť ten tunajší.",
+            "add": "Pridať výraz",
+            "edit": "Upraviť výraz",
+            "empty": "Zatiaľ žiadne výrazy",
             "keep": "Ponechať bez zmeny",
-            "keep_hint": "Pre názvy produktov alebo organizácií: AI termín v žiadnom jazyku nezmení.",
+            "keep_hint": "Ak je možnosť začiarknutá, AI zachová pôvodný výraz vo všetkých jazykoch. Ak nie je začiarknutá, prispôsobí výraz cieľovému jazyku.",
             "note": "Poznámka",
-            "note_hint": "Kontext pre AI, napríklad kde termín platí",
-            "terms": "Termíny",
+            "note_hint": "Kontext pre AI, napríklad kde výraz platí",
+            "terms": "Výrazy",
             "add_language": "Pridať jazyk",
             "remove_language": "Odstrániť jazyk {language}",
-            "needs_terms": "Vyplňte termín aspoň v dvoch jazykoch alebo jeden termín, ktorý sa má ponechať bez zmeny."
+            "needs_terms": "Vyplňte výraz aspoň v dvoch jazykoch alebo jeden výraz, ktorý sa má ponechať bez zmeny."
         }
     },
     "external_user": {

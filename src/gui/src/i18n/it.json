@@ -1725,7 +1725,7 @@
             "edit": "Modifica termine",
             "empty": "Ancora nessun termine",
             "keep": "Mantieni invariato",
-            "keep_hint": "Per nomi di prodotti o organizzazioni: l'IA lascia il termine invariato in ogni lingua.",
+            "keep_hint": "Se selezionata, l'IA mantiene il termine originale in tutte le lingue. Se non selezionata, adatta il termine alla lingua di destinazione.",
             "note": "Nota",
             "note_hint": "Contesto per l'IA, ad esempio dove si applica il termine",
             "terms": "Termini",

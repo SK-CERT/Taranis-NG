@@ -44,11 +44,15 @@
                         :data-test="`glossary-cell-${code}`"
                     >
                         <span
-                            class="text-caption text-medium-emphasis me-1"
+                            class="text-caption text-grey text-medium-emphasis me-1"
                             :title="languageName(code)"
-                            >{{ code.toUpperCase() }}</span
+                            >{{ code.toUpperCase() }}:</span
                         >
-                        <bdi dir="auto">{{ item[`term_${code}`] }}</bdi>
+                        <bdi
+                            dir="auto"
+                            class="me-2"
+                            >{{ item[`term_${code}`] }}</bdi
+                        >
                     </span>
                 </div>
             </template>
@@ -71,7 +75,7 @@
                     :hint="t('reports.glossary.keep_hint')"
                     persistent-hint
                     density="compact"
-                    class="mb-3"
+                    class="mb-7"
                     data-test="glossary-keep"
                 />
                 <v-text-field

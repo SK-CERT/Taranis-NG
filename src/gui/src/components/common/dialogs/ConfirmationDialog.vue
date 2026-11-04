@@ -2,7 +2,8 @@
     <v-dialog
         v-model="isOpen"
         :max-width="maxWidth"
-        @keydown.stop
+        @keydown.stop="handleDialogKeydown"
+        @after-enter="focusCancelButton"
     >
         <v-card style="min-width: min(500px, calc(100vw - 48px))">
             <v-card-title
@@ -23,12 +24,14 @@
             <v-card-actions>
                 <v-spacer />
                 <v-btn
+                    ref="cancelButton"
                     variant="text"
                     @click="isOpen = false"
                 >
                     {{ t('common.cancel') }}
                 </v-btn>
                 <v-btn
+                    ref="deleteButton"
                     color="error"
                     variant="text"
                     @click="confirmDelete"
@@ -41,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, watch } from 'vue'
+    import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
 
@@ -70,18 +73,34 @@
     const titleKey = props.titleKey
     const confirmLabelKey = props.confirmLabelKey
 
-    const isOpen = ref<boolean>(false)
-
-    watch(
-        () => props.modelValue,
-        (newVal: boolean) => {
-            isOpen.value = newVal
-        }
-    )
-
-    watch(isOpen, (newVal: boolean) => {
-        emit('update:modelValue', newVal)
+    const isOpen = computed({
+        get: () => props.modelValue,
+        set: (value: boolean) => emit('update:modelValue', value)
     })
+
+    const cancelButton = ref<{ $el: HTMLElement } | null>(null)
+    const deleteButton = ref<{ $el: HTMLElement } | null>(null)
+
+    const focusButton = (button: HTMLElement | undefined): void => {
+        button?.focus({ focusVisible: true })
+    }
+
+    const focusCancelButton = (): void => {
+        focusButton(cancelButton.value?.$el)
+    }
+
+    const handleDialogKeydown = (event: KeyboardEvent): void => {
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault()
+            focusCancelButton()
+        } else if (event.key === 'ArrowRight') {
+            event.preventDefault()
+            focusButton(deleteButton.value?.$el)
+        } else if (event.key === 'Escape') {
+            event.preventDefault()
+            isOpen.value = false
+        }
+    }
 
     const confirmDelete = (): void => {
         emit('confirm')

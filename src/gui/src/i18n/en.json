@@ -1725,7 +1725,7 @@
             "edit": "Edit term",
             "empty": "No terms yet",
             "keep": "Keep as written",
-            "keep_hint": "For names of products or organisations: the AI leaves the term unchanged in every language.",
+            "keep_hint": "When checked, the AI preserves the original term in all languages. When unchecked, the AI adapts the term to the target language.",
             "note": "Note",
             "note_hint": "Context for the AI, for example where the term applies",
             "terms": "Terms",

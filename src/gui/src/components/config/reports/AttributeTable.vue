@@ -67,7 +67,7 @@
                 :hint="t('attribute.translate_hint')"
                 persistent-hint
                 density="comfortable"
-                class="mb-3"
+                class="mb-7"
                 data-test="attribute-translate"
             />
             <v-select

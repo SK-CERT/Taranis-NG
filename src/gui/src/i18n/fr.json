@@ -1725,7 +1725,7 @@
             "edit": "Modifier le terme",
             "empty": "Aucun terme pour l'instant",
             "keep": "Conserver tel quel",
-            "keep_hint": "Pour les noms de produits ou d'organisations : l'IA laisse le terme inchangé dans toutes les langues.",
+            "keep_hint": "Lorsque cette option est cochée, l'IA conserve le terme d'origine dans toutes les langues. Lorsqu'elle est décochée, l'IA adapte le terme à la langue cible.",
             "note": "Remarque",
             "note_hint": "Contexte pour l'IA, par exemple où le terme s'applique",
             "terms": "Termes",

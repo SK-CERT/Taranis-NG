@@ -1725,7 +1725,7 @@
             "edit": "Edytuj termin",
             "empty": "Brak terminów",
             "keep": "Zachowaj bez zmian",
-            "keep_hint": "Dla nazw produktów lub organizacji: AI pozostawia termin bez zmian w każdym języku.",
+            "keep_hint": "Po zaznaczeniu AI zachowuje oryginalny termin we wszystkich językach. Po odznaczeniu AI dostosowuje termin do języka docelowego.",
             "note": "Notatka",
             "note_hint": "Kontekst dla AI, na przykład gdzie termin ma zastosowanie",
             "terms": "Terminy",
