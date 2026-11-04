@@ -92,6 +92,8 @@ updates:
     directory: "/src/gui"
     schedule:
       interval: "weekly"
+    cooldown:
+      exclude:
+        - "vuetify"
     labels:
       - "dependencies"
-

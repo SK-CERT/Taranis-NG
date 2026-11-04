@@ -107,7 +107,7 @@ jobs:
     # Building the four backend images (~2.3 GB) takes the bulk of this; the suite
     # itself is ~10 min for chromium and ~15 min for firefox on one worker (the
     # Playwright config pins workers: 1 because the specs share one backend).
-    timeout-minutes: 60
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -161,7 +161,7 @@ jobs:
 
       - name: Build and start the E2E backend stack
         working-directory: .
-        timeout-minutes: 30
+        timeout-minutes: 10
         run: bash scripts/test-setup.sh
 
       # Chromium is installed for EVERY matrix entry, not just the chromium one: the
