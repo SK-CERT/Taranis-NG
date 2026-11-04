@@ -1725,7 +1725,7 @@
             "edit": "Term bewerken",
             "empty": "Nog geen termen",
             "keep": "Ongewijzigd laten",
-            "keep_hint": "Voor namen van producten of organisaties: de AI laat de term in elke taal ongewijzigd.",
+            "keep_hint": "Als dit is aangevinkt, behoudt de AI de oorspronkelijke term in alle talen. Als dit niet is aangevinkt, past de AI de term aan de doeltaal aan.",
             "note": "Notitie",
             "note_hint": "Context voor de AI, bijvoorbeeld waar de term van toepassing is",
             "terms": "Termen",

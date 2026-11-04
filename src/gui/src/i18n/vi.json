@@ -1725,7 +1725,7 @@
             "edit": "Sửa thuật ngữ",
             "empty": "Chưa có thuật ngữ",
             "keep": "Giữ nguyên",
-            "keep_hint": "Dành cho tên sản phẩm hoặc tổ chức: AI giữ nguyên thuật ngữ trong mọi ngôn ngữ.",
+            "keep_hint": "Khi được chọn, AI giữ nguyên thuật ngữ gốc trong tất cả ngôn ngữ. Khi không được chọn, AI điều chỉnh thuật ngữ theo ngôn ngữ đích.",
             "note": "Ghi chú",
             "note_hint": "Ngữ cảnh cho AI, ví dụ thuật ngữ áp dụng ở đâu",
             "terms": "Thuật ngữ",

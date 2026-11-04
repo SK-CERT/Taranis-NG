@@ -1725,7 +1725,7 @@
             "edit": "Begriff bearbeiten",
             "empty": "Noch keine Begriffe",
             "keep": "Unverändert lassen",
-            "keep_hint": "Für Namen von Produkten oder Organisationen: Die KI lässt den Begriff in jeder Sprache unverändert.",
+            "keep_hint": "Wenn diese Option aktiviert ist, behält die KI den ursprünglichen Begriff in allen Sprachen bei. Ist sie deaktiviert, passt die KI den Begriff an die Zielsprache an.",
             "note": "Notiz",
             "note_hint": "Kontext für die KI, zum Beispiel wo der Begriff gilt",
             "terms": "Begriffe",

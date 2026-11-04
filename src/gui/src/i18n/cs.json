@@ -1725,7 +1725,7 @@
             "edit": "Upravit termín",
             "empty": "Zatím žádné termíny",
             "keep": "Ponechat beze změny",
-            "keep_hint": "Pro názvy produktů nebo organizací: AI termín v žádném jazyce nezmění.",
+            "keep_hint": "Je-li možnost zaškrtnuta, AI zachová původní výraz ve všech jazycích. Není-li zaškrtnuta, AI výraz přizpůsobí cílovému jazyku.",
             "note": "Poznámka",
             "note_hint": "Kontext pro AI, například kde termín platí",
             "terms": "Termíny",

@@ -1725,7 +1725,7 @@
             "edit": "Terimi düzenle",
             "empty": "Henüz terim yok",
             "keep": "Olduğu gibi bırak",
-            "keep_hint": "Ürün veya kuruluş adları için: yapay zekâ terimi her dilde değiştirmeden bırakır.",
+            "keep_hint": "İşaretlendiğinde yapay zekâ özgün terimi tüm dillerde korur. İşaret kaldırıldığında terimi hedef dile uyarlar.",
             "note": "Not",
             "note_hint": "Yapay zekâ için bağlam, örneğin terimin nerede geçerli olduğu",
             "terms": "Terimler",
