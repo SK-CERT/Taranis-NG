@@ -55,7 +55,7 @@
         "@types/qrcode": "^1.5.6",
         "@typescript-eslint/parser": "^8.72.1",
         "@vitejs/plugin-vue": "^6.0.10",
-        "@vitest/coverage-v8": "^5.0.1",
+        "@vitest/coverage-v8": "^5.1.0",
         "@vitest/ui": "^5.0.5",
         "@vue/test-utils": "^2.5.1",
         "eslint": "^10.14.0",
