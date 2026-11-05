@@ -63,6 +63,18 @@
                         @click:append-inner="showApiKey = !showApiKey"
                     />
 
+                    <v-text-field
+                        v-model="localItem.legacy_timezone"
+                        :spellcheck="false"
+                        :label="t('remote.access.legacy_timezone')"
+                        :hint="t('remote.access.legacy_timezone_hint')"
+                        persistent-hint
+                        variant="outlined"
+                        density="comfortable"
+                        class="mb-3"
+                        :disabled="saving"
+                    />
+
                     <v-switch
                         v-model="localItem.enabled"
                         :label="t('remote.access.enabled')"
@@ -161,6 +173,7 @@
         name: string
         description: string
         api_key: string
+        legacy_timezone?: string
         enabled: boolean
         osint_sources: IdRef[]
         report_item_types: IdRef[]
@@ -207,6 +220,7 @@
         name: '',
         description: '',
         api_key: '',
+        legacy_timezone: '',
         enabled: true,
         osint_sources: [],
         report_item_types: []
@@ -271,6 +285,10 @@
                 osint_sources: selectedOsintSources.value.map((id) => ({ id })),
                 report_item_types: selectedReportItemTypes.value.map((id) => ({ id }))
             }
+
+            const timezone = payload.legacy_timezone?.trim()
+            if (timezone) payload.legacy_timezone = timezone
+            else delete payload.legacy_timezone
 
             if (isEdit.value) {
                 await updateRemoteAccess(payload)

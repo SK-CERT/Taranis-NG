@@ -337,8 +337,9 @@ worker_remove_staged_key: true    # the control-host copies under docker/secrets
 # rows then survive as unreachable nodes in the GUI.
 worker_deregister_node: true
 
-# Timezone for the container. Mirrors docker/.env TZ.
-worker_tz: "Europe/Bratislava"
+# Legacy inventory compatibility; services always run in UTC. This value no longer
+# controls worker timestamps or schedules.
+worker_tz: "UTC"
 
 # Log levels.
 taranis_log_level: "INFO"

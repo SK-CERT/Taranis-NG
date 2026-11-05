@@ -1,0 +1,173 @@
+# Standalone, disposable compatibility stack. The runner supplies all paths and
+# assigns a unique Compose project; this file never includes the deployment stack.
+x-core: &core
+  sysctls:
+    net.ipv4.ip_unprivileged_port_start: "0"
+  security_opt:
+    - no-new-privileges:true
+  # Keep the real forwarding and server path, without the unrelated scheduler:
+  # the scheduler also creates an app and would duplicate listeners on restart.
+  command:
+    - sh
+    - -ec
+    - |
+      /usr/local/bin/forward --sender-port 5000 --client-port 5001 &
+      python /app/db_migration.py
+      exec gunicorn -k gevent -c /gunicorn_conf.py run:app
+  volumes:
+    - type: bind
+      source: ${REMOTE_TEST_ROOT:?}/tests/integration/remote
+      target: /remote-tests
+      read_only: true
+  secrets:
+    - postgres_password
+    - jwt_secret_key
+    - api_key
+    - secrets_encryption_key
+  healthcheck:
+    test: [CMD, curl, --fail, --max-time, "3", http://localhost/api/v1/isalive]
+    interval: 3s
+    timeout: 5s
+    start_period: 180s
+    retries: 20
+  stop_grace_period: 5s
+
+x-core-environment: &core-environment
+  DB_DATABASE: remote-tests
+  DB_USER: remote-tests
+  DB_POOL_SIZE: "5"
+  DB_POOL_RECYCLE: "300"
+  DB_POOL_TIMEOUT: "30"
+  GUNICORN_WORKERS: "1"
+  GUNICORN_CMD_ARGS: --timeout 120 --access-logfile -
+  TARANIS_LOG_LEVEL: DEBUG
+  MODULES_LOG_LEVEL: DEBUG
+  DEBUG_SQL: "false"
+  TZ: UTC
+  TARANIS_NG_LEGACY_TZ: UTC
+
+x-postgres: &postgres
+  image: postgres:16-alpine
+  environment:
+    POSTGRES_DB: remote-tests
+    POSTGRES_USER: remote-tests
+    POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    TZ: UTC
+    PGTZ: UTC
+  secrets:
+    - postgres_password
+  healthcheck:
+    test: [CMD-SHELL, "pg_isready -U remote-tests -d remote-tests"]
+    interval: 2s
+    timeout: 3s
+    retries: 30
+  stop_grace_period: 5s
+
+x-redis: &redis
+  image: redis:6-alpine
+  healthcheck:
+    test: [CMD, redis-cli, ping]
+    interval: 2s
+    timeout: 3s
+    retries: 30
+  stop_grace_period: 5s
+
+services:
+  core-a:
+    <<: *core
+    image: ${REMOTE_TEST_PROJECT:?}-current
+    build:
+      context: ${REMOTE_TEST_A_CONTEXT:?}
+      dockerfile: docker/Dockerfile.core
+    environment:
+      <<: *core-environment
+      DB_URL: postgres-a
+      REDIS_URL: redis://redis-a
+    ports:
+      - "127.0.0.1::80"
+    depends_on:
+      postgres-a:
+        condition: service_healthy
+      redis-a:
+        condition: service_healthy
+
+  core-b:
+    <<: *core
+    build:
+      context: ${REMOTE_TEST_B_CONTEXT:?}
+      dockerfile: docker/Dockerfile.core
+    environment:
+      <<: *core-environment
+      DB_URL: postgres-b
+      REDIS_URL: redis://redis-b
+      TZ: ${REMOTE_TEST_B_TIMEZONE:?}
+      TARANIS_NG_LEGACY_TZ: ${REMOTE_TEST_B_TIMEZONE:?}
+    ports:
+      - "127.0.0.1::80"
+    volumes:
+      - type: bind
+        source: ${REMOTE_TEST_ROOT:?}/tests/integration/remote
+        target: /remote-tests
+        read_only: true
+      # Historical application and dependencies stay untouched. Its image did
+      # not install OS timezone data, needed to reproduce a non-UTC deployment.
+      - timezone-data:/usr/share/zoneinfo:ro
+    depends_on:
+      postgres-b:
+        condition: service_healthy
+      redis-b:
+        condition: service_healthy
+      timezone-data:
+        condition: service_completed_successfully
+
+  timezone-data:
+    # Reuse the current image, which already installs tzdata. No host timezone
+    # files, runtime package downloads, or legacy application patches are needed.
+    image: ${REMOTE_TEST_PROJECT:?}-current
+    pull_policy: never
+    entrypoint: [sh, -ec]
+    command: ["cp -a /usr/share/zoneinfo/. /zoneinfo/"]
+    volumes:
+      - timezone-data:/zoneinfo
+    security_opt:
+      - no-new-privileges:true
+
+  postgres-a:
+    <<: *postgres
+    volumes:
+      - postgres-a:/var/lib/postgresql/data
+
+  postgres-b:
+    <<: *postgres
+    # The legacy application writes timezone-aware datetimes to naive columns;
+    # preserve its historical server/session timezone conversion as well as TZ.
+    environment:
+      POSTGRES_DB: remote-tests
+      POSTGRES_USER: remote-tests
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      TZ: ${REMOTE_TEST_B_TIMEZONE:?}
+      PGTZ: ${REMOTE_TEST_B_TIMEZONE:?}
+    command: [postgres, -c, "timezone=${REMOTE_TEST_B_TIMEZONE:?}"]
+    volumes:
+      - postgres-b:/var/lib/postgresql/data
+
+  redis-a:
+    <<: *redis
+
+  redis-b:
+    <<: *redis
+
+volumes:
+  postgres-a:
+  postgres-b:
+  timezone-data:
+
+secrets:
+  postgres_password:
+    file: ${REMOTE_TEST_SECRETS_DIR:?}/postgres_password
+  jwt_secret_key:
+    file: ${REMOTE_TEST_SECRETS_DIR:?}/jwt_secret_key
+  api_key:
+    file: ${REMOTE_TEST_SECRETS_DIR:?}/api_key
+  secrets_encryption_key:
+    file: ${REMOTE_TEST_SECRETS_DIR:?}/secrets_encryption_key

@@ -16,10 +16,7 @@ from marshmallow import post_load
 from model.osint_source import OSINTSourceGroup
 from shared.attribute_extraction import pattern_error
 from shared.common import TZ
-from shared.schema.attribute_extraction_rule import (
-    AttributeExtractionRulePresentationSchema,
-    AttributeExtractionRuleSchema,
-)
+from shared.schema.attribute_extraction_rule import AttributeExtractionRulePresentationSchema, AttributeExtractionRuleSchema
 
 if TYPE_CHECKING:
     from model.osint_source import OSINTSource
@@ -83,7 +80,7 @@ class AttributeExtractionRule(db.Model):
     capture_group = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     max_matches = db.Column(db.Integer, nullable=False, default=100, server_default="100")
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     osint_source_groups = db.relationship(
         "OSINTSourceGroup",

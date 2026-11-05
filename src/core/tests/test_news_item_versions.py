@@ -83,7 +83,7 @@ def test_a_new_version_takes_over_the_item_in_place() -> None:
     # Same row: everything pointing at the item follows it to the new revision.
     assert stored.id == "item-1"
     assert (stored.version, stored.hash, stored.title) == ("1.1.0", "hash-1.1.0", "Advisory, updated")
-    assert stored.published == "05.09.2026 - 08:00"
+    assert stored.published == "2026-09-05T08:00:00Z"
     assert stored.link == "https://example.com/advisory/1.1.0"
 
 
@@ -296,7 +296,7 @@ def test_a_republished_copy_of_the_stored_revision_refreshes_it_in_place(ingest:
 
     # The item takes the copy, but history does not repeat version 3 and nothing resurfaces.
     assert stored.versions == []
-    assert (stored.hash, stored.published, stored.content) == ("hash-republished", "29.09.2026 - 12:58", "<p>Content 3, now with a CWE</p>")
+    assert (stored.hash, stored.published, stored.content) == ("hash-republished", "2026-09-29T12:58:00Z", "<p>Content 3, now with a CWE</p>")
     assert ingest.resurfaced == []
     assert ingest.refreshed == [(stored, "RHSA-2026:9109: Update", "Review 3")]
 
@@ -514,5 +514,5 @@ def test_a_republished_copy_from_a_remote_node_refreshes_the_item(monkeypatch: p
     NewsItemAggregate.add_remote_news_items([{"relevance": 0}], remote, "group-1")
 
     assert stored.versions == []
-    assert stored.published == "29.09.2026 - 12:58"
+    assert stored.published == "2026-09-29T12:58:00Z"
     assert (refreshed, resurfaced) == ([stored], [])

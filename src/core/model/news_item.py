@@ -25,6 +25,8 @@ from model.osint_source import OSINTSource, OSINTSourceGroup
 from model.tag_cloud import TagCloud
 from shared.attribute_extraction import ExtractionRule, extract_attributes
 from shared.common import TZ, sanitize_content_html, smart_truncate, strip_html
+from shared.datetime_utils import format_datetime, normalize_timestamp, parse_datetime, utc_now
+from shared.remote_protocol import normalize_remote_publication
 from shared.schema.acl_entry import ItemType
 from shared.schema.news_item import (
     NewsItemAggregateSchema,
@@ -41,12 +43,9 @@ from sqlalchemy import and_, func, or_, orm, text
 # or the integrity result of a revision it no longer holds.
 VERSION_SCOPED_ATTRIBUTE_KEYS = frozenset({"TLP", "CSAF_HASH", "CSAF_SIGNATURE"})
 
-# The format collectors write `published` in (see NewsItemData).
-PUBLISHED_FORMAT = "%d.%m.%Y - %H:%M"
-
 
 def _published_datetime(published: str | None) -> datetime | None:
-    """Read a `published` value as a date, or None when it is not in the collectors' format.
+    """Read an ISO or legacy publication timestamp, or None for unknown source text.
 
     Args:
         published (str | None): The stored or incoming `published` string.
@@ -57,7 +56,7 @@ def _published_datetime(published: str | None) -> datetime | None:
     if not published:
         return None
     try:
-        return datetime.strptime(published.strip(), PUBLISHED_FORMAT)  # noqa: DTZ007 - both sides are compared naive
+        return parse_datetime(published)
     except ValueError:
         return None
 
@@ -99,7 +98,7 @@ class NewsItemAttribute(db.Model):
     value = db.Column(db.String(), nullable=False)
     binary_mime_type = db.Column(db.String())
     binary_data = orm.deferred(db.Column(db.LargeBinary))
-    created = db.Column(db.DateTime, default=datetime.now)
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
 
     remote_node_id = db.Column(db.Integer, db.ForeignKey("remote_node.id"), nullable=True)
     remote_user = db.Column(db.String())
@@ -171,9 +170,9 @@ class NewsItemData(db.Model):
     language = db.Column(db.String())
     content = db.Column(db.String())
 
-    collected = db.Column(db.DateTime)
+    collected = db.Column(db.DateTime(timezone=True))
     published = db.Column(db.String())
-    updated = db.Column(db.DateTime)
+    updated = db.Column(db.DateTime(timezone=True))
 
     attributes = db.relationship("NewsItemAttribute", secondary="news_item_data_news_item_attribute", lazy="selectin")
 
@@ -232,7 +231,7 @@ class NewsItemData(db.Model):
         self.review = review
         self.source = source
         self.link = link
-        self.published = published
+        self.published = normalize_timestamp(published)
         self.author = author
         self.collected = collected
         self.content = content
@@ -532,7 +531,7 @@ class NewsItemData(db.Model):
         """
         news_item_data = cls.query.order_by(db.desc(NewsItemData.collected)).limit(1).all()
         if len(news_item_data) > 0:
-            return news_item_data[0].collected.strftime("%d.%m.%Y - %H:%M")
+            return format_datetime(news_item_data[0].collected)
         return ""
 
     @classmethod
@@ -544,7 +543,7 @@ class NewsItemData(db.Model):
         Returns:
             All news items data
         """
-        limit = datetime.strptime(limit, "%d.%m.%Y - %H:%M").replace(tzinfo=TZ)
+        limit = parse_datetime(limit)
         news_items_data = cls.query.filter(cls.collected >= limit).all()
         news_items_data_schema = NewsItemDataSchema(many=True)
         return news_items_data_schema.dump(news_items_data)
@@ -586,7 +585,7 @@ class NewsItemData(db.Model):
                 db.session.commit()
 
     @classmethod
-    def get_for_sync(cls, last_synced: datetime, osint_sources: list[OSINTSource]) -> tuple[dict, datetime]:
+    def get_for_sync(cls, last_synced: datetime, osint_sources: list[OSINTSource]) -> tuple[list[dict], datetime]:
         """Get news items for sync.
 
         Args:
@@ -649,8 +648,8 @@ class NewsItemDataVersion(db.Model):
     link = db.Column(db.String())
     content = db.Column(db.String())
     published = db.Column(db.String())
-    collected = db.Column(db.DateTime)
-    superseded = db.Column(db.DateTime)
+    collected = db.Column(db.DateTime(timezone=True))
+    superseded = db.Column(db.DateTime(timezone=True))
 
     # Read by NewsItemDataVersionSchema: a stored revision is never the current one.
     current = False
@@ -1109,7 +1108,7 @@ class NewsItemAggregate(db.Model):
     title = db.Column(db.String())
     description = db.Column(db.String())
 
-    created = db.Column(db.DateTime)
+    created = db.Column(db.DateTime(timezone=True))
 
     read = db.Column(db.Boolean, default=False)
     important = db.Column(db.Boolean, default=False)
@@ -1614,16 +1613,29 @@ class NewsItemAggregate(db.Model):
             db.session.commit()
 
     @classmethod
-    def add_remote_news_items(cls, news_items_data_list: list[dict], remote_node: RemoteNode, osint_source_group_id: str) -> None:
+    def add_remote_news_items(
+        cls,
+        news_items_data_list: list[dict],
+        remote_node: RemoteNode,
+        osint_source_group_id: str,
+        *,
+        api_version: int = 2,  # noqa: ARG003
+    ) -> None:
         """Add remote news items.
 
         Args:
             news_items_data_list (list[dict]): News items data list
             remote_node (RemoteNode): Remote node
             osint_source_group_id (str): OSINT source group GUID
+            api_version (int): Negotiated remote protocol; publication text stays source-owned in both versions.
         """
         news_item_data_schema = NewNewsItemDataSchema(many=True)
         news_items_data = news_item_data_schema.load(news_items_data_list)
+        for item, payload in zip(news_items_data, news_items_data_list, strict=True):
+            # Legacy RSS and other collectors used different naive publication zones.
+            # Preserve this source text unless its offset establishes a known instant.
+            if "published" in payload:
+                item.published = normalize_remote_publication(payload["published"])
         NewsItemData.lock_identities(news_items_data)
 
         news_item_data_ids = set()
@@ -2059,7 +2071,7 @@ class NewsItemAggregate(db.Model):
         Returns:
             News item aggregates
         """
-        limit = datetime.strptime(limit["limit"], "%d.%m.%Y - %H:%M").replace(tzinfo=TZ)
+        limit = parse_datetime(limit["limit"])
         news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group_id).filter(cls.created > limit).all()
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         return news_item_aggregate_schema.dumps(news_item_aggregates)

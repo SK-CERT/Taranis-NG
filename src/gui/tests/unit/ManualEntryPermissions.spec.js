@@ -160,9 +160,9 @@ describe('manual news entry permissions', () => {
         expect(wrapper.emitted('update:modelValue')).toContainEqual([false])
     })
 
-    it('keeps manual-entry timestamps in the fixed backend transport format', async () => {
+    it('sends manual-entry timestamps as UTC ISO instants', async () => {
         vi.useFakeTimers()
-        vi.setSystemTime(new Date(2026, 7, 9, 20, 31))
+        vi.setSystemTime(new Date('2026-08-09T18:31:00.123Z'))
         const assessApi = await import('@/api/assess')
         const wrapper = mountManualEntryDialog()
 
@@ -172,8 +172,8 @@ describe('manual news entry permissions', () => {
 
             expect(assessApi.addNewsItem).toHaveBeenCalledOnce()
             expect(assessApi.addNewsItem.mock.calls[0][0]).toMatchObject({
-                collected: '09.08.2026 - 20:31',
-                published: '09.08.2026 - 20:31'
+                collected: '2026-08-09T18:31:00.123Z',
+                published: '2026-08-09T18:31:00.123Z'
             })
             expect(wrapper.emitted('news-item-added')).toEqual([[]])
         } finally {

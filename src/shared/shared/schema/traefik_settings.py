@@ -2,6 +2,8 @@
 
 from marshmallow import EXCLUDE, Schema, fields
 
+from shared.schema.datetime import UTCDateTime
+
 
 class TraefikSettingsSchema(Schema):
     """Marshmallow schema for the routing and TLS settings core serves to Traefik.
@@ -39,4 +41,4 @@ class TraefikSettingsSchema(Schema):
     cert_subject = fields.Str(dump_only=True)
     cert_not_after = fields.Str(dump_only=True)
     updated_by = fields.Str(dump_only=True)
-    updated_at = fields.Str(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)

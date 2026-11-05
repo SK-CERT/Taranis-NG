@@ -35,14 +35,16 @@
                 >
                     <template #col_middle="{ delVisible, onDelete }">
                         <v-text-field
-                            v-model="value.value"
+                            :model-value="toLocalDateTime(value.value)"
                             density="compact"
                             variant="outlined"
                             hide-details="auto"
                             type="datetime-local"
+                            step="any"
                             :label="$t('attribute.value')"
                             :class="getLockedStyle(index)"
                             :disabled="value.locked || !canModify"
+                            @update:model-value="value.value = fromLocalDateTime($event)"
                             @focus="onFocus(index)"
                             @blur="onBlur(index)"
                             @keyup="onKeyUp(index)"
@@ -66,6 +68,7 @@
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
+    import { fromLocalDateTime, toLocalDateTime } from '@/utils/dateTime'
     import { useAttributes } from './useAttributes'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
 

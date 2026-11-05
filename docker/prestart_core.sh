@@ -1,4 +1,5 @@
 #! /usr/bin/env sh
+set -e
 
 echo "Running inside /app/prestart.sh..."
 

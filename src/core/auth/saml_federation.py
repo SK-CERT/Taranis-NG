@@ -38,6 +38,7 @@ from auth.url_guard import assert_no_redirect, assert_public_url
 from managers import log_manager
 from minisignxml.config import VerifyConfig
 from minisignxml.verify import extract_verified_element_and_certificate
+from shared.datetime_utils import format_datetime
 
 if TYPE_CHECKING:
     from lxml.etree import _Element
@@ -299,7 +300,7 @@ def verify_metadata(metadata_url: str, cert_pem: str) -> dict:
         ValueError: When the URL or anchor is missing, or verification fails.
     """
     entities, valid_until = _fetch_verify_index(metadata_url, cert_pem)
-    return {"entity_count": len(entities), "valid_until": valid_until.isoformat() if valid_until else None}
+    return {"entity_count": len(entities), "valid_until": format_datetime(valid_until)}
 
 
 def resolve_idp(provider: AuthProvider, entity_id: str) -> ResolvedIdp | None:

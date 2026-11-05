@@ -13,7 +13,8 @@ from defusedxml.ElementTree import iterparse
 from managers import content_language
 from managers.db_manager import db
 from managers.log_manager import logger
-from marshmallow import fields, post_load
+from marshmallow import ValidationError, fields, post_load
+from shared.datetime_utils import format_datetime
 from shared.schema.attribute import AttributeBaseSchema, AttributeEnumSchema, AttributePresentationSchema, AttributeType, AttributeValidator
 from sqlalchemy import and_, func, or_, orm
 from sqlalchemy import text as sqlalchemy_text
@@ -388,6 +389,16 @@ class Attribute(db.Model):
         self.title = ""
         self.subtitle = ""
         self.tag = ""
+
+    @orm.validates("default_value")
+    def _normalize_default_value(self, key: str, value: str | None) -> str | None:  # noqa: ARG002
+        """Store configured date-time defaults using the same UTC contract as values."""
+        if self.type != AttributeType.DATE_TIME or not value:
+            return value
+        try:
+            return format_datetime(value)
+        except ValueError as exc:
+            raise ValidationError({"default_value": ["Invalid date-time value."]}) from exc
 
     @orm.reconstructor
     def reconstruct(self) -> None:

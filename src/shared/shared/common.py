@@ -1,18 +1,18 @@
 """Common functions used across whole application."""
 
-import os
 import re
 from collections.abc import Callable
+from datetime import UTC
 from functools import wraps
 from html import escape
 from urllib.parse import urljoin
-from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup, Comment
 
 from shared.log_manager import logger
 
-TZ = ZoneInfo(os.getenv("TZ", "UTC"))
+# Backend timestamps always use UTC, regardless of the host or deployment TZ.
+TZ = UTC
 
 # Tags kept as-is. Same list as the GUI's DOMPurify allowlist
 # (src/gui/src/utils/sanitizeNewsItemHtml.ts), so what is stored is also what renders.

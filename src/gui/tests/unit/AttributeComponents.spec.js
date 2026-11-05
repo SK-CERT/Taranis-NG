@@ -635,6 +635,21 @@ describe('AttributeDateTime', () => {
         expect(props.values[0].value).toBe(rawValue)
     })
 
+    it('keeps UTC in report state and converts only the editable input to local wall time', async () => {
+        const rawValue = '2026-07-14T23:30:00.123Z'
+        const props = baseProps({ value: rawValue })
+        const wrapper = mountAttr(AttributeDateTime, props)
+        const input = wrapper.findComponent({ name: 'VTextField' })
+        const date = new Date(rawValue)
+
+        expect(input.props('modelValue').slice(11, 13)).toBe(String(date.getHours()).padStart(2, '0'))
+        expect(props.values[0].value).toBe(rawValue)
+        await input.vm.$emit('update:modelValue', '2026-07-15T12:45')
+        expect(props.values[0].value).toBe(new Date(2026, 6, 15, 12, 45).toISOString())
+        await input.vm.$emit('update:modelValue', '')
+        expect(props.values[0].value).toBe('')
+    })
+
     it('shows VTextField in edit mode', () => {
         const wrapper = mountAttr(AttributeDateTime, baseProps({ value: '2024-01-15T14:30' }))
         expect(wrapper.findComponent({ name: 'VTextField' }).exists()).toBe(true)

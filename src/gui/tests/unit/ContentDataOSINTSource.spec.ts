@@ -295,6 +295,17 @@ describe('ContentDataOSINTSource', () => {
             expect(cells[4]!.text()).toBe('04.09.2026 - 11:00:00')
         })
 
+        it('displays API collection timestamps in the browser timezone', async () => {
+            const attempted = '2026-07-14T23:30:00Z'
+            const collected = '2026-07-14T23:29:00Z'
+            const wrapper = await mountTable([source({ last_attempted: attempted, last_collected: collected })])
+            const formatter = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' })
+            const cells = wrapper.findAll('tbody td')
+
+            expect(cells[3]!.text()).toBe(formatter.format(new Date(attempted)))
+            expect(cells[4]!.text()).toBe(formatter.format(new Date(collected)))
+        })
+
         it('shows a dash for a source that has never run', async () => {
             const cells = (await mountTable([source()])).findAll('tbody td')
 

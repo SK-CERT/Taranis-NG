@@ -29,6 +29,7 @@ from model.state import (
 from model.tag import Tag, product_tag, set_item_tags
 from model.translation import ORIGIN_AI, ORIGIN_MANUAL, PRODUCT_FIELDS, ProductTranslation, sql_source_hash
 from shared.common import TZ
+from shared.datetime_utils import parse_datetime, utc_now
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
 from shared.schema.product import ProductPresentationSchema, ProductSchemaBase
@@ -90,8 +91,8 @@ class Product(db.Model):
 
     language = db.Column(db.String(8), nullable=True)
 
-    created = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now)
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
+    updated_at = db.Column(db.DateTime(timezone=True), default=utc_now)
 
     product_type_id = db.Column(db.Integer, db.ForeignKey("product_type.id"))
     product_type = db.relationship("ProductType")
@@ -379,7 +380,7 @@ class Product(db.Model):
                 date_limit = date_limit.replace(hour=0, minute=0, second=0, microsecond=0)
 
             if filter["range"] == "WEEK":
-                date_limit = date_limit.replace(day=date_limit.day - date_limit.weekday(), hour=0, minute=0, second=0, microsecond=0)
+                date_limit = (date_limit - timedelta(days=date_limit.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
 
             if filter["range"] == "MONTH":
                 date_limit = date_limit.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -391,8 +392,8 @@ class Product(db.Model):
                 date_limit = date_limit - timedelta(days=31)
 
             if filter["range"] == "DATE":
-                date_limit = datetime.fromisoformat(filter["date_from"])
-                date_to = datetime.fromisoformat(filter["date_to"])
+                date_limit = parse_datetime(filter["date_from"])
+                date_to = parse_datetime(filter["date_to"])
                 query = query.filter(Product.created <= date_to)
 
             query = query.filter(Product.created >= date_limit)

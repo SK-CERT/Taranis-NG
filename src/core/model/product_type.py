@@ -9,8 +9,6 @@ if TYPE_CHECKING:
     from model.user import User
 
 
-import datetime as dt
-
 import sqlalchemy
 from managers import content_language
 from managers.db_manager import db
@@ -20,6 +18,7 @@ from model.parameter import Parameter
 from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.presenter import Presenter
 from model.product import Product
+from shared.datetime_utils import utc_now
 from shared.schema.acl_entry import ItemType
 from shared.schema.product_type import ProductTypePresentationSchema, ProductTypeSchema
 from sqlalchemy import and_, or_, orm
@@ -70,7 +69,7 @@ class ProductType(db.Model):
     title = db.Column(db.String(64), unique=True, nullable=False)
     description = db.Column(db.String(), nullable=False)
 
-    created = db.Column(db.DateTime, default=dt.datetime.now(dt.UTC))
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
 
     presenter_id = db.Column(db.String, db.ForeignKey("presenter.id"))
     presenter = db.relationship("Presenter")

@@ -511,7 +511,7 @@ def test_the_message_carries_the_headers_the_publisher_owns(publish: Callable[..
 
     assert publication.message["From"] == "taranis@example.org"
     assert publication.message["To"] == "constituency@example.org"
-    assert publication.message["Date"]
+    assert publication.message["Date"].endswith("+0000")
     assert publication.message["Message-ID"]
 
 

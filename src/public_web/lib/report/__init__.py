@@ -4,7 +4,7 @@ This module provides classes and functions for processing vulnerability reports.
 """
 
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 class MissingFieldError(TypeError):
@@ -33,6 +33,8 @@ def format_iso_date(date: str | None) -> str:
         raise ValueError(msg)
     try:
         parsed = datetime.fromisoformat(date)
+        if parsed.tzinfo is not None:
+            parsed = parsed.astimezone(UTC)
     except ValueError as exc:
         msg = f"Wrong date input: {date}. It must be an ISO date string."
         raise ValueError(msg) from exc

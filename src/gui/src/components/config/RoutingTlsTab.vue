@@ -66,7 +66,7 @@
                                 <td class="text-no-wrap">{{ row.key_type || '-' }}</td>
                                 <td class="text-no-wrap">
                                     <span v-if="row.not_after">
-                                        {{ row.not_after.slice(0, 10) }}
+                                        {{ timestampLabel(row.not_after) }}
                                         <span class="text-medium-emphasis">{{ t('routing.served_days_left', { days: row.days_left }) }}</span>
                                     </span>
                                     <span v-else>{{ statusText(row) }}</span>
@@ -354,7 +354,7 @@
                             v-if="settings.updated_by"
                             class="text-caption text-medium-emphasis"
                         >
-                            {{ t('routing.last_updated', { user: settings.updated_by, at: settings.updated_at }) }}
+                            {{ t('routing.last_updated', { user: settings.updated_by, at: timestampLabel(settings.updated_at) }) }}
                         </span>
                         <v-spacer />
                         <v-btn
@@ -377,6 +377,7 @@
 <script setup lang="ts">
     import { ref, computed, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { useAuth } from '@/composables/useAuth'
     import { getTraefikSettings, updateTraefikSettings, getTraefikCertificates } from '@/api/config'
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
@@ -480,11 +481,14 @@
         }
     })
 
+    const { formatDateTime } = useLocaleFormatters()
+    const timestampLabel = (value?: string): string => (value ? formatDateTime(value) || value : '')
+
     const certSummary = computed(() => {
         if (!settings.value.cert_subject) return ''
         return t('routing.cert_summary', {
             subject: settings.value.cert_subject,
-            expires: settings.value.cert_not_after
+            expires: timestampLabel(settings.value.cert_not_after)
         })
     })
 

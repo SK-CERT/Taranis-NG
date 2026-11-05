@@ -2,7 +2,7 @@
 
 import contextlib
 import copy
-import datetime
+import datetime as dt
 import hashlib
 import os
 import re
@@ -31,6 +31,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, smart_truncate, strip_html
 from shared.config_collector import ConfigCollector
+from shared.datetime_utils import format_datetime
 from shared.log_manager import logger
 from shared.schema.news_item import NewsItemAttribute, NewsItemData
 
@@ -773,9 +774,12 @@ class WebCollector(BaseCollector):
         extracted_date = None
         published_str = self.__find_element_text_by(scope, self.selectors["published"])
         if published_str:
-            extracted_date = parse(published_str, fuzzy=True)
-        now = datetime.datetime.now(TZ)
-        published_str = extracted_date.strftime("%d.%m.%Y - %H:%M") if extracted_date else now.strftime("%d.%m.%Y - %H:%M")
+            try:
+                extracted_date = parse(published_str, fuzzy=True)
+            except (ValueError, OverflowError):
+                self.source.logger.debug("Unable to parse publication date: %s", published_str)
+        now = dt.datetime.now(TZ)
+        published_str = format_datetime(extracted_date) if extracted_date else published_str or format_datetime(now)
 
         link = current_url
 

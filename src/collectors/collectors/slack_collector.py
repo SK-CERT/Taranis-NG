@@ -1,13 +1,13 @@
 """Module for Slack collector."""
 
-import datetime
+import datetime as dt
 import hashlib
 import socket
-import time
 import uuid
 
 from shared.common import TZ, ignore_exceptions, smart_truncate
 from shared.config_collector import ConfigCollector
+from shared.datetime_utils import format_datetime
 from shared.schema.news_item import NewsItemData
 from slack import WebClient
 
@@ -63,7 +63,7 @@ class SlackCollector(BaseCollector):
                 data = slack_client.conversations_history(channel=channel_id, limit=30)
                 for count, message in enumerate(data["messages"], 1):
                     self.source.logger.debug(f"Message: {count}")
-                    published = time.ctime(float(message["ts"]))
+                    published = format_datetime(dt.datetime.fromtimestamp(float(message["ts"]), tz=dt.UTC))
                     content = message["text"]
                     review = smart_truncate(content)
 
@@ -99,7 +99,7 @@ class SlackCollector(BaseCollector):
                         link,
                         published,
                         author,
-                        datetime.datetime.now(TZ),
+                        dt.datetime.now(TZ),
                         content,
                         self.source.id,
                         [],

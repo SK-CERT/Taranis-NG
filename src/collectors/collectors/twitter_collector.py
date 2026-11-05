@@ -1,12 +1,13 @@
 """Module for X collector."""
 
-import datetime
+import datetime as dt
 import hashlib
 import uuid
 
 import tweepy
 from shared.common import TZ, ignore_exceptions
 from shared.config_collector import ConfigCollector
+from shared.datetime_utils import parse_datetime
 from shared.schema.news_item import NewsItemData
 
 from .base_collector import BaseCollector
@@ -67,7 +68,7 @@ class TwitterCollector(BaseCollector):
             limit = self.history(interval)
 
             for tweet in public_tweets:
-                time_to_collect = tweet.created_at
+                time_to_collect = parse_datetime(tweet.created_at)
 
                 if time_to_collect > limit:
                     tweet_id = tweet.id_str
@@ -90,7 +91,7 @@ class TwitterCollector(BaseCollector):
                         link,
                         published,
                         author,
-                        datetime.datetime.now(TZ),
+                        dt.datetime.now(TZ),
                         content,
                         self.source.id,
                         attributes,

@@ -484,6 +484,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
@@ -572,11 +573,14 @@
         return /^[A-Za-z0-9_-]{1,64}$/.test(value.trim()) || t('routing.cert_resolver_invalid')
     }
 
+    const { formatDateTime } = useLocaleFormatters()
+    const timestampLabel = (value?: string): string => (value ? formatDateTime(value) || value : '')
+
     const certSummary = computed(() => {
         if (!localItem.value.tls_cert_subject) return ''
         return t('public_web.webs.tls_cert_summary', {
             subject: localItem.value.tls_cert_subject,
-            expires: localItem.value.tls_cert_not_after
+            expires: timestampLabel(localItem.value.tls_cert_not_after)
         })
     })
 

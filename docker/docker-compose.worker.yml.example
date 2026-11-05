@@ -60,7 +60,7 @@ services:
       TARANIS_NG_CORE_URL: "${CORE_URL}"
       # Bots only — uncomment if WORKER_TYPE=bots:
       # TARANIS_NG_CORE_SSE: "${CORE_URL}/sse"
-      TZ: "${TZ:-Europe/Bratislava}"
+      TZ: "UTC"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL:-INFO}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL:-INFO}"
       # Presenters only — uncomment if WORKER_TYPE=presenters:

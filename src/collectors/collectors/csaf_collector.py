@@ -8,7 +8,7 @@ Each document becomes one news item. A newer revision of an advisory carries the
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import re
 import threading
 import time
@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from http import HTTPStatus
 from typing import TYPE_CHECKING, ClassVar
 
-from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, read_str_parameter
+from shared.common import ignore_exceptions, read_bool_parameter, read_int_parameter, read_str_parameter
 from shared.config_collector import ConfigCollector
 
 from . import csaf_document
@@ -44,7 +44,7 @@ from .csaf_sources import (
 if TYPE_CHECKING:
     from shared.schema.news_item import NewsItemData
 
-EPOCH = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
+EPOCH = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
 
 
 @dataclass
@@ -59,7 +59,7 @@ class ListingState:
         initialized: Whether a GitHub listing has a baseline of blob SHAs.
     """
 
-    watermark: datetime.datetime | None = None
+    watermark: dt.datetime | None = None
     etag: str | None = None
     last_modified: str | None = None
     seen: dict[str, object] = field(default_factory=dict)
@@ -83,10 +83,10 @@ class Collected:
 
     change: Change
     item: NewsItemData | None = None
-    released_at: datetime.datetime | None = None
+    released_at: dt.datetime | None = None
 
 
-def _stamp(change: Change) -> datetime.datetime:
+def _stamp(change: Change) -> dt.datetime:
     return change.changed_at or EPOCH
 
 
@@ -117,8 +117,8 @@ class CSAFCollector(BaseCollector):
     RESOLUTION_MAX_AGE = 24 * 60 * 60
     # How far before the newest change handled a later run looks again. Some providers stamp
     # whole days (BSI) or fixed times (CISA), so a document can appear with a time already past.
-    OVERLAP = datetime.timedelta(hours=24)
-    SEEN_RETENTION = datetime.timedelta(hours=48)
+    OVERLAP = dt.timedelta(hours=24)
+    SEEN_RETENTION = dt.timedelta(hours=48)
     # Keeps each request well within the 30 seconds the client waits for core to store it.
     PUBLISH_CHUNK = 25
     DEFAULT_MAX_DOCUMENTS = 100
@@ -261,11 +261,11 @@ class CSAFCollector(BaseCollector):
         self.source.logger.info(f"{summary} (integrity: {integrity})" if integrity else summary)
         return OK
 
-    def _last_collected(self) -> datetime.datetime | None:
+    def _last_collected(self) -> dt.datetime | None:
         value = getattr(self.source, "last_collected", None)
-        if not isinstance(value, datetime.datetime):
+        if not isinstance(value, dt.datetime):
             return None
-        return value if value.tzinfo else value.replace(tzinfo=TZ)
+        return value.astimezone(dt.UTC) if value.tzinfo else value.replace(tzinfo=dt.UTC)
 
     def _select_dated(self, listing: Listing, changes: list[Change], listing_state: ListingState, limit: int) -> tuple[list[Change], bool]:
         """Pick the changes to download from a listing that dates its entries.
@@ -296,7 +296,7 @@ class CSAFCollector(BaseCollector):
     @staticmethod
     def _already_seen(listing_state: ListingState, change: Change) -> bool:
         previous = listing_state.seen.get(change.key)
-        return isinstance(previous, datetime.datetime) and previous >= _stamp(change)
+        return isinstance(previous, dt.datetime) and previous >= _stamp(change)
 
     def _select_by_content(self, listing: Listing, changes: list[Change], listing_state: ListingState, limit: int) -> list[Change]:
         """Pick the changes to download from a GitHub listing, by blob SHA.
@@ -452,7 +452,7 @@ class CSAFCollector(BaseCollector):
             if complete:
                 # A date in the future would hold the watermark ahead of every change listed until
                 # then, and skip them all: Microsoft dates some updates by their Patch Tuesday.
-                now = datetime.datetime.now(datetime.UTC)
+                now = dt.datetime.now(dt.UTC)
                 future = [stamp for change in result.changes if (stamp := _stamp(change)) > now]
                 if future:
                     self.source.logger.info(
@@ -466,7 +466,7 @@ class CSAFCollector(BaseCollector):
             if listing_state.watermark is not None:
                 horizon = listing_state.watermark - self.SEEN_RETENTION
                 listing_state.seen = {
-                    key: stamp for key, stamp in listing_state.seen.items() if isinstance(stamp, datetime.datetime) and stamp >= horizon
+                    key: stamp for key, stamp in listing_state.seen.items() if isinstance(stamp, dt.datetime) and stamp >= horizon
                 }
         elif complete:
             # Every current SHA becomes the baseline, including documents a limit left out.

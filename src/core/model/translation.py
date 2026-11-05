@@ -18,6 +18,7 @@ from datetime import datetime
 
 from managers.db_manager import db
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 from sqlalchemy import func
 from sqlalchemy.orm import declared_attr
 
@@ -64,7 +65,7 @@ class TranslationMixin:
     source_hash = db.Column(db.String(64), nullable=False, default="")
     origin = db.Column(db.String(8), nullable=False, default=ORIGIN_MANUAL)
     version = db.Column(db.Integer, nullable=False, default=1)
-    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(TZ))
+    last_updated = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(TZ))
 
     @declared_attr
     def user_id(cls):  # noqa: ANN201, N805 - declared_attr passes the mapped class; an annotation would be read as a mapping
@@ -130,7 +131,7 @@ class TranslationMixin:
             "version": self.version or 1,
             "outdated": self.is_outdated(source),
             "user": self.user.name if self.user else None,
-            "last_updated": self.last_updated.strftime("%d.%m.%Y - %H:%M") if self.last_updated else None,
+            "last_updated": format_datetime(self.last_updated),
         }
 
 

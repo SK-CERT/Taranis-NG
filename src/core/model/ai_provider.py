@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from managers import tlp
 from managers.db_manager import db
 from marshmallow import post_load
-from shared.common import TZ
+from shared.datetime_utils import utc_now
 from shared.schema.ai_provider import AiProviderSchema
 
 
@@ -53,7 +51,7 @@ class AiProvider(db.Model):
     model = db.Column(db.String())
     max_tlp = db.Column(db.String(16), nullable=True)
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     def __init__(self, name: str, api_type: str, api_url: str, api_key: str | None, model: str | None, max_tlp: str | None = None) -> None:
         """Create a new local AI model.
@@ -135,7 +133,7 @@ class AiProvider(db.Model):
         schema = NewAiProviderSchema()
         new = schema.load(data)
         new.updated_by = user_name
-        new.updated_at = datetime.now(TZ)
+        new.updated_at = utc_now()
         db.session.add(new)
         db.session.commit()
         return new
@@ -162,7 +160,7 @@ class AiProvider(db.Model):
         old.model = new.model
         old.max_tlp = tlp.clean_limit(new.max_tlp)
         old.updated_by = user_name
-        old.updated_at = datetime.now(TZ)
+        old.updated_at = utc_now()
         db.session.commit()
         return old
 

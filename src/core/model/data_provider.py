@@ -11,7 +11,6 @@ from datetime import datetime
 
 from managers.db_manager import db
 from marshmallow import post_load
-
 from shared.common import TZ
 from shared.schema.data_provider import DataProviderSchema
 
@@ -38,7 +37,7 @@ class DataProvider(db.Model):
     user_agent = db.Column(db.String())
     web_url = db.Column(db.String())
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     def __init__(self, name: str, api_type: str, api_url: str, api_key: str, user_agent: str, web_url: str) -> None:
         """Create a new Data Provider."""

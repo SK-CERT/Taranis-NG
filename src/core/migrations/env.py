@@ -4,6 +4,7 @@ import logging
 from logging.config import fileConfig
 
 from alembic import context, script
+from alembic.operations.ops import MigrationScript
 from alembic.runtime.migration import MigrationContext
 from flask import current_app
 from migrations.regenerate_params import regenerate_all
@@ -32,7 +33,12 @@ target_metadata = current_app.extensions["migrate"].db.metadata
 # ... etc.
 
 
-def run_migrations_offline():
+def include_object(_object: object, name: str | None, type_: str, _reflected: bool, _compare_to: object) -> bool:
+    """Keep historical UTC conversion metadata out of model autogeneration."""
+    return not (type_ == "table" and name == "_utc_migration_state")
+
+
+def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
     This configures the context with just a URL
@@ -45,13 +51,13 @@ def run_migrations_offline():
 
     """
     url = config.get_main_option("sqlalchemy.url")
-    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(url=url, target_metadata=target_metadata, literal_binds=True, include_object=include_object)
 
     with context.begin_transaction():
         context.run_migrations()
 
 
-def run_migrations_online():
+def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
@@ -60,7 +66,7 @@ def run_migrations_online():
     Reference: http://alembic.zzzcomputing.com/en/latest/cookbook.html
     """
 
-    def process_revision_directives(context, revision, directives):
+    def process_revision_directives(_context: MigrationContext, _revision: tuple[str, ...], directives: list[MigrationScript]) -> None:
         if getattr(config.cmd_opts, "autogenerate", False):
             script = directives[0]
             if script.upgrade_ops.is_empty():
@@ -77,6 +83,7 @@ def run_migrations_online():
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
+            include_object=include_object,
             process_revision_directives=process_revision_directives,
             **current_app.extensions["migrate"].configure_args,
         )

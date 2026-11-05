@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from managers.db_manager import db
+from shared.datetime_utils import utc_now
 
 
 class TokenBlacklist(db.Model):
@@ -16,7 +17,7 @@ class TokenBlacklist(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(), nullable=False)
-    created = db.Column(db.DateTime, default=datetime.now)
+    created = db.Column(db.DateTime(timezone=True), default=utc_now)
 
     def __init__(self, jwt_id: str) -> None:
         """Create a new blacklist entry.

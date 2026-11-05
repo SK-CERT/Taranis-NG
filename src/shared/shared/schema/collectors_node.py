@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 from marshmallow import Schema, fields, post_load, validate
 
 from shared.schema.collector import CollectorSchema
+from shared.schema.datetime import UTCDateTime
 from shared.schema.presentation import PresentationSchema
 
 
@@ -63,8 +64,8 @@ class CollectorsNodeSchema(Schema):
     api_key = fields.Str(required=True, validate=validate.Regexp(r".*\S"))
     collectors = fields.List(fields.Nested(CollectorSchema))
     status = fields.Str(dump_only=True)
-    created = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)
-    last_seen = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)
+    created = UTCDateTime(dump_only=True)
+    last_seen = UTCDateTime(dump_only=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> CollectorsNode:  # noqa: ANN003, ARG002

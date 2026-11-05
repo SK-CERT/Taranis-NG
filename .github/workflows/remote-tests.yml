@@ -1,0 +1,106 @@
+name: Remote Compatibility Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Remote Protocol Contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: remote-tests
+          POSTGRES_DB: remote-tests
+          POSTGRES_PASSWORD: remote-contract-tests
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U remote-tests -d remote-tests"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      # Required by database-backed migration cases; unset would silently skip.
+      TARANIS_TEST_POSTGRES_URL: postgresql+psycopg://remote-tests:remote-contract-tests@127.0.0.1:5432/remote-tests
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .github/python-version
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install test environment
+        run: |
+          mkdir -p local/remote-tests/contracts
+          if ! python3 scripts/dev_setup.py --skip-gui > local/remote-tests/contracts/setup.log 2>&1; then
+            echo "::error::Python test setup failed; see setup.log in the contract artifacts."
+            exit 1
+          fi
+      - name: Run remote contract and migration tests
+        run: |
+          mkdir -p local/remote-tests/contracts
+          .venv/bin/python -m pytest -v --no-header \
+            src/core/tests/test_remote_api_versions.py \
+            src/core/tests/test_remote_client_compat.py \
+            src/core/tests/test_remote_model_compat.py \
+            src/core/tests/test_remote_timezone_migration.py \
+            src/shared/tests/test_remote_protocol.py \
+            --junitxml=local/remote-tests/contracts/junit.xml
+      - name: Upload contract results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: remote-contract-results
+          path: local/remote-tests/contracts/
+          retention-days: 14
+
+  integration:
+    name: Remote Synchronization (${{ matrix.lane }})
+    runs-on: ubuntu-latest
+    # Covers image builds (40m), startup (8m), tests (20m), and setup/cleanup.
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [mixed-utc, mixed-bratislava, current]
+    steps:
+      # Full history includes the immutable legacy baseline used by git archive.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .github/python-version
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install test environment
+        run: |
+          mkdir -p local/remote-tests/${{ matrix.lane }}
+          if ! python3 scripts/dev_setup.py --skip-gui > local/remote-tests/${{ matrix.lane }}/setup.log 2>&1; then
+            echo "::error::Python test setup failed; see setup.log in the synchronization artifacts."
+            exit 1
+          fi
+      - name: Test real nodes in both directions
+        run: python3 scripts/run_remote_tests.py --lane ${{ matrix.lane }}
+      - name: Upload synchronization results and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: remote-sync-${{ matrix.lane }}
+          path: local/remote-tests/${{ matrix.lane }}/
+          retention-days: 14

@@ -4,6 +4,9 @@
 
 This is the canonical Docker installation guide for Taranis NG.
 
+For upgrades across the UTC timestamp transition, first follow the
+[UTC upgrade procedure](https://github.com/SK-CERT/Taranis-NG/blob/main/docs/utc-upgrade.md).
+
 ## Install and complete the first workflow
 
 Follow this section from top to bottom. Installation is complete only after the
@@ -38,8 +41,7 @@ and the satellite services, and the encryption key for auth provider secrets
 and TOTP seeds stored in the database. They do not set the passwords of
 Taranis NG user accounts.
 
-Edit `docker/.env` if you want to change the hostname, ports, timezone, or image
-tag. Keep local changes in this gitignored file or in
+Edit `docker/.env` if you want to change the hostname, ports, or image tag. Keep local changes in this gitignored file or in
 `docker/docker-compose.override.yml`; do not edit the tracked Compose file.
 
 ### 2. Start Taranis NG

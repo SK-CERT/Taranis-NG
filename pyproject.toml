@@ -148,6 +148,7 @@ ignore = [
 "scripts/bump_version.py" = ["T201", "S603"]
 "scripts/check_ansible_syntax.py" = ["T201", "S603"]
 "scripts/run_tests.py" = ["T201", "S603"]
+"scripts/run_remote_tests.py" = ["T201", "S603"]
 "scripts/dev_setup.py" = ["T201", "S603"]
 # Alembic owns this directory and loads env.py by path rather than importing it,
 # so there is no package for an __init__.py to complete.
@@ -164,6 +165,10 @@ ignore = [
 # each test module top-level against `pythonpath` above — which is exactly what
 # src/core/tests/conftest.py relies on.
 "src/*/tests/**/*.py" = ["D103", "INP001", "PLR2004", "S101", "S105", "S106", "SLF001"]
+# The real-node suite is deliberately outside core's stub-config test tree.
+"tests/integration/remote/**/*.py" = ["D103", "INP001", "PLR2004", "S101", "S105", "S106", "SLF001", "S603"]
+# Reflected legacy/current table rows have version-dependent types; stdout is the helper's JSON protocol.
+"tests/integration/remote/node_helper.py" = ["ANN401", "T201"]
 "src/core/model/product.py" = ["A002"]
 "src/core/api/publish.py" = ["PLC0415"]
 

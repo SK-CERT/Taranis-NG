@@ -33,7 +33,7 @@ class SettingUser(db.Model):
     settings_id = db.Column(db.Integer, db.ForeignKey("settings.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     value = db.Column(db.String(), nullable=False)
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     def __init__(self, settings_id: int, user_id: int, value: str) -> None:
         """Initialize a new SettingUser instance.
@@ -123,7 +123,7 @@ class Setting(db.Model):
     description = db.Column(db.String(), nullable=False)
     is_global = db.Column(db.Boolean(), nullable=False, default=True)
     options = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
     updated_by = db.Column(db.String())
     user_settings = db.relationship(SettingUser, lazy="joined")
 

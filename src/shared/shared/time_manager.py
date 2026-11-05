@@ -61,7 +61,7 @@ class SchedulerManager:
     ) -> Job:
         """Schedule a job to run every day at a specific time."""
         logger.debug(f"Scheduling '{description}' for {interval} daily")
-        job = schedule.every().day.at(interval).do(job_func, *args, **kwargs)
+        job = schedule.every().day.at(interval, "UTC").do(job_func, *args, **kwargs)
         return SchedulerManager._finalize_job(job, description, tags)
 
     @staticmethod
@@ -89,7 +89,7 @@ class SchedulerManager:
     ) -> Job:
         """Schedule a job to run every Monday at a specific time."""
         logger.debug(f"Scheduling '{description}' for every Monday {interval}")
-        job = schedule.every().monday.at(interval).do(job_func, *args, **kwargs)
+        job = schedule.every().monday.at(interval, "UTC").do(job_func, *args, **kwargs)
         return SchedulerManager._finalize_job(job, description, tags)
 
     @staticmethod
@@ -103,7 +103,7 @@ class SchedulerManager:
     ) -> Job:
         """Schedule a job to run every Tuesday at a specific time."""
         logger.debug(f"Scheduling '{description}' for every Tuesday {interval}")
-        job = schedule.every().tuesday.at(interval).do(job_func, *args, **kwargs)
+        job = schedule.every().tuesday.at(interval, "UTC").do(job_func, *args, **kwargs)
         return SchedulerManager._finalize_job(job, description, tags)
 
     @staticmethod
@@ -117,7 +117,7 @@ class SchedulerManager:
     ) -> Job:
         """Schedule a job to run every Wednesday at a specific time."""
         logger.debug(f"Scheduling '{description}' for every Wednesday {interval}")
-        job = schedule.every().wednesday.at(interval).do(job_func, *args, **kwargs)
+        job = schedule.every().wednesday.at(interval, "UTC").do(job_func, *args, **kwargs)
         return SchedulerManager._finalize_job(job, description, tags)
 
     @staticmethod
@@ -131,7 +131,7 @@ class SchedulerManager:
     ) -> Job:
         """Schedule a job to run every Thursday at a specific time."""
         logger.debug(f"Scheduling '{description}' for every Thursday {interval}")
-        job = schedule.every().thursday.at(interval).do(job_func, *args, **kwargs)
+        job = schedule.every().thursday.at(interval, "UTC").do(job_func, *args, **kwargs)
         return SchedulerManager._finalize_job(job, description, tags)
 
     @staticmethod
@@ -145,7 +145,7 @@ class SchedulerManager:
     ) -> Job:
         """Schedule a job to run every Friday at a specific time."""
         logger.debug(f"Scheduling '{description}' for every Friday {interval}")
-        job = schedule.every().friday.at(interval).do(job_func, *args, **kwargs)
+        job = schedule.every().friday.at(interval, "UTC").do(job_func, *args, **kwargs)
         return SchedulerManager._finalize_job(job, description, tags)
 
     @staticmethod
@@ -159,7 +159,7 @@ class SchedulerManager:
     ) -> Job:
         """Schedule a job to run every Saturday at a specific time."""
         logger.debug(f"Scheduling '{description}' for every Saturday {interval}")
-        job = schedule.every().saturday.at(interval).do(job_func, *args, **kwargs)
+        job = schedule.every().saturday.at(interval, "UTC").do(job_func, *args, **kwargs)
         return SchedulerManager._finalize_job(job, description, tags)
 
     @staticmethod
@@ -173,7 +173,7 @@ class SchedulerManager:
     ) -> Job:
         """Schedule a job to run every Sunday at a specific time."""
         logger.debug(f"Scheduling '{description}' for every Sunday {interval}")
-        job = schedule.every().sunday.at(interval).do(job_func, *args, **kwargs)
+        job = schedule.every().sunday.at(interval, "UTC").do(job_func, *args, **kwargs)
         return SchedulerManager._finalize_job(job, description, tags)
 
     @staticmethod

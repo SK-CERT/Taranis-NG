@@ -7,6 +7,7 @@ from datetime import datetime
 from managers import passkey_authenticator_manager
 from managers.db_manager import db
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 
 
 class WebauthnCredential(db.Model):
@@ -36,8 +37,8 @@ class WebauthnCredential(db.Model):
     sign_count = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     transports = db.Column(db.String(), nullable=True)
     aaguid = db.Column(db.String(36), nullable=True)
-    created_at = db.Column(db.DateTime)
-    last_used_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime(timezone=True))
+    last_used_at = db.Column(db.DateTime(timezone=True))
 
     user = db.relationship("User", back_populates="webauthn_credentials")
 
@@ -140,8 +141,8 @@ class WebauthnCredential(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "created_at": str(self.created_at) if self.created_at else None,
-            "last_used_at": str(self.last_used_at) if self.last_used_at else None,
+            "created_at": format_datetime(self.created_at),
+            "last_used_at": format_datetime(self.last_used_at),
             "aaguid": self.aaguid,
             "authenticator": passkey_authenticator_manager.describe(self.aaguid),
             # Without it the GUI could not tell an authenticator the list does not know from one

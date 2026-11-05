@@ -129,7 +129,7 @@ class User(db.Model):
     # When this account last completed a sign-in, whatever the method. UserAuthIdentity has its
     # own last_login_at, but that only covers external providers - a local password login writes
     # no identity row, so it would leave most accounts looking as if they had never signed in.
-    last_login_at = db.Column(db.DateTime, nullable=True)
+    last_login_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     organizations = db.relationship("Organization", secondary="user_organization")
     roles = db.relationship(Role, secondary="user_role")

@@ -126,10 +126,10 @@
                                     >
                                 </td>
                                 <td class="text-medium-emphasis text-no-wrap">
-                                    <bdi dir="ltr">{{ source.last_attempted || '—' }}</bdi>
+                                    <bdi dir="auto">{{ timestampLabel(source.last_attempted) }}</bdi>
                                 </td>
                                 <td class="text-medium-emphasis text-no-wrap">
-                                    <bdi dir="ltr">{{ source.last_collected || '—' }}</bdi>
+                                    <bdi dir="auto">{{ timestampLabel(source.last_collected) }}</bdi>
                                 </td>
                                 <td>
                                     <span :title="nextRunExact(source)">{{ nextRunLabel(source) }}</span>
@@ -218,7 +218,7 @@
                     <bdi dir="auto">{{ errorSource?.name }}</bdi>
                 </v-card-title>
                 <v-card-subtitle v-if="errorSource?.last_attempted">
-                    {{ t('collectors.sources.last_attempt') }}: {{ errorSource?.last_attempted }}
+                    {{ t('collectors.sources.last_attempt') }}: {{ timestampLabel(errorSource?.last_attempted) }}
                 </v-card-subtitle>
                 <v-card-text>
                     <pre class="error-detail text-error">{{ errorSource?.last_error_message }}</pre>
@@ -241,6 +241,7 @@
 <script setup lang="ts">
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { useAuth } from '@/composables/useAuth'
     import { COLLECTOR_TYPE_FALLBACK_ICON, COLLECTOR_TYPE_ICONS } from '@/config/ui-constants'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
@@ -274,6 +275,8 @@
     }>()
 
     const { t } = useI18n()
+    const { formatDateTime } = useLocaleFormatters()
+    const timestampLabel = (value?: string | null): string => (value ? formatDateTime(value) || value : '—')
     const { checkPermission } = useAuth()
 
     const canUpdate = computed(() => checkPermission('CONFIG_OSINT_SOURCE_UPDATE'))
@@ -468,8 +471,7 @@
     /** The exact moment, for the native tooltip behind the countdown. */
     const nextRunExact = (source: OSINTSourceItem): string => {
         if (!source.next_run || source.enabled === false || source.collecting === true) return ''
-        const when = new Date(source.next_run)
-        return Number.isNaN(when.getTime()) ? '' : when.toLocaleString()
+        return formatDateTime(source.next_run)
     }
 
     const errorDialog = ref(false)

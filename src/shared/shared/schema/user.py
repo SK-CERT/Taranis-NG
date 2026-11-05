@@ -2,6 +2,7 @@
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
+from shared.schema.datetime import UTCDateTime
 from shared.schema.organization import OrganizationSchema
 from shared.schema.presentation import PresentationSchema
 from shared.schema.role import PermissionSchema, RoleSchema
@@ -48,7 +49,7 @@ class UserSchemaBase(Schema):
     status = fields.Str(validate=lambda s: s in USER_STATUSES)
     require_mfa = fields.Bool(load_default=False)
     # Dump-only: written when a sign-in completes, never accepted from a client.
-    last_login_at = fields.DateTime(dump_only=True, allow_none=True)
+    last_login_at = UTCDateTime(dump_only=True, allow_none=True)
 
 
 class UserIdentitySchema(Schema):
@@ -65,7 +66,7 @@ class UserIdentitySchema(Schema):
     provider_kind = fields.Str(attribute="provider.kind", dump_only=True)
     external_username = fields.Str()
     external_id = fields.Str(dump_only=True, allow_none=True)
-    last_login_at = fields.Str(dump_only=True, allow_none=True)
+    last_login_at = UTCDateTime(dump_only=True, allow_none=True)
 
 
 class UserSchema(UserSchemaBase):

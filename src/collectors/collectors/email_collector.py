@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from email.message import EmailMessage
 
-import datetime
+import datetime as dt
 import email.header
 import email.utils
 import hashlib
@@ -19,6 +19,7 @@ from email import policy
 
 from shared.common import TZ, ignore_exceptions, read_int_parameter, text_to_simple_html
 from shared.config_collector import ConfigCollector
+from shared.datetime_utils import format_datetime
 from shared.schema.news_item import NewsItemAttribute, NewsItemData
 
 from .base_collector import BaseCollector
@@ -208,10 +209,10 @@ class EmailCollector(BaseCollector):
             date = email.utils.parsedate_to_datetime(email_message.get("Date"))
         except (TypeError, ValueError):
             self.source.logger.debug(f"Email '{title}' has no usable 'Date' header, using the time of collection")
-            date = datetime.datetime.now(TZ)
+            date = dt.datetime.now(TZ)
         if date.tzinfo is None:
             date = date.replace(tzinfo=TZ)
-        return date.astimezone(TZ).strftime("%d.%m.%Y - %H:%M")
+        return format_datetime(date)
 
     def __decode_body(self, part: EmailMessage, title: str) -> str:
         """Decode one body part using the charset it declares.
@@ -331,7 +332,7 @@ class EmailCollector(BaseCollector):
             "",  # the link, an email has none
             published,
             author,
-            datetime.datetime.now(TZ),
+            dt.datetime.now(TZ),
             content,
             self.source.id,
             [],

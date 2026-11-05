@@ -32,6 +32,7 @@ from managers.log_manager import logger
 from model.product import Product, ProductPublicWeb
 from model.public_web import PublicWeb
 from model.state import StateDefinition, StateEnum
+from shared.datetime_utils import format_datetime
 from shared.schema.attribute import AttributeType
 
 
@@ -150,8 +151,8 @@ def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: di
         "title": report_item.title,
         "title_prefix": report_item.title_prefix,
         "uuid": report_item.uuid,
-        "created": report_item.created.isoformat() if report_item.created else None,
-        "last_updated": report_item.last_updated.isoformat() if report_item.last_updated else None,
+        "created": format_datetime(report_item.created),
+        "last_updated": format_datetime(report_item.last_updated),
         "type": report_type.title if report_type else None,
         "type_description": report_type.description if report_type else None,
         "attributes": [
@@ -219,7 +220,7 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
         "title": product.title,
         "description": index.render(product.description),
         "links": list(index.urls),
-        "created": product.created.isoformat() if product.created else None,
+        "created": format_datetime(product.created),
         "user": {"name": user.name, "username": user.username} if user else None,
         "report_items": report_items,
     }
@@ -275,7 +276,7 @@ class PublicWebProducts(Resource):
             web_id = None
 
         products = Product.get_published(limit, web_id=web_id)
-        items = [{"id": p.id, "title": p.title, "created": p.created.isoformat() if p.created else None} for p in products]
+        items = [{"id": p.id, "title": p.title, "created": format_datetime(p.created)} for p in products]
         logger.debug(f"Public-web '{public_web_node.name}': listed {len(items)} published products")
         return {"total_count": len(items), "items": items}, HTTPStatus.OK
 

@@ -75,7 +75,7 @@ class StateDefinition(db.Model):
     icon = db.Column(db.String(50))
     editable = db.Column(db.Boolean, default=True)
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     @classmethod
     def get_by_name(cls, display_name: str) -> StateDefinition | None:
@@ -251,7 +251,7 @@ class StateEntityType(db.Model):
     editable = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     state = db.relationship(StateDefinition)
 

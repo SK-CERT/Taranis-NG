@@ -2,6 +2,8 @@
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
+from shared.schema.datetime import UTCDateTime
+
 
 class AiProvider:
     """Data model for AI model."""
@@ -54,7 +56,7 @@ class AiProviderSchema(Schema):
     model = fields.Str()
     max_tlp = fields.Str(allow_none=True, load_default=None)
     updated_by = fields.Str(dump_only=True)
-    updated_at = fields.Str(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> AiProvider:  # noqa: ANN003, ARG002

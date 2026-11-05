@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 from marshmallow import EXCLUDE, Schema, fields, post_load, validate
 
 from shared.schema.bot import BotSchema
+from shared.schema.datetime import UTCDateTime
 from shared.schema.presentation import PresentationSchema
 
 
@@ -72,8 +73,8 @@ class BotsNodeSchema(Schema):
     api_url = fields.Str()
     api_key = fields.Str(required=True, validate=validate.Regexp(r".*\S"))
     bots = fields.List(fields.Nested(BotSchema))
-    created = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)
-    last_seen = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)
+    created = UTCDateTime(dump_only=True)
+    last_seen = UTCDateTime(dump_only=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> BotsNode:  # noqa: ANN003, ARG002

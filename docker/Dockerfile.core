@@ -18,11 +18,14 @@ RUN gcc -o forward forward.c
 
 FROM python:3.13-alpine3.24 AS production
 
+ENV TZ="UTC"
+
 WORKDIR /app/
 
 # install common packages
 RUN \
     apk add --no-cache \
+    tzdata \
     postgresql-libs \
     libpq \
     curl \

@@ -119,7 +119,7 @@ class AuthProvider(db.Model):
     config = db.Column(db.JSON, nullable=False, default=dict)
     secret = db.Column(db.String(), nullable=True)
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     organization = db.relationship("Organization")
     default_roles = db.relationship("Role", secondary="auth_provider_role")
@@ -522,8 +522,8 @@ class UserAuthIdentity(db.Model):
     auth_provider_id = db.Column(db.Integer, db.ForeignKey("auth_provider.id", ondelete="CASCADE"), nullable=False)
     external_username = db.Column(db.String(), nullable=False)
     external_id = db.Column(db.String(), nullable=True)
-    created_at = db.Column(db.DateTime)
-    last_login_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime(timezone=True))
+    last_login_at = db.Column(db.DateTime(timezone=True))
 
     __table_args__ = (
         db.UniqueConstraint("auth_provider_id", "external_username", name="uq_identity_provider_username"),

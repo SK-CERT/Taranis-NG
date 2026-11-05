@@ -1,22 +1,29 @@
 """API Key Model."""
 
-from datetime import datetime
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from managers.db_manager import db
 from marshmallow import post_load
-
+from shared.datetime_utils import utc_now
 from shared.schema.apikey import ApiKeySchema
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from typing import Any
 
 
 class NewApiKeySchema(ApiKeySchema):
     """New API Key Schema."""
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict[str, Any], **kwargs: object) -> ApiKey:  # noqa: ARG002 -- Marshmallow supplies hook options
         """Create a new API Key.
 
         Args:
             data (dict): Data to create the new API Key.
+            **kwargs: Marshmallow post-load hook options.
 
         Returns:
             ApiKey: New API Key object.
@@ -41,12 +48,27 @@ class ApiKey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
     key = db.Column(db.String())  # length 40
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    expires_at = db.Column(db.DateTime, nullable=True, default=None)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=True, default=None)
 
-    def __init__(self, name, key, created_at, user_id, expires_at):
-        """Create a new API Key."""
+    def __init__(
+        self,
+        name: str,
+        key: str,
+        created_at: datetime | None,  # noqa: ARG002 -- Accepted schema field; database default owns creation time
+        user_id: int | None,
+        expires_at: datetime | None,
+    ) -> None:
+        """Create a new API Key.
+
+        Args:
+            name: API Key name.
+            key: API Key secret.
+            created_at: Accepted for schema compatibility; the database supplies creation time.
+            user_id: Owner's user ID, or None for an unassigned key.
+            expires_at: Expiration timestamp, or None for no expiration.
+        """
         # self.id = None
         self.name = name
         self.key = key
@@ -55,46 +77,43 @@ class ApiKey(db.Model):
         self.expires_at = expires_at
 
     @classmethod
-    def find(cls, apikey_id):
+    def find(cls, apikey_id: int) -> ApiKey | None:
         """Find an API Key by ID.
 
         Args:
             apikey_id (int): API Key ID.
 
         Returns:
-            ApiKey: API Key object.
+            ApiKey | None: API Key object, or None when no key matches.
         """
-        apikey = db.session.get(cls, apikey_id)
-        return apikey
+        return db.session.get(cls, apikey_id)
 
     @classmethod
-    def find_by_name(cls, apikey_name):
+    def find_by_name(cls, apikey_name: str) -> ApiKey | None:
         """Find an API Key by name.
 
         Args:
             apikey_name (str): API Key name.
 
         Returns:
-            ApiKey: API Key object.
+            ApiKey | None: API Key object, or None when no key matches.
         """
-        apikey = cls.query.filter_by(name=apikey_name).first()
-        return apikey
+        return cls.query.filter_by(name=apikey_name).first()
 
     @classmethod
-    def find_by_key(cls, key_str):
+    def find_by_key(cls, key_str: str) -> ApiKey | None:
         """Find an API Key by key.
 
         Args:
             key_str (str): API Key key.
 
         Returns:
-            ApiKey: API Key object.s
+            ApiKey | None: API Key object, or None when no key matches.
         """
-        apikey = cls.query.filter_by(key=key_str).first()
-        return apikey
+        return cls.query.filter_by(key=key_str).first()
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[ApiKey]:
         """Get all API Keys.
 
         Returns:
@@ -103,14 +122,14 @@ class ApiKey(db.Model):
         return cls.query.order_by(db.asc(ApiKey.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str | None) -> tuple[list[ApiKey], int]:
         """Get API Keys.
 
         Args:
-            search (str): Search string.
+            search (str | None): Search string, or None to return all keys.
 
         Returns:
-            list: List of API Keys.
+            tuple[list[ApiKey], int]: Matching API Keys and their total count.
         """
         query = cls.query
 
@@ -121,7 +140,7 @@ class ApiKey(db.Model):
         return query.order_by(db.asc(ApiKey.name)).all(), query.count()
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict[str, Any]) -> ApiKey:
         """Add a new API Key.
 
         Args:
@@ -138,7 +157,7 @@ class ApiKey(db.Model):
         return apikey
 
     @classmethod
-    def delete(cls, id):
+    def delete(cls, id: int) -> None:  # noqa: A002 -- Retain the public keyword argument
         """Delete an API Key.
 
         Args:

@@ -19,6 +19,7 @@ from http import HTTPStatus
 from managers.db_manager import db
 from model.state import StateEntityTypeEnum
 from shared.common import TZ
+from shared.datetime_utils import format_datetime
 
 # The translation status of an item in one language, and an item whose language is not set.
 TRANSLATION_MISSING = "translation_missing"
@@ -41,7 +42,7 @@ report_item_tag = db.Table(
     db.Column("report_item_id", db.Integer, db.ForeignKey("report_item.id", ondelete="CASCADE"), primary_key=True),
     db.Column("tag_id", db.Integer, db.ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True),
     db.Column("user_id", db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True),
-    db.Column("created", db.DateTime, nullable=True),
+    db.Column("created", db.DateTime(timezone=True), nullable=True),
 )
 
 product_tag = db.Table(
@@ -49,7 +50,7 @@ product_tag = db.Table(
     db.Column("product_id", db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), primary_key=True),
     db.Column("tag_id", db.Integer, db.ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True),
     db.Column("user_id", db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True),
-    db.Column("created", db.DateTime, nullable=True),
+    db.Column("created", db.DateTime(timezone=True), nullable=True),
 )
 
 # Which assignment table holds the tags of each entity type, and the column naming the item.
@@ -106,7 +107,7 @@ class Tag(db.Model):
     icon = db.Column(db.String(_ICON_LENGTH))
     system_key = db.Column(db.String(50), unique=True, nullable=True)
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     entity_types = db.relationship("TagEntityType", back_populates="tag", cascade="all, delete-orphan", passive_deletes=True)
 
@@ -125,7 +126,7 @@ class Tag(db.Model):
             "icon": self.icon,
             "system_key": self.system_key,
             "updated_by": self.updated_by,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "updated_at": format_datetime(self.updated_at),
         }
 
     @classmethod
@@ -273,7 +274,7 @@ class TagEntityType(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     sort_order = db.Column(db.Integer, nullable=False, default=0)
     updated_by = db.Column(db.String())
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime(timezone=True))
 
     tag = db.relationship(Tag, back_populates="entity_types")
 
