@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.14
 
-FROM python:3.13-alpine3.24 AS build_shared
+FROM python:3.15-alpine3.24 AS build_shared
 
 WORKDIR /build_shared/
 
@@ -16,7 +16,7 @@ COPY ./src/core/sse/forward.c .
 RUN gcc -o forward forward.c
 
 
-FROM python:3.13-alpine3.24 AS production
+FROM python:3.15-alpine3.24 AS production
 
 WORKDIR /app/
 
