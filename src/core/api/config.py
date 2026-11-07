@@ -18,6 +18,7 @@ from flask import request, send_file
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from managers import (
+    api_key_manager,
     auth_manager,
     bots_manager,
     certificate_manager,
@@ -36,6 +37,7 @@ from managers.sse_manager import sse_manager
 from model import (
     acl_entry,
     ai_provider,
+    apikey,
     attribute,
     attribute_extraction_rule,
     auth_provider,
@@ -1479,6 +1481,113 @@ class UserMfaResetResource(Resource):
             msg = "Could not reset user MFA"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+def _api_key_error(ex: Exception, what: str) -> tuple[dict, HTTPStatus]:
+    """Answer a rejected API key change: a broken rule says what to fix, anything else is logged."""
+    db.session.rollback()
+    if isinstance(ex, ValueError):
+        return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+    if isinstance(ex, IntegrityError):
+        return {"error": "The user already has an API key with this name"}, HTTPStatus.BAD_REQUEST
+    msg = f"Could not {what} the API key"
+    log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+    return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class ApiKeysResource(Resource):
+    """API keys of every user (Access Management).
+
+    Key management never accepts an API key: a key cannot mint, widen or keep alive other keys.
+    """
+
+    @auth_required("CONFIG_API_KEY_ACCESS", allow_api_key=False)
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """List API keys, optionally of one owner (``user_id``) and matching ``search``.
+
+        Returns:
+            (dict): The keys, the policy, the caller's address and the users (with their status).
+        """
+        user_id = request.args.get("user_id", type=int)
+        keys = apikey.ApiKey.get_filtered(request.args.get("search"), user_id)
+        # Every user, for the owner filter; the dialog offers only active ones as new owners.
+        owners = user.User.query.order_by(user.User.username).all()
+        return api_key_manager.list_payload(keys, owners=owners), HTTPStatus.OK
+
+    @auth_required("CONFIG_API_KEY_CREATE", allow_api_key=False)
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create an API key for a user.
+
+        Returns:
+            (dict): The new key and, this once, its plaintext under ``key``.
+        """
+        data = request.json or {}
+        owner = user.User.find_by_id(data.get("user_id")) if isinstance(data.get("user_id"), int) else None
+        if owner is None:
+            return {"error": "Choose the user the API key acts as"}, HTTPStatus.BAD_REQUEST
+        try:
+            item, plaintext = api_key_manager.create(owner, data, get_user_from_jwt())
+        except Exception as ex:
+            return _api_key_error(ex, "create")
+        return {"item": item, "key": plaintext}, HTTPStatus.CREATED
+
+
+class ApiKeyResource(Resource):
+    """One API key of any user (Access Management)."""
+
+    @auth_required("CONFIG_API_KEY_UPDATE", allow_api_key=False)
+    def put(self, api_key_id: int) -> tuple[dict, HTTPStatus]:
+        """Change an API key's name, description, enabled state, scope or allowed IPs.
+
+        Args:
+            api_key_id (int): The API key ID
+        Returns:
+            (dict): The changed key
+        """
+        record = apikey.ApiKey.find(api_key_id)
+        if record is None:
+            return {"error": "API key not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return {"item": api_key_manager.update(record, request.json or {}, get_user_from_jwt())}, HTTPStatus.OK
+        except Exception as ex:
+            return _api_key_error(ex, "update")
+
+    @auth_required("CONFIG_API_KEY_DELETE", allow_api_key=False)
+    def delete(self, api_key_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete an API key.
+
+        Args:
+            api_key_id (int): The API key ID
+        Returns:
+            (dict): Empty on success
+        """
+        record = apikey.ApiKey.find(api_key_id)
+        if record is None:
+            return {"error": "API key not found"}, HTTPStatus.NOT_FOUND
+        try:
+            api_key_manager.delete(record, get_user_from_jwt())
+        except Exception as ex:
+            db.session.rollback()
+            return _delete_failed("Could not delete the API key", ex)
+        return {}, HTTPStatus.OK
+
+
+class ApiKeyPermissionsResource(Resource):
+    """The permissions a key of one user can be limited to."""
+
+    @auth_required("CONFIG_API_KEY_ACCESS", allow_api_key=False)
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """List the permissions of the user given by ``user_id``.
+
+        Returns:
+            (dict): The permissions, by id
+        """
+        user_id = request.args.get("user_id", type=int)
+        owner = user.User.find_by_id(user_id) if user_id is not None else None
+        if owner is None:
+            return {"error": "User not found"}, HTTPStatus.NOT_FOUND
+        items = api_key_manager.permission_options(owner)
+        return {"total_count": len(items), "items": items}, HTTPStatus.OK
 
 
 class ExternalUsersResource(Resource):
@@ -3200,6 +3309,9 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(UserResource, "/api/v1/config/users/<int:user_id>")
     api.add_resource(UserStatusResource, "/api/v1/config/users/<int:user_id>/status")
     api.add_resource(UserMfaResetResource, "/api/v1/config/users/<int:user_id>/reset-mfa")
+    api.add_resource(ApiKeysResource, "/api/v1/config/api-keys")
+    api.add_resource(ApiKeyPermissionsResource, "/api/v1/config/api-keys/permissions")
+    api.add_resource(ApiKeyResource, "/api/v1/config/api-keys/<int:api_key_id>")
 
     api.add_resource(AuthProvidersResource, "/api/v1/config/auth-providers")
     api.add_resource(AuthProviderResource, "/api/v1/config/auth-providers/<int:auth_provider_id>")
@@ -3285,6 +3397,12 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Permission.add("CONFIG_USER_CREATE", "Config user create", "Create user configuration")
     Permission.add("CONFIG_USER_UPDATE", "Config user update", "Update user configuration")
     Permission.add("CONFIG_USER_DELETE", "Config user delete", "Delete user configuration")
+
+    Permission.add("CONFIG_API_KEY_ACCESS", "Config API keys access", "Access to the API keys of all users")
+    Permission.add("CONFIG_API_KEY_CREATE", "Config API key create", "Create API keys for any user")
+    Permission.add("CONFIG_API_KEY_UPDATE", "Config API key update", "Rename, enable, disable and limit API keys of any user")
+    Permission.add("CONFIG_API_KEY_DELETE", "Config API key delete", "Delete API keys of any user")
+    Permission.add("MY_API_KEYS_MANAGE", "Own API keys", "Create and manage own API keys")
 
     Permission.add("CONFIG_ROLE_ACCESS", "Config roles access", "Access to roles configuration")
     Permission.add("CONFIG_ROLE_CREATE", "Config role create", "Create role configuration")

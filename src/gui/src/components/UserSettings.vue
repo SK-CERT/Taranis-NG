@@ -59,6 +59,16 @@
                     {{ t('settings.tab_security') }}
                 </v-tab>
 
+                <!-- API keys Tab (only with MY_API_KEYS_MANAGE) -->
+                <v-tab
+                    v-if="canManageApiKeys"
+                    value="api-keys"
+                    data-test="user-settings-api-keys-tab"
+                >
+                    <v-icon start>mdi-key-chain-variant</v-icon>
+                    {{ t('api_keys.tab') }}
+                </v-tab>
+
                 <!-- Word Lists Tab -->
                 <v-tab value="wordlists">
                     <v-icon start>mdi-format-list-bulleted</v-icon>
@@ -93,6 +103,28 @@
                             v-if="activeTab === 'security'"
                             :load-trigger="securityLoadTrigger"
                         />
+                    </v-window-item>
+
+                    <!-- API keys: mounted while shown, so it reloads every time it is opened -->
+                    <v-window-item
+                        v-if="canManageApiKeys"
+                        value="api-keys"
+                    >
+                        <section class="settings-pane">
+                            <header class="settings-pane__header">
+                                <span class="settings-pane__icon">
+                                    <v-icon>mdi-key-chain-variant</v-icon>
+                                </span>
+                                <div>
+                                    <h2>{{ t('api_keys.tab') }}</h2>
+                                    <p>{{ t('api_keys.self_description') }}</p>
+                                </div>
+                            </header>
+                            <ApiKeysPanel
+                                v-if="activeTab === 'api-keys'"
+                                mode="self"
+                            />
+                        </section>
                     </v-window-item>
 
                     <!-- Word Lists -->
@@ -230,6 +262,8 @@
     import SettingsTable from './config/SettingsTable.vue'
     import ThemeEditor from './config/ThemeEditor.vue'
     import SecuritySettings from './SecuritySettings.vue'
+    import ApiKeysPanel from './common/api-keys/ApiKeysPanel.vue'
+    import { useAuth } from '@/composables/useAuth'
 
     type HotkeyItem = {
         alias: string
@@ -260,8 +294,10 @@
 
     const { t } = useI18n()
     const settingsStore = useSettingsStore()
+    const { checkPermission } = useAuth()
+    const canManageApiKeys = computed(() => checkPermission('MY_API_KEYS_MANAGE'))
 
-    const activeTab = ref<'general' | 'theme' | 'security' | 'wordlists' | 'hotkeys'>('general')
+    const activeTab = ref<'general' | 'theme' | 'security' | 'api-keys' | 'wordlists' | 'hotkeys'>('general')
     const keyDialogVisible = ref<boolean>(false)
     const currentHotkeyAlias = ref<string>('')
     // Bumped whenever the Security tab becomes visible so SecuritySettings

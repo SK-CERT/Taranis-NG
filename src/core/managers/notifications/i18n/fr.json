@@ -29,6 +29,18 @@
             "subject": "Vos seconds facteurs ont été réinitialisés",
             "text": "Un administrateur a réinitialisé les seconds facteurs de votre compte Taranis NG. Il pourra vous être demandé de les configurer à nouveau lors de votre prochaine connexion."
         },
+        "api_key_created": {
+            "subject": "Nouvelle clé d’API créée",
+            "text": "Une nouvelle clé d’API a été créée pour votre compte Taranis NG. Les programmes qui l’utilisent peuvent appeler l’API avec vos autorisations."
+        },
+        "api_key_deleted": {
+            "subject": "Clé d’API supprimée",
+            "text": "Une clé d’API de votre compte Taranis NG a été supprimée. Les programmes qui l’utilisaient ne peuvent plus appeler l’API."
+        },
+        "api_key_expired": {
+            "subject": "Clé d’API expirée",
+            "text": "Une clé d’API de votre compte Taranis NG a expiré. Les programmes qui l’utilisent encore ne peuvent plus appeler l’API ; créez une nouvelle clé si elle est toujours nécessaire."
+        },
         "test": {
             "subject": "E-mail de test",
             "text": "Ceci est un e-mail de test de Taranis NG. Si vous le lisez, les paramètres d’e-mail fonctionnent."
@@ -41,7 +53,11 @@
         "ip": "Adresse IP",
         "passkey": "Clé d’accès",
         "authenticator": "Authentificateur",
-        "factors": "Réinitialisé"
+        "factors": "Réinitialisé",
+        "api_key": "Clé d’API",
+        "api_key_prefix": "La clé commence par",
+        "expires": "Expire le",
+        "expired": "Expirée le"
     },
     "actor_self": "Vous",
     "actor_admin": "Administrateur {admin}",

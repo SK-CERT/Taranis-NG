@@ -29,6 +29,18 @@
             "subject": "Seus segundos fatores foram redefinidos",
             "text": "Um administrador redefiniu os segundos fatores da sua conta Taranis NG. Talvez seja necessário configurá-los novamente no próximo login."
         },
+        "api_key_created": {
+            "subject": "Nova chave de API criada",
+            "text": "Uma nova chave de API foi criada para sua conta do Taranis NG. Programas que a usam podem chamar a API com suas permissões."
+        },
+        "api_key_deleted": {
+            "subject": "Chave de API excluída",
+            "text": "Uma chave de API da sua conta do Taranis NG foi excluída. Programas que a usavam não podem mais chamar a API."
+        },
+        "api_key_expired": {
+            "subject": "Chave de API expirada",
+            "text": "Uma chave de API da sua conta do Taranis NG expirou. Programas que ainda a usam não podem mais chamar a API; crie uma nova chave se ela ainda for necessária."
+        },
         "test": {
             "subject": "E-mail de teste",
             "text": "Este é um e-mail de teste do Taranis NG. Se você está lendo, as configurações de e-mail funcionam."
@@ -41,7 +53,11 @@
         "ip": "Endereço IP",
         "passkey": "Chave de acesso",
         "authenticator": "Autenticador",
-        "factors": "Redefinido"
+        "factors": "Redefinido",
+        "api_key": "Chave de API",
+        "api_key_prefix": "A chave começa com",
+        "expires": "Expira em",
+        "expired": "Expirou em"
     },
     "actor_self": "Você",
     "actor_admin": "Administrador {admin}",

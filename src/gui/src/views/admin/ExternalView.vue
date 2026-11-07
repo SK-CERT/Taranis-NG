@@ -5,6 +5,7 @@
     >
         <v-tabs
             v-model="activeTab"
+            class="config-tabs"
             color="primary"
         >
             <v-tab value="users">{{ t('nav_menu.external_users') }}</v-tab>

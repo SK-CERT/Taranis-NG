@@ -408,6 +408,26 @@
 
     /* Configuration is an operational workspace: keep tables dense enough to scan
        without changing the more generous spacing of edit forms and dialogs. */
+    /* Configuration pages scroll the document. With the fixed height the other views use, the
+       main area's background ended at the first screen and the page colour showed below a tall
+       page (the Security tab). Let it grow with its content instead. */
+    .v-main.configuration-view {
+        height: auto;
+        min-height: 100%;
+    }
+
+    /* The top tabs of a configuration page stay in view: they stick under the app bar while
+       the page scrolls (--v-layout-top is the app bar's height, set by Vuetify on v-main). On a
+       narrow screen they still scroll sideways, as Vuetify's tabs do. The solid background hides
+       the content passing under them; it overrides the views' bg-color="transparent", which
+       Vuetify applies with !important. */
+    .config-tabs.v-tabs {
+        position: sticky;
+        top: var(--v-layout-top, 0px);
+        z-index: 10;
+        background-color: rgb(var(--v-theme-background)) !important;
+    }
+
     .configuration-view .v-data-table .v-data-table__th {
         height: 36px !important;
         padding-inline: 10px !important;

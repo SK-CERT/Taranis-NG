@@ -29,6 +29,18 @@
             "subject": "İkinci faktörleriniz sıfırlandı",
             "text": "Bir yönetici Taranis NG hesabınızın ikinci faktörlerini sıfırladı. Bir sonraki oturum açışınızda bunları yeniden ayarlamanız istenebilir."
         },
+        "api_key_created": {
+            "subject": "Yeni API anahtarı oluşturuldu",
+            "text": "Taranis NG hesabınız için yeni bir API anahtarı oluşturuldu. Onu kullanan programlar API’yi sizin izinlerinizle çağırabilir."
+        },
+        "api_key_deleted": {
+            "subject": "API anahtarı silindi",
+            "text": "Taranis NG hesabınızın bir API anahtarı silindi. Onu kullanan programlar artık API’yi çağıramaz."
+        },
+        "api_key_expired": {
+            "subject": "API anahtarının süresi doldu",
+            "text": "Taranis NG hesabınızın bir API anahtarının süresi doldu. Onu hâlâ kullanan programlar artık API’yi çağıramaz; hâlâ gerekiyorsa yeni bir anahtar oluşturun."
+        },
         "test": {
             "subject": "Test e-postası",
             "text": "Bu, Taranis NG'den gönderilen bir test e-postasıdır. Bunu okuyorsanız e-posta ayarları çalışıyor."
@@ -41,7 +53,11 @@
         "ip": "IP adresi",
         "passkey": "Geçiş anahtarı",
         "authenticator": "Kimlik doğrulayıcı",
-        "factors": "Sıfırlanan"
+        "factors": "Sıfırlanan",
+        "api_key": "API anahtarı",
+        "api_key_prefix": "Anahtarın başı",
+        "expires": "Sona erme",
+        "expired": "Süresi doldu"
     },
     "actor_self": "Siz",
     "actor_admin": "Yönetici {admin}",

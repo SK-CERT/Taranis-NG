@@ -29,6 +29,18 @@
             "subject": "2 番目の要素がリセットされました",
             "text": "管理者が Taranis NG アカウントの 2 番目の要素をリセットしました。次回のサインイン時に再設定を求められることがあります。"
         },
+        "api_key_created": {
+            "subject": "新しい API キーが作成されました",
+            "text": "Taranis NG アカウントに新しい API キーが作成されました。このキーを使うプログラムは、あなたの権限で API を呼び出せます。"
+        },
+        "api_key_deleted": {
+            "subject": "API キーが削除されました",
+            "text": "Taranis NG アカウントの API キーが削除されました。このキーを使っていたプログラムは、もう API を呼び出せません。"
+        },
+        "api_key_expired": {
+            "subject": "API キーの有効期限が切れました",
+            "text": "Taranis NG アカウントの API キーの有効期限が切れました。このキーをまだ使っているプログラムは API を呼び出せなくなります。引き続き必要な場合は新しいキーを作成してください。"
+        },
         "test": {
             "subject": "テストメール",
             "text": "これは Taranis NG からのテストメールです。このメールが読めていれば、メール設定は正しく動作しています。"
@@ -41,7 +53,11 @@
         "ip": "IP アドレス",
         "passkey": "パスキー",
         "authenticator": "認証器",
-        "factors": "リセット対象"
+        "factors": "リセット対象",
+        "api_key": "API キー",
+        "api_key_prefix": "キーの先頭",
+        "expires": "有効期限",
+        "expired": "期限切れ"
     },
     "actor_self": "あなた",
     "actor_admin": "管理者 {admin}",

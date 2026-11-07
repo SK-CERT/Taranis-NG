@@ -29,6 +29,18 @@
             "subject": "Ihre zweiten Faktoren wurden zurückgesetzt",
             "text": "Ein Administrator hat die zweiten Faktoren Ihres Taranis-NG-Kontos zurückgesetzt. Bei der nächsten Anmeldung werden Sie möglicherweise gebeten, sie neu einzurichten."
         },
+        "api_key_created": {
+            "subject": "Neuer API-Schlüssel erstellt",
+            "text": "Für Ihr Taranis-NG-Konto wurde ein neuer API-Schlüssel erstellt. Programme, die ihn verwenden, können die API mit Ihren Berechtigungen aufrufen."
+        },
+        "api_key_deleted": {
+            "subject": "API-Schlüssel gelöscht",
+            "text": "Ein API-Schlüssel Ihres Taranis-NG-Kontos wurde gelöscht. Programme, die ihn verwendet haben, können die API nicht mehr aufrufen."
+        },
+        "api_key_expired": {
+            "subject": "API-Schlüssel abgelaufen",
+            "text": "Ein API-Schlüssel Ihres Taranis-NG-Kontos ist abgelaufen. Programme, die ihn noch verwenden, können die API nicht mehr aufrufen; erstellen Sie einen neuen Schlüssel, falls er noch gebraucht wird."
+        },
         "test": {
             "subject": "Test-E-Mail",
             "text": "Dies ist eine Test-E-Mail von Taranis NG. Wenn Sie sie lesen, funktionieren die E-Mail-Einstellungen."
@@ -41,7 +53,11 @@
         "ip": "IP-Adresse",
         "passkey": "Passkey",
         "authenticator": "Authentifikator",
-        "factors": "Zurückgesetzt"
+        "factors": "Zurückgesetzt",
+        "api_key": "API-Schlüssel",
+        "api_key_prefix": "Schlüssel beginnt mit",
+        "expires": "Läuft ab",
+        "expired": "Abgelaufen"
     },
     "actor_self": "Ihnen",
     "actor_admin": "Administrator {admin}",

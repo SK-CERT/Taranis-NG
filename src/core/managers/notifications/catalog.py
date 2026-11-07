@@ -31,7 +31,14 @@ DETAIL_LABELS = (
     ("passkey_name", "passkey"),
     ("authenticator", "authenticator"),
     ("factors", "factors"),
+    ("api_key_name", "api_key"),
+    ("api_key_prefix", "api_key_prefix"),
+    ("expires", "expires"),
+    ("expired_at", "expired"),
 )
+
+# What Taranis NG reports by itself: nobody made a change, so nobody is asked to report one.
+INFORMATIONAL_EVENTS = frozenset({"test", "api_key_expired"})
 
 
 class _KeepMissing(dict):
@@ -110,7 +117,7 @@ def render(locale: str, event: str, context: dict) -> tuple[str, str]:
 
     Args:
         locale (str): Catalog language.
-        event (str): What happened ("totp_enabled", ..., or "test").
+        event (str): What happened ("totp_enabled", ..., "api_key_expired", or "test").
         context (dict): name, and the details listed in ``DETAIL_LABELS``; actor is "self",
             or an administrator's name; factors is a list of "totp" / "passkeys";
             instance_url is optional.
@@ -131,7 +138,7 @@ def render(locale: str, event: str, context: dict) -> tuple[str, str]:
     if details:
         lines.append("")
         lines.extend(f"{label}: {value}" for label, value in details)
-    if event != "test":
+    if event not in INFORMATIONAL_EVENTS:
         lines += ["", text(locale, "unexpected")]
     url = values.get("instance_url")
     signature = fill(text(locale, "signature_with_url"), {"url": url}) if url else text(locale, "signature")

@@ -27,11 +27,11 @@ from auth.oauth2_authenticator import OAuth2Authenticator
 from auth.password_authenticator import PasswordAuthenticator
 from auth.saml_authenticator import SamlAuthenticator
 from config import Config
-from flask import request
+from flask import g, has_request_context, request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
 from flask_jwt_extended.exceptions import JWTExtendedException
 from jwt.exceptions import InvalidTokenError
-from managers import log_manager, login_throttle, notification_manager, totp_manager, webauthn_manager
+from managers import ip_allowlist, log_manager, login_throttle, notification_manager, totp_manager, webauthn_manager
 from managers.db_manager import db
 from model.apikey import ApiKey
 from model.auth_provider import FORM_KINDS, OAUTH_KINDS, AuthProvider, UserAuthIdentity
@@ -51,6 +51,7 @@ from model.user import User
 from shared.common import TZ
 
 SCOPED_TOKEN_MINUTES = 5
+API_KEY_SCHEME = "ApiKey"
 OAUTH_STATE_MINUTES = 10
 AUTH_GENERATION_CLAIM = "auth_generation"
 
@@ -896,27 +897,57 @@ def _find_active_user(identity: str) -> User | None:
     return user
 
 
-def get_user_from_api_key() -> User:
-    """Try to authenticate the user by API key.
+def uses_api_key() -> bool:
+    """Tell whether the request authenticates with the ``ApiKey`` scheme (case-sensitive)."""
+    return has_request_context() and request.headers.get("Authorization", "").startswith(API_KEY_SCHEME + " ")
+
+
+def get_api_key_record() -> ApiKey | None:
+    """Return the user API key that authenticated this request, once one has."""
+    return g.get("api_key")
+
+
+def get_user_from_api_key() -> User | None:
+    """Try to authenticate the user by a user API key (``Authorization: ApiKey <key>``).
+
+    The key must be enabled and unexpired, its owner active, and the client address (the one
+    ProxyFix trusts, never the client's own ``X-Forwarded-For``) in the site-wide allowlist and
+    in the key's own, wherever one is set. The accepted key is kept in ``flask.g`` for the
+    permission check and the activity log, and its use is recorded.
 
     Returns:
-        user (User object or None): The authenticated user object, or None if authentication fails.
+        user (User object or None): The key's owner, or None when the request carries no usable key.
     """
     try:
-        if "Authorization" not in request.headers or not request.headers["Authorization"].__contains__("ApiKey "):
+        if not uses_api_key():
             return None
-        api_key = get_api_key()
-        apikey = ApiKey.find_by_key(api_key)
-        if not apikey:
+        record = g.get("api_key")
+        if record is not None:  # already checked during this request
+            return record.user
+        record = ApiKey.find_by_key(get_api_key())
+        if not record:
             return None
-        user = User.find_by_id(apikey.user_id)
-        if user and user.status != "active":
+        ip = ip_allowlist.client_ip()
+        refusal = record.refusal(ip, SecuritySettings.get_api_key_policy()["allowed_ips"])
+        if refusal:
+            # An expected policy rejection, like a disabled user's key below: a warning, and
+            # the only entry for it (see auth_required).
+            log_manager.store_auth_warning_activity(f"API key '{record.name}' of user id {record.user_id} refused: {refusal}")
+            g.api_key_refused = True
+            return None
+        user = record.user
+        if not user:
+            return None
+        if user.status != "active":
             # Expected policy rejection: an API key for an account that was
             # disabled (or is still pending approval) being refused. See the
             # matching note in _find_active_user for why this is a warning.
             log_manager.store_auth_warning_activity(f"API key access of non-active user blocked: {user.username}")
+            g.api_key_refused = True
             return None
-        return user
+        g.api_key = record
+        record.touch(ip)
+        return record.user
 
     except Exception as ex:
         log_manager.store_auth_error_activity("API key check presence error", ex)
@@ -995,12 +1026,22 @@ def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set | None:
         return None
 
 
-def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def auth_required(
+    required_permissions: str | list,
+    *acl_args: ACLCheck,
+    allow_api_key: bool = True,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Check if the user has the required permissions and ACL access.
+
+    A request with ``Authorization: ApiKey <key>`` is authenticated by that user API key only;
+    any other request by its JWT. A key acts with its effective permissions (see
+    :meth:`model.apikey.ApiKey.effective_permissions`).
 
     Args:
         required_permissions (str or list): The required permissions for the user.
         *acl_args: Variable number of arguments representing the ACLs to check.
+        allow_api_key (bool): False refuses API keys, for endpoints only a signed-in person may
+            use - managing API keys, so that a key can never mint or widen keys.
 
     Returns:
         The decorated function.
@@ -1023,8 +1064,27 @@ def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> Call
             required_permissions_set = set(required_permissions) if isinstance(required_permissions, list) else {required_permissions}
 
             # obtain the identity and current permissions of that identity
-            user = get_user_from_jwt_token()
-            if user:
+            activity_detail = ""
+            if uses_api_key():
+                # An API key request is never also tried as a JWT: that only logged a bogus
+                # "Missing JWT" error for every call made with a key.
+                if not allow_api_key:
+                    log_manager.store_auth_warning_activity("API key refused: this endpoint needs a signed-in user")
+                    return error
+                user = get_user_from_api_key()
+                if not user:
+                    if not g.get("api_key_refused"):  # a refused key has its warning already
+                        log_manager.store_auth_error_activity("Unauthorized API call access (invalid API key)")
+                    return error
+                api_key = get_api_key_record()
+                active_permissions_set = api_key.effective_permissions(get_perm_from_user(user))
+                activity_detail = f"API key: {api_key.name}"
+
+            else:
+                user = get_user_from_jwt_token()
+                if not user:
+                    log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
+                    return error
                 jwt_data = get_jwt()
                 jwt_id = jwt_data.get("jti")
                 if TokenBlacklist.is_blacklisted(jwt_id):
@@ -1033,17 +1093,8 @@ def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> Call
 
                 active_permissions_set = get_perm_from_jwt_token(user, jwt_data)
 
-            else:
-                # Fallback: check API key if JWT fails
-                user = get_user_from_api_key()
-                if not user:
-                    log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
-                    return error
-
-                active_permissions_set = get_perm_from_user(user)
-
             # is there at least one match with the permissions required by the call?
-            if not required_permissions_set.intersection(active_permissions_set):
+            if not required_permissions_set.intersection(active_permissions_set or set()):
                 log_manager.store_user_auth_error_activity(user, f"Insufficient permissions for user: {user.username}")
                 return error
 
@@ -1058,7 +1109,7 @@ def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> Call
             log_manager.store_user_activity(
                 user,
                 str(required_permissions_set),
-                "",
+                activity_detail,
                 request_data=request.get_json(force=True, silent=True),
             )
             return fn(*args, **kwargs)
@@ -1094,6 +1145,9 @@ def api_key_required(key_type: str | None) -> Callable[[Callable[..., Any]], Cal
                 log_manager.store_auth_error_activity("Missing Authorization ApiKey for external access")
                 return error
             api_key = get_api_key()
+            if not api_key:
+                log_manager.store_auth_error_activity("Empty ApiKey for external access")
+                return error
 
             master_id = None
             if key_type == "collectors":
@@ -1178,21 +1232,23 @@ def jwt_token_required(fn: Callable[..., Any]) -> Callable[..., Any]:
 def get_api_key() -> str:
     """Get the API key from the request headers.
 
-    This function retrieves the API key from the "Authorization" header of the request.
-    The API key is expected to be in the format "ApiKey <api_key>".
+    The "Authorization" header must read exactly "ApiKey <api_key>"; the scheme is
+    case-sensitive.
 
     Returns:
-        The API key extracted from the request headers.
+        The API key, or an empty string when the header does not carry one.
     """
-    return request.headers.get("Authorization", "").replace("ApiKey ", "")
+    scheme, _, key = request.headers.get("Authorization", "").partition(" ")
+    if scheme != API_KEY_SCHEME:
+        return ""
+    return key.strip()
 
 
 def get_user_from_jwt() -> User:
     """Obtain the identity and current permissions.
 
-    This function retrieves the user information from the JWT token. If the user information
-    is not found in the JWT token, it falls back to retrieving the user information from the
-    API key.
+    A request made with ``Authorization: ApiKey <key>`` is identified by that user API key,
+    any other by its JWT.
 
     An endpoint reporting its own failed flush calls this for the error log
     (``store_data_error_activity(get_user_from_jwt(), ...)``) before anything has rolled the
@@ -1205,10 +1261,9 @@ def get_user_from_jwt() -> User:
     """
     if not db.session.is_active:
         db.session.rollback()
-    user = get_user_from_api_key()
-    if user is None:
-        user = get_user_from_jwt_token()
-    return user
+    if uses_api_key():
+        return get_user_from_api_key()
+    return get_user_from_jwt_token()
 
 
 def decode_user_from_jwt(jwt_token: str) -> User:

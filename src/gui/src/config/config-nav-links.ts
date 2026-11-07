@@ -14,7 +14,8 @@ export const configLinks: GroupNavItem[] = [
             'CONFIG_ROLE_ACCESS',
             'CONFIG_ACL_ACCESS',
             'CONFIG_ORGANIZATION_ACCESS',
-            'CONFIG_AUTH_PROVIDER_ACCESS'
+            'CONFIG_AUTH_PROVIDER_ACCESS',
+            'CONFIG_API_KEY_ACCESS'
         ],
         translate: true
     },

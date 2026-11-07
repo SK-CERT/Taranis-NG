@@ -39,8 +39,22 @@ TOTP_DISABLED = "totp_disabled"
 PASSKEY_ADDED = "passkey_added"
 PASSKEY_REMOVED = "passkey_removed"
 MFA_RESET = "mfa_reset"
+API_KEY_CREATED = "api_key_created"
+API_KEY_DELETED = "api_key_deleted"
+API_KEY_EXPIRED = "api_key_expired"
 # In the order the settings list them.
-EVENTS = (PASSWORD_CHANGED, PASSWORD_REMOVED, TOTP_ENABLED, TOTP_DISABLED, PASSKEY_ADDED, PASSKEY_REMOVED, MFA_RESET)
+EVENTS = (
+    PASSWORD_CHANGED,
+    PASSWORD_REMOVED,
+    TOTP_ENABLED,
+    TOTP_DISABLED,
+    PASSKEY_ADDED,
+    PASSKEY_REMOVED,
+    MFA_RESET,
+    API_KEY_CREATED,
+    API_KEY_DELETED,
+    API_KEY_EXPIRED,
+)
 
 # Delays before the 2nd, 3rd, ... attempt, in minutes; the last one repeats.
 RETRY_DELAYS_MINUTES = (1, 5, 15, 60, 180, 360)
@@ -65,15 +79,19 @@ def instance_url() -> str | None:
     return f"https://{hostname}" if hostname else None
 
 
-def _context(user: User, actor: User | None, details: dict) -> dict:
-    """What every notification says about the change: whose account, when, by whom, from where."""
+def _context(user: User, actor: User | None, details: dict, *, system: bool = False) -> dict:
+    """What every notification says about the change: whose account, when, by whom, from where.
+
+    A change Taranis NG made itself (``system``, such as an API key expiring) names nobody.
+    """
     context = {
         "name": user.name or user.username,
         "username": user.username,
         "time": datetime.now(TZ).strftime("%Y-%m-%d %H:%M %Z"),
-        "actor": "self" if actor is None or actor.id == user.id else (actor.name or actor.username),
         "instance_url": instance_url(),
     }
+    if not system:
+        context["actor"] = "self" if actor is None or actor.id == user.id else (actor.name or actor.username)
     if has_request_context():
         context["ip"] = log_manager.resolve_ip_address()
     context.update({key: value for key, value in details.items() if value})
@@ -94,6 +112,21 @@ def passkey_details(credential: object) -> dict:
     return details
 
 
+def api_key_details(api_key: object, *, expired: bool = False) -> dict:
+    """What an API key notification says about the key: its name, how it begins, when it expires.
+
+    With ``expired``, the expiry is given as when the key expired.
+    """
+    expires_at = getattr(api_key, "expires_at", None)
+    if expires_at is not None and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=TZ)
+    return {
+        "api_key_name": getattr(api_key, "name", None),
+        "api_key_prefix": f"{api_key.key_prefix}…" if getattr(api_key, "key_prefix", None) else None,
+        "expired_at" if expired else "expires": expires_at.astimezone(TZ).strftime("%Y-%m-%d %H:%M %Z") if expires_at else None,
+    }
+
+
 def password_event(before: str | None, after: str | None) -> str | None:
     """Which password event an edit of a user is, from the stored hash before and after it.
 
@@ -105,13 +138,14 @@ def password_event(before: str | None, after: str | None) -> str | None:
     return PASSWORD_CHANGED if after else PASSWORD_REMOVED
 
 
-def notify_user(user: User, event: str, *, actor: User | None = None, **details: object) -> int:
+def notify_user(user: User, event: str, *, actor: User | None = None, system: bool = False, **details: object) -> int:
     """Queue a notification about the user's account on every channel that reaches them.
 
     Args:
         user (User): Whose account changed.
         event (str): What happened, one of ``EVENTS``.
         actor (User | None): Who did it, when not the user themself (an administrator).
+        system (bool): Nobody did it: Taranis NG noticed it (an API key expired).
         **details: Event details for the message (passkey_name, authenticator, factors).
 
     Returns:
@@ -124,7 +158,7 @@ def notify_user(user: User, event: str, *, actor: User | None = None, **details:
         channels = NotificationChannel.enabled_channels()
         if channels:
             locale = catalog.locale_for(user)
-            subject, body = catalog.render(locale, event, _context(user, actor, details))
+            subject, body = catalog.render(locale, event, _context(user, actor, details, system=system))
             for channel in channels:
                 channel_class = CHANNELS.get(channel.kind)
                 address = channel_class.address_for(user) if channel_class else None

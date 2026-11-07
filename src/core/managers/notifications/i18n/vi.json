@@ -29,6 +29,18 @@
             "subject": "Các yếu tố thứ hai của bạn đã được đặt lại",
             "text": "Quản trị viên đã đặt lại các yếu tố thứ hai của tài khoản Taranis NG của bạn. Bạn có thể được yêu cầu thiết lập lại chúng ở lần đăng nhập tới."
         },
+        "api_key_created": {
+            "subject": "Đã tạo khóa API mới",
+            "text": "Một khóa API mới đã được tạo cho tài khoản Taranis NG của bạn. Các chương trình dùng khóa này có thể gọi API bằng quyền của bạn."
+        },
+        "api_key_deleted": {
+            "subject": "Đã xóa khóa API",
+            "text": "Một khóa API của tài khoản Taranis NG của bạn đã bị xóa. Các chương trình từng dùng khóa này không thể gọi API nữa."
+        },
+        "api_key_expired": {
+            "subject": "Khóa API đã hết hạn",
+            "text": "Một khóa API của tài khoản Taranis NG của bạn đã hết hạn. Các chương trình vẫn dùng khóa này không thể gọi API nữa; hãy tạo khóa mới nếu vẫn cần."
+        },
         "test": {
             "subject": "Email thử nghiệm",
             "text": "Đây là email thử nghiệm từ Taranis NG. Nếu bạn đang đọc nó, cài đặt email đang hoạt động."
@@ -41,7 +53,11 @@
         "ip": "Địa chỉ IP",
         "passkey": "Khóa truy cập",
         "authenticator": "Trình xác thực",
-        "factors": "Đã đặt lại"
+        "factors": "Đã đặt lại",
+        "api_key": "Khóa API",
+        "api_key_prefix": "Khóa bắt đầu bằng",
+        "expires": "Hết hạn",
+        "expired": "Hết hạn lúc"
     },
     "actor_self": "Bạn",
     "actor_admin": "Quản trị viên {admin}",

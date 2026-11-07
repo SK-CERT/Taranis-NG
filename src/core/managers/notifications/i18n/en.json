@@ -29,6 +29,18 @@
             "subject": "Your second factors were reset",
             "text": "An administrator reset the second factors of your Taranis NG account. You may be asked to set them up again the next time you sign in."
         },
+        "api_key_created": {
+            "subject": "New API key created",
+            "text": "A new API key was created for your Taranis NG account. Programs that use it can call the API with your permissions."
+        },
+        "api_key_deleted": {
+            "subject": "API key deleted",
+            "text": "An API key of your Taranis NG account was deleted. Programs that used it can no longer call the API."
+        },
+        "api_key_expired": {
+            "subject": "API key expired",
+            "text": "An API key of your Taranis NG account has expired. Programs that still use it can no longer call the API; create a new key if it is still needed."
+        },
         "test": {
             "subject": "Test e-mail",
             "text": "This is a test e-mail from Taranis NG. If you are reading it, the e-mail settings work."
@@ -41,7 +53,11 @@
         "ip": "IP address",
         "passkey": "Passkey",
         "authenticator": "Authenticator",
-        "factors": "Reset"
+        "factors": "Reset",
+        "api_key": "API key",
+        "api_key_prefix": "Key begins with",
+        "expires": "Expires",
+        "expired": "Expired"
     },
     "actor_self": "You",
     "actor_admin": "Administrator {admin}",

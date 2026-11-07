@@ -4,7 +4,8 @@ import { defineComponent, nextTick } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import UserSettings from '@/components/UserSettings.vue'
 
-const { settingsStore, tMock } = vi.hoisted(() => ({
+const { settingsStore, tMock, granted } = vi.hoisted(() => ({
+    granted: new Set<string>(),
     settingsStore: {
         getProfileWordLists: [] as Array<{ id: number; name: string }>,
         getAvailableWordListsComputed: [] as Array<{ id: number; name: string }>,
@@ -25,6 +26,10 @@ vi.mock('@/stores/settings', () => ({
 
 vi.mock('vue-i18n', () => ({
     useI18n: () => ({ t: tMock })
+}))
+
+vi.mock('@/composables/useAuth', () => ({
+    useAuth: () => ({ checkPermission: (permission: string) => granted.has(permission) })
 }))
 
 const passthroughStub = defineComponent({ template: '<div><slot /></div>' })
@@ -98,7 +103,8 @@ const mountDialog = () =>
                 VProgressLinear: passthroughStub,
                 I18nT: I18nTStub,
                 SettingsTable: true,
-                SecuritySettings: true
+                SecuritySettings: true,
+                ApiKeysPanel: true
             }
         }
     })
@@ -106,6 +112,7 @@ const mountDialog = () =>
 describe('UserSettings word-list selection', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        granted.clear()
         settingsStore.getProfileWordLists = [{ id: 2, name: 'Selected' }]
         settingsStore.getAvailableWordListsComputed = [
             { id: 1, name: 'Available' },
@@ -195,5 +202,20 @@ describe('UserSettings word-list selection', () => {
         await wrapper.findAll('button')[1]!.trigger('click')
         await flushPromises()
         expect(settingsStore.saveUserWordLists).toHaveBeenLastCalledWith([])
+    })
+
+    it('offers the API keys tab only with MY_API_KEYS_MANAGE, and mounts its panel only while it is open', async () => {
+        const without = mountDialog()
+        expect(without.find('[data-test="user-settings-api-keys-tab"]').exists()).toBe(false)
+
+        granted.add('MY_API_KEYS_MANAGE')
+        const wrapper = mountDialog()
+        expect(wrapper.find('[data-test="user-settings-api-keys-tab"]').exists()).toBe(true)
+        expect(wrapper.findComponent({ name: 'ApiKeysPanel' }).exists()).toBe(false)
+
+        ;(wrapper.vm as unknown as { activeTab: string }).activeTab = 'api-keys'
+        await nextTick()
+
+        expect(wrapper.findComponent({ name: 'ApiKeysPanel' }).props('mode')).toBe('self')
     })
 })
