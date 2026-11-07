@@ -79,10 +79,10 @@ describe('SecurityTab (passkey relying-party settings)', () => {
         expect(wrapper.vm.settings.updated_at).toBe(rawTimestamp)
     })
 
-    it('uses logical inline-end spacing for both heading icons', async () => {
+    it('uses logical inline-end spacing for every heading icon', async () => {
         const wrapper = await mountTab()
 
-        expect(wrapper.findAll('.me-2')).toHaveLength(2)
+        expect(wrapper.findAll('.me-2')).toHaveLength(3)
         expect(wrapper.find('.mr-2').exists()).toBe(false)
     })
 
@@ -282,5 +282,64 @@ describe('SecurityTab (passkey relying-party settings)', () => {
 
         expect(wrapper.vm.errorMessage).toContain('relying-party ID')
         expect(wrapper.find('.v-alert.text-error, .v-alert').exists()).toBe(true)
+    })
+
+    // ── API key policy ────────────────────────────
+    it('shows the API key policy and edits the site-wide allowlist one network per line', async () => {
+        const wrapper = await mountTab({
+            ...SAVED,
+            api_key_require_expiry: true,
+            api_key_max_days: 90,
+            api_key_require_allowlist: false,
+            api_key_allowed_ips: ['185.10.0.0/16', '2a01:4f8::/32']
+        })
+
+        expect(wrapper.find('[data-test="security-api-keys"]').exists()).toBe(true)
+        expect(wrapper.vm.settings.api_key_require_expiry).toBe(true)
+        expect(wrapper.vm.maxDaysInput).toBe(90)
+        expect(wrapper.vm.siteAllowlist).toBe('185.10.0.0/16\n2a01:4f8::/32')
+        expect(wrapper.vm.siteAllowlistNarrowed).toBe(false)
+    })
+
+    it('saves the API key policy: a cleared maximum is null and the allowlist a list', async () => {
+        const wrapper = await mountTab({ ...SAVED, api_key_max_days: 30, api_key_allowed_ips: [] })
+        updateSecuritySettings.mockResolvedValue({ data: { ...SAVED, api_key_allowed_ips: ['185.10.0.0/16'] } })
+        stubValidation(wrapper)
+
+        wrapper.vm.maxDaysInput = ''
+        wrapper.vm.siteAllowlist = '185.10.0.0/16\n\n'
+        await wrapper.vm.save()
+
+        expect(updateSecuritySettings).toHaveBeenCalledWith(
+            expect.objectContaining({ api_key_max_days: null, api_key_allowed_ips: ['185.10.0.0/16'] })
+        )
+        expect(wrapper.vm.siteAllowlist).toBe('185.10.0.0/16')
+    })
+
+    it('validates the maximum lifetime and the allowlist entries', async () => {
+        const wrapper = await mountTab()
+        const [maxDaysRule] = wrapper.vm.maxDaysRules
+        const [allowlistRule] = wrapper.vm.siteAllowlistRules
+
+        expect(maxDaysRule(null)).toBe(true)
+        expect(maxDaysRule('30')).toBe(true)
+        expect(maxDaysRule('0')).not.toBe(true)
+        expect(maxDaysRule('1.5')).not.toBe(true)
+        expect(allowlistRule('185.10.0.0/16\n2a01:4f8::1')).toBe(true)
+        expect(allowlistRule('185.10.0.0/16\nexample.com')).toContain('example.com')
+        expect(allowlistRule('192.168.0.0/16')).toBe('Only public addresses can be listed, not: 192.168.0.0/16')
+    })
+
+    it('warns before a site-wide allowlist that would refuse addresses allowed now', async () => {
+        const wrapper = await mountTab({ ...SAVED, api_key_allowed_ips: ['185.10.0.0/16', '185.20.30.0/24'] })
+
+        wrapper.vm.siteAllowlist = '185.10.0.0/16\n185.20.30.0/24\n185.40.50.0/24'
+        await wrapper.vm.$nextTick()
+        expect(wrapper.vm.siteAllowlistNarrowed).toBe(false)
+
+        wrapper.vm.siteAllowlist = '185.10.0.0/16'
+        await wrapper.vm.$nextTick()
+        expect(wrapper.vm.siteAllowlistNarrowed).toBe(true)
+        expect(wrapper.find('[data-test="security-api-key-allowlist-warning"]').exists()).toBe(true)
     })
 })

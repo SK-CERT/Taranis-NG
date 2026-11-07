@@ -29,6 +29,18 @@
             "subject": "Uw tweede factoren zijn gereset",
             "text": "Een beheerder heeft de tweede factoren van uw Taranis NG-account gereset. Bij uw volgende aanmelding wordt u mogelijk gevraagd ze opnieuw in te stellen."
         },
+        "api_key_created": {
+            "subject": "Nieuwe API-sleutel aangemaakt",
+            "text": "Er is een nieuwe API-sleutel aangemaakt voor uw Taranis NG-account. Programma’s die hem gebruiken, kunnen de API aanroepen met uw rechten."
+        },
+        "api_key_deleted": {
+            "subject": "API-sleutel verwijderd",
+            "text": "Een API-sleutel van uw Taranis NG-account is verwijderd. Programma’s die hem gebruikten, kunnen de API niet meer aanroepen."
+        },
+        "api_key_expired": {
+            "subject": "API-sleutel verlopen",
+            "text": "Een API-sleutel van uw Taranis NG-account is verlopen. Programma’s die hem nog gebruiken, kunnen de API niet meer aanroepen; maak een nieuwe sleutel als die nog nodig is."
+        },
         "test": {
             "subject": "Test-e-mail",
             "text": "Dit is een test-e-mail van Taranis NG. Als u dit leest, werken de e-mailinstellingen."
@@ -41,7 +53,11 @@
         "ip": "IP-adres",
         "passkey": "Passkey",
         "authenticator": "Authenticator",
-        "factors": "Gereset"
+        "factors": "Gereset",
+        "api_key": "API-sleutel",
+        "api_key_prefix": "Sleutel begint met",
+        "expires": "Verloopt",
+        "expired": "Verlopen"
     },
     "actor_self": "U",
     "actor_admin": "Beheerder {admin}",

@@ -8,12 +8,17 @@ than in ``auth_provider``.
 
 ``require_mfa`` here is the *site* level of the policy. It is one of four, and
 they are OR-ed: see :func:`managers.auth_manager.mfa_required`.
+
+The ``api_key_*`` fields are the API key policy: whether new keys need an expiry and
+how far out it may be, whether they need an IP allowlist, and the site-wide allowlist
+that every API key request has to match (see :mod:`managers.ip_allowlist`).
 """
 
 from __future__ import annotations
 
 from datetime import datetime
 
+from managers import ip_allowlist
 from managers.db_manager import db
 from shared.common import TZ
 from shared.schema.security_settings import SecuritySettingsSchema
@@ -35,6 +40,10 @@ class SecuritySettings(db.Model):
         rp_id (str): WebAuthn relying-party ID (the site's registrable domain).
         rp_name (str): Relying-party display name shown by the authenticator.
         origins (str): Comma-separated list of allowed origins.
+        api_key_require_expiry (bool): Whether new API keys must have an expiry date.
+        api_key_max_days (int | None): How many days ahead a new API key may expire; None is no cap.
+        api_key_require_allowlist (bool): Whether new API keys must have an IP allowlist.
+        api_key_allowed_ips (str | None): Site-wide IP allowlist for every API key, one network per line.
         updated_by (str): User who last updated the settings.
         updated_at (datetime): Timestamp of the last update.
     """
@@ -50,6 +59,10 @@ class SecuritySettings(db.Model):
     rp_id = db.Column(db.String(), nullable=True)
     rp_name = db.Column(db.String(), nullable=True)
     origins = db.Column(db.String(), nullable=True)
+    api_key_require_expiry = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
+    api_key_max_days = db.Column(db.Integer, nullable=True)
+    api_key_require_allowlist = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
+    api_key_allowed_ips = db.Column(db.Text, nullable=True)
     updated_by = db.Column(db.String())
     updated_at = db.Column(db.DateTime)
 
@@ -70,6 +83,8 @@ class SecuritySettings(db.Model):
             record.require_mfa = False
             record.auth_generation = 1
             record.rp_name = "Taranis NG"
+            record.api_key_require_expiry = False
+            record.api_key_require_allowlist = False
             db.session.add(record)
             db.session.commit()
         return record
@@ -103,6 +118,7 @@ class SecuritySettings(db.Model):
         record.rp_id = (new.get("rp_id") or "").strip()
         record.rp_name = (new.get("rp_name") or "").strip() or "Taranis NG"
         record.origins = (new.get("origins") or "").strip()
+        cls._update_api_key_policy(record, new)
 
         if record.passkey_enabled and not (record.rp_id and record.get_origins()):
             msg = "Passkey sign-in requires a relying-party ID and at least one origin"
@@ -118,6 +134,43 @@ class SecuritySettings(db.Model):
         record.updated_at = datetime.now(TZ)
         db.session.commit()
         return record
+
+    @staticmethod
+    def _update_api_key_policy(record: SecuritySettings, new: dict) -> None:
+        """Apply the API key policy fields present in an update; absent ones stay as stored.
+
+        Raises:
+            ValueError: When the maximum lifetime is not a positive number of days, or the
+                site-wide allowlist holds an invalid entry.
+        """
+        if "api_key_require_expiry" in new:
+            record.api_key_require_expiry = bool(new["api_key_require_expiry"])
+        if "api_key_max_days" in new:
+            max_days = new["api_key_max_days"]
+            if max_days is not None and max_days < 1:
+                msg = "The maximum API key lifetime must be at least one day"
+                raise ValueError(msg)
+            record.api_key_max_days = max_days
+        if "api_key_require_allowlist" in new:
+            record.api_key_require_allowlist = bool(new["api_key_require_allowlist"])
+        if "api_key_allowed_ips" in new:
+            record.api_key_allowed_ips = ip_allowlist.normalize(new["api_key_allowed_ips"])
+
+    @classmethod
+    def get_api_key_policy(cls) -> dict:
+        """Return the API key policy.
+
+        Returns:
+            dict: ``require_expiry``, ``max_days``, ``require_allowlist`` and ``allowed_ips``
+            (the stored site-wide allowlist, None when there is none).
+        """
+        record = cls.get()
+        return {
+            "require_expiry": bool(record.api_key_require_expiry),
+            "max_days": record.api_key_max_days,
+            "require_allowlist": bool(record.api_key_require_allowlist),
+            "allowed_ips": record.api_key_allowed_ips,
+        }
 
     def get_origins(self) -> list[str]:
         """Return the allowed origins as a normalized list."""

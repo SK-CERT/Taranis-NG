@@ -14,7 +14,8 @@ const tabStubs = {
     ACLTab: { template: '<div data-test="acls-content">ACL content</div>' },
     OrganizationsTab: { template: '<div data-test="organizations-content">Organizations content</div>' },
     AuthProvidersTab: { template: '<div data-test="login-methods-content">Login Methods content</div>' },
-    SecurityTab: { template: '<div data-test="security-content">Two-factor authentication Passkeys</div>' }
+    SecurityTab: { template: '<div data-test="security-content">Two-factor authentication Passkeys</div>' },
+    ApiKeysTab: { template: '<div data-test="api-keys-content">API keys content</div>' }
 }
 
 describe('AccessManagementView tab panels', () => {
@@ -78,5 +79,23 @@ describe('AccessManagementView tab panels', () => {
         expect(router.currentRoute.value.query).toEqual({})
         expect(wrapper.find('[data-test="security-content"]').exists()).toBe(false)
         expect(wrapper.find('[data-test="dashboard-content"]').exists()).toBe(true)
+    })
+
+    it('opens the API keys tab from its query', async () => {
+        const router = createRouter({
+            history: createMemoryHistory(),
+            routes: [{ path: '/', component: AccessManagementView }]
+        })
+        await router.push({ path: '/', query: { tab: 'api-keys' } })
+        await router.isReady()
+
+        const wrapper = mountWithPlugins(AccessManagementView, {
+            global: { plugins: [router], stubs: tabStubs }
+        })
+        await flushPromises()
+
+        expect(wrapper.vm.activeTab).toBe('api-keys')
+        expect(wrapper.find('[data-test="api-keys-content"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="security-content"]').exists()).toBe(false)
     })
 })

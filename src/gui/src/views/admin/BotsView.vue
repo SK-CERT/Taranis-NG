@@ -5,6 +5,7 @@
     >
         <v-tabs
             v-model="activeTab"
+            class="config-tabs"
             bg-color="transparent"
             color="primary"
         >

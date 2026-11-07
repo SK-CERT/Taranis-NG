@@ -5,6 +5,7 @@
     >
         <v-tabs
             v-model="activeTab"
+            class="config-tabs"
             bg-color="transparent"
             color="primary"
         >
@@ -45,6 +46,7 @@
     import OrganizationsTab from '@/components/config/access-management/OrganizationsTab.vue'
     import AuthProvidersTab from '@/components/config/access-management/AuthProvidersTab.vue'
     import SecurityTab from '@/components/config/access-management/SecurityTab.vue'
+    import ApiKeysTab from '@/components/config/access-management/ApiKeysTab.vue'
 
     type AccessTab = {
         value: string
@@ -105,6 +107,14 @@
             description: 'access_management.security.tab_description',
             component: SecurityTab,
             permission: 'CONFIG_AUTH_PROVIDER_ACCESS'
+        },
+        {
+            value: 'api-keys',
+            title: 'api_keys.tab',
+            icon: 'mdi-key-chain-variant',
+            description: 'api_keys.tab_description',
+            component: ApiKeysTab,
+            permission: 'CONFIG_API_KEY_ACCESS'
         }
     ]
 

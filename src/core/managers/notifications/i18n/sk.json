@@ -29,6 +29,18 @@
             "subject": "Vaše druhé faktory boli resetované",
             "text": "Administrátor resetoval druhé faktory vášho účtu Taranis NG. Pri ďalšom prihlásení vás môže vyzvať na ich nové nastavenie."
         },
+        "api_key_created": {
+            "subject": "Vytvorený nový API kľúč",
+            "text": "Pre váš účet Taranis NG bol vytvorený nový API kľúč. Programy, ktoré ho použijú, môžu volať API s vašimi oprávneniami."
+        },
+        "api_key_deleted": {
+            "subject": "API kľúč zmazaný",
+            "text": "API kľúč vášho účtu Taranis NG bol zmazaný. Programy, ktoré ho používali, už nemôžu volať API."
+        },
+        "api_key_expired": {
+            "subject": "Platnosť API kľúča vypršala",
+            "text": "Platnosť API kľúča vášho účtu Taranis NG vypršala. Programy, ktoré ho stále používajú, už nemôžu volať API; ak ho ešte potrebujete, vytvorte nový kľúč."
+        },
         "test": {
             "subject": "Testovací e-mail",
             "text": "Toto je testovací e-mail z Taranis NG. Ak ho čítate, nastavenie e-mailu funguje."
@@ -41,7 +53,11 @@
         "ip": "IP adresa",
         "passkey": "Passkey",
         "authenticator": "Autentifikátor",
-        "factors": "Resetované"
+        "factors": "Resetované",
+        "api_key": "API kľúč",
+        "api_key_prefix": "Kľúč začína",
+        "expires": "Platnosť do",
+        "expired": "Vypršal"
     },
     "actor_self": "Vy",
     "actor_admin": "Administrátor {admin}",
