@@ -117,12 +117,16 @@ class _Client:
     def __init__(self) -> None:
         self.languages: list[str | None] = []
 
-    @staticmethod
-    def list_published_product_ids(limit: int, web_id: int | None = None) -> list[int]:  # noqa: ARG004
-        return [7]
+    def list_published_products(self, offset: int, limit: int, **options: str | None) -> tuple[list[dict], int]:  # noqa: ARG002
+        self.languages.append(options.get("language"))
+        return [self._product(options.get("language"))], 1
 
     def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict:  # noqa: ARG002
         self.languages.append(language)
+        return self._product(language)
+
+    @staticmethod
+    def _product(language: str | None) -> dict:
         return {**_slovak_product(), "title": f"Bulletin ({language})", "language": language}
 
 
@@ -293,3 +297,34 @@ def test_a_web_in_one_language_offers_no_choice(app: Flask) -> None:
         g.site = web_site.SiteContext({"id": 4, "config": {"languages": ["cs"], "default_language": "cs"}}, "cs")
 
         assert web.language_choices() == []
+
+
+def test_a_page_read_from_an_unreviewed_ai_translation_warns_and_links_the_original(app: Flask) -> None:
+    page = _page(app, {**_slovak_product(), "ai_translation": "unreviewed", "original_language": "cs"}, "sk")
+
+    assert 'data-ai-translation="unreviewed"' in page
+    assert "alert-warning" in page
+    assert "Tento report bol preložený pomocou AI; preklad zatiaľ nikto neskontroloval. Pôvodný jazyk: " in page
+    assert '<a href="/reports/7?lang=cs" lang="cs">čeština</a>.' in page
+
+
+def test_a_page_read_from_a_reviewed_ai_translation_says_a_person_reviewed_it(app: Flask) -> None:
+    page = _page(app, {**_slovak_product(), "ai_translation": "reviewed", "original_language": "cs"}, "sk")
+
+    assert 'data-ai-translation="reviewed"' in page
+    assert "Tento report bol preložený pomocou AI a preklad skontroloval človek. Pôvodný jazyk: " in page
+    assert "neskontroloval" not in page
+
+
+def test_a_page_a_person_translated_has_no_ai_notice(app: Flask) -> None:
+    page = _page(app, {**_slovak_product(), "ai_translation": None, "original_language": "cs"}, "sk")
+
+    assert "data-ai-translation" not in page
+    assert "pomocou AI" not in page
+
+
+def test_an_original_the_web_does_not_offer_is_named_without_a_link(app: Flask) -> None:
+    page = _page(app, {**_slovak_product(), "ai_translation": "unreviewed", "original_language": "pl"}, "en")
+
+    assert "This report was translated by AI; nobody has reviewed the translation yet. Original language: pl." in page
+    assert 'lang="pl"' not in page

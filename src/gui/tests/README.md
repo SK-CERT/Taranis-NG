@@ -44,7 +44,7 @@ Playwright configuration:
 
 - starts a dedicated `taranis-e2e` Docker backend;
 - starts the Vue 3 Vite server on `http://localhost:4444`;
-- seeds required nodes, sources, product types, and presets;
+- seeds required nodes, sources, product formats, and publishing channels;
 - runs one worker because the specs share and mutate one backend;
 - exercises Chromium, Firefox, and WebKit; and
 - records traces on the first retry plus screenshots and video on failure.

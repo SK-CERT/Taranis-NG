@@ -22,7 +22,7 @@ for _module in sorted((Path(__file__).parents[1] / "model").glob("*.py")):
 from model.attribute import Attribute, AttributeEnum  # noqa: E402 - after every mapper is registered
 from model.report_item import ReportItem, ReportItemAttribute  # noqa: E402
 from model.report_item_type import AttributeGroup, AttributeGroupItem, ReportItemType  # noqa: E402
-from model.translation import ORIGIN_AI, ProductTranslation, ReportItemAttributeTranslation, ReportItemTranslation  # noqa: E402
+from model.translation import ORIGIN_AI, ORIGIN_MANUAL, ProductTranslation, ReportItemAttributeTranslation, ReportItemTranslation  # noqa: E402
 from shared.schema.attribute import AttributeType  # noqa: E402
 
 
@@ -144,7 +144,9 @@ def product() -> SimpleNamespace:
     product_description = ProductTranslation(language="sk", field="description", value="", version=0)
     product_description.write("Súhrn [#ab12cd]", "Souhrn [#ab12cd]", ORIGIN_AI, 1)
     parameter_values = [SimpleNamespace(parameter=SimpleNamespace(key="BODY_TEMPLATE_PATH", translate=True), value="b_cz.txt")]
-    product_type = SimpleNamespace(
+    product_format = SimpleNamespace(
+        id=3,
+        title="E-mail",
         language="cs",
         language_templates={"sk": {"BODY_TEMPLATE_PATH": "b_sk.txt"}},
         parameter_values=parameter_values,
@@ -155,7 +157,7 @@ def product() -> SimpleNamespace:
         language="cs",
         report_items=[report],
         translation_rows=[product_title, product_description],
-        product_type=product_type,
+        product_preset=SimpleNamespace(formats=[product_format]),
     )
 
 
@@ -190,7 +192,7 @@ def _payload() -> dict:
 
 def test_presenter_input_in_slovak_keeps_keys_titles_and_raw_constants(product: SimpleNamespace) -> None:
     payload = content_localizer.localize_presenter_input(_payload(), "sk", product)
-    content_localizer.localize_templates(payload, product.product_type, "sk")
+    content_localizer.localize_templates(payload, product.product_preset.formats[0], "sk")
 
     # Citations stay keys here; rendering numbers them after the translation is in place.
     assert payload["product"] == {"title": "Bulletin (sk)", "description": "Súhrn [#ab12cd]", "language": "sk"}
@@ -214,7 +216,7 @@ def test_presenter_input_in_slovak_keeps_keys_titles_and_raw_constants(product: 
 
 def test_presenter_input_in_its_own_language_is_the_original(product: SimpleNamespace) -> None:
     payload = content_localizer.localize_presenter_input(_payload(), "cs", product)
-    content_localizer.localize_templates(payload, product.product_type, "cs")
+    content_localizer.localize_templates(payload, product.product_preset.formats[0], "cs")
 
     assert (payload["product"]["title"], payload["product"]["description"]) == ("Bulletin", "Souhrn [#ab12cd]")
     assert payload["reports"][0]["title"] == "Kritická chyba"
@@ -244,12 +246,18 @@ def test_outdated_translations_are_skipped_when_asked(product: SimpleNamespace) 
 
 
 def test_a_presenter_without_templates_suits_every_language(product: SimpleNamespace) -> None:
-    """A JSON product type has nothing that depends on a language, so nothing falls back."""
+    """A JSON format has nothing that depends on a language, so nothing falls back."""
     indent = SimpleNamespace(parameter=SimpleNamespace(key="JSON_INDENT", translate=False), value="4")
-    product.product_type = SimpleNamespace(language=None, language_templates={}, parameter_values=[indent])
+    product.product_preset.formats.append(
+        SimpleNamespace(id=4, title="JSON", language=None, language_templates={}, parameter_values=[indent]),
+    )
 
-    assert content_localizer.language_check(product, "sk")["template_language"] == "sk"
-    assert content_localizer.language_check(product, "de")["template_language"] == "de"
+    assert content_localizer.language_check(product, "sk")["formats"][1] == {
+        "product_format_id": 4,
+        "title": "JSON",
+        "template_language": "sk",
+    }
+    assert content_localizer.language_check(product, "de")["formats"][1]["template_language"] == "de"
 
 
 def test_the_publish_check_names_what_falls_back(product: SimpleNamespace) -> None:
@@ -259,11 +267,11 @@ def test_the_publish_check_names_what_falls_back(product: SimpleNamespace) -> No
     check = content_localizer.language_check(product, "sk")
     assert check["missing"] == []
     assert check["outdated"] == [{"report_item_id": 7, "title": "Kritická chyba", "field": "Popis"}]
-    assert check["template_language"] == "sk"
+    assert check["formats"] == [{"product_format_id": 3, "title": "E-mail", "template_language": "sk"}]
 
     check = content_localizer.language_check(product, "de")
     assert check["missing"] == [{"id": 7, "title": "Kritická chyba"}]
-    assert check["template_language"] == "cs"
+    assert check["formats"][0]["template_language"] == "cs"
 
     assert content_localizer.language_check(product, "cs")["missing"] == []
 
@@ -338,22 +346,29 @@ def test_a_report_nobody_translated_keeps_its_own_language_for_labels_and_consta
     assert (severity["value"], network["value"]) == ("Vysoká", "Síť")
 
 
-def test_the_public_web_shows_a_report_not_in_the_page_language_as_written_not_in_english(published: SimpleNamespace) -> None:
+def test_the_public_web_shows_a_report_not_in_the_page_language_in_english_else_as_written(published: SimpleNamespace) -> None:
     report_item = published.report_items[0]
+
+    # German is only the language of the visitor's page: nothing is translated into it, nor into English.
+    feed = public_web._serialize_product(published, "de")
+    report = feed["report_items"][0]
+    assert (feed["language"], feed["title"]) == ("cs", "Bulletin")
+    assert (report["language"], report["title"]) == ("cs", "Kritická chyba")
+    assert report["attributes"][1]["value"] == "Vysoká"
+
     english = ReportItemTranslation(language="en", field="title", value="", version=0)
     english.write("Critical flaw", report_item.title, ORIGIN_AI, 1)
     report_item.translations.append(english)
 
-    # German is only the language of the visitor's page: nothing is translated into it.
+    # With English, it is shown in English, constants too; a text without English stays as written.
     feed = public_web._serialize_product(published, "de")
-
     report = feed["report_items"][0]
-    assert feed["available_languages"] == ["cs", "en", "sk"]
-    assert (feed["language"], feed["title"]) == ("cs", "Bulletin")
-    assert (report["language"], report["title"]) == ("cs", "Kritická chyba")
-    assert report["attributes"][1]["value"] == "Vysoká"
-    # In English, which it has, it is shown in English.
-    assert public_web._serialize_product(published, "en")["report_items"][0]["title"] == "Critical flaw"
+    assert (feed["available_languages"], feed["language"]) == (["cs", "en", "sk"], "en")
+    assert (report["language"], report["title"]) == ("en", "Critical flaw")
+    assert report["attributes"][0]["value"] == "Útočník může [1]"
+    assert report["attributes"][1]["value"] == "High"
+    # A language it has comes first.
+    assert public_web._serialize_product(published, "sk")["report_items"][0]["title"] == "Kritická chyba (sk)"
 
 
 def test_without_a_language_the_public_web_gets_the_product_as_written(published: SimpleNamespace) -> None:
@@ -366,6 +381,69 @@ def test_without_a_language_the_public_web_gets_the_product_as_written(published
     assert report["title"] == "Kritická chyba"
     assert "type_label" not in report
     assert report["attributes"][1] == {"key": "závažnost", "type": "ENUM", "value": "Vysoká", "description": ""}
+
+
+def test_the_public_web_says_when_it_shows_an_ai_translation_and_what_was_written(published: SimpleNamespace) -> None:
+    feed = public_web._serialize_product(published, "sk")
+
+    assert (feed["ai_translation"], feed["original_language"]) == ("unreviewed", "cs")
+    assert (feed["report_items"][0]["ai_translation"], feed["report_items"][0]["original_language"]) == ("unreviewed", "cs")
+    # As written, nothing is a translation.
+    feed = public_web._serialize_product(published, "cs")
+    assert (feed["ai_translation"], feed["report_items"][0]["ai_translation"]) == (None, None)
+
+
+def _review_all_but_the_attack(published: SimpleNamespace) -> None:
+    """A person reviews every Slovak translation the AI made but that of the attack's description."""
+    report_item = published.report_items[0]
+    title, description = published.translation_rows
+    title.review(published.title, 1)
+    description.review(published.description, 1)
+    report_item.translations[0].review(report_item.title, 1)
+
+
+def test_reviewed_ai_translations_are_told_apart_from_unreviewed_ones(published: SimpleNamespace) -> None:
+    _review_all_but_the_attack(published)
+    attack = published.report_items[0].attributes[0]
+    attack.translations[0].review(attack.value, 1)
+
+    feed = public_web._serialize_product(published, "sk")
+
+    assert feed["language"] == "sk"
+    assert (feed["ai_translation"], feed["report_items"][0]["ai_translation"]) == ("reviewed", "reviewed")
+
+
+def test_one_unreviewed_part_outweighs_reviewed_ones_and_an_outdated_one_is_not_shown(published: SimpleNamespace) -> None:
+    _review_all_but_the_attack(published)
+
+    feed = public_web._serialize_product(published, "sk")
+    assert (feed["ai_translation"], feed["report_items"][0]["ai_translation"]) == ("unreviewed", "unreviewed")
+
+    # Changed since, the attack's description is shown as written; what is left a person reviewed.
+    published.report_items[0].attributes[0].value = "Útočník může cokoli [#ab12cd]"
+    feed = public_web._serialize_product(published, "sk")
+    assert (feed["ai_translation"], feed["report_items"][0]["ai_translation"]) == ("reviewed", "reviewed")
+
+
+def test_what_a_person_translated_has_no_ai_notice(published: SimpleNamespace) -> None:
+    report_item = published.report_items[0]
+    attack = report_item.attributes[0]
+    sources = [
+        (published.translation_rows[0], published.title),
+        (published.translation_rows[1], published.description),
+        (report_item.translations[0], report_item.title),
+        (attack.translations[0], attack.value),
+    ]
+    for row, source in sources:
+        row.write(row.value, source, ORIGIN_MANUAL, 1)
+
+    assert public_web._serialize_product(published, "sk")["ai_translation"] is None
+
+
+def test_without_a_product_language_the_original_is_the_reports(published: SimpleNamespace) -> None:
+    published.language = None
+
+    assert public_web._serialize_product(published, "sk")["original_language"] == "cs"
 
 
 def test_reports_of_no_known_language_are_shown_without_naming_one(published: SimpleNamespace) -> None:

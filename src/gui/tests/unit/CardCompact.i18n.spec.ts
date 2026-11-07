@@ -82,7 +82,7 @@ describe('CardCompact localized status and bidi content', () => {
     })
 
     it('announces report items for compact product cards', () => {
-        const wrapper = mountCard({ product_type_name: 'PDF', report_items_count: 2 })
+        const wrapper = mountCard({ product_preset_name: 'Weekly bulletin', report_items_count: 2 })
         const count = wrapper.get('.compact-review-count')
 
         expect(count.attributes('title')).toBe('2 report items')

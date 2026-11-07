@@ -8,6 +8,7 @@ vi.mock('@/api/config', () => ({
     getAllAttributes: vi.fn(),
     getAllAiProviders: vi.fn(),
     getAllDataProviders: vi.fn(),
+    getAllProductPresets: vi.fn(),
     getAllBotPresets: vi.fn(),
     getAllBotsNodes: vi.fn(),
     getAllCollectorsNodes: vi.fn(),
@@ -18,8 +19,8 @@ vi.mock('@/api/config', () => ({
     getAllOSINTSources: vi.fn(),
     getAllPermissions: vi.fn(),
     getAllPresentersNodes: vi.fn(),
-    getAllProductTypes: vi.fn(),
-    getAllPublisherPresets: vi.fn(),
+    getAllProductFormats: vi.fn(),
+    getAllPublishingChannels: vi.fn(),
     getAllPublishersNodes: vi.fn(),
     getAllRemoteAccesses: vi.fn(),
     getAllRemoteNodes: vi.fn(),
@@ -32,10 +33,6 @@ vi.mock('@/api/config', () => ({
     updateStateDefinition: vi.fn(),
     deleteStateDefinition: vi.fn(),
     getAllStateEntityTypes: vi.fn()
-}))
-
-vi.mock('@/api/user', () => ({
-    getAllUserProductTypes: vi.fn()
 }))
 
 vi.mock('@/api/assess', () => ({
@@ -54,14 +51,12 @@ function makeResponse(items, total_count = null) {
 
 describe('Config Store', () => {
     let configApi
-    let userApi
     let assessApi
 
     beforeEach(async () => {
         setActivePinia(createPinia())
         vi.clearAllMocks()
         configApi = await import('@/api/config')
-        userApi = await import('@/api/user')
         assessApi = await import('@/api/assess')
     })
 
@@ -74,7 +69,8 @@ describe('Config Store', () => {
                 'aiProviders',
                 'dataProviders',
                 'reportItemTypesConfig',
-                'productTypes',
+                'productFormats',
+                'productPresets',
                 'allPermissions',
                 'roles',
                 'acls',
@@ -89,7 +85,7 @@ describe('Config Store', () => {
                 'osintSourceGroups',
                 'presentersNodes',
                 'publishersNodes',
-                'publisherPresets',
+                'publishingChannels',
                 'botsNodes',
                 'botPresets',
                 'stateDefinitions',
@@ -112,7 +108,8 @@ describe('Config Store', () => {
             { action: 'loadExternalUsers', stateKey: 'externalUsers', apiFn: 'getAllExternalUsers' },
             { action: 'loadAttributes', stateKey: 'attributes', apiFn: 'getAllAttributes' },
             { action: 'loadWordLists', stateKey: 'wordLists', apiFn: 'getAllWordLists' },
-            { action: 'loadProductTypes', stateKey: 'productTypes', apiFn: 'getAllProductTypes' },
+            { action: 'loadProductFormats', stateKey: 'productFormats', apiFn: 'getAllProductFormats' },
+            { action: 'loadProductPresets', stateKey: 'productPresets', apiFn: 'getAllProductPresets' },
             { action: 'loadOSINTSources', stateKey: 'osintSources', apiFn: 'getAllOSINTSources' },
             { action: 'loadCollectorsNodes', stateKey: 'collectorsNodes', apiFn: 'getAllCollectorsNodes' },
             { action: 'loadACLEntries', stateKey: 'acls', apiFn: 'getAllACLEntries' },
@@ -171,16 +168,6 @@ describe('Config Store', () => {
             await store.loadExternalPermissions()
 
             expect(store.allPermissions.items).toEqual(perms)
-        })
-
-        it('loadUserProductTypes should update productTypes from user API', async () => {
-            const types = [{ id: 1, title: 'Product A' }]
-            vi.mocked(userApi.getAllUserProductTypes).mockResolvedValue(makeResponse(types))
-
-            const store = useConfigStore()
-            await store.loadUserProductTypes()
-
-            expect(store.productTypes.items).toEqual(types)
         })
 
         it('loadOSINTSourceGroupsAssess should update osintSourceGroups from assess API', async () => {

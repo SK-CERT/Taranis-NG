@@ -1,7 +1,7 @@
 """The product languages migration matches the models and can run on a database that has its table.
 
 ``4bc3bad77008`` adds constant translations, the product's language and translated titles, and
-per-language templates of product types. It must not guess any language. No database needed.
+per-language templates of product types (now product formats). It must not guess any language. No database needed.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from model.attribute import AttributeEnum
 from model.product import Product
-from model.product_type import ProductType
+from model.product_format import ProductFormat
 from model.translation import ProductTranslation
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ def test_the_migration_creates_what_the_models_declare() -> None:
     module = _load()
     assert ProductTranslation.__tablename__ == module.PRODUCT_TABLE
     assert module.PRODUCT_INDEX in {index.name for index in ProductTranslation.__table__.indexes}
-    models = {"attribute_enum": AttributeEnum, "product": Product, "product_type": ProductType}
+    models = {"attribute_enum": AttributeEnum, "product": Product, "product_type": ProductFormat}
     for table, columns in module._columns().items():
         model_columns = models[table].__table__.columns
         for column in columns:

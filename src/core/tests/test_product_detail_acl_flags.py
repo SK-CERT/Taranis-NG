@@ -44,9 +44,9 @@ def _product(report_items: list) -> types.SimpleNamespace:
         id=7,
         title="Weekly report",
         description="",
-        product_type_id=3,
+        product_preset_id=3,
+        product_preset_name="Vulnerability advisory",
         state_id=2,
-        public_webs=[types.SimpleNamespace(id=11), types.SimpleNamespace(id=12)],
         report_items=report_items,
     )
 
@@ -78,13 +78,15 @@ def test_detail_marks_report_items_accessible(primed_session: Callable[[object |
         assert item["modify"] is True
 
 
-def test_detail_still_reports_public_web_targeting(primed_session: Callable[[object | None], _FakeSession]) -> None:
-    """The public-web ids keep being derived from the product's webs."""
+def test_detail_names_the_product_preset(primed_session: Callable[[object | None], _FakeSession]) -> None:
+    """The product is published as its product preset, which decides the webs too."""
     primed_session(_product([]))
 
     detail = Product.get_detail_json(7)
 
-    assert detail["public_web_ids"] == [11, 12]
+    assert detail["product_preset_id"] == 3
+    assert detail["product_preset_name"] == "Vulnerability advisory"
+    assert "public_web_ids" not in detail
     assert detail["report_items"] == []
 
 

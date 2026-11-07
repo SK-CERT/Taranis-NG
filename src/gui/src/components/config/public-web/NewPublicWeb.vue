@@ -170,19 +170,6 @@
                                     sm="3"
                                 >
                                     <v-text-field
-                                        v-model.number="localItem.config.max_reports_rss"
-                                        type="number"
-                                        :label="t('public_web.webs.max_reports_rss')"
-                                        variant="outlined"
-                                        density="comfortable"
-                                        :disabled="saving"
-                                    />
-                                </v-col>
-                                <v-col
-                                    cols="6"
-                                    sm="3"
-                                >
-                                    <v-text-field
                                         v-model.number="localItem.config.logo_width"
                                         type="number"
                                         :label="t('public_web.webs.logo_width')"
@@ -489,7 +476,6 @@
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useAuth } from '@/composables/useAuth'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
-    import { usePublishStore } from '@/stores/publish'
     import {
         createNewPublicWeb,
         updatePublicWeb,
@@ -504,7 +490,6 @@
         languages: string[]
         default_language: string
         max_reports_homepage: number | null
-        max_reports_rss: number | null
         logo_width: number | null
         logo_height: number | null
         organization: string
@@ -551,7 +536,6 @@
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
-    const publishStore = usePublishStore()
 
     const imageKinds = ['logo', 'favicon', 'preview'] as const
     type ImageKind = (typeof imageKinds)[number]
@@ -638,7 +622,6 @@
             languages: ['en'],
             default_language: 'en',
             max_reports_homepage: 10,
-            max_reports_rss: 15,
             logo_width: 90,
             logo_height: 45,
             organization: '',
@@ -832,10 +815,6 @@
             if (webId != null) {
                 await syncImages(webId)
             }
-            // The Publish view caches the public-web options; a new or renamed
-            // web must be dropped from that cache so product targeting offers
-            // it on the next dialog open.
-            publishStore.invalidatePublicWebOptions()
             emit('saved')
             return true
         } catch (error) {

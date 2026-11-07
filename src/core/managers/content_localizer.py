@@ -16,12 +16,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from managers import content_language
-from model.translation import PRODUCT_FIELDS, TITLE_FIELDS
+from model.translation import ORIGIN_AI, ORIGIN_REVIEWED, PRODUCT_FIELDS, TITLE_FIELDS
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping
 
     from model.product import Product
+    from model.product_format import ProductFormat
     from model.report_item import ReportItem
 
 FALLBACK_LANGUAGE = "en"
@@ -285,6 +286,76 @@ def shown_language(requested: str | None, source: str | None, available: list[st
     return next((language for language in chain if language in available), available[0] if available else None)
 
 
+# How much of what is shown the AI translated: some of it with nobody having reviewed it yet,
+# or only translations a person reviewed. None: nothing, or what a person wrote.
+AI_UNREVIEWED = "unreviewed"
+AI_REVIEWED = "reviewed"
+
+
+def ai_translation(states: Iterable[str | None]) -> str | None:
+    """Put together the AI states of the parts of what is shown: an unreviewed part outweighs reviewed ones.
+
+    Args:
+        states (Iterable[str | None]): AI_UNREVIEWED, AI_REVIEWED or None per part.
+
+    Returns:
+        str | None: AI_UNREVIEWED, AI_REVIEWED or None.
+    """
+    states = set(states)
+    if AI_UNREVIEWED in states:
+        return AI_UNREVIEWED
+    return AI_REVIEWED if AI_REVIEWED in states else None
+
+
+def _ai_state(rows: list, shown: str | None, written_in: str | None, source: str | None, field: str | None = None) -> str | None:
+    """Whether a text shown in ``shown`` is read from an AI translation, and whether a person reviewed it.
+
+    The row is the one :func:`_row_lookup` reads, passing over outdated ones as the public web
+    does. A translation a person wrote, or an AI one they edited, is theirs: None.
+    """
+    if not shown or shown == written_in:
+        return None
+    for row in rows:
+        if row.language == shown and (field is None or row.field == field) and row.value:
+            if row.is_outdated(source):
+                return None
+            return {ORIGIN_AI: AI_UNREVIEWED, ORIGIN_REVIEWED: AI_REVIEWED}.get(row.origin)
+    return None
+
+
+def report_ai_translation(report_item: ReportItem, shown: str | None) -> str | None:
+    """How much of a report shown in ``shown`` is read from AI translations (see :func:`ai_translation`).
+
+    Args:
+        report_item (ReportItem): The report.
+        shown (str | None): The language it is shown in (see :func:`shown_language`).
+
+    Returns:
+        str | None: AI_UNREVIEWED, AI_REVIEWED or None, over its names and translated values.
+    """
+    titles = (_ai_state(report_item.translations, shown, report_item.language, getattr(report_item, field), field) for field in TITLE_FIELDS)
+    values = (
+        _ai_state(attribute.translations, shown, report_item.language, attribute.value)
+        for attribute in report_item.attributes
+        if attribute.attribute_group_item is not None and attribute.attribute_group_item.is_translated
+    )
+    return ai_translation([*titles, *values])
+
+
+def product_text_ai_translation(product: Product, field: str, shown: str | None) -> str | None:
+    """Whether the product's ``field``, shown in ``shown`` (see :func:`product_text`), is read from an AI translation.
+
+    Args:
+        product (Product): The product.
+        field (str): ``title`` or ``description``.
+        shown (str | None): The language :func:`product_text` gave for it.
+
+    Returns:
+        str | None: AI_UNREVIEWED, AI_REVIEWED or None.
+    """
+    return _ai_state(product.translation_rows, shown, product.language, getattr(product, field) or "", field)
+
+
 def resolve_language_templates(
     default_params: Mapping[str, str],
     language_templates: Mapping[str, Mapping[str, str]] | None,
@@ -300,7 +371,7 @@ def resolve_language_templates(
     overridden.
 
     Args:
-        default_params (Mapping[str, str]): The product type's parameters (key -> value).
+        default_params (Mapping[str, str]): The product format's parameters (key -> value).
         language_templates (Mapping[str, Mapping[str, str]] | None): Overrides per language.
         default_language (str | None): The language of the default templates, if stated.
         requested (str | None): The language rendered.
@@ -412,12 +483,12 @@ def localize_presenter_input(
     return payload
 
 
-def localize_templates(payload: dict, product_type: object, language: str | None) -> str | None:
+def localize_templates(payload: dict, product_format: object, language: str | None) -> str | None:
     """Swap the template paths in a dumped presenter input for those of ``language``.
 
     Args:
         payload (dict): The dumped presenter input.
-        product_type (ProductType): The product type rendering it.
+        product_format (ProductFormat): The format rendering it.
         language (str | None): The language rendered.
 
     Returns:
@@ -428,8 +499,8 @@ def localize_templates(payload: dict, product_type: object, language: str | None
     translatable_keys = [parameter["key"] for value in values if (parameter := value.get("parameter")) and parameter.get("translate")]
     params, template_language = resolve_language_templates(
         defaults,
-        product_type.language_templates,
-        product_type.language,
+        product_format.language_templates,
+        product_format.language,
         language,
         translatable_keys,
     )
@@ -450,9 +521,10 @@ def language_check(product: Product, language: str | None) -> dict:
     Returns:
         dict: ``missing`` - reports with nothing in that language (English or the original will
             be shown); ``outdated`` - translations whose source changed since, per report and
-            field; ``template_language`` - the language of the templates that will be used (None:
-            the default ones, whose language is not set; the language itself when the presenter
-            uses no templates, as JSON does, since nothing then depends on a language).
+            field; ``formats`` - each format of the product's product preset with
+            ``template_language``, the language of the templates it will use (None: the default
+            ones, whose language is not set; the language itself when the presenter uses no
+            templates, as JSON does, since nothing then depends on a language).
     """
     missing: list[dict] = []
     outdated: list[dict] = []
@@ -481,19 +553,21 @@ def language_check(product: Product, language: str | None) -> dict:
             if row.value and row.is_outdated(attribute.value)
         )
 
-    product_type = product.product_type
-    template_language = None
-    if product_type is not None:
-        defaults = {value.parameter.key: value.value for value in product_type.parameter_values if value.parameter}
-        translatable_keys = [value.parameter.key for value in product_type.parameter_values if value.parameter and value.parameter.translate]
-        if translatable_keys:
-            template_language = resolve_language_templates(
-                defaults,
-                product_type.language_templates,
-                product_type.language,
-                language,
-                translatable_keys,
-            )[1]
-        else:
-            template_language = language
-    return {"missing": missing, "outdated": outdated, "template_language": template_language}
+    formats = [
+        {
+            "product_format_id": product_format.id,
+            "title": product_format.title,
+            "template_language": _template_language(product_format, language),
+        }
+        for product_format in (product.product_preset.formats if product.product_preset else [])
+    ]
+    return {"missing": missing, "outdated": outdated, "formats": formats}
+
+
+def _template_language(product_format: ProductFormat, language: str | None) -> str | None:
+    """The language of the templates a format renders ``language`` with (see language_check)."""
+    defaults = {value.parameter.key: value.value for value in product_format.parameter_values if value.parameter}
+    translatable_keys = [value.parameter.key for value in product_format.parameter_values if value.parameter and value.parameter.translate]
+    if not translatable_keys:
+        return language
+    return resolve_language_templates(defaults, product_format.language_templates, product_format.language, language, translatable_keys)[1]

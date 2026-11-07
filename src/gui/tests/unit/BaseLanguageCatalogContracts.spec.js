@@ -57,9 +57,9 @@ describe('Arabic production catalog contracts', () => {
         }
     })
 
-    it('provides six nonempty forms for all 55 canonical count messages', () => {
+    it('provides six nonempty forms for all 56 canonical count messages', () => {
         const pluralMessages = englishStrings.filter(([, message]) => message.includes('|'))
-        expect(pluralMessages).toHaveLength(55)
+        expect(pluralMessages).toHaveLength(56)
 
         for (const [path] of pluralMessages) {
             const forms = arabicByPath.get(path).split('|')

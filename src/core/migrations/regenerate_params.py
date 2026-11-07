@@ -18,10 +18,10 @@ from model.parameter import Parameter
 from model.parameter_value import ParameterValue
 from model.presenter import Presenter, PresenterParameter
 from model.presenters_node import PresentersNode
-from model.product_type import ProductType, ProductTypeParameterValue
+from model.product_format import ProductFormat, ProductFormatParameterValue
 from model.publisher import Publisher, PublisherParameter
-from model.publisher_preset import PublisherPreset, PublisherPresetParameterValue
 from model.publishers_node import PublishersNode
+from model.publishing_channel import PublishingChannel, PublishingChannelParameterValue
 from shared.config_bot import ConfigBot
 from shared.config_collector import ConfigCollector
 from shared.config_presenter import ConfigPresenter
@@ -124,7 +124,7 @@ def regenerate_parameters(module_type: str, session: Session) -> None:  # noqa: 
                     for db_par in db_mod.parameters:
                         print(f"---  {db_mod.type}.{db_par.key}", flush=True)  # noqa: T201
                         # this delete via DB constraints also osint_source_parameter_value, bot_preset_parameter_value,
-                        # publisher_preset_parameter_value, product_type_parameter_value tables
+                        # publishing_channel_parameter_value, product_format_parameter_value tables
                         session.delete(db_par)
                     print(f"---  {db_mod.type}", flush=True)  # noqa: T201
                     session.delete(db_mod)
@@ -181,47 +181,47 @@ def regenerate_parameters(module_type: str, session: Session) -> None:  # noqa: 
                                     db_param_value = ParameterValue(def_par.default_value, db_param)
                                     preset.parameter_values.append(db_param_value)
             case "presenters":
-                caption = "Product Types"
-                query = session.query(Presenter, ProductType)
-                product_types = query.join(ProductType, ProductType.presenter_id == Presenter.id).all()
-                for presenter, prod_type in product_types:
+                caption = "Product Formats"
+                query = session.query(Presenter, ProductFormat)
+                product_formats = query.join(ProductFormat, ProductFormat.presenter_id == Presenter.id).all()
+                for presenter, product_format in product_formats:
                     def_mod = next((m for m in def_modules if m.type == presenter.type), None)
                     if def_mod:
-                        query = session.query(ProductTypeParameterValue, ParameterValue, Parameter)
-                        query = query.join(ParameterValue, ParameterValue.id == ProductTypeParameterValue.parameter_value_id)
+                        query = session.query(ProductFormatParameterValue, ParameterValue, Parameter)
+                        query = query.join(ParameterValue, ParameterValue.id == ProductFormatParameterValue.parameter_value_id)
                         query = query.join(Parameter, Parameter.id == ParameterValue.parameter_id)
-                        results = query.filter(ProductTypeParameterValue.product_type_id == prod_type.id).all()
+                        results = query.filter(ProductFormatParameterValue.product_format_id == product_format.id).all()
 
                         db_param_lookup = {param.key: param for _, _, param in results}
                         for def_par in def_mod.parameters:
                             if def_par.key not in db_param_lookup:
-                                print(f"+++  {def_par.key}: {prod_type.title}", flush=True)  # noqa: T201
+                                print(f"+++  {def_par.key}: {product_format.title}", flush=True)  # noqa: T201
                                 db_param = next((p for p in presenter.parameters if p.key == def_par.key), None)
                                 if db_param:
                                     added += 1
                                     db_param_value = ParameterValue(def_par.default_value, db_param)
-                                    prod_type.parameter_values.append(db_param_value)
+                                    product_format.parameter_values.append(db_param_value)
             case "publishers":
-                caption = "Publisher Presets"
-                query = session.query(Publisher, PublisherPreset)
-                publisher_presets = query.join(PublisherPreset, PublisherPreset.publisher_id == Publisher.id).all()
-                for pub, preset in publisher_presets:
+                caption = "Publishing Channels"
+                query = session.query(Publisher, PublishingChannel)
+                publishing_channels = query.join(PublishingChannel, PublishingChannel.publisher_id == Publisher.id).all()
+                for pub, channel in publishing_channels:
                     def_mod = next((m for m in def_modules if m.type == pub.type), None)
                     if def_mod:
-                        query = session.query(PublisherPresetParameterValue, ParameterValue, Parameter)
-                        query = query.join(ParameterValue, ParameterValue.id == PublisherPresetParameterValue.parameter_value_id)
+                        query = session.query(PublishingChannelParameterValue, ParameterValue, Parameter)
+                        query = query.join(ParameterValue, ParameterValue.id == PublishingChannelParameterValue.parameter_value_id)
                         query = query.join(Parameter, Parameter.id == ParameterValue.parameter_id)
-                        results = query.filter(PublisherPresetParameterValue.publisher_preset_id == preset.id).all()
+                        results = query.filter(PublishingChannelParameterValue.publishing_channel_id == channel.id).all()
 
                         db_param_lookup = {param.key: param for _, _, param in results}
                         for def_par in def_mod.parameters:
                             if def_par.key not in db_param_lookup:
-                                print(f"+++  {def_par.key}: {preset.name}", flush=True)  # noqa: T201
+                                print(f"+++  {def_par.key}: {channel.name}", flush=True)  # noqa: T201
                                 db_param = next((p for p in pub.parameters if p.key == def_par.key), None)
                                 if db_param:
                                     added += 1
                                     db_param_value = ParameterValue(def_par.default_value, db_param)
-                                    preset.parameter_values.append(db_param_value)
+                                    channel.parameter_values.append(db_param_value)
             case _:
                 print(f"ERROR: Invalid module type '{module_type}' to refresh parameters in depending objects", flush=True)  # noqa: T201
                 return

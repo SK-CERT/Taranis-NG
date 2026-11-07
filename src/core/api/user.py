@@ -1,6 +1,6 @@
 """This module defines several Flask-RESTful resources for handling user-related operations.
 
-This includes word lists, product types, and publisher presets. It also provides
+This includes word lists, product presets, and publishing channels. It also provides
 an initialization function to add these resources to a Flask API instance.
 """
 
@@ -18,8 +18,8 @@ from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from managers import auth_manager, notification_manager, totp_manager, webauthn_manager
 from managers.auth_manager import auth_required
-from model.product_type import ProductType
-from model.publisher_preset import PublisherPreset
+from model.product_preset import ProductPreset
+from model.publishing_channel import PublishingChannel
 from model.user import Hotkey, UserWordList
 from model.webauthn_credential import WebauthnCredential
 from model.word_list import WordList
@@ -109,8 +109,21 @@ class AvailableWordLists(Resource):
         return WordList.get_all_json(search, user, acl_check=True)
 
 
-class UserProductTypes(Resource):
-    """Flask-RESTful resource that handles HTTP GET requests for retrieving all product types associated with the authenticated user.
+class UserProductPresets(Resource):
+    """The product presets the authenticated user may publish products as."""
+
+    @auth_required("PUBLISH_ACCESS")
+    def get(self) -> dict:
+        """Retrieve the product presets the user can see, with their deliveries.
+
+        Returns:
+            dict: ``{"total_count": int, "items": [...]}``.
+        """
+        return ProductPreset.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
+
+
+class UserPublishingChannels(Resource):
+    """A resource for handling user publishing channels.
 
     Attributes:
         Resource: A base class for implementing API resources.
@@ -118,29 +131,12 @@ class UserProductTypes(Resource):
 
     @auth_required("PUBLISH_ACCESS")
     def get(self) -> dict:
-        """Retrieve all product types in JSON format.
+        """Retrieve all publishing channels in JSON format.
 
         Returns:
-            list: A list of all product types in JSON format.
+            list: A list of all publishing channels in JSON format.
         """
-        return ProductType.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
-
-
-class UserPublisherPresets(Resource):
-    """A resource for handling user publisher presets.
-
-    Attributes:
-        Resource: A base class for implementing API resources.
-    """
-
-    @auth_required("PUBLISH_ACCESS")
-    def get(self) -> dict:
-        """Retrieve all publisher presets in JSON format.
-
-        Returns:
-            list: A list of all publisher presets in JSON format.
-        """
-        return PublisherPreset.get_all_json(None)
+        return PublishingChannel.get_all_json(None)
 
 
 class UserTotp(Resource):
@@ -305,7 +301,7 @@ def initialize(api: Api) -> None:
     """Initialize the API with user-related resources.
 
     This function adds several user-related resources to the provided API instance.
-    The resources include word lists, product types, publisher presets and
+    The resources include word lists, product formats, publishing channels and
     self-service security (TOTP, passkeys).
 
     Args:
@@ -314,16 +310,16 @@ def initialize(api: Api) -> None:
         - UserHotkeys: Endpoint for user hotkeys at "/api/v1/users/my-hotkeys".
         - UserWordLists: Endpoint for user word lists at "/api/v1/users/my-word-lists".
         - AvailableWordLists: Endpoint for available word lists at "/api/v1/users/available-word-lists".
-        - UserProductTypes: Endpoint for user product types at "/api/v1/users/my-product-types".
-        - UserPublisherPresets: Endpoint for user publisher presets at "/api/v1/users/my-publisher-presets".
+        - UserProductPresets: Endpoint for user product presets at "/api/v1/users/my-product-presets".
+        - UserPublishingChannels: Endpoint for user publishing channels at "/api/v1/users/my-publishing-channels".
         - UserTotp: Self-service TOTP enrollment at "/api/v1/users/my-totp".
         - UserPasskeys/UserPasskey*: Self-service passkey management at "/api/v1/users/my-passkeys...".
     """
     api.add_resource(UserHotkeys, "/api/v1/users/my-hotkeys")
     api.add_resource(UserWordLists, "/api/v1/users/my-word-lists")
     api.add_resource(AvailableWordLists, "/api/v1/users/available-word-lists")
-    api.add_resource(UserProductTypes, "/api/v1/users/my-product-types")
-    api.add_resource(UserPublisherPresets, "/api/v1/users/my-publisher-presets")
+    api.add_resource(UserProductPresets, "/api/v1/users/my-product-presets")
+    api.add_resource(UserPublishingChannels, "/api/v1/users/my-publishing-channels")
     api.add_resource(UserTotp, "/api/v1/users/my-totp")
     api.add_resource(UserPasskeys, "/api/v1/users/my-passkeys")
     api.add_resource(UserPasskeyRegisterBegin, "/api/v1/users/my-passkeys/register-begin")

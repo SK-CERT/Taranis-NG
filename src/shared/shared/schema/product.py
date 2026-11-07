@@ -22,11 +22,16 @@ class ProductSchemaBase(Schema):
     description = fields.Str()
     created = fields.DateTime("%d.%m.%Y - %H:%M")
     updated_at = fields.DateTime("%d.%m.%Y - %H:%M")
-    product_type_id = fields.Int()
+    # What the product is published as: its formats, channels and public webs.
+    product_preset_id = fields.Int()
+    # Of its product preset's webs, those it is limited to; empty: every one. Left out of an edit,
+    # they stay as they are.
+    public_web_ids = fields.List(fields.Int(), allow_none=True, load_default=None)
+    # Off, it stays off the public web; left out of an edit, it stays as it is.
+    public_web_enabled = fields.Bool(allow_none=True, load_default=None)
     state_id = fields.Int(allow_none=True)
     # The language the product is written in (ISO 639-1); None while not set.
     language = fields.Str(allow_none=True, load_default=None)
-    public_web_ids = fields.List(fields.Int(), allow_none=True)
     # The product's own sources, in citation order; the description cites them by key.
     links = fields.Nested(LinkRefSchema, many=True, load_default=list)
 
@@ -55,6 +60,7 @@ class ProductPresentationSchema(ProductSchema, ACLEntryStatusSchema, Presentatio
     state = fields.Nested(StateDefinitionSchema, allow_none=True)
     report_items_count = fields.Int()
     updated_by = fields.Str()
+    product_preset_name = fields.Str(dump_only=True)
     # Translated titles: with their state for the edit form, and plain for lists.
     translations = fields.Dict(dump_only=True)
     title_translations = fields.Dict(dump_only=True)

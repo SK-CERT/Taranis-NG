@@ -18,7 +18,7 @@ class ItemType(Enum):
         OSINT_SOURCE_GROUP (auto): Represents a group of OSINT sources.
         WORD_LIST (auto): Represents a word list item type.
         REPORT_ITEM_TYPE (auto): Represents a type of report item.
-        PRODUCT_TYPE (auto): Represents a product type item.
+        PRODUCT_PRESET (auto): Represents a product preset; its ACL governs the products of the product preset.
     """
 
     COLLECTOR = auto()
@@ -26,7 +26,7 @@ class ItemType(Enum):
     OSINT_SOURCE_GROUP = auto()
     WORD_LIST = auto()
     REPORT_ITEM_TYPE = auto()
-    PRODUCT_TYPE = auto()
+    PRODUCT_PRESET = auto()
 
 
 class ACLEntryStatusSchema(Schema):

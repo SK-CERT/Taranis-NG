@@ -40,7 +40,7 @@ from model.collectors_node import CollectorsNode
 from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
-from model.product_type import ProductType
+from model.product_preset import ProductPreset
 from model.public_web_node import PublicWebNode
 from model.publishers_node import PublishersNode
 from model.remote import RemoteAccess
@@ -764,8 +764,8 @@ class ACLCheck(Enum):
         NEWS_ITEM_MODIFY: Modify check for news item.
         REPORT_ITEM_ACCESS: Access check for report item.
         REPORT_ITEM_MODIFY: Modify check for report item.
-        PRODUCT_TYPE_ACCESS: Access check for product type.
-        PRODUCT_TYPE_MODIFY: Modify check for product type.
+        PRODUCT_PRESET_ACCESS: Access check for a product, by the ACL of its product preset.
+        PRODUCT_PRESET_MODIFY: Modify check for a product, by the ACL of its product preset.
     """
 
     OSINT_SOURCE_GROUP_ACCESS = auto()
@@ -773,8 +773,8 @@ class ACLCheck(Enum):
     NEWS_ITEM_MODIFY = auto()
     REPORT_ITEM_ACCESS = auto()
     REPORT_ITEM_MODIFY = auto()
-    PRODUCT_TYPE_ACCESS = auto()
-    PRODUCT_TYPE_MODIFY = auto()
+    PRODUCT_PRESET_ACCESS = auto()
+    PRODUCT_PRESET_MODIFY = auto()
 
 
 def check_acl(item_id: str, acl_check: str, user: User) -> bool:
@@ -808,9 +808,9 @@ def check_acl(item_id: str, acl_check: str, user: User) -> bool:
         item_type = "Report Item"
         allowed = ReportItem.allowed_with_acl(item_id, user, check_see, check_access, check_modify)
 
-    if acl_check in [ACLCheck.PRODUCT_TYPE_ACCESS, ACLCheck.PRODUCT_TYPE_MODIFY]:
-        item_type = "Product Type"
-        allowed = ProductType.allowed_product_with_acl(item_id, user, check_see, check_access, check_modify)
+    if acl_check in [ACLCheck.PRODUCT_PRESET_ACCESS, ACLCheck.PRODUCT_PRESET_MODIFY]:
+        item_type = "Product"
+        allowed = ProductPreset.allowed_product_with_acl(item_id, user, check_see, check_access, check_modify)
 
     if not allowed:
         if check_access:

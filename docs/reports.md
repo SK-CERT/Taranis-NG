@@ -3,7 +3,7 @@
 **Audience:** analysts and administrators of an initialized instance.
 
 **Status:** workflow examples for instances where the named official report
-and product types are installed.
+and product formats are installed.
 
 ### Contents
 

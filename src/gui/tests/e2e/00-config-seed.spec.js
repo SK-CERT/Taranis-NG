@@ -6,10 +6,10 @@ import { login, generateTestName, fillRequiredParameters } from '../helpers/test
 import { createApiContext, purgeSeedEntitiesBestEffort } from '../helpers/api-seed'
 
 /**
- * E2E Environment Setup: Presenters/Publishers Nodes + Product Type + Publisher Preset
+ * E2E Environment Setup: Presenters/Publishers Nodes + Product Format + Publishing Channel + Product preset
  *
  * This spec exercises the GUI to add a presenters node and a publishers node,
- * then creates a product type and publisher preset via the GUI. This both
+ * then creates a product format and publishing channel via the GUI. This both
  * tests the configuration UI and seeds data for the publish-confirm spec.
  *
  * Prerequisites: the presenters and publishers Docker services must be running
@@ -26,9 +26,9 @@ const PUBLISHERS_URL = 'http://publishers'
 const COLLECTORS_URL = 'http://collectors'
 const API_KEY = readFileSync(resolve(__dirname, '../../../../docker/secrets/api_key.txt'), 'utf-8').trim()
 
-test.describe('Configure environment: nodes + product type + publisher preset', () => {
+test.describe('Configure environment: nodes + product format + publishing channel', () => {
     // SERIAL: these tests form one dependency chain — the OSINT source needs the collectors
-    // node, the product type needs the presenters node, the preset needs the publishers node.
+    // node, the product format needs the presenters node, the publishing channel needs the publishers node.
     // Serial mode also protects the beforeAll purge below: Playwright discards the worker
     // after a failed test and re-runs beforeAll in the fresh one, which in the default
     // (parallel) mode would purge the nodes the earlier tests just created and turn one real
@@ -36,7 +36,7 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
     // instead (or, with retries, the whole group re-runs from a clean purge).
     test.describe.configure({ mode: 'serial' })
 
-    // Nodes, product types, and publisher presets are created via the GUI and
+    // Nodes, product formats, and publishing channels are created via the GUI and
     // intentionally left in the E2E environment for downstream specs. They are
     // not cleaned up per-run — the environment is ephemeral (rebuilt by test-setup.sh).
     //
@@ -53,9 +53,9 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
     // next add hits a UniqueViolation → HTTP 500 → the misleading "Could not connect to X
     // node." alert. So ONCE before the whole suite, purge any pre-existing fixed-name nodes.
     //
-    // IMPORTANT: this must run in beforeAll, NOT beforeEach. The downstream product-type and
-    // publisher-preset tests need the presenters/publishers nodes created by tests 1-3 to
-    // still exist (NewProductType.vue auto-selects the first presenters node's first presenter,
+    // IMPORTANT: this must run in beforeAll, NOT beforeEach. The downstream product-format and
+    // publishing-channel tests need the presenters/publishers nodes created by tests 1-3 to
+    // still exist (NewProductFormat.vue auto-selects the first presenters node's first presenter,
     // which renders the v-if="selectedPresenter" Name field). A beforeEach purge would delete
     // the very node test 5 needs → the Name field never renders → timeout.
     test.beforeAll(async ({ playwright }) => {
@@ -124,18 +124,18 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         await expect(page.getByText('E2E Collectors Node')).toBeVisible({ timeout: 5000 })
     })
 
-    test('should add a product type via the GUI', async ({ page }) => {
+    test('should add a product format via the GUI', async ({ page }) => {
         await login(page)
-        await page.goto('/config/presenters?tab=types')
-        await page.getByRole('tab', { name: 'Product Types' }).waitFor({ state: 'visible', timeout: 10000 })
+        await page.goto('/config/presenters?tab=formats')
+        await page.getByRole('tab', { name: 'Product Formats' }).waitFor({ state: 'visible', timeout: 10000 })
 
         await page.getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await expect(dialog).toBeVisible({ timeout: 5000 })
 
-        const productTypeName = generateTestName('E2E Product Type')
+        const productFormatName = generateTestName('E2E Product Format')
 
-        // NewProductType.vue auto-selects the first Presenters Node AND the first Presenter as
+        // NewProductFormat.vue auto-selects the first Presenters Node AND the first Presenter as
         // soon as loadNodes() completes (onMounted), which renders the v-if="selectedPresenter"
         // Name/Description fields. We do NOT re-click the dropdowns — doing so re-triggers
         // syncPresenterSelection and can momentarily null selectedPresenter, hiding the Name
@@ -143,37 +143,37 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         // (proves auto-selection finished), then fill by label and save.
         const nameField = dialog.getByLabel('Name', { exact: true })
         await expect(nameField).toBeVisible({ timeout: 15000 })
-        await nameField.fill(productTypeName)
-        await dialog.getByLabel('Description', { exact: true }).fill('Test product type for E2E publish confirmation')
+        await nameField.fill(productFormatName)
+        await dialog.getByLabel('Description', { exact: true }).fill('Test product format for E2E publish confirmation')
         await fillRequiredParameters(dialog)
 
         // Save.
         await dialog.getByRole('button', { name: 'Save' }).click()
         await expect(dialog).toHaveCount(0, { timeout: 10000 })
 
-        // Verify the product type appears in the list.
-        await expect(page.getByText(productTypeName)).toBeVisible({ timeout: 5000 })
+        // Verify the product format appears in the list.
+        await expect(page.getByText(productFormatName)).toBeVisible({ timeout: 5000 })
     })
 
-    test('should add a publisher preset via the GUI', async ({ page }) => {
+    test('should add a publishing channel via the GUI', async ({ page }) => {
         await login(page)
-        await page.goto('/config/publishers?tab=presets')
-        await page.getByRole('tab', { name: 'Publisher Presets' }).waitFor({ state: 'visible', timeout: 10000 })
+        await page.goto('/config/publishers?tab=channels')
+        await page.getByRole('tab', { name: 'Publishing Channels' }).waitFor({ state: 'visible', timeout: 10000 })
 
         await page.getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await expect(dialog).toBeVisible({ timeout: 5000 })
 
-        const presetName = generateTestName('E2E Publisher Preset')
+        const channelName = generateTestName('E2E Publishing Channel')
 
-        // NewPublisherPreset.vue auto-selects the first Publishers Node AND the first Publisher
+        // NewPublishingChannel.vue auto-selects the first Publishers Node AND the first Publisher
         // once loadNodes() completes (which renders the v-if="selectedPublisher" Name field).
         // We do NOT re-click the dropdowns — doing so re-triggers syncPublisherSelection and can
         // momentarily null selectedPublisher, hiding the Name field. Wait for Name to appear
         // (proves auto-selection finished), then fill and save.
         const nameField = dialog.getByLabel('Name', { exact: true })
         await expect(nameField).toBeVisible({ timeout: 15000 })
-        await nameField.fill(presetName)
+        await nameField.fill(channelName)
         // The auto-selected publisher (EMAIL_PUBLISHER) declares a dozen parameters with
         // no defaults; all of them are required, so fill whatever is still empty.
         await fillRequiredParameters(dialog)
@@ -182,8 +182,42 @@ test.describe('Configure environment: nodes + product type + publisher preset', 
         await dialog.getByRole('button', { name: 'Save' }).click()
         await expect(dialog).toHaveCount(0, { timeout: 10000 })
 
-        // Verify the preset appears in the list.
-        await expect(page.getByText(presetName)).toBeVisible({ timeout: 5000 })
+        // Verify the channel appears in the list.
+        await expect(page.getByText(channelName)).toBeVisible({ timeout: 5000 })
+    })
+
+    test('should add a product preset via the GUI', async ({ page }) => {
+        await login(page)
+        await page.goto('/config/product-presets')
+
+        await page.getByRole('button', { name: 'Add New' }).click()
+        const dialog = page.locator('.v-dialog.v-overlay--active')
+        await expect(dialog).toBeVisible({ timeout: 5000 })
+
+        const productPresetName = generateTestName('E2E Product Preset')
+        await dialog.getByLabel('Name', { exact: true }).fill(productPresetName)
+
+        // The dialog opens with one empty row: the E2E product format in the product's own
+        // language (the row's first select), sent through the E2E publishing channel.
+        const row = dialog.locator('[data-test="product-preset-row"]').first()
+        await row.locator('.v-select').nth(1).click()
+        await page
+            .locator('.v-overlay__content:visible .v-list-item')
+            .filter({ hasText: /E2E Product Format/ })
+            .first()
+            .click()
+        await row.locator('.v-select').nth(2).click()
+        await page
+            .locator('.v-overlay__content:visible .v-list-item')
+            .filter({ hasText: /E2E Publishing Channel/ })
+            .first()
+            .click()
+        await page.keyboard.press('Escape')
+
+        await dialog.getByRole('button', { name: 'Save' }).click()
+        await expect(dialog).toHaveCount(0, { timeout: 10000 })
+
+        await expect(page.getByText(productPresetName)).toBeVisible({ timeout: 5000 })
     })
 
     test('should add a manual OSINT source via the GUI', async ({ page }) => {

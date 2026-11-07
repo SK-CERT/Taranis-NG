@@ -4,7 +4,28 @@ import { describe, expect, it, vi } from 'vitest'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewProduct from '@/components/publish/NewProduct.vue'
 
-const publisherNames = vi.hoisted(() => ['Publisher العربية', 'Publisher Deutsch'])
+const productPreset = vi.hoisted(() => ({
+    id: 3,
+    name: 'التوزيع',
+    public_web_enabled: false,
+    deliveries: [
+        {
+            id: 1,
+            product_format_id: 7,
+            product_format_title: 'JSON',
+            publishing_channel_id: 'sftp',
+            publishing_channel_name: 'Kanal العربية'
+        },
+        {
+            id: 2,
+            product_format_id: 7,
+            product_format_title: 'JSON',
+            publishing_channel_id: 'mail',
+            publishing_channel_name: 'Kanal Deutsch'
+        },
+        { id: 3, product_format_id: 8, product_format_title: 'PDF', publishing_channel_id: null, publishing_channel_name: null }
+    ]
+}))
 
 vi.mock('@/api/publish', () => ({
     createProduct: vi.fn(),
@@ -14,10 +35,7 @@ vi.mock('@/api/publish', () => ({
 }))
 
 vi.mock('@/api/user', () => ({
-    getAllUserProductTypes: vi.fn().mockResolvedValue({ data: { items: [{ id: 3, title: 'نوع المنتج' }] } }),
-    getAllUserPublishersPresets: vi.fn().mockResolvedValue({
-        data: { items: publisherNames.map((name, index) => ({ id: index + 1, name })) }
-    })
+    getAllUserProductPresets: vi.fn().mockResolvedValue({ data: { items: [productPreset] } })
 }))
 
 vi.mock('@/api/state', () => ({
@@ -45,10 +63,10 @@ const createMessages = () =>
         messages: {
             de: {
                 product: {
-                    publish_confirmation_type: '{type} ist die Produktart',
-                    publish_confirmation_publishers: '{publishers} sind die Ziele',
-                    no_type: 'Keine Produktart',
-                    no_publisher_in_dialog: 'Keine Veröffentlichungsziele',
+                    publish_confirmation_product_preset: '{productPreset} ist die Verteilung',
+                    publish_confirmation_deliveries: '{deliveries} sind die Ziele',
+                    no_product_preset: 'Keine Verteilung',
+                    delivery: '{format} nach {channel}',
                     publish_confirmation_message: 'Jetzt veröffentlichen'
                 }
             }
@@ -72,35 +90,36 @@ const mountEditor = async () => {
 }
 
 describe('NewProduct locale-safe publish confirmation', () => {
-    it('uses complete reorderable messages and an active-locale publisher list', async () => {
+    it('uses complete reorderable messages and lists each ticked delivery on its own line', async () => {
         const wrapper = await mountEditor()
         wrapper.vm.product.title = 'عنوان المنتج'
-        wrapper.vm.selectedType = { id: 3, title: 'نوع المنتج' }
-        wrapper.vm.publisherPresets.forEach((preset: { selected: boolean }) => {
-            preset.selected = true
-        })
+        wrapper.vm.selectedProductPreset = productPreset
+        wrapper.vm.handleProductPresetChange()
         await wrapper.vm.$nextTick()
 
         const isolate = (value: string) => `\u2068${value}\u2069`
-        const expectedList = new Intl.ListFormat('de', { style: 'long', type: 'conjunction' }).format(publisherNames.map(isolate))
+        const labels = ['Kanal العربية', 'Kanal Deutsch'].map((channel) => `${isolate('JSON')} nach ${isolate(channel)}`)
         const confirmation = wrapper.get('[data-test="publish-confirmation"]')
+        const lines = confirmation.findAll('.publish-deliveries > li')
 
-        expect(confirmation.text()).toContain('نوع المنتج ist die Produktart')
-        expect(confirmation.text()).toContain(`${expectedList} sind die Ziele`)
-        expect(wrapper.vm.selectedPublisherPresetList).toBe(expectedList)
+        expect(confirmation.text()).toContain('التوزيع ist die Verteilung')
+        expect(confirmation.text()).toContain(`${labels.join('')} sind die Ziele`)
+        expect(lines.map((line) => line.text())).toEqual(labels)
+        expect(lines.map((line) => line.get('bdi').attributes('dir'))).toEqual(['auto', 'auto'])
         expect(confirmation.findAll('bdi[dir="auto"]').map((node) => node.text())).toEqual(
-            expect.arrayContaining(['عنوان المنتج', 'نوع المنتج', expectedList])
+            expect.arrayContaining(['عنوان المنتج', 'التوزيع', ...labels])
         )
-        expect(wrapper.findAll('bdi[dir="auto"]').map((node) => node.text())).toEqual(expect.arrayContaining(publisherNames))
+        // The format-only PDF is not a delivery to tick.
+        expect(wrapper.findAll('bdi[dir="auto"]').map((node) => node.text())).toEqual(expect.arrayContaining(labels))
+        expect(wrapper.text()).not.toContain('PDF nach')
     })
 
-    it('keeps the no-type and no-publisher fallbacks inside the complete messages', async () => {
+    it('keeps the no-product-preset fallback inside the complete message', async () => {
         const wrapper = await mountEditor()
         const confirmation = wrapper.get('[data-test="publish-confirmation"]')
 
-        expect(confirmation.text()).toContain('Keine Produktart ist die Produktart')
-        expect(confirmation.text()).toContain('Keine Veröffentlichungsziele sind die Ziele')
-        expect(wrapper.vm.selectedPublisherPresetList).toBe('')
+        expect(confirmation.text()).toContain('Keine Verteilung ist die Verteilung')
+        expect(confirmation.findAll('.publish-deliveries > li')).toHaveLength(0)
     })
 
     it('gives editable server and user text automatic writing direction', async () => {
