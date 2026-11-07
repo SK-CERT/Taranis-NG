@@ -123,12 +123,12 @@ def rss() -> Response:
     fg.description(site.metadata.get("rss_description", ""))
     fg.link(href=site.hostname)
 
+    # Every published report: a feed reader can then catch up on all of them.
     reports = cache.get_all_reports(site.id, site.language)
-    item_count = min(site.max_reports_rss, len(reports))
 
     # add_entry() adds items in a reverse order (the first added item will be
     # the last in the feed), that's why reversed() is needed.
-    for report in reversed(reports[:item_count]):
+    for report in reversed(reports):
         report_link = site.hostname + url_for("reports.show", report_id=report.get_id())
         fe = fg.add_entry()
         fe.title(report.get_title())

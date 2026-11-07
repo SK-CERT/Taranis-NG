@@ -569,7 +569,12 @@
     } from '@/api/analyze'
     import { getEntityTypeStates } from '@/api/state'
     import AttributeContainer from '@/components/common/attribute/AttributeContainer.vue'
-    import { isLabelOnly } from '@/components/common/attribute/useAttributes'
+    import {
+        attributeWriteMark,
+        attributeWritesPending,
+        attributeWritesSince,
+        isLabelOnly
+    } from '@/components/common/attribute/useAttributes'
     import NewsItemSelector from '@/components/analyze/NewsItemSelector.vue'
     import RemoteReportItemSelector from '@/components/analyze/RemoteReportItemSelector.vue'
     import ReportItemTranslation from '@/components/analyze/ReportItemTranslation.vue'
@@ -1146,6 +1151,7 @@
     }
 
     const showDetail = async (report_item_data, rebuild = true) => {
+        const writeMark = attributeWriteMark()
         try {
             const [response, locksResponse] = await Promise.all([getReportItem(report_item_data.id), getReportItemLocks(report_item_data.id)])
 
@@ -1154,6 +1160,11 @@
 
             // A background refresh must not switch the dialog to another report.
             if (!rebuild && data.id !== report_item.id) return
+            // Nor show what it read before a write that began meanwhile: it tries again later.
+            if (!rebuild && (resyncWouldInterrupt() || attributeWritesSince(writeMark))) {
+                resync_timer.value = setTimeout(requestResync, 3000)
+                return
+            }
 
             // Rebuild when explicitly requested or when the report type changed.
             const rebuildForm = rebuild || data.report_item_type_id !== report_item.report_item_type_id
@@ -1722,9 +1733,18 @@
     /**
      * Re-read the open report item after the live stream was down: updates published in the
      * meantime are not replayed, so without this the dialog would keep showing stale values
-     * and save them back over newer ones. Deferred while a field is focused so the refresh
-     * does not overwrite text that is still being edited.
+     * and save them back over newer ones. Deferred while a field is focused, or a value is still
+     * being added, saved or removed, so the refresh neither overwrites text that is still being
+     * edited nor shows a value from before a write it then lists twice or brings back.
      */
+    const resyncWouldInterrupt = (): boolean => {
+        const active = document.activeElement as HTMLElement | null
+        const isEditingField = !!active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
+        // Reloading would also invalidate the value a pending conflict is about, so wait for
+        // the user to finish typing or to resolve the conflict first.
+        return isEditingField || showConflict.value || attributeWritesPending()
+    }
+
     const requestResync = () => {
         if (resync_timer.value) {
             clearTimeout(resync_timer.value)
@@ -1733,11 +1753,7 @@
 
         if (!visible.value || !edit.value || !report_item.id) return
 
-        const active = document.activeElement as HTMLElement | null
-        const isEditingField = !!active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
-        // Reloading would also invalidate the value a pending conflict is about, so wait for
-        // the user to finish typing or to resolve the conflict first.
-        if (isEditingField || showConflict.value) {
+        if (resyncWouldInterrupt()) {
             resync_timer.value = setTimeout(requestResync, 3000)
             return
         }

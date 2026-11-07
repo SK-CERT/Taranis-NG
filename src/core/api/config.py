@@ -46,11 +46,12 @@ from model import (
     organization,
     osint_source,
     presenters_node,
-    product_type,
+    product_format,
+    product_preset,
     public_web,
     public_web_node,
-    publisher_preset,
     publishers_node,
+    publishing_channel,
     remote,
     report_item_type,
     role,
@@ -958,74 +959,184 @@ class ReportItemTypeLabelsTranslateResource(Resource):
         return {"translations": translations, "failed": failed}, HTTPStatus.OK
 
 
-class ProductTypesResource(Resource):
-    """Product types API endpoint."""
+class ProductFormatsResource(Resource):
+    """Product formats API endpoint."""
 
-    @auth_required("CONFIG_PRODUCT_TYPE_ACCESS")
+    @auth_required("CONFIG_PRODUCT_FORMAT_ACCESS")
     def get(self) -> tuple[str, dict]:
-        """Get all product types.
+        """Get all product formats.
 
         Returns:
-            (dict): The product types
+            (dict): The product formats
         """
         search = request.args.get("search")
-        return product_type.ProductType.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
+        return product_format.ProductFormat.get_all_json(search)
 
-    @auth_required("CONFIG_PRODUCT_TYPE_CREATE")
+    @auth_required("CONFIG_PRODUCT_FORMAT_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:
-        """Create a product type.
+        """Create a product format.
 
         Returns:
             (str, int): The result of the create
         """
         try:
-            product_type.ProductType.add_new(request.json)
+            product_format.ProductFormat.add_new(request.json)
         except ValueError as ex:
             # A language code or template override that is not valid.
             db.session.rollback()
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
-            msg = "Could not create product type"
+            msg = "Could not create product format"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ProductTypeResource(Resource):
-    """Product type API endpoint."""
+class ProductFormatResource(Resource):
+    """Product format API endpoint."""
 
-    @auth_required("CONFIG_PRODUCT_TYPE_UPDATE")
-    def put(self, type_id: int) -> tuple[dict, HTTPStatus] | None:
-        """Update a product type.
+    @auth_required("CONFIG_PRODUCT_FORMAT_UPDATE")
+    def put(self, format_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Update a product format.
 
         Args:
-            type_id (int): The product type ID
+            format_id (int): The product format ID
         Returns:
             (str, int): The result of the update
         """
         try:
-            product_type.ProductType.update(type_id, request.json)
+            product_format.ProductFormat.update(format_id, request.json)
         except ValueError as ex:
             # A language code or template override that is not valid; nothing is stored.
             db.session.rollback()
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
-            msg = "Could not update product type"
+            msg = "Could not update product format"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
-    @auth_required("CONFIG_PRODUCT_TYPE_DELETE")
-    def delete(self, type_id: int) -> tuple[dict, HTTPStatus] | None:
-        """Delete a product type.
+    @auth_required("CONFIG_PRODUCT_FORMAT_DELETE")
+    def delete(self, format_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete a product format.
 
         Args:
-            type_id (int): The product type ID
+            format_id (int): The product format ID
         Returns:
             (str, int): The result of the delete
         """
         try:
-            return product_type.ProductType.delete(type_id)
+            return product_format.ProductFormat.delete(format_id)
         except Exception as ex:
-            return _delete_failed("Could not delete product type", ex)
+            return _delete_failed("Could not delete product format", ex)
+
+
+def _notify_public_web_nodes() -> None:
+    """Best-effort: push a cache reset to every public-web node (see _notify_public_web_node)."""
+    try:
+        from managers import public_web_manager  # noqa: PLC0415 (avoid import cycle at load)
+
+        if public_web_manager.public_web_enabled():
+            public_web_manager.notify_nodes(public_web_node.PublicWebNode.get_all())
+    except Exception as ex:
+        log_manager.store_data_error_activity(get_user_from_jwt(), "Could not notify public-web nodes", ex)
+
+
+class ProductPresetsResource(Resource):
+    """Product presets API endpoint: what products are published as."""
+
+    @auth_required("CONFIG_PRODUCT_PRESET_ACCESS")
+    def get(self) -> dict:
+        """Get all product presets.
+
+        Returns:
+            (dict): The product presets
+        """
+        search = request.args.get("search")
+        return product_preset.ProductPreset.get_all_json(search, get_user_from_jwt(), acl_check=False)
+
+    @auth_required("CONFIG_PRODUCT_PRESET_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create a product preset.
+
+        Returns:
+            (dict, int): The id of the created product preset
+        """
+        try:
+            created = product_preset.ProductPreset.add(request.json or {}, get_user_from_jwt().name)
+        except product_preset.ProductPresetValidationError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not create product preset"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        _notify_public_web_nodes()
+        return {"id": created.id}, HTTPStatus.OK
+
+
+class ProductPresetResource(Resource):
+    """Product preset API endpoint."""
+
+    @auth_required("CONFIG_PRODUCT_PRESET_UPDATE")
+    def put(self, product_preset_id: int) -> tuple[dict, HTTPStatus]:
+        """Update a product preset.
+
+        Args:
+            product_preset_id (int): The product preset ID
+        Returns:
+            (dict, int): The id of the updated product preset
+        """
+        try:
+            updated = product_preset.ProductPreset.update(product_preset_id, request.json or {}, get_user_from_jwt().name)
+        except product_preset.ProductPresetValidationError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not update product preset"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        if updated is None:
+            return {"error": "Product preset not found"}, HTTPStatus.NOT_FOUND
+        _notify_public_web_nodes()
+        return {"id": updated.id}, HTTPStatus.OK
+
+    @auth_required("CONFIG_PRODUCT_PRESET_DELETE")
+    def delete(self, product_preset_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete a product preset; one that products use answers 409.
+
+        Args:
+            product_preset_id (int): The product preset ID
+        Returns:
+            (dict, int): The result of the delete
+        """
+        try:
+            result = product_preset.ProductPreset.delete(product_preset_id)
+        except Exception as ex:
+            db.session.rollback()
+            return _delete_failed("Could not delete product preset", ex)
+        _notify_public_web_nodes()
+        return result
+
+
+class ProductPresetOptionsResource(Resource):
+    """What a product preset can be made of, for the product preset dialog.
+
+    Behind the product preset permission rather than the product format, publishing channel and
+    public-web ones, so an admin of product presets needs nothing more to fill the form.
+    """
+
+    @auth_required("CONFIG_PRODUCT_PRESET_ACCESS")
+    def get(self) -> dict:
+        """Get the formats, channels and public webs.
+
+        Returns:
+            (dict): ``{"formats": [...], "channels": [...], "public_webs": [...]}``
+        """
+        formats = [{"id": item.id, "title": item.title} for item in product_format.ProductFormat.get_all()]
+        channels = [
+            {"id": item.id, "name": item.name, "publisher_type": item.publisher.type if item.publisher else None}
+            for item in publishing_channel.PublishingChannel.get_all()
+        ]
+        webs = public_web.PublicWeb.query.order_by(db.asc(public_web.PublicWeb.name)).all()
+        public_webs = [{"id": web.id, "name": web.name or str(web.id)} for web in webs]
+        return {"formats": formats, "channels": channels, "public_webs": public_webs}
 
 
 class PermissionsResource(Resource):
@@ -2468,66 +2579,66 @@ class PublishersNodeResource(Resource):
             return _delete_failed("Could not delete publishers node", ex)
 
 
-class PublisherPresetsResource(Resource):
-    """Publisher presets API endpoint."""
+class PublishingChannelsResource(Resource):
+    """Publishing channels API endpoint."""
 
-    @auth_required("CONFIG_PUBLISHER_PRESET_ACCESS")
+    @auth_required("CONFIG_PUBLISHING_CHANNEL_ACCESS")
     def get(self) -> tuple[str, dict]:
-        """Get all publisher presets.
+        """Get all publishing channels.
 
         Returns:
-            (dict): The publisher presets
+            (dict): The publishing channels
         """
         search = request.args.get("search")
-        return publisher_preset.PublisherPreset.get_all_json(search)
+        return publishing_channel.PublishingChannel.get_all_json(search)
 
-    @auth_required("CONFIG_PUBLISHER_PRESET_CREATE")
+    @auth_required("CONFIG_PUBLISHING_CHANNEL_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:
-        """Create a publisher preset.
+        """Create a publishing channel.
 
         Returns:
             (str, int): The result of the create
         """
         try:
-            publishers_manager.add_publisher_preset(request.json)
+            publishers_manager.add_publishing_channel(request.json)
         except Exception as ex:
-            msg = "Could not create publishers preset"
+            msg = "Could not create publishing channel"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class PublisherPresetResource(Resource):
-    """Publisher preset API endpoint."""
+class PublishingChannelResource(Resource):
+    """Publishing channel API endpoint."""
 
-    @auth_required("CONFIG_PUBLISHER_PRESET_UPDATE")
-    def put(self, preset_id: int) -> tuple[dict, HTTPStatus] | None:
-        """Update a publisher preset.
+    @auth_required("CONFIG_PUBLISHING_CHANNEL_UPDATE")
+    def put(self, channel_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Update a publishing channel.
 
         Args:
-            preset_id (int): The publisher preset ID
+            channel_id (int): The publishing channel ID
         Returns:
             (str, int): The result of the update
         """
         try:
-            publisher_preset.PublisherPreset.update(preset_id, request.json)
+            publishing_channel.PublishingChannel.update(channel_id, request.json)
         except Exception as ex:
-            msg = "Could not update publishers preset"
+            msg = "Could not update publishing channel"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
-    @auth_required("CONFIG_PUBLISHER_PRESET_DELETE")
-    def delete(self, preset_id: int) -> tuple[dict, HTTPStatus] | None:
-        """Delete a publisher preset.
+    @auth_required("CONFIG_PUBLISHING_CHANNEL_DELETE")
+    def delete(self, channel_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete a publishing channel.
 
         Args:
-            preset_id (int): The publisher preset ID
+            channel_id (int): The publishing channel ID
         Returns:
             (str, int): The result of the delete
         """
         try:
-            return publisher_preset.PublisherPreset.delete(preset_id)
+            return publishing_channel.PublishingChannel.delete(channel_id)
         except Exception as ex:
-            return _delete_failed("Could not delete publishers preset", ex)
+            return _delete_failed("Could not delete publishing channel", ex)
 
 
 class BotNodesResource(Resource):
@@ -3069,8 +3180,11 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(ReportItemTypeResource, "/api/v1/config/report-item-types/<int:type_id>")
     api.add_resource(ReportItemTypeLabelsTranslateResource, "/api/v1/config/report-item-types/translate-labels")
 
-    api.add_resource(ProductTypesResource, "/api/v1/config/product-types")
-    api.add_resource(ProductTypeResource, "/api/v1/config/product-types/<int:type_id>")
+    api.add_resource(ProductFormatsResource, "/api/v1/config/product-formats")
+    api.add_resource(ProductFormatResource, "/api/v1/config/product-formats/<int:format_id>")
+    api.add_resource(ProductPresetsResource, "/api/v1/config/product-presets")
+    api.add_resource(ProductPresetResource, "/api/v1/config/product-presets/<int:product_preset_id>")
+    api.add_resource(ProductPresetOptionsResource, "/api/v1/config/product-presets/options")
 
     api.add_resource(PermissionsResource, "/api/v1/config/permissions")
     api.add_resource(ExternalPermissionsResource, "/api/v1/config/external-permissions")
@@ -3140,8 +3254,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(PublisherNodesResource, "/api/v1/config/publishers-nodes")
     api.add_resource(PublishersNodeResource, "/api/v1/config/publishers-nodes/<string:node_id>")
 
-    api.add_resource(PublisherPresetsResource, "/api/v1/config/publishers-presets")
-    api.add_resource(PublisherPresetResource, "/api/v1/config/publishers-presets/<string:preset_id>")
+    api.add_resource(PublishingChannelsResource, "/api/v1/config/publishing-channels")
+    api.add_resource(PublishingChannelResource, "/api/v1/config/publishing-channels/<string:channel_id>")
 
     api.add_resource(BotNodesResource, "/api/v1/config/bots-nodes")
     api.add_resource(BotsNodeResource, "/api/v1/config/bots-nodes/<string:node_id>")
@@ -3182,10 +3296,14 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Permission.add("CONFIG_ACL_UPDATE", "Config acl update", "Update acl configuration")
     Permission.add("CONFIG_ACL_DELETE", "Config acl delete", "Delete acl configuration")
 
-    Permission.add("CONFIG_PRODUCT_TYPE_ACCESS", "Config product types access", "Access to product types configuration")
-    Permission.add("CONFIG_PRODUCT_TYPE_CREATE", "Config product type create", "Create product type configuration")
-    Permission.add("CONFIG_PRODUCT_TYPE_UPDATE", "Config product type update", "Update product type configuration")
-    Permission.add("CONFIG_PRODUCT_TYPE_DELETE", "Config product type delete", "Delete product type configuration")
+    Permission.add("CONFIG_PRODUCT_FORMAT_ACCESS", "Config product formats access", "Access to product formats configuration")
+    Permission.add("CONFIG_PRODUCT_FORMAT_CREATE", "Config product format create", "Create product format configuration")
+    Permission.add("CONFIG_PRODUCT_FORMAT_UPDATE", "Config product format update", "Update product format configuration")
+    Permission.add("CONFIG_PRODUCT_FORMAT_DELETE", "Config product format delete", "Delete product format configuration")
+    Permission.add("CONFIG_PRODUCT_PRESET_ACCESS", "Config product presets access", "Access to product presets configuration")
+    Permission.add("CONFIG_PRODUCT_PRESET_CREATE", "Config product preset create", "Create product preset configuration")
+    Permission.add("CONFIG_PRODUCT_PRESET_UPDATE", "Config product preset update", "Update product preset configuration")
+    Permission.add("CONFIG_PRODUCT_PRESET_DELETE", "Config product preset delete", "Delete product preset configuration")
 
     Permission.add("CONFIG_ATTRIBUTE_ACCESS", "Config attributes access", "Access to attributes configuration")
     Permission.add("CONFIG_ATTRIBUTE_CREATE", "Config attribute create", "Create attribute configuration")
@@ -3268,10 +3386,10 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Permission.add("CONFIG_PUBLISHERS_NODE_UPDATE", "Config publishers node update", "Update publishers node configuration")
     Permission.add("CONFIG_PUBLISHERS_NODE_DELETE", "Config publishers node delete", "Delete publishers node configuration")
 
-    Permission.add("CONFIG_PUBLISHER_PRESET_ACCESS", "Config publisher presets access", "Access to publisher presets configuration")
-    Permission.add("CONFIG_PUBLISHER_PRESET_CREATE", "Config publisher preset create", "Create publisher preset configuration")
-    Permission.add("CONFIG_PUBLISHER_PRESET_UPDATE", "Config publisher preset update", "Update publisher preset configuration")
-    Permission.add("CONFIG_PUBLISHER_PRESET_DELETE", "Config publisher preset delete", "Delete publisher preset configuration")
+    Permission.add("CONFIG_PUBLISHING_CHANNEL_ACCESS", "Config publishing channels access", "Access to publishing channels configuration")
+    Permission.add("CONFIG_PUBLISHING_CHANNEL_CREATE", "Config publishing channel create", "Create publishing channel configuration")
+    Permission.add("CONFIG_PUBLISHING_CHANNEL_UPDATE", "Config publishing channel update", "Update publishing channel configuration")
+    Permission.add("CONFIG_PUBLISHING_CHANNEL_DELETE", "Config publishing channel delete", "Delete publishing channel configuration")
 
     Permission.add("CONFIG_BOTS_NODE_ACCESS", "Config bots nodes access", "Access to bots nodes configuration")
     Permission.add("CONFIG_BOTS_NODE_CREATE", "Config bots node create", "Create bots node configuration")

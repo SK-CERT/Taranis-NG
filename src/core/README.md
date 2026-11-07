@@ -10,7 +10,7 @@ on its own: the application also depends on PostgreSQL, Redis, the GUI, and the
 configured satellite services.
 
 Do not use test-module imports or sample-data hooks to initialize report forms,
-product types, templates, sources, or collector configuration. Use migrations,
+product formats, templates, sources, or collector configuration. Use migrations,
 bootstrap data, and the supported application APIs.
 
 ## Local Core development

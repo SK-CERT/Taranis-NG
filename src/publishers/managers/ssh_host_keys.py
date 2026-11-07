@@ -5,9 +5,9 @@ anything able to answer on the configured address can impersonate the target and
 receive the report - which for a Taranis publisher may be TLP:AMBER or RED
 material. Configuring the expected key turns that into a real check.
 
-The policy is deliberately *not* strict-by-default: every existing preset was
+The policy is deliberately *not* strict-by-default: every existing channel was
 created without a host key, and defaulting to ``RejectPolicy`` would break all
-of them on upgrade. A preset with ``HOST_KEY`` set verifies strictly; one
+of them on upgrade. A channel with ``HOST_KEY`` set verifies strictly; one
 without keeps the old behaviour and logs a warning naming the key it saw, which
 is the value an operator pastes into the setting to migrate.
 """
@@ -68,7 +68,7 @@ def apply_host_key_policy(
     if not (host_key and host_key.strip()):
         logger.warning(
             f"Connecting to {hostname} without host key verification - any host answering on that address is trusted. "
-            f"Set the publisher preset's 'SSH host key' to the server's public key to verify it.",
+            f"Set the publishing channel's 'SSH host key' to the server's public key to verify it.",
         )
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         return

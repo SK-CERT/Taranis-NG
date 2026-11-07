@@ -1,10 +1,10 @@
-"""This module defines API resources for managing publishers nodes and presets using Flask-RESTful.
+"""This module defines API resources for managing publishers nodes and publishing channels using Flask-RESTful.
 
 Classes:
     AddPublishersNode: API Resource for adding a new publishers node.
-    PublisherPresets: API Resource for handling publisher presets.
-    AddPublisherPreset: API Resource for adding a new publisher preset.
-    PublisherPreset: API Resource for handling a publisher preset.
+    PublishingChannels: API Resource for handling publishing channels.
+    AddPublishingChannel: API Resource for adding a new publishing channel.
+    PublishingChannel: API Resource for handling a publishing channel.
     PublisherNodes: API Resource for handling publisher nodes.
     PublishersNode: API Resource for handling a publisher node.
 
@@ -15,19 +15,26 @@ Each class contains methods to handle HTTP requests (GET, POST, PUT, DELETE) for
 The methods are decorated with authentication and authorization requirements to ensure proper access control.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from flask import request
 from flask_restful import Resource, reqparse
 from managers import publishers_manager
 from managers.auth_manager import api_key_required, auth_required
-from model import publisher_preset, publishers_node
+from model import publishers_node, publishing_channel
 from model.permission import Permission
+
+if TYPE_CHECKING:
+    from flask_restful import Api
 
 
 class AddPublishersNode(Resource):
     """API Resource for adding a new publishers node."""
 
     @auth_required("CONFIG_PUBLISHERS_NODE_CREATE")
-    def post(self):
+    def post(self) -> tuple[str, object]:
         """Handle POST request to add a new publisher node.
 
         This method processes the incoming JSON data from the request and
@@ -39,89 +46,89 @@ class AddPublishersNode(Resource):
         return "", publishers_manager.add_publishers_node(request.json)
 
 
-class PublisherPresets(Resource):
-    """API Resource for handling publisher presets."""
+class PublishingChannels(Resource):
+    """API Resource for handling publishing channels."""
 
-    @auth_required("CONFIG_PUBLISHER_PRESET_ACCESS")
-    def get(self):
-        """Handle GET requests to retrieve publisher presets.
+    @auth_required("CONFIG_PUBLISHING_CHANNEL_ACCESS")
+    def get(self) -> dict:
+        """Handle GET requests to retrieve publishing channels.
 
         If a "search" parameter is provided in the request arguments, it will be used
-        to filter the publisher presets.
+        to filter the publishing channels.
 
         Returns:
-            JSON response containing the list of publisher presets, optionally filtered by the search term.
+            JSON response containing the list of publishing channels, optionally filtered by the search term.
         """
         search = None
         if request.args.get("search"):
             search = request.args["search"]
-        return publisher_preset.PublisherPreset.get_all_json(search)
+        return publishing_channel.PublishingChannel.get_all_json(search)
 
     @api_key_required("publishers")
-    def post(self, publishers_node=None):
-        """Handle POST requests to retrieve all publisher presets for a given publisher.
+    def post(self, publishers_node: publishers_node.PublishersNode | None = None) -> dict | None:
+        """Handle POST requests to retrieve all publishing channels for a given publisher.
 
         This method parses the request arguments to extract the API key and collector type,
-        and then retrieves the corresponding publisher presets in JSON format.
+        and then retrieves the corresponding publishing channels in JSON format.
 
         Returns:
-            dict: A dictionary containing all publisher presets for the specified publisher in JSON format.
+            dict: A dictionary containing all publishing channels for the specified publisher in JSON format.
         """
         parser = reqparse.RequestParser()
         parser.add_argument("publisher_type", location="args")
         parameters = parser.parse_args()
-        return publisher_preset.PublisherPreset.get_all_for_publisher_json(publishers_node, parameters.publisher_type)
+        return publishing_channel.PublishingChannel.get_all_for_publisher_json(publishers_node, parameters.publisher_type)
 
 
-class AddPublisherPreset(Resource):
-    """API Resource for adding a new publisher preset."""
+class AddPublishingChannel(Resource):
+    """API Resource for adding a new publishing channel."""
 
-    @auth_required("CONFIG_PUBLISHER_PRESET_CREATE")
-    def post(self):
-        """Handle POST request to add a new publisher preset.
+    @auth_required("CONFIG_PUBLISHING_CHANNEL_CREATE")
+    def post(self) -> None:
+        """Handle POST request to add a new publishing channel.
 
         This method retrieves JSON data from the request and passes it to the
-        publishers_manager to add a new publisher preset.
+        publishers_manager to add a new publishing channel.
 
         Raises:
-            Exception: If there is an issue with adding the publisher preset.
+            Exception: If there is an issue with adding the publishing channel.
         """
-        publishers_manager.add_publisher_preset(request.json)
+        publishers_manager.add_publishing_channel(request.json)
 
 
-class PublisherPreset(Resource):
-    """API Resource for handling a publisher preset."""
+class PublishingChannel(Resource):
+    """API Resource for handling a publishing channel."""
 
-    @auth_required("CONFIG_PUBLISHER_PRESET_UPDATE")
-    def put(self, id):
-        """Update a publisher preset with the given ID using the provided JSON data.
+    @auth_required("CONFIG_PUBLISHING_CHANNEL_UPDATE")
+    def put(self, id: str) -> None:  # noqa: A002
+        """Update a publishing channel with the given ID using the provided JSON data.
 
         Args:
-            id (int): The ID of the publisher preset to update.
+            id (int): The ID of the publishing channel to update.
 
         Returns:
             Response: The response object indicating the result of the update operation.
         """
-        publisher_preset.PublisherPreset.update(id, request.json)
+        publishing_channel.PublishingChannel.update(id, request.json)
 
-    @auth_required("CONFIG_PUBLISHER_PRESET_DELETE")
-    def delete(self, id):
-        """Delete a publisher preset by its ID.
+    @auth_required("CONFIG_PUBLISHING_CHANNEL_DELETE")
+    def delete(self, id: str) -> object:  # noqa: A002
+        """Delete a publishing channel by its ID.
 
         Args:
-            id (int): The ID of the publisher preset to delete.
+            id (int): The ID of the publishing channel to delete.
 
         Returns:
             bool: True if the deletion was successful, False otherwise.
         """
-        return publisher_preset.PublisherPreset.delete(id)
+        return publishing_channel.PublishingChannel.delete(id)
 
 
 class PublisherNodes(Resource):
     """API Resource for handling publisher nodes."""
 
     @auth_required("CONFIG_PUBLISHERS_NODE_ACCESS")
-    def get(self):
+    def get(self) -> dict:
         """Handle GET requests to retrieve publisher data.
 
         If a "search" parameter is provided in the request arguments, it will be used
@@ -140,7 +147,7 @@ class PublishersNode(Resource):
     """API Resource for handling a publisher node."""
 
     @auth_required("CONFIG_PUBLISHERS_NODE_UPDATE")
-    def put(self, id):
+    def put(self, id: str) -> None:  # noqa: A002
         """Update a publisher's node with the given ID using the provided JSON data.
 
         Args:
@@ -149,7 +156,7 @@ class PublishersNode(Resource):
         publishers_manager.update_publishers_node(id, request.json)
 
     @auth_required("CONFIG_PUBLISHERS_NODE_DELETE")
-    def delete(self, id):
+    def delete(self, id: str) -> object:  # noqa: A002
         """Delete a publisher by its ID.
 
         Args:
@@ -161,12 +168,12 @@ class PublishersNode(Resource):
         return publishers_node.PublishersNode.delete(id)
 
 
-def initialize(api):
+def initialize(api: Api) -> None:
     """Initialize the API with publisher-related resources and permissions.
 
     This function adds various publisher-related resources to the provided API
     instance and sets up the necessary permissions for accessing, creating,
-    updating, and deleting publisher nodes and presets.
+    updating, and deleting publisher nodes and publishing channels.
 
     Args:
         api: The API instance to which the resources and permissions will be added.
@@ -174,33 +181,33 @@ def initialize(api):
         - /api/publishers/nodes: Endpoint for PublisherNodes resource.
         - /api/publishers/nodes/add: Endpoint for AddPublishersNode resource.
         - /api/publishers/node/<id>: Endpoint for PublishersNode resource.
-        - /api/publishers/presets: Endpoint for PublisherPresets resource.
-        - /api/publishers/presets/add: Endpoint for AddPublisherPreset resource.
-        - /api/publishers/preset/<id>: Endpoint for PublisherPreset resource.
+        - /api/publishers/channels: Endpoint for PublishingChannels resource.
+        - /api/publishers/channels/add: Endpoint for AddPublishingChannel resource.
+        - /api/publishers/channel/<id>: Endpoint for PublishingChannel resource.
     Permissions:
         - CONFIG_PUBLISHERS_NODE_ACCESS: Access to publishers nodes configuration.
         - CONFIG_PUBLISHERS_NODE_CREATE: Create publishers node configuration.
         - CONFIG_PUBLISHERS_NODE_UPDATE: Update publishers node configuration.
         - CONFIG_PUBLISHERS_NODE_DELETE: Delete publishers node configuration.
-        - CONFIG_PUBLISHER_PRESET_ACCESS: Access to publisher presets configuration.
-        - CONFIG_PUBLISHER_PRESET_CREATE: Create publisher preset configuration.
-        - CONFIG_PUBLISHER_PRESET_UPDATE: Update publisher preset configuration.
-        - CONFIG_PUBLISHER_PRESET_DELETE: Delete publisher preset configuration.
+        - CONFIG_PUBLISHING_CHANNEL_ACCESS: Access to publishing channels configuration.
+        - CONFIG_PUBLISHING_CHANNEL_CREATE: Create publishing channel configuration.
+        - CONFIG_PUBLISHING_CHANNEL_UPDATE: Update publishing channel configuration.
+        - CONFIG_PUBLISHING_CHANNEL_DELETE: Delete publishing channel configuration.
     """
     api.add_resource(PublisherNodes, "/api/publishers/nodes")
     api.add_resource(AddPublishersNode, "/api/publishers/nodes/add")
     api.add_resource(PublishersNode, "/api/publishers/node/<id>")
 
-    api.add_resource(PublisherPresets, "/api/publishers/presets")
-    api.add_resource(AddPublisherPreset, "/api/publishers/presets/add")
-    api.add_resource(PublisherPreset, "/api/publishers/preset/<id>")
+    api.add_resource(PublishingChannels, "/api/publishers/channels")
+    api.add_resource(AddPublishingChannel, "/api/publishers/channels/add")
+    api.add_resource(PublishingChannel, "/api/publishers/channel/<id>")
 
     Permission.add("CONFIG_PUBLISHERS_NODE_ACCESS", "Config publishers nodes access", "Access to publishers nodes configuration")
     Permission.add("CONFIG_PUBLISHERS_NODE_CREATE", "Config publishers node create", "Create publishers node configuration")
     Permission.add("CONFIG_PUBLISHERS_NODE_UPDATE", "Config publishers node update", "Update publishers node configuration")
     Permission.add("CONFIG_PUBLISHERS_NODE_DELETE", "Config publishers node delete", "Delete publishers node configuration")
 
-    Permission.add("CONFIG_PUBLISHER_PRESET_ACCESS", "Config publisher presets access", "Access to publisher presets configuration")
-    Permission.add("CONFIG_PUBLISHER_PRESET_CREATE", "Config publisher preset create", "Create publisher preset configuration")
-    Permission.add("CONFIG_PUBLISHER_PRESET_UPDATE", "Config publisher preset update", "Update publisher preset configuration")
-    Permission.add("CONFIG_PUBLISHER_PRESET_DELETE", "Config publisher preset delete", "Delete publisher preset configuration")
+    Permission.add("CONFIG_PUBLISHING_CHANNEL_ACCESS", "Config publishing channels access", "Access to publishing channels configuration")
+    Permission.add("CONFIG_PUBLISHING_CHANNEL_CREATE", "Config publishing channel create", "Create publishing channel configuration")
+    Permission.add("CONFIG_PUBLISHING_CHANNEL_UPDATE", "Config publishing channel update", "Update publishing channel configuration")
+    Permission.add("CONFIG_PUBLISHING_CHANNEL_DELETE", "Config publishing channel delete", "Delete publishing channel configuration")

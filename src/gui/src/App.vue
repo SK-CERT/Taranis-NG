@@ -63,7 +63,7 @@
 
     const navVisible = ref(true)
     const isAuth = computed(() => authStore.isAuthenticated)
-    const showNavigation = computed(() => isAuth.value && route.value.name !== 'publish' && route.value.name !== 'dashboard')
+    const showNavigation = computed(() => isAuth.value && route.value.name !== 'dashboard')
     const isConfigurationRoute = computed(() => route.value.path === '/config' || route.value.path.startsWith('/config/'))
 
     // vue-i18n and Vuetify keep separate locale state. Keep both, as well as the

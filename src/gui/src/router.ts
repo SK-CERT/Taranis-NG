@@ -70,7 +70,8 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPerm: [Permissions.ANALYZE_ACCESS] }
     },
     {
-        path: '/publish',
+        // Without a product preset, the products of all of them.
+        path: '/publish/:productPresetId(\\d+)?',
         name: 'publish',
         components: {
             default: () => import('./views/users/PublishView.vue'),
@@ -169,7 +170,7 @@ const routes: RouteRecordRaw[] = [
         },
         meta: {
             requiresAuth: true,
-            requiresPerm: [Permissions.CONFIG_PRODUCT_TYPE_ACCESS, Permissions.CONFIG_PRESENTERS_NODE_ACCESS]
+            requiresPerm: [Permissions.CONFIG_PRODUCT_FORMAT_ACCESS, Permissions.CONFIG_PRESENTERS_NODE_ACCESS]
         }
     },
     {
@@ -181,8 +182,17 @@ const routes: RouteRecordRaw[] = [
         },
         meta: {
             requiresAuth: true,
-            requiresPerm: [Permissions.CONFIG_PUBLISHER_PRESET_ACCESS, Permissions.CONFIG_PUBLISHERS_NODE_ACCESS]
+            requiresPerm: [Permissions.CONFIG_PUBLISHING_CHANNEL_ACCESS, Permissions.CONFIG_PUBLISHERS_NODE_ACCESS]
         }
+    },
+    {
+        path: '/config/product-presets',
+        name: 'productPresets',
+        components: {
+            default: () => import('./views/admin/ProductPresetsView.vue'),
+            nav: () => import('./views/nav/ConfigNav.vue')
+        },
+        meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_PRODUCT_PRESET_ACCESS] }
     },
     {
         path: '/config/remote',
@@ -278,6 +288,8 @@ const routes: RouteRecordRaw[] = [
         },
         meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG] }
     },
+    // Product presets were distributions.
+    { path: '/config/distributions', redirect: { path: '/config/product-presets' } },
     { path: '/config/users', redirect: { path: '/config/access-management', query: { tab: 'users' } } },
     { path: '/config/roles', redirect: { path: '/config/access-management', query: { tab: 'roles' } } },
     { path: '/config/acls', redirect: { path: '/config/access-management', query: { tab: 'acls' } } },
@@ -290,9 +302,9 @@ const routes: RouteRecordRaw[] = [
     { path: '/config/collectors/nodes', redirect: { path: '/config/collectors', query: { tab: 'nodes' } } },
     { path: '/config/collectors/extraction', redirect: { path: '/config/collectors', query: { tab: 'extraction' } } },
     { path: '/config/presenters/nodes', redirect: { path: '/config/presenters', query: { tab: 'nodes' } } },
-    { path: '/config/product/types', redirect: { path: '/config/presenters', query: { tab: 'types' } } },
+    { path: '/config/product/types', redirect: { path: '/config/presenters', query: { tab: 'formats' } } },
     { path: '/config/publishers/nodes', redirect: { path: '/config/publishers', query: { tab: 'nodes' } } },
-    { path: '/config/publishers/presets', redirect: { path: '/config/publishers', query: { tab: 'presets' } } },
+    { path: '/config/publishers/presets', redirect: { path: '/config/publishers', query: { tab: 'channels' } } },
     { path: '/config/bots/nodes', redirect: { path: '/config/bots', query: { tab: 'nodes' } } },
     { path: '/config/bots/presets', redirect: { path: '/config/bots', query: { tab: 'presets' } } },
     { path: '/config/remote/access', redirect: { path: '/config/remote', query: { tab: 'access' } } },

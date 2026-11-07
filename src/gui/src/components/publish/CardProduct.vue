@@ -22,7 +22,7 @@
                     <div class="product-card__content">
                         <div class="product-card__meta-row">
                             <span class="product-card__type"
-                                ><bdi dir="auto">{{ card.product_type_name }}</bdi></span
+                                ><bdi dir="auto">{{ card.product_preset_name || t('workflow.entity_types.product') }}</bdi></span
                             >
                             <span class="product-card__updated">
                                 <v-icon
@@ -142,6 +142,7 @@
     import { notifyDeleteError } from '@/utils/deleteError'
     import { useContentLanguages } from '@/composables/useContentLanguages'
     import TagChips from '@/components/common/tags/TagChips.vue'
+    import { DEFAULT_PRODUCT_ICON } from '@/types/product-presets'
 
     type ProductCard = {
         id: number | string
@@ -154,8 +155,8 @@
         translation_status?: Record<string, string>
         subtitle?: string
         tag?: string
-        product_type_name?: string
-        product_type_id?: number | string
+        product_preset_name?: string
+        product_preset_id?: number | string
         report_items_count?: number
         report_items?: unknown[]
         updated_at?: string
@@ -213,7 +214,7 @@
     })
 
     const productIcon = computed(() => {
-        return props.card.tag === 'mdi-file-pdf-outline' ? 'mdi-file-pdf-box' : props.card.tag || 'mdi-send'
+        return props.card.tag || DEFAULT_PRODUCT_ICON
     })
 
     const selectionChanged = (isSelected: boolean): void => {
@@ -230,7 +231,7 @@
             id: props.card.id,
             title: props.card.title,
             description: props.card.subtitle || '',
-            product_type_id: props.card.product_type_id,
+            product_preset_id: props.card.product_preset_id,
             state_id: props.card.state?.id || null,
             report_items: props.card.report_items || [],
             modify: props.card.modify === true,

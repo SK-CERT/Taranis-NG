@@ -74,8 +74,10 @@
 <script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useRoute } from 'vue-router'
     import { ICONS } from '@/config/ui-constants'
     import { usePublishStore } from '@/stores/publish'
+    import { routeProductPresetId } from '@/types/product-presets'
     import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
     import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
     import TagFilterMenu from '@/components/common/tags/TagFilterMenu.vue'
@@ -86,6 +88,7 @@
         range: string
         published: 'ALL' | boolean
         sort: string
+        product_preset_id?: number | null
         compact_mode?: boolean
     }
 
@@ -107,6 +110,7 @@
     const emit = defineEmits(['add-new'])
 
     const { t } = useI18n()
+    const route = useRoute()
     const publishStore = usePublishStore()
     const baseFilter = ref<any>(null)
     const toolbarGroup = ref<any>(null)
@@ -117,7 +121,8 @@
         search: '',
         range: 'ALL',
         published: 'ALL',
-        sort: 'DATE_DESC'
+        sort: 'DATE_DESC',
+        product_preset_id: routeProductPresetId(route.params)
     })
 
     const compactMode = ref(false)
@@ -179,6 +184,14 @@
         // Emit custom event for content to refresh data
         window.dispatchEvent(new CustomEvent('product-updated'))
     }
+
+    watch(
+        () => route.params['productPresetId'],
+        () => {
+            filter.value.product_preset_id = routeProductPresetId(route.params)
+            emitFilter()
+        }
+    )
 
     watch(
         () => publishStore.getSelection,

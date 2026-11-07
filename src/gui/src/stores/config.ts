@@ -6,6 +6,7 @@ import {
     getAllAiProviders,
     getAllAttributeExtractionRules,
     getAllDataProviders,
+    getAllProductPresets,
     getAllBotPresets,
     getAllBotsNodes,
     getAllCollectorsNodes,
@@ -15,8 +16,8 @@ import {
     getAllOSINTSources,
     getAllPermissions,
     getAllPresentersNodes,
-    getAllProductTypes,
-    getAllPublisherPresets,
+    getAllProductFormats,
+    getAllPublishingChannels,
     getAllPublishersNodes,
     getAllRemoteAccesses,
     getAllRemoteNodes,
@@ -33,7 +34,6 @@ import {
     deleteStateDefinition,
     getAllStateEntityTypes
 } from '@/api/config'
-import { getAllUserProductTypes } from '@/api/user'
 import { getAllOSINTSourceGroupsAssess } from '@/api/assess'
 import { type GroupNavItem } from '@/types/routing'
 
@@ -73,7 +73,8 @@ export const useConfigStore = defineStore('config', () => {
     const attributeExtractionRules = ref<ListState>(emptyListState())
     const dataProviders = ref<ListState>(emptyListState())
     const reportItemTypesConfig = ref<ListState>(emptyListState())
-    const productTypes = ref<ListState>(emptyListState())
+    const productFormats = ref<ListState>(emptyListState())
+    const productPresets = ref<ListState>(emptyListState())
     const allPermissions = ref<ListState>(emptyListState())
     const roles = ref<ListState>(emptyListState())
     const acls = ref<ListState>(emptyListState())
@@ -90,7 +91,7 @@ export const useConfigStore = defineStore('config', () => {
     const osintSourceGroups = ref<ListState<OSINTGroupItem>>(emptyListState())
     const presentersNodes = ref<ListState>(emptyListState())
     const publishersNodes = ref<ListState>(emptyListState())
-    const publisherPresets = ref<ListState>(emptyListState())
+    const publishingChannels = ref<ListState>(emptyListState())
     const botsNodes = ref<ListState>(emptyListState())
     const botPresets = ref<ListState>(emptyListState())
     const stateDefinitions = ref<ListState>(emptyListState())
@@ -155,12 +156,12 @@ export const useConfigStore = defineStore('config', () => {
         return await loadListState(getAllReportItemTypes, data, reportItemTypesConfig)
     }
 
-    async function loadProductTypes(data: FilterPayload): Promise<ApiResponse<ListState>> {
-        return await loadListState(getAllProductTypes, data, productTypes)
+    async function loadProductFormats(data: FilterPayload): Promise<ApiResponse<ListState>> {
+        return await loadListState(getAllProductFormats, data, productFormats)
     }
 
-    async function loadUserProductTypes(data: FilterPayload): Promise<ApiResponse<ListState>> {
-        return await loadListState(getAllUserProductTypes, data, productTypes)
+    async function loadProductPresets(data: FilterPayload): Promise<ApiResponse<ListState>> {
+        return await loadListState(getAllProductPresets, data, productPresets)
     }
 
     async function loadPermissions(data: FilterPayload): Promise<ApiResponse<ListState>> {
@@ -235,8 +236,8 @@ export const useConfigStore = defineStore('config', () => {
         return await loadListState(getAllPublishersNodes, data, publishersNodes)
     }
 
-    async function loadPublisherPresets(data: FilterPayload): Promise<ApiResponse<ListState>> {
-        return await loadListState(getAllPublisherPresets, data, publisherPresets)
+    async function loadPublishingChannels(data: FilterPayload): Promise<ApiResponse<ListState>> {
+        return await loadListState(getAllPublishingChannels, data, publishingChannels)
     }
 
     async function loadBotsNodes(data: FilterPayload): Promise<ApiResponse<ListState>> {
@@ -274,7 +275,8 @@ export const useConfigStore = defineStore('config', () => {
         attributeExtractionRules,
         dataProviders,
         reportItemTypesConfig,
-        productTypes,
+        productFormats,
+        productPresets,
         allPermissions,
         roles,
         acls,
@@ -291,7 +293,7 @@ export const useConfigStore = defineStore('config', () => {
         osintSourceGroups,
         presentersNodes,
         publishersNodes,
-        publisherPresets,
+        publishingChannels,
         botsNodes,
         botPresets,
         stateDefinitions,
@@ -306,8 +308,8 @@ export const useConfigStore = defineStore('config', () => {
         loadAttributeExtractionRules,
         loadDataProviders,
         loadReportItemTypesConfig,
-        loadProductTypes,
-        loadUserProductTypes,
+        loadProductFormats,
+        loadProductPresets,
         loadPermissions,
         loadExternalPermissions,
         loadRoles,
@@ -326,7 +328,7 @@ export const useConfigStore = defineStore('config', () => {
         loadOSINTSourceGroupsAssess,
         loadPresentersNodes,
         loadPublishersNodes,
-        loadPublisherPresets,
+        loadPublishingChannels,
         loadBotsNodes,
         loadBotPresets,
         loadStateDefinitions,

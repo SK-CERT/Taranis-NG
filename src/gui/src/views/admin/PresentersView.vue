@@ -42,17 +42,17 @@
     import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
     import PresentersNodesView from './PresentersNodesView.vue'
-    import ProductTypesView from './ProductTypesView.vue'
+    import ProductFormatsView from './ProductFormatsView.vue'
 
     const { t } = useI18n()
     const tabs = [
         {
-            value: 'types',
-            title: 'nav_menu.product_types',
-            description: 'presenters.types.tab_description',
+            value: 'formats',
+            title: 'nav_menu.product_formats',
+            description: 'presenters.formats.tab_description',
             icon: ICONS.FILE_DOCUMENT_OUTLINE,
-            component: ProductTypesView,
-            permission: 'CONFIG_PRODUCT_TYPE_ACCESS'
+            component: ProductFormatsView,
+            permission: 'CONFIG_PRODUCT_FORMAT_ACCESS'
         },
         {
             value: 'nodes',

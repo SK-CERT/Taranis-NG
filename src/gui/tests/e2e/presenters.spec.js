@@ -4,7 +4,7 @@ import { login } from '../helpers/test-helpers'
 /**
  * Presenters E2E Tests
  *
- * Covers the tabbed Presenters view: Product Types and Presenters Nodes.
+ * Covers the tabbed Presenters view: Product Formats and Presenters Nodes.
  * These tabs use the card-grid layout (ContentData) with a shared ToolbarFilter,
  * so assertions target the tabs, the "Add New" button and the shared blue dialog
  * toolbar rather than a data table.
@@ -14,15 +14,15 @@ test.describe('Presenters', () => {
     test.beforeEach(async ({ page }) => {
         await login(page)
         // Go straight to the resolved tab URL. The bare /config/presenters path makes the
-        // view rewrite the URL to add ?tab=types on mount, and that redirect during initial
+        // view rewrite the URL to add ?tab=formats on mount, and that redirect during initial
         // navigation trips a WebKit "internal error".
-        await page.goto('/config/presenters?tab=types')
-        await page.getByRole('tab', { name: 'Product Types' }).waitFor({ state: 'visible', timeout: 5000 })
+        await page.goto('/config/presenters?tab=formats')
+        await page.getByRole('tab', { name: 'Product Formats' }).waitFor({ state: 'visible', timeout: 5000 })
     })
 
     test('should show the two presenters tabs', async ({ page }) => {
         await expect(page).toHaveURL(/\/config\/presenters/)
-        await expect(page.getByRole('tab', { name: 'Product Types' })).toBeVisible()
+        await expect(page.getByRole('tab', { name: 'Product Formats' })).toBeVisible()
         await expect(page.getByRole('tab', { name: 'Presenter Nodes' })).toBeVisible()
     })
 
@@ -32,13 +32,13 @@ test.describe('Presenters', () => {
         await expect(page.getByRole('button', { name: 'Add New' })).toBeVisible()
     })
 
-    test('should deep-link to the Product Types tab', async ({ page }) => {
-        await page.goto('/config/presenters?tab=types')
-        await expect(page).toHaveURL(/tab=types/)
+    test('should deep-link to the Product Formats tab', async ({ page }) => {
+        await page.goto('/config/presenters?tab=formats')
+        await expect(page).toHaveURL(/tab=formats/)
         await expect(page.getByRole('button', { name: 'Add New' })).toBeVisible()
     })
 
-    test('new product type dialog opens with a header toolbar and cancels', async ({ page }) => {
+    test('new product format dialog opens with a header toolbar and cancels', async ({ page }) => {
         await page.getByRole('button', { name: 'Add New' }).click()
 
         const dialog = page.locator('.v-dialog:visible')
@@ -50,7 +50,7 @@ test.describe('Presenters', () => {
         await expect(page.locator('.v-dialog:visible')).toHaveCount(0)
     })
 
-    test('product type help dialog lists template variables', async ({ page }) => {
+    test('product format help dialog lists template variables', async ({ page }) => {
         await page.getByRole('button', { name: 'Add New' }).click()
 
         const dialog = page.locator('.v-dialog:visible')

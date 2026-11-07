@@ -98,10 +98,10 @@ Open these administration pages:
 
 - **Configuration → Attributes**
 - **Configuration → Report Types**
-- **Configuration → Product Types**
+- **Configuration → Product Formats**
 
 The installation automatically supplies 26 attributes/data types, ten report
-types in total, and these four distribution product types:
+types in total, and these four distribution product formats:
 
 - `Weekly Bulletin`
 - `OSINT Weekly Report`
@@ -109,7 +109,7 @@ types in total, and these four distribution product types:
 - `Offensive Content`
 
 For the first workflow below, confirm that `News by Sector` and
-`Weekly Bulletin` are available and that the product type is bound to the HTML
+`Weekly Bulletin` are available and that the product format is bound to the HTML
 presenter and `/app/templates/weekly.html`.
 
 ### 6. Import a small source set
@@ -146,7 +146,7 @@ Use the normal `user` account for this workflow:
 4. Select **Preview**.
 
 The preview should open as HTML without presenter warnings. Previewing verifies
-the complete chain from collected news through report data and product type to
+the complete chain from collected news through report data and product format to
 the bundled presenter template. It does not send the product to an external
 publisher.
 
@@ -157,7 +157,7 @@ The evaluation installation is complete when all of these are true:
 - the published images were pulled, or every application image was built;
 - both application-account passwords were changed and the old passwords fail;
 - collector, bot, presenter, and publisher capabilities are visible;
-- the official report and product types required above exist;
+- the official report and product formats required above exist;
 - at least one bounded source collected news;
 - a `News by Sector` report item was saved; and
 - a `Weekly Bulletin` product preview rendered successfully.
@@ -181,7 +181,7 @@ or a real publication destination:
 - Import CVE, CWE, and CPE dictionaries when the related analysis fields are
   needed; they can be large and are maintained separately from the application
   schema.
-- A publisher capability and a publisher preset are not the same as a working
+- A publisher capability and a publishing channel are not the same as a working
   destination. Supply real endpoints and credentials deliberately, and test
   external side effects only when the destination is intended to receive data.
 

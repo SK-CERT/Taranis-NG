@@ -60,52 +60,37 @@
             <div class="mb-1">
                 <i18n-t
                     scope="global"
-                    keypath="product.publish_confirmation_type"
+                    keypath="product.publish_confirmation_product_preset"
                 >
-                    <template #type>
-                        <bdi dir="auto">{{ selectedType?.title || $t('product.no_type') }}</bdi>
+                    <template #productPreset>
+                        <bdi dir="auto">{{ selectedProductPreset?.name || $t('product.no_product_preset') }}</bdi>
                     </template>
                 </i18n-t>
             </div>
             <div class="mb-1">
                 <i18n-t
                     scope="global"
-                    keypath="product.publish_confirmation_publishers"
+                    keypath="product.publish_confirmation_deliveries"
                 >
-                    <template #publishers>
-                        <bdi
-                            v-if="selectedPublisherPresetNames.length > 0"
-                            dir="auto"
-                            >{{ selectedPublisherPresetList }}</bdi
-                        >
-                        <span
-                            v-else
-                            class="text-grey"
-                        >
-                            {{ $t('product.no_publisher_in_dialog') }}
-                        </span>
+                    <template #deliveries>
+                        <ul class="publish-deliveries">
+                            <li
+                                v-for="delivery in tickedDeliveries"
+                                :key="delivery.id"
+                            >
+                                <bdi dir="auto">{{ deliveryLabel(delivery) }}</bdi>
+                            </li>
+                        </ul>
                     </template>
                 </i18n-t>
             </div>
-            <v-select
-                v-if="renderLanguages.length > 1"
-                v-model="publishLanguage"
-                :items="renderLanguages.map((code) => ({ title: languageName(code), value: code }))"
-                :label="$t('product.publish_in')"
-                density="compact"
-                variant="outlined"
-                class="mt-3"
-                data-test="publish-language"
-            />
-            <div
-                v-else-if="publishLanguage"
-                class="mb-1"
-            >
-                {{ $t('product.publish_in_language', { language: languageName(publishLanguage) }) }}
-            </div>
+            <!-- What rendering falls back on, for each language the ticked deliveries send. -->
             <ProductLanguageNotices
-                :check="publishCheck"
-                :language="publishLanguage"
+                v-for="entry in publishChecks"
+                :key="entry.language"
+                class="mt-3"
+                :check="entry.check"
+                :language="entry.language"
             />
             <div class="text-body-2 text-grey mt-3">
                 {{ $t('product.publish_confirmation_message') }}
@@ -129,7 +114,7 @@
             @confirm="continueWithOutdated"
         >
             <ProductLanguageNotices
-                :check="outdatedCheck ? { ...outdatedCheck, missing: [], template_language: renderLanguage } : null"
+                :check="outdatedCheck ? { ...outdatedCheck, missing: [], formats: [] } : null"
                 :language="renderLanguage"
             />
         </ConfirmationDialog>
@@ -293,16 +278,17 @@
                             cols="12"
                             md="6"
                         >
-                            <v-combobox
-                                v-model="selectedType"
+                            <v-select
+                                v-model="selectedProductPreset"
                                 dir="auto"
-                                :items="productTypes"
-                                :item-title="(item) => item?.title || ''"
-                                :label="$t('product.report_type')"
+                                :items="productPresets"
+                                item-title="name"
+                                item-value="id"
+                                :label="$t('product.product_preset')"
                                 :rules="[requiredRule]"
                                 :disabled="!canModify"
                                 return-object
-                                @update:model-value="handleProductTypeChange"
+                                @update:model-value="handleProductPresetChange"
                             />
                         </v-col>
                         <v-col
@@ -443,56 +429,68 @@
                         </v-col>
                     </v-row>
 
-                    <!-- Publisher Presets + Public Websites -->
-                    <v-row>
+                    <!-- Where publishing sends the product: the product preset's deliveries -->
+                    <v-row v-if="selectedProductPreset">
                         <v-col
                             cols="12"
                             md="6"
                         >
                             <div class="text-title-medium mb-2">
-                                {{ $t('product.publisher_presets') }}
+                                {{ $t('product.deliveries') }}
                             </div>
-                            <div v-if="publisherPresets.length > 0">
+                            <div v-if="channelDeliveries.length > 0">
                                 <v-checkbox
-                                    v-for="preset in publisherPresets"
-                                    :key="preset.id"
-                                    v-model="preset.selected"
-                                    :disabled="!canModify"
+                                    v-for="delivery in channelDeliveries"
+                                    :key="delivery.id"
+                                    v-model="tickedDeliveryIds"
+                                    :value="delivery.id"
+                                    :disabled="!canPublish"
                                     hide-details
                                     density="compact"
                                 >
                                     <template #label>
-                                        <bdi dir="auto">{{ preset.name }}</bdi>
+                                        <bdi dir="auto">{{ deliveryLabel(delivery) }}</bdi>
                                     </template>
                                 </v-checkbox>
                             </div>
                             <div
                                 v-else
-                                class="text-center text-grey py-4"
+                                class="text-body-2 text-medium-emphasis py-2"
                             >
-                                {{ $t('common.no_data') }}
+                                {{ $t('product.no_channels') }}
                             </div>
                         </v-col>
-
+                        <!-- Of the product preset's webs, those it appears on; none keeps it off the public web. -->
                         <v-col
-                            v-if="showPublicWebSelection"
+                            v-if="webChoices.length > 0"
                             cols="12"
                             md="6"
+                            data-test="product-webs"
                         >
                             <div class="text-title-medium mb-2">
                                 {{ $t('product.public_web_targets') }}
                             </div>
                             <v-checkbox
-                                v-for="web in publicWebOptions"
+                                v-for="web in webChoices"
                                 :key="web.id"
-                                v-model="product.public_web_ids"
-                                :label="web.name"
+                                v-model="shownWebIds"
                                 :value="web.id"
                                 :disabled="!canModify"
                                 hide-details
                                 density="compact"
-                                @update:model-value="handlePublicWebSelectionChange"
-                            />
+                            >
+                                <template #label>
+                                    <bdi dir="auto">{{ web.name }}</bdi>
+                                </template>
+                            </v-checkbox>
+                        </v-col>
+                        <v-col
+                            v-else-if="publicWebNote"
+                            cols="12"
+                            md="6"
+                            class="text-body-2 text-medium-emphasis"
+                        >
+                            {{ publicWebNote }}
                         </v-col>
                     </v-row>
 
@@ -502,17 +500,77 @@
                             cols="12"
                             md="6"
                         >
+                            <!-- A product preset with several formats previews the one picked. -->
+                            <v-menu v-if="formats.length > 1">
+                                <template #activator="{ props: menuProps }">
+                                    <v-btn
+                                        v-bind="menuProps"
+                                        :prepend-icon="ICONS.READ_OUTLINE"
+                                        append-icon="mdi-menu-down"
+                                        color="primary"
+                                        variant="flat"
+                                    >
+                                        {{ $t('product.preview') }}
+                                    </v-btn>
+                                </template>
+                                <v-list
+                                    density="compact"
+                                    data-test="preview-formats"
+                                >
+                                    <v-list-item
+                                        v-for="format in formats"
+                                        :key="format.id"
+                                        @click="(event: MouseEvent) => handlePreview(event, format.id)"
+                                    >
+                                        <v-list-item-title>
+                                            <bdi dir="auto">{{ format.title }}</bdi>
+                                        </v-list-item-title>
+                                    </v-list-item>
+                                </v-list>
+                            </v-menu>
                             <v-btn
+                                v-else
                                 :prepend-icon="ICONS.READ_OUTLINE"
+                                :disabled="selectedProductPreset !== null && formats.length === 0"
                                 color="primary"
                                 variant="flat"
                                 @click="handlePreview"
                             >
                                 {{ $t('product.preview') }}
                             </v-btn>
+                            <v-menu v-if="formats.length > 1">
+                                <template #activator="{ props: menuProps }">
+                                    <v-btn
+                                        v-bind="menuProps"
+                                        class="ms-2"
+                                        :prepend-icon="ICONS.DOWNLOAD"
+                                        append-icon="mdi-menu-down"
+                                        color="primary"
+                                        variant="flat"
+                                    >
+                                        {{ $t('common.download') }}
+                                    </v-btn>
+                                </template>
+                                <v-list
+                                    density="compact"
+                                    data-test="download-formats"
+                                >
+                                    <v-list-item
+                                        v-for="format in formats"
+                                        :key="format.id"
+                                        @click="(event: MouseEvent) => handleDownload(event, format.id)"
+                                    >
+                                        <v-list-item-title>
+                                            <bdi dir="auto">{{ format.title }}</bdi>
+                                        </v-list-item-title>
+                                    </v-list-item>
+                                </v-list>
+                            </v-menu>
                             <v-btn
+                                v-else
                                 class="ms-2"
                                 :prepend-icon="ICONS.DOWNLOAD"
+                                :disabled="selectedProductPreset !== null && formats.length === 0"
                                 color="primary"
                                 variant="flat"
                                 @click="handleDownload"
@@ -554,11 +612,9 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
-    import { storeToRefs } from 'pinia'
+    import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuthStore } from '@/stores/auth'
-    import { usePublishStore } from '@/stores/publish'
     import ApiService from '@/services/api_service'
     import { ICONS } from '@/config/ui-constants'
     import {
@@ -571,7 +627,7 @@
         checkProductLanguage
     } from '@/api/publish'
     import { getReportItem } from '@/api/analyze'
-    import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
+    import { getAllUserProductPresets } from '@/api/user'
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
     import { useSpellcheck } from '@/composables/useSpellcheck'
@@ -597,16 +653,16 @@
     // The texts of a product that are translated.
     const PRODUCT_FIELDS = ['title', 'description'] as const
     type ProductField = (typeof PRODUCT_FIELDS)[number]
-    type FieldTranslation = { value: string; origin: 'ai' | 'manual' }
+    // Written by the AI (until a person edits or reviews it), reviewed by a person, or a person's own.
+    type FieldTranslation = { value: string; origin: 'ai' | 'reviewed' | 'manual' }
 
     type ProductModel = {
         id: number
         title: string
         description: string
-        product_type_id: number | string | undefined
+        product_preset_id: number | undefined
         state_id: number | string | undefined
         report_items: Array<{ id: number | string }>
-        public_web_ids: Array<number | string>
         links: ProductLink[]
         // The language the product is written in; null while not set.
         language: string | null
@@ -614,6 +670,11 @@
         translations: Record<string, Partial<Record<ProductField, FieldTranslation>>>
         // The tags people put on it, saved with the product.
         tag_ids: number[]
+        // Of its product preset's webs, those it is limited to; none: every one. Undefined until
+        // known, so that saving then keeps the stored ones.
+        public_web_ids?: number[] | undefined
+        // Off, it stays off the public web; undefined until known, like the webs.
+        public_web_enabled?: boolean | undefined
     }
 
     /** A source of the product, cited from its description by key. */
@@ -636,11 +697,31 @@
         [key: string]: unknown
     }
 
-    type PublisherPreset = {
-        id: number | string
+    /** The product in a language and a format, and the channel it goes to (none: preview only). */
+    type Delivery = {
+        id: number
+        // None: the language the product is written in.
+        language: string | null
+        product_format_id: number
+        product_format_title: string
+        publishing_channel_id: string | null
+        publishing_channel_name: string | null
+    }
+
+    /** What the product is published as. */
+    type ProductPreset = {
+        id: number
         name: string
-        selected: boolean
-        [key: string]: unknown
+        deliveries: Delivery[]
+        public_web_enabled: boolean
+        public_web_names?: string[]
+        // The webs a product of it can be shown on: its own, else every web.
+        web_choices?: Array<{ id: number; name: string }>
+    }
+
+    type PublishResult = {
+        delivery_id: number
+        success: boolean
     }
 
     type AvailableState = {
@@ -651,20 +732,13 @@
         [key: string]: unknown
     }
 
-    type ProductType = {
-        id: number | string
-        title?: string
-        [key: string]: unknown
-    }
-
     type ProductEditPayload = {
         id: number
         title: string
         description: string
-        product_type_id: number | string | undefined
+        product_preset_id: number | undefined
         state_id: number | string | undefined
         report_items?: ReportItem[]
-        public_web_ids?: Array<number | string>
         links?: ProductLink[]
         modify: boolean
         access: boolean
@@ -674,14 +748,15 @@
         id: number
         title: string
         description?: string
-        product_type_id: number | string | undefined
+        product_preset_id: number | undefined
         state_id: number | string | undefined
         report_items?: ReportItem[]
-        public_web_ids?: Array<number | string>
         links?: ProductLink[]
         language?: string | null
         translations?: Record<string, Partial<Record<ProductField, TranslationStateValue>>>
         tags?: number[]
+        public_web_ids?: number[]
+        public_web_enabled?: boolean
     }
 
     const { t } = useI18n()
@@ -690,8 +765,6 @@
     const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
     const authStore = useAuthStore()
-    const publishStore = usePublishStore()
-    const { publicWebOptions } = storeToRefs(publishStore)
 
     // Component state
     const visible = ref<boolean>(false)
@@ -710,20 +783,22 @@
         id: -1,
         title: '',
         description: '',
-        product_type_id: undefined,
+        product_preset_id: undefined,
         state_id: undefined,
         report_items: [],
-        public_web_ids: [],
         links: [],
         language: null,
         translations: {},
-        tag_ids: []
+        tag_ids: [],
+        public_web_ids: [],
+        public_web_enabled: true
     })
 
-    const selectedType = ref<ProductType | null>(null)
+    const selectedProductPreset = ref<ProductPreset | null>(null)
     const reportItems = ref<ReportItem[]>([])
-    const productTypes = ref<ProductType[]>([])
-    const publisherPresets = ref<PublisherPreset[]>([])
+    const productPresets = ref<ProductPreset[]>([])
+    // The deliveries Publish sends to; all of the product preset's channels unless unticked.
+    const tickedDeliveryIds = ref<number[]>([])
     const availableStates = ref<AvailableState[]>([])
     const reportItemSelector = ref<{ openSelector?: () => void } | null>(null)
 
@@ -778,8 +853,8 @@
     const pendingField = ref<ProductField | null>(null)
     // The last language check, with what it was made for (see checkKey).
     const languageCheck = ref<{ key: string; check: LanguageCheck | null } | null>(null)
-    const publishLanguage = ref<string | null>(null)
-    const publishCheck = ref<LanguageCheck | null>(null)
+    // The checks of the languages Publish sends, for the confirmation.
+    const publishChecks = ref<Array<{ language: string; check: LanguageCheck | null }>>([])
     const showOutdatedConfirmation = ref<boolean>(false)
     const pendingOutdatedAction = ref<(() => void) | null>(null)
     // The check whose outdated translations the confirmation lists.
@@ -826,7 +901,6 @@
         )
     )
     const renderLanguage = computed<string | null>(() => (activeLanguage.value === 'source' ? product.value.language : activeLanguage.value))
-    const renderLanguages = computed<string[]>(() => [...(product.value.language ? [product.value.language] : []), ...productLanguages.value])
 
     const setTranslation = (language: string, field: ProductField, text: FieldTranslation): void => {
         product.value.translations = { ...product.value.translations, [language]: { ...product.value.translations[language], [field]: text } }
@@ -889,13 +963,13 @@
             : PRODUCT_FIELDS.filter((field) => sourceText(field) && fieldState(activeLanguage.value, field)?.origin === 'ai')
     )
 
-    // A person read the AI's text and keeps it: theirs, checked against the current original.
+    // A person read the AI's text and keeps it: still the AI's, but reviewed and checked against the current original.
     const markReviewed = (language: string, field: ProductField): void => {
         const local = product.value.translations[language]?.[field]
         if (!local?.value) return
-        setTranslation(language, field, { value: local.value, origin: 'manual' })
+        setTranslation(language, field, { value: local.value, origin: 'reviewed' })
         const stored = storedTranslations.value[language]?.[field]
-        if (stored) setStored(language, field, { ...stored, origin: 'manual', outdated: false })
+        if (stored) setStored(language, field, { ...stored, origin: 'reviewed', outdated: false })
     }
 
     async function reviewField(field: ProductField): Promise<void> {
@@ -984,10 +1058,11 @@
         await translateInTab('language', fields)
     }
 
-    // One text into the open tab's language; a translation a person wrote is replaced only after asking.
+    // One text into the open tab's language; a translation a person wrote or reviewed is replaced only after asking.
     function translateField(field: ProductField): void {
         pendingField.value = field
-        if (fieldState(activeLanguage.value, field)?.origin === 'manual') {
+        const state = fieldState(activeLanguage.value, field)
+        if (state && state.origin !== 'ai') {
             confirmOverwrite.value = true
             return
         }
@@ -1003,17 +1078,17 @@
     }
 
     // The product as the form has it, for the language check.
-    // For saved products, core ignored the submitted type and checked the saved database row; that could race the asynchronous type save and produce random warning on same selected type.
-    // Language checks now send id: -1, making core build the check from the current form’s selected type and report IDs.
+    // For saved products, core ignored the submitted product preset and checked the saved database row; that could race the asynchronous product preset save and produce random warning on same selected product preset.
+    // Language checks now send id: -1, making core build the check from the current form’s selected product preset and report IDs.
     const productPayload = () => ({
         ...product.value,
         id: -1,
-        product_type_id: selectedType.value?.id ?? product.value.product_type_id,
+        product_preset_id: selectedProductPreset.value?.id ?? product.value.product_preset_id,
         report_items: reportItems.value.map((item) => ({ id: item.id }))
     })
 
     async function fetchLanguageCheck(language: string | null): Promise<LanguageCheck | null> {
-        if (!language || !(selectedType.value?.id ?? product.value.product_type_id)) return null
+        if (!language || !(selectedProductPreset.value?.id ?? product.value.product_preset_id)) return null
         try {
             const response = (await checkProductLanguage(productPayload(), language)) as { data?: LanguageCheck }
             return response.data ?? null
@@ -1023,11 +1098,11 @@
         }
     }
 
-    // A check answers for one language, product type and set of reports. Once any of them
+    // A check answers for one language, product preset and set of reports. Once any of them
     // changes, the last answer is neither shown nor acted on: it would name the previous
-    // type's templates or the previous tab's outdated translations.
+    // product preset's templates or the previous tab's outdated translations.
     const checkKey = computed<string>(() =>
-        JSON.stringify([renderLanguage.value, selectedType.value?.id ?? null, reportItems.value.map((item) => item.id)])
+        JSON.stringify([renderLanguage.value, selectedProductPreset.value?.id ?? null, reportItems.value.map((item) => item.id)])
     )
     const checkIsCurrent = computed<boolean>(() => languageCheck.value?.key === checkKey.value)
     const currentCheck = computed<LanguageCheck | null>(() => (checkIsCurrent.value ? (languageCheck.value?.check ?? null) : null))
@@ -1047,12 +1122,6 @@
     watch([visible, checkKey], () => {
         clearTimeout(checkTimer)
         if (visible.value) checkTimer = setTimeout(() => void loadCurrentCheck(), 300)
-    })
-
-    watch(publishLanguage, async (language) => {
-        publishCheck.value = null
-        const check = showPublishConfirmation.value ? await fetchLanguageCheck(language) : null
-        if (language === publishLanguage.value) publishCheck.value = check
     })
 
     /** Outdated translations in the rendered language need a confirmation before preview or download. */
@@ -1125,7 +1194,7 @@
     }
 
     // Validation rules
-    const requiredRule = (value: string | number | null | undefined): true | string => !!value || t('common.required')
+    const requiredRule = (value: unknown): true | string => !!value || t('common.required')
 
     // Computed properties
     const canModify = computed(() => {
@@ -1133,8 +1202,24 @@
         return checkPermission('PUBLISH_UPDATE') && canModifyFlag.value
     })
 
+    // The deliveries that send the product somewhere; a format without a channel is only previewed.
+    const channelDeliveries = computed<Delivery[]>(() =>
+        (selectedProductPreset.value?.deliveries || []).filter((delivery) => delivery.publishing_channel_id)
+    )
+
+    // The product preset's formats, in delivery order.
+    const formats = computed(() => {
+        const byId = new Map<number, { id: number; title: string }>()
+        for (const delivery of selectedProductPreset.value?.deliveries || []) {
+            if (!byId.has(delivery.product_format_id)) {
+                byId.set(delivery.product_format_id, { id: delivery.product_format_id, title: delivery.product_format_title })
+            }
+        }
+        return [...byId.values()]
+    })
+
     const canPublish = computed(() => {
-        if (publisherPresets.value.length === 0) return false
+        if (channelDeliveries.value.length === 0) return false
         if (!isEditMode.value) return true
         return checkPermission('PUBLISH_PRODUCT') && canAccessFlag.value
     })
@@ -1146,18 +1231,55 @@
         return availableStates.value.some((s) => s.id === product.value.state_id && s.state_type === 'final')
     })
 
-    // The full names of the selected publisher presets, used in the publish dialog.
-    const selectedPublisherPresetNames = computed<string[]>(() =>
-        publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.name)
-    )
     const FIRST_STRONG_ISOLATE = '\u2068'
     const POP_DIRECTIONAL_ISOLATE = '\u2069'
     const isolateAuto = (value: string): string => `${FIRST_STRONG_ISOLATE}${value}${POP_DIRECTIONAL_ISOLATE}`
-    const selectedPublisherPresetList = computed(() =>
-        formatList(selectedPublisherPresetNames.value.map(isolateAuto), { style: 'long', type: 'conjunction' })
-    )
+    const listOf = (values: string[]): string => formatList(values.map(isolateAuto), { style: 'long', type: 'conjunction' })
 
-    const showPublicWebSelection = computed(() => publicWebOptions.value.length > 1)
+    // The language a delivery renders the product in: its own, else the product's.
+    const deliveryLanguage = (delivery: Delivery): string | null => delivery.language ?? product.value.language
+
+    const deliveryLabel = (delivery: Delivery): string => {
+        const label = t('product.delivery', {
+            format: isolateAuto(delivery.product_format_title),
+            channel: isolateAuto(String(delivery.publishing_channel_name ?? ''))
+        })
+        const language = deliveryLanguage(delivery)
+        return language ? t('product.delivery_in_language', { language: isolateAuto(languageName(language)), delivery: label }) : label
+    }
+
+    // The deliveries Publish will send to; the confirmation dialog lists one per line.
+    const tickedDeliveries = computed(() => channelDeliveries.value.filter((delivery) => tickedDeliveryIds.value.includes(delivery.id)))
+
+    // Where the published product also appears, as the product preset sets it.
+    const publicWebNote = computed(() => {
+        const productPreset = selectedProductPreset.value
+        if (!productPreset?.public_web_enabled) return ''
+        const webs = productPreset.public_web_names || []
+        return webs.length > 0 ? t('product.public_web_some', { webs: listOf(webs) }) : t('product.public_web_all')
+    })
+
+    // The webs the product can appear on, its product preset's; it can be left out of some.
+    const webChoices = computed(() => (selectedProductPreset.value?.public_web_enabled ? selectedProductPreset.value.web_choices || [] : []))
+
+    // Those it appears on: every one unless it is limited to some, or kept off them all. All of them
+    // are stored as none, so that a web the product preset gains later shows the product too.
+    const shownWebIds = computed<number[]>({
+        get: () => {
+            if (product.value.public_web_enabled === false) return []
+            const choices = webChoices.value.map((web) => web.id)
+            const own = product.value.public_web_ids || []
+            return own.length > 0 ? choices.filter((id) => own.includes(id)) : choices
+        },
+        set: (ids) => {
+            product.value.public_web_enabled = ids.length > 0
+            product.value.public_web_ids =
+                ids.length === 0 || ids.length === webChoices.value.length
+                    ? []
+                    : webChoices.value.map((web) => web.id).filter((id) => ids.includes(id))
+            handleUpdateRecord()
+        }
+    })
 
     // Methods
     function resetForm() {
@@ -1165,71 +1287,37 @@
             id: -1,
             title: '',
             description: '',
-            product_type_id: undefined,
+            product_preset_id: undefined,
             state_id: undefined,
             report_items: [],
-            public_web_ids: [],
             links: [],
             // Written in the user's default language unless they pick another one.
             language: defaultContentLanguage.value,
             translations: {},
-            tag_ids: []
+            tag_ids: [],
+            public_web_ids: [],
+            public_web_enabled: true
         }
         resetLanguages()
         productLinks.value = []
-        selectedType.value = null
+        selectedProductPreset.value = null
+        tickedDeliveryIds.value = []
         isEditMode.value = false
         showError.value = false
         canModifyFlag.value = false
         canAccessFlag.value = false
         reportItems.value = []
-        normalizePublicWebSelection()
         formRef.value?.reset?.()
-        resetPublisherPresets()
         selectDefaultState()
         initialFormState.value = snapshotForm()
     }
 
-    function normalizePublicWebIds(ids: Array<number | string> | undefined | null): Array<number | string> {
-        if (!Array.isArray(ids)) {
-            return []
-        }
-
-        return Array.from(new Set(ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))))
-    }
-
-    function normalizePublicWebSelection() {
-        // Without options the valid-id set is empty, so filtering here would
-        // silently wipe the product's saved targeting (e.g. after a failed
-        // options fetch). Leave the stored selection alone instead.
-        if (publicWebOptions.value.length === 0) {
-            return
-        }
-
-        const validIds = new Set(normalizePublicWebIds(publicWebOptions.value.map((web) => web.id)))
-        const selectedIds = normalizePublicWebIds(product.value.public_web_ids)
-
-        product.value.public_web_ids = selectedIds.filter((id) => validIds.has(Number(id)))
-
-        // Keep legacy behavior visible in UI: no explicit mapping means all websites.
-        if (showPublicWebSelection.value && product.value.public_web_ids.length === 0) {
-            product.value.public_web_ids = publicWebOptions.value.map((web) => web.id)
-        }
-    }
-
-    function resetPublisherPresets() {
-        publisherPresets.value.forEach((preset) => {
-            preset.selected = false
-        })
-    }
-
     function snapshotForm() {
+        // The ticked deliveries are not part of the product, so they are not an unsaved change.
         return JSON.stringify({
             product: product.value,
             links: productLinks.value,
-            selectedType: selectedType.value,
-            reportItems: reportItems.value,
-            publisherPresets: publisherPresets.value.map((p) => ({ id: p.id, selected: p.selected }))
+            reportItems: reportItems.value
         })
     }
 
@@ -1345,9 +1433,26 @@
         }
     }
 
-    function handleProductTypeChange(): void {
-        if (selectedType.value) {
-            product.value.product_type_id = selectedType.value.id
+    // Every channel of the product preset is ticked to begin with.
+    function tickAllDeliveries(): void {
+        tickedDeliveryIds.value = channelDeliveries.value.map((delivery) => delivery.id)
+    }
+
+    // The product's product preset, once both the product and the user's product presets are loaded.
+    function syncSelectedProductPreset(): void {
+        const productPresetId = product.value.product_preset_id
+        if (productPresetId === undefined || selectedProductPreset.value?.id === productPresetId) return
+        selectedProductPreset.value = productPresets.value.find((productPreset) => productPreset.id === productPresetId) || null
+        tickAllDeliveries()
+    }
+
+    function handleProductPresetChange(): void {
+        if (selectedProductPreset.value) {
+            product.value.product_preset_id = selectedProductPreset.value.id
+            // Webs picked from another product preset's: on every web of this one.
+            product.value.public_web_ids = []
+            product.value.public_web_enabled = true
+            tickAllDeliveries()
             handleUpdateRecord()
         }
     }
@@ -1357,20 +1462,12 @@
         if (!valid) return false
 
         showError.value = false
-        product.value.product_type_id = selectedType.value?.id
+        product.value.product_preset_id = selectedProductPreset.value?.id ?? product.value.product_preset_id
         product.value.report_items = reportItems.value.map((item) => ({ id: item.id }))
-        product.value.public_web_ids = normalizePublicWebIds(product.value.public_web_ids)
         product.value.links = productLinks.value
             .map((link) => ({ key: String(link.value_description ?? ''), url: String(link.value ?? '').trim() }))
             .filter((link) => link.url)
         return true
-    }
-
-    async function handlePublicWebSelectionChange(): Promise<void> {
-        await nextTick()
-        if (isEditMode.value && product.value.id !== -1) {
-            await handleUpdateRecord()
-        }
     }
 
     function openReportItemSelector(): void {
@@ -1385,16 +1482,11 @@
         }
     }
 
-    function getSelectedPublisherIds(): never[] {
-        return publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.id) as unknown as never[]
-    }
-
-    function validatePublisherSelection(): boolean {
-        const selectedIds = getSelectedPublisherIds()
-        if (selectedIds.length === 0) {
+    function validateDeliverySelection(): boolean {
+        if (tickedDeliveries.value.length === 0) {
             window.dispatchEvent(
                 new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'product.no_publisher_selected' }
+                    detail: { type: 'error', loc: 'product.no_delivery_selected' }
                 })
             )
             return false
@@ -1494,21 +1586,41 @@
         visible.value = false
     }
 
-    async function handlePublishConfirmation(): Promise<void> {
-        if (!validatePublisherSelection()) return
+    /** A language's check, with only the formats the ticked deliveries send in that language. */
+    function publishCheckFor(language: string, check: LanguageCheck | null): LanguageCheck | null {
+        if (!check) return null
+        const formatIds = new Set(
+            tickedDeliveries.value.filter((delivery) => deliveryLanguage(delivery) === language).map((delivery) => delivery.product_format_id)
+        )
+        return { ...check, formats: check.formats.filter((format) => formatIds.has(format.product_format_id)) }
+    }
 
-        const language = renderLanguage.value
-        publishLanguage.value = language
-        publishCheck.value = currentCheck.value
+    // Counts the confirmations opened, so a check that arrives late fills only its own.
+    let publishCheckRun = 0
+
+    async function handlePublishConfirmation(): Promise<void> {
+        if (!validateDeliverySelection()) return
+
+        const run = ++publishCheckRun
+        const languages = [...new Set(tickedDeliveries.value.map(deliveryLanguage).filter((language): language is string => !!language))]
+        // The open tab's language is usually checked already.
+        publishChecks.value = languages.map((language) => ({
+            language,
+            check: language === renderLanguage.value ? publishCheckFor(language, currentCheck.value) : null
+        }))
         if (!isEditMode.value && hasUnsavedChanges()) {
             showPublishUnsavedConfirmation.value = true
         } else {
             showPublishConfirmation.value = true
         }
-        // The open tab's check is still on its way: the dialog lists it once it arrives.
-        if (!checkIsCurrent.value) {
-            const check = await loadCurrentCheck()
-            if (publishLanguage.value === language) publishCheck.value = check
+        // The other checks: the dialog lists each once it arrives.
+        for (const [index, entry] of publishChecks.value.entries()) {
+            if (entry.check) continue
+            const check = entry.language === renderLanguage.value ? await loadCurrentCheck() : await fetchLanguageCheck(entry.language)
+            if (run !== publishCheckRun) return
+            publishChecks.value = publishChecks.value.map((other, at) =>
+                at === index ? { ...other, check: publishCheckFor(other.language, check) } : other
+            )
         }
     }
 
@@ -1517,24 +1629,21 @@
 
         if (!(await prepareProduct())) return
 
-        const selectedPublisherIds: any = getSelectedPublisherIds()
+        const deliveries = tickedDeliveries.value
 
         try {
-            const response = await publishProduct(product.value, selectedPublisherIds, publishLanguage.value)
-            if (response.data.overall_success) {
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: { type: 'success', loc: 'product.publish_successful' }
-                    })
-                )
-            } else {
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: { type: 'error', loc: 'product.publish_failed' }
-                    })
-                )
+            const response = await publishProduct(
+                product.value,
+                deliveries.map((delivery) => delivery.id)
+            )
+            notifyPublishResults(response.data?.results || [], deliveries)
+        } catch (error: unknown) {
+            // A failing delivery answers 500 with the result of every delivery.
+            const results = (error as { response?: { data?: { results?: PublishResult[] } } }).response?.data?.results
+            if (results) {
+                notifyPublishResults(results, deliveries)
+                return
             }
-        } catch {
             showError.value = true
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -1542,6 +1651,17 @@
                 })
             )
         }
+    }
+
+    /** Say whether every delivery went out, or which did not. One core no longer has is not reported, so did not go out. */
+    function notifyPublishResults(results: PublishResult[], deliveries: Delivery[]): void {
+        const sentIds = new Set(results.filter((result) => result.success).map((result) => result.delivery_id))
+        const failed = deliveries.filter((delivery) => !sentIds.has(delivery.id))
+        const detail =
+            failed.length === 0
+                ? { type: 'success', loc: 'product.publish_successful' }
+                : { type: 'error', loc: 'product.publish_failed_deliveries', params: { deliveries: listOf(failed.map(deliveryLabel)) } }
+        window.dispatchEvent(new CustomEvent('notification', { detail }))
     }
 
     async function saveAndPublish(): Promise<void> {
@@ -1560,8 +1680,8 @@
         handlePublish()
     }
 
-    async function handlePreview(event?: MouseEvent): Promise<void> {
-        if (needsOutdatedConfirmation(currentCheck.value, () => void handlePreview(event))) return
+    async function handlePreview(event?: MouseEvent, productFormatId?: number): Promise<void> {
+        if (needsOutdatedConfirmation(currentCheck.value, () => void handlePreview(event, productFormatId))) return
         // Reserve the tab before validation or the API request yields. Waiting
         // until either promise resolves loses browser user activation and may
         // cause the preview to be blocked as an unsolicited popup.
@@ -1579,7 +1699,7 @@
                 return
             }
 
-            const response = await previewProduct(product.value, ctrl, authStore.jwt, renderLanguage.value)
+            const response = await previewProduct(product.value, ctrl, authStore.jwt, productFormatId, renderLanguage.value)
             const token = response.data.token
 
             const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
@@ -1592,14 +1712,14 @@
         }
     }
 
-    async function handleDownload(event?: MouseEvent): Promise<void> {
-        if (needsOutdatedConfirmation(await loadCurrentCheck(), () => void handleDownload(event))) return
+    async function handleDownload(event?: MouseEvent, productFormatId?: number): Promise<void> {
+        if (needsOutdatedConfirmation(await loadCurrentCheck(), () => void handleDownload(event, productFormatId))) return
         const ctrl = Boolean(event?.ctrlKey || event?.metaKey)
 
         if (!(await prepareProduct())) return
 
         try {
-            const response = await previewProduct(product.value, ctrl, authStore.jwt, renderLanguage.value)
+            const response = await previewProduct(product.value, ctrl, authStore.jwt, productFormatId, renderLanguage.value)
             const downloaded = await ApiService.download(
                 `/publish/products/preview/${response.data.token}`,
                 undefined,
@@ -1624,40 +1744,13 @@
         }
     }
 
-    async function loadProductTypes() {
+    async function loadProductPresets() {
         try {
-            const response = await getAllUserProductTypes()
-            productTypes.value = response.data.items || []
+            const response = await getAllUserProductPresets()
+            productPresets.value = (response.data.items as ProductPreset[]) || []
+            syncSelectedProductPreset()
         } catch (error: unknown) {
-            console.error('Failed to load product types:', error)
-        }
-    }
-
-    async function loadPublisherPresets() {
-        try {
-            const response = await getAllUserPublishersPresets()
-            publisherPresets.value = (response.data.items || []).map((preset) => ({
-                ...preset,
-                selected: false
-            }))
-        } catch (error: unknown) {
-            console.error('Failed to load publisher presets:', error)
-        }
-    }
-
-    async function loadPublicWebOptions() {
-        // The store fetches the publish-scoped list once and caches it; a failed
-        // fetch must not touch the product's saved targeting below.
-        const wasPristine = !hasUnsavedChanges()
-        await publishStore.loadPublicWebOptions()
-        normalizePublicWebSelection()
-        // When this call actually refilled emptied options, the normalization above
-        // can adjust the targeting (stale ids dropped, the legacy "no mapping means
-        // all webs" made explicit). On a form the user has not touched yet that is
-        // our own adjustment, not their edit, so re-baseline the unsaved-changes
-        // snapshot rather than warning them about a change they did not make.
-        if (wasPristine && initialFormState.value !== null) {
-            initialFormState.value = snapshotForm()
+            console.error('Failed to load product presets:', error)
         }
     }
 
@@ -1665,10 +1758,6 @@
     function openDialog(): void {
         visible.value = true
         resetForm()
-        // Cheap when the options are already cached; it only re-requests after an
-        // invalidation (a web created or deleted elsewhere), so the target
-        // selector cannot go missing on a dialog opened later in the same view.
-        void loadPublicWebOptions()
     }
 
     function openEditDialog(data: ProductEditPayload | ProductDetailPayload, editMeta?: { modify: boolean; access: boolean }): void {
@@ -1682,10 +1771,9 @@
             id: data.id,
             title: data.title,
             description: data.description || '',
-            product_type_id: data.product_type_id,
+            product_preset_id: data.product_preset_id,
             state_id: data.state_id,
             report_items: data.report_items || [],
-            public_web_ids: normalizePublicWebIds(data.public_web_ids),
             links: data.links || [],
             language: (data as ProductDetailPayload).language ?? null,
             translations: Object.fromEntries(
@@ -1699,7 +1787,9 @@
                     )
                 ])
             ),
-            tag_ids: (data as ProductDetailPayload).tags ?? []
+            tag_ids: (data as ProductDetailPayload).tags ?? [],
+            public_web_ids: (data as ProductDetailPayload).public_web_ids,
+            public_web_enabled: (data as ProductDetailPayload).public_web_enabled
         }
         resetLanguages()
         storedTranslations.value = Object.fromEntries(
@@ -1716,13 +1806,9 @@
         productLinks.value = toLinkValues(data.links)
 
         reportItems.value = Array.isArray(data.report_items) ? [...data.report_items] : []
-        selectedType.value = productTypes.value.find((type) => type.id === data.product_type_id) || null
-        normalizePublicWebSelection()
+        selectedProductPreset.value = null
+        syncSelectedProductPreset()
         initialFormState.value = snapshotForm()
-        // See openDialog: refills the options after an invalidation. It runs after
-        // the product is in place, so its own normalizePublicWebSelection() call
-        // reconciles the loaded targeting against the freshly fetched options.
-        void loadPublicWebOptions()
     }
 
     // Event listeners
@@ -1755,9 +1841,7 @@
     onMounted(() => {
         void tagsStore.load('product')
         loadAvailableStates()
-        loadProductTypes()
-        loadPublisherPresets()
-        loadPublicWebOptions()
+        loadProductPresets()
         window.addEventListener('new-product', handleNewProduct)
         window.addEventListener('show-product-edit', handleShowProductEdit)
         window.addEventListener('report-item-updated', onReportItemUpdated)
@@ -1787,5 +1871,10 @@
     .confirm-btn,
     .confirm-btn :deep(.v-btn__content) {
         color: #fff !important;
+    }
+
+    .publish-deliveries {
+        list-style: none;
+        padding-inline-start: 16px;
     }
 </style>

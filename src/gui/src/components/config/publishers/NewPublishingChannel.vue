@@ -17,7 +17,7 @@
 
         <v-card>
             <DialogToolbar
-                :title="isEdit ? t('publishers.presets.edit') : t('publishers.presets.add_new')"
+                :title="isEdit ? t('publishers.channels.edit') : t('publishers.channels.add_new')"
                 :saving="saving"
                 :save-disabled="!selectedPublisher"
                 :show-save="canSave"
@@ -38,7 +38,7 @@
                         item-title="name"
                         item-value="id"
                         return-object
-                        :label="t('publishers.presets.node')"
+                        :label="t('publishers.channels.node')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -54,7 +54,7 @@
                         item-title="name"
                         item-value="id"
                         return-object
-                        :label="t('publishers.presets.publisher')"
+                        :label="t('publishers.channels.publisher')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -66,7 +66,7 @@
                         v-if="selectedPublisher"
                         v-model="localItem.name"
                         :spellcheck="spellcheck"
-                        :label="t('publishers.presets.name')"
+                        :label="t('publishers.channels.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -78,7 +78,7 @@
                         v-if="selectedPublisher"
                         v-model="localItem.description"
                         :spellcheck="spellcheck"
-                        :label="t('publishers.presets.description')"
+                        :label="t('publishers.channels.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -89,7 +89,7 @@
                     <v-checkbox
                         v-if="selectedPublisher"
                         v-model="localItem.use_for_notifications"
-                        :label="t('publishers.presets.use_for_notifications')"
+                        :label="t('publishers.channels.use_for_notifications')"
                         color="primary"
                         density="comfortable"
                         class="mb-3"
@@ -100,7 +100,7 @@
                     <div v-if="selectedPublisher && selectedPublisher.parameters && selectedPublisher.parameters.length > 0">
                         <v-divider class="my-4" />
                         <h3 class="text-subtitle-1 mb-3">
-                            {{ t('publishers.presets.parameters') }}
+                            {{ t('publishers.channels.parameters') }}
                         </h3>
 
                         <div
@@ -148,7 +148,7 @@
                         density="compact"
                         class="mb-3"
                     >
-                        {{ t('publishers.presets.error') }}
+                        {{ t('publishers.channels.error') }}
                     </v-alert>
                 </v-form>
             </v-card-text>
@@ -172,10 +172,10 @@
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { useAuth } from '@/composables/useAuth'
-    import { createNewPublisherPreset, updatePublisherPreset, getAllPublishersNodes } from '@/api/config'
+    import { createNewPublishingChannel, updatePublishingChannel, getAllPublishersNodes } from '@/api/config'
     import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
 
-    type PresetParameter = {
+    type ChannelParameter = {
         id?: string | number
         key?: string
         name?: string
@@ -188,7 +188,7 @@
     type Publisher = {
         id: string | number
         name?: string
-        parameters?: PresetParameter[]
+        parameters?: ChannelParameter[]
         [key: string]: unknown
     }
 
@@ -199,19 +199,19 @@
         [key: string]: unknown
     }
 
-    type PublisherPresetParameterValue = {
+    type PublishingChannelParameterValue = {
         value?: string
-        parameter?: PresetParameter
+        parameter?: ChannelParameter
         [key: string]: unknown
     }
 
-    type PublisherPresetItem = {
+    type PublishingChannelItem = {
         id: string | number | null
         name: string
         description: string
         use_for_notifications: boolean
         publisher_id: string | number | null
-        parameter_values: PublisherPresetParameterValue[]
+        parameter_values: PublishingChannelParameterValue[]
         [key: string]: unknown
     }
 
@@ -251,7 +251,7 @@
     const selectedPublisher = ref<Publisher | null>(null)
     const parameterValues = ref<string[]>([])
 
-    const defaultItem: PublisherPresetItem = {
+    const defaultItem: PublishingChannelItem = {
         // Empty string (not null): backend requires a string id even on create (ignored), null fails validation.
         id: '',
         name: '',
@@ -261,20 +261,20 @@
         parameter_values: []
     }
 
-    const localItem = ref<PublisherPresetItem>({ ...defaultItem })
+    const localItem = ref<PublishingChannelItem>({ ...defaultItem })
 
     const isEdit = computed(() => !!localItem.value.id)
-    const canCreate = computed(() => checkPermission('CONFIG_PUBLISHER_PRESET_CREATE'))
-    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_PUBLISHER_PRESET_UPDATE' : 'CONFIG_PUBLISHER_PRESET_CREATE'))
+    const canCreate = computed(() => checkPermission('CONFIG_PUBLISHING_CHANNEL_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_PUBLISHING_CHANNEL_UPDATE' : 'CONFIG_PUBLISHING_CHANNEL_CREATE'))
 
     // Watch for edit item changes
     watch(
         () => props.editItem,
         (newVal) => {
             if (newVal) {
-                const incoming = newVal as Partial<PublisherPresetItem> & {
+                const incoming = newVal as Partial<PublishingChannelItem> & {
                     publisher_id?: string | number | null
-                    parameter_values?: PublisherPresetParameterValue[]
+                    parameter_values?: PublishingChannelParameterValue[]
                 }
 
                 localItem.value = { ...defaultItem, ...incoming }
@@ -321,7 +321,7 @@
             parameterValues.value = newPublisher.parameters.map((param) => String(param.default_value ?? ''))
             return
         }
-        // Edit mode: the operator is moving the preset to a different
+        // Edit mode: the operator is moving the channel to a different
         // publisher (possibly on a different publishers node). Rebuild the
         // parameter scaffold from the target publisher's parameter set and
         // carry over values whose parameter.key matches the previously-
@@ -430,21 +430,21 @@
                     parameter: param
                 })) || []
 
-            const payload: PublisherPresetItem = {
+            const payload: PublishingChannelItem = {
                 ...localItem.value,
                 publisher_id: selectedPublisher.value.id,
                 parameter_values: paramValues
             }
 
             if (isEdit.value) {
-                await updatePublisherPreset(payload)
+                await updatePublishingChannel(payload)
                 window.dispatchEvent(
                     new CustomEvent('notification', {
                         detail: { type: 'success', loc: 'common.updated_successfully' }
                     })
                 )
             } else {
-                await createNewPublisherPreset(payload)
+                await createNewPublishingChannel(payload)
                 window.dispatchEvent(
                     new CustomEvent('notification', {
                         detail: { type: 'success', loc: 'common.created_successfully' }

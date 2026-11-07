@@ -77,7 +77,7 @@ class SFTPPublisher(BasePublisher):
                     any supported type, or its passphrase is missing or wrong.
             """
             resolved = str(Path(key_path).resolve())
-            # An unset preset field arrives as "", which paramiko takes for a real
+            # An unset channel field arrives as "", which paramiko takes for a real
             # passphrase and fails deep in bcrypt with "password and salt must not
             # be empty". None gets the meaningful "private key file is encrypted".
             ssh_key_password = ssh_key_password or None

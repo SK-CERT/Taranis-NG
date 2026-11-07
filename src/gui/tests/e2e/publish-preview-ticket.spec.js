@@ -20,17 +20,17 @@ import { createApiContext } from '../helpers/api-seed'
 const CORE_API = process.env.E2E_CORE_API || `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1`
 
 async function mintTicket(request, token) {
-    // product types are a config resource, not a publish one
-    const types = await request.get(`${CORE_API}/config/product-types`, {
+    // A product is previewed in a format of its product preset (the first unless one is named).
+    const productPresets = await request.get(`${CORE_API}/users/my-product-presets`, {
         headers: { Authorization: `Bearer ${token}` }
     })
-    if (!types.ok()) return null
-    const body = await types.json()
-    const productType = (body.items || []).find(Boolean)
-    if (!productType) return null
+    if (!productPresets.ok()) return null
+    const body = await productPresets.json()
+    const productPreset = (body.items || []).find((item) => (item.deliveries || []).length > 0)
+    if (!productPreset) return null
 
     const response = await request.post(`${CORE_API}/publish/products/preview-ticket`, {
-        data: { jwt: token, product: { product_type_id: productType.id, title: 'E2E preview', description: 'E2E' } }
+        data: { jwt: token, product: { product_preset_id: productPreset.id, title: 'E2E preview', description: 'E2E' } }
     })
     if (!response.ok()) return null
     return (await response.json()).token
@@ -50,7 +50,7 @@ test.describe('Product preview ticket', () => {
 
     test('a preview ticket may be redeemed a bounded number of times', async () => {
         const ticket = await mintTicket(request, token)
-        test.skip(!ticket, 'no product type available to preview in this environment')
+        test.skip(!ticket, 'no product preset with a format to preview in this environment')
 
         // Keep in step with PREVIEW_TICKET_MAX_REDEMPTIONS in src/core/api/publish.py.
         const maxRedemptions = 3
@@ -72,7 +72,7 @@ test.describe('Product preview ticket', () => {
 
     test('the preview CSP matches what the rendered format needs', async () => {
         const ticket = await mintTicket(request, token)
-        test.skip(!ticket, 'no product type available to preview in this environment')
+        test.skip(!ticket, 'no product preset with a format to preview in this environment')
 
         const response = await request.get(`${CORE_API}/publish/products/preview/${ticket}`)
         expect(response.status()).toBe(200)

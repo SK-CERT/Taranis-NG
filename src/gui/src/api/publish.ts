@@ -16,6 +16,9 @@ export function buildFilterQueryString(filter_data) {
         filter += '&range=' + encodeURIComponent(filter_data.filter.range)
     }
     filter += tagFilterQuery(filter_data.filter)
+    if (filter_data.filter.product_preset_id) {
+        filter += '&product_preset_id=' + encodeURIComponent(filter_data.filter.product_preset_id)
+    }
     return filter
 }
 
@@ -76,12 +79,14 @@ export function deleteProduct(product) {
     return ApiService.delete('/publish/products/' + product.id)
 }
 
-// `language` is the one the product is rendered in (the tab chosen in the publish dialog).
-export function publishProduct(product: unknown, publisher_ids: Array<number | string>, language: string | null = null) {
+/**
+ * Publish a product to the given deliveries of its product preset (all of them when omitted).
+ * Each delivery renders the product in its own language.
+ */
+export function publishProduct(product: unknown, delivery_ids?: number[]) {
     return ApiService.post('/publish/products/publish', {
         product,
-        publisher_ids,
-        language
+        delivery_ids
     })
 }
 
@@ -95,20 +100,19 @@ export function translateProduct(data: {
     return ApiService.post('/publish/products/translate', data)
 }
 
-// What rendering in `language` falls back on: reports missing it, outdated translations, templates.
+// What rendering in `language` falls back on: reports missing it, outdated translations, and the
+// language of each format's templates.
 export function checkProductLanguage(product: unknown, language: string | null) {
     return ApiService.post('/publish/products/language-check', { product, language })
 }
 
-export function getPublishPublicWebs() {
-    return ApiService.get('/publish/public-webs')
-}
-
-export function previewProduct(data, ctrl_key, jwt, language: string | null = null) {
+/** Preview a product in one format of its product preset (the first when omitted), in `language`. */
+export function previewProduct(data, ctrl_key, jwt, product_format_id?: number, language: string | null = null) {
     return ApiService.post('/publish/products/preview-ticket', {
         product: data,
         ctrl: ctrl_key,
         jwt,
+        product_format_id,
         language
     })
 }

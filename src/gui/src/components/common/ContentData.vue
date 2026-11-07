@@ -74,7 +74,7 @@
     // import CardNode from '@/components/common/CardNode.vue'
     // import CardPreset from '@/components/common/CardPreset.vue'
     // import CardUser from '@/components/config/users/CardUser.vue'
-    // import CardProductType from '@/components/config/product_types/CardProductType.vue'
+    // import CardProductFormat from '@/components/config/product_formats/CardProductFormat.vue'
     // import CardSource from '@/components/config/osint_sources/CardSource.vue'
     // import CardGroup from '@/components/config/osint_sources/CardGroup.vue'
 
