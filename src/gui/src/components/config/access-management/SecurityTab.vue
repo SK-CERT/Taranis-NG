@@ -130,47 +130,139 @@
                     >
                         {{ t('access_management.security.secure_context_hint') }}
                     </v-alert>
-
-                    <v-alert
-                        v-if="errorMessage"
-                        type="error"
-                        density="compact"
-                        class="mt-4"
-                    >
-                        {{ errorMessage }}
-                    </v-alert>
-
-                    <div class="d-flex align-center mt-4">
-                        <span
-                            v-if="settings.updated_by"
-                            class="text-caption text-medium-emphasis"
-                        >
-                            <i18n-t
-                                scope="global"
-                                keypath="access_management.security.last_updated"
-                            >
-                                <template #user>
-                                    <bdi dir="auto">{{ settings.updated_by }}</bdi>
-                                </template>
-                                <template #at>
-                                    <bdi dir="auto">{{ updatedAtDisplay }}</bdi>
-                                </template>
-                            </i18n-t>
-                        </span>
-                        <v-spacer />
-                        <v-btn
-                            v-if="canUpdate"
-                            type="submit"
-                            color="primary"
-                            variant="flat"
-                            prepend-icon="mdi-content-save"
-                            :loading="saving"
-                        >
-                            {{ t('common.save') }}
-                        </v-btn>
-                    </div>
                 </v-card-text>
             </v-card>
+
+            <v-card
+                class="mt-4"
+                data-test="security-api-keys"
+            >
+                <v-card-title class="d-flex align-center">
+                    <v-icon class="me-2">mdi-key-chain-variant</v-icon>
+                    {{ t('api_keys.policy_title') }}
+                </v-card-title>
+
+                <v-card-subtitle class="pb-2">
+                    {{ t('api_keys.policy_description') }}
+                </v-card-subtitle>
+
+                <v-card-text>
+                    <v-row>
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
+                            <v-switch
+                                v-model="settings.api_key_require_expiry"
+                                :label="t('api_keys.policy_require_expiry')"
+                                color="primary"
+                                hide-details
+                                :disabled="!canUpdate || saving"
+                                data-test="security-api-key-require-expiry"
+                            />
+                        </v-col>
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
+                            <v-text-field
+                                v-model="maxDaysInput"
+                                type="number"
+                                min="1"
+                                step="1"
+                                :label="t('api_keys.policy_max_days')"
+                                :hint="t('api_keys.policy_max_days_hint')"
+                                persistent-hint
+                                :rules="maxDaysRules"
+                                variant="outlined"
+                                density="comfortable"
+                                clearable
+                                :disabled="!canUpdate || saving"
+                                data-test="security-api-key-max-days"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-switch
+                                v-model="settings.api_key_require_allowlist"
+                                :label="t('api_keys.policy_require_allowlist')"
+                                color="primary"
+                                hide-details
+                                :disabled="!canUpdate || saving"
+                                data-test="security-api-key-require-allowlist"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-textarea
+                                v-model="siteAllowlist"
+                                :label="t('api_keys.policy_site_allowlist')"
+                                :hint="t('api_keys.policy_site_allowlist_hint')"
+                                persistent-hint
+                                :rules="siteAllowlistRules"
+                                rows="3"
+                                auto-grow
+                                dir="ltr"
+                                spellcheck="false"
+                                variant="outlined"
+                                density="comfortable"
+                                :disabled="!canUpdate || saving"
+                                class="security-api-key-allowlist"
+                                data-test="security-api-key-allowlist"
+                            />
+                        </v-col>
+                    </v-row>
+
+                    <v-alert
+                        v-if="siteAllowlistNarrowed"
+                        type="warning"
+                        variant="tonal"
+                        density="compact"
+                        class="mt-4"
+                        data-test="security-api-key-allowlist-warning"
+                    >
+                        {{ t('api_keys.policy_site_allowlist_warning') }}
+                    </v-alert>
+                    <p class="text-caption text-medium-emphasis mt-3 mb-0">{{ t('api_keys.policy_existing_keys') }}</p>
+                </v-card-text>
+            </v-card>
+
+            <v-alert
+                v-if="errorMessage"
+                type="error"
+                density="compact"
+                class="mt-4"
+            >
+                {{ errorMessage }}
+            </v-alert>
+
+            <div class="d-flex align-center mt-4">
+                <span
+                    v-if="settings.updated_by"
+                    class="text-caption text-medium-emphasis"
+                >
+                    <i18n-t
+                        scope="global"
+                        keypath="access_management.security.last_updated"
+                    >
+                        <template #user>
+                            <bdi dir="auto">{{ settings.updated_by }}</bdi>
+                        </template>
+                        <template #at>
+                            <bdi dir="auto">{{ updatedAtDisplay }}</bdi>
+                        </template>
+                    </i18n-t>
+                </span>
+                <v-spacer />
+                <v-btn
+                    v-if="canUpdate"
+                    type="submit"
+                    color="primary"
+                    variant="flat"
+                    prepend-icon="mdi-content-save"
+                    :loading="saving"
+                >
+                    {{ t('common.save') }}
+                </v-btn>
+            </div>
         </v-form>
     </v-container>
 </template>
@@ -181,6 +273,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import SuggestField from '@/components/common/SuggestField.vue'
+    import { invalidAllowlistEntries, nonPublicAllowlistEntries, parseAllowlist } from '@/components/common/api-keys/apiKeys'
     import { getSecuritySettings, updateSecuritySettings } from '@/api/config'
 
     type SecuritySettingsItem = {
@@ -191,14 +284,19 @@
         rp_id: string
         rp_name: string
         origins: string
+        api_key_require_expiry: boolean
+        api_key_max_days: number | null
+        api_key_require_allowlist: boolean
+        api_key_allowed_ips: string[]
         updated_by?: string
         updated_at?: string
     }
 
-    type SecuritySettingsResponse = Omit<SecuritySettingsItem, 'rp_id' | 'rp_name' | 'origins'> & {
+    type SecuritySettingsResponse = Omit<SecuritySettingsItem, 'rp_id' | 'rp_name' | 'origins' | 'api_key_allowed_ips'> & {
         rp_id: string | null
         rp_name: string | null
         origins: string | null
+        api_key_allowed_ips?: string[] | null
     }
 
     type FormValidationResult = {
@@ -220,7 +318,41 @@
         passkey_second_factor: true,
         rp_id: '',
         rp_name: '',
-        origins: ''
+        origins: '',
+        api_key_require_expiry: false,
+        api_key_max_days: null,
+        api_key_require_allowlist: false,
+        api_key_allowed_ips: []
+    })
+
+    // The site-wide allowlist is edited as text, one network per line; the API speaks lists.
+    const siteAllowlist = ref('')
+    const savedAllowlist = ref<string[]>([])
+    // A field emptied with its clear button, or typed in, is a string; the API takes a whole number or null.
+    const maxDaysInput = computed<string | number | null>({
+        get: () => settings.value.api_key_max_days ?? null,
+        set: (value) => {
+            const text = value === null || value === undefined ? '' : String(value).trim()
+            settings.value.api_key_max_days = text === '' ? null : Number(text)
+        }
+    })
+    const maxDaysRules = [
+        (value: string | number | null) =>
+            value === null || value === '' || (Number.isInteger(Number(value)) && Number(value) >= 1) || t('api_keys.policy_max_days_invalid')
+    ]
+    const siteAllowlistRules = [
+        (value: string) => {
+            const invalid = invalidAllowlistEntries(value)
+            if (invalid.length) return t('api_keys.allowed_ips_invalid', { entries: invalid.join(', ') })
+            const notPublic = nonPublicAllowlistEntries(value)
+            return notPublic.length === 0 || t('api_keys.allowed_ips_not_public', { entries: notPublic.join(', ') })
+        }
+    ]
+    // Warn when saving would refuse addresses that are allowed now: a list appears, or loses entries.
+    const siteAllowlistNarrowed = computed(() => {
+        const next = parseAllowlist(siteAllowlist.value)
+        if (next.length === 0) return false
+        return savedAllowlist.value.length === 0 || savedAllowlist.value.some((entry) => !next.includes(entry))
     })
 
     const canUpdate = computed(() => checkPermission('CONFIG_AUTH_PROVIDER_UPDATE'))
@@ -289,8 +421,12 @@
             ...data,
             rp_id: data.rp_id ?? '',
             rp_name: data.rp_name ?? '',
-            origins: data.origins ?? ''
+            origins: data.origins ?? '',
+            api_key_max_days: data.api_key_max_days ?? null,
+            api_key_allowed_ips: data.api_key_allowed_ips ?? []
         }
+        savedAllowlist.value = [...settings.value.api_key_allowed_ips]
+        siteAllowlist.value = settings.value.api_key_allowed_ips.join('\n')
     }
 
     const loadData = async (): Promise<void> => {
@@ -311,7 +447,8 @@
 
         saving.value = true
         try {
-            const response = (await updateSecuritySettings(settings.value)) as { data: SecuritySettingsResponse }
+            const payload = { ...settings.value, api_key_allowed_ips: parseAllowlist(siteAllowlist.value) }
+            const response = (await updateSecuritySettings(payload)) as { data: SecuritySettingsResponse }
             applyResponse(response.data)
             window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'common.updated_successfully' } }))
         } catch (error) {
@@ -327,3 +464,9 @@
         loadData()
     })
 </script>
+
+<style scoped>
+    .security-api-key-allowlist :deep(textarea) {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+</style>

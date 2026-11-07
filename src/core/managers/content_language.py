@@ -157,7 +157,7 @@ def clean_enum_translations(translations: object) -> dict[str, dict[str, str]] |
 
 
 def clean_language_templates(templates: object, template_keys: Iterable[str]) -> dict[str, dict[str, str]]:
-    """Validate a product type's per-language templates, ``{language: {PARAM_TEMPLATE_PATH: path}}``.
+    """Validate a product format's per-language templates, ``{language: {PARAM_TEMPLATE_PATH: path}}``.
 
     Args:
         templates (object): The submitted overrides.

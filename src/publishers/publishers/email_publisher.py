@@ -88,7 +88,7 @@ class EMAILPublisher(BasePublisher):
         smtp = {"host": smtp_server, "port": smtp_server_port, "user": user, "password": password}
 
         def _read_key(key_path: str, description: str) -> str:
-            """Read the signing or encryption key the preset points at.
+            """Read the signing or encryption key the channel points at.
 
             Args:
                 key_path (str): The configured path to the key file.

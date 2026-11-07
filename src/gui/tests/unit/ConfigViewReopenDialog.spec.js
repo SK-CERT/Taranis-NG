@@ -21,13 +21,15 @@ vi.mock('@/composables/useAuth', () => ({
 }))
 
 const mockConfigStore = {
-    productTypes: { items: [], total_count: 0 },
-    publisherPresets: { items: [], total_count: 0 },
+    productFormats: { items: [], total_count: 0 },
+    productPresets: { items: [], total_count: 0 },
+    publishingChannels: { items: [], total_count: 0 },
     botPresets: { items: [], total_count: 0 },
     osintSources: { items: [], total_count: 0 },
     collectorsNodes: { items: [], total_count: 0 },
-    loadProductTypes: vi.fn().mockResolvedValue({}),
-    loadPublisherPresets: vi.fn().mockResolvedValue({}),
+    loadProductFormats: vi.fn().mockResolvedValue({}),
+    loadProductPresets: vi.fn().mockResolvedValue({}),
+    loadPublishingChannels: vi.fn().mockResolvedValue({}),
     loadBotPresets: vi.fn().mockResolvedValue({}),
     loadOSINTSources: vi.fn().mockResolvedValue({}),
     loadCollectorsNodes: vi.fn().mockResolvedValue({})
@@ -41,8 +43,8 @@ vi.mock('@/api/config', async () => {
     const actual = await vi.importActual('@/api/config')
     return {
         ...actual,
-        deleteProductType: vi.fn().mockResolvedValue({}),
-        deletePublisherPreset: vi.fn().mockResolvedValue({}),
+        deleteProductFormat: vi.fn().mockResolvedValue({}),
+        deletePublishingChannel: vi.fn().mockResolvedValue({}),
         deleteBotPreset: vi.fn().mockResolvedValue({})
     }
 })
@@ -66,8 +68,9 @@ function makeDialogStub(opens) {
 }
 
 const cases = [
-    { name: 'ProductTypesView', path: '@/views/admin/ProductTypesView.vue', child: 'NewProductType' },
-    { name: 'PublisherPresetsView', path: '@/views/admin/PublisherPresetsView.vue', child: 'NewPublisherPreset' },
+    { name: 'ProductFormatsView', path: '@/views/admin/ProductFormatsView.vue', child: 'NewProductFormat' },
+    { name: 'ProductPresetsView', path: '@/views/admin/ProductPresetsView.vue', child: 'NewProductPreset' },
+    { name: 'PublishingChannelsView', path: '@/views/admin/PublishingChannelsView.vue', child: 'NewPublishingChannel' },
     { name: 'BotPresetsView', path: '@/views/admin/BotPresetsView.vue', child: 'NewBotPreset' },
     { name: 'OSINTSourcesView', path: '@/views/admin/OSINTSourcesView.vue', child: 'NewOSINTSource' }
 ]

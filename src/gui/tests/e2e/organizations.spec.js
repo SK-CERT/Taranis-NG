@@ -5,7 +5,7 @@ import { login, navigateToConfig, openDialog, saveDialog, generateTestName, acti
  * Organization Management CRUD E2E Tests
  *
  * Template for testing CRUD operations on other entities
- * Can be replicated for: ACLs, ProductTypes, Attributes, ReportTypes,
+ * Can be replicated for: ACLs, ProductFormats, Attributes, ReportTypes,
  * OSINTSources, OSINTSourceGroups, Collectors, DataProviders, etc.
  */
 
@@ -149,10 +149,10 @@ test.describe('Organization Management', () => {
 /**
  * TEMPLATE: Copy this file to test other CRUD entities
  *
- * 1. Copy this file: cp organizations.spec.js product-types.spec.js
- * 2. Update entity name: Organizations → ProductTypes
- * 3. Update navigation: 'Organizations' → 'Product Types'
- * 4. Update URL pattern: /organizations/ → /product-types/
+ * 1. Copy this file: cp organizations.spec.js product-formats.spec.js
+ * 2. Update entity name: Organizations → ProductFormats
+ * 3. Update navigation: 'Organizations' → 'Product Formats'
+ * 4. Update URL pattern: /organizations/ → /product-formats/
  * 5. Update field names to match entity schema
  * 6. Add entity-specific validations
  *
@@ -160,7 +160,7 @@ test.describe('Organization Management', () => {
  * - ✅ Roles
  * - ✅ Organizations
  * - ⏳ ACL Entries
- * - ⏳ Product Types
+ * - ⏳ Product Formats
  * - ⏳ Attributes
  * - ⏳ Report Types
  * - ⏳ OSINT Sources
@@ -176,7 +176,7 @@ test.describe('Organization Management', () => {
  * - ⏳ Notification Templates
  * - ⏳ Bots Nodes
  * - ⏳ Bot Presets
- * - ⏳ Publisher Presets
+ * - ⏳ Publishing Channels
  * - ⏳ Users
  * - ⏳ Word Lists
  */

@@ -26,7 +26,7 @@ write is atomic, and `pdf_template.html` is replaced last so an interruption
 cannot expose a template whose macro or asset is absent.
 
 The migration never reads, writes, or traverses `user_templates`; custom
-presenters remain operator-managed. It makes no database, product-type,
+presenters remain operator-managed. It makes no database, product-format,
 Compose, or volume changes.
 
 Operators can inspect the decision without writing:

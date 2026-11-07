@@ -85,6 +85,10 @@ class AttributeEnum(db.Model):
     attribute_id = db.Column(db.Integer, db.ForeignKey("attribute.id"))
     attribute = db.relationship("Attribute", back_populates="attribute_enums")
 
+    # Every attribute loads its constants, and CPE and CVE hold over a million rows between them:
+    # without the index, each load scans them all.
+    __table_args__ = (db.Index("ix_attribute_enum_attribute_id_index", "attribute_id", "index"),)
+
     # `id` shadows the builtin, but it is the schema field marshmallow unpacks into
     # this constructor, so renaming it would break deserialization.
     def __init__(self, id: int | None, index: int, value: str, description: str, translations: dict | None = None) -> None:  # noqa: A002

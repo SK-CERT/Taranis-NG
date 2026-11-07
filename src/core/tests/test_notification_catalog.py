@@ -142,6 +142,26 @@ def test_the_test_message_asks_nobody_to_contact_an_administrator() -> None:
     assert "Administrator" not in body
 
 
+def test_an_expired_api_key_is_reported_as_a_fact_nobody_is_asked_to_have_made() -> None:
+    subject, body = catalog.render(
+        "en",
+        "api_key_expired",
+        {
+            "name": "Alice",
+            "username": "alice",
+            "api_key_name": "SOAR sync",
+            "api_key_prefix": "tnk_abcdefgh…",
+            "expired_at": "2027-02-05 16:58 CET",
+        },
+    )
+
+    assert subject == "[Taranis NG] API key expired"
+    for line in ("API key: SOAR sync", "Key begins with: tnk_abcdefgh…", "Expired: 2027-02-05 16:58 CET"):
+        assert line in body.splitlines()
+    assert "Changed by" not in body
+    assert "contact your administrator" not in body
+
+
 def test_user_supplied_values_never_reach_the_subject() -> None:
     subject, _body = catalog.render("en", "passkey_added", {"name": "Eve", "passkey_name": "x\r\nBcc: victim@example.test"})
 

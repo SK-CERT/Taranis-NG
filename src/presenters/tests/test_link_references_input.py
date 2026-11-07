@@ -55,8 +55,8 @@ def _input(product_links: list[str] | None) -> dict:
     product = {
         "title": "Bulletin",
         "description": "Read [1] and [3].",
-        "product_type": "PDF",
-        "product_type_description": "",
+        "product_format": "PDF",
+        "product_format_description": "",
         "user": {"username": "analyst", "name": "Analyst"},
         "id": "7",
     }

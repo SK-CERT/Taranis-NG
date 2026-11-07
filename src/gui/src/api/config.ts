@@ -165,6 +165,30 @@ export function updateUserStatus(user_id, status) {
     return ApiService.put('/config/users/' + user_id + '/status', { status: status })
 }
 
+export function getAllApiKeys(filter: { search?: string; user_id?: number | null } = {}) {
+    const query = new URLSearchParams()
+    if (filter.search) query.set('search', filter.search)
+    if (filter.user_id) query.set('user_id', String(filter.user_id))
+    const suffix = query.toString()
+    return ApiService.get('/config/api-keys' + (suffix ? '?' + suffix : ''))
+}
+
+export function getApiKeyPermissions(user_id: number) {
+    return ApiService.get('/config/api-keys/permissions?user_id=' + encodeURIComponent(String(user_id)))
+}
+
+export function createApiKey(api_key) {
+    return ApiService.post('/config/api-keys', api_key)
+}
+
+export function updateApiKey(id: number, changes) {
+    return ApiService.put('/config/api-keys/' + id, changes)
+}
+
+export function deleteApiKey(id: number) {
+    return ApiService.delete('/config/api-keys/' + id)
+}
+
 export function resetUserMfa(user_id, options) {
     const body = options ? { reset_totp: !!options.reset_totp, reset_passkeys: !!options.reset_passkeys } : {}
     return ApiService.post('/config/users/' + user_id + '/reset-mfa', body)
@@ -214,20 +238,41 @@ export function translateReportItemTypeLabels(data: {
     return ApiService.post('/config/report-item-types/translate-labels', data)
 }
 
-export function getAllProductTypes(filter) {
-    return ApiService.get('/config/product-types?search=' + filter.search)
+export function getAllProductFormats(filter) {
+    return ApiService.get('/config/product-formats?search=' + filter.search)
 }
 
-export function createNewProductType(product_type) {
-    return ApiService.post('/config/product-types', product_type)
+export function createNewProductFormat(product_format) {
+    return ApiService.post('/config/product-formats', product_format)
 }
 
-export function deleteProductType(product_type) {
-    return ApiService.delete('/config/product-types/' + product_type.id)
+export function deleteProductFormat(product_format) {
+    return ApiService.delete('/config/product-formats/' + product_format.id)
 }
 
-export function updateProductType(product_type) {
-    return ApiService.put('/config/product-types/' + product_type.id, product_type)
+export function updateProductFormat(product_format) {
+    return ApiService.put('/config/product-formats/' + product_format.id, product_format)
+}
+
+export function getAllProductPresets(filter) {
+    return ApiService.get('/config/product-presets?search=' + encodeURIComponent(filter.search ?? ''))
+}
+
+/** The formats, channels and public webs a product preset can be made of. */
+export function getProductPresetOptions() {
+    return ApiService.get('/config/product-presets/options')
+}
+
+export function createProductPreset(productPreset) {
+    return ApiService.post('/config/product-presets', productPreset)
+}
+
+export function updateProductPreset(productPreset) {
+    return ApiService.put('/config/product-presets/' + productPreset.id, productPreset)
+}
+
+export function deleteProductPreset(productPreset) {
+    return ApiService.delete('/config/product-presets/' + productPreset.id)
 }
 
 export function getAllPermissions(filter) {
@@ -533,20 +578,20 @@ export function deletePublishersNode(node) {
     return ApiService.delete('/config/publishers-nodes/' + node.id)
 }
 
-export function getAllPublisherPresets(filter) {
-    return ApiService.get('/config/publishers-presets?search=' + filter.search)
+export function getAllPublishingChannels(filter) {
+    return ApiService.get('/config/publishing-channels?search=' + filter.search)
 }
 
-export function createNewPublisherPreset(preset) {
-    return ApiService.post('/config/publishers-presets', preset)
+export function createNewPublishingChannel(channel) {
+    return ApiService.post('/config/publishing-channels', channel)
 }
 
-export function updatePublisherPreset(node) {
-    return ApiService.put('/config/publishers-presets/' + node.id, node)
+export function updatePublishingChannel(node) {
+    return ApiService.put('/config/publishing-channels/' + node.id, node)
 }
 
-export function deletePublisherPreset(node) {
-    return ApiService.delete('/config/publishers-presets/' + node.id)
+export function deletePublishingChannel(node) {
+    return ApiService.delete('/config/publishing-channels/' + node.id)
 }
 
 export function getAllBotsNodes(filter) {

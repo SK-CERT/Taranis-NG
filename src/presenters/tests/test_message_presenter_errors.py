@@ -48,8 +48,8 @@ def presenter_input() -> object:
     product = types.SimpleNamespace(
         title="P",
         description="d",
-        product_type="T",
-        product_type_description="",
+        product_format="T",
+        product_format_description="",
         user=types.SimpleNamespace(name="Analyst"),
         id="1",
     )

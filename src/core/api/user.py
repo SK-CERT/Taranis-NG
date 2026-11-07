@@ -1,6 +1,6 @@
 """This module defines several Flask-RESTful resources for handling user-related operations.
 
-This includes word lists, product types, and publisher presets. It also provides
+This includes word lists, product presets, and publishing channels. It also provides
 an initialization function to add these resources to a Flask API instance.
 """
 
@@ -16,13 +16,16 @@ from http import HTTPStatus
 from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
-from managers import auth_manager, notification_manager, totp_manager, webauthn_manager
+from managers import api_key_manager, auth_manager, notification_manager, totp_manager, webauthn_manager
 from managers.auth_manager import auth_required
-from model.product_type import ProductType
-from model.publisher_preset import PublisherPreset
+from managers.db_manager import db
+from model.apikey import ApiKey
+from model.product_preset import ProductPreset
+from model.publishing_channel import PublishingChannel
 from model.user import Hotkey, UserWordList
 from model.webauthn_credential import WebauthnCredential
 from model.word_list import WordList
+from sqlalchemy.exc import IntegrityError
 
 
 class UserHotkeys(Resource):
@@ -109,8 +112,21 @@ class AvailableWordLists(Resource):
         return WordList.get_all_json(search, user, acl_check=True)
 
 
-class UserProductTypes(Resource):
-    """Flask-RESTful resource that handles HTTP GET requests for retrieving all product types associated with the authenticated user.
+class UserProductPresets(Resource):
+    """The product presets the authenticated user may publish products as."""
+
+    @auth_required("PUBLISH_ACCESS")
+    def get(self) -> dict:
+        """Retrieve the product presets the user can see, with their deliveries.
+
+        Returns:
+            dict: ``{"total_count": int, "items": [...]}``.
+        """
+        return ProductPreset.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
+
+
+class UserPublishingChannels(Resource):
+    """A resource for handling user publishing channels.
 
     Attributes:
         Resource: A base class for implementing API resources.
@@ -118,29 +134,12 @@ class UserProductTypes(Resource):
 
     @auth_required("PUBLISH_ACCESS")
     def get(self) -> dict:
-        """Retrieve all product types in JSON format.
+        """Retrieve all publishing channels in JSON format.
 
         Returns:
-            list: A list of all product types in JSON format.
+            list: A list of all publishing channels in JSON format.
         """
-        return ProductType.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
-
-
-class UserPublisherPresets(Resource):
-    """A resource for handling user publisher presets.
-
-    Attributes:
-        Resource: A base class for implementing API resources.
-    """
-
-    @auth_required("PUBLISH_ACCESS")
-    def get(self) -> dict:
-        """Retrieve all publisher presets in JSON format.
-
-        Returns:
-            list: A list of all publisher presets in JSON format.
-        """
-        return PublisherPreset.get_all_json(None)
+        return PublishingChannel.get_all_json(None)
 
 
 class UserTotp(Resource):
@@ -301,11 +300,94 @@ class UserPasskey(Resource):
         return {}, HTTPStatus.OK
 
 
+def _api_key_rejected(ex: Exception) -> tuple[dict, HTTPStatus]:
+    """Answer a rejected change of the caller's API key: say which rule it broke."""
+    db.session.rollback()
+    if isinstance(ex, IntegrityError):
+        return {"error": "You already have an API key with this name"}, HTTPStatus.BAD_REQUEST
+    if isinstance(ex, ValueError):
+        return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+    raise ex
+
+
+class UserApiKeys(Resource):
+    """Self-service API keys of the signed-in user.
+
+    Needs ``MY_API_KEYS_MANAGE`` and a signed-in session: an API key is refused, so a key can
+    never create or change keys.
+    """
+
+    @auth_required("MY_API_KEYS_MANAGE", allow_api_key=False)
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """List the caller's API keys.
+
+        Returns:
+            dict: The keys, the policy, the caller's address and the permissions a key can be limited to.
+        """
+        user = auth_manager.get_user_from_jwt()
+        keys = ApiKey.get_filtered(request.args.get("search"), user.id)
+        return api_key_manager.list_payload(keys, permissions_of=user), HTTPStatus.OK
+
+    @auth_required("MY_API_KEYS_MANAGE", allow_api_key=False)
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create an API key for the caller.
+
+        Returns:
+            dict: The new key and, this once, its plaintext under ``key``.
+        """
+        user = auth_manager.get_user_from_jwt()
+        try:
+            item, plaintext = api_key_manager.create(user, request.json or {}, user)
+        except (ValueError, IntegrityError) as ex:
+            return _api_key_rejected(ex)
+        return {"item": item, "key": plaintext}, HTTPStatus.CREATED
+
+
+class UserApiKey(Resource):
+    """One API key of the signed-in user."""
+
+    @auth_required("MY_API_KEYS_MANAGE", allow_api_key=False)
+    def put(self, api_key_id: int) -> tuple[dict, HTTPStatus]:
+        """Change the caller's API key: name, description, enabled state, scope or allowed IPs.
+
+        Args:
+            api_key_id (int): The API key ID.
+
+        Returns:
+            dict: The changed key.
+        """
+        user = auth_manager.get_user_from_jwt()
+        record = ApiKey.find_for_user(api_key_id, user.id)
+        if record is None:
+            return {"error": "API key not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return {"item": api_key_manager.update(record, request.json or {}, user)}, HTTPStatus.OK
+        except (ValueError, IntegrityError) as ex:
+            return _api_key_rejected(ex)
+
+    @auth_required("MY_API_KEYS_MANAGE", allow_api_key=False)
+    def delete(self, api_key_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete the caller's API key.
+
+        Args:
+            api_key_id (int): The API key ID.
+
+        Returns:
+            dict: Empty on success.
+        """
+        user = auth_manager.get_user_from_jwt()
+        record = ApiKey.find_for_user(api_key_id, user.id)
+        if record is None:
+            return {"error": "API key not found"}, HTTPStatus.NOT_FOUND
+        api_key_manager.delete(record, user)
+        return {}, HTTPStatus.OK
+
+
 def initialize(api: Api) -> None:
     """Initialize the API with user-related resources.
 
     This function adds several user-related resources to the provided API instance.
-    The resources include word lists, product types, publisher presets and
+    The resources include word lists, product formats, publishing channels and
     self-service security (TOTP, passkeys).
 
     Args:
@@ -314,18 +396,21 @@ def initialize(api: Api) -> None:
         - UserHotkeys: Endpoint for user hotkeys at "/api/v1/users/my-hotkeys".
         - UserWordLists: Endpoint for user word lists at "/api/v1/users/my-word-lists".
         - AvailableWordLists: Endpoint for available word lists at "/api/v1/users/available-word-lists".
-        - UserProductTypes: Endpoint for user product types at "/api/v1/users/my-product-types".
-        - UserPublisherPresets: Endpoint for user publisher presets at "/api/v1/users/my-publisher-presets".
+        - UserProductPresets: Endpoint for user product presets at "/api/v1/users/my-product-presets".
+        - UserPublishingChannels: Endpoint for user publishing channels at "/api/v1/users/my-publishing-channels".
         - UserTotp: Self-service TOTP enrollment at "/api/v1/users/my-totp".
         - UserPasskeys/UserPasskey*: Self-service passkey management at "/api/v1/users/my-passkeys...".
+        - UserApiKeys/UserApiKey: Self-service API keys at "/api/v1/users/my-api-keys...".
     """
     api.add_resource(UserHotkeys, "/api/v1/users/my-hotkeys")
     api.add_resource(UserWordLists, "/api/v1/users/my-word-lists")
     api.add_resource(AvailableWordLists, "/api/v1/users/available-word-lists")
-    api.add_resource(UserProductTypes, "/api/v1/users/my-product-types")
-    api.add_resource(UserPublisherPresets, "/api/v1/users/my-publisher-presets")
+    api.add_resource(UserProductPresets, "/api/v1/users/my-product-presets")
+    api.add_resource(UserPublishingChannels, "/api/v1/users/my-publishing-channels")
     api.add_resource(UserTotp, "/api/v1/users/my-totp")
     api.add_resource(UserPasskeys, "/api/v1/users/my-passkeys")
     api.add_resource(UserPasskeyRegisterBegin, "/api/v1/users/my-passkeys/register-begin")
     api.add_resource(UserPasskeyRegisterFinish, "/api/v1/users/my-passkeys/register-finish")
     api.add_resource(UserPasskey, "/api/v1/users/my-passkeys/<int:credential_id>")
+    api.add_resource(UserApiKeys, "/api/v1/users/my-api-keys")
+    api.add_resource(UserApiKey, "/api/v1/users/my-api-keys/<int:api_key_id>")

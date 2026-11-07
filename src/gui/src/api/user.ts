@@ -20,12 +20,12 @@ export function updateUserWordLists(data) {
     return ApiService.put('/users/my-word-lists', data)
 }
 
-export function getAllUserProductTypes() {
-    return ApiService.get('/users/my-product-types')
+export function getAllUserProductPresets() {
+    return ApiService.get('/users/my-product-presets')
 }
 
-export function getAllUserPublishersPresets() {
-    return ApiService.get('/users/my-publisher-presets')
+export function getAllUserPublishingChannels() {
+    return ApiService.get('/users/my-publishing-channels')
 }
 
 export function getMyTotp() {
@@ -62,4 +62,20 @@ export function renamePasskey(id: number, name: string) {
 
 export function deletePasskey(id: number) {
     return ApiService.delete('/users/my-passkeys/' + id)
+}
+
+export function getMyApiKeys() {
+    return ApiService.get('/users/my-api-keys')
+}
+
+export function createMyApiKey(api_key) {
+    return ApiService.post('/users/my-api-keys', api_key)
+}
+
+export function updateMyApiKey(id: number, changes) {
+    return ApiService.put('/users/my-api-keys/' + id, changes)
+}
+
+export function deleteMyApiKey(id: number) {
+    return ApiService.delete('/users/my-api-keys/' + id)
 }

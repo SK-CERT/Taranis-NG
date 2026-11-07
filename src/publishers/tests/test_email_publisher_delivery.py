@@ -170,17 +170,17 @@ def smtp_server(monkeypatch: pytest.MonkeyPatch) -> type[RecordingSMTP]:
 @pytest.fixture
 def publish(
     smtp_server: type[RecordingSMTP],
-    email_preset: Callable[..., object],
+    email_channel: Callable[..., object],
 ) -> Callable[..., Publication]:
-    """Publish an email preset and report what came out the other end.
+    """Publish an email channel and report what came out the other end.
 
     Returns:
-        Callable: Takes the preset parameters and payload fields to override (see the
-            ``email_preset`` fixture) and returns the resulting :class:`Publication`.
+        Callable: Takes the channel parameters and payload fields to override (see the
+            ``email_channel`` fixture) and returns the resulting :class:`Publication`.
     """
 
     def _publish(**overrides: object) -> Publication:
-        response, status = EMAILPublisher().publish(email_preset(**overrides))
+        response, status = EMAILPublisher().publish(email_channel(**overrides))
         from_addr, to_addrs, raw = smtp_server.sent[-1] if smtp_server.sent else (None, [], None)
         return Publication(
             status=status,
@@ -209,7 +209,7 @@ def test_a_message_the_server_accepted_is_reported_as_sent(publish: Callable[...
     assert RecordingSMTP.helo_calls == 0
 
 
-def test_the_server_the_preset_names_is_the_one_we_talk_to(
+def test_the_server_the_channel_names_is_the_one_we_talk_to(
     publish: Callable[..., Publication],
     smtp_server: type[RecordingSMTP],
 ) -> None:
@@ -222,18 +222,18 @@ def test_the_session_is_encrypted_and_authenticated(
     publish: Callable[..., Publication],
     smtp_server: type[RecordingSMTP],
 ) -> None:
-    """Port 587 is submission: STARTTLS, then the preset's credentials."""
+    """Port 587 is submission: STARTTLS, then the channel's credentials."""
     publish(SMTP_SERVER_PORT="587", EMAIL_USERNAME="taranis", EMAIL_PASSWORD="hunter2")
 
     assert smtp_server.starttls_used
     assert smtp_server.credentials == ("taranis", "hunter2")
 
 
-def test_a_preset_without_credentials_does_not_authenticate(
+def test_a_channel_without_credentials_does_not_authenticate(
     publish: Callable[..., Publication],
     smtp_server: type[RecordingSMTP],
 ) -> None:
-    """The unauthenticated relay case, which is what the real presets here use."""
+    """The unauthenticated relay case, which is what the real channels here use."""
     publication = publish(SMTP_SERVER_PORT="25", EMAIL_USERNAME="", EMAIL_PASSWORD="")
 
     assert publication.status == HTTPStatus.OK
@@ -322,8 +322,8 @@ def test_a_refused_recipient_is_still_reported_as_sent(
     assert publication.status == HTTPStatus.OK
 
 
-def test_every_preset_recipient_is_on_the_envelope(publish: Callable[..., Publication]) -> None:
-    """A comma-separated preset field is several recipients, not one malformed address."""
+def test_every_channel_recipient_is_on_the_envelope(publish: Callable[..., Publication]) -> None:
+    """A comma-separated channel field is several recipients, not one malformed address."""
     publication = publish(EMAIL_RECIPIENT="one@example.org, two@example.org")
 
     # envelope builds the recipient list from a set, so the order is not ours to expect.
@@ -334,14 +334,14 @@ def test_every_preset_recipient_is_on_the_envelope(publish: Callable[..., Public
 # ---------------------------------------------------------------------- subject and body
 
 
-def test_the_preset_subject_and_body_are_used_when_no_presenter_ran(publish: Callable[..., Publication]) -> None:
+def test_the_channel_subject_and_body_are_used_when_no_presenter_ran(publish: Callable[..., Publication]) -> None:
     publication = publish(EMAIL_SUBJECT="Security Warning", EMAIL_MESSAGE="See attached.")
 
     assert publication.message["Subject"] == "Security Warning"
     assert body_of(publication.message) == "See attached."
 
 
-def test_the_presenter_overrides_the_preset_subject_and_body(publish: Callable[..., Publication]) -> None:
+def test_the_presenter_overrides_the_channel_subject_and_body(publish: Callable[..., Publication]) -> None:
     publication = publish(
         EMAIL_SUBJECT="Security Warning",
         EMAIL_MESSAGE="See attached.",
@@ -382,7 +382,7 @@ def test_a_long_subject_keeps_its_spaces_where_it_folds(publish: Callable[..., P
 
 
 def test_an_empty_subject_and_body_still_send(publish: Callable[..., Publication]) -> None:
-    """An unconfigured preset field must not cost the publication."""
+    """An unconfigured channel field must not cost the publication."""
     publication = publish(EMAIL_SUBJECT="", EMAIL_MESSAGE="")
 
     assert publication.status == HTTPStatus.OK
@@ -450,7 +450,7 @@ def test_the_attachment_is_named_by_the_presenter_and_arrives_intact(publish: Ca
 
 
 def test_an_unnamed_attachment_falls_back_to_a_timestamp(publish: Callable[..., Publication]) -> None:
-    """A product type with no file name template still has to produce a usable file."""
+    """A product format with no file name template still has to produce a usable file."""
     publication = publish(att_file_name=None)
 
     assert re.fullmatch(r"file_\d{14}\.json", only_attachment(publication.message).get_filename())

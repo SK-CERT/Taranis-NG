@@ -14,7 +14,8 @@ export const configLinks: GroupNavItem[] = [
             'CONFIG_ROLE_ACCESS',
             'CONFIG_ACL_ACCESS',
             'CONFIG_ORGANIZATION_ACCESS',
-            'CONFIG_AUTH_PROVIDER_ACCESS'
+            'CONFIG_AUTH_PROVIDER_ACCESS',
+            'CONFIG_API_KEY_ACCESS'
         ],
         translate: true
     },
@@ -31,7 +32,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-presentation',
         title: 'nav_menu.presenters',
         route: '/config/presenters',
-        permissions: ['CONFIG_PRODUCT_TYPE_ACCESS', 'CONFIG_PRESENTERS_NODE_ACCESS'],
+        permissions: ['CONFIG_PRODUCT_FORMAT_ACCESS', 'CONFIG_PRESENTERS_NODE_ACCESS'],
         translate: true
     },
     {
@@ -39,7 +40,15 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-upload-network',
         title: 'nav_menu.publishers',
         route: '/config/publishers',
-        permissions: ['CONFIG_PUBLISHER_PRESET_ACCESS', 'CONFIG_PUBLISHERS_NODE_ACCESS'],
+        permissions: ['CONFIG_PUBLISHING_CHANNEL_ACCESS', 'CONFIG_PUBLISHERS_NODE_ACCESS'],
+        translate: true
+    },
+    {
+        id: 15,
+        icon: 'mdi-package-variant-closed',
+        title: 'nav_menu.product_presets',
+        route: '/config/product-presets',
+        permissions: ['CONFIG_PRODUCT_PRESET_ACCESS'],
         translate: true
     },
     {

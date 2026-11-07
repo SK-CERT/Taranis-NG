@@ -322,7 +322,7 @@ export async function fillRequiredParameters(dialog, value = 'none') {
     // same dialogs embed EntitySelectTable "Search" boxes, and filling one of those
     // would filter the table the spec then selects from.
     //
-    // The second filter is not redundant: NewProductType wraps its heading in a flex row
+    // The second filter is not redundant: NewProductFormat wraps its heading in a flex row
     // (heading + help button) that holds no field, so matching on the heading alone would
     // settle on that row and quietly fill nothing.
     //

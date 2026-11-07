@@ -10,9 +10,9 @@ const legacyConfigRoutes = [
     ['/config/collectors/groups', '/config/collectors', 'groups'],
     ['/config/collectors/nodes', '/config/collectors', 'nodes'],
     ['/config/presenters/nodes', '/config/presenters', 'nodes'],
-    ['/config/product/types', '/config/presenters', 'types'],
+    ['/config/product/types', '/config/presenters', 'formats'],
     ['/config/publishers/nodes', '/config/publishers', 'nodes'],
-    ['/config/publishers/presets', '/config/publishers', 'presets'],
+    ['/config/publishers/presets', '/config/publishers', 'channels'],
     ['/config/bots/nodes', '/config/bots', 'nodes'],
     ['/config/bots/presets', '/config/bots', 'presets'],
     ['/config/remote/access', '/config/remote', 'access'],
@@ -42,6 +42,12 @@ describe('legacy route redirects', () => {
             params: { groupId: 'all' },
             query: { from: 'bookmark', manualSource: 'manual-42' }
         })
+    })
+
+    it('sends the distributions page to the product presets it became', () => {
+        const route = router.getRoutes().find((candidate) => candidate.path === '/config/distributions')
+
+        expect(route?.redirect).toEqual({ path: '/config/product-presets' })
     })
 
     it('maps the legacy manual-entry root to an explicit Assess dialog handoff', () => {

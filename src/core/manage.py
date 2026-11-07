@@ -6,8 +6,6 @@
 # if TYPE_CHECKING:
 #     from flask.app import Flask
 
-import random
-import string
 import time
 from http import HTTPStatus
 from os import abort, getenv, read
@@ -16,7 +14,7 @@ from pathlib import Path
 import click
 from flask import Flask
 from flask.cli import FlaskGroup
-from managers import db_manager
+from managers import db_manager, ip_allowlist
 from managers.log_manager import logger
 from model import (  # noqa: F401  Don't remove 'osint_source' and bot_preset reference otherwise relationship problems
     apikey,
@@ -32,6 +30,7 @@ from model import (  # noqa: F401  Don't remove 'osint_source' and bot_preset re
     public_web,
     public_web_node,
     role,
+    security_settings,
     user,
 )
 from remote.bots_api import BotsApi
@@ -641,76 +640,125 @@ def upload_to(filename: str) -> None:
         abort()
 
 
+def _find_api_key(opt_id: int | None, opt_name: str | None, opt_user: str | None) -> apikey.ApiKey:
+    """Find the API key named by --id, or by --name and --user; abort when there is none."""
+    if opt_id is not None:
+        record = apikey.ApiKey.find(opt_id)
+    elif opt_name:
+        owner = user.User.find(opt_user) if opt_user else None
+        if opt_user and not owner:
+            logger.error(f"The specified user '{opt_user}' does not exist!")
+            abort()
+        record = apikey.ApiKey.find_by_name(opt_name, owner.id if owner else None)
+    else:
+        logger.error("Specify the API key by --id, or by --name and --user!")
+        abort()
+    if not record:
+        logger.error("API key not found!")
+        abort()
+    return record
+
+
+def _split(value: str | None) -> list[str]:
+    return [item.strip() for item in (value or "").split(",") if item.strip()]
+
+
 @cli.command("apikey")
 @click.option("--list", "-l", "opt_list", is_flag=True)
 @click.option("--create", "-c", "opt_create", is_flag=True)
 @click.option("--delete", "-d", "opt_delete", is_flag=True)
+@click.option("--enable", "opt_enable", is_flag=True)
+@click.option("--disable", "opt_disable", is_flag=True)
+@click.option("--id", "opt_id", type=int)
 @click.option("--name", "-n", "opt_name")
+@click.option("--description", "opt_description")
 @click.option("--user", "-u", "opt_user")
 @click.option("--expires", "-e", "opt_expires")
-def api_keys_management(opt_list: bool, opt_create: bool, opt_delete: bool, opt_name: str, opt_user: str, opt_expires: str) -> None:
+@click.option("--permissions", "opt_permissions")
+@click.option("--allowed-ips", "opt_allowed_ips")
+def api_keys_management(
+    opt_list: bool,
+    opt_create: bool,
+    opt_delete: bool,
+    opt_enable: bool,
+    opt_disable: bool,
+    opt_id: int | None,
+    opt_name: str | None,
+    opt_description: str | None,
+    opt_user: str | None,
+    opt_expires: str | None,
+    opt_permissions: str | None,
+    opt_allowed_ips: str | None,
+) -> None:
     """Manage API keys.
 
-    This function provides functionality to list, create, and delete API keys.
+    List, create, enable, disable and delete API keys. Only a hash of a key is stored: the key
+    is printed once, when it is created.
 
     Args:
-        opt_list (bool): If True, list all existing API keys.
-        opt_create (bool): If True, create a new API key.
-        opt_delete (bool): If True, delete an existing API key.
-        opt_name (str): The name of the API key.
-        opt_user (str): The user associated with the API key.
-        opt_expires (str): The expiration date of the API key.
+        opt_list (bool): List all API keys (never the keys themselves).
+        opt_create (bool): Create an API key for --user, named --name.
+        opt_delete (bool): Delete the API key given by --id, or by --name and --user.
+        opt_enable (bool): Enable that API key.
+        opt_disable (bool): Disable that API key.
+        opt_id (int): The ID of the API key.
+        opt_name (str): The name of the API key, unique per user.
+        opt_description (str): What the API key is for.
+        opt_user (str): The username of the key's owner.
+        opt_expires (str): When the key expires, e.g. "2027-12-31 16:55" (server time zone).
+        opt_permissions (str): Comma-separated permission ids to limit the key to.
+        opt_allowed_ips (str): Comma-separated IP addresses or CIDR ranges the key may be used from.
     """
     if opt_list:
-        apikeys = apikey.ApiKey.get_all()
-        for k in apikeys:
+        for k in apikey.ApiKey.get_all():
+            scope = ", ".join(p.id for p in k.permissions) if k.restricted else "all permissions of the user"
             logger.info(
-                f"Id: {k.id}\n\tName: {k.name}\n\tKey: {k.key}\n\tCreated: {k.created_at}\n\tUser id: {k.user_id}\n\tExpires: {k.expires_at}",
+                f"Id: {k.id}\n\tName: {k.name}\n\tKey: {k.key_prefix}...\n\tUser: {k.user.username if k.user else k.user_id}"
+                f"\n\tEnabled: {k.enabled}\n\tCreated: {k.created_at}\n\tExpires: {k.expires_at or 'never'}"
+                f"\n\tScope: {scope or 'none'}\n\tAllowed IPs: {', '.join(ip_allowlist.as_list(k.allowed_ips)) or 'any'}"
+                f"\n\tLast used: {k.last_used_at or 'never'}{f' from {k.last_used_ip}' if k.last_used_ip else ''}",
             )
 
     if opt_create:
         if not opt_name:
             logger.error("Name not specified!")
             abort()
-
-        if apikey.ApiKey.find_by_name(opt_name):
-            logger.error("Name already exists!")
-            abort()
-
         if not opt_user:
             logger.error("User not specified!")
             abort()
-
-        u = None
-        if opt_user:
-            u = user.User.find(opt_user)
-            if not u:
-                logger.error(f"The specified user '{opt_user}' does not exist!")
-                abort()
-
+        owner = user.User.find(opt_user)
+        if not owner:
+            logger.error(f"The specified user '{opt_user}' does not exist!")
+            abort()
+        permissions = _split(opt_permissions)
         data = {
-            # 'id': None,
             "name": opt_name,
-            "key": "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=40)),  # noqa: S311
-            "user_id": u.id,
-            "expires_at": opt_expires or None,
+            "description": opt_description,
+            "expires_at": opt_expires,
+            "restricted": bool(permissions),
+            "permissions": permissions,
+            "allowed_ips": _split(opt_allowed_ips),
         }
+        try:
+            policy = security_settings.SecuritySettings.get_api_key_policy()
+            k, plaintext = apikey.ApiKey.create(owner, data, created_by="manage.py", policy=policy)
+        except ValueError as ex:
+            db_manager.db.session.rollback()
+            logger.error(str(ex))
+            abort()
+        logger.info(f"ApiKey '{k.name}' with id {k.id} created for user '{owner.username}'.")
+        # The key is not stored, only its hash: this is the only time it can be shown.
+        click.echo(f"API key (shown only once): {plaintext}")
 
-        k = apikey.ApiKey.add_new(data)
-        logger.info(f"ApiKey '{opt_name}' with id {k.id} created.")
+    if opt_enable or opt_disable:
+        k = _find_api_key(opt_id, opt_name, opt_user)
+        k.apply_update({"enabled": bool(opt_enable)}, policy=security_settings.SecuritySettings.get_api_key_policy())
+        logger.info(f"ApiKey '{k.name}' has been {'enabled' if opt_enable else 'disabled'}.")
 
     if opt_delete:
-        if not opt_name:
-            logger.error("Name not specified!")
-            abort()
-
-        k = apikey.ApiKey.find_by_name(opt_name)
-        if not k:
-            logger.error("Name not found!")
-            abort()
-
+        k = _find_api_key(opt_id, opt_name, opt_user)
         apikey.ApiKey.delete(k.id)
-        logger.info(f"ApiKey '{opt_name}' has been deleted.")
+        logger.info(f"ApiKey '{k.name}' has been deleted.")
 
 
 @cli.command("public-web")

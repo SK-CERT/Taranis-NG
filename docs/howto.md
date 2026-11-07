@@ -15,6 +15,7 @@ item and product preview.
 - [Using AI in Taranis NG](#_toc6)
 - [Citing sources in reports and products](#_toc7)
 - [Reports and products in several languages](#_toc8)
+- [Products: what is published, in which languages, formats and channels](#_toc9)
 
 # <a id="_toc1"></a>Altering the roles
 
@@ -32,8 +33,9 @@ sources you've created into different groups.
 
 If you want to restrict the access, go to Configuration -> ACLs, and create
 a new ACL by clicking `Add new`. You can pick any particular item type
-(Collector, OSINT Source, OSINT Source Group, Product Type, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
-access types to everyone, selected users, or selected roles.
+(Collector, OSINT Source, OSINT Source Group, Product, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
+access types to everyone, selected users, or selected roles. An ACL on a product (a product
+preset, see [Products](#_toc9)) covers the products published with it.
 
 # <a id="_toc4"></a>Customizing stop lists
 
@@ -87,7 +89,7 @@ Currently, you may manage the following:
 | `role`     | (WIP) List, create, edit and delete user roles. | `--list`, `-l` : list all roles<br /> `--filter`, `-f` : filter roles by their name or description<br /> `--create`, `-c` : create a new role<br /> `--edit`, `-e` : edit an existing role<br /> `--delete`, `-d` : delete a role<br /> `--id` : specify the role id (in combination with `--edit` or `--delete`)<br /> `--name` : specify the role name<br /> `--description` : specify the role description (default is `""`)<br /> `--permissions` : specify a list of permissions, divided with a comma (`,`), that the role would allow |
 | `collector, bot`     | (WIP) List, create, edit, delete and update nodes. | `--list`, `-l` : list all nodes<br /> `--create`, `-c` : create a new node<br /> `--edit`, `-e` : edit an existing node<br /> `--delete`, `-d` : delete a node<br /> `--update`, `-u` : re-initialize node<br /> `--all`, `-a` : update all nodes (in combination with `--update`)<br /> `--show-api-key` : show API key in plaintext (in combination with `--list`)<br /> `--id` : specify the node id (in combination with `--edit`, `--delete` or `--update`)<br /> `--name` : specify the node name<br /> `--description` : specify the collector description (default is `""`)<br /> `--api-url` : specify the collector node API url<br /> `--api-key` : specify the collector node API key |
 | `dictionary`     | Update CPE, CWE and CVE dictionaries. | `--upload-cpe` : upload the CPE dictionary (expected on STDIN in XML format) to the path indicated by `CPE_UPDATE_FILE` environment variable, and update the database from that file.<br /> `--upload-cve` : upload the CVE dictionary (expected on STDIN in XML format) to the path indicated by `CVE_UPDATE_FILE` environment variable, and update the database from that file.<br /> `--upload-cwe` : upload the CWE dictionary (expected on STDIN in XML format) to the path indicated by `CWE_UPDATE_FILE` environment variable, and update the database from that file. |
-| `apikey`     | List, create and delete apikeys. | `--list`, `-l` : list all apikeys<br /> `--create`, `-c` : create a new apikey<br /> `--delete`, `-d` : delete a apikey<br /> `--name` : specify the apikey name<br /> `--user` : specify the user's name<br /> `--expires` : specify the apikey expiration datetime |
+| `apikey`     | List, create, enable, disable and delete API keys. Only a hash of each key is stored: the key is printed once, when it is created. API keys can also be managed in the GUI (**Configuration → Access Management → API keys**, and **User settings → API keys** for one's own). | `--list`, `-l` : list all API keys (never the keys themselves)<br /> `--create`, `-c` : create a new API key and print it<br /> `--enable` / `--disable` : enable or disable an API key<br /> `--delete`, `-d` : delete an API key<br /> `--id` : specify the API key id (in combination with `--enable`, `--disable` or `--delete`)<br /> `--name`, `-n` : specify the API key name, unique per user<br /> `--user`, `-u` : specify the username of the key's owner<br /> `--description` : what the key is for<br /> `--expires`, `-e` : specify the expiration datetime (`YYYY-MM-DD HH:MM`, server time zone)<br /> `--permissions` : limit the key to these permissions, divided by a comma (`,`)<br /> `--allowed-ips` : public IP addresses or CIDR ranges the key may be used from, divided by a comma (`,`) |
 
 
 Here are some examples:
@@ -229,28 +231,68 @@ zcat cwec_latest.xml.zip | \
 
 Some Linux distributions might provide gzcat instead of zcat.
 
-### Create new ApiKey
-
-```bash
-manage.py apikey \
-    --create \
-    --name "My ApiKey"
-```
-
-### Create a new API key for a user with an expiration date
+### Create a new API key
 
 ```bash
 manage.py apikey \
     --create \
     --name "My ApiKey" \
-    --user "test_user" \
-    --expire "2022-12-31 16:55"
+    --user "test_user"
 ```
 
 Command output:
 
 ```
-ApiKey 'My ApiKey' with id 3 created.
+ApiKey 'My ApiKey' with id 3 created for user 'test_user'.
+API key (shown only once): tnk_ZmV5B0Zq1c3Yk2hJ9c0wPq8u6TtR1vXx4Ae7sL2mN0o
+```
+
+Only a hash of the key is stored, so copy it now; it cannot be shown again. A script sends it
+in the `Authorization` header and acts with the permissions of the key's owner:
+
+```bash
+curl -H "Authorization: ApiKey tnk_ZmV5B0Zq1c3Yk2hJ9c0wPq8u6TtR1vXx4Ae7sL2mN0o" \
+    https://taranis.example.com/api/v1/assess/osint-source-groups
+```
+
+### Create a limited API key that expires
+
+```bash
+manage.py apikey \
+    --create \
+    --name "SOAR sync" \
+    --user "soar" \
+    --expires "2027-12-31 16:55" \
+    --permissions "ASSESS_ACCESS,ANALYZE_ACCESS" \
+    --allowed-ips "185.10.20.0/24,2a01:4f8::/32"
+```
+
+A limited key can do only what it is limited to and its owner can still do. An expiry, a
+maximum lifetime and an IP allowlist can be required for every new key, and a site-wide IP
+allowlist can be set for all of them, under **Configuration → Access Management → Security**.
+When a key expires, its owner is notified (on the channels set up under **Notifications**),
+once; the check runs every five minutes.
+
+Only public addresses can be listed. Private (`10.0.0.0/8`, `172.16.0.0/12`,
+`192.168.0.0/16`, `fc00::/7`), shared (`100.64.0.0/10`), loopback, link-local, multicast,
+broadcast, documentation, benchmarking and other reserved ranges are refused, and so is any
+range that reaches into one of them (such as `0.0.0.0/0`). IPv6 must be global unicast
+(`2000::/3`).
+
+IP allowlists are checked against the client address that the trusted reverse proxies
+(`TRUSTED_PROXY_HOPS`, 1 for the bundled Traefik) report in `X-Forwarded-For`. Set it to the
+real number of proxies in front of core, and do not let clients reach core except through
+them: whoever talks to core directly can write that header and claim any address. A client
+connecting over IPv6 through Docker's userland proxy shows up as the Docker bridge address
+(e.g. `172.18.0.1`) unless IPv6 is enabled for the network (`enable_ipv6`). The API key
+dialogs show the address core sees for you, so you can check it before relying on a list;
+an address that is not public cannot be used for one.
+
+### Disable or delete an API key
+
+```bash
+manage.py apikey --disable --name "SOAR sync" --user "soar"
+manage.py apikey --delete --id 3
 ```
 
 # <a id="_toc6"></a>Using AI in Taranis NG
@@ -427,21 +469,20 @@ constants).
   same for that language, and **Mark AI translations as reviewed** keeps its AI texts as they are.
   A translation a person wrote is replaced only from that text's own button, after confirming; the
   check mark next to **AI** marks one text reviewed.
-- **Show product preview** and **Download** render the open tab's language. The publish dialog
-  has a **Publish in** select; each publish uses one language, so publishing two languages takes
-  two publishes.
+- **Show product preview** and **Download** render the open tab's language. **Publish** sends each
+  delivery of the product preset in its own language (see [Products](#_toc9)).
 - Notices under the tabs say what a language falls back on: reports without a translation into
-  it, outdated translations (preview, download and publish ask to confirm them first), and a
-  product type without templates for it.
+  it, outdated translations (preview, download and publish ask to confirm them first), and each
+  format of the product's preset that has no templates for it.
 
 ### Templates per language
 
-In **Configuration → Presenters → Product Types**, the **Default** tab holds all parameters and
+In **Configuration → Presenters → Product Formats**, the **Default** tab holds all parameters and
 **Language of the templates**, the language the default templates are written in. **Add
 language** adds a tab with only the template paths for that language; a path left empty uses
 the default one. A product is rendered with the templates of its language, then English, then
 the default ones. A presenter without templates, such as JSON, has none of these settings.
-Existing per-language product types (for example `e-mail CZ` and `e-mail SK`) keep working; set
+Existing per-language product formats (for example `e-mail CZ` and `e-mail SK`) keep working; set
 their template language, and a product rendered in another language warns about it.
 
 For template authors, rendering in a language changes only additive fields, so existing
@@ -476,3 +517,60 @@ A bulletin whose reports are in different languages shows each one in its own.
 
 Remote presenter nodes must be upgraded before core: core sends presenters fields that older
 nodes reject. Core and public-web nodes can be upgraded in either order.
+
+# <a id="_toc9"></a>Products: what is published, in which languages, formats and channels
+
+A **product** is the content: its title and description and the reports it collects. Three
+things decide how it is published:
+
+- a **product format** is a presenter and its template: an e-mail, a JSON file, a PDF, a
+  Mastodon post (Configuration -> Presenters -> Product Formats);
+- a **publishing channel** is where a rendered product goes: an e-mail address, an SFTP server,
+  a Mastodon account (Configuration -> Publishers -> Publishing Channels);
+- a **product preset**, shown as a product in Configuration -> Products, says which languages
+  of the product go in which formats to which channels, for example *Cyberfeed*.
+
+A product picks a product preset, and **Publish** runs it. Each row of a preset is a language
+and a format, and the channels they are sent to. *Cyberfeed* could have these rows:
+
+- Czech, *Mastodon post* -> *Mastodon CZ* and *Mastodon SK*, and the mailing list;
+- English, *Mastodon post* -> the mailing list;
+- Slovak, *PDF* -> SFTP;
+- Slovak, *HTML* -> SFTP.
+
+A row without a language publishes the product in the language it is written in. A channel gets
+each language and format on its own: the mailing list above gets two e-mails, one in Czech and
+one in English, and the SFTP server two files. A row without a channel is only previewed. Each
+language of each format is rendered once per publish, then sent to every channel it goes to. A
+channel that fails does not stop the others; the notification names the deliveries that failed.
+
+In the product dialog, every delivery of the chosen preset comes ticked, labelled with its
+language: untick one to leave it out of this publish; the preset stays as it is. The publish
+confirmation lists, for each language it sends, what that language falls back on (see
+[Reports and products in several languages](#_toc8)). **Show product preview** and **Download**
+render the open tab's language, with a menu of the formats when the preset has more than one.
+
+A product preset can also show its published products on the **public web**: on every web, or only
+on the webs it lists. Who may see, edit and publish products is set by ACLs on their preset
+(item type *Product*).
+
+A format or a channel that a preset uses, a web that one is restricted to, and a preset that
+products use cannot be deleted until nothing uses them any more.
+
+### Upgrading
+
+The `72f1a157e289` migration renames product types to product formats and publisher presets to
+publishing channels, and creates one preset per existing product format, named after it, with
+that format and no channel, shown on every public web. Products keep their content, and the webs
+they were limited to, and point at the preset of their old format. Which channels products used
+to be sent to was never recorded, so assign the channels once in Configuration -> Products; until
+then, **Publish** has nothing to send. Every delivery is in the product's own language until you
+pick another. ACL entries on product types became entries on the matching presets, and every role
+or user allowed to configure product types may configure presets. Roles and users keep their
+rights under the new permission names (`CONFIG_PRODUCT_FORMAT_*`, `CONFIG_PUBLISHING_CHANNEL_*`,
+`CONFIG_PRODUCT_PRESET_*`), ACL entries keep guarding the same presets (item type
+`PRODUCT_PRESET`), and the API is at `/api/v1/config/product-formats`,
+`/api/v1/config/publishing-channels` and `/api/v1/config/product-presets`. Presenter templates
+get the format a product is rendered in as `data.product.product_format` and
+`data.product.product_format_description`; custom templates that read `product_type` or
+`product_type_description` have to be changed.
