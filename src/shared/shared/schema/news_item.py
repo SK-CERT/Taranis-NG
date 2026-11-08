@@ -201,6 +201,10 @@ class NewsItemDataPresentationSchema(NewsItemDataBaseSchema):
     remote_source = fields.Str(allow_none=True)
     osint_source_name = fields.Str()
     osint_source_type = fields.Str()
+    # Set for an item a user entered by hand (their name then); its source_label is the name of
+    # the manual source an older one came from.
+    entered_by = fields.Str(allow_none=True)
+    source_label = fields.Str(allow_none=True)
     content = fields.Str()
     attributes = fields.Nested(NewsItemAttributeBaseSchema, many=True)
 

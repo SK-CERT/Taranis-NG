@@ -330,8 +330,10 @@
         "source": "Bron",
         "link": "Koppeling",
         "content": "Inhoud",
-        "manual_source": "Handmatige OSINT-bron",
-        "successful": "Nieuwsitem is aangemaakt"
+        "group": "Brongroep",
+        "successful": "Nieuwsitem is aangemaakt",
+        "manual_entry_by": "Handmatig ingevoerd door {name}",
+        "manual_entry": "Handmatige invoer"
     },
     "card_item": {
         "title": "Titel",

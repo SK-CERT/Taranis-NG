@@ -31,12 +31,12 @@
                     validate-on="submit"
                     @submit.prevent="handleSubmit"
                 >
-                    <!-- Manual OSINT Source Select -->
+                    <!-- The group the item goes into; nothing to choose when there is only one. -->
                     <v-select
-                        v-if="manualSources && manualSources.length > 1"
-                        v-model="selectedSourceId"
-                        :items="sourceOptions"
-                        :label="t('enter.manual_source')"
+                        v-if="groups.length > 1"
+                        v-model="selectedGroupId"
+                        :items="groupOptions"
+                        :label="t('enter.group')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-4"
@@ -152,12 +152,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import Permissions from '@/services/permissions'
-
-    type ManualSource = {
-        id: string | number
-        name?: string
-        [key: string]: unknown
-    }
+    import type { EntryGroup } from '@/stores/assess'
 
     type NewsItemForm = {
         id: string
@@ -169,7 +164,6 @@
         author: string
         language: string
         hash: string
-        osint_source_id: string | number
         published: string
         collected: string
         attributes: unknown[]
@@ -183,13 +177,15 @@
     const props = withDefaults(
         defineProps<{
             modelValue?: boolean
-            manualSources?: unknown[]
-            initialSourceId?: string | number | null
+            /** The groups the user may enter items into. */
+            groups?: EntryGroup[]
+            /** The group to propose: the one open in Assess; otherwise the default group. */
+            initialGroupId?: string | null
         }>(),
         {
             modelValue: false,
-            manualSources: () => [],
-            initialSourceId: null
+            groups: () => [],
+            initialGroupId: null
         }
     )
 
@@ -217,7 +213,7 @@
     const showValidationError = ref<boolean>(false)
     const showSuccess = ref<boolean>(false)
 
-    const selectedSourceId = ref<string | number>('')
+    const selectedGroupId = ref<string>('')
 
     const newsItem = ref<NewsItemForm>({
         id: '',
@@ -229,7 +225,6 @@
         author: '',
         language: '',
         hash: '',
-        osint_source_id: '',
         published: '',
         collected: '',
         attributes: []
@@ -241,22 +236,24 @@
         required: (value: string | number | null | undefined) => !!value || t('error.required')
     }
 
-    const sourceOptions = computed(() => {
-        return (props.manualSources as ManualSource[]).map((source: ManualSource) => ({
-            title: source.name || source.id,
-            value: source.id
+    // The default group is seeded as "Default" and shown as "Uncategorized", as in the Assess sidebar.
+    const groupOptions = computed(() =>
+        props.groups.map((group) => ({
+            title: group.default ? t('collectors.groups.default_group') : group.name || group.id,
+            value: group.id
         }))
-    })
+    )
 
-    // Initialize selected source
+    // Propose the group open in Assess, else the default group, else the first.
     watch(
-        [() => props.modelValue, () => props.manualSources, () => props.initialSourceId],
+        [() => props.modelValue, () => props.groups, () => props.initialGroupId],
         ([isDialogOpen]) => {
-            if (isDialogOpen && props.manualSources.length > 0) {
-                const requestedSource = (props.manualSources as ManualSource[]).find(
-                    (source) => props.initialSourceId !== null && String(source.id) === String(props.initialSourceId)
-                )
-                selectedSourceId.value = requestedSource?.id ?? (props.manualSources[0] as ManualSource).id
+            if (isDialogOpen && props.groups.length > 0) {
+                const proposed =
+                    props.groups.find((group) => props.initialGroupId !== null && group.id === props.initialGroupId) ??
+                    props.groups.find((group) => group.default) ??
+                    props.groups[0]
+                selectedGroupId.value = proposed?.id ?? ''
             }
         },
         { immediate: true }
@@ -280,7 +277,6 @@
             author: '',
             language: '',
             hash: '',
-            osint_source_id: '',
             published: '',
             collected: '',
             attributes: []
@@ -332,9 +328,6 @@
             newsItem.value.link ??= ''
             newsItem.value.review ??= ''
 
-            // Set osint_source_id from selected source
-            newsItem.value.osint_source_id = selectedSourceId.value
-
             // Set author
             newsItem.value.author = userStore.userName
 
@@ -347,7 +340,7 @@
             newsItem.value.collected = timestamp
             newsItem.value.published = timestamp
 
-            await addNewsItem(newsItem.value)
+            await addNewsItem({ ...newsItem.value, osint_source_group_id: selectedGroupId.value })
             showSuccess.value = true
 
             emit('news-item-added')

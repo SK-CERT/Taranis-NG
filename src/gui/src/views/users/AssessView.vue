@@ -15,13 +15,13 @@
                     <AddNewsItemDialog
                         v-if="canCreateNewsItem"
                         v-model="showAddNewsItemDialog"
-                        :manual-sources="assessStore.getManualOSINTSourcesList"
-                        :initial-source-id="requestedManualSourceId"
+                        :groups="assessStore.getEntryGroups"
+                        :initial-group-id="openGroupId"
                         @news-item-added="handleNewsItemAdded"
                     >
                         <template #activator="{ props: activatorProps }">
                             <AddNewButton
-                                :show="hasManualSources"
+                                :show="hasEntryGroups"
                                 v-bind="activatorProps"
                             />
                         </template>
@@ -86,11 +86,16 @@
     const toolbarFilter = ref<any>(null)
     const contentData = ref<any>(null)
     const showAddNewsItemDialog = ref(false)
-    const requestedManualSourceId = ref<string | null>(null)
     const newReportItem = ref<any>(null)
     const canCreateNewsItem = computed(() => checkPermission(Permissions.ASSESS_CREATE))
     const canAccessAssess = computed(() => checkPermission(Permissions.ASSESS_ACCESS))
-    const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
+    const hasEntryGroups = computed(() => assessStore.getEntryGroups.length > 0)
+    // An item added while a group is open goes into that group, unless the user picks another.
+    const openGroupId = computed(() => {
+        const groupId = route.params['groupId']
+        const id = Array.isArray(groupId) ? groupId[0] : groupId
+        return id && id !== 'all' ? id : null
+    })
 
     const newDataLoaded = (count: number): void => {
         if (toolbarFilter.value) {
@@ -157,14 +162,14 @@
     }
 
     onMounted(async () => {
+        // `manualSource` is from links made before manual sources were removed: it asks for the
+        // dialog as well, the source itself no longer exists.
         const manualSourceQuery = route.query['manualSource']
-        const sourceId = Array.isArray(manualSourceQuery) ? manualSourceQuery[0] : manualSourceQuery
-        requestedManualSourceId.value = sourceId ?? null
-        const manualEntryRequested = route.query['manualEntry'] === 'true'
+        const manualEntryRequested = route.query['manualEntry'] === 'true' || manualSourceQuery !== undefined
 
         // Keep the handoff marker in the URL for create-only users: without it a refresh would
         // correctly fail the ASSESS_ACCESS route guard. Full Assess users get the canonical URL.
-        if ((manualSourceQuery !== undefined || manualEntryRequested) && (canAccessAssess.value || !canCreateNewsItem.value)) {
+        if (manualEntryRequested && (canAccessAssess.value || !canCreateNewsItem.value)) {
             const query = { ...route.query }
             delete query['manualSource']
             delete query['manualEntry']
@@ -172,24 +177,14 @@
         }
 
         if (canCreateNewsItem.value) {
-            // Load manual OSINT sources to show "Add New" button (non-blocking)
+            // The groups to enter items into; without any, there is no "Add New" (non-blocking).
             try {
-                await assessStore.loadManualOSINTSources()
-                if (
-                    manualEntryRequested ||
-                    (requestedManualSourceId.value &&
-                        assessStore.getManualOSINTSourcesList.some(
-                            (source) =>
-                                typeof source === 'object' &&
-                                source !== null &&
-                                'id' in source &&
-                                String(source.id) === requestedManualSourceId.value
-                        ))
-                ) {
+                await assessStore.loadEntryGroups()
+                if (manualEntryRequested && hasEntryGroups.value) {
                     showAddNewsItemDialog.value = true
                 }
             } catch (error) {
-                console.error('Error loading manual OSINT sources:', error)
+                console.error('Error loading the groups to enter news items into:', error)
             }
         }
 

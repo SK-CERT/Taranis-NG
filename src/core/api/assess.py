@@ -9,8 +9,9 @@ from managers import auth_manager, log_manager
 from managers.auth_manager import ACLCheck, auth_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
+from marshmallow import ValidationError
 from model.news_item import NewsItem, NewsItemAggregate, NewsItemData
-from model.osint_source import OSINTSource, OSINTSourceGroup
+from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
 
 
@@ -32,29 +33,44 @@ class UnreadCountsByGroup(Resource):
         return NewsItemAggregate.count_unread_by_group(auth_manager.get_user_from_jwt())
 
 
-class ManualOSINTSources(Resource):
-    """Manual OSINT sources for Assess API endpoint."""
+class NewsItemEntryGroups(Resource):
+    """The OSINT source groups a user may enter news items into by hand."""
 
-    @auth_required(["ASSESS_ACCESS"])
-    def get(self) -> dict:
-        """Get all manual OSINT sources for Assess."""
-        return OSINTSource.get_all_manual_json(auth_manager.get_user_from_jwt())
+    # ASSESS_CREATE, not ASSESS_ACCESS: a user who may only enter items has no Assess otherwise.
+    @auth_required("ASSESS_CREATE")
+    def get(self) -> list[dict]:
+        """Get the groups the user may add a news item to."""
+        return OSINTSourceGroup.get_for_entry_json(auth_manager.get_user_from_jwt())
 
 
 class AddNewsItem(Resource):
     """Add news item API endpoint."""
 
     @auth_required("ASSESS_CREATE")
-    def post(self) -> None:
-        """Add a news item."""
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Add a news item, entered by hand, to the OSINT source group given as ``osint_source_group_id``."""
+        user = auth_manager.get_user_from_jwt()
+        data = request.json if isinstance(request.json, dict) else {}
+        group_id = data.get("osint_source_group_id")
+        if not isinstance(group_id, str) or not group_id:
+            return {"error": "Choose the group to add the news item to"}, HTTPStatus.BAD_REQUEST
+        group = OSINTSourceGroup.find(group_id)
+        if group is None:
+            return {"error": "Group not found"}, HTTPStatus.NOT_FOUND
+        if not OSINTSourceGroup.allowed_with_acl(group.id, user, see=False, access=True, modify=False):
+            log_manager.store_user_auth_error_activity(user, f"Unauthorized news item entry into group: {group.id}")
+            return {"error": "Access denied"}, HTTPStatus.FORBIDDEN
         try:
-            osint_source_ids = NewsItemAggregate.add_news_item(request.json)
+            aggregate = NewsItemAggregate.add_news_item(data, group.id, user)
             sse_manager.news_items_updated()
-            sse_manager.remote_access_news_items_updated(osint_source_ids)
+        except ValidationError:
+            # A 400 naming the fields, logged (SafeErrorApi), rather than a 500.
+            raise
         except Exception as ex:
             msg = "Post AddNewsItem failed"
             logger.exception(f"{msg}: {ex}")
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+        return {"id": aggregate.id, "osint_source_group_id": group.id}, HTTPStatus.CREATED
 
 
 class NewsItemsByGroup(Resource):
@@ -269,7 +285,7 @@ def initialize(api: object) -> None:
     """Initialize Assess API endpoints."""
     api.add_resource(OSINTSourceGroupsAssess, "/api/v1/assess/osint-source-groups")
     api.add_resource(UnreadCountsByGroup, "/api/v1/assess/osint-source-groups/unread-counts")
-    api.add_resource(ManualOSINTSources, "/api/v1/assess/manual-osint-sources")
+    api.add_resource(NewsItemEntryGroups, "/api/v1/assess/news-item-entry-groups")
     api.add_resource(AddNewsItem, "/api/v1/assess/news-items")
     api.add_resource(NewsItemsByGroup, "/api/v1/assess/news-item-aggregates-by-group/<string:group_id>")
     api.add_resource(NewsItemResource, "/api/v1/assess/news-items/<int:item_id>")

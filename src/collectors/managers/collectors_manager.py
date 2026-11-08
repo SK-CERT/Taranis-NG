@@ -11,7 +11,6 @@ from shared.log_manager import logger
 
 from collectors.csaf_collector import CSAFCollector
 from collectors.email_collector import EmailCollector
-from collectors.manual_collector import ManualCollector
 from collectors.rss_collector import RSSCollector
 from collectors.scheduled_tasks_collector import ScheduledTasksCollector
 from collectors.slack_collector import SlackCollector
@@ -93,7 +92,6 @@ def initialize_after_core_is_ready() -> None:
     register_collector(TwitterCollector())
     register_collector(EmailCollector())
     register_collector(SlackCollector())
-    register_collector(ManualCollector())
     register_collector(ScheduledTasksCollector())
 
     # Started after registration, so the first beat already reports every collector.

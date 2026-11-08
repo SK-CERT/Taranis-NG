@@ -220,7 +220,7 @@ test.describe('Configure environment: nodes + product format + publishing channe
         await expect(page.getByText(productPresetName)).toBeVisible({ timeout: 5000 })
     })
 
-    test('should add a manual OSINT source via the GUI', async ({ page }) => {
+    test('should add an OSINT source via the GUI', async ({ page }) => {
         await login(page)
         await page.goto('/config/collectors?tab=sources')
         await page.getByRole('tab', { name: 'OSINT Sources' }).waitFor({ state: 'visible', timeout: 10000 })
@@ -231,27 +231,26 @@ test.describe('Configure environment: nodes + product format + publishing channe
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await expect(dialog).toBeVisible({ timeout: 5000 })
 
-        const sourceName = generateTestName('E2E Manual Source')
+        const sourceName = generateTestName('E2E Seed Source')
 
         // Opening from a node's panel preselects that node, so the source cannot silently land
         // on another one. Asserted rather than re-picked: re-picking "the first node" would hide
         // a broken preselection and put the source somewhere the later specs do not look.
         await expect(dialog.locator('.v-select').first()).toContainText('E2E Collectors Node')
 
-        // Select the MANUAL_COLLECTOR from the second dropdown.
+        // An RSS source (there is no manual collector any more: items entered by hand go into a
+        // group). Its Feed URL is filled with the other required parameters below.
         const collectorSelect = dialog.locator('.v-select').nth(1)
         await collectorSelect.click()
         const collectorItems = page.locator('.v-overlay__content:visible .v-list-item')
-        // Find the "Manual" collector option.
-        const manualItem = collectorItems.filter({ hasText: /manual/i }).first()
-        await manualItem.click()
+        await collectorItems.filter({ hasText: /rss/i }).first().click()
 
         // Fill in name and description by label. Positional input.first() resolves to the
         // Collectors Node v-select's internal <input> (rendered before the Name text-field),
         // where the value is dropped — so the Name field stayed empty and client-side
         // validation kept the dialog open (Save never reached the backend).
         await dialog.getByLabel('Name', { exact: true }).fill(sourceName)
-        await dialog.getByLabel('Description', { exact: true }).fill('Manual OSINT source for E2E testing')
+        await dialog.getByLabel('Description', { exact: true }).fill('OSINT source for E2E testing')
 
         // Every collector parameter is required (PROXY_SERVER ships without a default),
         // so Save stays blocked until the empty ones carry a value.

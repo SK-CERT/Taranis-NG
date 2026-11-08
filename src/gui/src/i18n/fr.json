@@ -330,8 +330,10 @@
         "source": "Source",
         "link": "Lien",
         "content": "Contenu",
-        "manual_source": "Source OSINT manuelle",
-        "successful": "L’actualité a été créée"
+        "group": "Groupe de sources",
+        "successful": "L’actualité a été créée",
+        "manual_entry_by": "Saisie manuelle par {name}",
+        "manual_entry": "Saisie manuelle"
     },
     "card_item": {
         "title": "Titre",

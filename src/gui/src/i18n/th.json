@@ -330,8 +330,10 @@
         "source": "แหล่งที่มา",
         "link": "ลิงก์",
         "content": "เนื้อหา",
-        "manual_source": "แหล่ง OSINT แบบกำหนดเอง",
-        "successful": "สร้างรายการข่าวสำเร็จ"
+        "group": "กลุ่มแหล่งที่มา",
+        "successful": "สร้างรายการข่าวสำเร็จ",
+        "manual_entry_by": "ป้อนด้วยตนเองโดย {name}",
+        "manual_entry": "ป้อนด้วยตนเอง"
     },
     "card_item": {
         "title": "ชื่อเรื่อง",

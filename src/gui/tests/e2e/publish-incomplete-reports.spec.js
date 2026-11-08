@@ -5,7 +5,6 @@ import {
     createNewsItem,
     getFirstReportItemTypeId,
     getInitialStateId,
-    getFirstOSINTSourceId,
     createReportItem,
     cleanupSeedData
 } from '../helpers/api-seed'
@@ -38,13 +37,11 @@ test.describe('Add Incomplete Reports confirmation', () => {
 
         reportItemTypeId = await getFirstReportItemTypeId(request, token)
         initialStateId = await getInitialStateId(request, token)
-        const osintSourceId = await getFirstOSINTSourceId(request, token)
 
-        // Create a news-item aggregate.
+        // Create a news-item aggregate (in the default group).
         const result = await createNewsItem(request, token, {
             title: 'E2E Incomplete Reports Item',
-            description: 'News item for incomplete-reports-confirm testing',
-            osintSourceId
+            description: 'News item for incomplete-reports-confirm testing'
         })
         aggregateId = result.aggregateId
 

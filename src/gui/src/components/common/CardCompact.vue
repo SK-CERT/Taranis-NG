@@ -268,6 +268,7 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import HighlightedText from '@/components/common/HighlightedText.vue'
     import { collectHighlightWords } from '@/utils/word-list-highlighting'
+    import { newsItemSourceName } from '@/utils/newsItemSource'
     import TagChips from '@/components/common/tags/TagChips.vue'
 
     type CardData = {
@@ -313,6 +314,8 @@
         news_items?: Array<{
             news_item_data?: {
                 osint_source_name?: string
+                entered_by?: string | null
+                source_label?: string | null
                 source?: string
                 osint_source_type?: string
             }
@@ -423,8 +426,7 @@
         if (props.card?.product_preset_name) {
             return props.card.product_preset_name
         }
-        const sourceName =
-            props.card?.news_items?.[0]?.news_item_data?.osint_source_name || props.card?.news_items?.[0]?.news_item_data?.source
+        const sourceName = newsItemSourceName(props.card?.news_items?.[0]?.news_item_data, t)
         const sourceType = props.card?.news_items?.[0]?.news_item_data?.osint_source_type
         if (sourceName) {
             return sourceType ? `${sourceName} (${sourceType})` : sourceName

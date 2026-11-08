@@ -3,7 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useAssessStore } from '@/stores/assess'
 
 vi.mock('@/api/assess', () => ({
-    getManualOSINTSources: vi.fn(),
+    getNewsItemEntryGroups: vi.fn(),
     getNewsItemsByGroup: vi.fn(),
     voteNewsItemAggregate: vi.fn(),
     readNewsItemAggregate: vi.fn(),
@@ -65,16 +65,9 @@ describe('Assess Store', () => {
             expect(store.selectedItems.size).toBe(0)
         })
 
-        it('getManualOSINTSourcesList should return array even if data is non-array', () => {
+        it('getEntryGroups should be empty until loaded', () => {
             const store = useAssessStore()
-            store.manual_osint_sources = null
-            expect(store.getManualOSINTSourcesList).toEqual([])
-        })
-
-        it('getManualOSINTSourcesList should return sources when loaded', () => {
-            const store = useAssessStore()
-            store.manual_osint_sources = [{ id: 1, name: 'Manual Source' }]
-            expect(store.getManualOSINTSourcesList).toEqual([{ id: 1, name: 'Manual Source' }])
+            expect(store.getEntryGroups).toEqual([])
         })
     })
 
@@ -294,23 +287,23 @@ describe('Assess Store', () => {
             expect(store.filter).toEqual(newFilter)
         })
 
-        it('loadManualOSINTSources should fetch and store sources', async () => {
-            const sources = [{ id: 1, name: 'Manual' }]
-            vi.mocked(assessApi.getManualOSINTSources).mockResolvedValue({ data: sources })
+        it('loadEntryGroups should fetch and store the groups to enter items into', async () => {
+            const groups = [{ id: 'g-1', name: 'Intel', default: false }]
+            vi.mocked(assessApi.getNewsItemEntryGroups).mockResolvedValue({ data: groups })
 
             const store = useAssessStore()
-            await store.loadManualOSINTSources()
+            await store.loadEntryGroups()
 
-            expect(store.manual_osint_sources).toEqual(sources)
+            expect(store.getEntryGroups).toEqual(groups)
         })
 
-        it('loadManualOSINTSources should default to empty array', async () => {
-            vi.mocked(assessApi.getManualOSINTSources).mockResolvedValue({ data: null })
+        it('loadEntryGroups should default to empty array', async () => {
+            vi.mocked(assessApi.getNewsItemEntryGroups).mockResolvedValue({ data: null })
 
             const store = useAssessStore()
-            await store.loadManualOSINTSources()
+            await store.loadEntryGroups()
 
-            expect(store.manual_osint_sources).toEqual([])
+            expect(store.getEntryGroups).toEqual([])
         })
     })
 })

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import {
-    getManualOSINTSources,
+    getNewsItemEntryGroups,
     getNewsItemsByGroup,
     voteNewsItemAggregate as apiVoteAggregate,
     readNewsItemAggregate as apiReadAggregate,
@@ -13,6 +13,13 @@ import {
 type ListState<T = unknown> = {
     total_count: number
     items: T[]
+}
+
+/** A group a news item can be entered into by hand. */
+export type EntryGroup = {
+    id: string
+    name: string
+    default: boolean
 }
 
 type SelectableItem = {
@@ -54,7 +61,8 @@ export const useAssessStore = defineStore('assess', () => {
     const multi_select = ref(false)
     const selection = ref<SelectableItem[]>([])
     const current_group_id = ref('')
-    const manual_osint_sources = ref<unknown[]>([])
+    // The groups the user may enter a news item into by hand (Add New in Assess).
+    const entry_groups = ref<EntryGroup[]>([])
     const filter = ref<Record<string, unknown>>({})
 
     // Getters
@@ -68,7 +76,7 @@ export const useAssessStore = defineStore('assess', () => {
         return selection.value.length
     }
     const getCurrentGroup = computed(() => current_group_id.value)
-    const getManualOSINTSourcesList = computed(() => (Array.isArray(manual_osint_sources.value) ? manual_osint_sources.value : []))
+    const getEntryGroups = computed(() => entry_groups.value)
     const getFilter = computed(() => filter.value)
 
     // Actions
@@ -132,10 +140,10 @@ export const useAssessStore = defineStore('assess', () => {
         current_group_id.value = group_id
     }
 
-    async function loadManualOSINTSources(): Promise<ApiResponse<unknown[]>> {
-        const response = await getManualOSINTSources()
+    async function loadEntryGroups(): Promise<ApiResponse<EntryGroup[]>> {
+        const response = await getNewsItemEntryGroups()
         const responseData = response?.data
-        manual_osint_sources.value = Array.isArray(responseData) ? responseData : []
+        entry_groups.value = Array.isArray(responseData) ? responseData : []
         return response
     }
 
@@ -181,7 +189,7 @@ export const useAssessStore = defineStore('assess', () => {
         selection,
         getNumberOfSelected,
         current_group_id,
-        manual_osint_sources,
+        entry_groups,
         filter,
 
         // Getters
@@ -190,7 +198,7 @@ export const useAssessStore = defineStore('assess', () => {
         getSelection,
         selectedItems,
         getCurrentGroup,
-        getManualOSINTSourcesList,
+        getEntryGroups,
         getFilter,
 
         // Actions
@@ -203,7 +211,7 @@ export const useAssessStore = defineStore('assess', () => {
         deselectById,
         isSelectedById,
         changeCurrentGroup,
-        loadManualOSINTSources,
+        loadEntryGroups,
         setFilter,
         voteNewsItemAggregate,
         readNewsItemAggregate,

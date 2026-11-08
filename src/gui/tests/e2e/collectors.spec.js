@@ -137,19 +137,15 @@ test.describe('Collectors', () => {
     // NewOSINTSourceSchema forwards e.g. last_attempted to OSINTSource(**data) and crashes:
     //   TypeError: __init__() got an unexpected keyword argument 'last_attempted'
     // The source list is a table grouped by node; the row's edit action opens its dialog.
-    async function createManualSource(page, sourceName) {
+    async function createSource(page, sourceName) {
         await panelAddSource(page).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await expect(dialog).toBeVisible({ timeout: 5000 })
 
-        // The node is preselected by the panel the dialog was opened from.
-        // MANUAL_COLLECTOR.
+        // The node is preselected by the panel the dialog was opened from. An RSS source: the
+        // manual collector is gone (items entered by hand go into a group instead).
         await dialog.locator('.v-select').nth(1).click()
-        await page
-            .locator('.v-overlay__content:visible .v-list-item')
-            .filter({ hasText: /manual/i })
-            .first()
-            .click()
+        await page.locator('.v-overlay__content:visible .v-list-item').filter({ hasText: /rss/i }).first().click()
 
         // Fill by label: input.first() hits the Collectors Node v-select's internal input
         // (rendered before the Name text-field) and the value is dropped → validation blocks save.
@@ -166,7 +162,7 @@ test.describe('Collectors', () => {
         const sourceName = generateTestName('E2E Edit Source')
         const renamed = `${sourceName} Renamed`
 
-        await createManualSource(page, sourceName)
+        await createSource(page, sourceName)
 
         // The row's edit action opens the dialog. Unlike the old card, the row itself is not a
         // click target: it carries a switch and a collect button that must not open an editor.
@@ -195,7 +191,7 @@ test.describe('Collectors', () => {
 
     test('should prompt on unsaved changes when cancelling an OSINT source edit', async ({ page }) => {
         const sourceName = generateTestName('E2E Cancel Source')
-        await createManualSource(page, sourceName)
+        await createSource(page, sourceName)
 
         await sourceRow(page, sourceName).first().locator('button[title="Edit"]').click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
@@ -221,8 +217,7 @@ test.describe('Collectors', () => {
     // ── RSS collector source creation ────────────
     // Selecting the RSS collector exposes its real parameter fields (Proxy server,
     // Refresh interval, Warning interval, Feed URL, User agent, ...). This exercises the
-    // parameter-value rendering + payload assembly for a parameter-heavy collector, unlike
-    // the Manual collector (no parameters). The Feed URL field is targeted by its label
+    // parameter-value rendering + payload assembly for a parameter-heavy collector. The Feed URL field is targeted by its label
     // text rather than by DOM order, since the parameter list is long and the position of
     // Feed URL (4th parameter, behind the defaults) is brittle if the collector config adds
     // a default param.

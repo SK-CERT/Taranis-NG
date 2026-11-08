@@ -37,12 +37,13 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPerm: [Permissions.ASSESS_ACCESS] }
     },
     {
+        // Links from when items were entered into a manual OSINT source: those are gone, the
+        // dialog asks for a group instead.
         path: '/enter/source/:sourceId',
-        redirect: (to) => ({
-            name: 'assess',
-            params: { groupId: 'all' },
-            query: { ...to.query, manualSource: String(to.params['sourceId']) }
-        })
+        redirect: (to) => {
+            const query = { ...to.query, manualEntry: 'true' }
+            return { name: 'assess', params: { groupId: 'all' }, query }
+        }
     },
     {
         path: '/enter',

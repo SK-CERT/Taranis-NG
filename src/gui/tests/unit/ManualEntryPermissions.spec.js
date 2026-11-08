@@ -28,7 +28,12 @@ vi.mock('@/api/assess', async () => {
     const actual = await vi.importActual('@/api/assess')
     return {
         ...actual,
-        getManualOSINTSources: vi.fn().mockResolvedValue({ data: [{ id: 'manual-1', name: 'Manual source' }] }),
+        getNewsItemEntryGroups: vi.fn().mockResolvedValue({
+            data: [
+                { id: 'g-default', name: 'Default', default: true },
+                { id: 'g-intel', name: 'Intel', default: false }
+            ]
+        }),
         addNewsItem: vi.fn().mockResolvedValue({})
     }
 })
@@ -40,7 +45,7 @@ const ToolbarFilterAssessStub = {
 
 const AddNewsItemDialogStub = {
     name: 'AddNewsItemDialog',
-    props: ['modelValue', 'manualSources'],
+    props: ['modelValue', 'groups', 'initialGroupId'],
     template: '<div class="add-news-item-dialog"><slot name="activator" :props="{}" /></div>'
 }
 
@@ -97,11 +102,15 @@ async function mountAssessView() {
     return wrapper
 }
 
-function mountManualEntryDialog() {
+function mountManualEntryDialog(props = {}) {
     return mountWithPlugins(AddNewsItemDialog, {
         props: {
             modelValue: true,
-            manualSources: [{ id: 'manual-1', name: 'Manual source' }]
+            groups: [
+                { id: 'g-default', name: 'Default', default: true },
+                { id: 'g-intel', name: 'Intel', default: false }
+            ],
+            ...props
         },
         global: {
             stubs: {
@@ -121,21 +130,21 @@ describe('manual news entry permissions', () => {
         authState.checkPermission.mockImplementation((permission) => authState.permissions.has(permission))
     })
 
-    it('does not expose manual entry or load its sources without ASSESS_CREATE', async () => {
+    it('does not expose manual entry or load its groups without ASSESS_CREATE', async () => {
         authState.permissions.clear()
         const assessApi = await import('@/api/assess')
         const wrapper = await mountAssessView()
 
         expect(wrapper.findComponent({ name: 'AddNewsItemDialog' }).exists()).toBe(false)
         expect(wrapper.find('.add-news-item-button').exists()).toBe(false)
-        expect(assessApi.getManualOSINTSources).not.toHaveBeenCalled()
+        expect(assessApi.getNewsItemEntryGroups).not.toHaveBeenCalled()
     })
 
-    it('shows manual entry when ASSESS_CREATE and a manual source are available', async () => {
+    it('shows manual entry when ASSESS_CREATE and a group to enter into are available', async () => {
         const assessApi = await import('@/api/assess')
         const wrapper = await mountAssessView()
 
-        expect(assessApi.getManualOSINTSources).toHaveBeenCalledOnce()
+        expect(assessApi.getNewsItemEntryGroups).toHaveBeenCalledOnce()
         expect(wrapper.findComponent({ name: 'AddNewsItemDialog' }).exists()).toBe(true)
         expect(wrapper.find('.add-news-item-button').exists()).toBe(true)
     })
@@ -183,8 +192,38 @@ describe('manual news entry permissions', () => {
         }
     })
 
+    it('hides manual entry when the user may enter into no group', async () => {
+        const assessApi = await import('@/api/assess')
+        vi.mocked(assessApi.getNewsItemEntryGroups).mockResolvedValueOnce({ data: [] })
+        const wrapper = await mountAssessView()
+
+        expect(wrapper.find('.add-news-item-button').exists()).toBe(false)
+    })
+
+    it.each([
+        [null, 'g-default'],
+        ['g-intel', 'g-intel'],
+        ['g-gone', 'g-default']
+    ])('enters the item into the group open in Assess (%s), else the default group', async (initialGroupId, expected) => {
+        const assessApi = await import('@/api/assess')
+        const wrapper = mountManualEntryDialog({ initialGroupId })
+
+        try {
+            wrapper.findComponent({ name: 'DialogToolbar' }).vm.$emit('save')
+            await flushPromises()
+
+            const sent = assessApi.addNewsItem.mock.calls[0][0]
+            expect(sent.osint_source_group_id).toBe(expected)
+            expect(sent).not.toHaveProperty('osint_source_id')
+        } finally {
+            wrapper.unmount()
+            vi.clearAllTimers()
+        }
+    })
+
     it('gives human text and URL fields explicit writing directions', () => {
-        const wrapper = mountManualEntryDialog()
+        // One group: nothing to choose, so no group field among them.
+        const wrapper = mountManualEntryDialog({ groups: [{ id: 'g-default', name: 'Default', default: true }] })
 
         try {
             expect(wrapper.findAll('input').map((field) => field.attributes('dir'))).toEqual(['auto', 'auto', 'ltr'])

@@ -330,8 +330,10 @@
         "source": "Source",
         "link": "Link",
         "content": "Content",
-        "manual_source": "Manual OSINT Source",
-        "successful": "News item was successfully created"
+        "group": "Source group",
+        "successful": "News item was successfully created",
+        "manual_entry_by": "Manual entry by {name}",
+        "manual_entry": "Manual entry"
     },
     "card_item": {
         "title": "Title",

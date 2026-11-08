@@ -32,8 +32,9 @@ export function getUnreadCountsByGroup() {
     return ApiService.get('/assess/osint-source-groups/unread-counts')
 }
 
-export function getManualOSINTSources() {
-    return ApiService.get('/assess/manual-osint-sources')
+/** The groups the user may enter a news item into by hand (needs ASSESS_CREATE only). */
+export function getNewsItemEntryGroups() {
+    return ApiService.get('/assess/news-item-entry-groups')
 }
 
 export function getNewsItemsByGroup(group_id, filter_data) {

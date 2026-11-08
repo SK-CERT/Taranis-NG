@@ -330,8 +330,10 @@
         "source": "Zdroj",
         "link": "Odkaz",
         "content": "Obsah",
-        "manual_source": "Manuálny OSINT zdroj",
-        "successful": "Novinka bola úspešne vytvorená"
+        "group": "Skupina zdrojov",
+        "successful": "Novinka bola úspešne vytvorená",
+        "manual_entry_by": "Ručné zadanie: {name}",
+        "manual_entry": "Ručné zadanie"
     },
     "card_item": {
         "title": "Názov",

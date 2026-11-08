@@ -330,8 +330,10 @@
         "source": "Nguồn",
         "link": "Liên kết",
         "content": "Nội dung",
-        "manual_source": "Nguồn OSINT thủ công",
-        "successful": "Đã tạo tin thành công"
+        "group": "Nhóm nguồn",
+        "successful": "Đã tạo tin thành công",
+        "manual_entry_by": "Nhập thủ công bởi {name}",
+        "manual_entry": "Nhập thủ công"
     },
     "card_item": {
         "title": "Tiêu đề",

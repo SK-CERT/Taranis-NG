@@ -330,8 +330,10 @@
         "source": "Fuente",
         "link": "Enlace",
         "content": "Contenido",
-        "manual_source": "Fuente OSINT manual",
-        "successful": "La noticia se creó correctamente"
+        "group": "Grupo de fuentes",
+        "successful": "La noticia se creó correctamente",
+        "manual_entry_by": "Entrada manual de {name}",
+        "manual_entry": "Entrada manual"
     },
     "card_item": {
         "title": "Título",
