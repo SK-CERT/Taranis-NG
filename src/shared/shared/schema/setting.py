@@ -1,6 +1,6 @@
 """Module for Settings schema."""
 
-import datetime
+import datetime as dt
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
@@ -46,7 +46,7 @@ class SettingValueSchema(Schema):
         is_global (bool): Indicates if the setting is global.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for the schema.
 
         Attributes:
@@ -89,7 +89,7 @@ class Setting:
         description: str,
         is_global: bool,
         options: str,
-        updated_at: datetime,
+        updated_at: dt.datetime,
         updated_by: str,
     ) -> None:
         """Initialize a global Setting instance.
@@ -137,7 +137,7 @@ class SettingSchema(Schema):
         updated_by (str): The user who last updated the setting.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for the schema.
 
         Attributes:

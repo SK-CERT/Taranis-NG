@@ -93,7 +93,7 @@ class PresenterInputProductSchema(Schema):
         Schema (Any): Base schema class.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Ignore fields this node does not know yet, so a newer core can add some."""
 
         unknown = EXCLUDE
@@ -208,7 +208,7 @@ class PresenterInputSchema(Schema):
         Schema (Any): Base schema class.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Ignore fields this node does not know yet, so a newer core can add some."""
 
         unknown = EXCLUDE

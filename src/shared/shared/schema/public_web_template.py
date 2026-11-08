@@ -13,7 +13,7 @@ class PublicWebTemplateSchema(Schema):
     report item block) is set. ``public_web_ids`` lists the webs it applies to; none: every web.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class."""
 
         unknown = EXCLUDE

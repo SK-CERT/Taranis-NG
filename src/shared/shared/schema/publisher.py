@@ -71,7 +71,7 @@ class PublisherInput:
 class PublisherInputSchema(Schema):
     """Schema for Publisher Input."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior.
 
         Unknown fields are excluded so a core running ahead of a publishers node - they are

@@ -19,7 +19,7 @@ class SecuritySettingsSchema(Schema):
     owned by users, these fields only describe *this* site to the authenticator.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

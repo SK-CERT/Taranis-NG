@@ -52,7 +52,7 @@ class AttributeExtractionRule:
 class AttributeExtractionRuleSchema(Schema):
     """Marshmallow schema for AttributeExtractionRule."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

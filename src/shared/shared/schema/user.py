@@ -35,7 +35,7 @@ class User:
 class UserSchemaBase(Schema):
     """Base schema for User with common fields."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -54,7 +54,7 @@ class UserSchemaBase(Schema):
 class UserIdentitySchema(Schema):
     """Schema for a user's identity link at an authentication provider."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -102,7 +102,7 @@ class UserId:
 class UserIdSchema(Schema):
     """Schema for User ID."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -118,7 +118,7 @@ class UserIdSchema(Schema):
 class HotkeySchema(Schema):
     """Schema for Hotkey."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE

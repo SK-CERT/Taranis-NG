@@ -51,7 +51,7 @@ class PublishersNode:
 class PublishersNodeSchema(Schema):
     """Marshmallow schema for a publishers node."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Configure unknown-field handling."""
 
         unknown = EXCLUDE
