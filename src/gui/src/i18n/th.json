@@ -333,7 +333,8 @@
         "group": "กลุ่มแหล่งที่มา",
         "successful": "สร้างรายการข่าวสำเร็จ",
         "manual_entry_by": "ป้อนด้วยตนเองโดย {name}",
-        "manual_entry": "ป้อนด้วยตนเอง"
+        "manual_entry": "ป้อนด้วยตนเอง",
+        "link_invalid": "ป้อนที่อยู่เว็บที่ขึ้นต้นด้วย http:// หรือ https://"
     },
     "card_item": {
         "title": "ชื่อเรื่อง",

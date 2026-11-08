@@ -333,7 +333,8 @@
         "group": "소스 그룹",
         "successful": "뉴스 항목을 생성했습니다",
         "manual_entry_by": "{name}의 수동 입력",
-        "manual_entry": "수동 입력"
+        "manual_entry": "수동 입력",
+        "link_invalid": "http:// 또는 https://로 시작하는 웹 주소를 입력하세요"
     },
     "card_item": {
         "title": "제목",

@@ -1,5 +1,5 @@
 /* eslint-disable vue/one-component-per-file -- test harness uses minimal inline components */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { computed, defineComponent, h, reactive } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import { flushPromises } from '@vue/test-utils'
@@ -30,6 +30,11 @@ vi.mock('@/api/analyze', () => ({
 }))
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Until every add and save under way has landed. A fixed pause was too short on a busy CI runner:
+// the saves of one value run one after another, so the assertions read a core the last save had
+// not reached yet - and that save then wrote into the next test's core.
+const settle = () => vi.waitFor(() => expect(attributeWritesPending(), 'writes still under way').toBe(false), { timeout: 8000, interval: 10 })
 
 function fakeCore(seed) {
     let random = seed
@@ -134,12 +139,16 @@ function mountLinks() {
     return { wrapper: mountWithPlugins(Form), values }
 }
 
-describe('AttributeLink against a slow core', () => {
+// Room for a busy runner: the waits below last as long as the writes do.
+describe('AttributeLink against a slow core', { timeout: 20000 }, () => {
     beforeEach(() => {
         setActivePinia(createPinia())
         vi.clearAllMocks()
         vi.spyOn(AuthService, 'hasPermission').mockReturnValue(true)
     })
+
+    // A test that failed half-way may leave writes under way; they must not land in the next one.
+    afterEach(settle)
 
     it.each(Array.from({ length: 12 }, (_, seed) => seed + 1))('keeps the rows, the screen and the core in step (seed %i)', async (seed) => {
         const guarded = true
@@ -173,7 +182,7 @@ describe('AttributeLink against a slow core', () => {
             await sleep(Math.floor(rand() * 10))
         }
         await Promise.all(pending)
-        await sleep(400)
+        await settle()
         await flushPromises()
 
         const objects = new Set(values)
@@ -203,7 +212,7 @@ describe('AttributeLink against a slow core', () => {
         })
 
         await wrapper.get('[data-test="link-add"]').trigger('click')
-        await sleep(50)
+        await settle()
         await flushPromises()
 
         expect(values.map((value) => value.id)).toEqual([...attributes.keys()])
@@ -249,9 +258,8 @@ describe('AttributeLink against a slow core', () => {
         const { wrapper } = mountLinks()
         await flushPromises()
         await wrapper.get('[data-test="link-add"]').trigger('click')
-        await sleep(50)
+        await settle()
         await flushPromises()
-        expect(attributeWritesPending()).toBe(false)
 
         const mark = attributeWriteMark()
         const input = wrapper.get('[data-test="link-row"] input')
@@ -261,9 +269,8 @@ describe('AttributeLink against a slow core', () => {
 
         expect(attributeWritesPending()).toBe(true)
         expect(attributeWritesSince(mark)).toBe(true)
-        await sleep(50)
-        await flushPromises()
-        expect(attributeWritesPending()).toBe(false)
+        // ...and no longer once it is done.
+        await settle()
         wrapper.unmount()
     })
 })

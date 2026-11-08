@@ -333,7 +333,8 @@
         "group": "Көздер тобы",
         "successful": "Жаңалық сәтті жасалды",
         "manual_entry_by": "{name} қолмен енгізген",
-        "manual_entry": "Қолмен енгізу"
+        "manual_entry": "Қолмен енгізу",
+        "link_invalid": "http:// немесе https:// басталатын веб-мекенжайды енгізіңіз"
     },
     "card_item": {
         "title": "Тақырыбы",

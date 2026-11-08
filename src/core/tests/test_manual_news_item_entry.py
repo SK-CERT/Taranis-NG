@@ -231,3 +231,44 @@ def test_the_group_acl_governs_an_item_without_a_source() -> None:
     assert "news_item_data.remote_source IS NULL" in sql
     assert "news_item_aggregate.osint_source_group_id = acl_entry.item_id" in sql
     assert sql.count("acl_entry.item_type =") == 3
+
+
+# ── the link ─────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    ("link", "valid"),
+    [
+        ("https://example.com/advisory", True),
+        ("http://10.0.0.1:8080/x?y=1", True),
+        ("example.com", False),
+        ("javascript:alert(1)", False),
+        ("ftp://example.com/file", False),
+        ("https://", False),
+        ("https://exa mple.com", False),
+        ("  ", False),
+        (42, False),
+    ],
+)
+def test_a_link_must_be_a_web_address(link: object, valid: bool) -> None:
+    assert assess.is_web_link(link) is valid
+
+
+@pytest.mark.usefixtures("caller")
+def test_an_item_with_a_link_that_is_not_a_web_address_is_refused(app: Flask, groups: dict, added: list) -> None:
+    groups["g-intel"] = True
+
+    body, status = _post(app, {**ITEM, "osint_source_group_id": "g-intel", "link": "not a link"})
+
+    assert status == HTTPStatus.BAD_REQUEST
+    assert body["field"] == "link"
+    assert added == []
+
+
+@pytest.mark.usefixtures("caller", "added")
+def test_an_item_without_a_link_is_fine(app: Flask, groups: dict) -> None:
+    groups["g-intel"] = True
+
+    _body, status = _post(app, {**ITEM, "osint_source_group_id": "g-intel", "link": ""})
+
+    assert status == HTTPStatus.CREATED

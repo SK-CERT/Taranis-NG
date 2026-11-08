@@ -333,7 +333,8 @@
         "group": "Hal ghom",
         "successful": "De' chu' chenmoHlu'pu'. Qapla'!",
         "manual_entry_by": "ghop ghItlh {name}",
-        "manual_entry": "ghop ghItlh"
+        "manual_entry": "ghop ghItlh",
+        "link_invalid": "http:// pagh https:// Daq bI'reS Qo'noS Sar yIghItlh"
     },
     "card_item": {
         "title": "per",

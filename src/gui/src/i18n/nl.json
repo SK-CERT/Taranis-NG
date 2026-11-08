@@ -333,7 +333,8 @@
         "group": "Brongroep",
         "successful": "Nieuwsitem is aangemaakt",
         "manual_entry_by": "Handmatig ingevoerd door {name}",
-        "manual_entry": "Handmatige invoer"
+        "manual_entry": "Handmatige invoer",
+        "link_invalid": "Voer een webadres in dat begint met http:// of https://"
     },
     "card_item": {
         "title": "Titel",

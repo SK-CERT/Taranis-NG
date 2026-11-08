@@ -333,7 +333,8 @@
         "group": "Grupo de fuentes",
         "successful": "La noticia se creó correctamente",
         "manual_entry_by": "Entrada manual de {name}",
-        "manual_entry": "Entrada manual"
+        "manual_entry": "Entrada manual",
+        "link_invalid": "Introduzca una dirección web que empiece por http:// o https://"
     },
     "card_item": {
         "title": "Título",

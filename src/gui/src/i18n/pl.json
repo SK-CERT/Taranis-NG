@@ -333,7 +333,8 @@
         "group": "Grupa źródeł",
         "successful": "Utworzono element wiadomości",
         "manual_entry_by": "Wpis ręczny: {name}",
-        "manual_entry": "Wpis ręczny"
+        "manual_entry": "Wpis ręczny",
+        "link_invalid": "Wpisz adres internetowy zaczynający się od http:// lub https://"
     },
     "card_item": {
         "title": "Tytuł",

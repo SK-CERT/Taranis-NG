@@ -333,7 +333,8 @@
         "group": "مجموعة المصادر",
         "successful": "تم إنشاء العنصر الإخباري بنجاح",
         "manual_entry_by": "إدخال يدوي بواسطة {name}",
-        "manual_entry": "إدخال يدوي"
+        "manual_entry": "إدخال يدوي",
+        "link_invalid": "أدخل عنوان ويب يبدأ بـ http:// أو https://"
     },
     "card_item": {
         "title": "العنوان",

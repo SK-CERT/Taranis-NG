@@ -333,7 +333,8 @@
         "group": "Groupe de sources",
         "successful": "L’actualité a été créée",
         "manual_entry_by": "Saisie manuelle par {name}",
-        "manual_entry": "Saisie manuelle"
+        "manual_entry": "Saisie manuelle",
+        "link_invalid": "Saisissez une adresse web commençant par http:// ou https://"
     },
     "card_item": {
         "title": "Titre",

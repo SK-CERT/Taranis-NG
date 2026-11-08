@@ -333,7 +333,8 @@
         "group": "来源组",
         "successful": "已成功创建新闻条目",
         "manual_entry_by": "{name} 手动录入",
-        "manual_entry": "手动录入"
+        "manual_entry": "手动录入",
+        "link_invalid": "请输入以 http:// 或 https:// 开头的网址"
     },
     "card_item": {
         "title": "标题",

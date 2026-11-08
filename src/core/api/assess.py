@@ -2,6 +2,7 @@
 
 import io
 from http import HTTPStatus
+from urllib.parse import urlparse
 
 from flask import Response, request, send_file
 from flask_restful import Resource
@@ -13,6 +14,22 @@ from marshmallow import ValidationError
 from model.news_item import NewsItem, NewsItemAggregate, NewsItemData
 from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
+
+
+def is_web_link(link: object) -> bool:
+    """Whether ``link`` is a web address a news item can point to: http(s), a host, no spaces.
+
+    Args:
+        link: The link as submitted.
+
+    Returns:
+        bool: True for a usable link.
+    """
+    if not isinstance(link, str) or not link.strip() or any(character.isspace() for character in link.strip()):
+        return False
+    parsed = urlparse(link.strip())
+    return parsed.scheme in ("http", "https") and bool(parsed.hostname)
+
 
 # The largest page of aggregates one request returns, and the most ids one re-read may name.
 MAX_PAGE = 200
@@ -64,6 +81,9 @@ class AddNewsItem(Resource):
         if not OSINTSourceGroup.allowed_with_acl(group.id, user, see=False, access=True, modify=False):
             log_manager.store_user_auth_error_activity(user, f"Unauthorized news item entry into group: {group.id}")
             return {"error": "Access denied"}, HTTPStatus.FORBIDDEN
+        link = data.get("link")
+        if link not in (None, "") and not is_web_link(link):
+            return {"error": "The link must be a web address (http:// or https://)", "field": "link"}, HTTPStatus.BAD_REQUEST
         try:
             aggregate = NewsItemAggregate.add_news_item(data, group.id, user)
             sse_manager.news_items_updated()

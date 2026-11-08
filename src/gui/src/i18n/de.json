@@ -333,7 +333,8 @@
         "group": "Quellengruppe",
         "successful": "Der Nachrichtenbeitrag wurde erfolgreich erstellt",
         "manual_entry_by": "Manuell eingetragen von {name}",
-        "manual_entry": "Manueller Eintrag"
+        "manual_entry": "Manueller Eintrag",
+        "link_invalid": "Geben Sie eine Webadresse ein, die mit http:// oder https:// beginnt"
     },
     "card_item": {
         "title": "Titel",

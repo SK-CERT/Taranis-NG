@@ -221,6 +221,21 @@ describe('manual news entry permissions', () => {
         }
     })
 
+    it('accepts no link or a web address, nothing else', () => {
+        const wrapper = mountManualEntryDialog()
+
+        try {
+            const link = wrapper.findAllComponents({ name: 'VTextField' }).find((field) => field.props('label') === 'Link')
+            const [rule] = link.props('rules')
+            expect(rule('')).toBe(true)
+            expect(rule('https://example.com/advisory')).toBe(true)
+            expect(rule('example.com')).toBe('Enter a web address starting with http:// or https://')
+            expect(rule('javascript:alert(1)')).toBe('Enter a web address starting with http:// or https://')
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
     it('gives human text and URL fields explicit writing directions', () => {
         // One group: nothing to choose, so no group field among them.
         const wrapper = mountManualEntryDialog({ groups: [{ id: 'g-default', name: 'Default', default: true }] })

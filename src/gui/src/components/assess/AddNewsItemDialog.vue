@@ -87,6 +87,7 @@
                         variant="outlined"
                         density="comfortable"
                         type="url"
+                        :rules="[rules.link]"
                         class="mb-4"
                     />
 
@@ -153,6 +154,7 @@
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import Permissions from '@/services/permissions'
     import type { EntryGroup } from '@/stores/assess'
+    import { isHttpUrl } from '@/utils/linkReferences'
 
     type NewsItemForm = {
         id: string
@@ -232,8 +234,11 @@
 
     const rules: {
         required: (value: string | number | null | undefined) => true | string
+        link: (value: string | null | undefined) => true | string
     } = {
-        required: (value: string | number | null | undefined) => !!value || t('error.required')
+        required: (value: string | number | null | undefined) => !!value || t('error.required'),
+        // Optional, but a web address when given: core refuses anything else.
+        link: (value: string | null | undefined) => !value?.trim() || isHttpUrl(value) || t('enter.link_invalid')
     }
 
     // The default group is seeded as "Default" and shown as "Uncategorized", as in the Assess sidebar.
@@ -325,7 +330,7 @@
 
             // v-text-field change '' -> null, normalize it otherwise the backend will fail
             newsItem.value.source ??= ''
-            newsItem.value.link ??= ''
+            newsItem.value.link = (newsItem.value.link ?? '').trim()
             newsItem.value.review ??= ''
 
             // Set author
