@@ -1238,7 +1238,7 @@ class ACLEntriesResource(Resource):
     """ACL entries API endpoint."""
 
     @auth_required("CONFIG_ACL_ACCESS")
-    def get(self) -> tuple[str, dict]:
+    def get(self) -> dict:
         """Get all ACL entries.
 
         Returns:
