@@ -14,7 +14,7 @@ from http import HTTPStatus
 import requests
 from auth import oauth2_authenticator, saml_authenticator, saml_federation, saml_metadata
 from auth import url_guard as saml_url_guard
-from flask import request, send_file
+from flask import Response, request, send_file
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from managers import (
@@ -30,6 +30,7 @@ from managers import (
     presenters_manager,
     publishers_manager,
     remote_manager,
+    template_preview,
 )
 from managers.auth_manager import auth_required, get_user_from_jwt
 from managers.db_manager import db
@@ -2501,6 +2502,63 @@ class PublicWebTemplateResource(Resource):
         return result
 
 
+class PublicWebTemplatePreviewResource(Resource):
+    """Preview a report template before it is saved, rendered by a public-web node."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self) -> dict:
+        """What the preview can show: the webs, and the products for the chosen web.
+
+        Query params: ``product_preset_id`` or ``report_item_type_id`` (the template's target),
+        ``web_id`` (optional), ``public_web_ids`` (the template's webs, comma separated: one of
+        them is chosen first).
+
+        Returns:
+            (dict): See managers/template_preview.options.
+        """
+
+        def number(name: str) -> int | None:
+            value = request.args.get(name, "")
+            return int(value) if value.isdigit() else None
+
+        preferred = [int(part) for part in (request.args.get("public_web_ids") or "").split(",") if part.strip().isdigit()]
+        return template_preview.options(number("product_preset_id"), number("report_item_type_id"), number("web_id"), preferred)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Render the template of the dialog (``{"template", "web_id", "language", "product_id", "view"}``).
+
+        Returns:
+            (dict, int): The page (``html``) or the feed item (``rss``, ``xml``) with ``errors`` and
+                ``warnings``; or why there is none (invalid source 400, no node 409, node down 502).
+        """
+        return template_preview.preview(request.json if isinstance(request.json, dict) else {})
+
+
+class PublicWebTemplatePreviewPage(Resource):
+    """A rendered template preview, by its ticket, with a policy of its own (see managers/template_preview).
+
+    Not behind auth_required: a frame (or a new tab) sends no bearer token. The ticket was handed
+    to a user allowed to preview, is random, short-lived and good for a few views.
+    """
+
+    def get(self, token: str) -> Response:
+        """Serve the page of a preview ticket.
+
+        Args:
+            token (str): The ticket.
+
+        Returns:
+            Response: The page, or 404 once the ticket is gone.
+        """
+        page = template_preview.take_page(token)
+        if page is None:
+            return Response("Preview expired, render it again.", HTTPStatus.NOT_FOUND, mimetype="text/plain")
+        response = Response(page, HTTPStatus.OK, mimetype="text/html")
+        response.headers.update(template_preview.PAGE_HEADERS)
+        return response
+
+
 class PublicWebTemplateBuiltinResource(Resource):
     """The built-in report templates: read-only, never deleted, but those public-web falls back on can be switched off."""
 
@@ -3481,6 +3539,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(RemoteAccessResource, "/api/v1/config/remote-accesses/<int:remote_access_id>")
 
     api.add_resource(PublicWebTemplatesResource, "/api/v1/config/public-web-templates")
+    api.add_resource(PublicWebTemplatePreviewResource, "/api/v1/config/public-web-templates/preview")
+    api.add_resource(PublicWebTemplatePreviewPage, "/api/v1/config/public-web-templates/preview/<string:token>")
     api.add_resource(PublicWebTemplateBuiltinResource, "/api/v1/config/public-web-templates/builtin")
     api.add_resource(PublicWebTemplateResource, "/api/v1/config/public-web-templates/<int:template_id>")
     api.add_resource(PublicWebNodesResource, "/api/v1/config/public-web-nodes")

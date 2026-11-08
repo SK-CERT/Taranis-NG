@@ -2319,7 +2319,26 @@
             "webs_hint": "Keine ausgewählt: alle Websites. Eine Website verwendet die Vorlage, die sie aufführt, sonst die für alle Websites.",
             "every_web": "Alle Websites",
             "web_taken": "Bereits in '{name}'",
-            "every_web_taken": "'{name}' ist bereits seine Vorlage für alle Websites: Wählen Sie die Websites, für die diese gilt."
+            "every_web_taken": "'{name}' ist bereits seine Vorlage für alle Websites: Wählen Sie die Websites, für die diese gilt.",
+            "tab_template": "Vorlage"
+        },
+        "preview": {
+            "title": "Vorschau",
+            "intro": "So sieht ein veröffentlichtes Produkt mit dieser Vorlage auf der Website aus. Der Public-Web-Knoten rendert sie; eine Änderung erscheint kurz nachdem Sie aufhören zu tippen.",
+            "choose_target": "Wählen Sie, wofür die Vorlage ist, um eine Vorschau zu sehen.",
+            "web": "Website",
+            "language": "Sprache",
+            "product": "Produkt",
+            "no_products": "Kein veröffentlichtes Produkt auf dieser Website, für das die Vorlage gilt.",
+            "view_detail": "Berichtsseite",
+            "view_summary": "Eintrag auf der Startseite",
+            "view_rss": "RSS-Eintrag",
+            "refresh": "Aktualisieren",
+            "errors_title": "Die Vorlage ist fehlgeschlagen; stattdessen wird die eingebaute angezeigt:",
+            "line": "Zeile {line}",
+            "xml": "Feed-Eintrag (XML)",
+            "failed": "Die Vorschau konnte nicht erstellt werden.",
+            "open_new_tab": "In einem neuen Tab öffnen"
         }
     },
     "routing": {

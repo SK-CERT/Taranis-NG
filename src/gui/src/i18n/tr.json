@@ -2319,7 +2319,26 @@
             "webs_hint": "Hiçbiri seçilmedi: tüm siteler. Bir site, kendisini listeleyen şablonu, yoksa tüm siteler için olanı kullanır.",
             "every_web": "Tüm siteler",
             "web_taken": "'{name}' içinde",
-            "every_web_taken": "'{name}' zaten tüm siteler için şablonu: bu şablonun hangi siteler için olduğunu seçin."
+            "every_web_taken": "'{name}' zaten tüm siteler için şablonu: bu şablonun hangi siteler için olduğunu seçin.",
+            "tab_template": "Şablon"
+        },
+        "preview": {
+            "title": "Önizleme",
+            "intro": "Yayınlanmış bir ürünün bu şablonla sitede nasıl göründüğü. Public-web düğümü oluşturur; bir değişiklik yazmayı bıraktıktan kısa süre sonra görünür.",
+            "choose_target": "Önizleme görmek için şablonun ne için olduğunu seçin.",
+            "web": "Site",
+            "language": "Dil",
+            "product": "Ürün",
+            "no_products": "Bu sitede şablonun uygulandığı yayınlanmış ürün yok.",
+            "view_detail": "Rapor sayfası",
+            "view_summary": "Ana sayfa girdisi",
+            "view_rss": "RSS öğesi",
+            "refresh": "Yenile",
+            "errors_title": "Şablon başarısız oldu; yerine yerleşik olan gösteriliyor:",
+            "line": "satır {line}",
+            "xml": "Akış öğesi (XML)",
+            "failed": "Önizleme oluşturulamadı.",
+            "open_new_tab": "Yeni sekmede aç"
         }
     },
     "routing": {

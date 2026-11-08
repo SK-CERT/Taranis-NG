@@ -2319,7 +2319,26 @@
             "webs_hint": "Nič nevybrané: všetky weby. Web použije šablónu, ktorá ho uvádza, inak tú pre všetky weby.",
             "every_web": "Všetky weby",
             "web_taken": "Už v '{name}'",
-            "every_web_taken": "'{name}' je už jeho šablónou pre všetky weby: vyberte weby, pre ktoré je táto."
+            "every_web_taken": "'{name}' je už jeho šablónou pre všetky weby: vyberte weby, pre ktoré je táto.",
+            "tab_template": "Šablóna"
+        },
+        "preview": {
+            "title": "Náhľad",
+            "intro": "Ako vyzerá publikovaný produkt s touto šablónou na webe. Vykreslí ho uzol public-web; zmena sa prejaví chvíľu po tom, čo prestanete písať.",
+            "choose_target": "Pre náhľad vyberte, pre čo je šablóna.",
+            "web": "Web",
+            "language": "Jazyk",
+            "product": "Produkt",
+            "no_products": "Na tomto webe nie je žiadny publikovaný produkt, na ktorý sa šablóna vzťahuje.",
+            "view_detail": "Stránka reportu",
+            "view_summary": "Položka na domovskej stránke",
+            "view_rss": "Položka RSS",
+            "refresh": "Obnoviť",
+            "errors_title": "Šablóna zlyhala; namiesto nej sa zobrazuje vstavaná:",
+            "line": "riadok {line}",
+            "xml": "Položka kanála (XML)",
+            "failed": "Náhľad sa nepodarilo vytvoriť.",
+            "open_new_tab": "Otvoriť v novom okne"
         }
     },
     "routing": {

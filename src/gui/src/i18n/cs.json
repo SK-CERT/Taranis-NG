@@ -2319,7 +2319,26 @@
             "webs_hint": "Nic nevybráno: všechny weby. Web použije šablonu, která ho uvádí, jinak tu pro všechny weby.",
             "every_web": "Všechny weby",
             "web_taken": "Už v '{name}'",
-            "every_web_taken": "'{name}' je už jeho šablonou pro všechny weby: vyberte weby, pro které je tato."
+            "every_web_taken": "'{name}' je už jeho šablonou pro všechny weby: vyberte weby, pro které je tato.",
+            "tab_template": "Šablona"
+        },
+        "preview": {
+            "title": "Náhled",
+            "intro": "Jak vypadá publikovaný produkt s touto šablonou na webu. Vykreslí ho uzel public-web; změna se projeví chvíli poté, co přestanete psát.",
+            "choose_target": "Pro náhled vyberte, pro co šablona je.",
+            "web": "Web",
+            "language": "Jazyk",
+            "product": "Produkt",
+            "no_products": "Na tomto webu není žádný publikovaný produkt, na který se šablona vztahuje.",
+            "view_detail": "Stránka reportu",
+            "view_summary": "Položka na domovské stránce",
+            "view_rss": "Položka RSS",
+            "refresh": "Obnovit",
+            "errors_title": "Šablona selhala; místo ní se zobrazuje vestavěná:",
+            "line": "řádek {line}",
+            "xml": "Položka kanálu (XML)",
+            "failed": "Náhled se nepodařilo vytvořit.",
+            "open_new_tab": "Otevřít v novém okně"
         }
     },
     "routing": {

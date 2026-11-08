@@ -142,6 +142,24 @@ Filters: `clean` (escapes everything but `<a>` links), `clean_rich`,
 `capitalize_first`, `fix_spaces`, and the presenter filters `strfdate`,
 `regex_replace`, `truncate_on_symbol`, `tlp_color`.
 
+### Preview
+
+The template dialog (Configuration → Public Web → Report templates) previews a template
+before it is saved: core checks the source, then asks the web's node
+(`POST /management/preview`, authenticated with the node key) to render a published
+product with it - the newest one the template applies to, or one picked in the dialog -
+as the report page, the homepage entry, or the whole RSS item. The node renders it with
+the web's stored templates, the previewed one in place of its target's, in the web's own
+page with its branding; its stylesheet and images are inlined, so the preview does not
+depend on the browser reaching the web's hostname, and its scripts are left out. A custom
+template that fails is replaced by the built-in one, as on the site, and the failure
+(template, line, message) is listed under the preview. The node caches nothing; core keeps
+the rendered page for ten minutes under a random ticket and serves it from
+`/api/v1/config/public-web-templates/preview/<ticket>` with a policy of its own (the web's
+CDN stylesheets and fonts allowed, no scripts, framed only by the GUI), shown in the
+dialog's Preview tab and, from there, in a browser tab. No node that core can reach, no
+preview.
+
 ## Configuration
 
 There is **no config file**. Per-web presentation (branding text per language,

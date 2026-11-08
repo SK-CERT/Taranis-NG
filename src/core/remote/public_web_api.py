@@ -13,6 +13,8 @@ import requests
 from managers.log_manager import logger
 
 _TIMEOUT = 5
+# Rendering a product (it fetches it from core first) takes longer than a health probe.
+_PREVIEW_TIMEOUT = 20
 
 
 class PublicWebApi:
@@ -67,3 +69,21 @@ class PublicWebApi:
         except requests.RequestException as exc:
             logger.debug(f"Public-web node test-email failed for '{self.api_url}': {exc}")
             return {"error": str(exc)}, HTTPStatus.SERVICE_UNAVAILABLE
+
+    def preview(self, payload: dict) -> tuple[dict, HTTPStatus]:
+        """Ask the node to render a product with a report template that is not saved yet."""
+        try:
+            response = requests.post(
+                self.api_url + "/management/preview",
+                json=payload,
+                headers=self.headers,
+                timeout=_PREVIEW_TIMEOUT,
+            )
+        except requests.RequestException as exc:
+            logger.debug(f"Public-web node preview failed for '{self.api_url}': {exc}")
+            return {"error": str(exc)}, HTTPStatus.SERVICE_UNAVAILABLE
+        try:
+            body = response.json() if response.content else {}
+        except ValueError:
+            body = {"error": response.text[:300]}
+        return body, HTTPStatus(response.status_code)

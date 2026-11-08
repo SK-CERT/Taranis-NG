@@ -3,7 +3,8 @@ import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewPublicWebTemplate from '@/components/config/public-web/NewPublicWebTemplate.vue'
 import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
-import { createPublicWebTemplate, getAllProductPresets } from '@/api/config'
+import PublicWebTemplatePreview from '@/components/config/public-web/PublicWebTemplatePreview.vue'
+import { createPublicWebTemplate, getAllProductPresets, getPublicWebTemplatePreviewOptions } from '@/api/config'
 
 vi.mock('@/api/config', () => ({
     createPublicWebTemplate: vi.fn(),
@@ -28,6 +29,8 @@ vi.mock('@/api/config', () => ({
             ]
         }
     }),
+    getPublicWebTemplatePreviewOptions: vi.fn().mockResolvedValue({ data: { webs: [], web_id: null, products: [] } }),
+    previewPublicWebTemplate: vi.fn(),
     getBuiltinPublicWebTemplates: vi.fn().mockResolvedValue({
         data: {
             items: [
@@ -37,6 +40,14 @@ vi.mock('@/api/config', () => ({
         }
     })
 }))
+
+// The window width the dialog lays itself out by (tabs below 1400 px, side by side from it).
+const display = vi.hoisted(() => ({ width: null }))
+vi.mock('vuetify', async (importOriginal) => {
+    const { ref } = await import('vue')
+    display.width = ref(1024)
+    return { ...(await importOriginal()), useDisplay: () => ({ width: display.width }) }
+})
 
 vi.mock('@/composables/useAuth', () => ({
     useAuth: () => ({ checkPermission: () => true })
@@ -99,6 +110,7 @@ const select = (wrapper, dataTest) =>
 describe('NewPublicWebTemplate', () => {
     beforeEach(() => vi.clearAllMocks())
     afterEach(() => {
+        display.width.value = 1024
         while (mounted.length) mounted.pop().unmount()
     })
 
@@ -156,8 +168,9 @@ describe('NewPublicWebTemplate', () => {
         select(wrapper, 'template-kind').vm.$emit('update:modelValue', 'item')
         await flushPromises()
         select(wrapper, 'template-target').vm.$emit('update:modelValue', 9)
-        // The help panel renders its content once expanded.
-        await wrapper.find('.v-expansion-panel-title').trigger('click')
+        // The help panel under the editor renders its content once expanded.
+        const help = wrapper.findAll('.v-expansion-panel-title').find((title) => title.text().includes('What a template can use'))
+        await help.trigger('click')
         await flushPromises()
 
         expect(wrapper.findAll('[data-test="template-attr-key"]').map((key) => key.text())).toEqual([
@@ -212,5 +225,53 @@ describe('NewPublicWebTemplate', () => {
             })
         )
         expect(wrapper.find('[data-test="template-error"]').text()).toContain('line 2')
+    })
+
+    it('shows the preview on a tab of its own where both do not fit, asking the node only there', async () => {
+        const wrapper = await openNewTemplate()
+        await wrapper.findAllComponents({ name: 'VTextField' })[0].vm.$emit('update:modelValue', '')
+        select(wrapper, 'template-target').vm.$emit('update:modelValue', 2)
+        await flushPromises()
+        expect(wrapper.find('[data-test="template-panes"]').classes()).not.toContain('template-panes--split')
+        expect(wrapper.findComponent(PublicWebTemplatePreview).props('active')).toBe(false)
+        expect(getPublicWebTemplatePreviewOptions).not.toHaveBeenCalled()
+
+        await wrapper.find('[data-test="template-tab-preview"]').trigger('click')
+        await flushPromises()
+
+        expect(wrapper.findComponent(PublicWebTemplatePreview).props('active')).toBe(true)
+        expect(getPublicWebTemplatePreviewOptions).toHaveBeenCalledWith(expect.objectContaining({ product_preset_id: 2 }))
+
+        // Saving from the preview still checks the form, and goes back to what is missing.
+        wrapper.findComponent(DialogToolbar).vm.$emit('save')
+        await flushPromises()
+
+        expect(createPublicWebTemplate).not.toHaveBeenCalled()
+        expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('template')
+        expect(wrapper.findComponent(PublicWebTemplatePreview).props('active')).toBe(false)
+    })
+
+    it('puts the template and its preview side by side where both fit', async () => {
+        display.width.value = 1600
+        const wrapper = await openNewTemplate()
+        select(wrapper, 'template-target').vm.$emit('update:modelValue', 2)
+        await flushPromises()
+
+        const hidden = (selector) => (wrapper.find(selector).attributes('style') || '').includes('display: none')
+        expect(wrapper.find('[data-test="template-tab-preview"]').exists()).toBe(false)
+        expect(wrapper.find('[data-test="template-panes"]').classes()).toContain('template-panes--split')
+        expect([hidden('.template-panes__source'), hidden('.template-panes__preview')]).toEqual([false, false])
+        // The preview follows the editor without a click, in a wider dialog.
+        expect(wrapper.findComponent(PublicWebTemplatePreview).props('active')).toBe(true)
+        expect(getPublicWebTemplatePreviewOptions).toHaveBeenCalledWith(expect.objectContaining({ product_preset_id: 2 }))
+        expect(wrapper.findComponent({ name: 'VDialog' }).attributes('max-width')).toBe('1800')
+
+        // Narrowed: tabs again, on the template, and the preview stops asking.
+        display.width.value = 1200
+        await flushPromises()
+
+        expect(wrapper.find('[data-test="template-tab-preview"]').exists()).toBe(true)
+        expect(hidden('.template-panes__preview')).toBe(true)
+        expect(wrapper.findComponent(PublicWebTemplatePreview).props('active')).toBe(false)
     })
 })

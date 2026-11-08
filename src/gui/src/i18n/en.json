@@ -2319,7 +2319,26 @@
             "webs_hint": "None chosen: every web. A web uses the template that lists it, else the one for every web.",
             "every_web": "Every web",
             "web_taken": "Already in '{name}'",
-            "every_web_taken": "'{name}' is already its template for every web: choose the webs this one is for."
+            "every_web_taken": "'{name}' is already its template for every web: choose the webs this one is for.",
+            "tab_template": "Template"
+        },
+        "preview": {
+            "title": "Preview",
+            "intro": "How a published product looks with this template, as the web shows it. The web's public-web node renders it; a change appears a moment after you stop typing.",
+            "choose_target": "Choose what the template is for to see a preview.",
+            "web": "Web",
+            "language": "Language",
+            "product": "Product",
+            "no_products": "No published product on this web that the template applies to.",
+            "view_detail": "Report page",
+            "view_summary": "Homepage entry",
+            "view_rss": "RSS item",
+            "refresh": "Refresh",
+            "errors_title": "The template failed; the built-in one is shown in its place:",
+            "line": "line {line}",
+            "xml": "Feed item (XML)",
+            "failed": "The preview could not be made.",
+            "open_new_tab": "Open in a new tab"
         }
     },
     "routing": {

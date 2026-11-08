@@ -539,6 +539,8 @@ class Product(db.Model):
         web_id: int | None = None,
         offset: int = 0,
         with_content: bool = False,
+        product_preset_id: int | None = None,
+        report_item_type_id: int | None = None,
     ) -> tuple[list[Product], int]:
         """Get published products, newest first, a page at a time.
 
@@ -553,6 +555,8 @@ class Product(db.Model):
             web_id: Public-web id to filter for.
             offset: How many of the newest to skip.
             with_content: Load the page's report items with it, for serializing them all.
+            product_preset_id: Only products of this preset (a template preview).
+            report_item_type_id: Only products holding a report item of this type (a template preview).
 
         Returns:
             tuple[list[Product], int]: The page, ordered by creation date descending, and how many
@@ -576,6 +580,16 @@ class Product(db.Model):
             limited = exists().where(ProductPublicWeb.product_id == cls.id)
             limited_to_web = exists().where(ProductPublicWeb.product_id == cls.id, ProductPublicWeb.public_web_id == web_id)
             query = query.filter(or_(~targeted, targets_web), or_(~limited, limited_to_web))
+
+        if product_preset_id is not None:
+            query = query.filter(cls.product_preset_id == product_preset_id)
+        if report_item_type_id is not None:
+            holds_type = (
+                exists()
+                .where(ProductReportItem.product_id == cls.id)
+                .where(ProductReportItem.report_item_id == ReportItem.id, ReportItem.report_item_type_id == report_item_type_id)
+            )
+            query = query.filter(holds_type)
 
         total = query.count()
         # By id too, so that products created at the same moment keep their place between pages.
