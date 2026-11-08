@@ -88,10 +88,12 @@ class ProductsResource(Resource):
                 filters["date_to"] = request.args["date_to"]
             filters.update(tag.list_filter(request.args))
 
-            offset = int(request.args.get("offset", 0))
-            limit = min(int(request.args.get("limit", 50)), 200)
+            offset = max(int(request.args.get("offset", 0)), 0)
+            limit = min(max(int(request.args.get("limit", 50)), 1), 200)
+        except ValueError:
+            return {"error": "Invalid list parameters: offset, limit and ids must be whole numbers"}, HTTPStatus.BAD_REQUEST
+        try:
             return Product.get_json(filters, offset, limit, auth_manager.get_user_from_jwt()), HTTPStatus.OK
-
         except Exception as ex:
             msg = "Get Products failed"
             logger.exception(f"{msg}: {ex}")
@@ -273,6 +275,8 @@ def load_product(product_data: dict, user: User, token: str) -> tuple[dict, HTTP
             product and, for one not saved yet, its texts per language.
     """
     translations = None
+    if not isinstance(product_data, dict):
+        return {"error": "Send the product to publish"}, HTTPStatus.BAD_REQUEST, None, None
     product_id = product_data.get("id", -1)
     if product_id == -1:
         product_preset = ProductPreset.find(product_data.get("product_preset_id"))
@@ -454,7 +458,7 @@ class ProductSetPreview(Resource):
         err_msg = None
         user = None
 
-        jwt = request.json.get("jwt")
+        jwt = request.json.get("jwt") if isinstance(request.json, dict) else None
         if not jwt:
             err_msg = "Missing JWT"
         else:
@@ -540,7 +544,7 @@ class PublishProduct(Resource):
         user = auth_manager.get_user_from_jwt()
 
         try:
-            request_data = request.json
+            request_data = request.json if isinstance(request.json, dict) else {}
             product_data = request_data.get("product")
             token = str(uuid.uuid4())
 

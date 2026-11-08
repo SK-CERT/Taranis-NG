@@ -1407,7 +1407,9 @@ class UserResource(Resource):
             (str, int): The result of the update
         """
         target = user.User.find_by_id(user_id)
-        password_before = target.password if target else None
+        if target is None:
+            return {"error": "User not found"}, HTTPStatus.NOT_FOUND
+        password_before = target.password
         try:
             user.User.update(user_id, request.json)
         except ValueError as ex:
@@ -1425,7 +1427,10 @@ class UserResource(Resource):
         Returns:
             (str, int): The result of the delete
         """
+        if user.User.find_by_id(user_id) is None:
+            return {"error": "User not found"}, HTTPStatus.NOT_FOUND
         user.User.delete(user_id)
+        return None
 
 
 class UserStatusResource(Resource):

@@ -117,7 +117,7 @@ class NotificationTemplate(Resource):
         Request Body:
             JSON: Updated data for the notification template.
         """
-        notification_template.NotificationTemplate.update(auth_manager.get_user_from_jwt(), template_id, request.json)
+        return notification_template.NotificationTemplate.update(auth_manager.get_user_from_jwt(), template_id, request.json)
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, template_id):

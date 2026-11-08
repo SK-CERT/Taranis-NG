@@ -23,7 +23,7 @@ import sqlalchemy
 from managers import content_language, translation_status
 from managers.db_manager import db
 from managers.link_references import generate_link_key
-from marshmallow import fields, post_load, pre_load
+from marshmallow import ValidationError, fields, post_load, pre_load
 from model.acl_entry import ACLEntry
 from model.attribute import Attribute
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
@@ -969,6 +969,8 @@ class ReportItem(db.Model):
             ValueError: If ``language`` is not an ISO 639-1 code, or ``tag_ids`` names a tag that
                 cannot be put on reports.
         """
+        if not isinstance(report_item_data, dict):
+            raise ValidationError({"_schema": ["Send the report item as an object."]})
         # The language picked in the form, and its tags, checked before anything is built.
         language = content_language.clean_language(report_item_data.get("language"))
         tag_ids = Tag.assignable(StateEntityTypeEnum.REPORT_ITEM.value, report_item_data.get("tag_ids"))
@@ -977,6 +979,15 @@ class ReportItem(db.Model):
 
         if not ReportItemType.allowed_with_acl(report_item.report_item_type_id, user, see=False, access=False, modify=True):
             return "Unauthorized access to report item type", HTTPStatus.UNAUTHORIZED
+        # As when adding them later: only news items and reports the user may read.
+        report_item.news_item_aggregates = [
+            aggregate for aggregate in report_item.news_item_aggregates if NewsItemAggregate.allowed_for(aggregate, user)
+        ]
+        report_item.remote_report_items = [
+            remote
+            for remote in report_item.remote_report_items
+            if remote is not None and ReportItem.allowed_with_acl(remote.id, user, see=False, access=True, modify=False)
+        ]
 
         report_item.user_id = user.id
         report_item.updated_by = user.name
@@ -1415,17 +1426,9 @@ class ReportItem(db.Model):
                     # A new link gets its citation key right away; get_updated_data hands it back.
                     report_item.ensure_link_keys()
 
-                if "aggregate_ids" in data:
+                if "aggregate_ids" in data or "remote_report_item_ids" in data:
                     modified = True
-                    for aggregate_id in data["aggregate_ids"]:
-                        aggregate = NewsItemAggregate.find(aggregate_id)
-                        report_item.news_item_aggregates.append(aggregate)
-
-                if "remote_report_item_ids" in data:
-                    modified = True
-                    for remote_report_item_id in data["remote_report_item_ids"]:
-                        remote_report_item = ReportItem.find(remote_report_item_id)
-                        report_item.remote_report_items.append(remote_report_item)
+                    cls._link_readable(report_item, data, user)
 
             if "delete" in data:
                 if "attribute_id" in data:
@@ -1480,6 +1483,30 @@ class ReportItem(db.Model):
 
         return modified, data
 
+    @staticmethod
+    def _link_readable(report_item: ReportItem, data: dict, user: User) -> None:
+        """Add the news items (``aggregate_ids``) and reports (``remote_report_item_ids``) a user may read.
+
+        What a report holds, anyone who may read the report reads too; any id used to be taken.
+
+        Args:
+            report_item (ReportItem): The report.
+            data (dict): The request, with the ids.
+            user (User): Who adds them.
+        """
+        for aggregate_id in data.get("aggregate_ids", []):
+            aggregate = NewsItemAggregate.find(aggregate_id)
+            if NewsItemAggregate.allowed_for(aggregate, user) and aggregate not in report_item.news_item_aggregates:
+                report_item.news_item_aggregates.append(aggregate)
+        for remote_report_item_id in data.get("remote_report_item_ids", []):
+            remote = ReportItem.find(remote_report_item_id)
+            if (
+                remote is not None
+                and remote not in report_item.remote_report_items
+                and ReportItem.allowed_with_acl(remote.id, user, see=False, access=True, modify=False)
+            ):
+                report_item.remote_report_items.append(remote)
+
     @classmethod
     def get_updated_data(cls, id: int, data: dict) -> dict:  # noqa: A002
         """Get the updated data for a report item.
@@ -1525,19 +1552,21 @@ class ReportItem(db.Model):
                             break
 
             if "add" in data:
+                # Only what this report holds: the ids come from the request, and any other
+                # aggregate or report was handed out whole to whoever may read this one.
                 if "aggregate_ids" in data:
                     schema = NewsItemAggregateSchema()
-                    data["news_item_aggregates"] = []
-                    for aggregate_id in data["aggregate_ids"]:
-                        aggregate = NewsItemAggregate.find(aggregate_id)
-                        data["news_item_aggregates"].append(schema.dump(aggregate))
+                    linked = {str(aggregate.id): aggregate for aggregate in report_item.news_item_aggregates}
+                    data["news_item_aggregates"] = [
+                        schema.dump(linked[str(aggregate_id)]) for aggregate_id in data["aggregate_ids"] if str(aggregate_id) in linked
+                    ]
 
                 if "remote_report_item_ids" in data:
                     schema = RemoteReportItemSchema()
-                    data["remote_report_items"] = []
-                    for remote_report_item_id in data["remote_report_item_ids"]:
-                        remote_report_item = ReportItem.find(remote_report_item_id)
-                        data["remote_report_items"].append(schema.dump(remote_report_item))
+                    linked = {str(remote.id): remote for remote in report_item.remote_report_items}
+                    data["remote_report_items"] = [
+                        schema.dump(linked[str(remote_id)]) for remote_id in data["remote_report_item_ids"] if str(remote_id) in linked
+                    ]
 
                 if "attribute_id" in data:
                     for attribute in report_item.attributes:

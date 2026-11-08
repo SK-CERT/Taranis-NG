@@ -10,7 +10,7 @@ from managers.auth_manager import auth_required, get_user_from_jwt
 from managers.db_manager import db
 from model.product import Product
 from model.report_item import ReportItem
-from model.state import StateDefinition
+from model.state import StateDefinition, StateEntityTypeEnum
 from shared.log_manager import logger
 
 
@@ -74,6 +74,8 @@ class EntityTypeStatesResource(Resource):
         Returns:
             dict: List of available states with their details
         """
+        if entity_type not in {entity.value for entity in StateEntityTypeEnum}:
+            return {"error": f"Unknown entity type: {entity_type}"}, HTTPStatus.NOT_FOUND
         try:
             # Check if we should include inactive states
             include_inactive = request.args.get("include_inactive", "false").lower() == "true"

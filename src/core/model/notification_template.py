@@ -1,5 +1,7 @@
 """Module for NotificationTemplate model."""
 
+from http import HTTPStatus
+
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from sqlalchemy import or_, orm
@@ -209,9 +211,12 @@ class NotificationTemplate(db.Model):
             template_id (int): The ID of the template to be deleted.
         """
         template = db.session.get(cls, template_id)
+        if template is None:
+            return {"error": "Notification template not found"}, HTTPStatus.NOT_FOUND
         if any(org in user.organizations for org in template.organizations):
             db.session.delete(template)
             db.session.commit()
+        return None
 
     @classmethod
     def update(cls, user, template_id, data):
@@ -226,6 +231,8 @@ class NotificationTemplate(db.Model):
         new_template_schema = NewNotificationTemplateSchema()
         updated_template = new_template_schema.load(data)
         template = db.session.get(cls, template_id)
+        if template is None:
+            return {"error": "Notification template not found"}, HTTPStatus.NOT_FOUND
         if any(org in user.organizations for org in template.organizations):
             template.name = updated_template.name
             template.description = updated_template.description
@@ -233,6 +240,7 @@ class NotificationTemplate(db.Model):
             template.message_body = updated_template.message_body
             template.recipients = updated_template.recipients
             db.session.commit()
+        return None
 
 
 class NotificationTemplateOrganization(db.Model):
