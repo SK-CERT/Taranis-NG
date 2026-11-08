@@ -103,11 +103,14 @@ test.describe('API key management', () => {
             // A key can never manage keys, whatever it may do
             expect((await request.get(`${CORE_API}/config/api-keys`, withKey(plaintext))).status()).toBe(401)
 
-            // Paused: refused; resumed: works again
-            await row.locator('[data-test="api-key-disable"]').click()
+            // Paused: refused; resumed: works again. The switch moves before the save is answered,
+            // so wait for the save itself before trying the key.
+            const saved = () =>
+                page.waitForResponse((response) => /\/config\/api-keys\/\d+$/.test(response.url()) && response.request().method() === 'PUT')
+            await Promise.all([saved(), row.locator('[data-test="api-key-disable"]').click()])
             await expect(row.locator('[data-test="api-key-enable"]')).toBeVisible()
             expect((await request.get(PERMITTED, withKey(plaintext))).status()).toBe(401)
-            await row.locator('[data-test="api-key-enable"]').click()
+            await Promise.all([saved(), row.locator('[data-test="api-key-enable"]').click()])
             await expect(row.locator('[data-test="api-key-disable"]')).toBeVisible()
             expect((await request.get(PERMITTED, withKey(plaintext))).status()).toBe(200)
 
