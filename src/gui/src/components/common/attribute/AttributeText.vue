@@ -7,7 +7,7 @@
         <template #content>
             <div
                 v-for="(value, index) in values"
-                :key="`${value.index}-${index}`"
+                :key="rowKey(value)"
                 class="value-holder"
                 :class="{ 'drag-over': dragOverIndex === index, 'dragging': dragIndex === index }"
                 @dragover="onDragOver(index, $event)"
@@ -133,7 +133,7 @@
     import ReferencePreview from '@/components/common/links/ReferencePreview.vue'
     import { useCitingField } from '@/composables/useCitingField'
     import { ICONS } from '@/config/ui-constants'
-    import { useAttributes } from './useAttributes'
+    import { rowKey, useAttributes } from './useAttributes'
 
     type AttributeValueItem = {
         index?: string | number

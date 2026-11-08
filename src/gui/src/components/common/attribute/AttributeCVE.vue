@@ -7,7 +7,7 @@
         <template #content>
             <div
                 v-for="(value, index) in values"
-                :key="`${value.index}-${index}`"
+                :key="rowKey(value)"
                 class="value-holder"
             >
                 <!-- Read-only or remote -->
@@ -90,7 +90,7 @@
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
     import EnumSelector from '@/components/common/EnumSelector.vue'
-    import { useAttributes } from './useAttributes'
+    import { rowKey, useAttributes } from './useAttributes'
 
     type AttributeValueItem = {
         index?: string | number

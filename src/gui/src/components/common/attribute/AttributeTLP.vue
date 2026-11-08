@@ -7,7 +7,7 @@
         <template #content>
             <div
                 v-for="(value, index) in values"
-                :key="`${value.index}-${index}`"
+                :key="rowKey(value)"
                 class="w-100"
             >
                 <!-- Read-only or remote -->
@@ -93,7 +93,7 @@
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import AttributeItemLayout from './AttributeItemLayout.vue'
-    import { useAttributes } from './useAttributes'
+    import { rowKey, useAttributes } from './useAttributes'
 
     type TlpLevel = 'CLEAR' | 'GREEN' | 'AMBER' | 'AMBER+STRICT' | 'RED'
 
