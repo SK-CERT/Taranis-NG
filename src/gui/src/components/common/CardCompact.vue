@@ -28,9 +28,11 @@
                     :elevation="isDenseList ? 0 : isHovering ? 12 : 2"
                     class="card-compact flex-grow-1"
                     :class="{
-                        'card-compact--review review-list__row': isReviewCard,
+                        'card-compact--review review-list__row card-item': isReviewCard,
                         'card-compact--list': listMode
                     }"
+                    :data-id="isReviewCard ? card?.id : undefined"
+                    :tabindex="isReviewCard ? 0 : undefined"
                     @click="handleClick"
                 >
                     <v-card-text class="compact-card__body">

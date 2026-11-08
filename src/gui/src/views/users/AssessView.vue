@@ -201,6 +201,8 @@
 
         // Keyboard initialization
         window.addEventListener('keydown', handleKeyDown)
+        // Hovering a card makes it the one shortcuts act on.
+        window.addEventListener('pointermove', keyboard.onPointerMove, { passive: true })
         keyboard.onInit()
         keyboard.setDetailDialogCloseCallback(() => {
             if (contentData.value?.closeDetailDialog) {
@@ -228,6 +230,7 @@
 
     onUnmounted(() => {
         window.removeEventListener('keydown', handleKeyDown)
+        window.removeEventListener('pointermove', keyboard.onPointerMove)
         window.removeEventListener('new-report', handleNewReport as EventListener)
     })
 </script>
