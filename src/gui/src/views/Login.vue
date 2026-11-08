@@ -820,30 +820,19 @@
         padding: 8px;
     }
 
-    .error-alert {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-height: 80px;
-        margin: 0;
-        border-radius: 0;
-        z-index: 1000;
-        overflow: hidden;
-    }
-
+    /* Like the app's pop-up messages: a floating box at the bottom centre, not a bar across
+       the screen covering whatever sits along the bottom edge. */
+    .error-alert,
     .warning-alert {
         position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-height: 80px;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(560px, calc(100% - 32px));
+        max-height: 120px;
         margin: 0;
-        border-radius: 0;
         z-index: 1000;
-        overflow: hidden;
+        overflow: auto;
     }
 
     /* ===== Responsive ===== */

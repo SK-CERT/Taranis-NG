@@ -3,8 +3,9 @@
         v-model="show"
         :color="color"
         :timeout="timeout === 0 ? -1 : timeout"
-        location="top end"
-        transition="slide-y-transition"
+        location="bottom center"
+        transition="slide-y-reverse-transition"
+        class="notification-snackbar"
     >
         <div class="d-flex align-center">
             <v-icon
