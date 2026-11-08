@@ -2,6 +2,8 @@
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
+from shared.schema.presentation import HiddenApiKeySchema
+
 
 class DataProvider:
     """Data model for Data Providers."""
@@ -67,3 +69,7 @@ class DataProviderSchema(Schema):
             DataProvider: An instance of DataProvider initialized with the provided data.
         """
         return DataProvider(**data)
+
+
+class DataProviderPresentationSchema(HiddenApiKeySchema, DataProviderSchema):
+    """A data provider for the configuration: whether it has an API key, never the key."""

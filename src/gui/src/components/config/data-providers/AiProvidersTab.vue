@@ -49,7 +49,7 @@
                 </template>
 
                 <template #item.api_key="{ item }">
-                    {{ asAiProviderItem(item).api_key ? '••••••••' : '-' }}
+                    {{ asAiProviderItem(item).api_key_set ? '••••••••' : '-' }}
                 </template>
 
                 <template #item.updated_at="{ item }">
@@ -107,6 +107,7 @@
         api_type?: string
         model?: string
         api_key?: string
+        api_key_set?: boolean
         updated_by?: string
         updated_at?: string
         [key: string]: unknown

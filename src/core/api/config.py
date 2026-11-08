@@ -34,6 +34,7 @@ from managers import (
 from managers.auth_manager import auth_required, get_user_from_jwt
 from managers.db_manager import db
 from managers.sse_manager import sse_manager
+from managers.stored_secrets import hide_secret_parameters, keep_stored_api_key
 from model import (
     acl_entry,
     ai_provider,
@@ -973,7 +974,7 @@ class ProductFormatsResource(Resource):
             (dict): The product formats
         """
         search = request.args.get("search")
-        return product_format.ProductFormat.get_all_json(search)
+        return hide_secret_parameters(product_format.ProductFormat.get_all_json(search))
 
     @auth_required("CONFIG_PRODUCT_FORMAT_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:
@@ -1861,7 +1862,7 @@ class OSINTSourcesResource(Resource):
             (dict): The OSINT sources
         """
         search = request.args.get("search")
-        return osint_source.OSINTSource.get_all_json(search)
+        return hide_secret_parameters(osint_source.OSINTSource.get_all_json(search))
 
     @auth_required("CONFIG_OSINT_SOURCE_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:
@@ -2078,7 +2079,7 @@ class RemoteAccessesResource(Resource):
             (dict): The remote accesses
         """
         search = request.args.get("search")
-        return remote.RemoteAccess.get_all_json(search)
+        return hide_secret_parameters(remote.RemoteAccess.get_all_json(search))
 
     @auth_required("CONFIG_REMOTE_ACCESS_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:
@@ -2108,7 +2109,9 @@ class RemoteAccessResource(Resource):
             (str, int): The result of the update
         """
         try:
-            event_id, disconnect = remote.RemoteAccess.update(remote_access_id, request.json)
+            # The GUI never receives the key: saved empty, it stays as stored.
+            data = keep_stored_api_key(request.json, remote.RemoteAccess, remote_access_id)
+            event_id, disconnect = remote.RemoteAccess.update(remote_access_id, data)
             if disconnect:
                 sse_manager.remote_access_disconnect([event_id])
         except Exception as ex:
@@ -2653,7 +2656,8 @@ class RemoteNodeResource(Resource):
             (str, int): The result of the update
         """
         try:
-            if remote.RemoteNode.update(remote_node_id, request.json) is False:
+            data = keep_stored_api_key(request.json, remote.RemoteNode, remote_node_id)
+            if remote.RemoteNode.update(remote_node_id, data) is False:
                 remote_manager.disconnect_from_node(remote_node_id)
         except Exception as ex:
             msg = "Could not update remote node"
@@ -2831,7 +2835,7 @@ class PublishingChannelsResource(Resource):
             (dict): The publishing channels
         """
         search = request.args.get("search")
-        return publishing_channel.PublishingChannel.get_all_json(search)
+        return hide_secret_parameters(publishing_channel.PublishingChannel.get_all_json(search))
 
     @auth_required("CONFIG_PUBLISHING_CHANNEL_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:
@@ -2914,11 +2918,11 @@ class BotsNodeResource(Resource):
     """Bot node API endpoint."""
 
     @auth_required("CONFIG_BOTS_NODE_UPDATE")
-    def put(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+    def put(self, node_id: str) -> tuple[dict, HTTPStatus] | None:
         """Update a bot node.
 
         Args:
-            node_id (int): The bot node ID
+            node_id (str): The bot node ID
         Returns:
             (str, int): The result of the update
         """
@@ -2930,11 +2934,11 @@ class BotsNodeResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_BOTS_NODE_DELETE")
-    def delete(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+    def delete(self, node_id: str) -> tuple[dict, HTTPStatus] | None:
         """Delete a bot node.
 
         Args:
-            node_id (int): The bot node ID
+            node_id (str): The bot node ID
         Returns:
             (str, int): The result of the delete
         """
@@ -2955,7 +2959,7 @@ class BotPresetsResource(Resource):
             (dict): The bot presets
         """
         search = request.args.get("search")
-        return bot_preset.BotPreset.get_all_json(search)
+        return hide_secret_parameters(bot_preset.BotPreset.get_all_json(search))
 
     @auth_required("CONFIG_BOT_PRESET_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:

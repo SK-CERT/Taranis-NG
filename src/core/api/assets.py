@@ -4,13 +4,14 @@ It uses Flask-RESTful to define resource classes and Flask for handling HTTP req
 Authentication is enforced using decorators from the `auth_manager`.
 """
 
+from http import HTTPStatus
+
 from flask import request
-from flask_restful import Resource
+from flask_restful import Api, Resource
 from managers import auth_manager
 from managers.auth_manager import auth_required
 from model import asset, attribute, notification_template
 from model.permission import Permission
-
 from shared.schema.attribute import AttributeType
 
 
@@ -18,7 +19,7 @@ class AssetGroups(Resource):
     """Resource for managing asset groups."""
 
     @auth_required("MY_ASSETS_ACCESS")
-    def get(self):
+    def get(self) -> dict:
         """Retrieve all asset groups for the authenticated user.
 
         Query Parameters:
@@ -33,7 +34,7 @@ class AssetGroups(Resource):
         return asset.AssetGroup.get_all_json(auth_manager.get_user_from_jwt(), search)
 
     @auth_required("MY_ASSETS_CONFIG")
-    def post(self):
+    def post(self) -> tuple[str, None]:
         """Create a new asset group.
 
         Request Body:
@@ -49,7 +50,7 @@ class AssetGroup(Resource):
     """Resource for managing a single asset group."""
 
     @auth_required("MY_ASSETS_CONFIG")
-    def put(self, group_id):
+    def put(self, group_id: str) -> None:
         """Update an existing asset group.
 
         Args:
@@ -61,14 +62,11 @@ class AssetGroup(Resource):
         asset.AssetGroup.update(auth_manager.get_user_from_jwt(), group_id, request.json)
 
     @auth_required("MY_ASSETS_CONFIG")
-    def delete(self, group_id):
+    def delete(self, group_id: str) -> None:
         """Delete an asset group.
 
         Args:
             group_id (str): ID of the asset group to delete.
-
-        Returns:
-            bool: True if deletion was successful, False otherwise.
         """
         return asset.AssetGroup.delete(auth_manager.get_user_from_jwt(), group_id)
 
@@ -77,7 +75,7 @@ class NotificationTemplates(Resource):
     """Resource for managing notification templates."""
 
     @auth_required("MY_ASSETS_CONFIG")
-    def get(self):
+    def get(self) -> dict:
         """Retrieve all notification templates for the authenticated user.
 
         Query Parameters:
@@ -92,7 +90,7 @@ class NotificationTemplates(Resource):
         return notification_template.NotificationTemplate.get_all_json(auth_manager.get_user_from_jwt(), search)
 
     @auth_required("MY_ASSETS_CONFIG")
-    def post(self):
+    def post(self) -> tuple[str, None]:
         """Create a new notification template.
 
         Request Body:
@@ -108,7 +106,7 @@ class NotificationTemplate(Resource):
     """Resource for managing a single notification template."""
 
     @auth_required("MY_ASSETS_CONFIG")
-    def put(self, template_id):
+    def put(self, template_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an existing notification template.
 
         Args:
@@ -116,18 +114,21 @@ class NotificationTemplate(Resource):
 
         Request Body:
             JSON: Updated data for the notification template.
+
+        Returns:
+            tuple | None: An error and 404 when the template does not exist, otherwise None.
         """
         return notification_template.NotificationTemplate.update(auth_manager.get_user_from_jwt(), template_id, request.json)
 
     @auth_required("MY_ASSETS_CONFIG")
-    def delete(self, template_id):
+    def delete(self, template_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a notification template.
 
         Args:
             template_id (int): ID of the notification template to delete.
 
         Returns:
-            bool: True if deletion was successful, False otherwise.
+            tuple | None: An error and 404 when the template does not exist, otherwise None.
         """
         return notification_template.NotificationTemplate.delete(auth_manager.get_user_from_jwt(), template_id)
 
@@ -136,7 +137,7 @@ class Assets(Resource):
     """Resource for managing assets within a group."""
 
     @auth_required("MY_ASSETS_ACCESS")
-    def get(self, group_id):
+    def get(self, group_id: str) -> dict | None:
         """Retrieve all assets in a group for the authenticated user.
 
         Args:
@@ -162,7 +163,7 @@ class Assets(Resource):
         return asset.Asset.get_all_json(auth_manager.get_user_from_jwt(), group_id, search, sort, vulnerable)
 
     @auth_required("MY_ASSETS_CREATE")
-    def post(self, group_id):
+    def post(self, group_id: str) -> tuple[str, None]:
         """Create a new asset in a group.
 
         Args:
@@ -181,7 +182,7 @@ class Asset(Resource):
     """Resource for managing a single asset."""
 
     @auth_required("MY_ASSETS_CREATE")
-    def put(self, group_id, asset_id):
+    def put(self, group_id: str, asset_id: int) -> None:
         """Update an existing asset.
 
         Args:
@@ -194,15 +195,12 @@ class Asset(Resource):
         asset.Asset.update(auth_manager.get_user_from_jwt(), group_id, asset_id, request.json)
 
     @auth_required("MY_ASSETS_CREATE")
-    def delete(self, group_id, asset_id):
+    def delete(self, group_id: str, asset_id: int) -> None:
         """Delete an asset.
 
         Args:
             group_id (str): ID of the asset group.
             asset_id (int): ID of the asset to delete.
-
-        Returns:
-            bool: True if deletion was successful, False otherwise.
         """
         return asset.Asset.delete(auth_manager.get_user_from_jwt(), group_id, asset_id)
 
@@ -211,7 +209,7 @@ class AssetVulnerability(Resource):
     """Resource for managing vulnerabilities of an asset."""
 
     @auth_required("MY_ASSETS_CREATE")
-    def put(self, group_id, asset_id, vulnerability_id):
+    def put(self, group_id: str, asset_id: int, vulnerability_id: int) -> None:
         """Mark a vulnerability as solved for an asset.
 
         Args:
@@ -221,9 +219,6 @@ class AssetVulnerability(Resource):
 
         Request Body:
             JSON: Data indicating whether the vulnerability is solved.
-
-        Returns:
-            bool: True if the operation was successful, False otherwise.
         """
         return asset.Asset.solve_vulnerability(auth_manager.get_user_from_jwt(), group_id, asset_id, vulnerability_id, request.json["solved"])
 
@@ -232,7 +227,7 @@ class GetAttributeCPE(Resource):
     """Resource for retrieving the CPE attribute."""
 
     @auth_required("MY_ASSETS_CREATE")
-    def get(self):
+    def get(self) -> int:
         """Retrieve the CPE attribute.
 
         Returns:
@@ -246,7 +241,7 @@ class AttributeCPEEnums(Resource):
     """Resource for managing CPE attribute enums."""
 
     @auth_required("MY_ASSETS_CREATE")
-    def get(self):
+    def get(self) -> dict:
         """Retrieve enums for the CPE attribute.
 
         Query Parameters:
@@ -270,7 +265,7 @@ class AttributeCPEEnums(Resource):
         return attribute.AttributeEnum.get_for_attribute_json(cpe.id, search, offset, limit)
 
 
-def initialize(api):
+def initialize(api: Api) -> None:
     """Initialize the API with the defined resources and permissions.
 
     Args:
