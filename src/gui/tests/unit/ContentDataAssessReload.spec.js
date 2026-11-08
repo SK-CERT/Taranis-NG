@@ -484,6 +484,51 @@ describe('ContentDataAssess list reloads', () => {
         }
     })
 
+    it('lets a card on screen fade out and fold away before it leaves, but not one above the view', async () => {
+        const wrapper = mountAssess()
+
+        try {
+            await flushPromises()
+
+            const scroller = wrapper.vm.$el.parentElement
+            let scrollTop = 0
+            Object.defineProperty(scroller, 'scrollTop', {
+                configurable: true,
+                get: () => scrollTop,
+                set: (value) => {
+                    scrollTop = value
+                }
+            })
+            layOut(wrapper, scroller, () => scrollTop)
+            const animated = []
+            vi.spyOn(Element.prototype, 'animate').mockImplementation(function (keyframes) {
+                animated.push({ card: this, keyframes })
+                return { finished: Promise.resolve(), cancel: vi.fn() }
+            })
+
+            // The user marks card 3 read under "unread" (it is on screen): it leaves with an animation.
+            serveFrom(makeItems(60).filter((item) => item.id !== 3))
+            await wrapper.vm.refreshData()
+            await flushPromises()
+
+            expect(animated).toHaveLength(1)
+            expect(animated[0].keyframes.at(-1)).toMatchObject({ opacity: 0, height: '0px' })
+            expect(idsOf(wrapper.vm.news_items_data)).not.toContain(3)
+
+            // Card 1 leaves while the user reads further down: no animation, the view stays put.
+            animated.length = 0
+            scrollTop = 1000
+            serveFrom(makeItems(60).filter((item) => item.id !== 3 && item.id !== 1))
+            await wrapper.vm.refreshData()
+            await flushPromises()
+
+            expect(animated).toHaveLength(0)
+            expect(idsOf(wrapper.vm.news_items_data)).not.toContain(1)
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
     it('refreshes the card the user acted on even when many items were collected meanwhile', async () => {
         const wrapper = mountAssess()
 

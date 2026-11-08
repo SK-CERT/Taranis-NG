@@ -30,29 +30,41 @@
             :compact="!!filter.compact_mode"
         />
 
-        <!-- News Items Cards -->
+        <!-- News Items Cards. Only the rows on screen (and a few around) are rendered: the list
+             holds its full height and each row sits at its place in it. -->
         <div
             ref="listRef"
             class="card-list assess-list w-100"
+            :class="{ 'assess-list--virtual': virtual }"
+            :style="virtual ? { height: `${virtualizer.getTotalSize()}px` } : undefined"
         >
-            <component
-                :is="currentCard"
-                v-for="news_item in news_items_data"
-                :key="news_item.id"
-                :card="news_item"
-                :analyze-selector="analyze_selector"
-                :multi-select-active="multiSelectActive"
-                :preselected="isPreselected(news_item.id)"
-                :hide-reviews="filter.hide_reviews"
-                :hide-source-links="filter.hide_source_links"
-                :highlight-wordlist="filter.highlight_wordlist"
-                @show-detail="showDetail"
-                @show-reports-for-item="showReportsForItem"
-                @update-item="updateItem"
-                @delete-item="handleDelete"
-                @card-items-reindex="handleCardItemsReindex"
-                @selection-change="handleSelectionChange(news_item, $event)"
-            />
+            <div
+                v-for="row in rows"
+                :key="row.key"
+                :ref="measureRow"
+                class="assess-list__row"
+                :data-index="row.index"
+                :data-item-id="row.key"
+                :style="virtual ? { transform: `translateY(${row.start - listOffset}px)` } : undefined"
+            >
+                <component
+                    :is="currentCard"
+                    v-if="news_items_data[row.index]"
+                    :card="news_items_data[row.index]!"
+                    :analyze-selector="analyze_selector"
+                    :multi-select-active="multiSelectActive"
+                    :preselected="isPreselected(news_items_data[row.index]!.id)"
+                    :hide-reviews="filter.hide_reviews"
+                    :hide-source-links="filter.hide_source_links"
+                    :highlight-wordlist="filter.highlight_wordlist"
+                    @show-detail="showDetail"
+                    @show-reports-for-item="showReportsForItem"
+                    @update-item="updateItem"
+                    @delete-item="handleDelete"
+                    @card-items-reindex="handleCardItemsReindex"
+                    @selection-change="handleSelectionChange(news_items_data[row.index]!, $event)"
+                />
+            </div>
         </div>
 
         <!-- Infinite Scroll Trigger -->
@@ -129,7 +141,8 @@
 
 <script setup lang="ts">
     import type { AxiosError } from 'axios'
-    import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue'
+    import { ref, shallowRef, onMounted, onUnmounted, watch, computed, nextTick } from 'vue'
+    import { useVirtualizer } from '@tanstack/vue-virtual'
     import { useI18n } from 'vue-i18n'
     import { useRoute } from 'vue-router'
     import { ICONS } from '@/config/ui-constants'
@@ -240,6 +253,42 @@
     const selectedItem = ref<NewsItem | null>(null)
     const detailActionPending = ref(false)
     const listRef = ref<HTMLElement | null>(null)
+
+    /*
+     * Virtual rendering: a long window (hundreds of cards loaded while scrolling) only renders the
+     * rows on screen and a few around them, each measured as it renders. Rows are keyed by item, so
+     * a card keeps its component (and state) while it stays rendered. Without a scrolling container
+     * (unit tests, or a host that lets the page grow) every row renders as before.
+     */
+    const scrollerEl = shallowRef<HTMLElement | null>(null)
+    // Where the list starts inside the scrolling content (the toolbar of an embedding view, ...).
+    const listOffset = ref(0)
+    const virtual = computed(() => scrollerEl.value !== null)
+    const virtualizer = useVirtualizer(
+        computed(() => ({
+            count: news_items_data.value.length,
+            getScrollElement: () => scrollerEl.value,
+            estimateSize: () => (filter.value.compact_mode ? 72 : 200),
+            overscan: 6,
+            scrollMargin: listOffset.value,
+            getItemKey: (index: number) => String(news_items_data.value[index]?.id ?? index)
+        }))
+    )
+    type Row = { key: string; index: number; start: number }
+    const rows = computed<Row[]>(() =>
+        virtual.value
+            ? virtualizer.value.getVirtualItems().map((item) => ({ key: String(item.key), index: item.index, start: item.start }))
+            : news_items_data.value.map((item, index) => ({ key: String(item.id), index, start: 0 }))
+    )
+    const measureRow = (element: unknown): void => {
+        if (virtual.value && element instanceof HTMLElement) virtualizer.value.measureElement(element)
+    }
+    const measureListOffset = (): void => {
+        const scroller = scrollerEl.value
+        const list = listRef.value
+        if (!scroller || !list) return
+        listOffset.value = Math.round(list.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop)
+    }
     const reportsListDialogRef = ref<{ open: (card: NewsItem, mode: ReportsMode) => void } | null>(null)
     const reportItemModalRef = ref<{ openDialog: (items: NewsItem[]) => void; showDetail: (report: unknown) => void } | null>(null)
     const current_group_id = ref('')
@@ -668,25 +717,73 @@
      * stays is put back where it was. Measured after the change, so a browser that already
      * anchored the scroll by itself (Chrome, off the top of the scroller) is not corrected twice.
      */
+    /** The rows rendered now, in list order, with the id of the item each shows. */
+    const renderedRows = (): { id: string; row: HTMLElement }[] =>
+        (Array.from(listRef.value?.children ?? []) as HTMLElement[])
+            .map((row) => ({ id: row.dataset['itemId'] ?? '', row, index: Number(row.dataset['index']) }))
+            .sort((a, b) => a.index - b.index)
+            .map(({ id, row }) => ({ id, row }))
+
     const keepingViewStill = async (keeps: (id: string) => boolean, change: () => void): Promise<void> => {
         const scroller = getScroller()
-        const cards = Array.from(listRef.value?.children ?? []) as HTMLElement[]
-        const ids = news_items_data.value.map((item) => String(item.id))
         const viewTop = scroller?.getBoundingClientRect().top ?? 0
-        const anchorIndex = cards.findIndex((card, index) => keeps(ids[index] ?? '') && card.getBoundingClientRect().bottom > viewTop)
-        const anchorId = anchorIndex >= 0 ? ids[anchorIndex] : undefined
-        const anchorTop = anchorIndex >= 0 ? cards[anchorIndex]!.getBoundingClientRect().top : 0
+        const anchor = renderedRows().find(({ id, row }) => keeps(id) && row.getBoundingClientRect().bottom > viewTop)
+        const anchorTop = anchor?.row.getBoundingClientRect().top ?? 0
 
         change()
         await nextTick()
 
-        if (!scroller || anchorId === undefined) return
-        const index = news_items_data.value.findIndex((item) => String(item.id) === anchorId)
-        const card = (listRef.value?.children[index] as HTMLElement | undefined) ?? null
-        if (!card) return
-        const moved = card.getBoundingClientRect().top - anchorTop
+        if (!scroller || anchor === undefined) return
+        const row = renderedRows().find(({ id }) => id === anchor.id)?.row
+        if (!row) return
+        const moved = row.getBoundingClientRect().top - anchorTop
         if (Math.abs(moved) > 1) {
             scroller.scrollTop += moved
+        }
+    }
+
+    // How long a card takes to leave the list: fade and slide aside, then fold its space away.
+    const LEAVE_MS = 420
+
+    /**
+     * Play the leave animation on the cards of `ids` that are on screen, and wait for it. They are
+     * left folded to nothing, so taking them out of the list afterwards moves nothing. Cards off
+     * screen are not animated: one above the view folding away would pull the list up under the
+     * user (keepingViewStill handles those).
+     */
+    const animateLeaving = async (ids: Set<string>): Promise<() => void> => {
+        const scroller = getScroller()
+        if (!scroller || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return () => {}
+        const view = scroller.getBoundingClientRect()
+        const animations: { card: HTMLElement; animation: ReturnType<HTMLElement['animate']> }[] = []
+        renderedRows().forEach(({ id, row: card }) => {
+            if (!ids.has(id) || typeof card.animate !== 'function') return
+            const box = card.getBoundingClientRect()
+            if (box.bottom <= view.top || box.top >= view.bottom) return
+            const { marginTop, marginBottom } = window.getComputedStyle(card)
+            const height = `${card.offsetHeight}px`
+            card.style.overflow = 'hidden'
+            card.style.pointerEvents = 'none'
+            // `translate`, not `transform`: a virtual row is placed by its transform. As the row
+            // folds, the rows below follow it up (each is re-measured as it changes size).
+            const animation = card.animate(
+                [
+                    { opacity: 1, translate: '0 0', height, marginTop, marginBottom },
+                    { opacity: 0, translate: '32px 0', height, marginTop, marginBottom, offset: 0.5 },
+                    { opacity: 0, translate: '32px 0', height: '0px', marginTop: '0px', marginBottom: '0px' }
+                ],
+                { duration: LEAVE_MS, easing: 'ease-in-out', fill: 'forwards' }
+            )
+            animations.push({ card, animation })
+        })
+        await Promise.all(animations.map(({ animation }) => animation.finished.catch(() => undefined)))
+        // Undone once the cards are out of the list - or back to normal, should one stay after all.
+        return () => {
+            for (const { card, animation } of animations) {
+                animation.cancel()
+                card.style.overflow = ''
+                card.style.pointerEvents = ''
+            }
         }
     }
 
@@ -801,11 +898,19 @@
                 }
 
                 // 3. Refresh the cards in place; drop those that are gone (deleted, or no longer
-                //    matching the filter, e.g. marked read under "unread").
+                //    matching the filter, e.g. marked read under "unread"). One the user can see
+                //    first fades out and folds away, so it is clear it left the list.
+                const gone = rendered.filter((item) => !fresh.has(String(item.id))).map((item) => String(item.id))
+                const settleLeaving = gone.length > 0 ? await animateLeaving(new Set(gone)) : () => {}
+                if (requestId !== loadSequence.value) {
+                    // A newer load took over while the cards left; it decides what is shown.
+                    settleLeaving()
+                    return
+                }
                 await keepingViewStill(
                     (id) => fresh.has(id),
                     () => {
-                        news_items_data.value = rendered
+                        news_items_data.value = news_items_data.value
                             .filter((item) => fresh.has(String(item.id)))
                             .map((item) => fresh.get(String(item.id))!)
                         pendingNewItems.value = pending
@@ -813,6 +918,7 @@
                         total_count.value = listTotal
                     }
                 )
+                settleLeaving()
             } else {
                 // reset/reload: a fresh window at the top, nothing held back.
                 const page = await fetchPage({ offset: 0, limit: PAGE_SIZE })
@@ -903,13 +1009,21 @@
 
     // Initial load
     onMounted(() => {
+        scrollerEl.value = getScroller()
+        measureListOffset()
         updateData(false, false)
         window.addEventListener('news-items-updated', handleNewsItemsUpdated)
+        window.addEventListener('resize', measureListOffset)
     })
+
+    // What sits above the list (the skeleton while loading, the embedding view's own content)
+    // can change its height; the rows are placed relative to where the list starts.
+    watch([() => news_items_data.value.length, loading], () => nextTick(measureListOffset))
 
     onUnmounted(() => {
         clearTimeout(sseRefreshTimer)
         window.removeEventListener('news-items-updated', handleNewsItemsUpdated)
+        window.removeEventListener('resize', measureListOffset)
     })
 
     defineExpose({
@@ -928,6 +1042,13 @@
        for as long as the animation runs. */
     .card-list {
         position: relative;
+    }
+
+    .assess-list--virtual > .assess-list__row {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
     }
 
     .infinite-scroll-trigger {

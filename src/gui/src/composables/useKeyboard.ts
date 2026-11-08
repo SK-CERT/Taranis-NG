@@ -555,12 +555,12 @@ export function useKeyboard(
 
         const keyAlias = getKeyAlias(event)
         if (!keyAlias) return
-        if (navigationOnly) {
-            if (!NAVIGATION_ALIASES.has(keyAlias)) return
-            reindexElements()
-            followCurrentCard()
-            if (state.value.cardItems.length === 0) return
-        }
+        if (navigationOnly && !NAVIGATION_ALIASES.has(keyAlias)) return
+        // The cards in the page change as a list scrolls (Assess renders only those near the
+        // screen), not only when it reloads: read them again before acting.
+        reindexElements()
+        followCurrentCard()
+        if (navigationOnly && state.value.cardItems.length === 0) return
 
         const detailDialog = getOpenDetailDialog()
         if (detailDialog) {
