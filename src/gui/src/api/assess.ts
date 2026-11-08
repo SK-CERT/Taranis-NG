@@ -20,6 +20,12 @@ function buildFilterQueryString(filter_data) {
     if (filter_data.filter.range != 'ALL') {
         filter += '&range=' + encodeURIComponent(filter_data.filter.range)
     }
+    // A shown window re-read by id, and keyset paging after/before an item's cursor.
+    for (const key of ['ids', 'after', 'before']) {
+        if (filter_data[key]) {
+            filter += '&' + key + '=' + encodeURIComponent(filter_data[key])
+        }
+    }
     return filter
 }
 

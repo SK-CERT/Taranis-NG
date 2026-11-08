@@ -34,7 +34,7 @@ from shared.schema.news_item import (
     NewsItemRemoteSchema,
     NewsItemSchema,
 )
-from sqlalchemy import and_, func, or_, orm, text
+from sqlalchemy import and_, func, or_, orm, text, tuple_
 
 # Attribute keys that describe one revision of a versioned item rather than the item. When a
 # newer revision arrives these are replaced, not merged, so an item never shows two TLP labels
@@ -1287,20 +1287,31 @@ class NewsItemAggregate(db.Model):
                 date_limit = datetime.now(TZ) - timedelta(days=31)
             query = query.filter(NewsItemAggregate.created >= date_limit)
 
-        if "sort" in filters:
-            if filters["sort"] == "DATE_DESC":
-                query = query.order_by(db.desc(NewsItemAggregate.created), db.desc(NewsItemAggregate.id))
+        # A window the GUI shows, re-read in place: whichever of these still match. The count is
+        # still that of the whole list, which the GUI shows as its total.
+        list_query = query
+        if filters.get("ids") is not None:
+            query = query.filter(NewsItemAggregate.id.in_(filters["ids"]))
 
-            elif filters["sort"] == "DATE_ASC":
-                query = query.order_by(db.asc(NewsItemAggregate.created), db.asc(NewsItemAggregate.id))
+        sort = filters.get("sort")
+        if sort in SORT_KEYS:
+            column, descending = SORT_KEYS[sort]
+            if descending:
+                query = query.order_by(db.desc(column), db.desc(NewsItemAggregate.id))
+            else:
+                query = query.order_by(db.asc(column), db.asc(NewsItemAggregate.id))
 
-            elif filters["sort"] == "RELEVANCE_DESC":
-                query = query.order_by(db.desc(NewsItemAggregate.relevance), db.desc(NewsItemAggregate.id))
+            # Keyset paging: the items after (or before) a given one in this order. Unlike an
+            # offset, it does not shift when items are collected or removed elsewhere in the list.
+            for direction in ("after", "before"):
+                cursor = parse_cursor(filters.get(direction), sort)
+                if cursor is not None:
+                    key = tuple_(column, NewsItemAggregate.id)
+                    later = descending == (direction == "after")
+                    query = query.filter(key < cursor if later else key > cursor)
 
-            elif filters["sort"] == "RELEVANCE_ASC":
-                query = query.order_by(db.asc(NewsItemAggregate.relevance), db.asc(NewsItemAggregate.id))
-
-        return query.offset(offset).limit(limit).all(), query.count()
+        total = list_query.count() if filters.get("ids") is not None else query.count()
+        return query.offset(offset).limit(limit).all(), total
 
     @classmethod
     def get_by_group_json(cls, group_id: str, filters: dict, offset: int, limit: int, user: User) -> dict:
@@ -1350,10 +1361,14 @@ class NewsItemAggregate(db.Model):
 
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         items = news_item_aggregate_schema.dump(news_item_aggregates)
-        for aggregate in items:
+        sort = filters.get("sort")
+        for aggregate, news_item_aggregate in zip(items, news_item_aggregates, strict=True):
             for news_item in aggregate["news_items"][:]:
                 if news_item["see"] is False:
                     aggregate["news_items"].remove(news_item)
+            # Where the item stands in this order, to page on from it (see get_by_group).
+            if sort in SORT_KEYS:
+                aggregate["cursor"] = make_cursor(news_item_aggregate, sort)
 
         return {"total_count": count, "items": items}
 
@@ -2122,6 +2137,52 @@ class NewsItemAggregate(db.Model):
             list[NewsItemAggregate]: News item aggregates
         """
         return cls.query.filter(cls.osint_source_group_id == source_group_id).all()
+
+
+# The orders Assess lists aggregates in: the column sorted on, and whether descending. The id
+# breaks ties, the same way.
+SORT_KEYS: dict[str, tuple] = {
+    "DATE_DESC": (NewsItemAggregate.created, True),
+    "DATE_ASC": (NewsItemAggregate.created, False),
+    "RELEVANCE_DESC": (NewsItemAggregate.relevance, True),
+    "RELEVANCE_ASC": (NewsItemAggregate.relevance, False),
+}
+
+
+def make_cursor(aggregate: NewsItemAggregate, sort: str) -> str:
+    """Where an aggregate stands in an order: its sort value and id, as ``value|id``.
+
+    Args:
+        aggregate (NewsItemAggregate): The aggregate.
+        sort (str): One of SORT_KEYS.
+
+    Returns:
+        str: The cursor; ``parse_cursor`` reads it back.
+    """
+    if not sort.startswith("DATE"):
+        return f"{aggregate.relevance or 0}|{aggregate.id}"
+    created = aggregate.created.isoformat() if aggregate.created else ""
+    return f"{created}|{aggregate.id}"
+
+
+def parse_cursor(cursor: object, sort: str) -> tuple | None:
+    """Read a cursor of ``make_cursor`` back, for the given order.
+
+    Args:
+        cursor (object): The cursor as the request gave it.
+        sort (str): One of SORT_KEYS.
+
+    Returns:
+        tuple | None: ``(value, id)``, or None for a missing or malformed cursor.
+    """
+    if not isinstance(cursor, str) or "|" not in cursor:
+        return None
+    value, _, aggregate_id = cursor.rpartition("|")
+    try:
+        key = datetime.fromisoformat(value) if sort.startswith("DATE") else int(value)
+        return key, int(aggregate_id)
+    except ValueError:
+        return None
 
 
 class NewsItemAggregateSearchIndex(db.Model):

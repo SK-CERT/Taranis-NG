@@ -14,6 +14,10 @@ from model.news_item import NewsItem, NewsItemAggregate, NewsItemData
 from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
 
+# The largest page of aggregates one request returns, and the most ids one re-read may name.
+MAX_PAGE = 200
+MAX_IDS = 500
+
 
 class OSINTSourceGroupsAssess(Resource):
     """OSINT source groups for Assess API endpoint."""
@@ -107,13 +111,21 @@ class NewsItemsByGroup(Resource):
                 filters["range"] = request.args["range"]
             if request.args.get("sort"):
                 filters["sort"] = request.args["sort"]
+            # Keyset paging (cursors as each item carries them) and re-reading a shown window by id.
+            for direction in ("after", "before"):
+                if request.args.get(direction):
+                    filters[direction] = request.args[direction]
 
-            offset = int(request.args.get("offset", 0))
-            limit = min(int(request.args.get("limit", 50)), HTTPStatus.OK)
-        except Exception as ex:
-            msg = "Get NewsItemsByGroup failed"
-            logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+            offset = max(int(request.args.get("offset", 0)), 0)
+            limit = min(max(int(request.args.get("limit", 50)), 1), MAX_PAGE)
+            if request.args.get("ids"):
+                ids = [int(aggregate_id) for aggregate_id in request.args["ids"].split(",")]
+                if len(ids) > MAX_IDS:
+                    return {"error": f"At most {MAX_IDS} ids"}, HTTPStatus.BAD_REQUEST
+                filters["ids"] = ids
+                limit = len(ids)
+        except ValueError:
+            return {"error": "offset, limit and ids must be whole numbers"}, HTTPStatus.BAD_REQUEST
 
         return NewsItemAggregate.get_by_group_json(group_id, filters, offset, limit, user)
 

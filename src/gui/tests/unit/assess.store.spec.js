@@ -201,6 +201,31 @@ describe('Assess Store', () => {
             expect(store.newsitems.total_count).toBe(2)
         })
 
+        // The list on screen is made of several loads (pages, re-reads by id); the keyboard's "s"
+        // selects by id, and only found cards of the last one.
+        it('selects by id a card from an earlier load of the same group', async () => {
+            const store = useAssessStore()
+            store.changeCurrentGroup('g1')
+            vi.mocked(assessApi.getNewsItemsByGroup).mockResolvedValueOnce({
+                data: { total_count: 40, items: [{ id: 1, title: 'First page' }] }
+            })
+            await store.loadNewsItemsByGroup({ group_id: 'g1', data: { offset: 0 } })
+            vi.mocked(assessApi.getNewsItemsByGroup).mockResolvedValueOnce({
+                data: { total_count: 40, items: [{ id: 21, title: 'Second page' }] }
+            })
+            await store.loadNewsItemsByGroup({ group_id: 'g1', data: { after: 'x' } })
+
+            store.selectById('1')
+
+            expect(store.isSelectedById('1')).toBe(true)
+
+            // Another group's cards are not found under a stale id.
+            store.clearSelection()
+            store.changeCurrentGroup('g2')
+            store.selectById('1')
+            expect(store.isSelectedById('1')).toBe(false)
+        })
+
         it('should default to empty when response has null data', async () => {
             vi.mocked(assessApi.getNewsItemsByGroup).mockResolvedValue({ data: null })
 

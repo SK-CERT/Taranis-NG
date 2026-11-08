@@ -64,6 +64,7 @@ export const useAssessStore = defineStore('assess', () => {
     // The groups the user may enter a news item into by hand (Add New in Assess).
     const entry_groups = ref<EntryGroup[]>([])
     const filter = ref<Record<string, unknown>>({})
+    const loadedById = new Map<string, SelectableItem>()
 
     // Getters
     const getNewsItems = computed(() => newsitems.value || emptyListState())
@@ -87,6 +88,11 @@ export const useAssessStore = defineStore('assess', () => {
             return fallback
         }
         newsitems.value = response.data || emptyListState()
+        // Every item loaded in this group, not only the last page: the list on screen is made of
+        // several (pages, re-reads), and selecting a card by id must find any of them.
+        for (const item of newsitems.value.items) {
+            loadedById.set(String(item.id), item)
+        }
         return response
     }
 
@@ -110,7 +116,7 @@ export const useAssessStore = defineStore('assess', () => {
     }
 
     function selectById(id: string): void {
-        const item = newsitems.value.items.find((i) => String(i.id) === id)
+        const item = loadedById.get(id)
         if (item) {
             // console.log('Selecting item by id:', id, item, newsitems.value)
             select({ type: 'AGGREGATE', id: item.id, item })
@@ -137,6 +143,9 @@ export const useAssessStore = defineStore('assess', () => {
     }
 
     function changeCurrentGroup(group_id: string): void {
+        if (group_id !== current_group_id.value) {
+            loadedById.clear()
+        }
         current_group_id.value = group_id
     }
 
