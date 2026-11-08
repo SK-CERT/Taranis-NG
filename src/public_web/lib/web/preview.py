@@ -7,6 +7,11 @@ Core forwards the template dialog's state here (``POST /management/preview``): t
 * ``summary`` - the product's homepage entry, on the web's homepage;
 * ``rss`` - the product's whole feed item: title, link and description, and the item's XML.
 
+The page runs no script but the web's page script (``shared.public_web_script``), the only one
+core's policy for the preview page allows: its colour-mode button works there too, and, as the
+page is marked as a preview, its language menu opens and a language picked in it goes to the
+GUI, which renders the preview in that language.
+
 The product is fetched from core as for the site (core decides whether the web may show it),
 and rendered by a renderer built for this one request: the web's stored templates with the
 previewed one in place of the stored template of its target, and the built-ins switched off as
@@ -15,6 +20,10 @@ stored. Nothing is cached and nothing shared changes.
 A custom template that fails is replaced by its built-in fallback, as on the site, and the
 failure is reported (template, line, message) instead of only logged. Reasons the product would
 not be shown on the web (no template for its items, its TLP, ...) come back as warnings.
+
+A built-in template is previewed too (``builtin`` in place of ``template``): the product is
+rendered with the built-ins alone, every one of them on, whatever the web's own templates and
+switches, so it shows what the built-ins make of it.
 """
 
 from __future__ import annotations
@@ -34,12 +43,16 @@ from lib.report.product import InvalidProductError, build_product, displayable, 
 from lib.report.renderer import ReportRenderer, templates_for_web
 from lib.web import translate
 from lib.web.site import SiteContext
+from shared.public_web_templates import builtin_sources
+
+from shared import public_web_script
 
 if TYPE_CHECKING:
     from lib.web.cache import WebCache
 
 VIEWS = ("detail", "summary", "rss")
 _HEAD = re.compile(r"<head(\s[^>]*)?>", re.IGNORECASE)
+_HTML = re.compile(r"<html\b", re.IGNORECASE)
 _SCRIPT = re.compile(r"<script\b[^>]*>.*?</script>", re.IGNORECASE | re.DOTALL)
 # An event handler attribute in a tag (onfocus="..."): script too.
 _HANDLER = re.compile(r"""(<[a-zA-Z][^>]*?)\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*')""", re.IGNORECASE)
@@ -48,8 +61,8 @@ _HANDLER = re.compile(r"""(<[a-zA-Z][^>]*?)\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*')
 def _without_scripts(page: str) -> str:
     """The page without its scripts and event handlers.
 
-    The preview runs none (the theme switch, Bootstrap's); left in, a browser only blocks them,
-    and says so in its console.
+    The preview runs none of them (Bootstrap's, the page's own); left in, a browser only blocks
+    them, and says so in its console. The web's page script is put back by ``_with_page_script``.
     """
     page = _SCRIPT.sub("", page)
     while True:
@@ -147,6 +160,14 @@ def _self_contained(page: str, web_id: int, cache: WebCache) -> str:
     return _LOCAL_ASSET.sub(asset, _STYLESHEET.sub(stylesheet, page))
 
 
+def _with_page_script(page: str) -> str:
+    """The page marked as a preview, with the web's page script exactly as core's policy allows it (by its hash)."""
+    tag = f"<script>{public_web_script.SCRIPT}</script>"
+    page = _HTML.sub("<html data-taranis-preview", page, count=1)
+    match = _HEAD.search(page)
+    return page[: match.end()] + tag + page[match.end() :] if match else tag + page
+
+
 def _with_base(page: str, base: str) -> str:
     """The page with a ``<base>``, so its styles, images and links resolve against the web, not the GUI."""
     tag = f'<base href="{base}/" target="_blank">'
@@ -158,7 +179,7 @@ def render_preview(payload: dict, cache: WebCache) -> dict:
     """Render the preview core asked for.
 
     Args:
-        payload: ``{"template", "product_id", "web_id", "language", "view"}``.
+        payload: ``{"template" | "builtin", "product_id", "web_id", "language", "view"}``.
         cache: The site's cache (webs, stored templates, and the client to core).
 
     Returns:
@@ -169,7 +190,11 @@ def render_preview(payload: dict, cache: WebCache) -> dict:
         PreviewError: For a request that cannot be served.
     """
     view = payload.get("view") if payload.get("view") in VIEWS else "detail"
-    previewed = _previewed_template(payload.get("template"))
+    builtin = payload.get("builtin")
+    if builtin is not None and builtin not in builtin_sources():
+        msg = "There is no such built-in template"
+        raise PreviewError(msg, HTTPStatus.BAD_REQUEST)
+    previewed = None if builtin is not None else _previewed_template(payload.get("template"))
     web_id = _int(payload.get("web_id"), "web")
     product_id = _int(payload.get("product_id"), "product")
 
@@ -188,16 +213,19 @@ def render_preview(payload: dict, cache: WebCache) -> dict:
         msg = f"Product {product_id} is not published to this web"
         raise PreviewError(msg, HTTPStatus.NOT_FOUND)
 
-    stored = cache.get_report_templates()
-    target = _target(previewed)
-    own = [template for template in templates_for_web(stored["items"], web_id) if _target(template) != target]
     errors: list[dict] = []
 
     def failed(name: str, _what: str, error: Exception) -> None:
         if name.startswith(("product/", "item/")):
             errors.append(_describe(name, error))
 
-    renderer = ReportRenderer([*own, previewed], stored["disabled_builtins"], on_error=failed)
+    if previewed is None:
+        renderer = ReportRenderer([], on_error=failed)
+    else:
+        stored = cache.get_report_templates()
+        target = _target(previewed)
+        own = [template for template in templates_for_web(stored["items"], web_id) if _target(template) != target]
+        renderer = ReportRenderer([*own, previewed], stored["disabled_builtins"], on_error=failed)
     try:
         product = build_product(data, renderer.has_item_template)
     except InvalidProductError as error:
@@ -206,14 +234,16 @@ def render_preview(payload: dict, cache: WebCache) -> dict:
     warnings = []
     if product["items_left_out"]:
         warnings.append(f"{product['items_left_out']} report item(s) have no template to show them and are left out")
-    preset_id = product["product_preset"]["id"]
-    shown, reason = displayable(
-        product,
-        vulnerability_only=not renderer.has_product_template(preset_id),
-        require_tlp_clear=renderer.require_tlp_clear(preset_id),
-    )
-    if not shown:
-        warnings.append(f"The web would not show this product: {reason}")
+    # Whether the web would show it is the web's templates' to say, not the built-ins' alone.
+    if previewed is not None:
+        preset_id = product["product_preset"]["id"]
+        shown, reason = displayable(
+            product,
+            vulnerability_only=not renderer.has_product_template(preset_id),
+            require_tlp_clear=renderer.require_tlp_clear(preset_id),
+        )
+        if not shown:
+            warnings.append(f"The web would not show this product: {reason}")
 
     options = {
         "selected_items": [],
@@ -253,5 +283,5 @@ def render_preview(payload: dict, cache: WebCache) -> dict:
             feedback_q=site.feedback_questions,
             warning_seen="1",
         )
-    result["html"] = _with_base(_self_contained(_without_scripts(page), web_id, cache), site.hostname)
+    result["html"] = _with_base(_with_page_script(_self_contained(_without_scripts(page), web_id, cache)), site.hostname)
     return result

@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Pré-visualização",
-            "intro": "Como um produto publicado fica com este modelo no site. O nó public-web o renderiza; uma alteração aparece logo após você parar de digitar.",
             "choose_target": "Escolha para que é o modelo para ver uma pré-visualização.",
             "web": "Site",
-            "language": "Idioma",
             "product": "Produto",
             "no_products": "Nenhum produto publicado neste site ao qual o modelo se aplique.",
             "view_detail": "Página do relatório",

@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from model.product import Product
     from model.user import User
 
@@ -541,6 +543,7 @@ class Product(db.Model):
         with_content: bool = False,
         product_preset_id: int | None = None,
         report_item_type_id: int | None = None,
+        report_item_type_ids: Collection[int] | None = None,
     ) -> tuple[list[Product], int]:
         """Get published products, newest first, a page at a time.
 
@@ -557,6 +560,8 @@ class Product(db.Model):
             with_content: Load the page's report items with it, for serializing them all.
             product_preset_id: Only products of this preset (a template preview).
             report_item_type_id: Only products holding a report item of this type (a template preview).
+            report_item_type_ids: Only products holding a report item of one of these types (a
+                built-in template's preview); none: no product.
 
         Returns:
             tuple[list[Product], int]: The page, ordered by creation date descending, and how many
@@ -590,6 +595,13 @@ class Product(db.Model):
                 .where(ProductReportItem.report_item_id == ReportItem.id, ReportItem.report_item_type_id == report_item_type_id)
             )
             query = query.filter(holds_type)
+        if report_item_type_ids is not None:
+            holds_one_of = (
+                exists()
+                .where(ProductReportItem.product_id == cls.id)
+                .where(ProductReportItem.report_item_id == ReportItem.id, ReportItem.report_item_type_id.in_(list(report_item_type_ids)))
+            )
+            query = query.filter(holds_one_of)
 
         total = query.count()
         # By id too, so that products created at the same moment keep their place between pages.

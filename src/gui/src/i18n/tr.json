@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Önizleme",
-            "intro": "Yayınlanmış bir ürünün bu şablonla sitede nasıl göründüğü. Public-web düğümü oluşturur; bir değişiklik yazmayı bıraktıktan kısa süre sonra görünür.",
             "choose_target": "Önizleme görmek için şablonun ne için olduğunu seçin.",
             "web": "Site",
-            "language": "Dil",
             "product": "Ürün",
             "no_products": "Bu sitede şablonun uygulandığı yayınlanmış ürün yok.",
             "view_detail": "Rapor sayfası",

@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Vista previa",
-            "intro": "Cómo se ve un producto publicado con esta plantilla en la web. Lo genera el nodo public-web; un cambio aparece poco después de dejar de escribir.",
             "choose_target": "Elija para qué es la plantilla para ver una vista previa.",
             "web": "Web",
-            "language": "Idioma",
             "product": "Producto",
             "no_products": "No hay ningún producto publicado en esta web al que se aplique la plantilla.",
             "view_detail": "Página del informe",

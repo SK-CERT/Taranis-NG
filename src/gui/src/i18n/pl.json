@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Podgląd",
-            "intro": "Jak opublikowany produkt wygląda z tym szablonem na stronie. Renderuje go węzeł public-web; zmiana pojawia się chwilę po zakończeniu pisania.",
             "choose_target": "Wybierz, do czego jest szablon, aby zobaczyć podgląd.",
             "web": "Strona",
-            "language": "Język",
             "product": "Produkt",
             "no_products": "Brak opublikowanego produktu na tej stronie, do którego odnosi się szablon.",
             "view_detail": "Strona raportu",

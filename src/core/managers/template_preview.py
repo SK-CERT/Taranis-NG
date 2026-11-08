@@ -5,12 +5,16 @@ shows exactly what a web would: the product inside the web's own page, with its 
 language. Core checks the source first (a syntax error needs no node), picks the web and the
 product, and forwards the request to the web's node.
 
+A built-in template (read-only) is previewed too: the node renders the product with the
+built-ins alone, every one of them on, so the product shows what that built-in makes of it.
+
 Nothing works without a node that can be reached: the web's node must be switched on and have
 an API URL.
 """
 
 from __future__ import annotations
 
+import functools
 import json
 import uuid
 from http import HTTPStatus
@@ -20,20 +24,38 @@ from managers.db_manager import db
 from model.product import Product
 from model.public_web import PublicWeb
 from model.public_web_template import TemplateValidationError, validate_source
+from model.report_item_type import ReportItemType
 from remote.public_web_api import PublicWebApi
+from shared.public_web_templates import VULNERABILITY_TYPE, builtin_sources
+
+from shared import public_web_script
 
 PRODUCTS_LISTED = 50
 VIEWS = ("detail", "summary", "rss")
+BUILTINS = frozenset(builtin_sources())
+
+# Which report item types a built-in shows, rendered with the built-ins alone: the vulnerability
+# item template the "Vulnerability Report" type, the generic one any other, the vulnerability
+# product layout a product holding a vulnerability report. The others (the base layout, the
+# macros) show in every product.
+_BUILTIN_TYPES = {
+    "builtin/item_vulnerability.html": lambda title: title == VULNERABILITY_TYPE,
+    "builtin/item_generic.html": lambda title: title != VULNERABILITY_TYPE,
+    "builtin/product_vulnerability.html": lambda title: title.startswith(VULNERABILITY_TYPE),
+}
 
 # A rendered page is kept briefly under a random ticket and served from its own URL, with a
 # Content-Security-Policy made for it: shown inline (srcdoc) it took the GUI's policy, which
-# does not let the web's stylesheets and fonts load from the CDN the public web uses.
+# does not let the web's stylesheets and fonts load from the CDN the public web uses. The only
+# script it runs is the web's page script (colour mode, language menu), allowed by its hash
+# (shared.public_web_script).
 PAGE_TTL_SECONDS = 600
 PAGE_MAX_VIEWS = 5
 PAGE_URL = "/config/public-web-templates/preview/{token}"
 PAGE_HEADERS = {
     "Content-Security-Policy": (
-        "default-src 'none'; style-src 'unsafe-inline' https://cdn.jsdelivr.net; font-src data: https://cdn.jsdelivr.net; "
+        f"default-src 'none'; script-src {public_web_script.SCRIPT_HASH}; "
+        "style-src 'unsafe-inline' https://cdn.jsdelivr.net; font-src data: https://cdn.jsdelivr.net; "
         "img-src data: https:; base-uri https: http:; form-action 'none'; frame-ancestors 'self'"
     ),
     # The GUI embeds it under its own COEP, which a framed document must also declare. Its frame
@@ -133,15 +155,40 @@ def _products(web: PublicWeb, product_preset_id: int | None, report_item_type_id
     return products
 
 
-def options(product_preset_id: int | None, report_item_type_id: int | None, web_id: int | None, preferred: list[int]) -> dict:
+def _type_titles() -> list[tuple[int, str]]:
+    return [(type_id, title or "") for type_id, title in db.session.query(ReportItemType.id, ReportItemType.title).all()]
+
+
+def _builtin_products(web: PublicWeb, builtin: str) -> list[Product]:
+    """The published products the web shows that show the built-in (see ``_BUILTIN_TYPES``), newest first."""
+    matches = _BUILTIN_TYPES.get(builtin)
+    type_ids = None if matches is None else [type_id for type_id, title in _type_titles() if matches(title)]
+    products, _total = Product.get_published(PRODUCTS_LISTED, web_id=web.id, report_item_type_ids=type_ids)
+    return products
+
+
+def options(
+    product_preset_id: int | None,
+    report_item_type_id: int | None,
+    web_id: int | None,
+    preferred: list[int],
+    builtin: str | None = None,
+) -> dict:
     """What the preview can show: every web (and whether it can preview), and the products for the chosen one.
+
+    The products are those the template applies to, or with ``builtin``, those that show that built-in.
 
     Returns:
         dict: ``{"webs": [...], "web_id": int | None, "products": [{"id", "title", "created"}]}``.
     """
     webs = _all_webs()
     web = _choose_web(web_id, preferred)
-    products = _products(web, product_preset_id, report_item_type_id) if web is not None else []
+    if web is None or (builtin is not None and builtin not in BUILTINS):
+        products = []
+    elif builtin is not None:
+        products = _builtin_products(web, builtin)
+    else:
+        products = _products(web, product_preset_id, report_item_type_id)
     return {
         "webs": [_web_entry(entry) for entry in webs],
         "web_id": web.id if web is not None else None,
@@ -153,28 +200,46 @@ def options(product_preset_id: int | None, report_item_type_id: int | None, web_
 
 
 def preview(data: dict) -> tuple[dict, HTTPStatus]:
-    """Render the template of the dialog through the web's node.
+    """Render the template of the dialog, or a built-in one, through the web's node.
 
     Args:
         data: ``{"template": {"product_preset_id" | "report_item_type_id", "source",
-            "require_tlp_clear", "public_web_ids"}, "web_id", "language", "product_id", "view"}``;
-            without a product, the newest one the template applies to.
+            "require_tlp_clear", "public_web_ids"}, "web_id", "language", "product_id", "view"}``,
+            or ``{"builtin": "builtin/<file>", ...}`` for a built-in; without a product, the
+            newest one the template applies to (the built-in shows in).
 
     Returns:
         (dict, HTTPStatus): The node's answer (see public_web/lib/web/preview.py) with the web and
             product shown, or why there is nothing to show.
     """
-    template = data.get("template") if isinstance(data.get("template"), dict) else {}
-    product_preset_id, report_item_type_id = _target(template)
-    if (product_preset_id is None) == (report_item_type_id is None):
-        return {"error": "Choose what the template is for"}, HTTPStatus.BAD_REQUEST
-    source = template.get("source") if isinstance(template.get("source"), str) else ""
-    try:
-        validate_source(source, product_template=product_preset_id is not None)
-    except TemplateValidationError as error:
-        return {"error": str(error), "invalid": True}, HTTPStatus.BAD_REQUEST
+    builtin = data.get("builtin")
+    if builtin is not None:
+        if builtin not in BUILTINS:
+            return {"error": "There is no such built-in template"}, HTTPStatus.BAD_REQUEST
+        rendered: dict = {"builtin": builtin}
+        preferred: list[int] = []
+        listing = functools.partial(_builtin_products, builtin=builtin)
+    else:
+        template = data.get("template") if isinstance(data.get("template"), dict) else {}
+        product_preset_id, report_item_type_id = _target(template)
+        if (product_preset_id is None) == (report_item_type_id is None):
+            return {"error": "Choose what the template is for"}, HTTPStatus.BAD_REQUEST
+        source = template.get("source") if isinstance(template.get("source"), str) else ""
+        try:
+            validate_source(source, product_template=product_preset_id is not None)
+        except TemplateValidationError as error:
+            return {"error": str(error), "invalid": True}, HTTPStatus.BAD_REQUEST
+        rendered = {
+            "template": {
+                "product_preset_id": product_preset_id,
+                "report_item_type_id": report_item_type_id,
+                "source": source,
+                "require_tlp_clear": bool(template.get("require_tlp_clear", True)),
+            },
+        }
+        preferred = [web_id for web_id in (_int_or_none(value) for value in template.get("public_web_ids") or []) if web_id is not None]
+        listing = functools.partial(_products, product_preset_id=product_preset_id, report_item_type_id=report_item_type_id)
 
-    preferred = [web_id for web_id in (_int_or_none(value) for value in template.get("public_web_ids") or []) if web_id is not None]
     web = _choose_web(_int_or_none(data.get("web_id")), preferred)
     if web is None:
         return {"error": "There is no public web to preview on"}, HTTPStatus.NOT_FOUND
@@ -184,19 +249,14 @@ def preview(data: dict) -> tuple[dict, HTTPStatus]:
 
     product_id = _int_or_none(data.get("product_id"))
     if product_id is None:
-        products = _products(web, product_preset_id, report_item_type_id)
+        products = listing(web)
         if not products:
             return {"error": "No published product on this web that the template applies to"}, HTTPStatus.NOT_FOUND
         product_id = products[0].id
 
     view = data.get("view") if data.get("view") in VIEWS else "detail"
     payload = {
-        "template": {
-            "product_preset_id": product_preset_id,
-            "report_item_type_id": report_item_type_id,
-            "source": source,
-            "require_tlp_clear": bool(template.get("require_tlp_clear", True)),
-        },
+        **rendered,
         "web_id": web.id,
         "product_id": product_id,
         "language": data.get("language") if isinstance(data.get("language"), str) else None,

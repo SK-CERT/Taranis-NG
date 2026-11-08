@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Voorbeeld",
-            "intro": "Hoe een gepubliceerd product er met deze sjabloon op de website uitziet. De public-web-node rendert het; een wijziging verschijnt kort nadat u stopt met typen.",
             "choose_target": "Kies waarvoor de sjabloon is om een voorbeeld te zien.",
             "web": "Website",
-            "language": "Taal",
             "product": "Product",
             "no_products": "Geen gepubliceerd product op deze website waarop de sjabloon van toepassing is.",
             "view_detail": "Rapportpagina",

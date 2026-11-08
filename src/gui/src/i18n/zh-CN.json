@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "预览",
-            "intro": "已发布的产品使用此模板在网站上的显示效果。由 public-web 节点渲染；停止输入片刻后即显示更改。",
             "choose_target": "请先选择模板的用途以查看预览。",
             "web": "网站",
-            "language": "语言",
             "product": "产品",
             "no_products": "此网站上没有适用该模板的已发布产品。",
             "view_detail": "报告页面",

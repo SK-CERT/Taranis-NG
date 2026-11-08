@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Preview",
-            "intro": "How a published product looks with this template, as the web shows it. The web's public-web node renders it; a change appears a moment after you stop typing.",
             "choose_target": "Choose what the template is for to see a preview.",
             "web": "Web",
-            "language": "Language",
             "product": "Product",
             "no_products": "No published product on this web that the template applies to.",
             "view_detail": "Report page",

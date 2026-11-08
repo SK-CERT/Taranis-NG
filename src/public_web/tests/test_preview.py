@@ -48,10 +48,62 @@ def test_the_page_brings_its_own_styles_and_images(site_client: SimpleNamespace)
     body, _status = _preview(site_client)
 
     assert "/static/styles.css" not in body["html"]
-    assert "<script" not in body["html"]
     assert "onfocus=" not in body["html"]
     assert "<style>" in body["html"]
     assert 'href="data:image/' in body["html"]  # the favicon
+
+
+def test_the_only_script_is_the_web_s_page_script(site_client: SimpleNamespace) -> None:
+    # Core's policy for the preview page allows exactly this script, by its hash: the colour-mode
+    # button and the language menu work in the preview. Nothing else runs.
+    from shared import public_web_script  # noqa: PLC0415
+
+    body, _status = _preview(site_client)
+
+    assert body["html"].count("<script") == 1
+    assert f"<script>{public_web_script.SCRIPT}</script>" in body["html"]
+    assert "data-theme-toggle" in body["html"]
+
+
+def test_the_page_is_marked_as_a_preview(site_client: SimpleNamespace) -> None:
+    # The page script opens the language menu there (Bootstrap's script does not run) and hands
+    # a language picked in it to the GUI, which renders the preview in it.
+    body, _status = _preview(site_client)
+
+    assert '<html data-taranis-preview lang="en">' in body["html"]
+    assert 'data-language-choice="cs"' in body["html"]
+
+
+def test_a_builtin_is_previewed_with_the_builtins_alone(site_client: SimpleNamespace) -> None:
+    # The fixture instance shows its vulnerability reports with a template of its own (affected
+    # versions in a popover); the built-in shows the product its own way, even switched off.
+    site_client.fake.disabled_builtins = ["builtin/item_vulnerability.html"]
+
+    own, _status = _preview(site_client)
+    body, status = _preview(site_client, template=None, builtin="builtin/item_vulnerability.html")
+
+    assert status == HTTPStatus.OK
+    assert "Original version format" in own["html"]
+    assert "Original version format" not in body["html"]
+    assert 'class="accordion-item"' in body["html"]
+    assert body["errors"] == []
+
+
+def test_a_builtin_preview_says_nothing_of_whether_the_web_shows_the_product(site_client: SimpleNamespace) -> None:
+    # Without a template of its preset the web leaves a non-vulnerability product out; the
+    # built-ins alone are not the web's templates, so that is not the preview's to say.
+    body, status = _preview(site_client, template=None, builtin="builtin/item_generic.html", product_id=201)
+
+    assert status == HTTPStatus.OK
+    assert body["warnings"] == []
+    assert "Disinformation overview" in body["html"]
+
+
+def test_only_a_builtin_that_exists_is_previewed(site_client: SimpleNamespace) -> None:
+    body, status = _preview(site_client, template=None, builtin="builtin/nope.html")
+
+    assert status == HTTPStatus.BAD_REQUEST
+    assert "no such built-in" in body["error"]
 
 
 def test_scripts_and_event_handlers_are_left_out() -> None:

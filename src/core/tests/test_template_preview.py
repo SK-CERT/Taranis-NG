@@ -13,6 +13,8 @@ from flask import Flask
 from flask_restful import Api
 from managers import template_preview
 
+from shared import public_web_script
+
 if TYPE_CHECKING:
     from flask.testing import FlaskClient
 
@@ -128,6 +130,51 @@ def test_the_newest_product_of_the_target_on_the_first_web_that_can_preview(worl
     assert (body["web_id"], body["product_id"]) == (2, 42)
 
 
+TYPES = [(1, "Vulnerability Report"), (2, "Vulnerability Report (extended)"), (3, "Disinformation")]
+
+
+@pytest.mark.parametrize(
+    ("builtin", "type_ids"),
+    [
+        ("builtin/item_vulnerability.html", [1]),
+        ("builtin/item_generic.html", [2, 3]),
+        ("builtin/product_vulnerability.html", [1, 2]),
+        ("builtin/product_base.html", None),
+        ("builtin/_macros.html", None),
+    ],
+)
+def test_a_builtin_is_previewed_on_a_product_it_shows_in(
+    world: types.SimpleNamespace,
+    monkeypatch: pytest.MonkeyPatch,
+    builtin: str,
+    type_ids: list[int] | None,
+) -> None:
+    # The node renders it with the built-ins alone: the item ones show items of their types,
+    # the vulnerability layout products holding a vulnerability report, the rest every product.
+    monkeypatch.setattr(template_preview, "_type_titles", lambda: list(TYPES))
+
+    body, status = template_preview.preview({"builtin": builtin, "view": "summary"})
+
+    assert status == HTTPStatus.OK
+    (sent,) = world.sent
+    assert sent["builtin"] == builtin
+    assert "template" not in sent
+    assert (sent["web_id"], sent["product_id"], sent["view"]) == (2, 42, "summary")
+    assert world.listed == [{"web_id": 2, "report_item_type_ids": type_ids}]
+    assert template_preview.options(None, None, None, [], builtin=builtin)["products"][0]["id"] == 42
+    assert world.listed[-1] == {"web_id": 2, "report_item_type_ids": type_ids}
+    assert body["product_id"] == 42
+
+
+def test_only_a_builtin_that_exists_is_previewed(world: types.SimpleNamespace) -> None:
+    body, status = template_preview.preview({"builtin": "builtin/nope.html"})
+
+    assert status == HTTPStatus.BAD_REQUEST
+    assert "no such built-in" in body["error"]
+    assert world.sent == []
+    assert template_preview.options(None, None, None, [], builtin="builtin/nope.html")["products"] == []
+
+
 def test_the_page_comes_back_as_a_url_of_its_own(world: types.SimpleNamespace) -> None:
     # Inline (srcdoc) it took the GUI's policy, which blocks the web's stylesheets.
     body, status = template_preview.preview({"template": {"product_preset_id": 5, "source": SOURCE}})
@@ -175,7 +222,9 @@ def test_the_page_lets_the_web_s_styles_load_and_only_the_gui_frame_it(page_clie
     assert "style-src 'unsafe-inline' https://cdn.jsdelivr.net" in csp
     assert "font-src data: https://cdn.jsdelivr.net" in csp
     assert "frame-ancestors 'self'" in csp
-    assert "script-src" not in csp  # default-src 'none': no script runs
+    # One script runs: the web's colour-mode selector, by its hash; no other, nor inline handlers.
+    assert f"script-src {public_web_script.SCRIPT_HASH};" in csp
+    assert "script-src 'unsafe" not in csp
     assert "X-Frame-Options" not in response.headers  # frame-ancestors decides
     # The GUI's COEP lets in only a frame that declares one too; the sandboxed frame has an
     # opaque origin, which Firefox holds against "same-origin".

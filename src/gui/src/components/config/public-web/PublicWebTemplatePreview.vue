@@ -3,8 +3,6 @@
         class="template-preview"
         data-test="template-preview"
     >
-        <p class="text-body-medium text-medium-emphasis mb-3">{{ t('public_web.preview.intro') }}</p>
-
         <v-alert
             v-if="!hasTarget"
             type="info"
@@ -30,24 +28,10 @@
                         data-test="preview-web"
                     />
                 </v-col>
+                <!-- The language is picked in the previewed page's own language menu. -->
                 <v-col
-                    cols="6"
-                    md="2"
-                >
-                    <v-select
-                        v-model="language"
-                        :items="languageItems"
-                        :label="t('public_web.preview.language')"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        :disabled="languageItems.length < 2"
-                        data-test="preview-language"
-                    />
-                </v-col>
-                <v-col
-                    cols="6"
-                    md="6"
+                    cols="12"
+                    md="8"
                 >
                     <v-select
                         v-model="productId"
@@ -149,12 +133,14 @@
                 </v-alert>
 
                 <!-- Core serves the page with a policy of its own (the GUI's would block the web's
-                     styles); sandboxed, without scripts or an origin, it cannot reach the GUI. -->
+                     styles). Sandboxed without an origin, it cannot reach the GUI; the one script
+                     that policy lets run is the web's light/dark/auto selector. -->
                 <iframe
                     v-if="pageSrc"
+                    ref="frame"
                     class="template-preview__frame"
                     :src="pageSrc"
-                    sandbox=""
+                    sandbox="allow-scripts"
                     :title="t('public_web.preview.title')"
                     data-test="preview-frame"
                 />
@@ -188,23 +174,29 @@
      * The preview of a report template being edited: a published product rendered with it by the
      * web's public-web node, as the web would show it - the report page, the homepage entry or
      * the whole RSS item. It follows the editor: a change is rendered a moment after typing stops.
+     * A built-in template (`builtin`) is rendered with the built-ins alone, on a product it shows in.
      */
-    import { computed, onBeforeUnmount, ref, watch } from 'vue'
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import type { AxiosError } from 'axios'
     import { getPublicWebTemplatePreviewOptions, previewPublicWebTemplate } from '@/api/config'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import type { PreviewOptions, PreviewProduct, PreviewResult, PreviewView, PreviewWeb } from '@/types/public-web-template'
 
-    const props = defineProps<{
-        /** Whether the preview is shown: it asks the node only then. */
-        active: boolean
-        productPresetId: number | null
-        reportItemTypeId: number | null
-        source: string
-        requireTlpClear: boolean
-        publicWebIds: number[]
-    }>()
+    const props = withDefaults(
+        defineProps<{
+            /** Whether the preview is shown: it asks the node only then. */
+            active: boolean
+            productPresetId?: number | null
+            reportItemTypeId?: number | null
+            source?: string
+            requireTlpClear?: boolean
+            publicWebIds?: number[]
+            /** A built-in template to preview (read-only): rendered with the built-ins alone, on a product it shows in. */
+            builtin?: string | null
+        }>(),
+        { productPresetId: null, reportItemTypeId: null, source: '', requireTlpClear: true, publicWebIds: () => [], builtin: null }
+    )
 
     const { t } = useI18n()
     const { formatDate } = useLocaleFormatters()
@@ -226,9 +218,17 @@
 
     const API_BASE = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
 
-    const hasTarget = computed(() => props.productPresetId != null || props.reportItemTypeId != null)
+    const hasTarget = computed(() => props.builtin != null || props.productPresetId != null || props.reportItemTypeId != null)
     const currentWeb = computed(() => webs.value.find((web) => web.id === webId.value) ?? null)
-    const pageSrc = computed(() => (result.value?.page_url ? `${API_BASE}${result.value.page_url}` : ''))
+    // The colour mode picked in the page's own selector. The frame has no storage, so the page
+    // posts the pick and every new rendering opens with it (the web's script reads #theme=).
+    const PAGE_THEMES = ['auto', 'light', 'dark']
+    const frame = ref<HTMLIFrameElement | null>(null)
+    const pageTheme = ref('auto')
+    // The mode the shown rendering opened in: a pick inside the page must not reload it.
+    const openedTheme = ref('auto')
+    const pageUrl = (path: string, theme: string): string => `${API_BASE}${path}${theme === 'auto' ? '' : `#theme=${theme}`}`
+    const pageSrc = computed(() => (result.value?.page_url ? pageUrl(result.value.page_url, openedTheme.value) : ''))
 
     const webItems = computed(() =>
         webs.value.map((web) => ({
@@ -237,7 +237,6 @@
             props: { disabled: web.unavailable !== null }
         }))
     )
-    const languageItems = computed(() => (currentWeb.value?.languages ?? []).map((code) => ({ title: code, value: code })))
     const productItems = computed(() =>
         products.value.map((product) => ({
             title: product.created ? `${product.title} (${formatDate(product.created)})` : product.title,
@@ -257,6 +256,7 @@
             const response = await getPublicWebTemplatePreviewOptions({
                 product_preset_id: props.productPresetId,
                 report_item_type_id: props.reportItemTypeId,
+                builtin: props.builtin,
                 web_id: chosenWebId,
                 public_web_ids: props.publicWebIds
             })
@@ -286,14 +286,20 @@
         const number = ++requestNumber
         loading.value = true
         try {
+            const rendered =
+                props.builtin != null
+                    ? { builtin: props.builtin }
+                    : {
+                          template: {
+                              product_preset_id: props.productPresetId,
+                              report_item_type_id: props.reportItemTypeId,
+                              source: props.source,
+                              require_tlp_clear: props.requireTlpClear,
+                              public_web_ids: props.publicWebIds
+                          }
+                      }
             const response = await previewPublicWebTemplate({
-                template: {
-                    product_preset_id: props.productPresetId,
-                    report_item_type_id: props.reportItemTypeId,
-                    source: props.source,
-                    require_tlp_clear: props.requireTlpClear,
-                    public_web_ids: props.publicWebIds
-                },
+                ...rendered,
                 web_id: webId.value,
                 language: language.value,
                 product_id: productId.value,
@@ -301,6 +307,7 @@
             })
             if (number !== requestNumber) return
             result.value = (response as { data: PreviewResult }).data
+            openedTheme.value = pageTheme.value
             error.value = ''
         } catch (reason) {
             if (number !== requestNumber) return
@@ -318,7 +325,8 @@
 
     /** The page in a browser tab of its own (a button, not a link: it looks like Refresh beside it). */
     function openPage(): void {
-        if (pageSrc.value) window.open(pageSrc.value, '_blank', 'noopener,noreferrer')
+        const path = result.value?.page_url
+        if (path) window.open(pageUrl(path, pageTheme.value), '_blank', 'noopener,noreferrer')
     }
 
     async function refresh(): Promise<void> {
@@ -329,7 +337,7 @@
 
     // Opened, or a new target: what can be shown changes.
     watch(
-        () => [props.active, props.productPresetId, props.reportItemTypeId] as const,
+        () => [props.active, props.productPresetId, props.reportItemTypeId, props.builtin] as const,
         async ([active]) => {
             if (!active) return
             result.value = null
@@ -359,7 +367,25 @@
         }
     )
 
-    onBeforeUnmount(() => clearTimeout(timer))
+    /**
+     * A pick in the previewed page (only that frame is listened to): its colour mode, kept for
+     * the next rendering, or a language from its language menu, which renders it again in that one.
+     */
+    function onPageMessage(event: MessageEvent): void {
+        if (!frame.value?.contentWindow || event.source !== frame.value.contentWindow) return
+        const data = event.data as { taranisPublicWebTheme?: unknown; taranisPublicWebLanguage?: unknown } | null
+        const theme = data?.taranisPublicWebTheme
+        if (typeof theme === 'string' && PAGE_THEMES.includes(theme)) pageTheme.value = theme
+        const pickedLanguage = data?.taranisPublicWebLanguage
+        if (typeof pickedLanguage === 'string' && currentWeb.value?.languages.includes(pickedLanguage)) language.value = pickedLanguage
+    }
+
+    onMounted(() => window.addEventListener('message', onPageMessage))
+
+    onBeforeUnmount(() => {
+        clearTimeout(timer)
+        window.removeEventListener('message', onPageMessage)
+    })
 
     defineExpose({ refresh })
 </script>

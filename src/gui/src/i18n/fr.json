@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Aperçu",
-            "intro": "À quoi ressemble un produit publié avec ce modèle sur le site. Le nœud public-web le rend ; une modification apparaît peu après l'arrêt de la saisie.",
             "choose_target": "Choisissez à quoi sert le modèle pour voir un aperçu.",
             "web": "Site",
-            "language": "Langue",
             "product": "Produit",
             "no_products": "Aucun produit publié sur ce site auquel le modèle s'applique.",
             "view_detail": "Page du rapport",

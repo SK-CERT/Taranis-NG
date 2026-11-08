@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Náhľad",
-            "intro": "Ako vyzerá publikovaný produkt s touto šablónou na webe. Vykreslí ho uzol public-web; zmena sa prejaví chvíľu po tom, čo prestanete písať.",
             "choose_target": "Pre náhľad vyberte, pre čo je šablóna.",
             "web": "Web",
-            "language": "Jazyk",
             "product": "Produkt",
             "no_products": "Na tomto webe nie je žiadny publikovaný produkt, na ktorý sa šablóna vzťahuje.",
             "view_detail": "Stránka reportu",

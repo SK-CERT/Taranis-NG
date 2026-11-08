@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Anteprima",
-            "intro": "Come appare un prodotto pubblicato con questo modello sul sito. Lo genera il nodo public-web; una modifica appare poco dopo che smetti di scrivere.",
             "choose_target": "Scegli a cosa serve il modello per vedere un'anteprima.",
             "web": "Sito",
-            "language": "Lingua",
             "product": "Prodotto",
             "no_products": "Nessun prodotto pubblicato su questo sito a cui si applica il modello.",
             "view_detail": "Pagina del report",

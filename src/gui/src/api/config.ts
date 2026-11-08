@@ -493,18 +493,21 @@ export function deletePublicWebTemplate(template) {
 export function getPublicWebTemplatePreviewOptions(query: {
     product_preset_id?: number | null
     report_item_type_id?: number | null
+    /** A built-in template's name: the products it shows in. */
+    builtin?: string | null
     web_id?: number | null
     public_web_ids?: number[]
 }) {
     const params = new URLSearchParams()
     if (query.product_preset_id != null) params.set('product_preset_id', String(query.product_preset_id))
     if (query.report_item_type_id != null) params.set('report_item_type_id', String(query.report_item_type_id))
+    if (query.builtin) params.set('builtin', query.builtin)
     if (query.web_id != null) params.set('web_id', String(query.web_id))
     if (query.public_web_ids?.length) params.set('public_web_ids', query.public_web_ids.join(','))
     return ApiService.get('/config/public-web-templates/preview?' + params.toString())
 }
 
-/** Render a report template that is not saved yet, through the web's public-web node. */
+/** Render a report template that is not saved yet, or a built-in one, through the web's public-web node. */
 export function previewPublicWebTemplate(payload: Record<string, unknown>) {
     return ApiService.post('/config/public-web-templates/preview', payload)
 }

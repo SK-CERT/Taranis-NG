@@ -2324,10 +2324,8 @@
         },
         "preview": {
             "title": "Xem trước",
-            "intro": "Sản phẩm đã xuất bản trông như thế nào với mẫu này trên web. Nút public-web hiển thị nó; thay đổi xuất hiện ngay sau khi bạn ngừng gõ.",
             "choose_target": "Chọn mẫu dùng cho gì để xem trước.",
             "web": "Web",
-            "language": "Ngôn ngữ",
             "product": "Sản phẩm",
             "no_products": "Không có sản phẩm đã xuất bản nào trên web này mà mẫu áp dụng.",
             "view_detail": "Trang báo cáo",

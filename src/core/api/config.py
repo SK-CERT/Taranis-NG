@@ -2509,9 +2509,9 @@ class PublicWebTemplatePreviewResource(Resource):
     def get(self) -> dict:
         """What the preview can show: the webs, and the products for the chosen web.
 
-        Query params: ``product_preset_id`` or ``report_item_type_id`` (the template's target),
-        ``web_id`` (optional), ``public_web_ids`` (the template's webs, comma separated: one of
-        them is chosen first).
+        Query params: ``product_preset_id`` or ``report_item_type_id`` (the template's target), or
+        ``builtin`` (a built-in template's name), ``web_id`` (optional), ``public_web_ids`` (the
+        template's webs, comma separated: one of them is chosen first).
 
         Returns:
             (dict): See managers/template_preview.options.
@@ -2522,11 +2522,17 @@ class PublicWebTemplatePreviewResource(Resource):
             return int(value) if value.isdigit() else None
 
         preferred = [int(part) for part in (request.args.get("public_web_ids") or "").split(",") if part.strip().isdigit()]
-        return template_preview.options(number("product_preset_id"), number("report_item_type_id"), number("web_id"), preferred)
+        return template_preview.options(
+            number("product_preset_id"),
+            number("report_item_type_id"),
+            number("web_id"),
+            preferred,
+            builtin=request.args.get("builtin") or None,
+        )
 
     @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
     def post(self) -> tuple[dict, HTTPStatus]:
-        """Render the template of the dialog (``{"template", "web_id", "language", "product_id", "view"}``).
+        """Render the template of the dialog, or a built-in one (``{"template" | "builtin", "web_id", "language", "product_id", "view"}``).
 
         Returns:
             (dict, int): The page (``html``) or the feed item (``rss``, ``xml``) with ``errors`` and

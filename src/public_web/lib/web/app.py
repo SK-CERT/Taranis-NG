@@ -21,6 +21,9 @@ from lib.web.exceptions import register_error_handlers
 from lib.web.management import management_bp
 from lib.web.routes import reports_bp
 from lib.web.site import current_site
+from markupsafe import Markup
+
+from shared import public_web_script
 
 # Flask application definition and the definition of jinja functions. These serve
 # the site's own page chrome; report content is rendered by lib.report.renderer in
@@ -33,6 +36,8 @@ app.jinja_env.globals.update(
     language_name=language_name,
     translate_report=translate_report,
     translate_ui=translate_ui,
+    # The page script (colour mode), inline in every page's head (see shared.public_web_script).
+    page_script=Markup(public_web_script.SCRIPT),  # noqa: S704 (our own constant script, not input)
 )
 
 register_error_handlers(app)
