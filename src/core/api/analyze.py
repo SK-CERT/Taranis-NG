@@ -8,13 +8,15 @@ from flask import jsonify, request, send_file
 from flask_restful import Api, Resource
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
-from managers import asset_manager, auth_manager, llm_manager, public_web_manager, tlp, translation_manager
+from managers import asset_manager, auth_manager, cve_import, cve_publication, llm_manager, public_web_manager, tlp, translation_manager
 from managers.auth_manager import ACLCheck, auth_required
+from managers.cve_services import CveServicesError
 from managers.db_manager import db
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
 from model.attribute import AttributeEnum
 from model.news_item import NewsItemAggregate
+from model.organization_gna import cvd_organizations
 from model.permission import Permission
 from model.report_item import ReportItem
 from model.report_item_type import AttributeGroupItem, ReportItemType
@@ -66,6 +68,9 @@ class ReportItems(Resource):
                 report_filter["range"] = request.args["range"]
             if request.args.get("sort"):
                 report_filter["sort"] = request.args["sort"]
+            if request.args.get("type"):
+                # Only reports of a shipped type (its system_key): the GCVE and CVE products take CVD Reports alone.
+                report_filter["type"] = request.args["type"]
             report_filter.update(tag.list_filter(request.args))
 
             group = request.args.get("group")
@@ -103,6 +108,18 @@ class ReportItems(Resource):
         return new_report_item.id, status
 
 
+def _notify_public_web_nodes() -> None:
+    """Best-effort: tell the public-web nodes to drop their cached data (see public_web_manager)."""
+    try:
+        from managers import public_web_manager  # noqa: PLC0415 (avoid an import cycle at load)
+        from model.public_web_node import PublicWebNode  # noqa: PLC0415
+
+        if public_web_manager.public_web_enabled():
+            public_web_manager.notify_nodes(PublicWebNode.get_all())
+    except Exception as ex:
+        logger.debug(f"Could not notify public-web nodes about a GCVE record: {ex}")
+
+
 class ReportItemResource(Resource):
     """Report item API endpoint."""
 
@@ -135,6 +152,10 @@ class ReportItemResource(Resource):
             # A translation or language change that is not allowed; nothing was written.
             return data, HTTPStatus.BAD_REQUEST
 
+        if data.pop("gcve_record_updated", False):
+            # A published GCVE record changed: the public webs serving it drop their copy.
+            _notify_public_web_nodes()
+
         if modified is True:
             updated_report_item = ReportItem.find(report_item_id)
             asset_manager.report_item_changed(updated_report_item)
@@ -161,6 +182,165 @@ class ReportItemResource(Resource):
             sse_manager.report_items_updated()
 
         return result, code
+
+
+def _cve_error(error: Exception) -> tuple[dict, HTTPStatus]:
+    """A CVE ID action that failed: refused here (400), or by CVE Services (502, its message)."""
+    status = HTTPStatus.BAD_REQUEST if isinstance(error, cve_publication.CvePublicationError) else HTTPStatus.BAD_GATEWAY
+    return {"error": str(error)}, status
+
+
+def _cve_changed(report_item: ReportItem) -> dict:
+    """Tell the clients and the public webs that a CVE ID action changed the report; its CVE status."""
+    sse_manager.report_items_updated()
+    gcve_assignment = getattr(report_item, "gcve_assignment", None)
+    if gcve_assignment is not None and gcve_assignment.published:
+        # The GCVE record names the CVE ID: the webs serving it drop their copy.
+        _notify_public_web_nodes()
+    return {"cve_status": report_item.cve_status}
+
+
+class ReportItemCveId(Resource):
+    """Reserve a CVE ID for a CVD Report through CVE Services (this organisation as a CNA)."""
+
+    @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
+    def post(self, report_item_id: int) -> tuple[dict, HTTPStatus] | dict:
+        """Reserve a CVE ID and write it into the report's CVE field.
+
+        Args:
+            report_item_id (int): The CVD Report.
+
+        Returns:
+            dict: ``{"cve_status": ...}``, or ``{"error"}`` with 400 (not possible here) or 502 (CVE Services refused).
+        """
+        report_item = ReportItem.find(report_item_id)
+        if report_item is None:
+            return {"error": "Report item not found"}, HTTPStatus.NOT_FOUND
+        try:
+            cve_publication.reserve(report_item, cve_publication.credentials_for(report_item))
+        except (cve_publication.CvePublicationError, CveServicesError) as error:
+            return _cve_error(error)
+        return _cve_changed(report_item)
+
+
+class ReportItemCveIdReject(Resource):
+    """Reject a CVD Report's CVE ID at CVE Services."""
+
+    @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
+    def post(self, report_item_id: int) -> tuple[dict, HTTPStatus] | dict:
+        """Reject the CVE ID with the reason given (``{"reason"}``), and free the CVE field.
+
+        Args:
+            report_item_id (int): The CVD Report.
+
+        Returns:
+            dict: ``{"cve_status": ...}``, or ``{"error"}`` with 400 or 502.
+        """
+        report_item = ReportItem.find(report_item_id)
+        if report_item is None:
+            return {"error": "Report item not found"}, HTTPStatus.NOT_FOUND
+        reason = (request.json or {}).get("reason") if request.is_json else None
+        try:
+            cve_publication.reject(report_item, str(reason or ""), cve_publication.credentials_for(report_item))
+        except (cve_publication.CvePublicationError, CveServicesError) as error:
+            return _cve_error(error)
+        return _cve_changed(report_item)
+
+
+def _import_error(error: Exception) -> tuple[dict, HTTPStatus]:
+    """A CVE that cannot fill a report: not one, or rejected (400); no published record (404); CVE Services away (502)."""
+    if isinstance(error, CveServicesError):
+        status = HTTPStatus.NOT_FOUND if error.status == HTTPStatus.NOT_FOUND else HTTPStatus.BAD_GATEWAY
+    else:
+        status = HTTPStatus.BAD_REQUEST
+    return {"error": str(error)}, status
+
+
+class CveRecordCvd(Resource):
+    """What a CVE's published record fills a CVD Report with, for one being written."""
+
+    @auth_required(["ANALYZE_CREATE", "ANALYZE_UPDATE"])
+    def get(self, cve_id: str) -> tuple[dict, HTTPStatus]:
+        """The record's values by CVD field key (see managers.cve_import).
+
+        Args:
+            cve_id (str): The CVE ID.
+
+        Returns:
+            dict: ``{"cve_id", "title", "fields": {key: [{"value", "value_description"}]}, "skipped"}``,
+                or ``{"error"}`` with 400, 404 or 502.
+        """
+        try:
+            return cve_import.fetch(cve_id).to_json(), HTTPStatus.OK
+        except (cve_import.CveImportError, CveServicesError) as error:
+            return _import_error(error)
+
+
+class ReportItemCvdFill(Resource):
+    """Fill the empty fields of a saved CVD Report from a CVE's published record."""
+
+    @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
+    def post(self, report_item_id: int) -> tuple[dict, HTTPStatus]:
+        """Fill the report from ``{"cve_id"}``, or from the CVE its CVE field holds.
+
+        Args:
+            report_item_id (int): The CVD Report.
+
+        Returns:
+            dict: ``{"filled", "kept", "skipped"}`` (field titles; values no field took), or
+                ``{"error"}`` with 400, 404 or 502.
+        """
+        report_item = ReportItem.find(report_item_id)
+        if report_item is None:
+            return {"error": "Report item not found"}, HTTPStatus.NOT_FOUND
+        if not getattr(report_item, "is_cvd", False):
+            return {"error": "Only a CVD Report is filled from a CVE"}, HTTPStatus.BAD_REQUEST
+        wanted = str(((request.json or {}) if request.is_json else {}).get("cve_id") or "").strip().upper()
+        held = (cve_publication.cve_field_value(report_item) or "").strip().upper()
+        if held and wanted and wanted != held:
+            return {"error": f"The report's CVE field holds {held}: it is filled from that CVE"}, HTTPStatus.BAD_REQUEST
+        try:
+            imported = cve_import.fetch(wanted or held)
+        except (cve_import.CveImportError, CveServicesError) as error:
+            return _import_error(error)
+        result = ReportItem.fill_cvd_fields(
+            report_item,
+            imported,
+            auth_manager.get_user_from_jwt(),
+            sse_manager.get_report_item_locks(report_item_id),
+        )
+        if result.get("error"):
+            return {"error": result["error"]}, HTTPStatus.BAD_REQUEST
+        events = result.pop("events")
+        if result.pop("gcve_record_updated"):
+            # A published GCVE record changed: the public webs serving it drop their copy.
+            _notify_public_web_nodes()
+        if events:
+            asset_manager.report_item_changed(report_item)
+            for event in events:
+                sse_manager.report_item_updated(event)
+            sse_manager.report_items_updated()
+            sse_manager.remote_access_report_items_updated(report_item.report_item_type_id)
+        return result, HTTPStatus.OK
+
+
+class CvdStatus(Resource):
+    """Where the user's CVD Reports can be published: their organizations with a GNA number or a CVE Services account."""
+
+    @auth_required("ANALYZE_ACCESS")
+    def get(self) -> dict:
+        """The organizations a CVD Report of the user can belong to, and what each publishes it as.
+
+        Returns:
+            dict: ``{"organizations": [{id, name, gna_id, short_name, gna_configured, cna_configured}],
+                "gna_configured", "cna_configured"}`` (the last two: whether any of them has it).
+        """
+        organizations = cvd_organizations(auth_manager.get_user_from_jwt())
+        return {
+            "organizations": organizations,
+            "gna_configured": any(target["gna_configured"] for target in organizations),
+            "cna_configured": any(target["cna_configured"] for target in organizations),
+        }
 
 
 class ReportItemData(Resource):
@@ -674,6 +854,11 @@ def initialize(api: Api) -> None:
     api.add_resource(ReportItemTranslate, "/api/v1/analyze/report-items/<int:report_item_id>/translate")
     api.add_resource(ReportItemTranslationReview, "/api/v1/analyze/report-items/<int:report_item_id>/translations/review")
     api.add_resource(ReportItemTags, "/api/v1/analyze/report-items/<int:report_item_id>/tags")
+    api.add_resource(ReportItemCveId, "/api/v1/analyze/report-items/<int:report_item_id>/cve-id")
+    api.add_resource(ReportItemCveIdReject, "/api/v1/analyze/report-items/<int:report_item_id>/cve-id/reject")
+    api.add_resource(CvdStatus, "/api/v1/analyze/cvd-status")
+    api.add_resource(ReportItemCvdFill, "/api/v1/analyze/report-items/<int:report_item_id>/cvd-fill")
+    api.add_resource(CveRecordCvd, "/api/v1/analyze/cve-records/<string:cve_id>/cvd")
 
     Permission.add("ANALYZE_ACCESS", "Analyze access", "Access to Analyze module")
     Permission.add("ANALYZE_CREATE", "Analyze create", "Create report item")

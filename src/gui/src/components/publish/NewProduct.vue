@@ -169,7 +169,7 @@
                 <ContentLanguageSelect
                     :model-value="product.language"
                     :label="$t('product.language')"
-                    :disabled="!canModify"
+                    :disabled="!canModify || isCvdProduct"
                     class="me-4"
                     data-test="product-source-language"
                     @update:model-value="changeLanguage"
@@ -281,7 +281,7 @@
                             <v-select
                                 v-model="selectedProductPreset"
                                 dir="auto"
-                                :items="productPresets"
+                                :items="selectableProductPresets"
                                 item-title="name"
                                 item-value="id"
                                 :label="$t('product.product_preset')"
@@ -424,6 +424,7 @@
                                 :modify="canModify"
                                 :edit="isEditMode"
                                 :product-state-is-final="productStateIsFinal"
+                                :report-type-key="isCvdProduct ? CVD_TYPE_KEY : null"
                                 @items-changed="handleReportItemsChanged"
                             />
                         </v-col>
@@ -626,7 +627,7 @@
         translateProduct,
         checkProductLanguage
     } from '@/api/publish'
-    import { getReportItem } from '@/api/analyze'
+    import { getCvdStatus, getReportItem } from '@/api/analyze'
     import { getAllUserProductPresets } from '@/api/user'
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
@@ -717,6 +718,10 @@
         public_web_names?: string[]
         // The webs a product of it can be shown on: its own, else every web.
         web_choices?: Array<{ id: number; name: string }>
+        // Switched off: not offered for a new product (one already made with it keeps it).
+        enabled?: boolean
+        // Set on a preset Taranis ships (gcve, cve).
+        system_key?: string | null
     }
 
     type PublishResult = {
@@ -794,9 +799,33 @@
         public_web_enabled: true
     })
 
+    // The shipped presets and report type (shared.gcve): a GCVE Advisory and a CVE Record publish
+    // CVD Reports only, in English, as core enforces.
+    const CVE_PRESET_KEY = 'cve'
+    const GCVE_PRESET_KEY = 'gcve'
+    const CVD_TYPE_KEY = 'cvd'
+    const CVD_LANGUAGE = 'en'
     const selectedProductPreset = ref<ProductPreset | null>(null)
     const reportItems = ref<ReportItem[]>([])
     const productPresets = ref<ProductPreset[]>([])
+    // What the user's organizations publish CVD Reports as (core's cvd-status): a GNA number makes
+    // GCVE Advisories, a CNA account CVE Records. Unknown (not loaded, no Analyze access): all offered,
+    // and core refuses what cannot be published.
+    const cvdPublishing = ref<{ gna_configured: boolean; cna_configured: boolean } | null>(null)
+    const publishable = (productPreset: ProductPreset): boolean => {
+        if (!cvdPublishing.value) return true
+        if (productPreset.system_key === CVE_PRESET_KEY) return cvdPublishing.value.cna_configured
+        if (productPreset.system_key === GCVE_PRESET_KEY) return cvdPublishing.value.gna_configured
+        return true
+    }
+    // A product preset that is switched off, or that none of the user's organizations can publish,
+    // is offered only to the product already made with it.
+    const selectableProductPresets = computed(() =>
+        productPresets.value.filter(
+            (productPreset) =>
+                (productPreset.enabled !== false && publishable(productPreset)) || productPreset.id === product.value.product_preset_id
+        )
+    )
     // The deliveries Publish sends to; all of the product preset's channels unless unticked.
     const tickedDeliveryIds = ref<number[]>([])
     const availableStates = ref<AvailableState[]>([])
@@ -1336,8 +1365,17 @@
      * Saving a product in a FINAL state (e.g. published) completes its reports on the server -
      * whether the state was just set or reports were just added. Show the states they have now.
      */
+    // A CVE Record sends its reports to CVE Services when it is saved: their CVE status changes then,
+    // also when the publication was refused part way.
+    const isCveRecord = computed(() => selectedProductPreset.value?.system_key === CVE_PRESET_KEY)
+    const isCvdProduct = computed(() => [GCVE_PRESET_KEY, CVE_PRESET_KEY].includes(selectedProductPreset.value?.system_key ?? ''))
+    watch(isCvdProduct, (cvd) => {
+        if (cvd && product.value.language !== CVD_LANGUAGE) product.value.language = CVD_LANGUAGE
+    })
+
     async function refreshReportItemStates(): Promise<void> {
-        if (product.value.id === -1 || !productStateIsFinal.value || reportItems.value.length === 0) return
+        if (product.value.id === -1 || reportItems.value.length === 0) return
+        if (!productStateIsFinal.value && !isCveRecord.value) return
 
         try {
             const response = await getProductById(product.value.id)
@@ -1346,7 +1384,7 @@
             const wasPristine = !hasUnsavedChanges()
             reportItems.value = reportItems.value.map((item) => {
                 const current = stored.get(String(item.id))
-                return current ? { ...item, state: current['state'], state_id: current['state_id'] } : item
+                return current ? { ...item, state: current['state'], state_id: current['state_id'], cve_status: current['cve_status'] } : item
             })
             if (wasPristine) {
                 initialFormState.value = snapshotForm()
@@ -1547,11 +1585,18 @@
     function handleStateChange(newStateId: number | string | null): void {
         // StateSelector is bound one-way via :model-value, so we must write the
         // selected id back into the product before persisting.
+        const previousStateId = product.value.state_id
         product.value.state_id = newStateId ?? undefined
-        handleUpdateRecord()
+        void saveRecord(previousStateId)
     }
 
     async function handleUpdateRecord(): Promise<void> {
+        await saveRecord()
+    }
+
+    // ``previousStateId``: a state change core refuses (a GCVE Advisory or CVE Record that cannot be
+    // published, say) goes back to the state the product is still in.
+    async function saveRecord(previousStateId?: number | string | null): Promise<void> {
         if (!isEditMode.value || product.value.id === -1) return
 
         if (!(await prepareProduct())) return
@@ -1560,8 +1605,13 @@
             await updateProduct(product.value)
             window.dispatchEvent(new CustomEvent('product-updated'))
             initialFormState.value = snapshotForm()
-        } catch {
+        } catch (error: unknown) {
             showError.value = true
+            // Core says why (which reports cannot be published, what CVE Services refused).
+            notifyServerError(error, 'product.error')
+            if (previousStateId !== undefined) product.value.state_id = previousStateId ?? undefined
+            // CVE records sent before a refusal stay sent: the reports show where they stand.
+            await refreshReportItemStates()
             return
         }
         await refreshReportItemStates()
@@ -1750,11 +1800,26 @@
         }
     }
 
+    async function loadCvdPublishing() {
+        try {
+            const response = (await getCvdStatus()) as { data?: { gna_configured?: boolean; cna_configured?: boolean } }
+            cvdPublishing.value = response.data
+                ? { gna_configured: !!response.data.gna_configured, cna_configured: !!response.data.cna_configured }
+                : null
+        } catch {
+            cvdPublishing.value = null
+        }
+    }
+
     async function loadProductPresets() {
         try {
             const response = await getAllUserProductPresets()
             productPresets.value = (response.data.items as ProductPreset[]) || []
             syncSelectedProductPreset()
+            // Asked only where the shipped CVD presets are offered at all.
+            if (productPresets.value.some((preset) => [GCVE_PRESET_KEY, CVE_PRESET_KEY].includes(preset.system_key ?? ''))) {
+                void loadCvdPublishing()
+            }
         } catch (error: unknown) {
             console.error('Failed to load product presets:', error)
         }

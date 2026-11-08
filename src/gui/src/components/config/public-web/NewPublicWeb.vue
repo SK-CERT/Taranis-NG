@@ -281,6 +281,105 @@
                                     />
                                 </v-col>
                             </v-row>
+
+                            <!-- GCVE records (GCVE-BCP-03): the GNA's publication endpoint, its dump and
+                                 the security.txt that declares it live on the webs that publish them. -->
+                            <v-row>
+                                <v-col
+                                    cols="12"
+                                    sm="6"
+                                >
+                                    <v-select
+                                        v-model="localItem.config.gcve_organization_id"
+                                        :items="gcveOrganizationItems"
+                                        :label="t('gna.web.publish_records')"
+                                        :hint="t('gna.web.publish_records_hint')"
+                                        persistent-hint
+                                        :loading="loadingOrganizations"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        :disabled="saving"
+                                        data-test="web-gcve-organization"
+                                    />
+                                </v-col>
+                                <v-col
+                                    cols="12"
+                                    sm="6"
+                                >
+                                    <v-text-field
+                                        v-model="localItem.config.security_contact"
+                                        :label="t('gna.web.security_contact')"
+                                        :hint="t('gna.web.security_contact_hint')"
+                                        persistent-hint
+                                        placeholder="mailto:security@example.org"
+                                        :rules="[securityContactRule]"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        :disabled="saving"
+                                        data-test="web-security-contact"
+                                    />
+                                </v-col>
+                            </v-row>
+                            <template v-if="localItem.config.gcve_organization_id != null">
+                                <v-alert
+                                    v-if="!gnaId"
+                                    type="warning"
+                                    variant="tonal"
+                                    density="compact"
+                                    class="mt-2"
+                                    data-test="web-gcve-gna-unset"
+                                >
+                                    {{ t('gna.web.gna_unset') }}
+                                </v-alert>
+                                <v-alert
+                                    v-else-if="!gcveUrls.length"
+                                    type="info"
+                                    variant="tonal"
+                                    density="compact"
+                                    class="mt-2"
+                                    data-test="web-gcve-hostname-needed"
+                                >
+                                    {{ t('gna.web.hostname_needed') }}
+                                </v-alert>
+                                <div
+                                    v-else
+                                    class="mt-3"
+                                    data-test="web-gcve-urls"
+                                >
+                                    <div class="text-caption mb-1">{{ t('gna.web.registration') }}</div>
+                                    <v-table density="compact">
+                                        <tbody>
+                                            <tr
+                                                v-for="entry in gcveUrls"
+                                                :key="entry.key"
+                                            >
+                                                <td class="text-no-wrap">
+                                                    {{ t('gna.web.url_' + entry.key) }}
+                                                    <code
+                                                        v-if="entry.field"
+                                                        class="ms-1"
+                                                        >{{ entry.field }}</code
+                                                    >
+                                                </td>
+                                                <td class="text-break">
+                                                    <code>{{ entry.url }}</code>
+                                                </td>
+                                                <td class="text-end">
+                                                    <v-btn
+                                                        icon="mdi-content-copy"
+                                                        size="small"
+                                                        variant="text"
+                                                        :title="t('gna.web.copy_url')"
+                                                        :aria-label="t('gna.web.copy_url')"
+                                                        :data-test="'web-gcve-copy-' + entry.key"
+                                                        @click="copyUrl(entry.url)"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </v-table>
+                                </div>
+                            </template>
                         </v-window-item>
 
                         <v-window-item value="branding">
@@ -508,7 +607,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, watch } from 'vue'
+    import { ref, computed, onMounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
@@ -542,6 +641,10 @@
         smtp_port: number | null
         email_sender: string
         email_subject: string
+        // GCVE records (see shared.gcve): whether this web publishes them, and the security
+        // contact its security.txt names (served only when it is set).
+        gcve_organization_id: number | null
+        security_contact: string
         // Legacy neutral URLs; migrated into `text` (per-language) by normalize().
         organization_url?: string
         service_description_url?: string
@@ -578,6 +681,63 @@
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
+
+    // The GNA number of the organization whose GCVE records the web publishes; the dump is named after it.
+    const gnaId = computed(() => {
+        const chosen = organizations.value.find((organization) => organization.id === localItem.value.config.gcve_organization_id)
+        return chosen?.gna_id ? String(chosen.gna_id) : ''
+    })
+
+    // The organizations with a GNA number (and the one chosen, should it have lost its number).
+    const gcveOrganizationItems = computed(() => [
+        { title: t('gna.web.publish_none'), value: null },
+        ...organizations.value
+            .filter((organization) => organization.gna_id || organization.id === localItem.value.config.gcve_organization_id)
+            .map((organization) => ({
+                title: organization.gna_id ? `${organization.name} (GNA ${organization.gna_id})` : organization.name,
+                value: organization.id
+            }))
+    ])
+
+    type GcveUrl = { key: string; field?: string; url: string }
+
+    // What to give gcve.eu when registering this web as the GNA's publication: the directory
+    // fields it asks for, and the endpoints the node serves (GCVE-BCP-03, GCVE-BCP-06).
+    const gcveUrls = computed<GcveUrl[]>(() => {
+        const host = localItem.value.hostname.trim()
+        if (!host || hostnameRule(host) !== true) return []
+        const base = `https://${host}`
+        const urls: GcveUrl[] = [
+            { key: 'website', field: 'gcve_url', url: `${base}/` },
+            { key: 'pull_api', field: 'gcve_pull_api', url: `${base}/` },
+            { key: 'dumps', field: 'gcve_dump', url: `${base}/dumps/` },
+            { key: 'publication', url: `${base}/api/gcve/publication` },
+            { key: 'dump', url: `${base}/dumps/gna-${gnaId.value}.ndjson` },
+            { key: 'conformance', url: `${base}/api/gcve/conformance` }
+        ]
+        if (localItem.value.config.security_contact.trim()) {
+            urls.push({ key: 'security_txt', url: `${base}/.well-known/security.txt` })
+        }
+        return urls
+    })
+
+    // RFC 9116: a Contact is a URI; a bare e-mail address is written as mailto: by the node.
+    function securityContactRule(value: string): true | string {
+        const contact = (value ?? '').trim()
+        if (!contact) return true
+        if (/^mailto:[^@\s]+@[^@\s]+$/i.test(contact) || /^[^@\s:]+@[^@\s]+$/.test(contact)) return true
+        if (/^(https|tel):\S+$/i.test(contact)) return true
+        return t('gna.web.security_contact_invalid')
+    }
+
+    async function copyUrl(url: string): Promise<void> {
+        try {
+            await navigator.clipboard.writeText(url)
+            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'gna.web.url_copied' } }))
+        } catch {
+            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: 'gna.web.copy_failed' } }))
+        }
+    }
 
     const imageKinds = ['logo', 'favicon', 'preview'] as const
     type ImageKind = (typeof imageKinds)[number]
@@ -645,19 +805,22 @@
     const activeSection = ref('feed')
     const activeLang = ref('en')
 
-    // Existing Taranis organizations, offered as the org link label (a v-combobox
-    // so an admin can pick one or type a custom name). Loaded once on first open.
-    const organizationNames = ref<string[]>([])
+    // Existing Taranis organizations: offered as the org link label (a v-combobox so an admin
+    // can pick one or type a custom name), and those with a GNA number as the one whose GCVE
+    // records the web publishes. Loaded once on first open.
+    type OrganizationChoice = { id: number; name: string; gna_id?: number | null }
+    const organizations = ref<OrganizationChoice[]>([])
+    const organizationNames = computed(() => organizations.value.map((org) => org.name).filter(Boolean))
     const loadingOrganizations = ref(false)
 
     async function loadOrganizations(): Promise<void> {
-        if (organizationNames.value.length) {
+        if (organizations.value.length) {
             return
         }
         loadingOrganizations.value = true
         try {
-            const response = (await getAllOrganizations({ search: '' })) as { data?: { items?: Array<{ name: string }> } }
-            organizationNames.value = (response.data?.items || []).map((org) => org.name).filter(Boolean)
+            const response = (await getAllOrganizations({ search: '' })) as { data?: { items?: OrganizationChoice[] } }
+            organizations.value = response.data?.items || []
         } catch (error) {
             console.error('Error loading organizations:', error)
         } finally {
@@ -682,6 +845,8 @@
             smtp_port: null,
             email_sender: '',
             email_subject: '',
+            gcve_organization_id: null,
+            security_contact: '',
             text: {}
         }
     }
@@ -700,6 +865,8 @@
         // stored key and the form starts blank on every open.
         item.tls_key = ''
         item.config = { ...emptyConfig(), ...(item.config || {}) }
+        // Before a web named its organization it only said whether it published GCVE records.
+        delete (item.config as { gcve_enabled?: boolean }).gcve_enabled
         if (!Array.isArray(item.config.languages) || item.config.languages.length === 0) {
             item.config.languages = [item.config.default_language || 'en']
         }
@@ -923,4 +1090,9 @@
             }
         }
     )
+
+    // Mounted already open (an item to edit given at once): the watch above did not see it open.
+    onMounted(() => {
+        if (dialog.value) void loadOrganizations()
+    })
 </script>

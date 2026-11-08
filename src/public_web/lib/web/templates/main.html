@@ -12,15 +12,16 @@
         {%- set feeds = feed_links() %}
         {%- for feed in feeds %}
             {%- set language = " (" ~ feed.name ~ ")" if feeds | length > 1 else "" %}
+            {%- set name = metadata['rss_name'] ~ (" – " ~ feed.type if feed.type else "") %}
             <link rel="alternate"
                   type="application/rss+xml"
                   hreflang="{{ feed.code }}"
-                  title="{{ metadata['rss_name'] }} RSS{{ language }}"
+                  title="{{ name }} RSS{{ language }}"
                   href="{{ hostname }}{{ feed.rss }}">
             <link rel="alternate"
                   type="application/atom+xml"
                   hreflang="{{ feed.code }}"
-                  title="{{ metadata['rss_name'] }} Atom{{ language }}"
+                  title="{{ name }} Atom{{ language }}"
                   href="{{ hostname }}{{ feed.atom }}">
         {%- endfor %}
 

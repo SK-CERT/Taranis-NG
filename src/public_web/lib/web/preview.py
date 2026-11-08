@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 from feedgen.feed import FeedGenerator
 from flask import current_app, g, render_template, url_for
 from jinja2 import TemplateSyntaxError
-from lib.report.product import InvalidProductError, build_product, displayable, remove_link_references
+from lib.report.product import InvalidProductError, build_product, remove_link_references
 from lib.report.renderer import ReportRenderer, templates_for_web
 from lib.web import translate
 from lib.web.site import SiteContext
@@ -237,12 +237,7 @@ def render_preview(payload: dict, cache: WebCache) -> dict:
         warnings.append(f"{product['items_left_out']} report item(s) have no template to show them and are left out")
     # Whether the web would show it is the web's templates' to say, not the built-ins' alone.
     if previewed is not None:
-        preset_id = product["product_preset"]["id"]
-        shown, reason = displayable(
-            product,
-            vulnerability_only=not renderer.has_product_template(preset_id),
-            require_tlp_clear=renderer.require_tlp_clear(preset_id),
-        )
+        shown, reason = renderer.displayable(product)
         if not shown:
             warnings.append(f"The web would not show this product: {reason}")
 

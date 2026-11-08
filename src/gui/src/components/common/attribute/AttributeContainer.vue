@@ -39,6 +39,8 @@
     import AttributeCVSS from './AttributeCVSS.vue'
     import AttributeMultiChoice from './AttributeMultiChoice.vue'
     import AttributeLink from './AttributeLink.vue'
+    // The structured fields of a CVD Report (see structuredValue.ts)
+    import AttributeStructured from './AttributeStructured.vue'
 
     type AttributeItem = {
         attribute_group_item?: {
@@ -94,7 +96,15 @@
         CWE: AttributeCWE,
         CVSS: AttributeCVSS,
         // Citable source links; the text attributes cite them (see utils/linkReferences)
-        LINK: AttributeLink
+        LINK: AttributeLink,
+
+        // Structured CVD Report fields, stored as JSON
+        AFFECTED: AttributeStructured,
+        CREDIT: AttributeStructured,
+        TIMELINE: AttributeStructured,
+        RELATIONSHIP: AttributeStructured,
+        REFERENCE: AttributeStructured,
+        JSON: AttributeStructured
     }
 
     const attributeComponent = computed(() => {

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 from auth.saml_authenticator import SamlAuthenticator, generate_sp_keypair
-from lxml import etree
+from lxml.etree import QName, XMLSchema, fromstring, parse
 
 SCHEMA_DIR = Path(__file__).parent / "resources" / "saml_schemas"
 
@@ -47,9 +47,9 @@ FEDERATION = {
 
 
 @pytest.fixture(scope="module")
-def metadata_schema() -> etree.XMLSchema:
+def metadata_schema() -> XMLSchema:
     """The compiled SAML 2.0 metadata schema (with its imported schema chain)."""
-    return etree.XMLSchema(etree.parse(str(SCHEMA_DIR / "saml-schema-metadata-2.0.xsd")))
+    return XMLSchema(parse(str(SCHEMA_DIR / "saml-schema-metadata-2.0.xsd")))
 
 
 def _metadata(config: dict, disco_url: str | None = None) -> str:
@@ -71,10 +71,10 @@ CASES = {
 
 
 @pytest.mark.parametrize("case", CASES.keys())
-def test_generated_metadata_conforms_to_saml_schema(metadata_schema: etree.XMLSchema, case: str) -> None:
+def test_generated_metadata_conforms_to_saml_schema(metadata_schema: XMLSchema, case: str) -> None:
     """Every metadata shape we can emit validates against the SAML metadata XSD."""
     config, disco_url = CASES[case]
-    document = etree.fromstring(_metadata(config, disco_url).encode())
+    document = fromstring(_metadata(config, disco_url).encode())
     is_valid = metadata_schema.validate(document)
     errors = "\n".join(f"  line {e.line}: {e.message}" for e in metadata_schema.error_log)
     assert is_valid, f"metadata for '{case}' is not schema-valid:\n{errors}"
@@ -82,17 +82,17 @@ def test_generated_metadata_conforms_to_saml_schema(metadata_schema: etree.XMLSc
 
 def test_attribute_consuming_service_has_service_name_before_requested_attributes() -> None:
     """Regression: RequestedAttribute must be preceded by ServiceName (the schema requires it)."""
-    document = etree.fromstring(_metadata({**BASE, **ATTRS, **ENRICH}).encode())
+    document = fromstring(_metadata({**BASE, **ATTRS, **ENRICH}).encode())
     acs = document.find(f".//{{{MD}}}AttributeConsumingService")
     assert acs is not None, "no AttributeConsumingService emitted for a provider with attributes"
-    children = [etree.QName(child).localname for child in acs]
+    children = [QName(child).localname for child in acs]
     assert children[0] == "ServiceName", children
     assert children.index("ServiceName") < children.index("RequestedAttribute"), children
 
 
 def test_enriched_metadata_carries_uiinfo_organization_and_contact() -> None:
     """The fields a federation registration requires are present when configured."""
-    document = etree.fromstring(_metadata({**BASE, **ATTRS, **ENRICH}, DISCO_URL).encode())
+    document = fromstring(_metadata({**BASE, **ATTRS, **ENRICH}, DISCO_URL).encode())
     ui_info = document.find(f".//{{{MDUI}}}UIInfo")
     assert ui_info is not None
     for tag in ("DisplayName", "Description", "InformationURL"):
@@ -111,7 +111,7 @@ def test_enriched_metadata_carries_uiinfo_organization_and_contact() -> None:
 
 def test_minimal_metadata_omits_optional_blocks() -> None:
     """Nothing optional leaks in when unconfigured (backward compatible metadata)."""
-    document = etree.fromstring(_metadata(BASE).encode())
+    document = fromstring(_metadata(BASE).encode())
     assert document.find(f".//{{{MDUI}}}UIInfo") is None
     assert document.find(f"{{{MD}}}Organization") is None
     assert document.find(f"{{{MD}}}ContactPerson") is None

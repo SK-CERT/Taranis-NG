@@ -42,7 +42,7 @@
                     <v-select
                         v-model="localItem.api_type"
                         :label="t('data_providers.data.api_type')"
-                        :items="['CVE', 'CWE', 'CPE', 'EUVD', 'EPSS']"
+                        :items="['CVE', 'CWE', 'CPE', 'EUVD', 'EPSS', 'CVE_SERVICES']"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"

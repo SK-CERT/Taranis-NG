@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model.collector import Collector
-    from model.collectors_node import CollectorsNode
 
 import uuid
 from datetime import datetime

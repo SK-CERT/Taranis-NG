@@ -284,6 +284,12 @@
         | 'CVSS'
         | 'CWE'
         | 'MULTI_CHOICE'
+        | 'AFFECTED'
+        | 'CREDIT'
+        | 'TIMELINE'
+        | 'RELATIONSHIP'
+        | 'REFERENCE'
+        | 'JSON'
 
     type AttributeValidator = 'NONE' | 'EMAIL' | 'NUMBER' | 'RANGE' | 'REGEXP'
 
@@ -357,7 +363,14 @@
         { title: 'CVE', value: 'CVE' },
         { title: 'CVSS', value: 'CVSS' },
         { title: 'CWE', value: 'CWE' },
-        { title: 'Multiple Choice', value: 'MULTI_CHOICE' }
+        { title: 'Multiple Choice', value: 'MULTI_CHOICE' },
+        // Structured CVD Report fields (CVE Record Format objects)
+        { title: 'Affected Product', value: 'AFFECTED' },
+        { title: 'Credit', value: 'CREDIT' },
+        { title: 'Timeline Event', value: 'TIMELINE' },
+        { title: 'Relationship', value: 'RELATIONSHIP' },
+        { title: 'Reference', value: 'REFERENCE' },
+        { title: 'JSON', value: 'JSON' }
     ]
     attributeTypes.sort((a, b) => a.title.localeCompare(b.title))
 
@@ -408,7 +421,17 @@
     // to RADIO/ENUM/MULTI_CHOICE, and CPE/CVE/CWE keep theirs as imported dictionaries. Constants
     // saved on any other type (BOOLEAN above all, which renders a fixed yes/no switch) are never
     // read back, so the table stays hidden for them.
-    const constantTypes: AttributeType[] = ['RADIO', 'ENUM', 'MULTI_CHOICE', ...dictionaryTypes]
+    // The structured CVD types draw their vocabulary (roles, relationship types, tags) from constants too.
+    const constantTypes: AttributeType[] = [
+        'RADIO',
+        'ENUM',
+        'MULTI_CHOICE',
+        'AFFECTED',
+        'CREDIT',
+        'RELATIONSHIP',
+        'REFERENCE',
+        ...dictionaryTypes
+    ]
     const supportsConstants = computed(() => constantTypes.includes(localItem.value.type))
     // Choice constants have language variants; dictionary entries (CPE/CVE/CWE) do not.
     const translatableConstants = computed(() => (['RADIO', 'ENUM', 'MULTI_CHOICE'] as AttributeType[]).includes(localItem.value.type))

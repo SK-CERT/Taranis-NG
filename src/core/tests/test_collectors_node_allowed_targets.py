@@ -217,7 +217,7 @@ def migration(monkeypatch: pytest.MonkeyPatch) -> tuple[ModuleType, _Op]:
     return module, op
 
 
-def test_the_migration_follows_the_publication_time_and_is_the_head() -> None:
+def test_the_migration_follows_the_publication_time_and_the_gcve_one_follows_it() -> None:
     module = _load()
 
     def children(revision: str) -> list[str]:
@@ -226,7 +226,8 @@ def test_the_migration_follows_the_publication_time_and_is_the_head() -> None:
 
     assert (module.revision, module.down_revision) == ("7a4c1e9b2d36", "5c915192b607")
     assert children("5c915192b607") == [MIGRATION.name]
-    assert children("7a4c1e9b2d36") == []
+    # The GCVE revision follows it (see test_gcve_migration).
+    assert children("7a4c1e9b2d36") == ["6d1f0a9c3e25_gcve_numbering_authority.py"]
 
 
 def test_the_column_is_the_one_the_model_declares(migration: tuple[ModuleType, _Op], monkeypatch: pytest.MonkeyPatch) -> None:

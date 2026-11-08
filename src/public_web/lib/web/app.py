@@ -19,6 +19,7 @@ from lib.web import (
     translate_ui,
 )
 from lib.web.exceptions import register_error_handlers
+from lib.web.gcve import gcve_bp
 from lib.web.management import management_bp
 from lib.web.routes import reports_bp
 from lib.web.site import current_site
@@ -46,6 +47,7 @@ register_error_handlers(app)
 
 # Blueprints
 app.register_blueprint(management_bp)
+app.register_blueprint(gcve_bp)
 app.register_blueprint(reports_bp)
 
 

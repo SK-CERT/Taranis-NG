@@ -1,0 +1,190 @@
+{#- One CVD Report, the shipped type whose reports are published as GCVE records (see
+    shared.gcve): an accordion entry with its GCVE identifier, record type, description, affected
+    products, scores, weaknesses, impacts, remediation, disclosure and references. The type is
+    locked, so its fields are always these.
+
+    Context: item, index (its position among the product's items), product, links. The labels
+    are the type's; structured fields (affected products, credits, timeline, related records,
+    references, other metrics, taxonomy mappings) arrive as objects in item.attrs. -#}
+{%- import "builtin/_macros.html" as macros -%}
+
+{%- macro label(key) -%}
+    {{- item.fields | selectattr("key", "equalto", key) | map(attribute="label") | first -}}
+{%- endmacro -%}
+
+{%- macro texts(key) -%}
+    {%- for text in item.attrs[key] | as_list %}
+        <div class="mt-1 mb-0">{{ text | link_refs(links) | clean_rich }}</div>
+    {%- endfor %}
+{%- endmacro -%}
+
+{%- set record_type = item.attrs.record_type | single or "advisory" -%}
+{%- set cve = item.attrs.cve | single -%}
+{%- set scores = item.attrs.cvss | as_list | map("cvss_score") | reject("none") | list -%}
+{%- set affected = item.attrs.affected_products | as_list -%}
+{%- set related = item.attrs.related_records | as_list -%}
+{%- set timeline = item.attrs.timeline | as_list -%}
+{%- set credits = item.attrs.credits | as_list -%}
+{%- set references = item.attrs.references | as_list -%}
+{%- set statuses = {"affected": t("status_affected"), "unaffected": t("status_unaffected"), "unknown": t("status_unknown")} -%}
+
+<div class="accordion-item" id="accordionCVD-{{ index }}"{{ macros.content_lang(item, lang) }}>
+    <div class="accordion-header" id="heading{{ index }}">
+        <div class="accordion-button"
+             role="button"
+             data-bs-toggle="collapse"
+             data-bs-target="#collapse{{ index }}"
+             aria-expanded="true"
+             aria-controls="collapse{{ index }}">
+            <h5 class="m-0 text-body">
+                {%- if item.gcve_id %}
+                    <span class="badge text-bg-secondary me-2">{{ item.gcve_id }}</span>
+                {%- endif %}
+                <b class="fw-bolder me-4">{{ item.name | trim or item.gcve_id or t("vulnerability") }}</b>
+                {{ macros.severity_badge(scores | max if scores else none, False) }}
+            </h5>
+        </div>
+    </div>
+    <div id="collapse{{ index }}"
+         class="accordion-collapse collapse show"
+         aria-labelledby="heading{{ index }}">
+        <div class="accordion-body">
+            {%- if record_type == "deprecation" %}
+                <div class="alert alert-warning py-2" role="alert">{{ t("record_withdrawn") }}</div>
+            {%- elif record_type != "advisory" %}
+                <p class="mt-1 mb-2 text-secondary">{{ label("record_type") }}: {{ record_type }}</p>
+            {%- endif %}
+
+            {{ texts("description") }}
+
+            {%- if affected %}
+                <p class="mt-3 mb-1"><b>{{ label("affected_products") }}</b></p>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>{{ t("vendor") }}</th>
+                                <th>{{ t("product") }}</th>
+                                <th>{{ t("versions") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {%- for entry in affected %}
+                                <tr>
+                                    <td>{{ entry.vendor or "" }}</td>
+                                    <td>
+                                        {{ entry.product or entry.packageName or "" }}
+                                        {%- for cpe in entry.cpes or [] %}
+                                            <div><code class="text-break">{{ cpe }}</code></div>
+                                        {%- endfor %}
+                                    </td>
+                                    <td>
+                                        {%- for version in entry.versions or [] %}
+                                            <div>
+                                                {%- if version.lessThan %}
+                                                    {{ version.version if version.version not in ("0", "*") }} {{ "<" }} {{ version.lessThan }}
+                                                {%- elif version.lessThanOrEqual %}
+                                                    {{ version.version if version.version not in ("0", "*") }} {{ "≤" }} {{ version.lessThanOrEqual }}
+                                                {%- else %}
+                                                    {{ version.version }}
+                                                {%- endif %}
+                                                ({{ statuses.get(version.status, version.status) }})
+                                            </div>
+                                            {%- for change in version.changes or [] %}
+                                                <div class="text-secondary ps-3">
+                                                    {{ t("status_from") }} {{ change.at }}: {{ statuses.get(change.status, change.status) }}
+                                                </div>
+                                            {%- endfor %}
+                                        {%- endfor %}
+                                        {%- if entry.defaultStatus %}
+                                            <div class="text-secondary">{{ t("other_versions") }}: {{ statuses.get(entry.defaultStatus, entry.defaultStatus) }}</div>
+                                        {%- endif %}
+                                    </td>
+                                </tr>
+                            {%- endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {%- endif %}
+
+            {%- for vector in item.attrs.cvss | as_list %}
+                <p class="mt-1 mb-0 text-break"><b>CVSS:</b> {{ vector | trim }}</p>
+            {%- endfor %}
+
+            {%- for key in ("impacts", "solutions", "workarounds", "configurations", "exploits") %}
+                {%- if item.attrs[key] %}
+                    <p class="mt-3 mb-0"><b>{{ label(key) }}</b></p>
+                    {{ texts(key) }}
+                {%- endif %}
+            {%- endfor %}
+
+            {%- if timeline %}
+                <p class="mt-3 mb-0"><b>{{ label("timeline") }}</b></p>
+                <ul class="m-0">
+                    {%- for event in timeline %}
+                        <li>{{ event.time | iso_date or event.time }}: {{ event.value }}</li>
+                    {%- endfor %}
+                </ul>
+            {%- endif %}
+
+            {%- if credits %}
+                <p class="mt-3 mb-0"><b>{{ label("credits") }}</b></p>
+                <ul class="m-0">
+                    {%- for credit in credits %}
+                        <li>{{ credit.value }}{% if credit.type %} ({{ credit.type }}){% endif %}</li>
+                    {%- endfor %}
+                </ul>
+            {%- endif %}
+
+            {%- set cwes = item.attributes | selectattr("key", "equalto", "cwe") | list %}
+            {%- if cve or related or cwes or item.attrs.problem_types %}
+                <p class="mt-3 mb-0"><b>{{ t("more_info") }}:</b></p>
+                <ul class="m-0">
+                    {%- if cve %}
+                        <li>
+                            {{ cve }} {{ t("reference_at") }}
+                            <a href="https://cve.org/CVERecord?id={{ cve }}">cve.org</a>,
+                            <a href="https://nvd.nist.gov/vuln/detail/{{ cve }}">NVD</a>
+                        </li>
+                    {%- endif %}
+                    {%- for relation in related %}
+                        <li>{{ relation.type }} {{ relation.destId }}</li>
+                    {%- endfor %}
+                    {%- for attribute in cwes %}
+                        {%- set cwe = (attribute.value or "") | trim | replace("CWE-", "") %}
+                        {%- if cwe %}
+                            <li>
+                                CWE-{{ cwe }}{% if attribute.description %}: {{ attribute.description }}{% endif %}
+                                {{ t("reference_at") }} <a href="https://cwe.mitre.org/data/definitions/{{ cwe }}">cwe.mitre.org</a>
+                            </li>
+                        {%- endif %}
+                    {%- endfor %}
+                    {%- for problem in item.attrs.problem_types | as_list %}
+                        <li>{{ problem }}</li>
+                    {%- endfor %}
+                </ul>
+            {%- endif %}
+
+            {%- if references %}
+                <p class="mt-3 mb-0"><b>{{ label("references") }}</b></p>
+                <ul class="m-0">
+                    {%- for reference in references %}
+                        <li class="text-break">
+                            <a href="{{ reference.url | safe_url }}">{{ reference.name or reference.url }}</a>
+                            {%- for tag in reference.tags or [] %}
+                                <span class="badge text-bg-light border ms-1">{{ tag }}</span>
+                            {%- endfor %}
+                        </li>
+                    {%- endfor %}
+                </ul>
+            {%- endif %}
+
+            {%- set public = item.attrs.date_public | single %}
+            {%- if public %}
+                <p class="mt-3 mb-1 text-secondary">
+                    {{ t("vulnerability_exposed") }} {{ (public | iso_date) or (public | ymd_date) }}.
+                </p>
+            {%- endif %}
+        </div>
+    </div>
+</div>

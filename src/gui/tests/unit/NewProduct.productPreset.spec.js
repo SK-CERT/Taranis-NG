@@ -5,6 +5,7 @@ import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewProduct from '@/components/publish/NewProduct.vue'
 import { createProduct, getProductById, previewProduct, publishProduct, updateProduct } from '@/api/publish'
 import { getAllUserProductPresets } from '@/api/user'
+import { getCvdStatus } from '@/api/analyze'
 import { openBlankTabWithoutOpener } from '@/utils/window'
 
 vi.mock('@/api/publish', () => ({
@@ -14,6 +15,8 @@ vi.mock('@/api/publish', () => ({
     previewProduct: vi.fn(),
     getProductById: vi.fn()
 }))
+
+vi.mock('@/api/analyze', async (importOriginal) => ({ ...(await importOriginal()), getCvdStatus: vi.fn() }))
 
 vi.mock('@/api/user', () => ({
     getAllUserProductPresets: vi.fn()
@@ -119,6 +122,22 @@ describe('NewProduct product presets', () => {
     afterEach(() => {
         window.removeEventListener('notification', recordNotification)
         mounted.splice(0).forEach((wrapper) => wrapper.unmount())
+    })
+
+    it('offers the CVE Record and GCVE Advisory presets only where an organization can publish them', async () => {
+        const GCVE_ADVISORY = { id: 8, name: 'GCVE Advisory', system_key: 'gcve', public_web_enabled: true, deliveries: [] }
+        const CVE_RECORD = { id: 9, name: 'CVE Record', system_key: 'cve', public_web_enabled: false, deliveries: [] }
+        vi.mocked(getAllUserProductPresets).mockResolvedValue({ data: { items: [ADVISORY, GCVE_ADVISORY, CVE_RECORD] } })
+        // A GNA, no CNA account.
+        vi.mocked(getCvdStatus).mockResolvedValue({ data: { organizations: [], gna_configured: true, cna_configured: false } })
+        const wrapper = mountNewProduct()
+        await flushPromises()
+
+        expect(wrapper.vm.selectableProductPresets.map((preset) => preset.name)).toEqual(['Vulnerability advisory', 'GCVE Advisory'])
+
+        // A product already made with it keeps it.
+        wrapper.vm.product.product_preset_id = 9
+        expect(wrapper.vm.selectableProductPresets.map((preset) => preset.name)).toContain('CVE Record')
     })
 
     it('ticks every channel of the chosen product preset and leaves format-only ones out', async () => {
@@ -293,6 +312,54 @@ describe('NewProduct product presets', () => {
 
         expect(wrapper.vm.selectedProductPreset?.id).toBe(3)
         expect(wrapper.vm.tickedDeliveryIds).toEqual([11, 12, 13])
+    })
+
+    it.each([
+        ['gcve', 'GCVE Advisory'],
+        ['cve', 'CVE Record']
+    ])('makes a %s product English and offers it CVD Reports only', async (systemKey, name) => {
+        const shipped = { id: 9, name, system_key: systemKey, public_web_enabled: systemKey === 'gcve', deliveries: [] }
+        vi.mocked(getAllUserProductPresets).mockResolvedValue({ data: { items: [ADVISORY, shipped] } })
+        const wrapper = mountNewProduct()
+        await flushPromises()
+        wrapper.vm.product.language = 'cs'
+
+        await chooseProductPreset(wrapper, shipped)
+
+        expect(wrapper.vm.product.language).toBe('en')
+        expect(wrapper.findComponent('[data-test="product-source-language"]').props('disabled')).toBe(true)
+        expect(wrapper.findComponent({ name: 'ReportItemSelector' }).props('reportTypeKey')).toBe('cvd')
+
+        // Any other product preset: every report, and the language is the author's to pick.
+        await chooseProductPreset(wrapper, ADVISORY)
+        expect(wrapper.findComponent({ name: 'ReportItemSelector' }).props('reportTypeKey')).toBeNull()
+        expect(wrapper.findComponent('[data-test="product-source-language"]').props('disabled')).toBe(false)
+    })
+
+    it('says why core refused a state change, goes back to the state the product is in, and reads its reports again', async () => {
+        // A CVE Record whose publication CVE Services refused part way: one record went out.
+        const CVE_RECORD = { id: 9, name: 'CVE Record', system_key: 'cve', public_web_enabled: false, deliveries: [] }
+        vi.mocked(getAllUserProductPresets).mockResolvedValue({ data: { items: [ADVISORY, CVE_RECORD] } })
+        const report = { id: 21, title: 'Login bypass', cve_status: null }
+        vi.mocked(getProductById).mockResolvedValueOnce({
+            data: { id: 5, title: 'Login bypass', description: '', product_preset_id: 9, state_id: 2, report_items: [report], links: [] }
+        })
+        const wrapper = mountNewProduct()
+        window.dispatchEvent(new CustomEvent('show-product-edit', { detail: { id: 5, modify: true, access: true } }))
+        await flushPromises()
+        const reason = 'CVE Services refused 1 record(s). Sent: CVE-2026-1234. CVE-2026-1235: schema validation failed'
+        vi.mocked(updateProduct).mockRejectedValueOnce({ response: { status: 400, data: { error: reason } } })
+        vi.mocked(getProductById).mockResolvedValueOnce({
+            data: { id: 5, report_items: [{ ...report, cve_status: { cve_id: 'CVE-2026-1234', state: 'PUBLISHED' } }] }
+        })
+
+        // What the state selector does when "published" is picked.
+        wrapper.vm.handleStateChange(1)
+        await flushPromises()
+
+        expect(notifications).toContainEqual({ type: 'error', message: reason })
+        expect(wrapper.vm.product.state_id).toBe(2)
+        expect(wrapper.vm.reportItems[0].cve_status).toEqual({ cve_id: 'CVE-2026-1234', state: 'PUBLISHED' })
     })
 })
 

@@ -809,7 +809,7 @@
                     emit('update-data')
                 } catch (error: unknown) {
                     console.error('Error deleting items:', error)
-                    notifyDeleteError(error, { inUse: 'report_item.removed_error' })
+                    notifyDeleteError(error, { inUse: 'report_item.removed_error' }, true)
                 }
             }
         } else if (props.view === 'publish') {

@@ -91,7 +91,13 @@
         CVE: 'mdi-bug-outline',
         CWE: 'mdi-shield-alert-outline',
         TLP: 'mdi-traffic-light',
-        ATTACHMENT: 'mdi-paperclip'
+        ATTACHMENT: 'mdi-paperclip',
+        AFFECTED: 'mdi-package-variant-closed',
+        CREDIT: 'mdi-account-star-outline',
+        TIMELINE: 'mdi-timeline-clock-outline',
+        RELATIONSHIP: 'mdi-link-variant',
+        REFERENCE: 'mdi-bookmark-outline',
+        JSON: 'mdi-code-json'
     }
     const typeIcon = (type?: string): string => (type && TYPE_ICONS[type]) || ICONS.FILE_DOCUMENT
 

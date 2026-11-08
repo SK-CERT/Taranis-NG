@@ -108,7 +108,7 @@ def test_one_format_to_several_channels_and_several_formats_to_one(session: Call
         _data((1, "mail-1"), (1, "mail-2"), (2, "sftp"), (3, "sftp"), (3, None)),
     )
 
-    assert fields == {"name": "Advisory", "description": "", "icon": None, "public_web_enabled": False}
+    assert fields == {"name": "Advisory", "description": "", "icon": None, "public_web_enabled": False, "enabled": True}
     assert _pairs(deliveries) == [(1, "mail-1", 0), (1, "mail-2", 1), (2, "sftp", 2), (3, "sftp", 3), (3, None, 4)]
     assert webs == []
 

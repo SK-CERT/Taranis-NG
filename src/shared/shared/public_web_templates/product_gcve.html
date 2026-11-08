@@ -1,0 +1,36 @@
+{#- GCVE Advisories: their CVD Reports, each a published GCVE record (see shared.gcve). The
+    items as an expanded accordion, the homepage entry naming the GCVE identifiers, and an RSS
+    text that lists them. Header and links come from the base. -#}
+{%- extends "builtin/product_base.html" -%}
+
+{%- block summary_badges -%}
+    {{ macros.severity_badge(product.max_cvss, True) }}
+    {%- for item in product.body_items %}
+        {%- if item.gcve_id %}
+            <span class="badge text-bg-secondary align-self-start ms-md-2 mb-1">{{ item.gcve_id }}</span>
+        {%- endif %}
+    {%- endfor %}
+{%- endblock summary_badges -%}
+
+{%- block items -%}
+    <div class="accordion my-3">
+        {%- for item in product.body_items %}
+            {%- if not selected_items or loop.index in selected_items %}
+                {{ render_item(item, loop.index) }}
+            {%- endif %}
+        {%- endfor %}
+    </div>
+{%- endblock items -%}
+
+{%- block rss -%}
+    {{ product.description }}
+    {%- if product.body_items %}
+
+        {{ t('gcve_records') }}:
+        {% for item in product.body_items -%}
+            {%- set scores = item.attrs.cvss | as_list | map("cvss_score") | reject("none") | list -%}
+            {{ item.gcve_id ~ " " if item.gcve_id }}{{ item.name | trim }}{{ " (CVSS " ~ (scores | max) ~ ")" if scores }}
+            {%- if not loop.last %},{% endif %}
+        {% endfor %}
+    {%- endif %}
+{%- endblock rss -%}

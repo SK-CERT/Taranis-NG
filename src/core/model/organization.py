@@ -77,6 +77,14 @@ class Organization(db.Model):
         self.subtitle = self.description
         self.tag = "mdi-office-building"
 
+    @property
+    def gna_id(self) -> int | None:
+        """Its GCVE GNA number (see model.organization_gna); None when it is no GNA."""
+        from model.organization_gna import OrganizationGna  # noqa: PLC0415 (model.organization_gna imports this module)
+
+        gna = OrganizationGna.for_organization(self.id) if self.id is not None else None
+        return gna.gna_id if gna is not None else None
+
     @classmethod
     def find(cls, organization_id: int) -> Organization | None:
         """Find an organization by id.

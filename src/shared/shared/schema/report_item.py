@@ -143,6 +143,13 @@ class ReportItemBaseSchema(Schema):
         report_item_type_id (int): The ID of the report item type.
         language (str): The language the report is written in (ISO 639-1), None while not set.
             Dump only: core sets it from the author's settings and changes it on request.
+        gcve_id (str): A CVD Report's GCVE identifier (see shared.gcve); dump only, core allocates it.
+        cve_status (dict): Where a CVD Report's CVE record stands at CVE Services: its CVE ID, state,
+            whether it is out of date, the last error; dump only.
+        organization_id (int): A CVD Report's organization (its author's), whose GNA number and CVE
+            Services account publish it; dump only, set when it is created.
+        cvd_organization (dict): That organization, ``{id, name, gna_id, short_name, gna_configured,
+            cna_configured}``; dump only.
     """
 
     class Meta:  # ty: ignore[incompatible-attribute-override]
@@ -159,6 +166,10 @@ class ReportItemBaseSchema(Schema):
     report_item_type_id = fields.Int(load_default=None, allow_none=True)
     state_id = fields.Int(allow_none=True)
     language = fields.Str(dump_only=True, allow_none=True)
+    gcve_id = fields.Str(dump_only=True, allow_none=True)
+    cve_status = fields.Dict(dump_only=True, allow_none=True)
+    organization_id = fields.Int(dump_only=True, allow_none=True)
+    cvd_organization = fields.Dict(dump_only=True, allow_none=True)
 
 
 class RemoteReportItemSchema(ReportItemBaseSchema, PresentationSchema):

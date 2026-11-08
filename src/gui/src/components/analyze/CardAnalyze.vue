@@ -69,6 +69,28 @@
                         </h2>
 
                         <div class="report-card__details">
+                            <!-- A CVD Report's GCVE identifier -->
+                            <v-chip
+                                v-if="card.gcve_id"
+                                variant="tonal"
+                                color="primary"
+                                size="small"
+                                class="report-card__gcve"
+                                data-test="card-gcve-id"
+                                ><bdi dir="ltr">{{ card.gcve_id }}</bdi></v-chip
+                            >
+                            <!-- Its CVE ID, and where its record stands at CVE Services -->
+                            <v-chip
+                                v-if="card.cve_status"
+                                variant="tonal"
+                                :color="cveColor"
+                                size="small"
+                                class="report-card__gcve"
+                                :title="card.cve_status.last_error || card.cve_status.rejected_reason || t('gna.cve.state.' + cveStateKey)"
+                                data-test="card-cve-id"
+                                ><bdi dir="ltr">{{ card.cve_status.cve_id }}</bdi
+                                >&nbsp;·&nbsp;{{ t('gna.cve.state.' + cveStateKey) }}</v-chip
+                            >
                             <v-chip
                                 v-if="card.state"
                                 :color="card.state.color"
@@ -175,6 +197,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { PERMISSIONS } from '@/services/auth/permissions'
     import { deleteReportItem } from '@/api/analyze'
+    import { cveColor as cveColorOf, cveStateKey as cveStateKeyOf, type CveStatus } from '@/utils/cveStatus'
     import BaseCard from '@/components/common/BaseCard.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
@@ -195,6 +218,10 @@
         tags?: number[]
         translation_status?: Record<string, string>
         report_type_name?: string
+        // A CVD Report's GCVE identifier.
+        gcve_id?: string | null
+        // Its CVE ID and where its record stands at CVE Services.
+        cve_status?: CveStatus | null
         tag?: string
         news_items_count?: number
         last_updated?: string
@@ -233,6 +260,8 @@
     }>()
 
     const { t } = useI18n()
+    const cveStateKey = computed(() => cveStateKeyOf(props.card.cve_status))
+    const cveColor = computed(() => cveColorOf(props.card.cve_status))
     const { formatDateTime, formatNumber } = useLocaleFormatters()
     const route = useRoute()
     const router = useRouter()
@@ -313,7 +342,7 @@
             )
         } catch (error: unknown) {
             console.error('Error deleting report item:', error)
-            notifyDeleteError(error, { inUse: 'report_item.removed_error' })
+            notifyDeleteError(error, { inUse: 'report_item.removed_error' }, true)
         }
     }
 

@@ -121,6 +121,10 @@ class _Recorder:
         self.indexes[name] = (table, columns)
 
 
+# Columns of the models that later revisions add (see test_gcve_migration).
+LATER_COLUMNS = {"product_preset": ("system_key", "enabled")}
+
+
 def _shape(table: sa.Table) -> dict:
     """What a table is, as far as the models and a migration must agree."""
     columns = {
@@ -156,7 +160,11 @@ def test_the_product_preset_tables_are_the_models(recorded: tuple[ModuleType, _R
     module._create_preset_tables()
 
     for model in (ProductPreset, ProductPresetDelivery, ProductPresetPublicWeb):
-        assert _shape(recorder.tables[model.__table__.name]) == _shape(model.__table__), model.__name__
+        expected = _shape(model.__table__)
+        # Added by a later revision (the GCVE one).
+        for column in LATER_COLUMNS.get(model.__table__.name, ()):
+            del expected["columns"][column]
+        assert _shape(recorder.tables[model.__table__.name]) == expected, model.__name__
 
 
 def test_the_columns_and_index_of_their_own_are_the_models(recorded: tuple[ModuleType, _Recorder], monkeypatch: pytest.MonkeyPatch) -> None:

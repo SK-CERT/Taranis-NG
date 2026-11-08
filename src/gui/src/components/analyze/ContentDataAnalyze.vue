@@ -111,13 +111,16 @@
             remoteReports?: boolean
             selection?: Array<{ id: string | number }>
             cardItem?: string
+            // Only reports of this shipped type (its system_key), e.g. 'cvd'; none: every report.
+            reportTypeKey?: string | null
         }>(),
         {
             showRemoveAction: false,
             disableActions: false,
             remoteReports: false,
             selection: () => [],
-            cardItem: ''
+            cardItem: '',
+            reportTypeKey: null
         }
     )
 
@@ -205,7 +208,8 @@
                     group: group,
                     filter: filter.value,
                     offset: offset,
-                    limit: limit
+                    limit: limit,
+                    ...(props.reportTypeKey ? { type: props.reportTypeKey } : {})
                 }),
                 analyzeStore.loadReportItemTypes({})
             ])
@@ -283,6 +287,13 @@
 
     watch(
         () => route.params['scope'],
+        () => {
+            updateData(false, false)
+        }
+    )
+
+    watch(
+        () => props.reportTypeKey,
         () => {
             updateData(false, false)
         }

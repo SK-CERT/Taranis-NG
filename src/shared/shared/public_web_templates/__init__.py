@@ -12,8 +12,10 @@ each of them off to rely on custom templates alone. The base layout and the macr
 switched off: custom templates extend and import them.
 
 They fit the report item types Taranis itself creates: ``item_vulnerability.html`` the
-"Vulnerability Report" type as it ships (see ``VULNERABILITY_TYPE``), ``item_generic.html``
-any other type. A type changed from these, or a type of one's own, takes a custom template.
+"Vulnerability Report" type as it ships (see ``VULNERABILITY_TYPE``), ``item_cvd.html`` the
+locked "CVD Report" type and ``product_gcve.html`` the "GCVE Advisory" product preset (both
+found by their ``system_key``, see ``shared.gcve``), ``item_generic.html`` any other type. A
+type changed from these, or a type of one's own, takes a custom template.
 """
 
 from importlib import resources
@@ -22,7 +24,7 @@ BUILTIN_PREFIX = "builtin/"
 
 # A custom product template must extend one of these; the base decides, per ``view``,
 # which of its blocks the page asks for (detail page, homepage entry, RSS text).
-PRODUCT_BASES = ("builtin/product_base.html", "builtin/product_vulnerability.html")
+PRODUCT_BASES = ("builtin/product_base.html", "builtin/product_vulnerability.html", "builtin/product_gcve.html")
 
 # The built-ins public-web renders a product or a report item with when it has no custom
 # template, which an administrator may switch off: off, public-web does not show a product
@@ -33,6 +35,8 @@ DEFAULTS = (
     "builtin/product_vulnerability.html",
     "builtin/item_vulnerability.html",
     "builtin/item_generic.html",
+    "builtin/product_gcve.html",
+    "builtin/item_cvd.html",
 )
 
 # The title of the report item type item_vulnerability.html is for: the one Taranis creates.

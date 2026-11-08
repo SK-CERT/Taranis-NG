@@ -26,9 +26,10 @@ from model.public_web import PublicWeb
 from model.publishing_channel import PublishingChannel
 from model.tag import ICON_LENGTH, clean_icon
 from shared.common import TZ
+from shared.gcve import CVE_PRESET_KEY, GCVE_PRESET_KEY
 from shared.schema.acl_entry import ItemType
 from shared.schema.product_preset import ProductPresetPresentationSchema, ProductPresetSchema
-from sqlalchemy import and_, false, or_, orm
+from sqlalchemy import and_, false, or_, orm, true
 from sqlalchemy.sql.expression import cast
 
 if TYPE_CHECKING:
@@ -40,6 +41,15 @@ DEFAULT_ICON = "mdi-package-variant-closed"
 
 class ProductPresetValidationError(ValueError):
     """A product preset that cannot be saved; the message is meant for the form."""
+
+
+class ProductPresetLockedError(Exception):
+    """Raised when a shipped product preset (see shared.gcve) would be changed or deleted."""
+
+    def __init__(self, name: str) -> None:
+        """Name the product preset."""
+        self.name = name
+        super().__init__(f"'{name}' ships with Taranis: it can only be switched on or off")
 
 
 class ProductPresetPublicWeb(db.Model):
@@ -135,6 +145,8 @@ class ProductPreset(db.Model):
         deliveries: The language/format/channel deliveries, in order.
         public_web_enabled: Whether published products appear on the public web.
         public_webs: The webs they appear on; none listed means every web.
+        system_key: Set on a product preset Taranis ships (``gcve``), which is locked.
+        enabled: Whether new products can be made with it.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -142,6 +154,8 @@ class ProductPreset(db.Model):
     description = db.Column(db.String())
     icon = db.Column(db.String(ICON_LENGTH))
     public_web_enabled = db.Column(db.Boolean(), nullable=False, default=False, server_default=false())
+    system_key = db.Column(db.String(32), nullable=True, unique=True)
+    enabled = db.Column(db.Boolean(), nullable=False, default=True, server_default=true())
     created = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime)
     updated_by = db.Column(db.String())
@@ -154,12 +168,20 @@ class ProductPreset(db.Model):
     )
     public_webs = db.relationship(PublicWeb, secondary="product_preset_public_web", lazy="selectin")
 
-    def __init__(self, name: str, description: str = "", public_web_enabled: bool = False, icon: str | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        description: str = "",
+        public_web_enabled: bool = False,
+        icon: str | None = None,
+        enabled: bool = True,
+    ) -> None:
         """Initialize a product preset (the id is assigned by the database)."""
         self.name = name
         self.description = description
         self.public_web_enabled = public_web_enabled
         self.icon = icon
+        self.enabled = enabled
         self.title = name
         self.subtitle = description
 
@@ -175,8 +197,28 @@ class ProductPreset(db.Model):
         return self.icon or DEFAULT_ICON
 
     @property
+    def locked(self) -> bool:
+        """Whether it ships with Taranis: then it can only be switched on or off."""
+        return self.system_key is not None
+
+    @property
+    def is_gcve(self) -> bool:
+        """Whether its products publish GCVE records (shown only on webs that publish them)."""
+        return self.system_key == GCVE_PRESET_KEY
+
+    @property
+    def is_cve(self) -> bool:
+        """Whether its products publish CVE records through CVE Services (this organisation as a CNA)."""
+        return self.system_key == CVE_PRESET_KEY
+
+    @property
     def public_web_ids(self) -> list[int]:
-        """The ids of the webs the product preset's products appear on (empty: every web)."""
+        """The ids of the webs the product preset's products appear on (empty: every web).
+
+        For the GCVE preset these are the webs that publish GCVE records.
+        """
+        if self.is_gcve:
+            return sorted(web.id for web in PublicWeb.query.all() if web.gcve_enabled)
         return sorted(web.id for web in self.public_webs)
 
     @property
@@ -192,7 +234,7 @@ class ProductPreset(db.Model):
         """
         if not self.public_web_enabled:
             return []
-        webs = self.public_webs or PublicWeb.query.all()
+        webs = [web for web in PublicWeb.query.all() if web.gcve_enabled] if self.is_gcve else self.public_webs or PublicWeb.query.all()
         return [{"id": web.id, "name": web.name or str(web.id)} for web in sorted(webs, key=lambda web: (web.name or "", web.id))]
 
     @property
@@ -208,6 +250,9 @@ class ProductPreset(db.Model):
         if not self.public_web_enabled:
             return False
         targets = self.public_web_ids
+        if getattr(self, "system_key", None) == GCVE_PRESET_KEY:
+            # Only on the webs that publish GCVE records, and none when no web does.
+            return web_id in targets if web_id is not None else bool(targets)
         return web_id is None or not targets or web_id in targets
 
     # -- queries -----------------------------------------------------------
@@ -216,6 +261,11 @@ class ProductPreset(db.Model):
     def find(cls, product_preset_id: int) -> ProductPreset | None:
         """Get a product preset by id."""
         return db.session.get(cls, product_preset_id)
+
+    @classmethod
+    def find_by_key(cls, system_key: str) -> ProductPreset | None:
+        """The shipped product preset with this key, if it exists."""
+        return cls.query.filter_by(system_key=system_key).first()
 
     @classmethod
     def _with_acl(cls, query: sqlalchemy.orm.Query, user: User, see: bool, access: bool, modify: bool) -> sqlalchemy.orm.Query:
@@ -318,6 +368,7 @@ class ProductPreset(db.Model):
             "description": loaded.get("description") or "",
             "icon": clean_icon(loaded.get("icon")),
             "public_web_enabled": loaded["public_web_enabled"],
+            "enabled": loaded["enabled"],
         }
         return fields, deliveries, webs
 
@@ -350,6 +401,14 @@ class ProductPreset(db.Model):
         product_preset = cls.find(product_preset_id)
         if product_preset is None:
             return None
+        if product_preset.locked:
+            # Shipped: only its switch can change; the rest of the payload is ignored.
+            enabled = data.get("enabled", product_preset.enabled) if isinstance(data, dict) else product_preset.enabled
+            product_preset.enabled = bool(enabled)
+            product_preset.updated_at = datetime.now(TZ)
+            product_preset.updated_by = user_name
+            db.session.commit()
+            return product_preset
         fields, deliveries, webs = cls._checked(data, product_preset_id)
         for key, value in fields.items():
             setattr(product_preset, key, value)
@@ -376,6 +435,8 @@ class ProductPreset(db.Model):
         product_preset = cls.find(product_preset_id)
         if product_preset is None:
             return {"error": "Product preset not found"}, 404
+        if product_preset.locked:
+            raise ProductPresetLockedError(product_preset.name)
         db.session.delete(product_preset)
         db.session.commit()
         return {"message": "Product preset deleted"}, 200

@@ -7,17 +7,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-    from model.product import Product
     from model.user import User
 
 from datetime import datetime, timedelta
 
 import sqlalchemy
-from managers import content_language, translation_status
+from managers import content_language, cve_publication, gcve_publication, translation_status
 from managers.db_manager import db
 from managers.link_references import normalize_links
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
+from model.gcve_assignment import GcveAssignment
+from model.organization_gna import OrganizationGna
 from model.product_preset import DEFAULT_ICON, ProductPreset, ProductPresetPublicWeb
 from model.public_web import PublicWeb
 from model.report_item import ReportItem
@@ -32,6 +33,7 @@ from model.state import (
 from model.tag import Tag, product_tag, set_item_tags
 from model.translation import ORIGIN_AI, ORIGIN_MANUAL, ORIGIN_REVIEWED, PRODUCT_FIELDS, ProductTranslation, sql_source_hash
 from shared.common import TZ
+from shared.gcve import CVD_LANGUAGE, GCVE_PRESET_KEY
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
 from shared.schema.product import ProductPresentationSchema, ProductSchemaBase
@@ -98,6 +100,26 @@ class NewProductSchema(ProductSchemaBase):
             Product: New product
         """
         return Product(**data)
+
+
+class GcvePublicationError(ValueError):
+    """A GCVE Advisory that cannot be published: the message names the reports and why."""
+
+
+class CvdProductError(ValueError):
+    """A GCVE Advisory or a CVE Record given reports other than CVD Reports: the message names them."""
+
+
+class GcveRecordsHeldError(Exception):
+    """Raised when a change would take published GCVE records out of the feed."""
+
+    def __init__(self, gcve_ids: list[str]) -> None:
+        """Name the records."""
+        self.gcve_ids = gcve_ids
+        super().__init__(
+            f"{', '.join(gcve_ids)} {'is' if len(gcve_ids) == 1 else 'are'} published: a published GCVE record stays in the feed. "
+            "To withdraw one, set its Record type to 'deprecation'.",
+        )
 
 
 class Product(db.Model):
@@ -631,6 +653,24 @@ class Product(db.Model):
             .filter(cls.public_web_enabled.is_(True), ProductPreset.public_web_enabled.is_(True))
         )
 
+        # GCVE Advisories appear only on the webs that publish GCVE records (shared.gcve): each on
+        # the webs of the organization its CVD Reports belong to.
+        not_gcve = ProductPreset.system_key.is_distinct_from(GCVE_PRESET_KEY)
+        if web_id is None:
+            publishing = sorted({web.gcve_organization_id for web in PublicWeb.query.all() if web.gcve_enabled})
+        else:
+            web = PublicWeb.find(web_id)
+            publishing = [web.gcve_organization_id] if web is not None and web.gcve_enabled else []
+        if publishing:
+            of_publishing = (
+                exists()
+                .where(ProductReportItem.product_id == cls.id)
+                .where(ProductReportItem.report_item_id == ReportItem.id, ReportItem.organization_id.in_(publishing))
+            )
+            query = query.filter(or_(not_gcve, of_publishing))
+        else:
+            query = query.filter(not_gcve)
+
         if web_id is not None:
             targeted = exists().where(ProductPresetPublicWeb.product_preset_id == ProductPreset.id)
             targets_web = exists().where(
@@ -822,8 +862,11 @@ class Product(db.Model):
         product.updated_by = user.name
         if product.language is None:
             product.language = cls._author_language(user)
+        cls._apply_cvd_product_rules(product)
         product.apply_translations(product.submitted_translations, user.id)
         product.note_first_publication()
+        cls.publish_gcve_records(product.state_id, getattr(product, "product_preset_id", None), list(product.report_items or []))
+        cls.publish_cve_records(product.state_id, getattr(product, "product_preset_id", None), list(product.report_items or []))
         db.session.add(product)
         product.store_report_order()
         if tag_ids:
@@ -857,6 +900,13 @@ class Product(db.Model):
         product = product_schema.load(product_data)
 
         original_product = Product.find(product_id)
+        cls._apply_cvd_product_rules(product)
+        # Before anything changes: published GCVE records must stay in the feed, and the reports
+        # of a GCVE Advisory being published must make valid records. A CVE Record being published,
+        # or saved while published, sends its new and changed records to CVE Services.
+        cls.check_gcve_records_kept(original_product, product.state_id, product.product_preset_id, list(product.report_items))
+        cls.publish_gcve_records(product.state_id, product.product_preset_id, list(product.report_items))
+        cls.publish_cve_records(product.state_id, product.product_preset_id, list(product.report_items))
         old_state_id = original_product.state_id
         # Capture existing report-item ids before reassignment so the cascade
         # can target only newly-added reports (Option B: a report added to an
@@ -905,6 +955,148 @@ class Product(db.Model):
             cls._auto_complete_added_reports(product.state_id, user, added_report_item_ids)
         if user and old_state_id != product.state_id:
             cls._auto_complete_reports_on_publish(product_id, product.state_id, user)
+
+    @staticmethod
+    def _published_state_id() -> int | None:
+        published = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
+        return published.id if published else None
+
+    @classmethod
+    def _held_elsewhere(cls, product_id: int | None) -> set[int]:
+        """The reports other published GCVE Advisories hold (their records stay in the feed through them)."""
+        published_id = cls._published_state_id()
+        if published_id is None:
+            return set()
+        query = (
+            db.session.query(ProductReportItem.report_item_id)
+            .join(cls, cls.id == ProductReportItem.product_id)
+            .join(ProductPreset, ProductPreset.id == cls.product_preset_id)
+            .filter(cls.state_id == published_id, ProductPreset.system_key == GCVE_PRESET_KEY)
+        )
+        if product_id is not None:
+            query = query.filter(cls.id != product_id)
+        return {report_item_id for (report_item_id,) in query.all()}
+
+    @classmethod
+    def check_gcve_records_kept(cls, product: Product, state_id: int | None, product_preset_id: int | None, report_items: list) -> None:
+        """Refuse a change that would take a published GCVE record out of the feed.
+
+        A published GCVE Advisory keeps the published records it holds, unless another published
+        GCVE Advisory holds them too; withdrawing a record is done with its record type.
+
+        Args:
+            product: The product as it is stored.
+            state_id: Its state after the change (None: deleted).
+            product_preset_id: Its product preset after the change.
+            report_items: Its reports after the change.
+
+        Raises:
+            GcveRecordsHeldError: Naming the records that would be left out.
+        """
+        published_id = cls._published_state_id()
+        if published_id is None or product.state_id != published_id or not (product.product_preset and product.product_preset.is_gcve):
+            return
+        held = {item.id: item.gcve_id for item in product.report_items if item.gcve_assignment is not None and item.gcve_assignment.published}
+        if not held:
+            return
+        preset = ProductPreset.find(product_preset_id) if product_preset_id is not None else None
+        still_published = state_id == published_id and preset is not None and preset.is_gcve
+        kept = {item.id for item in report_items} if still_published else set()
+        dropped = set(held) - kept - cls._held_elsewhere(product.id)
+        if dropped:
+            raise GcveRecordsHeldError(sorted(held[item_id] for item_id in dropped))
+
+    @staticmethod
+    def _apply_cvd_product_rules(product: Product) -> None:
+        """A GCVE Advisory or a CVE Record holds CVD Reports only, and is written in English.
+
+        Its records are English only (see shared.gcve), so the product is too: its language is
+        English, and it is not translated.
+
+        Raises:
+            CvdProductError: Naming the reports that are not CVD Reports.
+        """
+        preset_id = getattr(product, "product_preset_id", None)
+        preset = ProductPreset.find(preset_id) if preset_id is not None else None
+        if preset is None or not (preset.is_gcve or preset.is_cve):
+            return
+        others = [f"'{item.title or item.id}'" for item in product.report_items or [] if not getattr(item, "is_cvd", False)]
+        if others:
+            msg = f"A {preset.name} holds CVD Reports only; not one: {', '.join(others)}"
+            raise CvdProductError(msg)
+        # Its records are published by one organization (its GNA, its CNA account, its webs).
+        by_organization: dict[object, list[str]] = {}
+        for item in product.report_items or []:
+            organization = getattr(item, "organization", None)
+            name = organization.name if organization is not None else "no organization"
+            by_organization.setdefault(name, []).append(f"'{item.title or item.id}'")
+        if len(by_organization) > 1:
+            listed = "; ".join(f"{name}: {', '.join(titles)}" for name, titles in sorted(by_organization.items()))
+            msg = f"A {preset.name} holds the CVD Reports of one organization; these belong to several ({listed})"
+            raise CvdProductError(msg)
+        product.language = CVD_LANGUAGE
+        product.submitted_translations = {}
+
+    @classmethod
+    def publish_cve_records(cls, state_id: int | None, product_preset_id: int | None, report_items: list) -> list[str]:
+        """Send the reports of a CVE Record being published, or saved while published, to CVE Services.
+
+        New records are published and changed ones updated (see managers.cve_publication); each
+        record sent is committed at once, whatever happens to the product.
+
+        Returns:
+            list[str]: The CVE IDs whose records were sent.
+
+        Raises:
+            CvePublicationError: Naming each report that cannot be published, and why.
+        """
+        preset = ProductPreset.find(product_preset_id) if product_preset_id is not None else None
+        if preset is None or not preset.is_cve or state_id is None or state_id != cls._published_state_id():
+            return []
+        return cve_publication.publish(list(report_items))
+
+    @classmethod
+    def publish_gcve_records(cls, state_id: int | None, product_preset_id: int | None, report_items: list) -> None:
+        """Check the reports of a GCVE Advisory being published, and publish their records.
+
+        Raises:
+            GcvePublicationError: Naming each report that cannot be published, and why.
+        """
+        preset = ProductPreset.find(product_preset_id) if product_preset_id is not None else None
+        if preset is None or not preset.is_gcve or state_id is None or state_id != cls._published_state_id():
+            return
+        reasons = []
+        for item in report_items:
+            gna = OrganizationGna.for_organization(getattr(item, "organization_id", None))
+            # A CVD Report written while its organization had only the CNA account has no GCVE
+            # identifier yet: it gets one now, in this transaction (a refused publication gives the
+            # number back).
+            if getattr(item, "is_cvd", False) and item.gcve_assignment is None:
+                if gna is None:
+                    reasons.append(f"{item.title}: it has no GCVE identifier, and its organization has no GNA number")
+                    continue
+                GcveAssignment.allocate(item, gna.gna_id)
+            short_name = item.gna_short_name
+            if getattr(item, "is_cvd", False) and not short_name:
+                gna_id = item.gcve_assignment.gna_id
+                reasons.append(
+                    f"{item.gcve_id}: the short name of GNA {gna_id} is not known yet: the gcve.eu GNA directory has not "
+                    "confirmed the number (Configuration -> Organizations -> GCVE & CVE, Check)",
+                )
+                continue
+            found = gcve_publication.problems(item, short_name)
+            if found:
+                reasons.append(f"{item.gcve_id or item.title}: {'; '.join(found)}")
+        if reasons:
+            msg = "The GCVE Advisory cannot be published. " + " | ".join(reasons)
+            raise GcvePublicationError(msg)
+        for item in report_items:
+            first_time = not item.gcve_assignment.published
+            item.gcve_assignment.publish()
+            # A published CVE record names its GCVE record (x_gcve) from now on: it is out of date.
+            cve_assignment = getattr(item, "cve_assignment", None)
+            if first_time and cve_assignment is not None and cve_assignment.published:
+                cve_assignment.changed()
 
     @staticmethod
     def _author_language(user: User) -> str | None:

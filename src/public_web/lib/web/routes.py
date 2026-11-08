@@ -14,6 +14,7 @@ from flask import (
     Blueprint,
     Response,
     abort,
+    g,
     make_response,
     render_template,
     request,
@@ -24,7 +25,9 @@ from lib.logger import get_logger
 from lib.report.product import matches_keyword, remove_link_references
 from lib.web import feeds, translate, translate_ui
 from lib.web.cache import WebCache
-from lib.web.site import IMAGE_KINDS, current_site, load_site
+from lib.web.report_types import find_type, of_type, report_types
+from lib.web.site import IMAGE_KINDS, SiteContext, current_site, load_site
+from shared.gcve import GCVE_PRESET_KEY
 
 feedback_logger = get_logger("feedback", silent=True)
 cache = WebCache()
@@ -74,13 +77,39 @@ def _get_rss_description(report: dict) -> str:
     return remove_link_references(text, report["links"])
 
 
+def _of_asked_type(reports: list[dict]) -> list[dict]:
+    """The reports of the type the page or feed is for (``?type=``, see ``report_types``); all without one.
+
+    The type is kept in ``g.report_type`` (``{"id", "title"}``, or None), for the feed links. A
+    type the web does not show (anymore) is not found.
+    """
+    asked = request.args.get("type")
+    kind = find_type(reports, asked) if asked else None
+    if asked and kind is None:
+        abort(404)
+    g.report_type = kind
+    return of_type(reports, kind["id"]) if kind else reports
+
+
+def _gcve_links(site: SiteContext) -> dict[str, str] | None:
+    """Where the GCVE records of the web's GNA are published, for its GCVE Advisories tab; None when it publishes none."""
+    if not site.gcve_enabled:
+        return None
+    links = {"publication": url_for("gcve.publication")}
+    gna_id = (cache.get_gcve_records(site.id) or {}).get("gna_id")
+    if gna_id is not None:
+        links["dump"] = url_for("gcve.dump", gna_id=gna_id)
+    return links
+
+
 @reports_bp.route("/", endpoint="home")
 def homepage() -> str:
     """Endpoint for homepage rendering.
 
     The homepage consists of a list of reports. There is a limit of reports per
     page, this limit is part of the web's configuration. Reports can also be
-    filtered using a keyword.
+    filtered using a keyword, and by their type (``?type=``): a web showing reports of
+    several types offers a tab for each, beside one for all of them.
     """
     search_arg = request.args.get("search")
     try:
@@ -90,7 +119,10 @@ def homepage() -> str:
 
     site = current_site()
     limit = site.max_reports_homepage
-    reports = cache.get_all_reports(site.id, site.language)
+    every_report = cache.get_all_reports(site.id, site.language)
+    tabs = report_types(every_report)
+    reports = _of_asked_type(every_report)
+    report_type = g.report_type
     renderer = cache.renderer(site.id)
     options = _render_options()
     if search_arg:
@@ -108,6 +140,10 @@ def homepage() -> str:
         page=page,
         pages=pages,
         warning_seen=request.cookies.get("warning-seen"),
+        # A tab bar only when there is something to choose between.
+        tabs=tabs if len(tabs) > 1 else [],
+        report_type=report_type,
+        gcve_links=_gcve_links(site) if report_type and report_type["id"] == GCVE_PRESET_KEY else None,
     )
 
 
@@ -130,7 +166,9 @@ def _feed_response(kind: str) -> Response:
     the response also names the hub and the feed (``Link``), as WebSub asks.
     """
     site = current_site()
-    reports = cache.get_all_reports(site.id, site.language)
+    reports = _of_asked_type(cache.get_all_reports(site.id, site.language))
+    report_type = g.report_type
+    of_type = {"type": report_type["id"]} if report_type else {}
     size = site.feed_page_size
     pages = max(1, math.ceil(len(reports) / size))
     page = _feed_page()
@@ -139,10 +177,11 @@ def _feed_response(kind: str) -> Response:
     shown = reports[(page - 1) * size : page * size]
 
     def page_url(number: int) -> str:
-        return site.hostname + (url_for(request.endpoint, page=number) if number > 1 else url_for(request.endpoint))
+        # ``type`` first, then the ``lang`` the URL defaults add: the address WebSub topics name.
+        return site.hostname + (url_for(request.endpoint, **of_type, page=number) if number > 1 else url_for(request.endpoint, **of_type))
 
     # Everything the feed shows; the copyright line names the year.
-    asked = [kind, request.endpoint, site.id, site.language, site.chosen, page, pages, feeds.this_year(), site.web, shown]
+    asked = [kind, request.endpoint, site.id, site.language, site.chosen, report_type, page, pages, feeds.this_year(), site.web, shown]
     key = hashlib.sha256(json.dumps(asked, sort_keys=True, default=str).encode()).hexdigest()
     made = cache.get_feed(key)
     if made is None:
@@ -151,6 +190,7 @@ def _feed_response(kind: str) -> Response:
         fg, changed = feeds.build(
             site,
             shown,
+            title=feeds.type_title(site, report_type["title"]) if report_type else None,
             page_url=page_url,
             page=page,
             pages=pages,

@@ -70,23 +70,29 @@ describe('NewAttribute type list', () => {
         // Mirrors shared/schema/attribute.py AttributeType; sorting must not drop a type.
         expect(values).toEqual(
             [
+                'AFFECTED',
                 'ATTACHMENT',
                 'BOOLEAN',
                 'CPE',
+                'CREDIT',
                 'CVE',
                 'CVSS',
                 'CWE',
                 'DATE',
                 'DATE_TIME',
                 'ENUM',
+                'JSON',
                 'LINK',
                 'MULTI_CHOICE',
                 'NUMBER',
                 'RADIO',
+                'REFERENCE',
+                'RELATIONSHIP',
                 'RICH_TEXT',
                 'STRING',
                 'TEXT',
                 'TIME',
+                'TIMELINE',
                 'TLP'
             ].sort()
         )

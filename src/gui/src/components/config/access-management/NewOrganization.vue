@@ -1,7 +1,7 @@
 <template>
     <v-dialog
         v-model="dialog"
-        max-width="600"
+        :max-width="activeTab === 'gcve' ? 960 : 600"
         persistent
         scrollable
         @keydown.esc.stop="requestClose"
@@ -23,99 +23,129 @@
             />
 
             <v-card-text>
-                <p
-                    id="organization-required-fields-hint"
-                    class="text-caption text-medium-emphasis mb-3"
+                <!-- An existing organization also has its GCVE and CVE publishing (its GNA, its CNA account). -->
+                <v-tabs
+                    v-if="isEdit"
+                    v-model="activeTab"
+                    color="primary"
+                    density="comfortable"
+                    class="mb-3"
+                    data-test="organization-tabs"
                 >
-                    {{ t('access_management.organizations.required_fields_hint') }}
-                </p>
-                <v-form
-                    ref="formRef"
-                    :disabled="!canSave"
-                    aria-describedby="organization-required-fields-hint"
-                    @submit.prevent="saveAndClose"
-                >
-                    <v-text-field
-                        v-model="localItem.name"
-                        :spellcheck="spellcheck"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        required
-                        aria-required="true"
-                        data-test="organization-name"
-                        :rules="[(v) => !!v || t('error.required')]"
-                        :disabled="saving"
+                    <v-tab value="details">{{ t('gna.organization.tab_details') }}</v-tab>
+                    <v-tab
+                        value="gcve"
+                        data-test="organization-tab-gcve"
+                        >{{ t('gna.organization.tab') }}</v-tab
                     >
-                        <template #label>
-                            <span>{{ t('access_management.organizations.name') }}</span>
-                            <span
-                                class="text-error ms-1"
-                                aria-hidden="true"
-                                >*</span
+                </v-tabs>
+                <v-window v-model="activeTab">
+                    <v-window-item value="details">
+                        <p
+                            id="organization-required-fields-hint"
+                            class="text-caption text-medium-emphasis mb-3"
+                        >
+                            {{ t('access_management.organizations.required_fields_hint') }}
+                        </p>
+                        <v-form
+                            ref="formRef"
+                            :disabled="!canSave"
+                            aria-describedby="organization-required-fields-hint"
+                            @submit.prevent="saveAndClose"
+                        >
+                            <v-text-field
+                                v-model="localItem.name"
+                                :spellcheck="spellcheck"
+                                variant="outlined"
+                                density="comfortable"
+                                class="mb-3"
+                                required
+                                aria-required="true"
+                                data-test="organization-name"
+                                :rules="[(v) => !!v || t('error.required')]"
+                                :disabled="saving"
                             >
-                        </template>
-                    </v-text-field>
+                                <template #label>
+                                    <span>{{ t('access_management.organizations.name') }}</span>
+                                    <span
+                                        class="text-error ms-1"
+                                        aria-hidden="true"
+                                        >*</span
+                                    >
+                                </template>
+                            </v-text-field>
 
-                    <v-textarea
-                        v-model="localItem.description"
-                        :spellcheck="spellcheck"
-                        :label="t('access_management.organizations.description')"
-                        variant="outlined"
-                        density="comfortable"
-                        rows="3"
-                        :disabled="saving"
-                    />
+                            <v-textarea
+                                v-model="localItem.description"
+                                :spellcheck="spellcheck"
+                                :label="t('access_management.organizations.description')"
+                                variant="outlined"
+                                density="comfortable"
+                                rows="3"
+                                :disabled="saving"
+                            />
 
-                    <v-text-field
-                        v-model="localItem.street"
-                        :spellcheck="spellcheck"
-                        :label="t('access_management.organizations.street')"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        :disabled="saving"
-                    />
+                            <v-text-field
+                                v-model="localItem.street"
+                                :spellcheck="spellcheck"
+                                :label="t('access_management.organizations.street')"
+                                variant="outlined"
+                                density="comfortable"
+                                class="mb-3"
+                                :disabled="saving"
+                            />
 
-                    <v-text-field
-                        v-model="localItem.city"
-                        :spellcheck="spellcheck"
-                        :label="t('access_management.organizations.city')"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        :disabled="saving"
-                    />
+                            <v-text-field
+                                v-model="localItem.city"
+                                :spellcheck="spellcheck"
+                                :label="t('access_management.organizations.city')"
+                                variant="outlined"
+                                density="comfortable"
+                                class="mb-3"
+                                :disabled="saving"
+                            />
 
-                    <v-text-field
-                        v-model="localItem.zip"
-                        :spellcheck="false"
-                        :label="t('access_management.organizations.zip')"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        :disabled="saving"
-                    />
+                            <v-text-field
+                                v-model="localItem.zip"
+                                :spellcheck="false"
+                                :label="t('access_management.organizations.zip')"
+                                variant="outlined"
+                                density="comfortable"
+                                class="mb-3"
+                                :disabled="saving"
+                            />
 
-                    <v-text-field
-                        v-model="localItem.country"
-                        :spellcheck="spellcheck"
-                        :label="t('access_management.organizations.country')"
-                        variant="outlined"
-                        density="comfortable"
-                        :disabled="saving"
-                    />
+                            <v-text-field
+                                v-model="localItem.country"
+                                :spellcheck="spellcheck"
+                                :label="t('access_management.organizations.country')"
+                                variant="outlined"
+                                density="comfortable"
+                                :disabled="saving"
+                            />
 
-                    <v-switch
-                        v-model="localItem.require_mfa"
-                        :label="t('access_management.organizations.require_mfa')"
-                        :hint="t('access_management.organizations.require_mfa_hint')"
-                        persistent-hint
-                        color="primary"
-                        :disabled="saving"
-                        data-test="organization-require-mfa"
-                    />
-                </v-form>
+                            <v-switch
+                                v-model="localItem.require_mfa"
+                                :label="t('access_management.organizations.require_mfa')"
+                                :hint="t('access_management.organizations.require_mfa_hint')"
+                                persistent-hint
+                                color="primary"
+                                :disabled="saving"
+                                data-test="organization-require-mfa"
+                            />
+                        </v-form>
+                    </v-window-item>
+                    <v-window-item
+                        v-if="isEdit"
+                        value="gcve"
+                    >
+                        <OrganizationGcve
+                            ref="gcveRef"
+                            :organization-id="Number(localItem.id)"
+                            :can-update="canSave"
+                        />
+                    </v-window-item>
+                </v-window>
 
                 <v-alert
                     v-if="showValidationError"
@@ -160,6 +190,7 @@
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { createNewOrganization, updateOrganization } from '@/api/config'
+    import OrganizationGcve from '@/components/config/access-management/OrganizationGcve.vue'
 
     type OrganizationItem = {
         id: string | number | null
@@ -195,6 +226,9 @@
     const { checkPermission } = useAuth()
 
     const formRef = ref<any>(null)
+    // Its GCVE and CVE publishing, saved with it (see OrganizationGcve); loaded when its tab is opened.
+    const gcveRef = ref<{ dirty: boolean; save: () => Promise<boolean> } | null>(null)
+    const activeTab = ref<'details' | 'gcve'>('details')
     const showValidationError = ref(false)
     const showError = ref(false)
     const saving = ref(false)
@@ -223,8 +257,9 @@
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = (await formRef.value.validate()) as FormValidationResult
+        const { valid } = formRef.value ? ((await formRef.value.validate()) as FormValidationResult) : { valid: true }
         if (!valid) {
+            activeTab.value = 'details'
             showValidationError.value = true
             return false
         }
@@ -248,6 +283,12 @@
 
             if (isEdit.value) {
                 await updateOrganization(payload)
+                // Then its GCVE and CVE publishing, which says itself why it was refused.
+                if (gcveRef.value?.dirty && !(await gcveRef.value.save())) {
+                    activeTab.value = 'gcve'
+                    emit('saved')
+                    return false
+                }
             } else {
                 await createNewOrganization(payload)
             }
@@ -271,11 +312,12 @@
         showError.value = false
         formRef.value?.reset()
         localItem.value = { ...defaultItem }
+        activeTab.value = 'details'
         dialog.value = false
     }
 
     const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
-        getState: () => localItem.value,
+        getState: () => ({ ...localItem.value, gcveDirty: gcveRef.value?.dirty ?? false }),
         save: persist,
         close: closeDialog
     })
@@ -312,6 +354,7 @@
                 saving.value = false
                 formRef.value?.reset()
                 localItem.value = { ...defaultItem }
+                activeTab.value = 'details'
             } else {
                 // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
                 capture()

@@ -28,7 +28,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from feedgen.ext.base import BaseExtension
 from feedgen.feed import FeedGenerator
-from lxml import etree
+from lxml.etree import SubElement
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -103,7 +103,7 @@ class AtomLinks(BaseExtension):
         """Add the links to the channel."""
         channel = feed[0]
         for rel, href in self.links:
-            etree.SubElement(channel, f"{{{ATOM_NS}}}link", href=href, rel=rel)
+            SubElement(channel, f"{{{ATOM_NS}}}link", href=href, rel=rel)
         return feed
 
     def extend_atom(self, feed):  # noqa: ANN001, ANN201 - unused: Atom has its own links
@@ -111,10 +111,17 @@ class AtomLinks(BaseExtension):
         return feed
 
 
+def type_title(site: SiteContext, name: str) -> str:
+    """The title of the feed of one type of reports: the web's RSS title and the type's name (its product's)."""
+    web_title = site.metadata.get("rss_title", "")
+    return f"{web_title} \N{EN DASH} {name}" if web_title else name
+
+
 def build(
     site: SiteContext,
     reports: list[dict],
     *,
+    title: str | None = None,
     page_url: Callable[[int], str],
     page: int,
     pages: int,
@@ -127,6 +134,7 @@ def build(
     Args:
         site: The web and language the feed is for.
         reports: The reports on this page, newest first.
+        title: The feed's title; the web's RSS title when left out (see :func:`type_title`).
         page_url: The absolute address of a page of this feed (1 is the feed itself).
         page: This page.
         pages: How many pages there are.
@@ -138,7 +146,7 @@ def build(
     fg.load_extension("dc", atom=False, rss=True)
     fg.register_extension("atomlinks", AtomLinks, None, atom=False, rss=True)
     fg.generator(GENERATOR, uri=GENERATOR_URI)
-    title = site.metadata.get("rss_title", "")
+    title = site.metadata.get("rss_title", "") if title is None else title
     fg.id(page_url(1))
     fg.title(title)
     fg.description(site.metadata.get("rss_description", ""))

@@ -13,7 +13,7 @@ import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from model.report_item import ReportItem
+    from managers.cve_import import CvdImport
     from model.user import User
 
 import uuid as uuid_generator
@@ -21,19 +21,23 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 
 import sqlalchemy
-from managers import content_language, translation_status
+from managers import content_language, cve_publication, gcve_publication, translation_status
 from managers.db_manager import db
-from managers.link_references import generate_link_key
+from managers.link_references import LINK_TYPES, generate_link_key, link_url
 from marshmallow import ValidationError, fields, post_load, pre_load
 from model.acl_entry import ACLEntry
 from model.attribute import Attribute
+from model.cve_assignment import CveAssignment
+from model.gcve_assignment import GcveAssignment
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
-from model.report_item_type import DEFAULT_ICON, AttributeGroupItem, ReportItemType
+from model.organization_gna import OrganizationGna, cvd_organization_for, cvd_organizations, cvd_targets
+from model.report_item_type import DEFAULT_ICON, AttributeGroupItem, ReportItemType, ReportTypeDisabledError
 from model.setting import Setting
 from model.state import StateDefinition, StateEntityTypeEnum, StateEnum, StateManager
 from model.tag import Tag, report_item_tag, set_item_tags
 from model.translation import ORIGIN_AI, ORIGIN_MANUAL, TITLE_FIELDS, ReportItemAttributeTranslation, ReportItemTranslation, sql_source_hash
 from shared.common import TZ
+from shared.gcve import CVD_LANGUAGE, CVD_TYPE_KEY, cvd_fields
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
 from shared.schema.attribute import AttributeType
@@ -332,6 +336,10 @@ class ReportItem(db.Model):
     remote_user = db.Column(db.String())
     updated_by = db.Column(db.String, nullable=True)
 
+    # A CVD Report's organization (its author's): its GNA number and CVE Services account publish it.
+    organization_id = db.Column(db.Integer, db.ForeignKey("organization.id", ondelete="SET NULL"), nullable=True, index=True)
+    organization = db.relationship("Organization", viewonly=True)
+
     report_item_type_id = db.Column(db.Integer, db.ForeignKey("report_item_type.id"), nullable=True)
     report_item_type = db.relationship("ReportItemType", viewonly=True)
 
@@ -368,6 +376,19 @@ class ReportItem(db.Model):
 
     # The admin tags people put on it; the built-in ones are worked out (see translation_status).
     tags = db.relationship(Tag, secondary=report_item_tag, viewonly=True, lazy="selectin")
+
+    # The GCVE identifier of a CVD Report (see model.gcve_assignment). It outlives the report:
+    # the database unlinks it when the report is deleted.
+    gcve_assignment = db.relationship(GcveAssignment, uselist=False, back_populates="report_item", lazy="selectin", passive_deletes=True)
+    # The CVE IDs reserved for a CVD Report through CVE Services (see model.cve_assignment), oldest
+    # first: rejected ones stay, at most one is live.
+    cve_assignments = db.relationship(
+        CveAssignment,
+        back_populates="report_item",
+        lazy="selectin",
+        passive_deletes=True,
+        order_by=CveAssignment.id,
+    )
 
     def __init__(
         self,
@@ -469,11 +490,58 @@ class ReportItem(db.Model):
             return []
         return [language for language in self.report_item_type.languages or [] if language != self.language]
 
+    @property
+    def gcve_id(self) -> str | None:
+        """The GCVE identifier of a CVD Report; None for any other report."""
+        return self.gcve_assignment.gcve_id if self.gcve_assignment is not None else None
+
+    @property
+    def cve_assignment(self) -> CveAssignment | None:
+        """The live CVE ID reserved for it through CVE Services; None when it has none."""
+        return next((assignment for assignment in getattr(self, "cve_assignments", None) or [] if assignment.live), None)
+
+    @property
+    def cve_status(self) -> dict | None:
+        """Where its CVE record stands, as the GUI shows it: the live ID, else the last rejected one."""
+        assignments = getattr(self, "cve_assignments", None) or []
+        shown = self.cve_assignment or (assignments[-1] if assignments else None)
+        return shown.to_json() if shown is not None else None
+
+    @property
+    def is_cvd(self) -> bool:
+        """Whether it is a CVD Report (the shipped type that publishes GCVE records)."""
+        return self.report_item_type is not None and self.report_item_type.system_key == CVD_TYPE_KEY
+
+    @property
+    def cvd_organization(self) -> dict | None:
+        """What a CVD Report's organization publishes it as (see model.organization_gna.cvd_targets); None for others."""
+        organization = getattr(self, "organization", None)
+        return cvd_targets(organization) if organization is not None else None
+
+    @property
+    def gna_short_name(self) -> str | None:
+        """The short name of the GNA its GCVE identifier is from (else of its organization's); None while unknown."""
+        assignment = getattr(self, "gcve_assignment", None)
+        gna = OrganizationGna.find_by_gna(assignment.gna_id) if assignment is not None else None
+        gna = gna or OrganizationGna.for_organization(getattr(self, "organization_id", None))
+        return gna.short_name if gna is not None else None
+
+    @property
+    def has_publication_ids(self) -> bool:
+        """Whether it holds a GCVE identifier or a live CVE ID (its organization is fixed from then on)."""
+        return getattr(self, "gcve_assignment", None) is not None or self.cve_assignment is not None
+
     @staticmethod
-    def _is_link_attribute(attribute_group_item_id: int | None) -> bool:
-        """Tell whether values of the attribute group item are citable links (type LINK)."""
+    def _link_type(attribute_group_item_id: int | None) -> str | None:
+        """The type of a citable link attribute group item (LINK, or a CVD Report's REFERENCE); None otherwise."""
         group_item = AttributeGroupItem.find(attribute_group_item_id) if attribute_group_item_id is not None else None
-        return bool(group_item and group_item.attribute and group_item.attribute.type == AttributeType.LINK)
+        type_name = group_item.attribute.type.name if group_item and group_item.attribute and group_item.attribute.type else None
+        return type_name if type_name in LINK_TYPES else None
+
+    @classmethod
+    def _is_link_attribute(cls, attribute_group_item_id: int | None) -> bool:
+        """Tell whether values of the attribute group item are citable links (type LINK or REFERENCE)."""
+        return cls._link_type(attribute_group_item_id) is not None
 
     def _link_attributes(self) -> list[ReportItemAttribute]:
         """Return the LINK values of this report item in display order: by group, group item and id."""
@@ -496,11 +564,12 @@ class ReportItem(db.Model):
     @property
     def links(self) -> list[dict]:
         """The citable links of this report item ({key, url}), in display order."""
-        return [
-            {"key": attribute.value_description, "url": attribute.value}
-            for attribute in self._link_attributes()
-            if attribute.value and attribute.value.strip()
-        ]
+        links = []
+        for attribute in self._link_attributes():
+            url = link_url(self._link_type(attribute.attribute_group_item_id), attribute.value)
+            if url:
+                links.append({"key": attribute.value_description, "url": url})
+        return links
 
     def ensure_link_keys(self) -> None:
         """Give every LINK value a stable key (kept in value_description) that text can cite.
@@ -665,6 +734,11 @@ class ReportItem(db.Model):
                         ),
                     ),
                 ),
+            )
+
+        if filter.get("type"):
+            query = query.filter(
+                ReportItem.report_item_type_id.in_(db.session.query(ReportItemType.id).filter(ReportItemType.system_key == filter["type"])),
             )
 
         if "completed" in filter:
@@ -1021,6 +1095,19 @@ class ReportItem(db.Model):
 
         if not ReportItemType.allowed_with_acl(report_item.report_item_type_id, user, see=False, access=False, modify=True):
             return "Unauthorized access to report item type", HTTPStatus.UNAUTHORIZED
+        report_type = ReportItemType.find(report_item.report_item_type_id) if report_item.report_item_type_id is not None else None
+        if report_type is not None and not report_type.enabled:
+            raise ReportTypeDisabledError(report_type.title)
+        # A CVD Report is published as a GCVE record, a CVE record or both, by its author's
+        # organization: it needs the GNA number or the CVE Services account. With the GNA number it
+        # gets its GCVE identifier now.
+        gna_id = None
+        organization_id = None
+        is_cvd = report_type is not None and report_type.system_key == CVD_TYPE_KEY
+        if is_cvd:
+            organization_id = cvd_organization_for(user, report_item_data.get("organization_id"))
+            gna = OrganizationGna.for_organization(organization_id)
+            gna_id = gna.gna_id if gna is not None else None
         # As when adding them later: only news items and reports the user may read.
         report_item.news_item_aggregates = [
             aggregate for aggregate in report_item.news_item_aggregates if NewsItemAggregate.allowed_for(aggregate, user)
@@ -1032,8 +1119,12 @@ class ReportItem(db.Model):
         ]
 
         report_item.user_id = user.id
+        report_item.organization_id = organization_id
         report_item.updated_by = user.name
         report_item.language = language or cls._author_language(user)
+        if is_cvd:
+            # Written in English: the CVE Record Format requires an English description.
+            report_item.language = CVD_LANGUAGE
         for attribute in report_item.attributes:
             attribute.user_id = user.id
         report_item.ensure_link_keys()
@@ -1047,6 +1138,9 @@ class ReportItem(db.Model):
         report_item.update_cpes()
 
         db.session.add(report_item)
+        if gna_id is not None:
+            # In this transaction: a report that fails to be stored gives its number back.
+            GcveAssignment.allocate(report_item, gna_id)
         if tag_ids:
             db.session.flush()
             set_item_tags(StateEntityTypeEnum.REPORT_ITEM.value, report_item.id, tag_ids, user.id)
@@ -1116,6 +1210,12 @@ class ReportItem(db.Model):
                 if not new_report_item.state_id and initial_state:
                     new_report_item.state_id = initial_state.id
                 db.session.add(new_report_item)
+            elif existing_report_item.remote_user is None:
+                # A report of this Taranis with the same UUID: a remote copy must not overwrite it
+                # (it would lose its type, and a CVD Report its GCVE identifier).
+                logger.warning(f"Ignoring a remote report from {remote_node_name} with the UUID of a local one ({new_report_item.uuid})")
+                if new_report_item in db.session:
+                    db.session.expunge(new_report_item)
             else:
                 # print("Updating existing report item:", vars(existing_report_item), flush=True)
                 # Beware! input data doesnt't contain ID (it's from remote system) so schema.load() ALWAYS create new record!
@@ -1325,6 +1425,192 @@ class ReportItem(db.Model):
         db.session.commit()
         return modified, data
 
+    @classmethod
+    def _update_attribute(cls, report_item: ReportItem, data: dict, user: User) -> tuple[bool, str | None]:
+        """Write a value of the report (``attribute_id``) as ``data`` gives it.
+
+        Returns:
+            tuple[bool, str | None]: Whether it changed, and why it was refused (nothing written).
+        """
+        attribute = cls._find_attribute(report_item, data["attribute_id"])
+        if attribute is None:
+            return False, None
+        reason = cls._structured_value_problem(attribute, data.get("attribute_value"))
+        if reason is None and "attribute_value" in data:
+            reason = cve_publication.cve_field_locked(report_item, attribute, data["attribute_value"])
+        if reason is not None:
+            return False, reason
+        attribute_modified = False
+        if "attribute_value" in data and attribute.value != data["attribute_value"]:
+            attribute_modified = True
+            attribute.value = data["attribute_value"]
+        # A description cleared to "" is stored too (it used to be ignored); "" and
+        # None are the same, so sending one for the other changes nothing.
+        if "value_description" in data and (attribute.value_description or "") != (data["value_description"] or ""):
+            attribute_modified = True
+            attribute.value_description = data["value_description"]
+
+        if attribute_modified:
+            attribute.user = user
+            attribute.last_updated = datetime.now(TZ)
+            # Bump the version so a client editing the previous one is told about
+            # this change instead of overwriting it (see _detect_update_conflict).
+            attribute.version = (attribute.version or 1) + 1
+            data["attribute_version"] = attribute.version
+        return attribute_modified, None
+
+    @staticmethod
+    def _organization_change_refused(report_item: ReportItem, organization_id: object, user: User) -> str | None:
+        """Why a CVD Report cannot move to another organization; None when it can.
+
+        Its identifiers are its organization's: once it holds one, it stays where it is.
+        """
+        if report_item.has_publication_ids:
+            return "The CVD Report holds a GCVE identifier or a CVE ID of its organization: its organization cannot change"
+        try:
+            wanted = int(organization_id)
+        except (TypeError, ValueError):
+            wanted = None
+        if wanted not in {target["id"] for target in cvd_organizations(user)}:
+            return "A CVD Report belongs to one of your organizations that has a GNA number or a CVE Services account"
+        return None
+
+    @staticmethod
+    def _update_published_record(report_item: ReportItem, data: dict) -> bool:
+        """Carry an edit into the report's published records: its GCVE record, and its CVE record.
+
+        The GCVE record changes with the report, so it must stay a valid record: an edit that would
+        make it invalid is rolled back, and ``data`` says why. A published CVE record is only noted
+        out of date: the next publication of a CVE Record product sends it again.
+
+        Returns:
+            bool: False when the edit was rolled back.
+        """
+        cve_assignment = getattr(report_item, "cve_assignment", None)
+        if cve_assignment is not None and cve_assignment.published:
+            cve_assignment.changed()
+            data["cve_record_out_of_date"] = True
+        assignment = getattr(report_item, "gcve_assignment", None)
+        if assignment is None or not assignment.published:
+            return True
+        found = gcve_publication.problems(report_item, report_item.gna_short_name)
+        if found:
+            db.session.rollback()
+            data["error"] = f"{assignment.gcve_id} is published, and this change would make its record invalid: " + "; ".join(found)
+            return False
+        assignment.touch()
+        data["gcve_record_updated"] = True
+        return True
+
+    @staticmethod
+    def _holds_content(attribute: ReportItemAttribute) -> bool:
+        """Whether a value says something: rich text with text in it, a structured value with a part."""
+        value = attribute.value or ""
+        group_item = getattr(attribute, "attribute_group_item", None)
+        kind = getattr(getattr(group_item, "attribute", None), "type", None)
+        attribute_type = getattr(kind, "name", None)
+        if attribute_type == "RICH_TEXT":
+            return bool(gcve_publication.html_to_text(value))
+        if attribute_type in gcve_publication.STRUCTURED_TYPES:
+            return bool(gcve_publication.parse_value(value))
+        return bool(value.strip())
+
+    @classmethod
+    def fill_cvd_fields(cls, report_item: ReportItem, imported: CvdImport, user: User, locks: dict) -> dict:
+        """Fill the empty fields of a CVD Report from a CVE record (see managers.cve_import), at once.
+
+        A field that holds something stays as it is, and so does one another user is editing
+        (``locks``, as sse_manager keeps them). An empty field takes the record's values: in the
+        empty values it has (a required field starts with one), then in new ones. An empty title
+        takes the record's. The published records of the report follow, as for any edit: an
+        edit that would make a published GCVE record invalid is rolled back.
+
+        Returns:
+            dict: ``filled`` and ``kept`` (field titles), ``skipped`` (values the record had that
+                no field took), ``events`` (one per value written, for the SSE clients) and
+                ``gcve_record_updated``; or ``error`` when nothing was written.
+        """
+        group_items = {
+            item.title: item
+            for group in (report_item.report_item_type.attribute_groups if report_item.report_item_type else [])
+            for item in group.attribute_group_items
+        }
+        fields = cvd_fields()
+        edited = {str(field_id).split(":")[0] for field_id, lock in locks.items() if lock.get("user_id") != user.id}
+        now = datetime.now(TZ)
+        filled: list[str] = []
+        kept: list[str] = []
+        written: list[tuple[str, ReportItemAttribute]] = []
+        for key, values in imported.fields.items():
+            cvd_field = fields.get(key)
+            group_item = group_items.get(cvd_field.title) if cvd_field is not None else None
+            if group_item is None:
+                continue
+            own = [attribute for attribute in report_item.attributes if attribute.attribute_group_item_id == group_item.id]
+            if any(cls._holds_content(attribute) or str(attribute.id) in edited for attribute in own) or any(
+                cve_publication.cve_field_locked(report_item, attribute, values[0].value) for attribute in own
+            ):
+                kept.append(cvd_field.title)
+                continue
+            empty = list(own)
+            for imported_value in values:
+                if empty:
+                    attribute = empty.pop(0)
+                    attribute.value = imported_value.value
+                    attribute.value_description = imported_value.value_description or ""
+                    attribute.version = (attribute.version or 1) + 1
+                    written.append(("update", attribute))
+                else:
+                    attribute = ReportItemAttribute(
+                        None,
+                        imported_value.value,
+                        imported_value.value_description or "",
+                        None,
+                        0,
+                        None,
+                        group_item.id,
+                        None,
+                    )
+                    report_item.attributes.append(attribute)
+                    written.append(("add", attribute))
+                attribute.user = user
+                attribute.last_updated = now
+            filled.append(cvd_field.title)
+        title_set = bool(imported.title) and not (report_item.title or "").strip()
+        if title_set:
+            report_item.title = imported.title
+        result: dict = {"filled": filled, "kept": kept, "skipped": list(imported.skipped), "events": [], "gcve_record_updated": False}
+        if not written and not title_set:
+            return result
+
+        report_item.ensure_link_keys()
+        report_item.last_updated = now
+        report_item.updated_by = user.name
+        report_item.update_cpes()
+        data: dict = {}
+        if not cls._update_published_record(report_item, data):
+            return {"error": data["error"]}
+        db.session.commit()
+
+        base = {"report_item_id": report_item.id, "user_id": user.id}
+        result["events"] = [
+            {action: True, "attribute_id": attribute.id, "attribute_group_item_id": attribute.attribute_group_item_id, **base}
+            for action, attribute in written
+        ]
+        if title_set:
+            result["events"].append({"update": True, "title": "", **base})
+        result["gcve_record_updated"] = bool(data.get("gcve_record_updated"))
+        return result
+
+    @staticmethod
+    def _structured_value_problem(attribute: ReportItemAttribute, value: object) -> str | None:
+        """Why a value cannot be stored in a structured attribute (CVD Report fields); None if it can."""
+        group_item = getattr(attribute, "attribute_group_item", None)
+        if not isinstance(value, str) or group_item is None or group_item.attribute is None or group_item.attribute.type is None:
+            return None
+        reason = gcve_publication.validate_value(group_item.attribute.type.name, value, group_item.attribute.validator_parameter)
+        return f"{group_item.title}: {reason}" if reason is not None else None
+
     @staticmethod
     def _find_attribute(report_item: ReportItem, attribute_id: int | str) -> ReportItemAttribute | None:
         """Find an attribute of a report item by its ID.
@@ -1411,12 +1697,18 @@ class ReportItem(db.Model):
                 and nothing was written.
         """
         modified = False
+        # What the report says changed (not only its state or the news items it holds): a
+        # published GCVE record of a CVD Report is then updated too.
+        content_modified = False
         new_attribute = None
         state_id_changed = False
         new_state_id = None
         report_item = db.session.get(cls, id)
         if report_item is not None:
             if "update" in data and ("source_language" in data or (data.get("language") or report_item.language) != report_item.language):
+                if getattr(report_item, "is_cvd", False):
+                    data["error"] = "A CVD Report is written in English"
+                    return False, data
                 return cls._update_language_fields(report_item, data, user)
 
             if "update" in data:
@@ -1434,13 +1726,25 @@ class ReportItem(db.Model):
                         return False, data
 
                 if "title" in data and report_item.title != data["title"]:
-                    modified = True
+                    modified = content_modified = True
                     report_item.title = data["title"]
                     data["title"] = ""
                 if "title_prefix" in data and report_item.title_prefix != data["title_prefix"]:
-                    modified = True
+                    modified = content_modified = True
                     report_item.title_prefix = data["title_prefix"]
                     data["title_prefix"] = ""
+                if (
+                    "organization_id" in data
+                    and getattr(report_item, "is_cvd", False)
+                    and report_item.organization_id != data["organization_id"]
+                ):
+                    reason = cls._organization_change_refused(report_item, data["organization_id"], user)
+                    if reason is not None:
+                        data["error"] = reason
+                        return False, data
+                    modified = True
+                    report_item.organization_id = int(data["organization_id"])
+                    data["cvd_organization"] = report_item.cvd_organization
                 if "state_id" in data and report_item.state_id != data["state_id"]:
                     modified = True
                     state_id_changed = True
@@ -1448,30 +1752,16 @@ class ReportItem(db.Model):
                     report_item.state_id = data["state_id"]
                     data["state_id"] = ""
                 if "attribute_id" in data:
-                    attribute = cls._find_attribute(report_item, data["attribute_id"])
-                    if attribute is not None:
-                        attribute_modified = False
-                        if "attribute_value" in data and attribute.value != data["attribute_value"]:
-                            attribute_modified = True
-                            attribute.value = data["attribute_value"]
-                        # A description cleared to "" is stored too (it used to be ignored); "" and
-                        # None are the same, so sending one for the other changes nothing.
-                        if "value_description" in data and (attribute.value_description or "") != (data["value_description"] or ""):
-                            attribute_modified = True
-                            attribute.value_description = data["value_description"]
-
-                        if attribute_modified:
-                            modified = True
-                            attribute.user = user
-                            attribute.last_updated = datetime.now(TZ)
-                            # Bump the version so a client editing the previous one is told about
-                            # this change instead of overwriting it (see _detect_update_conflict).
-                            attribute.version = (attribute.version or 1) + 1
-                            data["attribute_version"] = attribute.version
+                    attribute_modified, reason = cls._update_attribute(report_item, data, user)
+                    if reason is not None:
+                        data["error"] = reason
+                        return False, data
+                    if attribute_modified:
+                        modified = content_modified = True
 
             if "add" in data:
                 if "attribute_id" in data:
-                    modified = True
+                    modified = content_modified = True
                     # Start the new value at the attribute's configured default instead of blank,
                     # so "Default Value" in the attribute configuration actually reaches the form.
                     group_item = AttributeGroupItem.find(data["attribute_group_item_id"])
@@ -1496,30 +1786,15 @@ class ReportItem(db.Model):
                             break
 
                     if attribute_to_delete is not None:
-                        modified = True
+                        reason = cve_publication.cve_field_locked(report_item, attribute_to_delete)
+                        if reason is not None:
+                            data["error"] = reason
+                            return False, data
+                        modified = content_modified = True
                         report_item.attributes.remove(attribute_to_delete)
 
-                if "aggregate_id" in data:
-                    aggregate_to_delete = None
-                    for aggregate in report_item.news_item_aggregates:
-                        if aggregate.id == data["aggregate_id"]:
-                            aggregate_to_delete = aggregate
-                            break
-
-                    if aggregate_to_delete is not None:
-                        modified = True
-                        report_item.news_item_aggregates.remove(aggregate_to_delete)
-
-                if "remote_report_item_id" in data:
-                    remote_report_item_to_delete = None
-                    for remote_report_item in report_item.remote_report_items:
-                        if remote_report_item.id == data["remote_report_item_id"]:
-                            remote_report_item_to_delete = remote_report_item
-                            break
-
-                    if remote_report_item_to_delete is not None:
-                        modified = True
-                        report_item.remote_report_items.remove(remote_report_item_to_delete)
+                if cls._unlink(report_item, data):
+                    modified = True
 
             if modified:
                 report_item.last_updated = datetime.now(TZ)
@@ -1527,6 +1802,9 @@ class ReportItem(db.Model):
                 data["user_id"] = user.id
                 data["report_item_id"] = int(id)
                 report_item.update_cpes()
+
+            if content_modified and not cls._update_published_record(report_item, data):
+                return False, data
 
             db.session.commit()
 
@@ -1538,6 +1816,26 @@ class ReportItem(db.Model):
                 data["attribute_id"] = new_attribute.id
 
         return modified, data
+
+    @staticmethod
+    def _unlink(report_item: ReportItem, data: dict) -> bool:
+        """Remove the news item (``aggregate_id``) and the report (``remote_report_item_id``) ``data`` names.
+
+        Returns:
+            bool: Whether the report held either.
+        """
+        unlinked = False
+        if "aggregate_id" in data:
+            aggregate = next((held for held in report_item.news_item_aggregates if held.id == data["aggregate_id"]), None)
+            if aggregate is not None:
+                report_item.news_item_aggregates.remove(aggregate)
+                unlinked = True
+        if "remote_report_item_id" in data:
+            remote = next((held for held in report_item.remote_report_items if held.id == data["remote_report_item_id"]), None)
+            if remote is not None:
+                report_item.remote_report_items.remove(remote)
+                unlinked = True
+        return unlinked
 
     @staticmethod
     def _link_readable(report_item: ReportItem, data: dict, user: User) -> None:
@@ -1817,12 +2115,31 @@ class ReportItem(db.Model):
             tuple: A tuple containing the status message and the HTTP status code.
         """
         report_item = db.session.get(cls, id)
-        if report_item is not None:
-            # With direct state_id foreign key, no additional cleanup needed
-            db.session.delete(report_item)
-            db.session.commit()
-            return "success", HTTPStatus.OK
-        return None
+        if report_item is None:
+            return "Report item not found", HTTPStatus.NOT_FOUND
+        # A CVE ID reserved for it is the CNA's: it is rejected (with a reason) before the report goes.
+        cve_assignment = getattr(report_item, "cve_assignment", None)
+        if cve_assignment is not None:
+            if cve_assignment.published:
+                return (
+                    f"{cve_assignment.cve_id} is published at CVE Services and cannot be deleted; reject it to withdraw it",
+                    HTTPStatus.CONFLICT,
+                )
+            return f"{cve_assignment.cve_id} is reserved for this report; reject it before deleting the report", HTTPStatus.CONFLICT
+        assignment = report_item.gcve_assignment
+        if assignment is not None:
+            if assignment.published:
+                # A published GCVE record never disappears (GCVE-BCP-06); it is withdrawn instead.
+                return (
+                    f"{assignment.gcve_id} is published and cannot be deleted; set its Record type to 'deprecation' to withdraw it",
+                    HTTPStatus.CONFLICT,
+                )
+            # Never published: the identifier stays allocated, unused, and is never given again.
+            assignment.reject()
+        # With direct state_id foreign key, no additional cleanup needed
+        db.session.delete(report_item)
+        db.session.commit()
+        return "success", HTTPStatus.OK
 
     def update_cpes(self) -> None:
         """Update the list of CPES for the report item.

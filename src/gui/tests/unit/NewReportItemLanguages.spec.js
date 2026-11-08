@@ -70,7 +70,10 @@ vi.mock('@/api/analyze', () => ({
     aiGenerate: vi.fn(),
     translateReportItem: vi.fn(),
     setReportItemTags: vi.fn((_id, tagIds) => Promise.resolve({ data: { tags: tagIds } })),
-    uploadAttachment: vi.fn()
+    uploadAttachment: vi.fn(),
+    getCvdStatus: vi.fn(() => Promise.resolve({ data: { organizations: [], gna_configured: false, cna_configured: false } })),
+    reserveCveId: vi.fn(),
+    rejectCveId: vi.fn()
 }))
 
 vi.mock('@/api/tags', () => ({
@@ -289,5 +292,202 @@ describe('NewReportItem languages', () => {
         expect(wrapper.vm.report_tags).toEqual([1])
         expect(wrapper.vm.translations.en.title.value).toBe('Critical flaw')
         expect(wrapper.vm.attribute_groups[0].attribute_group_items[0].values[0].translations.en.value).toBe('An attacker can')
+    })
+
+    describe('a CVD Report', () => {
+        const cvdType = { id: 6, title: 'CVD Report', system_key: 'cvd', locked: true, enabled: true, languages: [], attribute_groups: [] }
+        // The author's organizations a CVD Report can belong to: CERT is a GNA and a CNA.
+        const CERT = { id: 3, name: 'CERT', gna_id: 65535, gna_configured: true, cna_configured: true }
+        const PARTNER = { id: 4, name: 'Partner CERT', gna_id: null, gna_configured: false, cna_configured: true }
+        const statusOf = (...organizations) => ({
+            organizations,
+            gna_configured: organizations.some((organization) => organization.gna_configured),
+            cna_configured: organizations.some((organization) => organization.cna_configured)
+        })
+        // The report's organization as core describes it.
+        const ofCert = (fields = {}) => ({ organization_id: 3, cvd_organization: { ...CERT, ...fields } })
+
+        async function startCvdReport(status = statusOf(CERT)) {
+            const analyzeApi = await import('@/api/analyze')
+            vi.mocked(analyzeApi.getCvdStatus).mockResolvedValue({ data: status })
+            mockAnalyzeStore.getReportItemTypes = { items: [reportType, cvdType] }
+            const wrapper = mountWithPlugins(NewReportItem, {
+                props: { showButton: false },
+                global: { stubs: { VDialog: VDialogStub, VOverlay: VOverlayStub } }
+            })
+            await flushPromises()
+            wrapper.vm.openDialog([])
+            await flushPromises()
+            const typeSelect = wrapper
+                .findAllComponents({ name: 'VCombobox' })
+                .find((select) => (select.props('items') ?? []).some((item) => item?.id === cvdType.id))
+            typeSelect.vm.$emit('update:modelValue', cvdType)
+            await flushPromises()
+            return wrapper
+        }
+
+        async function openCvdReport(detail = {}, status = statusOf(CERT)) {
+            const analyzeApi = await import('@/api/analyze')
+            vi.mocked(analyzeApi.getCvdStatus).mockResolvedValue({ data: status })
+            vi.mocked(analyzeApi.getReportItem).mockResolvedValue({
+                data: {
+                    ...reportDetail('en'),
+                    report_item_type_id: 6,
+                    gcve_id: 'GCVE-65535-2026-0001',
+                    attributes: [],
+                    ...ofCert(),
+                    ...detail
+                }
+            })
+            mockAnalyzeStore.getReportItemTypes = { items: [reportType, cvdType] }
+            const wrapper = mountWithPlugins(NewReportItem, {
+                props: { showButton: false },
+                global: { stubs: { VDialog: VDialogStub, VOverlay: VOverlayStub } }
+            })
+            await flushPromises()
+            await wrapper.vm.showDetail({ id: 7, modify: true })
+            await flushPromises()
+            return { wrapper, analyzeApi }
+        }
+
+        it('is written in English, which cannot be changed', async () => {
+            const wrapper = await startCvdReport()
+            const language = wrapper.findComponent('[data-test="report-source-language"]')
+
+            expect(language.props('modelValue')).toBe('en')
+            expect(language.props('disabled')).toBe(true)
+            expect(wrapper.find('[data-test="report-item-cvd-unset"]').exists()).toBe(false)
+        })
+
+        it("warns while none of the author's organizations can publish it: no GNA number and no CVE Services account", async () => {
+            const wrapper = await startCvdReport(statusOf())
+
+            expect(wrapper.find('[data-test="report-item-cvd-unset"]').exists()).toBe(true)
+        })
+
+        it('needs only one of them', async () => {
+            const wrapper = await startCvdReport(statusOf(PARTNER))
+
+            expect(wrapper.find('[data-test="report-item-cvd-unset"]').exists()).toBe(false)
+        })
+
+        it("belongs to the author's only organization that can publish it", async () => {
+            const wrapper = await startCvdReport()
+
+            expect(wrapper.find('[data-test="report-item-cvd-organization"]').exists()).toBe(false)
+            expect(wrapper.vm.cvd_organization_id).toBe(3)
+        })
+
+        it('is given one of them by a member of several', async () => {
+            const wrapper = await startCvdReport(statusOf(CERT, PARTNER))
+            const picker = wrapper.findComponent('[data-test="report-item-cvd-organization"]')
+
+            expect(picker.props('items').map((item) => [item.title, item.value])).toEqual([
+                ['CERT (GNA 65535)', 3],
+                ['Partner CERT', 4]
+            ])
+            expect(wrapper.vm.cvd_organization_id).toBeNull()
+        })
+
+        it('names its organization, fixed once it holds an identifier', async () => {
+            const { wrapper } = await openCvdReport({}, statusOf(CERT, PARTNER))
+
+            expect(wrapper.get('[data-test="report-item-cvd-organization-chip"]').text()).toBe('CERT')
+            expect(wrapper.find('[data-test="report-item-cvd-organization"]').exists()).toBe(false)
+        })
+
+        it("moves to another of the author's organizations while it holds no identifier", async () => {
+            const { wrapper, analyzeApi } = await openCvdReport({ gcve_id: null }, statusOf(CERT, PARTNER))
+            vi.mocked(analyzeApi.updateReportItem).mockResolvedValue({ data: { cvd_organization: PARTNER } })
+
+            wrapper.findComponent('[data-test="report-item-cvd-organization"]').vm.$emit('update:modelValue', 4)
+            await flushPromises()
+
+            expect(analyzeApi.updateReportItem).toHaveBeenCalledWith(7, { update: true, organization_id: 4 })
+        })
+
+        it('shows the GCVE identifier it was given', async () => {
+            const { wrapper } = await openCvdReport()
+
+            expect(wrapper.get('[data-test="report-item-gcve-id"]').text()).toBe('GCVE-65535-2026-0001')
+        })
+
+        it('reserves a CVE ID through CVE Services and shows it', async () => {
+            const { wrapper, analyzeApi } = await openCvdReport()
+            const reserved = { cve_id: 'CVE-2026-1234', state: 'RESERVED' }
+            vi.mocked(analyzeApi.reserveCveId).mockResolvedValue({ data: { cve_status: reserved } })
+            // The report as core holds it afterwards, read again to show the CVE field.
+            vi.mocked(analyzeApi.getReportItem).mockResolvedValue({
+                data: { ...reportDetail('en'), report_item_type_id: 6, attributes: [], cve_status: reserved, ...ofCert() }
+            })
+
+            await wrapper.get('[data-test="report-item-reserve-cve"]').trigger('click')
+            await flushPromises()
+
+            expect(analyzeApi.reserveCveId).toHaveBeenCalledWith(7)
+            expect(wrapper.get('[data-test="report-item-cve-id"]').text()).toContain('CVE-2026-1234')
+            expect(wrapper.get('[data-test="report-item-cve-id"]').text()).toContain('Reserved')
+            expect(wrapper.find('[data-test="report-item-reserve-cve"]').exists()).toBe(false)
+        })
+
+        it("offers no reservation without the CVE Services account of the report's organization", async () => {
+            const { wrapper } = await openCvdReport(ofCert({ cna_configured: false }))
+
+            expect(wrapper.find('[data-test="report-item-reserve-cve"]').exists()).toBe(false)
+        })
+
+        it('shows a published record that lags behind the report, and what CVE Services said', async () => {
+            const { wrapper } = await openCvdReport({
+                cve_status: {
+                    cve_id: 'CVE-2026-1234',
+                    state: 'PUBLISHED',
+                    out_of_date: true,
+                    last_error: 'CVE JSON schema validation FAILED.'
+                }
+            })
+            const chip = wrapper.get('[data-test="report-item-cve-id"]')
+
+            expect(chip.text()).toContain('Out of date')
+            expect(chip.attributes('title')).toBe('CVE JSON schema validation FAILED.')
+        })
+
+        it('rejects the CVE ID with the reason given', async () => {
+            const { wrapper, analyzeApi } = await openCvdReport({ cve_status: { cve_id: 'CVE-2026-1234', state: 'RESERVED' } })
+            const rejected = { cve_id: 'CVE-2026-1234', state: 'REJECTED', rejected_reason: 'Not a vulnerability' }
+            vi.mocked(analyzeApi.rejectCveId).mockResolvedValue({ data: { cve_status: rejected } })
+            vi.mocked(analyzeApi.getReportItem).mockResolvedValue({
+                data: { ...reportDetail('en'), report_item_type_id: 6, attributes: [], cve_status: rejected, ...ofCert() }
+            })
+
+            await wrapper.get('[data-test="report-item-reject-cve"]').trigger('click')
+            await flushPromises()
+            const confirm = wrapper.get('[data-test="report-item-reject-cve-confirm"]')
+            expect(confirm.attributes('disabled')).toBeDefined()
+            await wrapper.get('[data-test="report-item-reject-cve-reason"] textarea').setValue('Not a vulnerability')
+            await confirm.trigger('click')
+            await flushPromises()
+
+            expect(analyzeApi.rejectCveId).toHaveBeenCalledWith(7, 'Not a vulnerability')
+            expect(wrapper.get('[data-test="report-item-cve-id"]').text()).toContain('Rejected')
+            // A rejected ID frees the report for another one.
+            expect(wrapper.find('[data-test="report-item-reserve-cve"]').exists()).toBe(true)
+        })
+
+        it('says what CVE Services refused', async () => {
+            const { wrapper, analyzeApi } = await openCvdReport()
+            vi.mocked(analyzeApi.reserveCveId).mockRejectedValue({
+                response: { status: 502, data: { error: 'CVE Services refused the credentials' } }
+            })
+            const notifications = []
+            const listener = (event) => notifications.push(event.detail)
+            window.addEventListener('notification', listener)
+
+            await wrapper.get('[data-test="report-item-reserve-cve"]').trigger('click')
+            await flushPromises()
+            window.removeEventListener('notification', listener)
+
+            expect(notifications).toContainEqual({ type: 'error', message: 'CVE Services refused the credentials' })
+            expect(wrapper.find('[data-test="report-item-cve-id"]').exists()).toBe(false)
+        })
     })
 })

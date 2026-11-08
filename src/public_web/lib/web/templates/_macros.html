@@ -65,6 +65,12 @@ they are used (data-bs-auto-close), so that "copied" can be seen; the page scrip
             <span class="mdi mdi-rss-box fs-4" aria-hidden="true"></span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
+            {#- On a tab, the feeds of its type of reports: say which. -#}
+            {%- if feeds and feeds[0].type %}
+                <li>
+                    <h6 class="dropdown-header fw-semibold text-body-emphasis" data-test="feed-type"><bdi dir="auto">{{ feeds[0].type }}</bdi></h6>
+                </li>
+            {%- endif %}
             {%- for feed in feeds %}
                 {%- if several %}
                     <li>

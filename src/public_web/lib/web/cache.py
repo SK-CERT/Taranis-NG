@@ -10,13 +10,14 @@ import time
 from cachelib import FileSystemCache
 from lib import config
 from lib.logger import get_logger
-from lib.report.product import InvalidProductError, build_product, displayable
+from lib.report.product import InvalidProductError, build_product
 from lib.report.renderer import ReportRenderer, get_renderer
 from lib.web.taranis_client import TaranisClient, TaranisClientError
 
 logger = get_logger("web-cache", silent=True)
 
 CACHE_KEY_ALL_REPORTS = "ALL_REPORTS"
+CACHE_KEY_GCVE_RECORDS = "GCVE_RECORDS"
 CACHE_KEY_RESET_AT = "RESET_AT"
 CACHE_KEY_FEED = "FEED"
 CACHE_KEY_TEMPLATES = "REPORT_TEMPLATES"
@@ -129,19 +130,13 @@ class WebCache:
         except InvalidProductError as exc:
             logger.info("Skipping product %s: %s", data.get("id"), exc)
             return None
-        preset_id = product["product_preset"]["id"]
-        has_template = renderer.has_product_template(preset_id)
-        if not has_template and not renderer.has_builtin_product_template():
+        if not renderer.has_template_for(product):
             logger.info("Skipping product %s: its product preset has no report template, and the built-in one is off", product["id"])
             return None
         if product["items_left_out"] and not product["report_items"]:
             logger.info("Skipping product %s: none of its report items has a template, and the built-ins are off", product["id"])
             return None
-        shown, reason = displayable(
-            product,
-            vulnerability_only=not has_template,
-            require_tlp_clear=renderer.require_tlp_clear(preset_id),
-        )
+        shown, reason = renderer.displayable(product)
         if not shown:
             logger.info("Skipping product %s: %s", product["id"], reason)
             return None
@@ -247,6 +242,25 @@ class WebCache:
         if data is None:
             return None
         return self._accept(data, self.renderer(web_id))
+
+    def get_gcve_records(self, web_id: int) -> dict | None:
+        """Return the GCVE records a web publishes (see ``TaranisClient.list_gcve_records``), cached with a TTL.
+
+        None when the web does not publish GCVE records. On an API failure, logs and returns
+        None without caching, so the next request retries.
+        """
+        cache_key = f"{CACHE_KEY_GCVE_RECORDS}:{web_id}"
+        cached = self.cache.get(cache_key)
+        if isinstance(cached, dict):
+            return cached
+        try:
+            records = self.client.list_gcve_records(web_id)
+        except TaranisClientError as exc:
+            logger.exception("Could not fetch the GCVE records of web %s from Taranis: %s", web_id, exc)
+            return None
+        if records is not None:
+            self.cache.set(cache_key, records)
+        return records
 
     def get_feed(self, key: str) -> dict | None:
         """A feed page made before for exactly what ``key`` digests (see routes); None if not kept."""

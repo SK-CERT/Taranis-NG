@@ -17,6 +17,8 @@ from lib.logger import get_logger
 from lib.web import websub
 from lib.web.cache import WebCache
 from lib.web.preview import PreviewError, render_preview
+from lib.web.report_types import report_types
+from lib.web.site import SiteContext
 from shared.auth import make_api_key_required
 
 logger = get_logger("management", silent=True)
@@ -63,12 +65,19 @@ def preview() -> tuple:
 def reset_cache() -> tuple:
     """Clear the cache so a config change made in the GUI takes effect now.
 
-    Then the webs' WebSub hubs are told their feeds changed, in the background (see websub.py).
+    Then the webs' WebSub hubs are told their feeds changed, the feed of each type of reports too,
+    in the background (see websub.py).
     """
     cache.clear()
     logger.info("Cache reset requested by core.")
-    websub.notify_in_background(cache.get_webs)
+    websub.notify_in_background(cache.get_webs, _report_types_of)
     return jsonify({"reset": True}), HTTPStatus.OK
+
+
+def _report_types_of(web: dict) -> list[str]:
+    """The types of reports a web shows (its feeds per type, see ``report_types``), from its reports loaded again."""
+    reports = cache.get_all_reports(web.get("id"), SiteContext(web, "").default_language)
+    return [kind["id"] for kind in report_types(reports)]
 
 
 def _as_recipients(value: object) -> list[str]:

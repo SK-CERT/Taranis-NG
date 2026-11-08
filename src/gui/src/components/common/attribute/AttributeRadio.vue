@@ -32,6 +32,7 @@
                             v-model="value.value"
                             inline
                             density="compact"
+                            hide-details
                             class="radio-single-row"
                             :disabled="value.locked || !canModify"
                             @focus="onFocus(index)"
@@ -116,8 +117,9 @@
         margin-bottom: 2px;
     }
 
+    /* The options wrap when they do not fit on one line, rather than overflowing it. */
     .radio-single-row :deep(.v-selection-control-group) {
-        flex-wrap: nowrap;
-        gap: 12px;
+        flex-wrap: wrap;
+        column-gap: 12px;
     }
 </style>

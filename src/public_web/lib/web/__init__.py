@@ -58,11 +58,15 @@ def feed_links() -> list[dict[str, str | bool]]:
     Each language is named in itself, as in the language picker, and the one shown comes first.
     With several languages a feed's address names its language (``?lang=``), so a feed reader
     keeps getting that one whatever its own Accept-Language says; a web with a single language
-    keeps the plain ``/rss`` and ``/atom``.
+    keeps the plain ``/rss`` and ``/atom``. On the tab of one type of reports (``g.report_type``,
+    see ``report_types``) they are that type's feeds (``?type=``), and say its name (``type``).
     """
     site = getattr(g, "site", None)
     languages = site.languages if site is not None else [current_language()]
     several = len(languages) > 1
+    report_type = getattr(g, "report_type", None)
+    # ``type`` before ``lang``: the order of the feed's own address (rel="self") and WebSub topics.
+    of_type = {"type": report_type["id"]} if report_type else {}
     links: list[dict[str, str | bool]] = []
     for code in languages:
         language = {"lang": code} if several else {}
@@ -71,8 +75,9 @@ def feed_links() -> list[dict[str, str | bool]]:
                 "code": code,
                 "name": _own_name(code),
                 "current": code == current_language(),
-                "rss": url_for("reports.rss", **language),
-                "atom": url_for("reports.atom", **language),
+                **({"type": report_type["title"]} if report_type else {}),
+                "rss": url_for("reports.rss", **of_type, **language),
+                "atom": url_for("reports.atom", **of_type, **language),
             },
         )
     return sorted(links, key=lambda link: not link["current"])

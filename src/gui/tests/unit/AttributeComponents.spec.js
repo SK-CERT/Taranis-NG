@@ -820,6 +820,38 @@ describe('AttributeCVSS', () => {
         expect(updateReportItem).toHaveBeenCalledWith(42, expect.objectContaining({ update: true, attribute_value: cvssVector }))
     })
 
+    // The CVE Record Format's metric scenario: the conditions the score applies to.
+    it('saves the scenario of a vector as its description', async () => {
+        const props = baseProps({ value: cvssVector })
+        const wrapper = mountAttr(AttributeCVSS, props)
+        await flushPromises()
+        updateReportItem.mockClear()
+
+        const scenario = wrapper.get('[data-test="cvss-scenario"] input')
+        await scenario.trigger('focus')
+        await scenario.setValue('Default configuration')
+        await scenario.trigger('blur')
+        await flushPromises()
+
+        expect(props.values[0].value_description).toBe('Default configuration')
+        expect(updateReportItem).toHaveBeenCalledWith(
+            42,
+            expect.objectContaining({ update: true, attribute_value: cvssVector, value_description: 'Default configuration' })
+        )
+    })
+
+    it('shows the scenario with a read-only vector', () => {
+        const wrapper = mountAttr(AttributeCVSS, readOnlyProps({ value: cvssVector, value_description: 'Default configuration' }))
+        expect(wrapper.find('.numbered-cvss-value').text()).toContain('Default configuration')
+    })
+
+    it('shows each score on one line', () => {
+        const wrapper = mountAttr(AttributeCVSS, baseProps({ value: cvssVector }))
+        const scores = wrapper.findAll('.cvss-score')
+        expect(scores).toHaveLength(3)
+        expect(scores[0].text()).toContain('10')
+    })
+
     it('does not re-send a vector the calculator left unchanged', async () => {
         const props = baseProps({ value: cvssVector })
         const wrapper = mountAttr(AttributeCVSS, props)
@@ -852,6 +884,14 @@ describe('AttributeRichText', () => {
         const editor = wrapper.findComponent({ name: 'RichTextEditor' })
         expect(editor.exists()).toBe(true)
         expect(editor.props('placeholder')).toBe('Enter rich text')
+    })
+
+    // A short text keeps the editor small; a long one grows it, up to a point.
+    it('lets the editor grow with its text', () => {
+        const wrapper = mountAttr(AttributeRichText, baseProps({ value: '<p>Hello</p>' }))
+        const editor = wrapper.findComponent({ name: 'RichTextEditor' })
+        expect(editor.attributes('min-height') ?? editor.props('minHeight')).toBe('120px')
+        expect(editor.attributes('max-height') ?? editor.props('maxHeight')).toBe('480px')
     })
 })
 

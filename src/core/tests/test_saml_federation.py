@@ -20,7 +20,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
-from lxml import etree
+from lxml.etree import fromstring
 from minisignxml.sign import sign
 
 MD = "urn:oasis:names:tc:SAML:2.0:metadata"
@@ -72,7 +72,7 @@ def _signed_aggregate(specs: list[tuple[str, bool, bool]], *, valid_until: str |
     entities = "".join(_idp_entity(entity_id, cert_b64, sso=sso, cert=cert) for entity_id, sso, cert in specs)
     valid = f' validUntil="{valid_until}"' if valid_until else ""
     xml = f'<md:EntitiesDescriptor xmlns:md="{MD}" xmlns:ds="{DS}" ID="_aggregate"{valid}>{entities}</md:EntitiesDescriptor>'
-    signed = sign(element=etree.fromstring(xml.encode()), private_key=key, certificate=certificate)
+    signed = sign(element=fromstring(xml.encode()), private_key=key, certificate=certificate)
     anchor_pem = certificate.public_bytes(serialization.Encoding.PEM).decode()
     return signed, anchor_pem
 

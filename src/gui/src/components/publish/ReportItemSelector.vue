@@ -37,6 +37,17 @@
                         </v-btn>
                     </v-toolbar>
 
+                    <!-- A GCVE Advisory or a CVE Record publishes CVD Reports: only those are listed. -->
+                    <v-alert
+                        v-if="reportTypeKey"
+                        type="info"
+                        variant="tonal"
+                        density="compact"
+                        class="ma-2"
+                        data-test="selector-only-cvd"
+                    >
+                        {{ t('gna.only_cvd_reports') }}
+                    </v-alert>
                     <div class="selector-filter-panel">
                         <ToolbarFilterAnalyze
                             ref="toolbarFilter"
@@ -53,6 +64,7 @@
                         :show-remove-action="false"
                         :disable-actions="true"
                         :selection="value"
+                        :report-type-key="reportTypeKey"
                         card-item="CardAnalyze"
                         @show-report-item-detail="showReportItemDetail"
                         @new-data-loaded="handleNewDataLoaded"
@@ -230,12 +242,15 @@
             modify?: boolean
             edit?: boolean
             productStateIsFinal?: boolean
+            // Only reports of this shipped type are offered (system_key, e.g. 'cvd'); none: every report.
+            reportTypeKey?: string | null
         }>(),
         {
             values: () => [],
             modify: false,
             edit: false,
-            productStateIsFinal: false
+            productStateIsFinal: false,
+            reportTypeKey: null
         }
     )
 

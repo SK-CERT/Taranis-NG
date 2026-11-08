@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model.presenter import Presenter
-    from model.presenters_node import PresentersNode
 
 import uuid
 from http import HTTPStatus

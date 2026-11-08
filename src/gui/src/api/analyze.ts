@@ -18,6 +18,10 @@ function buildFilterQueryString(filter_data) {
     if (filter_data.group) {
         filter += '&group=' + encodeURIComponent(filter_data.group)
     }
+    // Only reports of a shipped type (e.g. 'cvd': the GCVE and CVE products take CVD Reports alone).
+    if (filter_data.type) {
+        filter += '&type=' + encodeURIComponent(filter_data.type)
+    }
     filter += tagFilterQuery(filter_data.filter)
     return filter
 }
@@ -135,6 +139,30 @@ export function createNewReportItem(data) {
     }
 
     return ApiService.post('/analyze/report-items', payload)
+}
+
+// CVE IDs of CVD Reports, reserved and rejected through the organisation's CVE Services account.
+export function reserveCveId(report_item_id: number) {
+    return ApiService.post(`/analyze/report-items/${report_item_id}/cve-id`, {})
+}
+
+export function rejectCveId(report_item_id: number, reason: string) {
+    return ApiService.post(`/analyze/report-items/${report_item_id}/cve-id/reject`, { reason })
+}
+
+// A CVE's published record as values of a CVD Report's fields, to fill one being written.
+export function getCveRecordCvd(cveId: string) {
+    return ApiService.get(`/analyze/cve-records/${encodeURIComponent(cveId)}/cvd`)
+}
+
+// Fill the empty fields of a saved CVD Report from a CVE's published record.
+export function fillCvdFromCve(report_item_id: number, cveId: string) {
+    return ApiService.post(`/analyze/report-items/${report_item_id}/cvd-fill`, { cve_id: cveId })
+}
+
+// Whether CVD Reports can be published as GCVE records (GNA number set) and as CVE records (CNA account set).
+export function getCvdStatus() {
+    return ApiService.get('/analyze/cvd-status')
 }
 
 /** Make `tagIds` the report's tags. */

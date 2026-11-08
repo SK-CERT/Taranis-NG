@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AxiosError, AxiosHeaders } from 'axios'
-import { deleteErrorLoc, isServerUnreachable, notifyDeleteError } from '@/utils/deleteError'
+import { conflictExplanation, deleteErrorLoc, isServerUnreachable, notifyDeleteError } from '@/utils/deleteError'
 
 const answered = (status: number): AxiosError =>
     new AxiosError(
@@ -71,5 +71,34 @@ describe('notifyDeleteError', () => {
         const event = dispatch.mock.calls[0]?.[0] as CustomEvent
         expect(event.type).toBe('notification')
         expect(event.detail).toEqual({ type: 'error', loc: 'word_lists.removed_error' })
+    })
+})
+
+describe('conflictExplanation', () => {
+    const conflict = (data: unknown): unknown => ({ response: { status: 409, data } })
+
+    it("takes core's own words for a conflict it explains", () => {
+        const message = 'CVE-2026-1234 is reserved for this report; reject it before deleting the report'
+        expect(conflictExplanation(conflict(message))).toBe(message)
+    })
+
+    it('keeps the translated wording for the generic "still in use" answer and anything else', () => {
+        expect(conflictExplanation(conflict({ error: 'The record is still in use and could not be deleted' }))).toBe('')
+        expect(conflictExplanation({ response: { status: 400, data: 'Bad request' } })).toBe('')
+        expect(conflictExplanation(new Error('x'))).toBe('')
+    })
+
+    it('is shown only where asked for', () => {
+        const shown: unknown[] = []
+        const listener = (event: Event) => shown.push((event as CustomEvent).detail)
+        window.addEventListener('notification', listener)
+        notifyDeleteError(conflict('GCVE-1-2026-0001 is published and cannot be deleted'), { inUse: 'report_item.removed_error' }, true)
+        notifyDeleteError(conflict('GCVE-1-2026-0001 is published and cannot be deleted'), { inUse: 'report_item.removed_error' })
+        window.removeEventListener('notification', listener)
+
+        expect(shown).toEqual([
+            { type: 'error', message: 'GCVE-1-2026-0001 is published and cannot be deleted' },
+            { type: 'error', loc: 'report_item.removed_error' }
+        ])
     })
 })

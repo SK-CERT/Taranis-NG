@@ -200,6 +200,16 @@ class SiteContext:
         return smtp
 
     @property
+    def gcve_enabled(self) -> bool:
+        """Whether the web publishes the GCVE records of an organization (``config.gcve_organization_id``, see shared.gcve)."""
+        return self.cfg.get("gcve_organization_id") not in (None, "")
+
+    @property
+    def security_contact(self) -> str:
+        """The web's security contact (a ``mailto:`` or https URI) for its security.txt; empty when none."""
+        return str(self.cfg.get("security_contact") or "").strip()
+
+    @property
     def max_reports_homepage(self) -> int:
         """Max reports shown on the homepage, falling back to the global default."""
         return int(self.cfg.get("max_reports_homepage") or config.max_reports_homepage())

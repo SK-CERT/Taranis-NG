@@ -96,6 +96,18 @@ def test_a_report_takes_only_news_items_and_reports_its_author_may_read(monkeypa
     assert [remote.id for remote in report.remote_report_items] == [10]
 
 
+def test_a_report_lets_go_of_the_news_item_and_the_report_named() -> None:
+    first, second = types.SimpleNamespace(id=1), types.SimpleNamespace(id=2)
+    report = types.SimpleNamespace(news_item_aggregates=[first, second], remote_report_items=[types.SimpleNamespace(id=10)])
+
+    assert ReportItem._unlink(report, {"aggregate_id": 2, "remote_report_item_id": 10}) is True
+    assert (report.news_item_aggregates, report.remote_report_items) == ([first], [])
+    # Nothing it holds: nothing changes.
+    assert ReportItem._unlink(report, {"aggregate_id": 7, "remote_report_item_id": 11}) is False
+    assert ReportItem._unlink(report, {}) is False
+    assert report.news_item_aggregates == [first]
+
+
 @pytest.mark.parametrize(
     ("group", "items", "allowed"),
     [(True, [True], True), (False, [True], False), (True, [False, False], False), (True, [False, True], True)],

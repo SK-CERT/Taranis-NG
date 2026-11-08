@@ -25,16 +25,20 @@ from http import HTTPStatus
 
 from flask import request, send_file
 from flask_restful import Api, Resource
-from managers import content_language, content_localizer, template_preview
+from managers import content_language, content_localizer, gcve_publication, template_preview
 from managers.auth_manager import api_key_required
 from managers.link_references import CITING_TYPES, ReferenceIndex, build_index
 from managers.log_manager import logger
+from model.organization_gna import OrganizationGna
 from model.product import Product
+from model.product_preset import ProductPreset
 from model.public_web import PublicWeb
 from model.public_web_template import PublicWebBuiltinTemplate, PublicWebTemplate
 from model.state import StateDefinition, StateEnum
 from shared.common import TZ
 from shared.schema.attribute import AttributeType
+
+from shared import gcve
 
 
 def _iso(value: datetime | None) -> str | None:
@@ -216,6 +220,15 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_links: dict, re
         url = (attribute.value or "").strip()
         return [{**entry, "value": url, "description": None}] if url else []
 
+    if attribute_type is not None and attribute_type.name in gcve_publication.STRUCTURED_TYPES:
+        # A CVD Report field holding an object: templates read ``data``, anything else a readable line.
+        data = gcve_publication.parse_value(attribute.value)
+        if data is None:
+            return []
+        # A reference's citation key stays internal, like a link's.
+        description = None if attribute_type == AttributeType.REFERENCE else attribute.value_description
+        return [{**entry, "value": gcve_publication.summary(attribute_type.name, data), "data": data, "description": description}]
+
     value = attribute.value
     if rendering is not None:
         value = content_localizer.attribute_value(
@@ -272,7 +285,11 @@ def _serialize_report_item(report_item, index: ReferenceIndex, local_links: dict
         "last_updated": report_item.last_updated.isoformat() if report_item.last_updated else None,
         "type": report_type.title if report_type else None,
         "type_id": report_type.id if report_type else None,
+        # Set on a shipped type (``cvd``): public-web picks its built-in template by it.
+        "type_key": getattr(report_type, "system_key", None),
         "type_description": report_type.description if report_type else None,
+        # A CVD Report's GCVE identifier.
+        "gcve_id": getattr(report_item, "gcve_id", None),
         "attributes": [
             entry
             for attribute in sorted(report_item.attributes, key=_form_position)
@@ -353,7 +370,7 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
         "id": product.id,
         "title": title,
         # What the product is published as; public-web picks the product template by it.
-        "product_preset": {"id": preset.id, "title": preset.name} if preset else None,
+        "product_preset": {"id": preset.id, "title": preset.name, "key": getattr(preset, "system_key", None)} if preset else None,
         "description": description,
         "links": index.urls,
         "created": product.created.isoformat() if product.created else None,
@@ -564,6 +581,63 @@ class PublicWebWebImage(Resource):
         return send_file(io.BytesIO(image.data), mimetype=image.mime_type, download_name=image.filename or kind)
 
 
+class PublicWebGcveRecords(Resource):
+    """The GCVE records a web publishes (see shared.gcve and managers.gcve_publication)."""
+
+    @api_key_required("public_web")
+    def get(self, public_web_node=None):  # noqa: ANN001, ANN201
+        """Return the records of the published GCVE Advisories a web shows, and what it says about its GNA.
+
+        A web publishes the records of one organization's GNA (``config.gcve_organization_id``).
+
+        Query params:
+            web_id (int): The web; it must belong to the asking node and publish GCVE records.
+
+        Returns:
+            dict: ``{"gna_id", "short_name", "license", "conformance", "total_count", "items"}``;
+                404 when the web is not this node's, does not publish GCVE records or its
+                organization has no GNA number, 403 for a disabled node.
+        """
+        public_web_node.touch()
+        if not public_web_node.enabled:
+            return _node_disabled()
+        try:
+            web_id = int(request.args.get("web_id", ""))
+        except (TypeError, ValueError):
+            return {"error": "web_id is required"}, HTTPStatus.BAD_REQUEST
+        web = PublicWeb.find(web_id)
+        if web is None or web.node_id != public_web_node.id:
+            return {"error": "Web not found"}, HTTPStatus.NOT_FOUND
+        if not web.enabled or not web.gcve_enabled:
+            return {"error": "This web does not publish GCVE records"}, HTTPStatus.NOT_FOUND
+
+        gna = OrganizationGna.for_organization(web.gcve_organization_id)
+        if gna is None:
+            return {"error": "The organization this web publishes the GCVE records of has no GNA number"}, HTTPStatus.NOT_FOUND
+
+        items = []
+        preset = ProductPreset.find_by_key(gcve.GCVE_PRESET_KEY)
+        if preset is not None:
+            products, _total = Product.get_published(None, web_id=web.id, product_preset_id=preset.id, with_content=True)
+            # Only the GNA's own identifiers: its dump and its conformance are about them.
+            own = (
+                item
+                for product in products
+                for item in product.report_items
+                if item.gcve_assignment is not None and item.gcve_assignment.gna_id == gna.gna_id
+            )
+            items = gcve_publication.records(own, gna.short_name)
+        logger.debug(f"Public-web '{public_web_node.name}': {len(items)} GCVE records of GNA {gna.gna_id} for web {web.id}")
+        return {
+            "gna_id": gna.gna_id,
+            "short_name": gna.short_name,
+            "license": gna.records_license or None,
+            "conformance": gna.conformance if isinstance(gna.conformance, dict) else {},
+            "total_count": len(items),
+            "items": items,
+        }, HTTPStatus.OK
+
+
 def initialize(api: Api) -> None:
     """Register the public-web node endpoints."""
     api.add_resource(PublicWebProducts, "/api/v1/public-web/products")
@@ -571,3 +645,4 @@ def initialize(api: Api) -> None:
     api.add_resource(PublicWebTemplates, "/api/v1/public-web/templates")
     api.add_resource(PublicWebWebs, "/api/v1/public-web/webs")
     api.add_resource(PublicWebWebImage, "/api/v1/public-web/webs/<int:web_id>/images/<string:kind>")
+    api.add_resource(PublicWebGcveRecords, "/api/v1/public-web/gcve/records")

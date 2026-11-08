@@ -33,6 +33,23 @@ class ReportTypeFieldInUseError(Exception):
         super().__init__(f"Report type fields still hold report item values: {detail}")
 
 
+class ReportTypeLockedError(Exception):
+    """Raised when a shipped report type (see shared.gcve) would be changed or deleted."""
+
+    def __init__(self, title: str) -> None:
+        """Name the type."""
+        self.title = title
+        super().__init__(f"'{title}' ships with Taranis: it can only be switched on or off")
+
+
+class ReportTypeDisabledError(ValueError):
+    """Raised when a report would be created with a report type that is switched off."""
+
+    def __init__(self, title: str) -> None:
+        """Name the type."""
+        super().__init__(f"The report type '{title}' is switched off")
+
+
 class ReportTypeInUseError(Exception):
     """Raised when a report type cannot be deleted because report items are based on it."""
 
@@ -359,6 +376,8 @@ class ReportItemType(db.Model):
         label_language (str): Language its labels are written in; None while not stated.
         translations (dict): Label variants, ``{language: {"title": ..., "description": ...}}``.
         icon (str): The MDI icon it and its reports show; None for :data:`DEFAULT_ICON`.
+        system_key (str): Set on a report type Taranis ships (e.g. ``cvd``), which is locked.
+        enabled (bool): Whether new reports can be written with it.
         subtitle (str): Subtitle.
     """
 
@@ -366,6 +385,8 @@ class ReportItemType(db.Model):
     title = db.Column(db.String())
     description = db.Column(db.String())
     icon = db.Column(db.String(ICON_LENGTH))
+    system_key = db.Column(db.String(32), nullable=True, unique=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=True, server_default=sqlalchemy.true())
 
     languages = db.Column(JSONB, nullable=False, default=list, server_default=sqlalchemy.text("'[]'"))
     translation_ai_provider_id = db.Column(
@@ -398,6 +419,7 @@ class ReportItemType(db.Model):
         label_language: str | None = None,
         translations: dict | None = None,
         icon: str | None = None,
+        enabled: bool = True,
     ) -> None:
         """Initialize report item type.
 
@@ -413,6 +435,8 @@ class ReportItemType(db.Model):
         self.label_language = content_language.clean_language(label_language)
         self.translations = content_language.clean_label_translations(translations, content_language.TYPE_LABEL_FIELDS)
         self.icon = clean_icon(icon)
+        self.enabled = enabled
+        self.system_key = None
         self.subtitle = ""
 
     @orm.reconstructor
@@ -424,6 +448,16 @@ class ReportItemType(db.Model):
     def tag(self) -> str:
         """The icon lists show for it and its reports."""
         return self.icon or DEFAULT_ICON
+
+    @property
+    def locked(self) -> bool:
+        """Whether it ships with Taranis: then it can only be switched on or off."""
+        return self.system_key is not None
+
+    @classmethod
+    def find_by_key(cls, system_key: str) -> "ReportItemType | None":
+        """The shipped report type with this key, if it exists."""
+        return cls.query.filter_by(system_key=system_key).first()
 
     @classmethod
     # `id` shadows the builtin; it is part of this classmethod's existing call signature.
@@ -573,9 +607,16 @@ class ReportItemType(db.Model):
             report_type_id (int): Report type id.
             data (dict): Data.
         """
+        report_type = db.session.get(cls, report_type_id)
+        if report_type is not None and report_type.locked:
+            # Shipped: only its switch can change. Anything else in the payload is ignored,
+            # but a payload that changes nothing else is what the GUI sends for the switch.
+            enabled = data.get("enabled", report_type.enabled) if isinstance(data, dict) else report_type.enabled
+            report_type.enabled = bool(enabled)
+            db.session.commit()
+            return
         schema = NewReportItemTypeSchema()
         updated_report_type = schema.load(data)
-        report_type = db.session.get(cls, report_type_id)
 
         # Dropping a field from a report type deletes its attribute_group_item row, which
         # report_item_attribute still points at (ON DELETE NO ACTION). Left to the flush that
@@ -590,6 +631,7 @@ class ReportItemType(db.Model):
         report_type.translation_ai_provider_id = updated_report_type.translation_ai_provider_id
         report_type.label_language = updated_report_type.label_language
         report_type.translations = updated_report_type.translations
+        report_type.enabled = updated_report_type.enabled
 
         for updated_attribute_group in updated_report_type.attribute_groups:
             found = False
@@ -627,10 +669,13 @@ class ReportItemType(db.Model):
         # reports were written against fails in the flush. Say what is in the way instead.
         from model.report_item import ReportItem  # noqa: PLC0415
 
+        report_item_type = db.session.get(cls, id)
+        if report_item_type is not None and report_item_type.locked:
+            raise ReportTypeLockedError(report_item_type.title)
+
         report_item_count = db.session.query(ReportItem).filter(ReportItem.report_item_type_id == id).count()
         if report_item_count:
             raise ReportTypeInUseError(report_item_count)
 
-        report_item_type = db.session.get(cls, id)
         db.session.delete(report_item_type)
         db.session.commit()

@@ -14,6 +14,7 @@ those of each report in report order. Equal URLs share one number.
 
 from __future__ import annotations
 
+import json
 import re
 import secrets
 import string
@@ -36,6 +37,21 @@ LINK_TOKEN_RE = re.compile(rf"( ?)\[#({LINK_KEY_RE.pattern})\]")
 
 # Attribute types whose text may cite links.
 CITING_TYPES = frozenset({AttributeType.STRING.name, AttributeType.TEXT.name, AttributeType.RICH_TEXT.name})
+
+# Attribute types whose values are citable links: a plain URL (LINK), or a reference of a CVD
+# Report (REFERENCE: a JSON object with its ``url``, name and tags).
+LINK_TYPES = frozenset({AttributeType.LINK.name, AttributeType.REFERENCE.name})
+
+
+def link_url(type_name: str | None, value: str | None) -> str:
+    """The URL a link value points at, trimmed; empty when it has none."""
+    if type_name == AttributeType.REFERENCE.name:
+        try:
+            data = json.loads(value or "")
+        except ValueError:
+            return ""
+        return str(data.get("url") or "").strip() if isinstance(data, dict) else ""
+    return (value or "").strip()
 
 
 def generate_link_key(taken: Collection[str] = ()) -> str:
@@ -170,7 +186,7 @@ def render_presenter_input(payload: dict, product_links: Iterable[Mapping[str, A
 
     ``payload`` is what ``PresenterInputSchema().dump()`` produced - plain data, never the
     database objects, which must not be modified. Citing attribute values and the product
-    description get their ``[n]`` numbers, LINK values are trimmed (empty ones are left out) and
+    description get their ``[n]`` numbers, LINK values are trimmed (empty links and references are left out) and
     ``product.links`` becomes the merged list of URLs that those numbers index.
     """
     attribute_types = {}
@@ -195,15 +211,18 @@ def render_presenter_input(payload: dict, product_links: Iterable[Mapping[str, A
         attributes = []
         link_attributes = []
         for attribute in report.get("attributes") or []:
-            if attribute_type(attribute) == AttributeType.LINK.name:
-                attribute["value"] = (attribute.get("value") or "").strip()
-                if not attribute["value"]:
+            type_name = attribute_type(attribute)
+            if type_name in LINK_TYPES:
+                url = link_url(type_name, attribute.get("value"))
+                if not url:
                     continue
-                link_attributes.append(attribute)
+                if type_name == AttributeType.LINK.name:
+                    attribute["value"] = url
+                link_attributes.append((attribute, url))
             attributes.append(attribute)
         report["attributes"] = attributes
-        link_attributes.sort(key=form_position)
-        report_links.append([(attribute.get("value_description"), attribute["value"]) for attribute in link_attributes])
+        link_attributes.sort(key=lambda pair: form_position(pair[0]))
+        report_links.append([(attribute.get("value_description"), url) for attribute, url in link_attributes])
 
     index, local_links = build_index(product_links, report_links)
 

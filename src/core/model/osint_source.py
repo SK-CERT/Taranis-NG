@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model.collectors_node import CollectorsNode
-    from model.osint_source import OSINTSource, OSINTSourceGroup
     from model.user import User
 
 import uuid

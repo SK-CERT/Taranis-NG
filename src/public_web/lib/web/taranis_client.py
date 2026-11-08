@@ -8,6 +8,7 @@ public-web node endpoints:
   * ``GET /api/v1/public-web/products``          -> list published products
   * ``GET /api/v1/public-web/products/<id>``     -> product with report items
   * ``GET /api/v1/public-web/templates``         -> custom report templates
+  * ``GET /api/v1/public-web/gcve/records``      -> the GCVE records a web publishes
 
 Core serializes the product directly from its database (no presenter involved):
 product info plus report items, each with a flat list of attributes
@@ -167,6 +168,24 @@ class TaranisClient:
             raise TaranisClientError(msg)
         payload = resp.json()
         return {"items": payload.get("items") or [], "disabled_builtins": payload.get("disabled_builtins") or []}
+
+    def list_gcve_records(self, web_id: int) -> dict | None:
+        """Return the GCVE records a web publishes, with what core says about its GNA.
+
+        Returns:
+            ``{"gna_id", "short_name", "license", "conformance", "total_count", "items"}``, or None
+            when the web does not publish GCVE records (or core is older than GCVE publishing).
+        """
+        resp = self._get("/api/v1/public-web/gcve/records", params={"web_id": str(web_id)})
+        if resp.status_code == HTTP_NOT_FOUND:
+            return None
+        if resp.status_code == HTTP_UNAUTHORIZED:
+            msg = "Taranis rejected the public-web ApiKey (401). Is the node registered in core with this key?"
+            raise TaranisClientError(msg)
+        if resp.status_code != HTTP_OK:
+            msg = f"Listing GCVE records failed (HTTP {resp.status_code}): {resp.text[:200]}"
+            raise TaranisClientError(msg)
+        return resp.json()
 
     def list_webs(self) -> list[dict[str, object]]:
         """Return the webs (branded feeds + config) this node hosts."""
