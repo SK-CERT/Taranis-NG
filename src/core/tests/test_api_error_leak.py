@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 from flask import Flask, request
 from flask_restful import Resource
+from managers import api_manager
 from managers.api_manager import SafeErrorApi
 from marshmallow import Schema, fields
 
@@ -64,3 +65,31 @@ def test_other_errors_keep_their_normal_handling(client: Flask) -> None:
 def test_a_valid_payload_still_passes_through(client: Flask) -> None:
     response = client.post("/api/v1/config/users", json={"username": "u", "password": SECRET, "role_id": "2"})
     assert response.status_code == 200
+
+
+def test_a_rejected_request_is_logged_without_echoing_it(client: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Answered quietly, a rejected payload left nothing in the log to explain "it did not save"."""
+    logged: list[tuple] = []
+    monkeypatch.setattr(
+        api_manager.log_manager,
+        "store_data_error_activity",
+        lambda user, detail, exception=None, request_data=None: logged.append((user, detail, exception, request_data)),
+    )
+
+    response = client.post("/api/v1/config/users", json={"username": "u", "password": SECRET, "role_id": 2})
+
+    assert response.status_code == 400
+    ((user, detail, exception, request_data),) = logged
+    assert detail == "Request rejected, invalid fields: role_id"
+    assert exception.normalized_messages() == {"role_id": ["Not a valid string."]}
+    # The body is logged the usual way (redacted by log_manager), never answered back.
+    assert user is None
+    assert request_data is None
+    assert SECRET not in response.get_data(as_text=True)
+
+
+def test_nested_rejections_name_their_path() -> None:
+    messages = {"deliveries": {0: {"language": ["Unknown"]}, 2: {"format": ["Missing"]}}, "name": ["Required"]}
+
+    assert api_manager._field_names(messages) == ["deliveries.0.language", "deliveries.2.format", "name"]
+    assert api_manager._field_names(["Invalid input type."]) == ["_schema"]
