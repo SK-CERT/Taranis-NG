@@ -178,6 +178,13 @@ describe('NewPublicWebTemplate', () => {
 
         const editor = wrapper.find('[data-test="template-source"] textarea')
         expect(editor.element.value).toBe('<div>generic</div>')
+        // Completions know the kind of template and, for an item, its type's attribute keys.
+        select(wrapper, 'template-target').vm.$emit('update:modelValue', 9)
+        await flushPromises()
+        expect(wrapper.findComponent({ name: 'CodeEditor' }).props('completions')).toEqual({
+            kind: 'item',
+            attrKeys: ['source_(link)', 'quote']
+        })
         expect(editor.attributes('aria-label')).toBe('Template (Jinja)')
         expect(wrapper.findAll('[data-test="template-source"] .token.tag').length).toBeGreaterThan(0)
     })

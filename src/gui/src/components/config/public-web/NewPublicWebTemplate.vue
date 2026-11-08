@@ -149,6 +149,7 @@
                         :disabled="saving"
                         min-height="22rem"
                         max-height="60vh"
+                        :completions="{ kind, attrKeys }"
                         data-test="template-source"
                     />
                 </v-form>
