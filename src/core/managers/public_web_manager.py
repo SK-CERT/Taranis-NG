@@ -1,9 +1,10 @@
 """Core's side of the core->public-web-node channel.
 
 Every side effect here is gated on :func:`public_web_enabled`: a deployment
-without at least one configured node has nothing to ping or push to, so the
+without at least one enabled node has nothing to ping or push to, so the
 health-check job and :func:`notify_nodes` return right after that single cheap
-existence query instead of loading nodes that cannot exist.
+existence query instead of loading nodes that cannot exist. A node an
+administrator switched off is left alone the same way.
 
 A scheduled job calls each public-web node's management ``isalive`` endpoint and
 records a successful contact in ``last_seen``, which drives the green/orange/red
@@ -40,7 +41,7 @@ _ALLOWED_SCHEMES = ("http", "https")
 
 
 def public_web_enabled() -> bool:
-    """Tell whether this deployment has a public-web node at all.
+    """Tell whether this deployment has a public-web node in use at all.
 
     Every core-side public-web side effect - the health-check ping, the
     cache-reset pushes, the product hooks - is meaningless without a node to
@@ -50,18 +51,18 @@ def public_web_enabled() -> bool:
     swallowing pushes after the first node is registered.
 
     Returns:
-        (bool): True when at least one public-web node is configured.
+        (bool): True when at least one public-web node is configured and enabled.
     """
-    return db.session.query(PublicWebNode.id).first() is not None
+    return db.session.query(PublicWebNode.id).filter(PublicWebNode.enabled.is_(True)).first() is not None
 
 
 def job(app: Flask) -> None:
-    """Ping every public-web node that has a management URL; refresh last_seen."""
+    """Ping every enabled public-web node that has a management URL; refresh last_seen."""
     with app.app_context():
         if not public_web_enabled():
             return
         for node in PublicWebNode.get_all():
-            if not node.api_url:
+            if not node.enabled or not node.api_url:
                 continue
             try:
                 _, status = PublicWebApi(node.api_url, node.api_key).isalive()
@@ -159,8 +160,8 @@ def _push_reset_cache(targets: list[tuple[str, str, str]]) -> None:
 def notify_nodes(nodes: Iterable[PublicWebNode]) -> None:
     """Push a cache reset to the reachable nodes among ``nodes``, without blocking.
 
-    Nodes with no management URL, and nodes the health check has not seen for a
-    long time, are skipped: calling a node that is not running only stalls the
+    Disabled nodes, nodes with no management URL, and nodes the health check has
+    not seen for a long time, are skipped: calling a node that is not running only stalls the
     caller — a failing DNS lookup inside Docker blocks for seconds regardless of
     the HTTP timeout, which is what made the GUI freeze on every edit. Skipping
     costs nothing there, because a node that is down has no cache to reset; it
@@ -175,6 +176,21 @@ def notify_nodes(nodes: Iterable[PublicWebNode]) -> None:
     """
     if not public_web_enabled():
         return
+    _push([node for node in nodes if node.enabled])
+
+
+def reset_node(node: PublicWebNode) -> None:
+    """Push a cache reset to one node, enabled or not, if it is reachable; without blocking.
+
+    For a node just switched on or off: either way it has to read its webs again - all
+    disabled now, so it stops serving them at once instead of when its cache expires, or
+    back in service.
+    """
+    _push([node])
+
+
+def _push(nodes: Iterable[PublicWebNode]) -> None:
+    """Send the cache reset to those of ``nodes`` that can be reached, on a daemon thread."""
     targets = [(node.name, node.api_url, node.api_key) for node in nodes if node.api_url and node.is_reachable()]
     if not targets:
         return

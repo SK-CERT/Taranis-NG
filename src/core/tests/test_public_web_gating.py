@@ -31,10 +31,16 @@ OTHER_STATE_ID = 3
 
 
 class _FakeQuery:
-    """A query that only knows how to answer ``.first()``."""
+    """A query that only knows how to narrow itself and answer ``.first()``."""
 
     def __init__(self, row: object) -> None:
         self._row = row
+        self.criteria: list[object] = []
+
+    def filter(self, *criteria: object) -> _FakeQuery:
+        """Record the criteria; the primed answer is what they find."""
+        self.criteria.extend(criteria)
+        return self
 
     def first(self) -> object:
         """Return the single row the fixture was primed with."""
@@ -47,11 +53,13 @@ class _FakeSession:
     def __init__(self, row: object) -> None:
         self._row = row
         self.queries: list[tuple] = []
+        self.made: list[_FakeQuery] = []
 
     def query(self, *columns: object) -> _FakeQuery:
         """Record the selected columns and hand back the primed answer."""
         self.queries.append(columns)
-        return _FakeQuery(self._row)
+        self.made.append(_FakeQuery(self._row))
+        return self.made[-1]
 
 
 class _FakeDb:
@@ -103,16 +111,18 @@ def nodes_in_db(monkeypatch: pytest.MonkeyPatch) -> Callable[[object], _FakeDb]:
 def node_traffic(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     """Record everything the health check reaches for, and hand it one node."""
     made: list[str] = []
-    node = types.SimpleNamespace(name="web", api_url="http://public-web", api_key="node-key")
+    node = types.SimpleNamespace(name="web", api_url="http://public-web", api_key="node-key", enabled=True)
     node.update_last_seen = lambda: made.append("update_last_seen")
+    off = types.SimpleNamespace(name="off", api_url="http://switched-off", api_key="other-key", enabled=False)
+    off.update_last_seen = lambda: made.append("update_last_seen off")
 
     def fake_get_all(_cls: type) -> list:
         made.append("get_all")
-        return [node]
+        return [node, off]
 
     class _FakeApi:
         def __init__(self, api_url: str, api_key: str) -> None:  # noqa: ARG002
-            made.append("PublicWebApi")
+            made.append("PublicWebApi" if api_url == node.api_url else f"PublicWebApi {api_url}")
 
         def isalive(self) -> tuple[dict, HTTPStatus]:
             return {"status": "ok"}, HTTPStatus.OK
@@ -169,6 +179,9 @@ def test_public_web_enabled_is_false_with_no_nodes(nodes_in_db: Callable[[object
     (columns,) = fake.session.queries
     assert len(columns) == 1
     assert columns[0] is PublicWebNode.id
+    # Only a node in use counts: with every node switched off there is nothing to talk to.
+    (query,) = fake.session.made
+    assert [str(criterion) for criterion in query.criteria] == [str(PublicWebNode.enabled.is_(True))]
 
 
 def test_public_web_enabled_is_true_with_a_node(nodes_in_db: Callable[[object], _FakeDb]) -> None:
@@ -188,7 +201,7 @@ def test_health_check_job_makes_no_calls_when_disabled(nodes_in_db: Callable[[ob
 
 
 def test_health_check_job_still_pings_when_a_node_exists(nodes_in_db: Callable[[object], _FakeDb], node_traffic: list[str]) -> None:
-    """The gate must not switch the feature off for the deployments that use it."""
+    """The gate must not switch the feature off for the deployments that use it - nor ping a node switched off."""
     nodes_in_db((1,))
 
     public_web_manager.job(_FakeApp())
@@ -205,15 +218,28 @@ def test_notify_nodes_returns_immediately_when_disabled(nodes_in_db: Callable[[o
     assert pushes == []
 
 
-def test_notify_nodes_still_pushes_when_a_node_exists(nodes_in_db: Callable[[object], _FakeDb], pushes: list) -> None:
-    """A reachable node still gets its cache reset, off the request thread."""
-    nodes_in_db((1,))
-    node = types.SimpleNamespace(name="web", api_url="http://public-web", api_key="node-key")
+def _reachable(name: str, *, enabled: bool = True) -> types.SimpleNamespace:
+    node = types.SimpleNamespace(name=name, api_url=f"http://{name}", api_key=f"{name}-key", enabled=enabled)
     node.is_reachable = lambda: True
+    return node
 
-    public_web_manager.notify_nodes([node])
 
-    assert pushes == [[("web", "http://public-web", "node-key")]]
+def test_notify_nodes_still_pushes_when_a_node_exists(nodes_in_db: Callable[[object], _FakeDb], pushes: list) -> None:
+    """A reachable node still gets its cache reset, off the request thread; one switched off does not."""
+    nodes_in_db((1,))
+
+    public_web_manager.notify_nodes([_reachable("web"), _reachable("off", enabled=False)])
+
+    assert pushes == [[("web", "http://web", "web-key")]]
+
+
+def test_a_node_switched_on_or_off_gets_its_cache_reset(nodes_in_db: Callable[[object], _FakeDb], pushes: list) -> None:
+    """Switched off it must drop what it serves now, not when its cache expires - even as the last node."""
+    nodes_in_db(None)
+
+    public_web_manager.reset_node(_reachable("off", enabled=False))
+
+    assert pushes == [[("off", "http://off", "off-key")]]
 
 
 def test_publish_hooks_do_no_state_lookup_when_disabled(

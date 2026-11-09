@@ -10,7 +10,9 @@ the page showed Czech whatever language was chosen.
 
 These tests close that loop from both ends: every key the templates ask for exists,
 every key the catalogs define is asked for, and no user-visible text is written
-straight into a template.
+straight into a template. The built-in report templates (``shared.public_web_templates``)
+count too: they ask for phrases with ``t("key")``, which looks in the ``report`` section
+first and in ``interface`` second.
 """
 
 import json
@@ -19,16 +21,21 @@ from pathlib import Path
 
 import pytest
 
+from shared import public_web_templates
+
 PUBLIC_WEB = Path(__file__).parents[1]
 TEMPLATES = PUBLIC_WEB / "lib" / "web" / "templates"
+REPORT_TEMPLATES = Path(public_web_templates.__file__).parent
 CATALOGS = PUBLIC_WEB / "conf" / "i18n"
 REFERENCE_LOCALE = "en"
 
 # translate_ui("key") / translate_ui('key'), in templates and in Python.
 TRANSLATE_CALL = re.compile(r"""translate_ui\(\s*['"]([^'"]+)['"]""")
-# translate_report(report, "key") / translate_report(item, 'key'): what each catalog section is asked for.
-TRANSLATE_REPORT_CALL = re.compile(r"""translate_report\(\s*\w+,\s*['"]([^'"]+)['"]""")
+# translate_report("key", report.language) / translate_report('key'): what each catalog section is asked for.
+TRANSLATE_REPORT_CALL = re.compile(r"""translate_report\(\s*['"]([^'"]+)['"]""")
 SECTION_CALLS = {"interface": TRANSLATE_CALL, "report": TRANSLATE_REPORT_CALL}
+# t("key") / t('key'), in the report templates.
+REPORT_TEMPLATE_CALL = re.compile(r"""\bt\(\s*['"]([^'"]+)['"]""")
 
 # Stripped before looking for stray text: script/style bodies are code, Jinja
 # expressions are substitutions, and tags are markup.
@@ -47,6 +54,9 @@ ALLOWED_LITERALS = {
     # CVE/CWE/CVSS specification terms and the example values shown beside them
     "CVSS ( )",
     "CVSS:",
+    "(CVSS )",
+    ", CVSS )",
+    "[TLP: ]",
     "CWE- :",
     "CWE (CWE-416)",
     "CVE (CVE-2025-26399)",
@@ -58,6 +68,7 @@ ALLOWED_LITERALS = {
     # Vendor and advisory-site names linked from a CVE
     "cve.org ,",
     "cwe.mitre.org",
+    "NVD",
     "NVD ,",
     "GitHub ,",
     "CIRCL.LU ,",
@@ -84,6 +95,20 @@ def _used_keys(section: str = "interface") -> set[str]:
     return {key.lower() for key in keys}
 
 
+# Report phrases no built-in template asks for, kept for the custom templates in core that do: an
+# instance whose vulnerability reports list affected systems with their versions (as the fixture
+# instance's templates in fixtures/templates/ show) words them with these.
+FOR_CUSTOM_TEMPLATES = {"in_versions", "original_version_format"}
+
+
+def _report_template_keys() -> set[str]:
+    """Every key the built-in report templates ask ``t()`` for."""
+    keys: set[str] = set()
+    for path in REPORT_TEMPLATES.glob("*.html"):
+        keys |= set(REPORT_TEMPLATE_CALL.findall(path.read_text(encoding="utf-8")))
+    return {key.lower() for key in keys}
+
+
 def _bare_text(template: Path) -> set[str]:
     """Text a visitor would read that is neither markup, code, nor a substitution."""
     source = SCRIPT_OR_STYLE.sub(" ", template.read_text(encoding="utf-8"))
@@ -91,10 +116,12 @@ def _bare_text(template: Path) -> set[str]:
     return {" ".join(line.split()) for line in source.splitlines() if HAS_WORD.search(line)}
 
 
-@pytest.mark.parametrize("section", SECTION_CALLS)
-def test_the_application_asks_for_something(section: str) -> None:
+def test_the_application_asks_for_something() -> None:
     """Guards the regexes themselves: a silent zero would make every other test vacuous."""
-    assert len(_used_keys(section)) > 10
+    # The report's phrases come mostly from the report templates; the page asks for a few.
+    assert len(_used_keys("interface")) > 10
+    assert _used_keys("report")
+    assert len(_report_template_keys()) > 10
 
 
 @pytest.mark.parametrize("section", SECTION_CALLS)
@@ -105,10 +132,18 @@ def test_every_key_the_templates_use_is_translated(locale: str, section: str) ->
     assert not missing, f"{locale}.json is missing {len(missing)} {section} key(s) the templates ask for: {missing}"
 
 
+@pytest.mark.parametrize("locale", _locales())
+def test_every_key_the_report_templates_use_is_translated(locale: str) -> None:
+    """``t()`` falls back to the key itself, so a missing phrase shows as its key."""
+    known = set(_catalog(locale, "report")) | set(_catalog(locale))
+    missing = sorted(_report_template_keys() - known)
+    assert not missing, f"{locale}.json is missing {len(missing)} key(s) the report templates ask for: {missing}"
+
+
 @pytest.mark.parametrize("section", SECTION_CALLS)
 def test_no_catalog_key_is_unreferenced(section: str) -> None:
     """An unused key means the template hardcoded the text instead - the original bug."""
-    unused = sorted(set(_catalog(REFERENCE_LOCALE, section)) - _used_keys(section))
+    unused = sorted(set(_catalog(REFERENCE_LOCALE, section)) - _used_keys(section) - _report_template_keys() - FOR_CUSTOM_TEMPLATES)
     assert not unused, (
         f"{len(unused)} {section} key(s) defined but never asked for: {unused}. "
         "Either a template hardcodes the text, or the key is dead and should go."
@@ -142,7 +177,7 @@ def test_no_translation_is_blank(locale: str, section: str) -> None:
     assert not blank, f"{locale}.json has blank translations: {blank}"
 
 
-@pytest.mark.parametrize("template", sorted(TEMPLATES.rglob("*.html")), ids=lambda p: p.name)
+@pytest.mark.parametrize("template", sorted([*TEMPLATES.rglob("*.html"), *REPORT_TEMPLATES.glob("*.html")]), ids=lambda p: p.name)
 def test_templates_hold_no_untranslated_prose(template: Path) -> None:
     """User-visible text belongs in the catalogs, not written into the markup.
 
@@ -155,3 +190,12 @@ def test_templates_hold_no_untranslated_prose(template: Path) -> None:
         f"Move it into conf/i18n/*.json and render it with translate_ui(), or - if it is "
         f"a proper noun or specification term - add it to ALLOWED_LITERALS here."
     )
+
+
+def test_the_phrases_kept_for_custom_templates_are_asked_for_by_one() -> None:
+    """Kept only while some custom template asks for them: the fixture instance's do."""
+    asked = set()
+    for path in (PUBLIC_WEB / "tests" / "fixtures" / "templates").glob("*.html"):
+        asked |= set(REPORT_TEMPLATE_CALL.findall(path.read_text(encoding="utf-8")))
+    assert asked >= FOR_CUSTOM_TEMPLATES
+    assert not FOR_CUSTOM_TEMPLATES & _report_template_keys(), "a built-in asks for it now; drop it from FOR_CUSTOM_TEMPLATES"

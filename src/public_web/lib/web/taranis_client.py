@@ -1,4 +1,4 @@
-"""Client for fetching vulnerability report data from the Taranis-NG API.
+"""Client for fetching report data and report templates from the Taranis-NG API.
 
 public-web is a Taranis-NG *node*: it authenticates to core with the shared node
 ApiKey (``Authorization: ApiKey ...``), exactly like the collector/presenter/
@@ -7,13 +7,15 @@ public-web node endpoints:
 
   * ``GET /api/v1/public-web/products``          -> list published products
   * ``GET /api/v1/public-web/products/<id>``     -> product with report items
+  * ``GET /api/v1/public-web/templates``         -> custom report templates
 
 Core serializes the product directly from its database (no presenter involved):
 product info plus report items, each with a flat list of attributes
-({"key", "value", "description"}), in the language asked for with ``lang``
-(see ``get_product``). ``VulnerabilityReport`` consumes this
-structure. Products that are not published are returned as 404 by core and
-skipped by the caller, so one bad product cannot break the feed.
+({"key", "value", "description", "label", ...}) in the language asked for with
+``lang`` (see ``get_product``), which ``lib.report.product`` turns into template
+data. Products that are not published, or not of a product type the web shows, are
+returned as 404 by core and skipped by the caller, so one bad product cannot break
+the feed.
 """
 
 import requests
@@ -134,6 +136,26 @@ class TaranisClient:
         except ValueError:
             logger.warning("Product %s response was not valid JSON.", product_id)
             return None
+
+    def get_report_templates(self) -> dict[str, list]:
+        """Return the custom report templates (per product preset / report item type) and the built-ins switched off.
+
+        Returns:
+            ``{"items": [template], "disabled_builtins": [name]}``. An older core without the
+            endpoint answers 404, which means no custom templates; one from before built-ins could
+            be switched off sends no ``disabled_builtins``. Either way the built-ins are all on.
+        """
+        resp = self._get("/api/v1/public-web/templates")
+        if resp.status_code == HTTP_NOT_FOUND:
+            return {"items": [], "disabled_builtins": []}
+        if resp.status_code == HTTP_UNAUTHORIZED:
+            msg = "Taranis rejected the public-web ApiKey (401). Is the node registered in core with this key?"
+            raise TaranisClientError(msg)
+        if resp.status_code != HTTP_OK:
+            msg = f"Listing report templates failed (HTTP {resp.status_code}): {resp.text[:200]}"
+            raise TaranisClientError(msg)
+        payload = resp.json()
+        return {"items": payload.get("items") or [], "disabled_builtins": payload.get("disabled_builtins") or []}
 
     def list_webs(self) -> list[dict[str, object]]:
         """Return the webs (branded feeds + config) this node hosts."""

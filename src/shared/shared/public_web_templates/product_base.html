@@ -1,0 +1,95 @@
+{#- Base of every product template.
+
+    A custom product template extends this file (or product_vulnerability.html) and
+    overrides only the blocks it needs. The page renders the template once per part,
+    and `view` says which part it wants:
+
+      detail   the report page body: header, items, links
+      summary  one entry of the homepage list
+      rss      the plain-text RSS description (tags are stripped afterwards)
+
+    Context: product, data (= {product, report_items}, as in presenter templates),
+    links, visible_links, selected_items, lang, site, t(), render_item().
+
+    `lang` is the page's language; product.language and item.language the ones the product
+    and each report item are shown in, which differ when they are not translated into the
+    page's (macros.content_lang marks their text then). t() gives a report's own phrases in
+    the language of what it renders - the product, or the item in an item template - and
+    the homepage entry's (summary) in the page's. In item.attrs choice constants are as
+    written, for comparing; show item.attrs_display or item.fields. -#}
+{%- import "builtin/_macros.html" as macros -%}
+
+{%- if view == "summary" -%}
+    {%- block summary -%}
+        <div class="d-flex flex-column flex-md-row mt-1">
+            <h5 class="m-0 me-2 mb-1"{{ macros.content_lang(product, lang) }}>
+                {{ product.title }}
+            </h5>
+            {%- block summary_badges -%}
+                {{ macros.severity_badge(product.max_cvss, True) }}
+            {%- endblock summary_badges -%}
+        </div>
+        {%- if product.published %}
+            <div class="text-secondary me-4 mb-1">
+                {{ t('published') }}
+                {{ t('on_day') }}
+                {{ product.published }}.
+            </div>
+        {%- endif %}
+    {%- endblock summary -%}
+
+{%- elif view == "rss" -%}
+    {%- block rss -%}
+        {{ product.description }}
+        {% for item in product.body_items %}
+            {{ item.name }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    {%- endblock rss -%}
+
+{%- else -%}
+    {%- block detail -%}
+        {%- block header -%}
+            <div class="d-flex flex-column flex-md-row mb-1">
+                <h4 class="text-body me-3"{{ macros.content_lang(product, lang) }}>
+                    {% if product.max_tlp %}[TLP:{{ product.max_tlp }}] {% endif %}{{ product.title }}
+                </h4>
+            </div>
+            {%- if product.description -%}
+                <p class="mb-3 fw-normal h5 pre-wrap"{{ macros.content_lang(product, lang) }}>
+                    {{- product.description | link_refs(links) | clean -}}
+                </p>
+            {%- endif -%}
+        {%- endblock header -%}
+
+        {%- block items -%}
+            <div class="my-3">
+                {%- for item in product.body_items %}
+                    {%- if not selected_items or loop.index in selected_items %}
+                        {{ render_item(item, loop.index) }}
+                    {%- endif %}
+                {%- endfor %}
+            </div>
+        {%- endblock items -%}
+
+        {%- block links -%}
+            {#- Only when a source is shown: with ?items= every link may be hidden. -#}
+            {%- if visible_links | reject('none') | list %}
+                <div class="my-4" id="links"{{ macros.content_lang(product, lang) }}>
+                    <h5>
+                        {{ t('links') }}
+                    </h5>
+                    <ul>
+                        {%- for link in visible_links %}
+                            {%- if link is not none -%}
+                                <li>
+                                    [{{ loop.index }}]
+                                    <a href="{{ link | safe_url }}" class="text-break">{{ link }}</a>
+                                </li>
+                            {%- endif -%}
+                        {%- endfor %}
+                    </ul>
+                </div>
+            {%- endif %}
+        {%- endblock links -%}
+    {%- endblock detail -%}
+{%- endif -%}

@@ -10,11 +10,11 @@
     </div>
 {% endmacro %}
 
-{#- A report, or one of its report items, shown in another language than the page's (it is not
-    translated into this one) marks its own text with that language; its phrases are in it too. #}
-{%- macro content_lang(part) -%}
-    {%- set shown = part.get_language() -%}
-    {%- if shown and shown != current_language() %}{{ {"lang": shown} | xmlattr }}{% endif -%}
+{#- A report shown in another language than the page's (it is not translated into this one)
+    marks its own text with that language; its phrases are in it too. The report body comes from
+    the report templates, which have a macro of their own for this. #}
+{%- macro content_lang(report) -%}
+    {%- if report.language and report.language != current_language() %}{{ {"lang": report.language} | xmlattr }}{% endif -%}
 {%- endmacro %}
 
 {#- The languages the web offers, each opening this page in it; nothing when it offers one. #}
@@ -158,27 +158,6 @@
         </script>
     {%- endif -%}
 {%- endmacro %}
-
-{%- macro render_severity_badge(cvss, render_max=False) -%}
-    {% if cvss %}
-        {% set severity = get_cvss_severity(cvss) %}
-        {%- set badge_colors = {
-            "low": "#ffc107",
-            "medium": "#fd7e14",
-            "high": "#dc3545",
-            "critical": "#b02a37"
-        } -%}
-
-        <h5 class="m-0 fw-normal">
-            <span class="badge"
-                  title="Common Vulnerability Scoring System Base Score"
-                  style="background-color: {{ badge_colors[severity|lower] }}; color: white;">
-                {%- if render_max %}Max {% endif -%}
-                CVSS {{ cvss }} ({{ severity }})
-            </span>
-        </h5>
-    {% endif %}
-{%- endmacro -%}
 
 {%- macro render_logo() -%}
     {%- if images["logo"] and images["logo_height"] and images["logo_width"] -%}

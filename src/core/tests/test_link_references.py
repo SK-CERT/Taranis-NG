@@ -173,9 +173,10 @@ def test_render_presenter_input_leaves_its_input_objects_alone() -> None:
 def _attribute(attribute_id: int, title: str, attribute_type: AttributeType, value: str, key: str | None = None) -> types.SimpleNamespace:
     group_item = types.SimpleNamespace(
         title=title,
-        index=0,
+        index=0 if title == "Description" else 1,
+        max_occurrence=1 if title == "Description" else 10,
         attribute=types.SimpleNamespace(type=attribute_type),
-        attribute_group=types.SimpleNamespace(index=0),
+        attribute_group=types.SimpleNamespace(index=0, title="Vulnerability"),
     )
     return types.SimpleNamespace(id=attribute_id, attribute_group_item=group_item, value=value, value_description=key)
 
@@ -193,7 +194,7 @@ def test_public_web_feed_carries_numbers_and_urls_but_no_keys() -> None:
         uuid="u-1",
         created=None,
         last_updated=None,
-        report_item_type=types.SimpleNamespace(title="Vulnerability Report", description=""),
+        report_item_type=types.SimpleNamespace(id=2, title="Vulnerability Report", description=""),
         attributes=attributes,
         links=[{"key": "rep1aa", "url": f"{VENDOR} "}, {"key": "rep1bb", "url": NVD}],
     )
@@ -204,17 +205,29 @@ def test_public_web_feed_carries_numbers_and_urls_but_no_keys() -> None:
         links=[{"key": "prod01", "url": BLOG}],
         created=None,
         user=None,
+        product_preset=types.SimpleNamespace(id=4, name="Vulnerability bulletin"),
         report_items=[report_item],
     )
     feed = public_web._serialize_product(product)
 
     assert feed["links"] == [BLOG, VENDOR, NVD]
     assert feed["description"] == "Our note [1], NVD [3]."
+    assert feed["product_preset"] == {"id": 4, "title": "Vulnerability bulletin"}
+    assert feed["report_items"][0]["type_id"] == 2
     entries = feed["report_items"][0]["attributes"]
+    layout = {"group": "Vulnerability", "description": None}
     assert entries == [
-        {"key": "description", "type": "TEXT", "value": "Fixed upstream [3].", "description": None},
-        {"key": "links", "type": "LINK", "value": VENDOR, "description": None},
-        {"key": "links", "type": "LINK", "value": NVD, "description": None},
+        {
+            "key": "description",
+            "attribute_type": "TEXT",
+            "label": "Description",
+            "multiple": False,
+            "order": [0, 0],
+            "value": "Fixed upstream [3].",
+            **layout,
+        },
+        {"key": "links", "attribute_type": "LINK", "label": "Links", "multiple": True, "order": [0, 1], "value": VENDOR, **layout},
+        {"key": "links", "attribute_type": "LINK", "label": "Links", "multiple": True, "order": [0, 1], "value": NVD, **layout},
     ]
     assert "rep1" not in str(feed)
 

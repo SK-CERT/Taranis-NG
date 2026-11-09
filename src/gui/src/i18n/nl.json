@@ -1315,7 +1315,8 @@
             "late": "Reageert traag",
             "unreachable": "Onbereikbaar",
             "never_seen": "Nooit verbonden",
-            "last_seen": "laatst gezien"
+            "last_seen": "laatst gezien",
+            "disabled": "Uitgeschakeld"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Gepubliceerde producten op het openbare web tonen",
         "public_web_ids": "Websites",
         "public_web_ids_hint": "Geen gekozen: elk web.",
+        "public_web_template_hint": "Zonder eigen rapportsjabloon van dit product (Public Web → Rapportsjablonen) verschijnen op het web alleen kwetsbaarheidsrapporten.",
         "needs_delivery": "Voeg een formaat toe of toon de producten op het openbare web.",
         "successful": "Nieuw product is toegevoegd",
         "successful_edit": "Product is opgeslagen",
@@ -2169,7 +2171,10 @@
             "name": "Naam",
             "tab_description": "Public-web-knooppunten en de websites die zij bedienen",
             "tab_title": "Knooppunten",
-            "total_count": "{count} public-web-knooppunt | {count} public-web-knooppunten"
+            "total_count": "{count} public-web-knooppunt | {count} public-web-knooppunten",
+            "enabled": "Ingeschakeld",
+            "enabled_hint": "Uit: Taranis controleert en ververst dit knooppunt niet meer, publiceert geen van zijn websites en stuurt het geen rapporten. Zijn websites en instellingen blijven bewaard voor als het weer wordt ingeschakeld.",
+            "disabled_notice": "Dit knooppunt is uitgeschakeld: geen van zijn websites wordt gepubliceerd."
         },
         "webs": {
             "total_count": "{count} website | {count} websites",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Verwijderen bevestigen",
         "confirm_delete_node": "Public-web-knooppunt '{name}' en al zijn websites verwijderen?",
-        "confirm_delete_web": "Website '{name}' verwijderen?"
+        "confirm_delete_web": "Website '{name}' verwijderen?",
+        "tabs": {
+            "nodes": "Nodes en webs",
+            "nodes_description": "Public-web-nodes en de webs die ze hosten",
+            "templates": "Rapportsjablonen",
+            "templates_description": "Sjablonen waarmee de openbare webs producten tonen"
+        },
+        "templates": {
+            "total_count": "{count} sjabloon | {count} sjablonen",
+            "name": "Naam",
+            "kind": "Sjabloon voor",
+            "kind_product": "Product",
+            "kind_item": "Type rapportitem",
+            "target": "Geldt voor",
+            "product_preset": "Product",
+            "report_item_type": "Type rapportitem",
+            "target_hint": "Een product of type rapportitem kan één sjabloon voor alle websites hebben en andere voor gekozen websites.",
+            "require_tlp_clear": "Vereist TLP:CLEAR",
+            "require_tlp_clear_hint": "Uit: een product zonder TLP wordt ook getoond. Een TLP dat het heeft, moet altijd CLEAR zijn.",
+            "updated": "Laatst gewijzigd",
+            "none": "Nog geen eigen sjablonen.",
+            "confirm_delete": "Sjabloon '{name}' verwijderen? Het ingebouwde sjabloon komt ervoor in de plaats, tenzij het is uitgeschakeld.",
+            "edit": "Rapportsjabloon bewerken",
+            "add_new": "Rapportsjabloon toevoegen",
+            "source": "Sjabloon (Jinja)",
+            "start_from": "Beginnen met",
+            "start_product_base": "Een pagina die de basisopmaak uitbreidt",
+            "start_product_vulnerability": "De opmaak voor kwetsbaarheidsrapporten",
+            "help_title": "Wat een sjabloon kan gebruiken",
+            "help_product": "Een productsjabloon breidt een ingebouwde opmaak uit en overschrijft de blokken ervan: header, items en links (de rapportpagina), summary (het item op de startpagina) en rss (de RSS-tekst).",
+            "help_item": "Een itemsjabloon toont één blok van een rapportitem op de rapportpagina.",
+            "help_attrs": "Waarden van dit type rapportitem:",
+            "help_more": "Waarden worden ge-escaped; de filters (clean, link_refs, cvss_score en andere) staan in de README van public-web. Een sjabloon dat faalt, wordt vervangen door het ingebouwde.",
+            "help_ctx_product": "het product: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "de bronnen van het product; [n] in de teksten is links[n - 1]",
+            "help_ctx_render_item": "toont een item met zijn eigen sjabloon",
+            "help_ctx_selected_items": "de door de lezer gekozen items (?items=); leeg betekent alle",
+            "help_ctx_t": "een zin uit de vertalingen van het openbare web",
+            "help_ctx_item": "het rapportitem: name, type, attrs, attributes, fields",
+            "help_ctx_index": "de positie van het item op de pagina",
+            "builtin_title": "Ingebouwde sjablonen",
+            "builtin_intro": "Het openbare web gebruikt deze voor producten en rapportitems zonder eigen sjabloon. Ze kunnen niet worden verwijderd, maar u kunt er een uitschakelen om daar alleen uw eigen sjablonen te gebruiken.",
+            "builtin_in_use": "In gebruik",
+            "builtin_used_for": "Gebruikt voor",
+            "builtin_always_on": "Altijd aan: eigen sjablonen bouwen erop voort.",
+            "builtin_view": "Sjabloon tonen",
+            "builtin_copy": "Kopiëren",
+            "builtin_copied": "Gekopieerd",
+            "builtin_copy_failed": "Kopiëren mislukt. Selecteer de tekst en kopieer die met de hand.",
+            "builtin_none": "Geen ingebouwd sjabloon komt overeen met de zoekopdracht.",
+            "builtin_use": {
+                "product_base": "De opmaak die elk productsjabloon uitbreidt.",
+                "product_vulnerability": "De pagina van kwetsbaarheidsrapporten van producten zonder eigen sjabloon.",
+                "item_vulnerability": "Items van het type Vulnerability Report zoals Taranis het aanmaakt, zonder eigen sjabloon.",
+                "item_generic": "Elk ander rapportitem van een type zonder eigen sjabloon.",
+                "macros": "Macro's die de sjablonen importeren."
+            },
+            "builtin_off": {
+                "product": "Uit: op het openbare web verschijnen alleen producten met een eigen sjabloon.",
+                "item_specific": "Uit: deze items gebruiken het algemene sjabloon, of vallen weg als dat ook uit staat.",
+                "item_generic": "Uit: rapportitems zonder overgebleven sjabloon worden niet getoond, en een product zonder overgebleven item evenmin."
+            },
+            "webs": "Websites",
+            "webs_hint": "Niets gekozen: alle websites. Een website gebruikt het sjabloon dat haar noemt, anders dat voor alle websites.",
+            "every_web": "Alle websites",
+            "web_taken": "Al in '{name}'",
+            "every_web_taken": "'{name}' is al het sjabloon voor alle websites: kies de websites waarvoor dit sjabloon is."
+        }
     },
     "routing": {
         "tab_title": "Routering en TLS",

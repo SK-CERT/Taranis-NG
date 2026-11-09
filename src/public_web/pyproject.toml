@@ -25,3 +25,6 @@ build-backend = "setuptools.build_meta"
 # Run from src/public_web (scripts/run_tests.py cds here). The tests import the app,
 # so scripts/dev_setup.py installs the dependencies above into the root .venv.
 testpaths = ["tests"]
+# `lib` and `run` are the service's own top-level modules; the project is never
+# pip-installed for a test run, so put its root on sys.path.
+pythonpath = ["."]

@@ -10,25 +10,27 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from flask import Flask
-from lib.report.vulnerability_report import VulnerabilityReport
+from lib.report.product import build_product
+from lib.report.renderer import ReportRenderer
 from lib.web import exceptions
 
 if TYPE_CHECKING:
     import pytest
 
 
-def _report(*extra_attributes: dict) -> VulnerabilityReport:
+def _detail(*extra_attributes: dict) -> str:
+    """The report page body of a one-vulnerability product, with phrase keys for its phrases."""
     item = {
         "title": "Kernel flaw",
         "type": "Vulnerability Report",
         "attributes": [
-            {"key": "description", "type": "TEXT", "value": "An attacker can run code.", "description": None},
-            {"key": "tlp", "type": "TLP", "value": "CLEAR", "description": None},
-            {"key": "affected_systems", "type": "TEXT", "value": "Linux: kernel; <6.1", "description": None},
+            {"key": "description", "attribute_type": "TEXT", "value": "An attacker can run code.", "description": None},
+            {"key": "tlp", "attribute_type": "TLP", "value": "CLEAR", "description": None},
+            {"key": "affected_systems", "attribute_type": "STRING", "value": "Linux: kernel; <6.1", "description": None},
             *extra_attributes,
         ],
     }
-    return VulnerabilityReport.from_dict(
+    product = build_product(
         {
             "id": 7,
             "title": "Bulletin",
@@ -38,16 +40,20 @@ def _report(*extra_attributes: dict) -> VulnerabilityReport:
             "report_items": [item],
         },
     )
+    return str(ReportRenderer([]).render(product, "detail"))
 
 
-def test_a_report_item_without_an_exposure_date_has_none() -> None:
-    assert _report().get_report_items()[0].get_exposure_date() is None
+def test_a_report_item_without_an_exposure_date_shows_without_one() -> None:
+    detail = _detail()
+
+    assert "An attacker can run code." in detail
+    assert "vulnerability_exposed" not in detail
 
 
 def test_a_report_item_shows_its_exposure_date() -> None:
-    exposure = {"key": "exposure_date", "type": "DATE", "value": "2026.10.01", "description": None}
+    exposure = {"key": "exposure_date", "attribute_type": "DATE", "value": "2026.10.01", "description": None}
 
-    assert _report(exposure).get_report_items()[0].get_exposure_date() == "1. 10. 2026"
+    assert "vulnerability_exposed 1. 10. 2026." in " ".join(_detail(exposure).split())
 
 
 def test_an_unexpected_error_is_logged_as_well_as_mailed(monkeypatch: pytest.MonkeyPatch) -> None:

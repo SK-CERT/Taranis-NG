@@ -1315,7 +1315,8 @@
             "late": "Réponse lente",
             "unreachable": "Injoignable",
             "never_seen": "Jamais connecté",
-            "last_seen": "vu pour la dernière fois"
+            "last_seen": "vu pour la dernière fois",
+            "disabled": "Désactivé"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Afficher ses produits publiés sur le web public",
         "public_web_ids": "Sites web",
         "public_web_ids_hint": "Aucun choisi : tous les webs.",
+        "public_web_template_hint": "Sans modèle de rapport propre à ce produit (Public Web → Modèles de rapports), seuls les rapports de vulnérabilité apparaissent sur le web.",
         "needs_delivery": "Ajoutez un format ou affichez les produits sur le web public.",
         "successful": "Le nouveau produit a été ajouté",
         "successful_edit": "Le produit a été enregistré",
@@ -2169,7 +2171,10 @@
             "name": "Nom",
             "tab_description": "Nœuds public-web et les sites qu'ils servent",
             "tab_title": "Nœuds",
-            "total_count": "{count} nœud public-web | {count} nœuds public-web"
+            "total_count": "{count} nœud public-web | {count} nœuds public-web",
+            "enabled": "Activé",
+            "enabled_hint": "Désactivé : Taranis cesse de vérifier et de rafraîchir ce nœud, ne publie aucun de ses sites et ne lui envoie aucun rapport. Ses sites et ses réglages sont conservés pour sa réactivation.",
+            "disabled_notice": "Ce nœud est désactivé : aucun de ses sites n'est publié."
         },
         "webs": {
             "total_count": "{count} site | {count} sites",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Confirmer la suppression",
         "confirm_delete_node": "Supprimer le nœud public-web '{name}' et tous ses sites ?",
-        "confirm_delete_web": "Supprimer le site '{name}' ?"
+        "confirm_delete_web": "Supprimer le site '{name}' ?",
+        "tabs": {
+            "nodes": "Nœuds et webs",
+            "nodes_description": "Les nœuds public-web et les webs qu'ils hébergent",
+            "templates": "Modèles de rapports",
+            "templates_description": "Modèles avec lesquels les webs publics affichent les produits"
+        },
+        "templates": {
+            "total_count": "{count} modèle | {count} modèles",
+            "name": "Nom",
+            "kind": "Modèle pour",
+            "kind_product": "Produit",
+            "kind_item": "Type d'élément de rapport",
+            "target": "S’applique à",
+            "product_preset": "Produit",
+            "report_item_type": "Type d'élément de rapport",
+            "target_hint": "Un produit ou un type d'élément de rapport peut avoir un modèle pour tous les sites et d'autres pour des sites choisis.",
+            "require_tlp_clear": "Exige TLP:CLEAR",
+            "require_tlp_clear_hint": "Désactivé : un produit sans TLP est aussi affiché. Un TLP présent doit toujours être CLEAR.",
+            "updated": "Dernière modification",
+            "none": "Pas encore de modèle personnalisé.",
+            "confirm_delete": "Supprimer le modèle '{name}' ? Le modèle intégré prend sa place, sauf s'il est désactivé.",
+            "edit": "Modifier le modèle de rapport",
+            "add_new": "Ajouter un modèle de rapport",
+            "source": "Modèle (Jinja)",
+            "start_from": "Partir de",
+            "start_product_base": "Une page qui étend la mise en page de base",
+            "start_product_vulnerability": "La mise en page des rapports de vulnérabilités",
+            "help_title": "Ce qu'un modèle peut utiliser",
+            "help_product": "Un modèle de produit étend une mise en page intégrée et redéfinit ses blocs : header, items et links (la page du rapport), summary (l'entrée de la page d'accueil) et rss (le texte RSS).",
+            "help_item": "Un modèle d'élément affiche un bloc d'élément de rapport sur la page du rapport.",
+            "help_attrs": "Valeurs de ce type d'élément de rapport :",
+            "help_more": "Les valeurs sont échappées ; les filtres (clean, link_refs, cvss_score et autres) sont décrits dans le README de public-web. Un modèle en échec est remplacé par le modèle intégré.",
+            "help_ctx_product": "le produit : title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "les sources du produit ; [n] dans les textes est links[n - 1]",
+            "help_ctx_render_item": "affiche un élément avec son propre modèle",
+            "help_ctx_selected_items": "les éléments choisis par le lecteur (?items=) ; vide signifie tous",
+            "help_ctx_t": "une phrase des traductions du web public",
+            "help_ctx_item": "l'élément de rapport : name, type, attrs, attributes, fields",
+            "help_ctx_index": "la position de l'élément sur la page",
+            "builtin_title": "Modèles intégrés",
+            "builtin_intro": "Le web public les utilise pour les produits et les éléments de rapport sans modèle propre. Ils ne peuvent pas être supprimés, mais vous pouvez en désactiver un pour n'utiliser là que vos propres modèles.",
+            "builtin_in_use": "Utilisé",
+            "builtin_used_for": "Sert à",
+            "builtin_always_on": "Toujours actif : les modèles personnalisés s'appuient dessus.",
+            "builtin_view": "Afficher le modèle",
+            "builtin_copy": "Copier",
+            "builtin_copied": "Copié",
+            "builtin_copy_failed": "La copie a échoué. Sélectionnez le texte et copiez-le à la main.",
+            "builtin_none": "Aucun modèle intégré ne correspond à la recherche.",
+            "builtin_use": {
+                "product_base": "La mise en page qu'étend tout modèle de produit.",
+                "product_vulnerability": "La page des rapports de vulnérabilités des produits sans modèle propre.",
+                "item_vulnerability": "Les éléments du type Vulnerability Report tel que Taranis le crée, sans modèle propre.",
+                "item_generic": "Tout autre élément de rapport d'un type sans modèle propre.",
+                "macros": "Macros importées par les modèles."
+            },
+            "builtin_off": {
+                "product": "Désactivé : seuls les produits ayant leur propre modèle apparaissent sur le web public.",
+                "item_specific": "Désactivé : ces éléments utilisent le modèle générique, ou sont omis s'il est désactivé lui aussi.",
+                "item_generic": "Désactivé : les éléments de rapport restés sans modèle ne sont pas affichés, ni un produit à qui il n'en reste aucun."
+            },
+            "webs": "Sites",
+            "webs_hint": "Aucun choisi : tous les sites. Un site utilise le modèle qui le cite, sinon celui de tous les sites.",
+            "every_web": "Tous les sites",
+            "web_taken": "Déjà dans '{name}'",
+            "every_web_taken": "'{name}' est déjà son modèle pour tous les sites : choisissez les sites auxquels celui-ci s'applique."
+        }
     },
     "routing": {
         "tab_title": "Routage et TLS",

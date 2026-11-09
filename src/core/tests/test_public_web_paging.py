@@ -12,7 +12,7 @@ import pytest
 from api import public_web
 from flask import Flask
 
-NODE = types.SimpleNamespace(name="node", touch=lambda: None)
+NODE = types.SimpleNamespace(name="node", enabled=True, touch=lambda: None)
 
 
 @pytest.fixture

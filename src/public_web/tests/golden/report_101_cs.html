@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="cs">
+    <head>
+
+        <title>
+    Critical vulnerabilities in Apache products</title>
+        <link rel="icon"
+              type="image/x-icon"
+              href="/static/favicon.ico">
+        <link rel="alternate"
+              type="application/rss+xml"
+              title="Example feed RSS"
+              href="https://localhost/feed">
+
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+              rel="stylesheet"
+              integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+              crossorigin="anonymous">
+
+        <!-- Material Design Icons -->
+        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css"
+              rel="stylesheet"
+              crossorigin="anonymous">
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet"
+              href="/static/styles.css">
+
+        <meta name="description"
+              content="Public feed of vulnerability reports.">
+        <meta name="keywords"
+              content="vulnerabilities, vulnerability reports">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="color-scheme" content="light dark">
+
+            <script>
+                  (function() {
+                        const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+                        function applyTheme(eventOrList) {
+                              const isDark = typeof eventOrList.matches === "boolean"
+                                    ? eventOrList.matches
+                                    : darkModeQuery.matches;
+                              document.documentElement.setAttribute("data-bs-theme", isDark ? "dark" : "light");
+                        }
+
+                        applyTheme(darkModeQuery);
+
+                        if (typeof darkModeQuery.addEventListener === "function") {
+                              darkModeQuery.addEventListener("change", applyTheme);
+                        } else if (typeof darkModeQuery.addListener === "function") {
+                              darkModeQuery.addListener(applyTheme);
+                        }
+                  })();
+            </script>
+
+        <!-- Tags for social networks (e.g. Mastodon) -->
+
+        <meta property="og:title" content="
+    Critical vulnerabilities in Apache products">
+        <meta property="og:description" content="Public feed of vulnerability reports.">
+        <meta property="og:image" content="http://localhost/static/preview.png">
+        <meta property="og:url" content="http://localhost/reports/101?lang=cs">
+        <meta name="twitter:image:src" content="http://localhost/static/preview.png">
+
+    </head>
+    <body>
+        <main>
+    <div class="m-3">
+        <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+            <nav class="me-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/?lang=cs"
+                           class="d-flex align-items-center text-decoration-none">
+                            <span class="mdi mdi-home" aria-hidden="true"></span>
+                            <p class="m-0 ms-1">
+                                Home
+                            </p>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">
+                        Report 101
+                    </li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <div class="dropdown" data-test="language-picker">
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            title="Jazyk">
+                        <span class="mdi mdi-translate fs-5 me-1" aria-hidden="true"></span>
+                        <span class="visually-hidden">Jazyk:</span>
+                        Čeština
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item"
+                               href="/reports/101?lang=en"
+                               hreflang="en"
+                               lang="en">English</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item active"
+                               href="/reports/101?lang=cs"
+                               hreflang="cs"
+                               lang="cs" aria-current="true">Čeština</a>
+                        </li>
+                    </ul>
+                </div>
+                <button id="feedback-button"
+                        type="button"
+                        class="btn btn-primary text-nowrap"
+                        data-bs-toggle="modal"
+                        data-bs-target="#feedback-modal">
+                    Dát zpětnou vazbu
+                </button>
+            </div>
+
+            <div class="modal fade" id="feedback-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        Zpětná vazba k reportu
+                    </h1>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="feedback-form">
+                        <div class="form-group">
+
+                                <div class="">
+                                    <label for="question1">
+                                        Do you find this report well prepared?
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div id="question1">
+                                        <div class="form-check-inline">
+                                                                                        <input class="form-check-input"
+                                                                                                     type="radio"
+                                                                                                     name="feedback-question1"
+                                                                                                     id="question1-yes"
+                                                                                                     value="yes"
+                                                                                                     required>
+                                                                                        <label class="form-check-label" for="question1-yes">
+                                                                                                Ano
+                                            </label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                                                                        <input class="form-check-input"
+                                                                                                     type="radio"
+                                                                                                     name="feedback-question1"
+                                                                                                     id="question1-no"
+                                                                                                     value="no"
+                                                                                                     required>
+                                                                                        <label class="form-check-label" for="question1-no">
+                                                                                                Ne
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <label for="question2">
+                                        Do you use this technology?
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div id="question2">
+                                        <div class="form-check-inline">
+                                                                                        <input class="form-check-input"
+                                                                                                     type="radio"
+                                                                                                     name="feedback-question2"
+                                                                                                     id="question2-yes"
+                                                                                                     value="yes"
+                                                                                                     required>
+                                                                                        <label class="form-check-label" for="question2-yes">
+                                                                                                Ano
+                                            </label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                                                                        <input class="form-check-input"
+                                                                                                     type="radio"
+                                                                                                     name="feedback-question2"
+                                                                                                     id="question2-no"
+                                                                                                     value="no"
+                                                                                                     required>
+                                                                                        <label class="form-check-label" for="question2-no">
+                                                                                                Ne
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <label for="question3">
+                                        Was this report useful to you?
+
+                                    </label>
+                                    <div id="question3">
+                                        <div class="form-check-inline">
+                                                                                        <input class="form-check-input"
+                                                                                                     type="radio"
+                                                                                                     name="feedback-question3"
+                                                                                                     id="question3-yes"
+                                                                                                     value="yes"
+                                                                                                     >
+                                                                                        <label class="form-check-label" for="question3-yes">
+                                                                                                Ano
+                                            </label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                                                                        <input class="form-check-input"
+                                                                                                     type="radio"
+                                                                                                     name="feedback-question3"
+                                                                                                     id="question3-no"
+                                                                                                     value="no"
+                                                                                                     >
+                                                                                        <label class="form-check-label" for="question3-no">
+                                                                                                Ne
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            <div class="mt-3">
+                                <label for="feedback-comment">
+                                    We will appreciate your additional comments:
+                                </label>
+                                <textarea class="form-control text-field"
+                                          id="feedback-comment"
+                                          name="feedback-comment"
+                                          rows="3"
+                                          onfocus="this.style.boxShadow='none';"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <span id="feedback-message" class="form-text form-error text-danger d-none"></span>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Zavřít
+                    </button>
+                    <button type="submit"
+                            form="feedback-form"
+                            id="feedback-submit"
+                            class="btn btn-primary">
+                        Odeslat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+        <div class="alert alert-warning alert-dismissible fade show d-flex" role="alert">
+            <div class="d-flex align-items-center">
+                <span class="mdi mdi-alert me-2 fs-4 flex-shrink-0" role="img" aria-label="Info"></span>
+                <span class="px-1">
+                    This service is provided as a best-effort aid to security. It does not guarantee coverage of all vulnerabilities and should complement, not replace, your own security management.
+                </span>
+            </div>
+            <button id="services-warning-close"
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const hideWarningBtn = document.getElementById('services-warning-close');
+                if (hideWarningBtn) {
+                    hideWarningBtn.addEventListener('click', () => {
+                        document.cookie = "warning-seen=True; path=/; max-age=" + (100 * 365 * 24 * 60 * 60);
+                    });
+                }
+            });
+        </script><div class="d-flex flex-column flex-md-row mb-1">
+            <h4 class="text-body me-3">
+                [TLP:CLEAR] Critical vulnerabilities in Apache products
+            </h4>
+        </div><p class="mb-3 fw-normal h5 pre-wrap">Several vulnerabilities were published, see <a href="https://httpd.apache.org/security/" style="text-decoration: none;">[1]</a>.</p><!-- CVEs and their description -->
+        <div class="accordion my-3">
+                    <div class="accordion-item" id="accordionCVE-1">
+                        <div class="accordion-header" id="heading1">
+                            <div class="accordion-button"
+                                 role="button"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#collapse1"
+                                 aria-expanded="true"
+                                 aria-controls="collapse1">
+                                <h5 class="m-0 text-body">
+
+                                    <b class="fw-bolder me-4">Apache HTTP Server: request smuggling (CVE-2025-1111)</b>
+
+        <h5 class="m-0 fw-normal">
+            <span class="badge"
+                  title="Common Vulnerability Scoring System Base Score"
+                  style="background-color: #b02a37; color: white;">CVSS 9.8 (Critical)
+            </span>
+        </h5>
+
+                                </h5>
+                            </div>
+                        </div>
+                        <div id="collapse1"
+                             class="accordion-collapse collapse show"
+                             aria-labelledby="heading1">
+                            <div class="accordion-body">
+                                    <p class="mt-1 mb-0 pre-wrap">An attacker can smuggle requests <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1111" style="text-decoration: none;">[2]</a> and bypass ACLs <a href="https://httpd.apache.org/security/" style="text-decoration: none;">[1]</a>.</p>
+                                        <p class="mt-1 mb-0">
+                                            Zranitelnost se nachází v produktech:
+                                        </p>
+                                        <ul class="m-0"><li>
+                                                        <span class="fw-light">Apache HTTP Server (linux)</span>
+
+        ve verzích
+        <span class="fw-light"
+              data-bs-toggle="popover"
+              data-bs-container="body"
+              data-bs-placement="top"
+              title="Originální formát verzí"
+              data-bs-content="linux:Apache HTTP Server; &gt;=2.4.0, &lt;2.4.65">
+            &gt;=2.4.0 AND  &lt;2.4.65</span>
+
+                                                    </li><li>
+                                                        <span class="fw-light">Apache mod_proxy</span>
+
+        ve verzích
+        <span class="fw-light"
+              data-bs-toggle="popover"
+              data-bs-container="body"
+              data-bs-placement="top"
+              title="Originální formát verzí"
+              data-bs-content="Apache mod_proxy; &lt;2.4.65; 3.0.0-beta">
+            (&lt;2.4.65) OR (3.0.0-beta)</span>
+
+                                                    </li><li>
+                                                        <span class="fw-light">Apache Traffic Server</span>
+                                                    </li>
+                                        </ul>
+                                    <p class="mt-1 mb-0 pre-wrap">Update to version 2.4.65 or later <a href="https://httpd.apache.org/security/" style="text-decoration: none;">[1]</a>.</p>
+                                    <p class="mt-1 mb-0 text-break">
+                                        <b>CVSS:</b>
+                                        CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+                                    </p>
+                                    <p class="mt-1 mb-0">
+                                        <b data-bs-toggle="tooltip"
+                                           title="Indicator of Compromise">
+                                            IOC:
+                                        </b> 198.51.100.7, evil.example.net
+                                    </p>
+                                <p class="mt-1 mb-0">
+                                    <b>Více informací:</b>
+                                </p>
+                                <ul class="m-0">
+                                        <li>
+                                            CVE-2025-1111 na
+                                            <a href="https://cve.org/CVERecord?id=CVE-2025-1111">cve.org</a>,
+                                            <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1111">NVD</a>,
+                                            <a href="https://github.com/advisories?query=CVE-2025-1111">GitHub</a>,
+                                            <a href="https://cve.circl.lu/cve/CVE-2025-1111">CIRCL.LU</a>,
+                                            <a href="https://security-tracker.debian.org/tracker/CVE-2025-1111">Debian</a>,
+                                            <a href="https://ubuntu.com/security/CVE-2025-1111">Ubuntu</a>,
+                                            <a href="https://access.redhat.com/security/cve/CVE-2025-1111">Red Hat</a>,
+                                            <a href="https://suse.com/security/cve/CVE-2025-1111">SUSE</a>
+                                        </li>
+                                        <li>
+                                            CVE-2025-1112 na
+                                            <a href="https://cve.org/CVERecord?id=CVE-2025-1112">cve.org</a>,
+                                            <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1112">NVD</a>,
+                                            <a href="https://github.com/advisories?query=CVE-2025-1112">GitHub</a>,
+                                            <a href="https://cve.circl.lu/cve/CVE-2025-1112">CIRCL.LU</a>,
+                                            <a href="https://security-tracker.debian.org/tracker/CVE-2025-1112">Debian</a>,
+                                            <a href="https://ubuntu.com/security/CVE-2025-1112">Ubuntu</a>,
+                                            <a href="https://access.redhat.com/security/cve/CVE-2025-1112">Red Hat</a>,
+                                            <a href="https://suse.com/security/cve/CVE-2025-1112">SUSE</a>
+                                        </li><li>
+                                                <span>
+                                                    CWE-444: Inconsistent Interpretation of HTTP Requests
+                                                </span> na
+                                                <a href="https://cwe.mitre.org/data/definitions/444">
+                                                    cwe.mitre.org
+                                                </a>
+                                            </li><li>
+                                                <span>
+                                                    CWE-20
+                                                </span> na
+                                                <a href="https://cwe.mitre.org/data/definitions/20">
+                                                    cwe.mitre.org
+                                                </a>
+                                            </li>
+                                </ul>
+                                    <p class="mt-3 mb-1 text-secondary">
+                                            Zranitelnost byla veřejně oznámena
+                                            10. 9. 2025.
+                                            Naposledy byl tento report aktualizován
+                                            12. 9. 2025.
+                                    </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item" id="accordionCVE-2">
+                        <div class="accordion-header" id="heading2">
+                            <div class="accordion-button"
+                                 role="button"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#collapse2"
+                                 aria-expanded="true"
+                                 aria-controls="collapse2">
+                                <h5 class="m-0 text-body">
+
+                                    <b class="fw-bolder me-4">Apache Tomcat information disclosure</b>
+
+        <h5 class="m-0 fw-normal">
+            <span class="badge"
+                  title="Common Vulnerability Scoring System Base Score"
+                  style="background-color: #fd7e14; color: white;">CVSS 5.3 (Medium)
+            </span>
+        </h5>
+
+                                </h5>
+                            </div>
+                        </div>
+                        <div id="collapse2"
+                             class="accordion-collapse collapse show"
+                             aria-labelledby="heading2">
+                            <div class="accordion-body">
+                                    <p class="mt-1 mb-0 pre-wrap">Sensitive files may be read, see <a href="https://tomcat.apache.org/security-10.html" style="text-decoration: none;">[3]</a>.</p><p class="mt-1 mb-0">
+                                                Zranitelnost se nachází v produktu
+                                                <span class="fw-light">Apache Tomcat (windows)</span>
+
+        ve verzích
+        <span class="fw-light"
+              data-bs-toggle="popover"
+              data-bs-container="body"
+              data-bs-placement="top"
+              title="Originální formát verzí"
+              data-bs-content="windows:Apache Tomcat; &lt;10.1.40">
+            &lt;10.1.40</span>.
+
+                                            </p>
+                                <p class="mt-1 mb-0">
+                                    <b>Více informací:</b>
+                                </p>
+                                <ul class="m-0">
+                                </ul>
+                                    <p class="mt-3 mb-1 text-secondary">
+                                            Zranitelnost byla veřejně oznámena
+                                            11. 9. 2025.
+                                    </p>
+                            </div>
+                        </div>
+                    </div>
+        </div>
+            <div class="my-4" id="links">
+                <h5>
+                    Odkazy
+                </h5>
+                <ul><li>
+                                [1]
+                                <a href="https://httpd.apache.org/security/" class="text-break">https://httpd.apache.org/security/</a>
+                            </li><li>
+                                [2]
+                                <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1111" class="text-break">https://nvd.nist.gov/vuln/detail/CVE-2025-1111</a>
+                            </li><li>
+                                [3]
+                                <a href="https://tomcat.apache.org/security-10.html" class="text-break">https://tomcat.apache.org/security-10.html</a>
+                            </li>
+                </ul>
+            </div>
+
+        <hr>
+        <div class="d-flex flex-row">
+                <p class="m-0 me-4">
+                        Za <a href="https://cert.example.org" target="_blank">Example CERT</a>
+                        Jan Novak
+                    dne 15. 9. 2025.
+                </p>
+            <a href="https://cert.example.org"
+           target="_blank"
+           class="ms-auto">
+            <img src="/static/logo.svg"
+                 height="45"
+                 width="90"
+                 alt="Example CERT Logo">
+        </a>
+        </div>
+    </div>
+        </main>
+
+        <!-- Bootstrap Javascripts -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const ajax_feedback_post_url = "/reports/101/feedback?lang=cs";
+        const something_went_wrong_message = "Při odesílání nastala chyba, zkuste to prosím později.";
+        const ok_message = "Zpětná vazba úspěšně odeslána.";
+
+        const form = document.getElementById('feedback-form')
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const feedback_comment = document.getElementById(`feedback-comment`);
+            const feedback_submit = document.getElementById(`feedback-submit`);
+
+            feedback_comment.readonly = true;
+            feedback_submit.disabled = true;
+            try {
+                const response = await fetch(ajax_feedback_post_url, {
+                    method: "POST",
+                    body: new URLSearchParams(new FormData(form))
+                });
+
+                const feedback_message = document.getElementById(`feedback-message`);
+
+                let data;
+                if (response.ok) {
+                    data = await response.json();
+                    console.log(`Feedback ended with status: '${response.status}'`);
+                    feedback_message.innerHTML = ok_message;
+                    feedback_message.classList.remove('text-danger');
+                    feedback_message.classList.add('text-success');
+                } else {
+                    console.log(`Feedback ended with error: '${response.status}', '${response.statusText}'`);
+                    feedback_message.innerHTML = something_went_wrong_message;
+                }
+
+                feedback_message.classList.remove('d-none');
+
+                if (!response.ok || data.form_errors) {
+                    feedback_comment.readonly = false;
+                    feedback_submit.disabled = false;
+                }
+            } catch (error) {
+                console.log(`Feedback ended with error: '${error.message}'`);
+                const feedback_message = document.getElementById(`feedback-message`);
+                feedback_message.innerHTML = something_went_wrong_message;
+                feedback_message.classList.remove('d-none');
+                feedback_comment.readonly = false;
+                feedback_submit.disabled = false;
+            }
+        });
+    </script>
+
+    <!-- Enable popovers -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.forEach(function(popoverTriggerEl) {
+                new bootstrap.Popover(popoverTriggerEl);
+            });
+        });
+    </script>
+    </body>
+</html>

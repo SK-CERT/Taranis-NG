@@ -1315,7 +1315,8 @@
             "late": "Antwortet langsam",
             "unreachable": "Nicht erreichbar",
             "never_seen": "Nie verbunden",
-            "last_seen": "zuletzt gesehen"
+            "last_seen": "zuletzt gesehen",
+            "disabled": "Deaktiviert"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Veröffentlichte Produkte im öffentlichen Web zeigen",
         "public_web_ids": "Websites",
         "public_web_ids_hint": "Keine ausgewählt: jedes Web.",
+        "public_web_template_hint": "Ohne eigene Berichtsvorlage dieses Produkts (Public Web → Berichtsvorlagen) erscheinen im Web nur Schwachstellenberichte.",
         "needs_delivery": "Fügen Sie ein Format hinzu oder zeigen Sie die Produkte im öffentlichen Web.",
         "successful": "Neues Produkt wurde hinzugefügt",
         "successful_edit": "Produkt wurde gespeichert",
@@ -2169,7 +2171,10 @@
             "name": "Name",
             "tab_description": "Public-Web-Knoten und die von ihnen ausgelieferten Websites",
             "tab_title": "Knoten",
-            "total_count": "{count} Public-Web-Knoten | {count} Public-Web-Knoten"
+            "total_count": "{count} Public-Web-Knoten | {count} Public-Web-Knoten",
+            "enabled": "Aktiviert",
+            "enabled_hint": "Aus: Taranis prüft und aktualisiert diesen Knoten nicht mehr, veröffentlicht keine seiner Websites und sendet ihm keine Berichte. Seine Websites und Einstellungen bleiben erhalten, bis er wieder eingeschaltet wird.",
+            "disabled_notice": "Dieser Knoten ist ausgeschaltet: Keine seiner Websites wird veröffentlicht."
         },
         "webs": {
             "total_count": "{count} Website | {count} Websites",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Löschen bestätigen",
         "confirm_delete_node": "Public-Web-Knoten '{name}' und alle zugehörigen Websites löschen?",
-        "confirm_delete_web": "Website '{name}' löschen?"
+        "confirm_delete_web": "Website '{name}' löschen?",
+        "tabs": {
+            "nodes": "Knoten & Webs",
+            "nodes_description": "Public-Web-Knoten und die Webs, die sie hosten",
+            "templates": "Berichtsvorlagen",
+            "templates_description": "Vorlagen, mit denen die öffentlichen Webs Produkte darstellen"
+        },
+        "templates": {
+            "total_count": "{count} Vorlage | {count} Vorlagen",
+            "name": "Bezeichnung",
+            "kind": "Vorlage für",
+            "kind_product": "Produkt",
+            "kind_item": "Berichtselementtyp",
+            "target": "Gilt für",
+            "product_preset": "Produkt",
+            "report_item_type": "Berichtselementtyp",
+            "target_hint": "Ein Produkt oder Berichtselementtyp kann eine Vorlage für alle Websites und weitere für ausgewählte Websites haben.",
+            "require_tlp_clear": "Erfordert TLP:CLEAR",
+            "require_tlp_clear_hint": "Aus: Auch ein Produkt ohne TLP wird angezeigt. Ein vorhandenes TLP muss immer CLEAR sein.",
+            "updated": "Zuletzt geändert",
+            "none": "Noch keine eigenen Vorlagen.",
+            "confirm_delete": "Vorlage '{name}' löschen? Die eingebaute Vorlage tritt an ihre Stelle, sofern sie nicht abgeschaltet ist.",
+            "edit": "Berichtsvorlage bearbeiten",
+            "add_new": "Berichtsvorlage hinzufügen",
+            "source": "Vorlage (Jinja)",
+            "start_from": "Beginnen mit",
+            "start_product_base": "Eine Seite, die das Basislayout erweitert",
+            "start_product_vulnerability": "Das Layout für Schwachstellenberichte",
+            "help_title": "Was eine Vorlage verwenden kann",
+            "help_product": "Eine Produktvorlage erweitert ein eingebautes Layout und überschreibt dessen Blöcke: header, items und links (die Berichtsseite), summary (der Eintrag auf der Startseite) und rss (der RSS-Text).",
+            "help_item": "Eine Elementvorlage stellt einen Block eines Berichtselements auf der Berichtsseite dar.",
+            "help_attrs": "Werte dieses Berichtselementtyps:",
+            "help_more": "Werte werden maskiert; die Filter (clean, link_refs, cvss_score und weitere) stehen in der README von public-web. Eine fehlerhafte Vorlage wird durch die eingebaute ersetzt.",
+            "help_ctx_product": "das Produkt: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "die Quellen des Produkts; [n] in den Texten ist links[n - 1]",
+            "help_ctx_render_item": "stellt ein Element mit seiner eigenen Vorlage dar",
+            "help_ctx_selected_items": "die vom Leser gewählten Elemente (?items=); leer bedeutet alle",
+            "help_ctx_t": "eine Phrase aus den Übersetzungen des öffentlichen Webs",
+            "help_ctx_item": "das Berichtselement: name, type, attrs, attributes, fields",
+            "help_ctx_index": "die Position des Elements auf der Seite",
+            "builtin_title": "Eingebaute Vorlagen",
+            "builtin_intro": "Das öffentliche Web verwendet sie für Produkte und Berichtselemente ohne eigene Vorlage. Sie lassen sich nicht löschen, aber Sie können eine abschalten, um dort nur Ihre eigenen Vorlagen zu verwenden.",
+            "builtin_in_use": "In Verwendung",
+            "builtin_used_for": "Verwendet für",
+            "builtin_always_on": "Immer aktiv: Eigene Vorlagen bauen darauf auf.",
+            "builtin_view": "Vorlage anzeigen",
+            "builtin_copy": "Kopieren",
+            "builtin_copied": "Kopiert",
+            "builtin_copy_failed": "Kopieren fehlgeschlagen. Markieren Sie den Text und kopieren Sie ihn von Hand.",
+            "builtin_none": "Keine eingebaute Vorlage passt zur Suche.",
+            "builtin_use": {
+                "product_base": "Das Layout, das jede Produktvorlage erweitert.",
+                "product_vulnerability": "Die Seite der Schwachstellenberichte von Produkten ohne eigene Vorlage.",
+                "item_vulnerability": "Elemente des Typs Vulnerability Report, wie Taranis ihn anlegt, ohne eigene Vorlage.",
+                "item_generic": "Jedes andere Berichtselement eines Typs ohne eigene Vorlage.",
+                "macros": "Makros, die die Vorlagen importieren."
+            },
+            "builtin_off": {
+                "product": "Aus: Im öffentlichen Web erscheinen nur Produkte mit eigener Vorlage.",
+                "item_specific": "Aus: Diese Elemente verwenden die allgemeine Vorlage oder entfallen, wenn auch sie aus ist.",
+                "item_generic": "Aus: Berichtselemente ohne verbleibende Vorlage werden nicht angezeigt, ebenso wenig ein Produkt ohne verbleibendes Element."
+            },
+            "webs": "Websites",
+            "webs_hint": "Keine ausgewählt: alle Websites. Eine Website verwendet die Vorlage, die sie aufführt, sonst die für alle Websites.",
+            "every_web": "Alle Websites",
+            "web_taken": "Bereits in '{name}'",
+            "every_web_taken": "'{name}' ist bereits seine Vorlage für alle Websites: Wählen Sie die Websites, für die diese gilt."
+        }
     },
     "routing": {
         "tab_title": "Routing & TLS",

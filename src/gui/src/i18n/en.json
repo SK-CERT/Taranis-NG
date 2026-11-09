@@ -1315,7 +1315,8 @@
             "late": "Slow to respond",
             "unreachable": "Unreachable",
             "never_seen": "Never connected",
-            "last_seen": "last seen"
+            "last_seen": "last seen",
+            "disabled": "Disabled"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Show its published products on the public web",
         "public_web_ids": "Webs",
         "public_web_ids_hint": "None chosen: every web.",
+        "public_web_template_hint": "Unless this product has a report template of its own (Public Web → Report templates), only vulnerability reports appear on the web.",
         "needs_delivery": "Add a format, or show the products on the public web.",
         "successful": "New product was added",
         "successful_edit": "Product was saved",
@@ -2169,7 +2171,10 @@
             "name": "Name",
             "tab_description": "Public-web nodes and the webs they serve",
             "tab_title": "Nodes",
-            "total_count": "{count} public-web node | {count} public-web nodes"
+            "total_count": "{count} public-web node | {count} public-web nodes",
+            "enabled": "Enabled",
+            "enabled_hint": "Off: Taranis stops checking and refreshing this node, publishes none of its webs and sends it no reports. Its webs and settings are kept for when it is switched on again.",
+            "disabled_notice": "This node is switched off: none of its webs are published."
         },
         "webs": {
             "total_count": "{count} web | {count} webs",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Confirm deletion",
         "confirm_delete_node": "Delete public-web node '{name}' and all its webs?",
-        "confirm_delete_web": "Delete web '{name}'?"
+        "confirm_delete_web": "Delete web '{name}'?",
+        "tabs": {
+            "nodes": "Nodes & webs",
+            "nodes_description": "Public-web nodes and the webs they host",
+            "templates": "Report templates",
+            "templates_description": "Templates the public webs render products with"
+        },
+        "templates": {
+            "total_count": "{count} template | {count} templates",
+            "name": "Name",
+            "kind": "Template for",
+            "kind_product": "Product",
+            "kind_item": "Report item type",
+            "target": "Applies to",
+            "product_preset": "Product",
+            "report_item_type": "Report item type",
+            "target_hint": "A product or report item type can have one template for every web and others for chosen webs.",
+            "require_tlp_clear": "Requires TLP:CLEAR",
+            "require_tlp_clear_hint": "Off: a product without any TLP is shown too. A TLP it does carry must always be CLEAR.",
+            "updated": "Last updated",
+            "none": "No custom templates yet.",
+            "confirm_delete": "Delete template '{name}'? The built-in one takes its place, unless it is switched off.",
+            "edit": "Edit report template",
+            "add_new": "Add report template",
+            "source": "Template (Jinja)",
+            "start_from": "Start from",
+            "start_product_base": "A page extending the base layout",
+            "start_product_vulnerability": "The vulnerability report layout",
+            "help_title": "What a template can use",
+            "help_product": "A product template extends a built-in layout and overrides its blocks: header, items and links (the report page), summary (the homepage entry) and rss (the RSS text).",
+            "help_item": "An item template renders one report item block on the report page.",
+            "help_attrs": "Values of this report item type:",
+            "help_more": "Values are escaped; the filters (clean, link_refs, cvss_score and others) are listed in the public-web README. A template that fails is replaced by the built-in one.",
+            "help_ctx_product": "the product: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "the product's sources; [n] in the texts is links[n - 1]",
+            "help_ctx_render_item": "renders an item with its own template",
+            "help_ctx_selected_items": "the items the reader selected (?items=); all of them when empty",
+            "help_ctx_t": "a phrase from the public web's translations",
+            "help_ctx_item": "the report item: name, type, attrs, attributes, fields",
+            "help_ctx_index": "the item's position on the page",
+            "builtin_title": "Built-in templates",
+            "builtin_intro": "The public web uses these for products and report items without a template of their own. They cannot be deleted, but you can switch one off to use only your own templates there.",
+            "builtin_in_use": "In use",
+            "builtin_used_for": "Used for",
+            "builtin_always_on": "Always on: custom templates build on it.",
+            "builtin_view": "Show the template",
+            "builtin_copy": "Copy",
+            "builtin_copied": "Copied",
+            "builtin_copy_failed": "Copying failed. Select the text and copy it by hand.",
+            "builtin_none": "No built-in template matches the search.",
+            "builtin_use": {
+                "product_base": "The layout every product template extends.",
+                "product_vulnerability": "The page of vulnerability reports of products without a template of their own.",
+                "item_vulnerability": "Items of the Vulnerability Report type as Taranis creates it, without a template of their own.",
+                "item_generic": "Any other report item of a type without a template of its own.",
+                "macros": "Macros the templates import."
+            },
+            "builtin_off": {
+                "product": "Off: only products with a template of their own are shown on the public web.",
+                "item_specific": "Off: these items use the generic template, or are left out if it is off too.",
+                "item_generic": "Off: report items left without a template are not shown, nor is a product left with none."
+            },
+            "webs": "Webs",
+            "webs_hint": "None chosen: every web. A web uses the template that lists it, else the one for every web.",
+            "every_web": "Every web",
+            "web_taken": "Already in '{name}'",
+            "every_web_taken": "'{name}' is already its template for every web: choose the webs this one is for."
+        }
     },
     "routing": {
         "tab_title": "Routing & TLS",

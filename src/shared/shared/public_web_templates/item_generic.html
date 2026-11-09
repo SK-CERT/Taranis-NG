@@ -1,0 +1,41 @@
+{#- Fallback for report items whose type has no template of its own: every attribute,
+    labelled with its title from the report item type, in the type's attribute order.
+    item.fields holds one entry per attribute: {key, label, group, type, value_list}; the
+    labels are in the item's language, which marks the whole card. -#}
+{%- import "builtin/_macros.html" as macros -%}
+<div class="card my-3"{{ macros.content_lang(item, lang) }}>
+    <div class="card-header">
+        <h5 class="m-0">
+            {{ item.name or item.type_label }}
+        </h5>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            {%- for field in item.fields if field.value_list and field.type != "ATTACHMENT" %}
+                <dt class="col-sm-3">
+                    {{ field.label }}
+                </dt>
+                <dd class="col-sm-9">
+                    {%- if field.type == "LINK" -%}
+                        {%- for value in field.value_list -%}
+                            <a href="{{ value | safe_url }}" class="text-break">{{ value }}</a>
+                            {%- if not loop.last %}<br>{% endif -%}
+                        {%- endfor -%}
+                    {%- elif field.type == "RICH_TEXT" -%}
+                        {%- for value in field.value_list -%}
+                            {{ value | clean_rich }}
+                        {%- endfor -%}
+                    {%- elif field.type == "TEXT" -%}
+                        {%- for value in field.value_list -%}
+                            <p class="m-0 pre-wrap">
+                                {{- value | link_refs(links) | clean -}}
+                            </p>
+                        {%- endfor -%}
+                    {%- else -%}
+                        {{ field.value_list | join(", ") }}
+                    {%- endif -%}
+                </dd>
+            {%- endfor %}
+        </dl>
+    </div>
+</div>

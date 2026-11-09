@@ -1315,7 +1315,8 @@
             "late": "Pomalá odezva",
             "unreachable": "Nedostupný",
             "never_seen": "Nikdy nepřipojen",
-            "last_seen": "naposledy viděn"
+            "last_seen": "naposledy viděn",
+            "disabled": "Vypnuto"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Zobrazovat zveřejněné produkty na veřejném webu",
         "public_web_ids": "Weby",
         "public_web_ids_hint": "Nic nevybráno: všechny weby.",
+        "public_web_template_hint": "Pokud tento produkt nemá vlastní šablonu reportu (Veřejný web → Šablony reportů), na webu se zobrazí jen reporty o zranitelnostech.",
         "needs_delivery": "Přidejte formát, nebo zapněte zobrazení na veřejném webu.",
         "successful": "Nový produkt byl přidán",
         "successful_edit": "Produkt byl uložen",
@@ -2169,7 +2171,10 @@
             "name": "Název",
             "tab_description": "Uzly public-web a weby, které obsluhují",
             "tab_title": "Uzly",
-            "total_count": "Žádné uzly public-web | {count} uzel public-web | {count} uzly public-web | {count} uzlů public-web"
+            "total_count": "Žádné uzly public-web | {count} uzel public-web | {count} uzly public-web | {count} uzlů public-web",
+            "enabled": "Povoleno",
+            "enabled_hint": "Vypnuto: Taranis přestane uzel kontrolovat a obnovovat, nezveřejní žádný z jeho webů a nepošle mu žádné reporty. Jeho weby a nastavení zůstanou zachovány pro opětovné zapnutí.",
+            "disabled_notice": "Tento uzel je vypnutý: žádný z jeho webů není zveřejněn."
         },
         "webs": {
             "total_count": "Žádné weby | {count} web | {count} weby | {count} webů",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Potvrdit smazání",
         "confirm_delete_node": "Smazat uzel public-web '{name}' a všechny jeho weby?",
-        "confirm_delete_web": "Smazat web '{name}'?"
+        "confirm_delete_web": "Smazat web '{name}'?",
+        "tabs": {
+            "nodes": "Uzly a weby",
+            "nodes_description": "Uzly public-web a weby, které hostují",
+            "templates": "Šablony reportů",
+            "templates_description": "Šablony, kterými veřejné weby zobrazují produkty"
+        },
+        "templates": {
+            "total_count": "Žádné šablony | {count} šablona | {count} šablony | {count} šablon",
+            "name": "Název",
+            "kind": "Šablona pro",
+            "kind_product": "Produkt",
+            "kind_item": "Typ reportu",
+            "target": "Platí pro",
+            "product_preset": "Produkt",
+            "report_item_type": "Typ reportu",
+            "target_hint": "Produkt nebo typ reportu může mít jednu šablonu pro všechny weby a další pro vybrané weby.",
+            "require_tlp_clear": "Vyžaduje TLP:CLEAR",
+            "require_tlp_clear_hint": "Vypnuto: zobrazí se i produkt bez TLP. TLP, které produkt má, musí být vždy CLEAR.",
+            "updated": "Naposledy upraveno",
+            "none": "Zatím žádné vlastní šablony.",
+            "confirm_delete": "Smazat šablonu '{name}'? Nahradí ji vestavěná šablona, pokud není vypnutá.",
+            "edit": "Upravit šablonu reportu",
+            "add_new": "Přidat šablonu reportu",
+            "source": "Šablona (Jinja)",
+            "start_from": "Začít od",
+            "start_product_base": "Stránka rozšiřující základní rozvržení",
+            "start_product_vulnerability": "Rozvržení reportu o zranitelnostech",
+            "help_title": "Co šablona může použít",
+            "help_product": "Šablona produktu rozšiřuje vestavěné rozvržení a přepisuje jeho bloky: header, items a links (stránka reportu), summary (položka na úvodní stránce) a rss (text RSS).",
+            "help_item": "Šablona položky vykreslí jeden blok reportu na stránce reportu.",
+            "help_attrs": "Hodnoty tohoto typu reportu:",
+            "help_more": "Hodnoty se escapují; filtry (clean, link_refs, cvss_score a další) popisuje README public-web. Šablonu, která selže, nahradí vestavěná.",
+            "help_ctx_product": "produkt: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "zdroje produktu; [n] v textech je links[n - 1]",
+            "help_ctx_render_item": "vykreslí položku její vlastní šablonou",
+            "help_ctx_selected_items": "položky vybrané čtenářem (?items=); prázdné znamená všechny",
+            "help_ctx_t": "fráze z překladů veřejného webu",
+            "help_ctx_item": "položka reportu: name, type, attrs, attributes, fields",
+            "help_ctx_index": "pořadí položky na stránce",
+            "builtin_title": "Vestavěné šablony",
+            "builtin_intro": "Veřejný web je používá pro produkty a reporty, které nemají vlastní šablonu. Nelze je smazat, ale můžete některou vypnout a používat tam jen své vlastní šablony.",
+            "builtin_in_use": "Používá se",
+            "builtin_used_for": "Použití",
+            "builtin_always_on": "Vždy zapnutá: vlastní šablony z ní vycházejí.",
+            "builtin_view": "Zobrazit šablonu",
+            "builtin_copy": "Kopírovat",
+            "builtin_copied": "Zkopírováno",
+            "builtin_copy_failed": "Kopírování selhalo. Označte text a zkopírujte ho ručně.",
+            "builtin_none": "Hledání neodpovídá žádná vestavěná šablona.",
+            "builtin_use": {
+                "product_base": "Rozvržení, které rozšiřuje každá šablona produktu.",
+                "product_vulnerability": "Stránka zranitelnostních reportů u produktů bez vlastní šablony.",
+                "item_vulnerability": "Reporty typu Vulnerability Report, jak ho vytváří Taranis, které nemají vlastní šablonu.",
+                "item_generic": "Jakýkoli jiný report typu, který nemá vlastní šablonu.",
+                "macros": "Makra, která šablony importují."
+            },
+            "builtin_off": {
+                "product": "Vypnuto: na veřejném webu se zobrazují jen produkty s vlastní šablonou.",
+                "item_specific": "Vypnuto: tyto reporty použijí obecnou šablonu, nebo se vynechají, je-li vypnutá i ona.",
+                "item_generic": "Vypnuto: reporty, kterým nezbude žádná šablona, se nezobrazí, a produkt, kterému nezbude žádný report, také ne."
+            },
+            "webs": "Weby",
+            "webs_hint": "Nic nevybráno: všechny weby. Web použije šablonu, která ho uvádí, jinak tu pro všechny weby.",
+            "every_web": "Všechny weby",
+            "web_taken": "Už v '{name}'",
+            "every_web_taken": "'{name}' je už jeho šablonou pro všechny weby: vyberte weby, pro které je tato."
+        }
     },
     "routing": {
         "tab_title": "Směrování a TLS",

@@ -1315,7 +1315,8 @@
             "late": "响应缓慢",
             "unreachable": "无法访问",
             "never_seen": "从未连接",
-            "last_seen": "最后在线"
+            "last_seen": "最后在线",
+            "disabled": "已停用"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "在公共网站上显示其已发布的产品",
         "public_web_ids": "网站",
         "public_web_ids_hint": "未选择：所有网站。",
+        "public_web_template_hint": "如果此产品没有自己的报告模板（Public Web → 报告模板），网站上只显示漏洞报告。",
         "needs_delivery": "请添加一种格式，或在公共网站上显示产品。",
         "successful": "已添加新产品",
         "successful_edit": "已保存产品",
@@ -2169,7 +2171,10 @@
             "name": "名称",
             "tab_description": "public-web 节点及其提供服务的站点",
             "tab_title": "节点",
-            "total_count": "{count} 个 public-web 节点 | {count} 个 public-web 节点"
+            "total_count": "{count} 个 public-web 节点 | {count} 个 public-web 节点",
+            "enabled": "已启用",
+            "enabled_hint": "关闭：Taranis 停止检查和刷新此节点，不发布其任何站点，也不向其发送报告。其站点和设置会保留，以便重新启用。",
+            "disabled_notice": "此节点已关闭：其站点均未发布。"
         },
         "webs": {
             "total_count": "{count} 个站点 | {count} 个站点",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "确认删除",
         "confirm_delete_node": "删除 public-web 节点“{name}”及其所有站点？",
-        "confirm_delete_web": "删除站点“{name}”？"
+        "confirm_delete_web": "删除站点“{name}”？",
+        "tabs": {
+            "nodes": "节点和网站",
+            "nodes_description": "public-web 节点及其托管的网站",
+            "templates": "报告模板",
+            "templates_description": "公开网站用来显示产品的模板"
+        },
+        "templates": {
+            "total_count": "{count} 个模板 | {count} 个模板",
+            "name": "名称",
+            "kind": "模板用途",
+            "kind_product": "产品",
+            "kind_item": "报告条目类型",
+            "target": "适用于",
+            "product_preset": "产品",
+            "report_item_type": "报告条目类型",
+            "target_hint": "产品或报告条目类型可以有一个适用于所有站点的模板，以及适用于所选站点的其他模板。",
+            "require_tlp_clear": "要求 TLP:CLEAR",
+            "require_tlp_clear_hint": "关闭：没有 TLP 的产品也会显示。产品带有的 TLP 必须始终为 CLEAR。",
+            "updated": "最后更新",
+            "none": "还没有自定义模板。",
+            "confirm_delete": "删除模板 '{name}'？除非内置模板已关闭，否则将改用内置模板。",
+            "edit": "编辑报告模板",
+            "add_new": "添加报告模板",
+            "source": "模板 (Jinja)",
+            "start_from": "从此开始",
+            "start_product_base": "扩展基础布局的页面",
+            "start_product_vulnerability": "漏洞报告布局",
+            "help_title": "模板可以使用的内容",
+            "help_product": "产品模板扩展内置布局并覆盖其区块：header、items 和 links（报告页面）、summary（首页条目）以及 rss（RSS 文本）。",
+            "help_item": "条目模板在报告页面上显示一个报告条目区块。",
+            "help_attrs": "此报告条目类型的值：",
+            "help_more": "值会被转义；过滤器（clean、link_refs、cvss_score 等）见 public-web 的 README。出错的模板会由内置模板替代。",
+            "help_ctx_product": "产品：title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "产品的来源；文本中的 [n] 即 links[n - 1]",
+            "help_ctx_render_item": "用条目自己的模板显示该条目",
+            "help_ctx_selected_items": "读者选择的条目（?items=）；为空表示全部",
+            "help_ctx_t": "公开网站翻译中的短语",
+            "help_ctx_item": "报告条目：name, type, attrs, attributes, fields",
+            "help_ctx_index": "条目在页面上的位置",
+            "builtin_title": "内置模板",
+            "builtin_intro": "公共网站将这些模板用于没有自有模板的产品和报告条目。它们不能删除，但可以关闭其中任一个，使那里只使用你自己的模板。",
+            "builtin_in_use": "使用中",
+            "builtin_used_for": "用途",
+            "builtin_always_on": "始终启用：自定义模板以它为基础。",
+            "builtin_view": "查看模板",
+            "builtin_copy": "复制",
+            "builtin_copied": "已复制",
+            "builtin_copy_failed": "复制失败。请选中文本并手动复制。",
+            "builtin_none": "没有与搜索匹配的内置模板。",
+            "builtin_use": {
+                "product_base": "每个产品模板都扩展的布局。",
+                "product_vulnerability": "没有自有模板的产品的漏洞报告页面。",
+                "item_vulnerability": "Taranis 创建的原样 Vulnerability Report 类型中没有自有模板的条目。",
+                "item_generic": "没有自有模板的类型的任何其他报告条目。",
+                "macros": "模板导入的宏。"
+            },
+            "builtin_off": {
+                "product": "已关闭：公共网站上只显示有自有模板的产品。",
+                "item_specific": "已关闭：这些条目改用通用模板；若通用模板也关闭，则不显示。",
+                "item_generic": "已关闭：没有剩余模板的报告条目不显示；没有剩余条目的产品也不显示。"
+            },
+            "webs": "站点",
+            "webs_hint": "未选择：所有站点。站点使用列出它的模板，否则使用适用于所有站点的模板。",
+            "every_web": "所有站点",
+            "web_taken": "已用于 '{name}'",
+            "every_web_taken": "'{name}' 已是它适用于所有站点的模板：请选择此模板适用的站点。"
+        }
     },
     "routing": {
         "tab_title": "路由与 TLS",

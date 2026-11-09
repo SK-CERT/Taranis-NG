@@ -1,10 +1,11 @@
 """public-web shows reports in the visitor's language, and decides the same in every language.
 
 Core shows a product in the language asked for with ``lang``: ``value`` is what to show, and a
-choice constant keeps the value it was written with in ``source_value``. What the app decides
-on - the TLP, events, whether to parse versions - must read the written value, or a translated
-"CLEAR" would hide a report. Reports are cached per language, and a language picked with
-``?lang=`` is carried into the page's links.
+choice constant keeps the value it was written with in ``source_value``. What the app and the
+templates decide on - the TLP, what ``attrs`` compares - must read the written value, or a
+translated "CLEAR" would hide a report. Reports are cached per language, a language picked with
+``?lang=`` is carried into the page's links, and report text shown in another language than the
+page's is marked with its own.
 """
 
 from __future__ import annotations
@@ -15,8 +16,8 @@ import pytest
 from cachelib import SimpleCache
 from flask import Flask, g, render_template, url_for
 from lib import web
-from lib.report.report_item import EventsGeneration
-from lib.report.vulnerability_report import VulnerabilityReport
+from lib.report.product import build_product, displayable
+from lib.report.renderer import ReportRenderer
 from lib.web import cache as web_cache
 from lib.web import site as web_site
 from lib.web.taranis_client import TaranisClient
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
 
 
 def _attribute(key: str, value: str, source_value: str | None = None, attribute_type: str = "STRING") -> dict:
-    attribute = {"key": key, "type": attribute_type, "value": value, "description": None}
+    attribute = {"key": key, "attribute_type": attribute_type, "value": value, "description": None, "multiple": False}
     if source_value is not None:
         attribute["source_value"] = source_value
     return attribute
@@ -34,61 +35,66 @@ def _attribute(key: str, value: str, source_value: str | None = None, attribute_
 
 def _slovak_product() -> dict:
     """A Czech report shown in Slovak, with translated constants and a translated affected system."""
-    intro = {
-        "title": "Úvod",
-        "type": "Vulnerability Report - Intro",
-        "attributes": [
-            _attribute("description", "Prehľad"),
-            _attribute("tlp", "TLP:CLEAR (sk)", "CLEAR", "ENUM"),
-            _attribute("generate_events", "generovať", "generate", "RADIO"),
-        ],
-    }
     item = {
         "title": "Chyba v jadre",
         "type": "Vulnerability Report",
         "attributes": [
             _attribute("description", "Útočník môže spustiť kód."),
             _attribute("tlp", "TLP:CLEAR (sk)", "CLEAR", "ENUM"),
-            # Translated by hand into something that no longer parses; the written one does.
-            _attribute("affected_systems", "Linux: jadro; verzie pred 6.1", "Linux: kernel; <6.1"),
-            _attribute("affected_versions_parsability", "Parsovať", "Parse", "RADIO"),
+            _attribute("severity", "Vysoká", "High", "RADIO"),
         ],
     }
     return {
         "id": 7,
         "title": "Bulletin (sk)",
-        "description": "",
+        "description": "Prehľad",
         "links": [],
         "created": "2026-10-01T10:00:00",
         "user": {"name": "Analyst", "username": "analyst"},
-        "report_items": [intro, item],
+        "report_items": [item],
+        "product_preset": {"id": 4, "title": "Bulletin"},
         "language": "sk",
         "available_languages": ["cs", "sk"],
     }
 
 
 def test_decisions_read_what_was_written_and_the_page_shows_the_translation() -> None:
-    report = VulnerabilityReport.from_dict(_slovak_product())
+    product = build_product(_slovak_product())
 
-    assert report.get_tlp() == "CLEAR"
-    assert report.should_generate_events() == EventsGeneration.GENERATE
-    item = report.get_report_items()[0]
-    assert item.should_search()
-    assert item.get_product_display(1) == "jadro (linux)"
-    assert report.get_language() == "sk"
+    assert product["max_tlp"] == "CLEAR"
+    assert displayable(product, vulnerability_only=True) == (True, "")
+    item = product["body_items"][0]
+    # Templates compare the constant as written, and show its translation.
+    assert item["attrs"]["severity"] == "High"
+    assert item["attrs_display"]["severity"] == "Vysoká"
+    assert [field["value_list"] for field in item["fields"] if field["key"] == "severity"] == [["Vysoká"]]
+    assert item["attrs"]["description"] == "Útočník môže spustiť kód."
+    assert product["language"] == "sk"
 
 
 def test_a_core_without_languages_is_read_as_before() -> None:
-    product = _slovak_product()
-    for item in product["report_items"]:
+    data = _slovak_product()
+    for item in data["report_items"]:
         for attribute in item["attributes"]:
             attribute["value"] = attribute.pop("source_value", attribute["value"])
-    del product["language"], product["available_languages"]
+    del data["language"], data["available_languages"]
 
-    report = VulnerabilityReport.from_dict(product)
+    product = build_product(data)
 
-    assert report.get_tlp() == "CLEAR"
-    assert report.get_language() is None
+    assert product["max_tlp"] == "CLEAR"
+    assert product["body_items"][0]["attrs_display"] == product["body_items"][0]["attrs"]
+    assert product["language"] is None
+
+
+@pytest.mark.parametrize(("page_language", "marked"), [("cs", True), ("sk", False)])
+def test_report_text_in_another_language_than_the_page_says_which(page_language: str, marked: bool) -> None:
+    product = build_product(_slovak_product())
+
+    detail = str(ReportRenderer([]).render(product, "detail", lang=page_language))
+    summary = str(ReportRenderer([]).render(product, "summary", lang=page_language))
+
+    assert ('lang="sk"' in detail) is marked
+    assert ('lang="sk"' in summary) is marked
 
 
 class _Response:
@@ -121,6 +127,10 @@ class _Client:
         self.languages.append(options.get("language"))
         return [self._product(options.get("language"))], 1
 
+    @staticmethod
+    def get_report_templates() -> dict[str, list]:
+        return {"items": [], "disabled_builtins": []}
+
     def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict:  # noqa: ARG002
         self.languages.append(language)
         return self._product(language)
@@ -135,9 +145,9 @@ def test_reports_are_cached_per_language(monkeypatch: pytest.MonkeyPatch) -> Non
     client = _Client()
     cache = web_cache.WebCache(client)
 
-    assert cache.get_all_reports(3, "sk")[0].get_title() == "Bulletin (sk)"
-    assert cache.get_all_reports(3, "en")[0].get_title() == "Bulletin (en)"
-    assert cache.get_report("7", 3, "sk").get_title() == "Bulletin (sk)"
+    assert cache.get_all_reports(3, "sk")[0]["title"] == "Bulletin (sk)"
+    assert cache.get_all_reports(3, "en")[0]["title"] == "Bulletin (en)"
+    assert cache.get_report("7", 3, "sk")["title"] == "Bulletin (sk)"
     assert client.languages == ["sk", "en"]
 
 
@@ -227,13 +237,15 @@ def app(routes: ModuleType) -> Flask:  # noqa: ARG001 - importing the app needs 
     return app
 
 
-def _page(app: Flask, product: dict, language: str) -> str:
+def _page(app: Flask, routes: ModuleType, product: dict, language: str) -> str:
     """The report page for a visitor reading in ``language``, its whitespace collapsed."""
     with app.test_request_context("/reports/7"):
         g.site = web_site.SiteContext(WEB, language)
+        report = build_product(product)
         html = render_template(
             "report.html",
-            report=VulnerabilityReport.from_dict(product),
+            report=report,
+            detail=ReportRenderer([]).render(report, "detail", **routes._render_options()),
             items=[],
             feedback_q=g.site.feedback_questions,
             warning_seen=None,
@@ -241,8 +253,8 @@ def _page(app: Flask, product: dict, language: str) -> str:
     return " ".join(html.split())
 
 
-def test_a_reports_own_phrases_are_in_its_language_and_only_the_page_in_the_visitors(app: Flask) -> None:
-    page = _page(app, _bulletin(), "en")
+def test_a_reports_own_phrases_are_in_its_language_and_only_the_page_in_the_visitors(app: Flask, routes: ModuleType) -> None:
+    page = _page(app, routes, _bulletin(), "en")
 
     # The page around the reports is in the visitor's language.
     assert "Give feedback" in page
@@ -258,16 +270,30 @@ def test_a_reports_own_phrases_are_in_its_language_and_only_the_page_in_the_visi
     assert 'id="accordionCVE-2" lang="cs">' in page
 
 
-def test_a_report_in_another_language_than_the_pages_has_its_links_and_byline_in_it(app: Flask) -> None:
+def test_a_report_in_another_language_than_the_pages_has_its_links_and_byline_in_it(app: Flask, routes: ModuleType) -> None:
     product = _bulletin()
     product.update(report_items=product["report_items"][1:], language="cs", available_languages=["cs"])
 
-    page = _page(app, product, "en")
+    page = _page(app, routes, product, "en")
 
     assert "This report is not available in this language, so it is shown in Czech." in page
     assert "Odkazy </h5>" in page
     assert "dne 1. 10. 2026." in page
     assert "More information" not in page
+
+
+def test_a_homepage_entry_belongs_to_the_page_and_reads_in_its_language(app: Flask, routes: ModuleType) -> None:
+    product = _bulletin()
+    product.update(report_items=product["report_items"][1:], language="cs", available_languages=["cs"])
+
+    with app.test_request_context("/"):
+        g.site = web_site.SiteContext(WEB, "en")
+        summary = str(ReportRenderer([]).render(build_product(product), "summary", **routes._render_options()))
+    summary = " ".join(summary.split())
+
+    # The report's title is marked as Czech, but the entry around it is the page's.
+    assert '<h5 class="m-0 me-2 mb-1" lang="cs">' in summary
+    assert "Published on 1. 10. 2026." in summary
 
 
 def test_a_visitor_can_switch_the_page_to_each_language_the_web_offers(app: Flask) -> None:
@@ -284,8 +310,8 @@ def test_a_visitor_can_switch_the_page_to_each_language_the_web_offers(app: Flas
     ]
 
 
-def test_the_report_page_offers_the_other_languages(app: Flask) -> None:
-    page = _page(app, _bulletin(), "en")
+def test_the_report_page_offers_the_other_languages(app: Flask, routes: ModuleType) -> None:
+    page = _page(app, routes, _bulletin(), "en")
 
     assert 'data-test="language-picker"' in page
     assert '<a class="dropdown-item" href="/reports/7?lang=cs" hreflang="cs" lang="cs">Čeština</a>' in page
@@ -299,8 +325,8 @@ def test_a_web_in_one_language_offers_no_choice(app: Flask) -> None:
         assert web.language_choices() == []
 
 
-def test_a_page_read_from_an_unreviewed_ai_translation_warns_and_links_the_original(app: Flask) -> None:
-    page = _page(app, {**_slovak_product(), "ai_translation": "unreviewed", "original_language": "cs"}, "sk")
+def test_a_page_read_from_an_unreviewed_ai_translation_warns_and_links_the_original(app: Flask, routes: ModuleType) -> None:
+    page = _page(app, routes, {**_slovak_product(), "ai_translation": "unreviewed", "original_language": "cs"}, "sk")
 
     assert 'data-ai-translation="unreviewed"' in page
     assert "alert-warning" in page
@@ -308,23 +334,23 @@ def test_a_page_read_from_an_unreviewed_ai_translation_warns_and_links_the_origi
     assert '<a href="/reports/7?lang=cs" lang="cs">čeština</a>.' in page
 
 
-def test_a_page_read_from_a_reviewed_ai_translation_says_a_person_reviewed_it(app: Flask) -> None:
-    page = _page(app, {**_slovak_product(), "ai_translation": "reviewed", "original_language": "cs"}, "sk")
+def test_a_page_read_from_a_reviewed_ai_translation_says_a_person_reviewed_it(app: Flask, routes: ModuleType) -> None:
+    page = _page(app, routes, {**_slovak_product(), "ai_translation": "reviewed", "original_language": "cs"}, "sk")
 
     assert 'data-ai-translation="reviewed"' in page
     assert "Tento report bol preložený pomocou AI a preklad skontroloval človek. Pôvodný jazyk: " in page
     assert "neskontroloval" not in page
 
 
-def test_a_page_a_person_translated_has_no_ai_notice(app: Flask) -> None:
-    page = _page(app, {**_slovak_product(), "ai_translation": None, "original_language": "cs"}, "sk")
+def test_a_page_a_person_translated_has_no_ai_notice(app: Flask, routes: ModuleType) -> None:
+    page = _page(app, routes, {**_slovak_product(), "ai_translation": None, "original_language": "cs"}, "sk")
 
     assert "data-ai-translation" not in page
     assert "pomocou AI" not in page
 
 
-def test_an_original_the_web_does_not_offer_is_named_without_a_link(app: Flask) -> None:
-    page = _page(app, {**_slovak_product(), "ai_translation": "unreviewed", "original_language": "pl"}, "en")
+def test_an_original_the_web_does_not_offer_is_named_without_a_link(app: Flask, routes: ModuleType) -> None:
+    page = _page(app, routes, {**_slovak_product(), "ai_translation": "unreviewed", "original_language": "pl"}, "en")
 
     assert "This report was translated by AI; nobody has reviewed the translation yet. Original language: pl." in page
     assert 'lang="pl"' not in page

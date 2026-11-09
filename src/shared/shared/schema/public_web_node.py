@@ -26,6 +26,8 @@ class PublicWebNodeSchema(Schema):
     # else defaults to false. Exposing it with a default would also mean any update
     # omitting it silently cleared it, taking core's own webs down with it.
     cert_resolver = fields.Str(load_default="", allow_none=True)
+    # None when not sent: an update without it keeps the node as it is (see PublicWebNode.update).
+    enabled = fields.Bool(load_default=None, allow_none=True)
 
 
 class PublicWebNodePresentationSchema(PublicWebNodeSchema, PresentationSchema):

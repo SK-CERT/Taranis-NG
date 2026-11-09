@@ -1315,7 +1315,8 @@
             "late": "Wolno odpowiada",
             "unreachable": "Nieosiągalny",
             "never_seen": "Nigdy nie połączono",
-            "last_seen": "ostatnio widziano"
+            "last_seen": "ostatnio widziano",
+            "disabled": "Wyłączony"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Pokazuj opublikowane produkty w serwisie publicznym",
         "public_web_ids": "Serwisy",
         "public_web_ids_hint": "Nic nie wybrano: każdy serwis.",
+        "public_web_template_hint": "Bez własnego szablonu raportu tego produktu (Public Web → Szablony raportów) w serwisie pojawiają się tylko raporty o podatnościach.",
         "needs_delivery": "Dodaj format albo pokazuj produkty w serwisie publicznym.",
         "successful": "Dodano nowy produkt",
         "successful_edit": "Zapisano produkt",
@@ -2169,7 +2171,10 @@
             "name": "Nazwa",
             "tab_description": "Węzły public-web i obsługiwane przez nie witryny",
             "tab_title": "Węzły",
-            "total_count": "Brak węzłów public-web | {count} węzeł public-web | {count} węzły public-web | {count} węzłów public-web"
+            "total_count": "Brak węzłów public-web | {count} węzeł public-web | {count} węzły public-web | {count} węzłów public-web",
+            "enabled": "Włączono",
+            "enabled_hint": "Wyłączony: Taranis przestaje sprawdzać i odświeżać ten węzeł, nie publikuje żadnej z jego witryn i nie wysyła mu raportów. Jego witryny i ustawienia zostają zachowane na czas ponownego włączenia.",
+            "disabled_notice": "Ten węzeł jest wyłączony: żadna z jego witryn nie jest publikowana."
         },
         "webs": {
             "total_count": "Brak witryn | {count} witryna | {count} witryny | {count} witryn",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Potwierdź usunięcie",
         "confirm_delete_node": "Usunąć węzeł public-web '{name}' i wszystkie jego witryny?",
-        "confirm_delete_web": "Usunąć witrynę '{name}'?"
+        "confirm_delete_web": "Usunąć witrynę '{name}'?",
+        "tabs": {
+            "nodes": "Węzły i serwisy",
+            "nodes_description": "Węzły public-web i hostowane przez nie serwisy",
+            "templates": "Szablony raportów",
+            "templates_description": "Szablony, którymi serwisy publiczne wyświetlają produkty"
+        },
+        "templates": {
+            "total_count": "Brak szablonów | {count} szablon | {count} szablony | {count} szablonów",
+            "name": "Nazwa",
+            "kind": "Szablon dla",
+            "kind_product": "Produkt",
+            "kind_item": "Typ elementu raportu",
+            "target": "Dotyczy",
+            "product_preset": "Produkt",
+            "report_item_type": "Typ elementu raportu",
+            "target_hint": "Produkt lub typ elementu raportu może mieć jeden szablon dla wszystkich witryn i inne dla wybranych witryn.",
+            "require_tlp_clear": "Wymaga TLP:CLEAR",
+            "require_tlp_clear_hint": "Wyłączone: wyświetlany jest także produkt bez TLP. TLP, które produkt ma, musi zawsze być CLEAR.",
+            "updated": "Ostatnia zmiana",
+            "none": "Na razie brak własnych szablonów.",
+            "confirm_delete": "Usunąć szablon '{name}'? Jego miejsce zajmie szablon wbudowany, o ile nie jest wyłączony.",
+            "edit": "Edytuj szablon raportu",
+            "add_new": "Dodaj szablon raportu",
+            "source": "Szablon (Jinja)",
+            "start_from": "Zacznij od",
+            "start_product_base": "Strona rozszerzająca układ podstawowy",
+            "start_product_vulnerability": "Układ raportu o podatnościach",
+            "help_title": "Czego może użyć szablon",
+            "help_product": "Szablon produktu rozszerza wbudowany układ i nadpisuje jego bloki: header, items i links (strona raportu), summary (wpis na stronie głównej) oraz rss (tekst RSS).",
+            "help_item": "Szablon elementu wyświetla jeden blok elementu raportu na stronie raportu.",
+            "help_attrs": "Wartości tego typu elementu raportu:",
+            "help_more": "Wartości są escapowane; filtry (clean, link_refs, cvss_score i inne) opisuje README public-web. Szablon, który zawiedzie, zastępuje wbudowany.",
+            "help_ctx_product": "produkt: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "źródła produktu; [n] w tekstach to links[n - 1]",
+            "help_ctx_render_item": "wyświetla element jego własnym szablonem",
+            "help_ctx_selected_items": "elementy wybrane przez czytelnika (?items=); puste oznacza wszystkie",
+            "help_ctx_t": "fraza z tłumaczeń serwisu publicznego",
+            "help_ctx_item": "element raportu: name, type, attrs, attributes, fields",
+            "help_ctx_index": "pozycja elementu na stronie",
+            "builtin_title": "Szablony wbudowane",
+            "builtin_intro": "Serwis publiczny używa ich dla produktów i elementów raportu bez własnego szablonu. Nie można ich usunąć, ale możesz wyłączyć któryś, aby używać tam tylko własnych szablonów.",
+            "builtin_in_use": "W użyciu",
+            "builtin_used_for": "Używany do",
+            "builtin_always_on": "Zawsze włączony: własne szablony na nim bazują.",
+            "builtin_view": "Pokaż szablon",
+            "builtin_copy": "Kopiuj",
+            "builtin_copied": "Skopiowano",
+            "builtin_copy_failed": "Kopiowanie nie powiodło się. Zaznacz tekst i skopiuj go ręcznie.",
+            "builtin_none": "Żaden szablon wbudowany nie pasuje do wyszukiwania.",
+            "builtin_use": {
+                "product_base": "Układ, który rozszerza każdy szablon produktu.",
+                "product_vulnerability": "Strona raportów o podatnościach produktów bez własnego szablonu.",
+                "item_vulnerability": "Elementy typu Vulnerability Report w postaci tworzonej przez Taranis, bez własnego szablonu.",
+                "item_generic": "Każdy inny element raportu typu bez własnego szablonu.",
+                "macros": "Makra importowane przez szablony."
+            },
+            "builtin_off": {
+                "product": "Wyłączony: w serwisie publicznym pojawiają się tylko produkty z własnym szablonem.",
+                "item_specific": "Wyłączony: te elementy używają szablonu ogólnego albo są pomijane, jeśli i on jest wyłączony.",
+                "item_generic": "Wyłączony: elementy raportu, którym nie zostanie żaden szablon, nie są wyświetlane, podobnie jak produkt, któremu nie zostanie żaden element."
+            },
+            "webs": "Witryny",
+            "webs_hint": "Nic nie wybrano: wszystkie witryny. Witryna używa szablonu, który ją wymienia, a w przeciwnym razie szablonu dla wszystkich witryn.",
+            "every_web": "Wszystkie witryny",
+            "web_taken": "Już w '{name}'",
+            "every_web_taken": "'{name}' jest już jego szablonem dla wszystkich witryn: wybierz witryny, dla których jest ten."
+        }
     },
     "routing": {
         "tab_title": "Routing i TLS",

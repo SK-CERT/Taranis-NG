@@ -1315,7 +1315,8 @@
             "late": "Phản hồi chậm",
             "unreachable": "Không thể kết nối",
             "never_seen": "Chưa từng kết nối",
-            "last_seen": "lần cuối thấy"
+            "last_seen": "lần cuối thấy",
+            "disabled": "Đã tắt"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Hiển thị sản phẩm đã xuất bản trên web công khai",
         "public_web_ids": "Trang web",
         "public_web_ids_hint": "Không chọn: mọi web.",
+        "public_web_template_hint": "Nếu sản phẩm này không có mẫu báo cáo riêng (Public Web → Mẫu báo cáo), web chỉ hiển thị các báo cáo lỗ hổng.",
         "needs_delivery": "Hãy thêm một định dạng hoặc hiển thị sản phẩm trên web công khai.",
         "successful": "Đã thêm sản phẩm mới",
         "successful_edit": "Đã lưu sản phẩm",
@@ -2169,7 +2171,10 @@
             "name": "Tên",
             "tab_description": "Các nút public-web và những trang web chúng phục vụ",
             "tab_title": "Nút",
-            "total_count": "{count} nút public-web | {count} nút public-web"
+            "total_count": "{count} nút public-web | {count} nút public-web",
+            "enabled": "Đã bật",
+            "enabled_hint": "Tắt: Taranis ngừng kiểm tra và làm mới nút này, không công bố trang web nào của nút và không gửi báo cáo cho nút. Các trang web và cài đặt của nút được giữ lại để bật lại sau.",
+            "disabled_notice": "Nút này đang tắt: không trang web nào của nút được công bố."
         },
         "webs": {
             "total_count": "{count} trang web | {count} trang web",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Xác nhận xóa",
         "confirm_delete_node": "Xóa nút public-web '{name}' và toàn bộ trang web của nó?",
-        "confirm_delete_web": "Xóa trang web '{name}'?"
+        "confirm_delete_web": "Xóa trang web '{name}'?",
+        "tabs": {
+            "nodes": "Nút và web",
+            "nodes_description": "Các nút public-web và các web chúng lưu trữ",
+            "templates": "Mẫu báo cáo",
+            "templates_description": "Các mẫu mà web công khai dùng để hiển thị sản phẩm"
+        },
+        "templates": {
+            "total_count": "{count} mẫu | {count} mẫu",
+            "name": "Tên",
+            "kind": "Mẫu dành cho",
+            "kind_product": "Sản phẩm",
+            "kind_item": "Loại mục báo cáo",
+            "target": "Áp dụng cho",
+            "product_preset": "Sản phẩm",
+            "report_item_type": "Loại mục báo cáo",
+            "target_hint": "Một sản phẩm hoặc loại mục báo cáo có thể có một mẫu cho mọi trang web và các mẫu khác cho những trang web được chọn.",
+            "require_tlp_clear": "Yêu cầu TLP:CLEAR",
+            "require_tlp_clear_hint": "Tắt: sản phẩm không có TLP cũng được hiển thị. TLP mà sản phẩm có phải luôn là CLEAR.",
+            "updated": "Cập nhật lần cuối",
+            "none": "Chưa có mẫu tùy chỉnh nào.",
+            "confirm_delete": "Xóa mẫu '{name}'? Mẫu tích hợp sẽ được dùng thay thế, trừ khi nó đã bị tắt.",
+            "edit": "Sửa mẫu báo cáo",
+            "add_new": "Thêm mẫu báo cáo",
+            "source": "Mẫu (Jinja)",
+            "start_from": "Bắt đầu từ",
+            "start_product_base": "Một trang mở rộng bố cục cơ sở",
+            "start_product_vulnerability": "Bố cục báo cáo lỗ hổng",
+            "help_title": "Những gì mẫu có thể dùng",
+            "help_product": "Mẫu sản phẩm mở rộng một bố cục tích hợp và ghi đè các khối của nó: header, items và links (trang báo cáo), summary (mục trên trang chủ) và rss (văn bản RSS).",
+            "help_item": "Mẫu mục hiển thị một khối mục báo cáo trên trang báo cáo.",
+            "help_attrs": "Các giá trị của loại mục báo cáo này:",
+            "help_more": "Giá trị được thoát ký tự; các bộ lọc (clean, link_refs, cvss_score và khác) được mô tả trong README của public-web. Mẫu bị lỗi sẽ được thay bằng mẫu tích hợp.",
+            "help_ctx_product": "sản phẩm: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "các nguồn của sản phẩm; [n] trong văn bản là links[n - 1]",
+            "help_ctx_render_item": "hiển thị một mục bằng mẫu riêng của nó",
+            "help_ctx_selected_items": "các mục người đọc đã chọn (?items=); để trống nghĩa là tất cả",
+            "help_ctx_t": "một cụm từ trong bản dịch của web công khai",
+            "help_ctx_item": "mục báo cáo: name, type, attrs, attributes, fields",
+            "help_ctx_index": "vị trí của mục trên trang",
+            "builtin_title": "Mẫu tích hợp",
+            "builtin_intro": "Web công khai dùng các mẫu này cho sản phẩm và mục báo cáo không có mẫu riêng. Không thể xóa chúng, nhưng bạn có thể tắt một mẫu để chỉ dùng mẫu của riêng mình ở đó.",
+            "builtin_in_use": "Đang dùng",
+            "builtin_used_for": "Dùng cho",
+            "builtin_always_on": "Luôn bật: các mẫu tùy chỉnh dựa trên mẫu này.",
+            "builtin_view": "Hiện mẫu",
+            "builtin_copy": "Sao chép",
+            "builtin_copied": "Đã sao chép",
+            "builtin_copy_failed": "Sao chép thất bại. Hãy chọn văn bản và sao chép thủ công.",
+            "builtin_none": "Không có mẫu tích hợp nào khớp với tìm kiếm.",
+            "builtin_use": {
+                "product_base": "Bố cục mà mọi mẫu sản phẩm mở rộng.",
+                "product_vulnerability": "Trang báo cáo lỗ hổng của các sản phẩm không có mẫu riêng.",
+                "item_vulnerability": "Các mục thuộc loại Vulnerability Report như Taranis tạo ra, không có mẫu riêng.",
+                "item_generic": "Mọi mục báo cáo khác thuộc loại không có mẫu riêng.",
+                "macros": "Các macro mà các mẫu nhập vào."
+            },
+            "builtin_off": {
+                "product": "Tắt: web công khai chỉ hiển thị các sản phẩm có mẫu riêng.",
+                "item_specific": "Tắt: các mục này dùng mẫu chung, hoặc bị bỏ qua nếu mẫu đó cũng tắt.",
+                "item_generic": "Tắt: các mục báo cáo không còn mẫu nào sẽ không được hiển thị, sản phẩm không còn mục nào cũng vậy."
+            },
+            "webs": "Trang web",
+            "webs_hint": "Không chọn: mọi trang web. Một trang web dùng mẫu liệt kê nó, nếu không thì dùng mẫu cho mọi trang web.",
+            "every_web": "Mọi trang web",
+            "web_taken": "Trong '{name}'",
+            "every_web_taken": "'{name}' đã là mẫu cho mọi trang web: hãy chọn các trang web mà mẫu này dành cho."
+        }
     },
     "routing": {
         "tab_title": "Định tuyến và TLS",

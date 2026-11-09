@@ -1,7 +1,9 @@
 """Public view routes: homepage, report detail, RSS feed, branding images, and feedback.
 
 All endpoints run per-request site resolution by Host header (see site.py) and
-serve branded content for the resolved web and language.
+serve branded content for the resolved web and language. The report content itself
+(homepage entries, report body, RSS text) comes from the report templates, see
+``lib.report.renderer``.
 """
 
 import json
@@ -19,8 +21,8 @@ from flask import (
 )
 from lib import send_mail
 from lib.logger import get_logger
-from lib.report.vulnerability_report import VulnerabilityReport
-from lib.web import translate_report, translate_ui
+from lib.report.product import matches_keyword
+from lib.web import translate, translate_ui
 from lib.web.cache import WebCache
 from lib.web.site import IMAGE_KINDS, current_site, load_site
 
@@ -62,21 +64,21 @@ def _remove_link_references(text: str, links: list[str | None]) -> str:
     return text
 
 
-def _get_rss_description(report: VulnerabilityReport) -> str:
-    """Returns the RSS description for this vulnerability report. (in escaped HTML)."""
-    result = report.get_one_description()
-    if len(report.items) > 0:
-        result += f"\n\n{translate_report(report, 'vulnerabilities')}:\n"
-    for i, item in enumerate(report.items):
-        item_description = item.get_name().strip()
-        if item_description[-1] == ")" and item.get_cvss_number() is not None:
-            item_description = item_description[:-1] + f", CVSS {item.get_cvss_number()})"
-        elif item.get_cvss_number() is not None:
-            item_description += f" (CVSS {item.get_cvss_number()})"
-        result += item_description
-        if i < len(report.items) - 1:
-            result += ",\n"
-    return _remove_link_references(result, report.get_links())
+def _render_options(selected_items: list[int] | None = None) -> dict:
+    """What the report templates get besides the product: language, branding, ``t()``."""
+    site = current_site()
+    return {
+        "selected_items": selected_items,
+        "translate": translate,
+        "lang": site.language,
+        "site": {"content": site.content, "metadata": site.metadata, "hostname": site.hostname, "language": site.language},
+    }
+
+
+def _get_rss_description(report: dict) -> str:
+    """Returns the plain-text RSS description of a report, without [n] link references."""
+    text = cache.renderer(current_site().id).render_text(report, **_render_options())
+    return _remove_link_references(text, report["links"])
 
 
 @reports_bp.route("/", endpoint="home")
@@ -98,14 +100,17 @@ def homepage() -> str:
     reports = cache.get_all_reports(site.id, site.language)
     if search_arg:
         # Filter per keyword search from arguments.
-        reports = [report for report in reports if report.matches_keyword(search_arg)]
+        reports = [report for report in reports if matches_keyword(report, search_arg)]
 
     pages = math.ceil(len(reports) / limit)
     upper_report_index = limit * page
     lower_report_index = upper_report_index - limit
+    renderer = cache.renderer(site.id)
+    options = _render_options()
+    entries = [(report, renderer.render(report, "summary", **options)) for report in reports[lower_report_index:upper_report_index]]
     return render_template(
         "homepage.html",
-        reports=reports[lower_report_index:upper_report_index],
+        entries=entries,
         search_arg=search_arg,
         page=page,
         pages=pages,
@@ -129,9 +134,9 @@ def rss() -> Response:
     # add_entry() adds items in a reverse order (the first added item will be
     # the last in the feed), that's why reversed() is needed.
     for report in reversed(reports):
-        report_link = site.hostname + url_for("reports.show", report_id=report.get_id())
+        report_link = site.hostname + url_for("reports.show", report_id=report["id"])
         fe = fg.add_entry()
-        fe.title(report.get_title())
+        fe.title(report["title"])
         fe.link(href=report_link)
         fe.description(_get_rss_description(report))
         fe.guid(report_link, permalink=True)
@@ -161,11 +166,12 @@ def branding(kind: str) -> Response:
 
 @reports_bp.route("/reports/<report_id>", endpoint="show")
 def report_view(report_id: str) -> str:
-    """Endpoint for displaying a vulnerability report."""
+    """Endpoint for displaying a report."""
     # Report ids are Taranis product ids (integers).
     if not report_id.isdigit():
         abort(400)
-    report = cache.get_report(report_id, current_site().id, current_site().language)
+    site = current_site()
+    report = cache.get_report(report_id, site.id, site.language)
     if report is None:
         abort(404)
     try:
@@ -176,6 +182,7 @@ def report_view(report_id: str) -> str:
     return render_template(
         "report.html",
         report=report,
+        detail=cache.renderer(site.id).render(report, "detail", **_render_options(items)),
         items=items,
         feedback_q=current_site().feedback_questions,
         warning_seen=request.cookies.get("warning-seen"),
@@ -213,7 +220,7 @@ def feedback_view(report_id: str) -> tuple[str, int, dict[str, str]]:
     if report is None:
         abort(404)
 
-    body = f'''Byl odeslán feedback k reportu {report.get_title()}
+    body = f'''Byl odeslán feedback k reportu {report["title"]}
 ({site.hostname}{url_for("reports.show", report_id=report_id)}).
 
 {questions["question1"]} "{request.form.get("feedback-question1", "---")}"

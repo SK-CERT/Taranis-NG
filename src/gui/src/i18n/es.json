@@ -1315,7 +1315,8 @@
             "late": "Responde con lentitud",
             "unreachable": "Inaccesible",
             "never_seen": "Nunca conectado",
-            "last_seen": "visto por última vez"
+            "last_seen": "visto por última vez",
+            "disabled": "Desactivado"
         }
     },
     "collectors": {
@@ -1535,6 +1536,7 @@
         "public_web_enabled": "Mostrar sus productos publicados en la web pública",
         "public_web_ids": "Sitios web",
         "public_web_ids_hint": "Ninguno elegido: todas las webs.",
+        "public_web_template_hint": "Si este producto no tiene una plantilla de informe propia (Public Web → Plantillas de informes), en la web solo aparecen los informes de vulnerabilidades.",
         "needs_delivery": "Añada un formato o muestre los productos en la web pública.",
         "successful": "Se añadió el nuevo producto",
         "successful_edit": "Se guardó el producto",
@@ -2169,7 +2171,10 @@
             "name": "Nombre",
             "tab_description": "Nodos public-web y los sitios que sirven",
             "tab_title": "Nodos",
-            "total_count": "{count} nodo public-web | {count} nodos public-web"
+            "total_count": "{count} nodo public-web | {count} nodos public-web",
+            "enabled": "Activado",
+            "enabled_hint": "Desactivado: Taranis deja de comprobar y actualizar este nodo, no publica ninguno de sus sitios y no le envía informes. Sus sitios y ajustes se conservan para cuando se vuelva a activar.",
+            "disabled_notice": "Este nodo está desactivado: no se publica ninguno de sus sitios."
         },
         "webs": {
             "total_count": "{count} sitio | {count} sitios",
@@ -2244,7 +2249,74 @@
         },
         "confirm_delete_title": "Confirmar la eliminación",
         "confirm_delete_node": "¿Eliminar el nodo public-web '{name}' y todos sus sitios?",
-        "confirm_delete_web": "¿Eliminar el sitio '{name}'?"
+        "confirm_delete_web": "¿Eliminar el sitio '{name}'?",
+        "tabs": {
+            "nodes": "Nodos y webs",
+            "nodes_description": "Nodos public-web y las webs que alojan",
+            "templates": "Plantillas de informes",
+            "templates_description": "Plantillas con las que las webs públicas muestran los productos"
+        },
+        "templates": {
+            "total_count": "{count} plantilla | {count} plantillas",
+            "name": "Nombre",
+            "kind": "Plantilla para",
+            "kind_product": "Producto",
+            "kind_item": "Tipo de elemento de informe",
+            "target": "Se aplica a",
+            "product_preset": "Producto",
+            "report_item_type": "Tipo de elemento de informe",
+            "target_hint": "Un producto o tipo de elemento de informe puede tener una plantilla para todos los sitios y otras para sitios elegidos.",
+            "require_tlp_clear": "Requiere TLP:CLEAR",
+            "require_tlp_clear_hint": "Desactivado: también se muestra un producto sin TLP. Un TLP que tenga debe ser siempre CLEAR.",
+            "updated": "Última modificación",
+            "none": "Todavía no hay plantillas propias.",
+            "confirm_delete": "¿Eliminar la plantilla '{name}'? La plantilla integrada ocupa su lugar, salvo que esté desactivada.",
+            "edit": "Editar plantilla de informe",
+            "add_new": "Añadir plantilla de informe",
+            "source": "Plantilla (Jinja)",
+            "start_from": "Empezar desde",
+            "start_product_base": "Una página que amplía el diseño base",
+            "start_product_vulnerability": "El diseño de informe de vulnerabilidades",
+            "help_title": "Qué puede usar una plantilla",
+            "help_product": "Una plantilla de producto amplía un diseño integrado y redefine sus bloques: header, items y links (la página del informe), summary (la entrada de la página de inicio) y rss (el texto RSS).",
+            "help_item": "Una plantilla de elemento muestra un bloque de elemento de informe en la página del informe.",
+            "help_attrs": "Valores de este tipo de elemento de informe:",
+            "help_more": "Los valores se escapan; los filtros (clean, link_refs, cvss_score y otros) se describen en el README de public-web. Una plantilla que falla se sustituye por la integrada.",
+            "help_ctx_product": "el producto: title, description, lead, published, author, product_preset, max_tlp, max_cvss, report_items, body_items",
+            "help_ctx_links": "las fuentes del producto; [n] en los textos es links[n - 1]",
+            "help_ctx_render_item": "muestra un elemento con su propia plantilla",
+            "help_ctx_selected_items": "los elementos elegidos por el lector (?items=); vacío significa todos",
+            "help_ctx_t": "una frase de las traducciones de la web pública",
+            "help_ctx_item": "el elemento de informe: name, type, attrs, attributes, fields",
+            "help_ctx_index": "la posición del elemento en la página",
+            "builtin_title": "Plantillas integradas",
+            "builtin_intro": "La web pública las usa para los productos y elementos de informe sin plantilla propia. No se pueden eliminar, pero puede desactivar una para usar allí solo sus propias plantillas.",
+            "builtin_in_use": "En uso",
+            "builtin_used_for": "Se usa para",
+            "builtin_always_on": "Siempre activa: las plantillas propias se basan en ella.",
+            "builtin_view": "Mostrar la plantilla",
+            "builtin_copy": "Copiar",
+            "builtin_copied": "Copiado",
+            "builtin_copy_failed": "No se pudo copiar. Seleccione el texto y cópielo a mano.",
+            "builtin_none": "Ninguna plantilla integrada coincide con la búsqueda.",
+            "builtin_use": {
+                "product_base": "El diseño que extiende toda plantilla de producto.",
+                "product_vulnerability": "La página de los informes de vulnerabilidades de productos sin plantilla propia.",
+                "item_vulnerability": "Elementos del tipo Vulnerability Report tal como lo crea Taranis, sin plantilla propia.",
+                "item_generic": "Cualquier otro elemento de informe de un tipo sin plantilla propia.",
+                "macros": "Macros que importan las plantillas."
+            },
+            "builtin_off": {
+                "product": "Desactivada: en la web pública solo se muestran los productos con plantilla propia.",
+                "item_specific": "Desactivada: estos elementos usan la plantilla genérica, o se omiten si también está desactivada.",
+                "item_generic": "Desactivada: los elementos de informe que se quedan sin plantilla no se muestran, ni tampoco un producto que se queda sin ninguno."
+            },
+            "webs": "Sitios",
+            "webs_hint": "Ninguno elegido: todos los sitios. Un sitio usa la plantilla que lo incluye; si no, la de todos los sitios.",
+            "every_web": "Todos los sitios",
+            "web_taken": "Ya en '{name}'",
+            "every_web_taken": "'{name}' ya es su plantilla para todos los sitios: elija los sitios a los que se aplica esta."
+        }
     },
     "routing": {
         "tab_title": "Enrutamiento y TLS",

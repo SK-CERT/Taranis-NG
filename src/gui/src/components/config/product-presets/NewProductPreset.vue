@@ -171,6 +171,13 @@
                         class="mb-2"
                         :disabled="saving"
                     />
+                    <div
+                        v-if="localItem.public_web_enabled"
+                        class="text-body-2 text-medium-emphasis mb-3"
+                        data-test="public-web-template-hint"
+                    >
+                        {{ t('product_presets.public_web_template_hint') }}
+                    </div>
                     <v-select
                         v-if="localItem.public_web_enabled && options.public_webs.length > 0"
                         v-model="localItem.public_web_ids"

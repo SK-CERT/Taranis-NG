@@ -551,8 +551,17 @@ confirmation lists, for each language it sends, what that language falls back on
 render the open tab's language, with a menu of the formats when the preset has more than one.
 
 A product preset can also show its published products on the **public web**: on every web, or only
-on the webs it lists. Who may see, edit and publish products is set by ACLs on their preset
-(item type *Product*).
+on the webs it lists. The page of a published product is rendered with the report template of its
+preset (Configuration -> Public Web -> Report templates); a preset without one shows only the
+products that are vulnerability reports, with the built-in templates. A template can be limited
+to chosen webs, so that each web has its own look: a web uses the template that lists it, else
+the one for every web. The same tab lists the
+built-in templates: they cannot be deleted, but those used for products and report items without
+a template of their own can be switched off, so that only your own templates are used. Switching
+off the vulnerability report template hides the products of every preset without a template; a
+report item left with no template is not shown, and neither is a product left
+with no item.
+Who may see, edit and publish products is set by ACLs on their preset (item type *Product*).
 
 A format or a channel that a preset uses, a web that one is restricted to, and a preset that
 products use cannot be deleted until nothing uses them any more.

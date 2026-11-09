@@ -1,13 +1,9 @@
-"""Shared public-web web helpers: language resolution, translations, and HTML sanitization."""
+"""Shared public-web web helpers: language resolution and translations."""
 
 from urllib.parse import urlencode
 
-from bleach import clean, css_sanitizer
 from flask import g, request
 from lib import config
-from lib.report.report_item import VulnerabilityReportPart
-from lib.report.vulnerability_report import VulnerabilityReport
-from markupsafe import Markup
 
 
 def current_language() -> str:
@@ -62,22 +58,22 @@ def language_choices() -> list[dict[str, str | bool]]:
     return choices
 
 
-def translate_report(part: VulnerabilityReport | VulnerabilityReportPart, key: str) -> str:
+def translate_report(key: str, language: str | None = None) -> str | None:
     """Get the phrase for ``key`` from the ``report`` section of the conf/i18n translations.
 
-    The phrase is part of the report, so it is in the language ``part`` (the report, or one of its
+    The phrase is part of a report, so it is in ``language``, the one the report (or one of its
     report items) is shown in: a report nobody translated into the page's language reads in the one
     it was written in, only the page around it in the page's language. Without a known language (a
     core without languages) it is the page's language; one without a catalog gets English.
     """
     page_translations = config.get_translations(current_language())
-    language = part.get_language() or current_language()
+    language = language or current_language()
     # Every catalog names the languages that have one; anything else is not a catalog's name.
     translations = config.get_translations(language if language in page_translations["languages"] else config.DEFAULT_LANGUAGE)
     return translations["report"].get(key.lower())
 
 
-def translate_ui(key: str) -> str:
+def translate_ui(key: str) -> str | None:
     """Get the phrase for ``key`` from the ``interface`` section of conf/i18n.
 
     Uses the language chosen for the current request.
@@ -85,19 +81,10 @@ def translate_ui(key: str) -> str:
     return config.get_translations(current_language())["interface"].get(key.lower())
 
 
-def transform_link_references(text: str, links: list[str]) -> str:
-    """Transforms references to links ([1], [2]...) to <a>...</a>."""
-    for i, link in enumerate(links, start=1):
-        text = text.replace(f"[{i}]", f"<a href='{link}' style='text-decoration: none;'>[{i}]</a>")
-    return text
+def translate(key: str, language: str | None = None) -> str:
+    """The ``t()`` of report templates: a ``report`` phrase, else an ``interface`` one, else the key itself.
 
-
-def do_clean(text: str) -> str:
-    """Strip all HTML tags except ``<a>`` to prevent XSS.
-
-    The description comes from an external source (Taranis), so it cannot be
-    trusted. A CSS sanitizer is needed to allow the ``style`` attribute.
+    The report phrase is in ``language``, the one the part rendered is shown in (see
+    :func:`translate_report`); an interface phrase belongs to the page, so it is in the page's.
     """
-    sanitizer = css_sanitizer.CSSSanitizer(allowed_css_properties=["text-decoration"])
-    # Safe because warning tags are removed by bleach, which is what's being rendered.
-    return Markup(clean(text, tags=["a"], attributes=["href", "style"], css_sanitizer=sanitizer))  # noqa: S704
+    return translate_report(key, language) or translate_ui(key) or key
