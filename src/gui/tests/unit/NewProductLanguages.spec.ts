@@ -217,6 +217,13 @@ const tabs = (wrapper: ReturnType<typeof mountWithPlugins>) =>
         .findAll('.v-tab')
         .map((tab) => tab.text())
 
+// The templates notices, as alerts: Vuetify 4.3 no longer marks a tonal alert with a
+// text-<type> class, so their look is read from the props.
+const templateAlerts = (wrapper: ReturnType<typeof mountWithPlugins>) =>
+    wrapper.findAllComponents({ name: 'VAlert' }).filter((component) => component.attributes('data-test') === 'notice-templates')
+
+const alertLook = (alert: ReturnType<typeof templateAlerts>[number]) => ({ variant: alert.props('variant'), type: alert.props('type') })
+
 describe('NewProduct languages', () => {
     beforeEach(() => {
         vi.clearAllMocks()
@@ -669,7 +676,7 @@ describe('NewProduct languages', () => {
         const notice = wrapper.get('[data-test="notice-templates"]')
         expect(notice.text()).toContain('Czech')
         expect(notice.text()).not.toContain('e-mail')
-        expect(notice.classes()).toContain('text-warning')
+        expect(templateAlerts(wrapper).map(alertLook)).toEqual([{ variant: 'tonal', type: 'warning' }])
     })
 
     it('names the format of each templates notice when the product preset has several', async () => {
@@ -691,8 +698,10 @@ describe('NewProduct languages', () => {
 
         const notices = wrapper.findAll('[data-test="notice-templates"]')
         expect(notices.map((notice) => notice.text().split(':')[0])).toEqual(['e-mail CZ', 'PDF'])
-        expect(notices[0]!.classes()).toContain('text-warning')
-        expect(notices[1]!.classes()).toContain('text-info')
+        expect(templateAlerts(wrapper).map(alertLook)).toEqual([
+            { variant: 'tonal', type: 'warning' },
+            { variant: 'tonal', type: 'info' }
+        ])
     })
 
     it('only informs about default templates of no stated language, and is quiet when the tab has its own', async () => {
@@ -704,13 +713,9 @@ describe('NewProduct languages', () => {
         await vi.advanceTimersByTimeAsync(400)
         await flushPromises()
 
-        const templates = wrapper.get('[data-test="notice-templates"]')
-        expect(templates.text()).toContain('default')
-        const alert = wrapper
-            .findAllComponents({ name: 'VAlert' })
-            .find((component) => component.attributes('data-test') === 'notice-templates')
-        expect(alert?.props('variant')).toBe('tonal')
-        expect(alert?.props('type')).toBe('info')
+        const notice = wrapper.get('[data-test="notice-templates"]')
+        expect(notice.text()).toContain('default')
+        expect(templateAlerts(wrapper).map(alertLook)).toEqual([{ variant: 'tonal', type: 'info' }])
 
         wrapper.vm.activeLanguage = 'sk'
         await vi.advanceTimersByTimeAsync(400)
