@@ -6,12 +6,11 @@ import { login, generateTestName } from '../helpers/test-helpers'
  *
  * Verifies that the publish confirmation dialog (ConfirmationDialog) shows:
  *  - the product title
- *  - the product type name
- *  - the selected publisher preset names
+ *  - the product preset name
+ *  - the deliveries the product is sent to
  *
- * These tests open the New Product dialog, fill minimal fields, select a publisher
- * preset, and click Publish — then assert the confirmation dialog content.
- * They are skipped when the environment has no product types or publisher presets.
+ * These tests open the New Product dialog, fill minimal fields, pick the E2E product preset
+ * (its channels come ticked), and click Publish — then assert the confirmation dialog content.
  */
 
 const PUBLISH_URL = '/publish'
@@ -23,7 +22,7 @@ test.describe('Publish confirmation dialog', () => {
         await expect(page).toHaveURL(/\/publish/)
     })
 
-    test('should show product type and publisher preset in the publish confirmation', async ({ page }) => {
+    test('should show the product preset and its deliveries in the publish confirmation', async ({ page }) => {
         // Open the New Product dialog.
         await page.getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
@@ -34,23 +33,23 @@ test.describe('Publish confirmation dialog', () => {
         const productTitle = generateTestName('E2E Publish Confirm')
         await form.locator('input').nth(1).fill(productTitle)
 
-        // Select the first product type from the combobox.
-        // Vuetify 3 teleports the dropdown to body; scope to visible list items.
-        const typeCombo = form.locator('.v-combobox').first()
-        await typeCombo.click()
+        // Pick the product preset 00-config-seed made; its channels come ticked.
+        // Vuetify teleports the dropdown to body; scope to visible list items.
+        const productPresetSelect = form.locator('.v-select').first()
+        await productPresetSelect.click()
         const dropdownItems = page.locator('.v-overlay__content:visible .v-list-item')
-        await dropdownItems.first().click()
-
-        // Select the first publisher preset checkbox.
-        const presetCheckbox = form.locator('.v-checkbox').first()
-        await presetCheckbox.locator('input').check()
+        await dropdownItems
+            .filter({ hasText: /E2E Product Preset/ })
+            .first()
+            .click()
+        await expect(form.locator('.v-checkbox input').first()).toBeChecked()
 
         // Click Publish — this triggers handlePublishConfirmation. Because the form is dirty
         // (we just typed the title), it first opens the "Publish Unsaved Product" unsaved-changes
         // dialog (`showPublishUnsavedConfirmation`), NOT the ConfirmationDialog. We must click
         // "Save and Publish" to save the product first, which then opens the actual
-        // ConfirmationDialog (showPublishConfirmation) showing the product title, type, and
-        // publisher-preset names — the content this test asserts.
+        // ConfirmationDialog (showPublishConfirmation) showing the product title, product preset and
+        // deliveries — the content this test asserts.
         await dialog.getByRole('button', { name: 'Publish product' }).click()
 
         // Unsaved-changes dialog ("Publish Unsaved Product") appears ON TOP OF the New Product
@@ -76,10 +75,10 @@ test.describe('Publish confirmation dialog', () => {
         // The confirmation should contain the product title.
         await expect(confirmDialog).toContainText(productTitle)
 
-        // It should carry the product-type and publishers labels
-        // (product.publish_confirmation_type / _publishers).
-        await expect(confirmDialog).toContainText(/Product type:/i)
-        await expect(confirmDialog).toContainText(/Publishers:/i)
+        // It should carry the product preset and deliveries labels
+        // (product.publish_confirmation_product_preset / _deliveries).
+        await expect(confirmDialog).toContainText(/Product: E2E Product Preset/i)
+        await expect(confirmDialog).toContainText(/Sent to: .*E2E Publishing Channel/i)
 
         // Cancel — don't actually publish a throwaway product.
         await confirmDialog.getByRole('button', { name: 'Cancel' }).click()
@@ -87,34 +86,14 @@ test.describe('Publish confirmation dialog', () => {
         await expect(confirmDialog).toHaveCount(0)
     })
 
-    test('should not render the Publish button without publisher presets', async ({ page }) => {
-        // When no publisher presets are configured, canPublish is false and the
-        // "Publish product" button is not rendered at all — so there's nothing
-        // to confirm. This test verifies that absence rather than trying to click
-        // a button that doesn't exist.
+    test('should not render the Publish button before a product preset is chosen', async ({ page }) => {
+        // Publish sends to the channels of the product's product preset; without one there is
+        // nowhere to send, so the button is not rendered at all.
         await page.getByRole('button', { name: 'Add New' }).click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await expect(dialog).toBeVisible()
 
-        const publishBtn = dialog.getByRole('button', { name: 'Publish product' })
-        const publishVisible = await publishBtn.count()
-
-        if (publishVisible === 0) {
-            // No publisher presets in the environment → Publish button correctly absent.
-            // Close the dialog and pass.
-            await dialog.locator('.v-toolbar .v-btn').first().click()
-            return
-        }
-
-        // If publisher presets DO exist, verify the button doesn't trigger a
-        // confirmation without selecting one (the validation toast blocks it).
-        await publishBtn.click()
-        await page.waitForTimeout(1000)
-
-        // Only the New Product dialog should be visible — no confirmation overlay.
-        const overlays = page.locator('.v-dialog.v-overlay--active')
-        // The confirmation dialog contains "Do you really want" — it should NOT appear.
-        await expect(overlays.filter({ hasText: /Do you really want/i })).toHaveCount(0)
+        await expect(dialog.getByRole('button', { name: 'Publish product' })).toHaveCount(0)
 
         await dialog.locator('.v-toolbar .v-btn').first().click()
     })

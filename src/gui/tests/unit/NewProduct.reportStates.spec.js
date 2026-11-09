@@ -5,7 +5,7 @@ import { mountWithPlugins } from '../helpers/mount-helpers'
 import NewProduct from '@/components/publish/NewProduct.vue'
 import StateSelector from '@/components/common/StateSelector.vue'
 import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
-import { getProductById, getPublishPublicWebs, updateProduct } from '@/api/publish'
+import { getProductById, updateProduct } from '@/api/publish'
 
 vi.mock('@/api/publish', () => ({
     getAllProducts: vi.fn(),
@@ -13,18 +13,11 @@ vi.mock('@/api/publish', () => ({
     updateProduct: vi.fn(),
     publishProduct: vi.fn(),
     previewProduct: vi.fn(),
-    getProductById: vi.fn(),
-    getPublishPublicWebs: vi.fn()
-}))
-
-vi.mock('@/api/config', () => ({
-    getAllPublicWebNodes: vi.fn(),
-    getPublicWebs: vi.fn()
+    getProductById: vi.fn()
 }))
 
 vi.mock('@/api/user', () => ({
-    getAllUserProductTypes: vi.fn().mockResolvedValue({ data: { items: [] } }),
-    getAllUserPublishersPresets: vi.fn().mockResolvedValue({ data: { items: [] } })
+    getAllUserProductPresets: vi.fn().mockResolvedValue({ data: { items: [] } })
 }))
 
 const PUBLISHED = 1
@@ -60,9 +53,8 @@ const productDetail = (stateId, reportState) => ({
     id: 1016,
     title: 'whatever',
     description: '',
-    product_type_id: 1,
+    product_preset_id: 1,
     state_id: stateId,
-    public_web_ids: [],
     links: [],
     report_items: [{ id: 3193, title: 'blbost', state_id: reportState === completed ? 3 : 2, state: reportState }]
 })
@@ -102,7 +94,6 @@ const shownReportStates = (wrapper) =>
 describe('NewProduct report states', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        vi.mocked(getPublishPublicWebs).mockResolvedValue({ data: { total_count: 0, items: [] } })
         vi.mocked(updateProduct).mockResolvedValue({ data: 1016 })
     })
 

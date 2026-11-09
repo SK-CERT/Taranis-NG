@@ -1,6 +1,6 @@
-"""Diagnostics for the key files publisher presets point at.
+"""Diagnostics for the key files publishing channels point at.
 
-Two presets name a file the publisher has to read: the SFTP publisher's private
+Two channels name a file the publisher has to read: the SFTP publisher's private
 key, and the email publisher's signing and encryption keys. Both are mounted in
 from the host, and both used to be read by a service running as root. Since the
 services dropped to an unprivileged user a key mounted 0600 root:root is
@@ -22,7 +22,7 @@ def unreadable_key_error(key_path: str, description: str, error: OSError) -> OSE
     """Build the error to raise when a configured key file cannot be read.
 
     Args:
-        key_path (str): The path as configured in the preset, absolute or relative.
+        key_path (str): The path as configured in the channel, absolute or relative.
         description (str): What the file is, for the message ("SSH key").
         error (OSError): The failure from the attempted read.
 
@@ -30,7 +30,7 @@ def unreadable_key_error(key_path: str, description: str, error: OSError) -> OSE
         OSError: The replacement error, to raise ``from`` the original.
     """
     # A relative path resolves against the container's working directory, not
-    # against anything the operator who typed it into the preset can see. Report
+    # against anything the operator who typed it into the channel can see. Report
     # the path actually opened, so the failure names a findable file.
     msg = f"Cannot read the {description} at {Path(key_path).resolve()}: {error.strerror}."
     if isinstance(error, PermissionError):

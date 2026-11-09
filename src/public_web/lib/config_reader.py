@@ -34,7 +34,6 @@ DEFAULT_LOG_DIR = "/tmp/public-web-logs"  # noqa: S108
 # settings come from the GUI. They only fill fields a web leaves unset (and keep
 # the page rendering when core is unreachable). site.py merges them per web/lang.
 DEFAULT_MAX_REPORTS_HOMEPAGE = 10
-DEFAULT_MAX_REPORTS_RSS = 15
 
 WEB_METADATA_DEFAULTS = {
     "hostname": "https://public-web.example.org",
@@ -144,15 +143,13 @@ class ConfigReader:
             raise RuntimeError(msg) from exc
         return self._api_key
 
-    def max_reports_api(self) -> int:
+    def max_reports_api(self) -> int | None:
         """How many of the latest published products to fetch/render from Taranis.
 
-        (PUBLIC_WEB_MAX_REPORTS env, else the larger of the homepage and RSS limits).
+        (PUBLIC_WEB_MAX_REPORTS env, else None: every published product).
         """
         value = (os.getenv("PUBLIC_WEB_MAX_REPORTS") or "").strip()
-        if value:
-            return int(value)
-        return max(self.max_reports_homepage(), self.max_reports_rss())
+        return int(value) if value else None
 
     def cache_ttl(self) -> int:
         """Cache lifetime in seconds for fetched data.
@@ -167,10 +164,6 @@ class ConfigReader:
     def max_reports_homepage(self) -> int:
         """Get the default maximum reports for homepage."""
         return DEFAULT_MAX_REPORTS_HOMEPAGE
-
-    def max_reports_rss(self) -> int:
-        """Get the default maximum reports for RSS feed."""
-        return DEFAULT_MAX_REPORTS_RSS
 
     def web_metadata(self) -> dict[str, str]:
         """Get the default web metadata."""

@@ -28,16 +28,25 @@
                     :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
-                    <v-text-field
-                        v-model="localItem.title"
-                        :spellcheck="spellcheck"
-                        :label="t('reports.types.name')"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        :rules="[(v) => !!v || t('error.required')]"
-                        :disabled="saving"
-                    />
+                    <div class="d-flex align-start ga-3 mb-3">
+                        <MdiIconPicker
+                            v-model="iconModel"
+                            :label="t('reports.types.icon')"
+                            :disabled="saving || !canSave"
+                            hide-label
+                            class="name-icon"
+                            data-test="report-type-icon"
+                        />
+                        <v-text-field
+                            v-model="localItem.title"
+                            :spellcheck="spellcheck"
+                            :label="t('reports.types.name')"
+                            variant="outlined"
+                            density="comfortable"
+                            :rules="[(v) => !!v || t('error.required')]"
+                            :disabled="saving"
+                        />
+                    </div>
 
                     <v-textarea
                         v-model="localItem.description"
@@ -275,6 +284,7 @@
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import MdiIconPicker from '@/components/common/MdiIconPicker.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
@@ -284,6 +294,7 @@
     import { useContentLanguages } from '@/composables/useContentLanguages'
     import { useAuth } from '@/composables/useAuth'
     import { createNewReportItemType, updateReportItemType, getAllAttributes, getAllAiProviders } from '@/api/config'
+    import { ICONS } from '@/config/ui-constants'
 
     type Translations = Record<string, Record<string, string>>
 
@@ -302,6 +313,8 @@
         id: number | null
         title: string
         description: string
+        // The MDI icon it and its reports show; null for the default one.
+        icon: string | null
         attribute_groups: AttributeGroup[]
         // Languages reports of this type are translated into (ISO 639-1).
         languages: string[]
@@ -373,6 +386,7 @@
         id: null,
         title: '',
         description: '',
+        icon: null,
         attribute_groups: [],
         languages: [],
         translation_ai_provider_id: null,
@@ -381,6 +395,14 @@
     })
 
     const localItem = ref<ReportTypeItem>(defaultItem())
+
+    // The picker shows the default icon of a type without its own; it is stored only once picked.
+    const iconModel = computed({
+        get: () => localItem.value.icon || ICONS.FILE_TABLE_OUTLINE,
+        set: (icon: string) => {
+            localItem.value.icon = icon
+        }
+    })
 
     // Label variants exist for every report language except the one the labels are written in.
     const labelLanguages = computed(() => localItem.value.languages.filter((language) => language !== localItem.value.label_language))
@@ -435,6 +457,7 @@
             id?: number
             title?: string
             description?: string
+            icon?: string | null
             attribute_groups?: IncomingGroup[]
             languages?: string[]
             translation_ai_provider_id?: number | null
@@ -445,6 +468,7 @@
             id: src.id ?? null,
             title: src.title ?? '',
             description: src.description ?? '',
+            icon: src.icon ?? null,
             languages: [...(src.languages ?? [])],
             translation_ai_provider_id: src.translation_ai_provider_id ?? null,
             label_language: src.label_language ?? null,
@@ -490,6 +514,7 @@
         id: localItem.value.id ?? -1,
         title: localItem.value.title,
         description: localItem.value.description,
+        icon: localItem.value.icon,
         languages: localItem.value.languages,
         translation_ai_provider_id: localItem.value.translation_ai_provider_id,
         label_language: localItem.value.label_language || null,
@@ -610,3 +635,9 @@
         }
     )
 </script>
+
+<style scoped>
+    .name-icon {
+        flex: 0 0 96px;
+    }
+</style>

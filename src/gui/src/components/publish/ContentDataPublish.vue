@@ -75,10 +75,11 @@
 <script setup lang="ts">
     import { ref, onMounted, onUnmounted, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useRoute } from 'vue-router'
     import { ICONS } from '@/config/ui-constants'
     import { tagFilterQuery, type TagFilterState } from '@/api/tags'
     import { usePublishStore } from '@/stores/publish'
-    import { getAllUserProductTypes } from '@/api/user'
+    import { routeProductPresetId } from '@/types/product-presets'
     import CardProduct from './CardProduct.vue'
     import ContentSkeleton from '@/components/common/ContentSkeleton.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
@@ -86,14 +87,8 @@
 
     type ProductItem = {
         id: string | number
-        product_type_id?: string | number
-        product_type_name?: string
-        [key: string]: unknown
-    }
-
-    type ProductType = {
-        id: string | number
-        title?: string
+        product_preset_id?: string | number
+        product_preset_name?: string
         [key: string]: unknown
     }
 
@@ -102,6 +97,7 @@
         range: string
         published: boolean | string
         sort: string
+        product_preset_id?: number | null
         compact_mode?: boolean
     }
 
@@ -117,16 +113,19 @@
     const emit = defineEmits(['update-showing-count'])
 
     const { t } = useI18n()
+    const route = useRoute()
     const publishStore = usePublishStore()
 
     const collections = ref<ProductItem[]>([])
     const dataLoaded = ref(false)
     let updateSequence = 0
+    // The first load runs before the toolbar's filter arrives, so it takes the sidebar's product preset itself.
     const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
         published: 'ALL',
-        sort: 'DATE_DESC'
+        sort: 'DATE_DESC',
+        product_preset_id: routeProductPresetId(route.params)
     })
 
     const currentCard = computed(() => {
@@ -178,39 +177,17 @@
         }
 
         try {
-            // Load the list and the product-type catalog in parallel, since the
-            // type enrichment below only needs both results to be available.
-            const [, productTypesResponse] = await Promise.all([
-                publishStore.loadProducts({
-                    filter: filter.value,
-                    offset: offset,
-                    limit: limit
-                }),
-                getAllUserProductTypes()
-            ])
+            await publishStore.loadProducts({
+                filter: filter.value,
+                offset: offset,
+                limit: limit
+            })
 
             if (requestId !== updateSequence) {
                 return
             }
 
-            const productTypes = Array.isArray(productTypesResponse?.data?.items) ? (productTypesResponse.data.items as ProductType[]) : []
-
             const newItems = Array.isArray(publishStore.getProducts.items) ? (publishStore.getProducts.items as ProductItem[]) : []
-
-            if (Array.isArray(newItems) && Array.isArray(productTypes)) {
-                for (let i = 0; i < newItems.length; i++) {
-                    const item = newItems[i]
-                    if (!item) {
-                        continue
-                    }
-                    const productType = productTypes.find((x) => x.id == item.product_type_id)
-                    if (productType) {
-                        item.product_type_name = String(productType.title || t('workflow.entity_types.product'))
-                    } else {
-                        item.product_type_name = t('workflow.entity_types.product')
-                    }
-                }
-            }
 
             // Directly assign or concat - Vue will detect removed items and animate them
             if (append) {
@@ -239,7 +216,8 @@
             oldFilter.range !== newFilter.range ||
             oldFilter.published !== newFilter.published ||
             oldFilter.sort !== newFilter.sort ||
-            tagFilterQuery(oldFilter) !== tagFilterQuery(newFilter)
+            tagFilterQuery(oldFilter) !== tagFilterQuery(newFilter) ||
+            (oldFilter.product_preset_id ?? null) !== (newFilter.product_preset_id ?? null)
 
         filter.value = newFilter
         if (dataFilterChanged) {
@@ -267,7 +245,7 @@
                     id: product.id,
                     title: product['title'],
                     description: product['subtitle'] || '',
-                    product_type_id: product.product_type_id,
+                    product_preset_id: product.product_preset_id,
                     state_id: state?.id || null,
                     report_items: product['report_items'] || [],
                     modify: product['modify'] === true,
@@ -284,13 +262,7 @@
     }
 
     useSseResync(async () => {
-        // Public webs may have been created/deleted elsewhere while this view was
-        // mounted; the options cache is written once, so force a re-fetch on
-        // resync. It has to be a refresh and not a bare invalidation: the product
-        // dialog is mounted alongside this component for the whole life of the
-        // view and would otherwise keep an empty option list, hiding the target
-        // selector until the route is left and re-entered.
-        await Promise.all([publishStore.refreshPublicWebOptions(), updateData(false, true)])
+        await updateData(false, true)
     })
 
     onMounted(() => {

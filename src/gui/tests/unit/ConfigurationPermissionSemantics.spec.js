@@ -186,9 +186,10 @@ describe('configuration permission coverage matrix', () => {
         ['components/config/word-lists/NewWordList.vue', 'CONFIG_WORD_LIST_CREATE', 'CONFIG_WORD_LIST_UPDATE'],
         ['components/config/collectors/NewOSINTSourceGroup.vue', 'CONFIG_OSINT_SOURCE_GROUP_CREATE', 'CONFIG_OSINT_SOURCE_GROUP_UPDATE'],
         ['components/config/collectors/NewOSINTSource.vue', 'CONFIG_OSINT_SOURCE_CREATE', 'CONFIG_OSINT_SOURCE_UPDATE'],
-        ['components/config/publishers/NewPublisherPreset.vue', 'CONFIG_PUBLISHER_PRESET_CREATE', 'CONFIG_PUBLISHER_PRESET_UPDATE'],
+        ['components/config/publishers/NewPublishingChannel.vue', 'CONFIG_PUBLISHING_CHANNEL_CREATE', 'CONFIG_PUBLISHING_CHANNEL_UPDATE'],
         ['components/config/bots/NewBotPreset.vue', 'CONFIG_BOT_PRESET_CREATE', 'CONFIG_BOT_PRESET_UPDATE'],
-        ['components/config/presenters/NewProductType.vue', 'CONFIG_PRODUCT_TYPE_CREATE', 'CONFIG_PRODUCT_TYPE_UPDATE']
+        ['components/config/presenters/NewProductFormat.vue', 'CONFIG_PRODUCT_FORMAT_CREATE', 'CONFIG_PRODUCT_FORMAT_UPDATE'],
+        ['components/config/product-presets/NewProductPreset.vue', 'CONFIG_PRODUCT_PRESET_CREATE', 'CONFIG_PRODUCT_PRESET_UPDATE']
     ]
 
     it.each(editorMatrix)('%s explicitly gates create and update', (relativePath, createPermission, updatePermission) => {
@@ -220,9 +221,10 @@ describe('configuration permission coverage matrix', () => {
         ['views/admin/ReportTypesView.vue', 'CONFIG_REPORT_TYPE_DELETE'],
         ['views/admin/WordListsView.vue', 'CONFIG_WORD_LIST_DELETE'],
         ['views/admin/OSINTSourceGroupsView.vue', 'CONFIG_OSINT_SOURCE_GROUP_DELETE'],
-        ['views/admin/PublisherPresetsView.vue', 'CONFIG_PUBLISHER_PRESET_DELETE'],
+        ['views/admin/PublishingChannelsView.vue', 'CONFIG_PUBLISHING_CHANNEL_DELETE'],
         ['views/admin/BotPresetsView.vue', 'CONFIG_BOT_PRESET_DELETE'],
-        ['views/admin/ProductTypesView.vue', 'CONFIG_PRODUCT_TYPE_DELETE'],
+        ['views/admin/ProductFormatsView.vue', 'CONFIG_PRODUCT_FORMAT_DELETE'],
+        ['views/admin/ProductPresetsView.vue', 'CONFIG_PRODUCT_PRESET_DELETE'],
         ['components/config/collectors/ContentDataOSINTSource.vue', 'CONFIG_OSINT_SOURCE_DELETE']
     ]
 

@@ -47,8 +47,6 @@ const mockPublishStore = {
     deselect: vi.fn()
 }
 
-const mockGetAllUserProductTypes = vi.fn()
-
 vi.mock('vue-router', () => ({
     useRoute: () => mockRoute
 }))
@@ -63,10 +61,6 @@ vi.mock('@/stores/analyze', () => ({
 
 vi.mock('@/stores/publish', () => ({
     usePublishStore: () => mockPublishStore
-}))
-
-vi.mock('@/api/user', () => ({
-    getAllUserProductTypes: (...args) => mockGetAllUserProductTypes(...args)
 }))
 
 const commonStubs = {
@@ -116,16 +110,11 @@ describe('Content data scroll guards', () => {
         mockPublishStore.getProducts = {
             total_count: 2,
             items: [
-                { id: 1, product_type_id: 20, title: 'Product 1' },
-                { id: 2, product_type_id: 20, title: 'Product 2' }
+                { id: 1, product_preset_id: 20, product_preset_name: 'Advisory', title: 'Product 1' },
+                { id: 2, product_preset_id: 20, product_preset_name: 'Advisory', title: 'Product 2' }
             ]
         }
         mockPublishStore.loadProducts.mockResolvedValue({ data: mockPublishStore.getProducts })
-        mockGetAllUserProductTypes.mockResolvedValue({
-            data: {
-                items: [{ id: 20, title: 'Product Type' }]
-            }
-        })
     })
 
     it.each([
@@ -241,13 +230,11 @@ describe('Content data scroll guards', () => {
             await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
-            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(1)
 
             await wrapper.vm.updateData(true, false)
             await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
-            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(1)
         } finally {
             wrapper.unmount()
         }

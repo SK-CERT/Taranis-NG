@@ -20,8 +20,7 @@ vi.mock('@/services/api_service', () => ({
 }))
 
 vi.mock('@/api/user', () => ({
-    getAllUserProductTypes: vi.fn().mockResolvedValue({ data: { items: [] } }),
-    getAllUserPublishersPresets: vi.fn().mockResolvedValue({ data: { items: [] } })
+    getAllUserProductPresets: vi.fn().mockResolvedValue({ data: { items: [] } })
 }))
 
 vi.mock('@/api/state', () => ({
@@ -89,7 +88,7 @@ describe('NewProduct preview', () => {
         finishValidation?.({ valid: true })
         await preview
 
-        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), true, '', null)
+        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), true, '', undefined, null)
         expect(navigateReservedTabOrCurrentWindow).toHaveBeenCalledWith(previewWindow, '/api/v1/publish/products/preview/ticket-123')
     })
 
@@ -127,7 +126,7 @@ describe('NewProduct preview', () => {
 
         await wrapper.vm.handleDownload({ ctrlKey: false } as MouseEvent)
 
-        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '', null)
+        expect(previewProduct).toHaveBeenCalledWith(expect.any(Object), false, '', undefined, null)
         expect(ApiService.download).toHaveBeenCalledWith('/publish/products/preview/download-ticket', undefined, 'product', 'GET')
     })
 })

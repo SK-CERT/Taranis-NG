@@ -16,6 +16,7 @@ from managers.db_manager import db
 from managers.link_references import normalize_links
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
+from model.product_preset import DEFAULT_ICON, ProductPreset, ProductPresetPublicWeb
 from model.public_web import PublicWeb
 from model.report_item import ReportItem
 from model.report_item_type import ReportItemType
@@ -27,13 +28,13 @@ from model.state import (
     StateManager,
 )
 from model.tag import Tag, product_tag, set_item_tags
-from model.translation import ORIGIN_AI, ORIGIN_MANUAL, PRODUCT_FIELDS, ProductTranslation, sql_source_hash
+from model.translation import ORIGIN_AI, ORIGIN_MANUAL, ORIGIN_REVIEWED, PRODUCT_FIELDS, ProductTranslation, sql_source_hash
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
 from shared.schema.product import ProductPresentationSchema, ProductSchemaBase
 from shared.schema.report_item import ReportItemIdSchema
-from sqlalchemy import and_, func, or_, orm
+from sqlalchemy import and_, exists, func, or_, orm
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql.expression import cast
 
@@ -46,7 +47,7 @@ class NewProductSchema(ProductSchemaBase):
     """
 
     report_items = fields.Nested(ReportItemIdSchema, many=True)
-    # Translated titles, {language: {"title": ..., "origin": "ai" | "manual"}}; saved with the product.
+    # Translated titles, {language: {"title": ..., "origin": "ai" | "reviewed" | "manual"}}; saved with the product.
     translations = fields.Dict(load_default=None, allow_none=True)
 
     @post_load
@@ -71,8 +72,8 @@ class Product(db.Model):
         title: Product title
         description: Product description
         created: Product creation date
-        product_type_id: Product type id
-        product_type: Product type
+        product_preset_id: What the product is published as (its formats, channels and webs)
+        product_preset: The product preset
         user_id: User id
         user: User
         report_items: List of report items
@@ -93,8 +94,9 @@ class Product(db.Model):
     created = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now)
 
-    product_type_id = db.Column(db.Integer, db.ForeignKey("product_type.id"))
-    product_type = db.relationship("ProductType")
+    # A product preset in use cannot be deleted.
+    product_preset_id = db.Column(db.Integer, db.ForeignKey("product_preset.id"), nullable=False)
+    product_preset = db.relationship(ProductPreset)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     user = db.relationship("User", foreign_keys=[user_id])
@@ -104,7 +106,11 @@ class Product(db.Model):
     state = db.relationship(StateDefinition, lazy="select")  # must be "select" to avoid join issues in get()
 
     report_items = db.relationship("ReportItem", secondary="product_report_item")
-    public_webs = db.relationship(PublicWeb, secondary="product_public_web")
+
+    # Off, it stays off the public web, whatever its product preset says.
+    public_web_enabled = db.Column(db.Boolean(), nullable=False, default=True, server_default=sqlalchemy.true())
+    # Of its product preset's webs, those it is limited to (none: every one).
+    public_webs = db.relationship(PublicWeb, secondary="product_public_web", lazy="selectin")
 
     translation_rows = db.relationship(
         ProductTranslation,
@@ -121,13 +127,14 @@ class Product(db.Model):
         id: int,
         title: str,
         description: str,
-        product_type_id: int,
+        product_preset_id: int,
         state_id: int,
         report_items: list[ReportItem],
-        public_web_ids: list[int] | None = None,
         links: list[dict] | None = None,
         language: str | None = None,
         translations: dict | None = None,
+        public_web_ids: list[int] | None = None,
+        public_web_enabled: bool | None = None,
     ) -> None:
         """Initialize a product.
 
@@ -145,27 +152,46 @@ class Product(db.Model):
         self.language = content_language.clean_language(language)
         # Applied by add_product / update_product, which know who wrote them.
         self.submitted_translations = translations
-        self.product_type_id = product_type_id
+        self.product_preset_id = product_preset_id
         self.state_id = state_id
         self.subtitle = ""
-        self.tag = ""
 
         self.report_items = []
         for report_item in report_items:
             self.report_items.append(ReportItem.find(report_item.id))
 
-        self.public_webs = []
-        if public_web_ids:
-            for web_id in public_web_ids:
-                web = PublicWeb.find(web_id)
-                if web:
-                    self.public_webs.append(web)
+        # An edit that leaves either out keeps what is stored (see update_product).
+        self.public_web_enabled_given = public_web_enabled is not None
+        self.public_web_enabled = public_web_enabled is not False
+        self.public_webs_given = public_web_ids is not None
+        self.public_webs = [web for web in (PublicWeb.find(web_id) for web_id in dict.fromkeys(public_web_ids or [])) if web]
+
+    @property
+    def public_web_ids(self) -> list[int]:
+        """Of its product preset's webs, those it is limited to (empty: every one)."""
+        return sorted(web.id for web in self.public_webs)
+
+    def shown_on_web(self, web_id: int | None) -> bool:
+        """Whether this published product belongs on the web: its product preset's, and one it is not left out of."""
+        if not self.public_web_enabled or not self.product_preset or not self.product_preset.shown_on_web(web_id):
+            return False
+        own = self.public_web_ids
+        return web_id is None or not own or web_id in own
+
+    @property
+    def product_preset_name(self) -> str | None:
+        """The name of the product's product preset."""
+        return self.product_preset.name if self.product_preset else None
+
+    @property
+    def tag(self) -> str:
+        """The icon the product shows: its product preset's."""
+        return self.product_preset.tag if self.product_preset else DEFAULT_ICON
 
     @orm.reconstructor
     def reconstruct(self) -> None:
         """Reconstruct a product."""
         self.subtitle = self.description
-        self.tag = "mdi-file-pdf-outline"
         self.submitted_translations = None
 
     @property
@@ -227,7 +253,7 @@ class Product(db.Model):
                 if language == self.language:
                     msg = f"The product is written in {content_language.language_name(language)}; it cannot also be translated into it"
                     raise ValueError(msg)
-                origin = ORIGIN_AI if text.get("origin") == ORIGIN_AI else ORIGIN_MANUAL
+                origin = text.get("origin") if text.get("origin") in (ORIGIN_AI, ORIGIN_REVIEWED) else ORIGIN_MANUAL
                 wanted[language, field] = (value.strip(), origin)
 
         for row in list(self.translation_rows):
@@ -309,7 +335,6 @@ class Product(db.Model):
         """
         product = db.session.get(cls, product_id)
         if product:
-            product.public_web_ids = [web.id for web in product.public_webs]
             # get_json() marks every report item of a product the user may see as
             # accessible; the GUI's report cards only open the detail dialog when
             # card.access is true, so the detail payload must carry the same flags.
@@ -346,8 +371,8 @@ class Product(db.Model):
         query = query.outerjoin(
             ACLEntry,
             and_(
-                cast(Product.product_type_id, sqlalchemy.String) == ACLEntry.item_id,
-                ACLEntry.item_type == ItemType.PRODUCT_TYPE,
+                cast(Product.product_preset_id, sqlalchemy.String) == ACLEntry.item_id,
+                ACLEntry.item_type == ItemType.PRODUCT_PRESET,
             ),
         )
         query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
@@ -364,6 +389,9 @@ class Product(db.Model):
                     ),
                 ),
             )
+
+        if filter.get("product_preset_id"):
+            query = query.filter(Product.product_preset_id == int(filter["product_preset_id"]))
 
         if "published" in filter:
             published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
@@ -494,7 +522,6 @@ class Product(db.Model):
             product.access = result.access > 0 or result.acls == 0
             product.modify = result.modify > 0 or result.acls == 0
             product.report_items_count = len(product.report_items)
-            product.public_web_ids = [web.id for web in product.public_webs]
             products.append(product)
 
             for report_item in product.report_items:
@@ -506,32 +533,56 @@ class Product(db.Model):
         return {"total_count": count, "items": products_schema.dump(products)}
 
     @classmethod
-    def get_published(cls, limit: int, web_id: int | None = None) -> list[Product]:
-        """Get the most recently published products, newest first.
+    def get_published(
+        cls,
+        limit: int,
+        web_id: int | None = None,
+        offset: int = 0,
+        with_content: bool = False,
+    ) -> tuple[list[Product], int]:
+        """Get published products, newest first, a page at a time.
 
         No user/ACL context — intended for trusted node access to the public feed.
 
+        Only products whose product preset delivers to the public web are listed, and for a
+        given web only when the product preset lists that web or no web at all (every web), and
+        so does the product itself.
+
         Args:
             limit: Maximum number of products to return.
-            web_id: Public-web id to filter for. Products with no selected
-                webs are considered global and included for every web.
+            web_id: Public-web id to filter for.
+            offset: How many of the newest to skip.
+            with_content: Load the page's report items with it, for serializing them all.
 
         Returns:
-            list[Product]: Published products ordered by creation date descending.
+            tuple[list[Product], int]: The page, ordered by creation date descending, and how many
+                products are published in all.
         """
         published = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
         if not published:
-            return []
-        query = cls.query.filter(cls.state_id == published.id)
+            return [], 0
+        query = (
+            cls.query.join(ProductPreset, ProductPreset.id == cls.product_preset_id)
+            .filter(cls.state_id == published.id)
+            .filter(cls.public_web_enabled.is_(True), ProductPreset.public_web_enabled.is_(True))
+        )
 
         if web_id is not None:
-            query = (
-                query.outerjoin(ProductPublicWeb, ProductPublicWeb.product_id == cls.id)
-                .filter(or_(ProductPublicWeb.public_web_id.is_(None), ProductPublicWeb.public_web_id == web_id))
-                .distinct()
+            targeted = exists().where(ProductPresetPublicWeb.product_preset_id == ProductPreset.id)
+            targets_web = exists().where(
+                ProductPresetPublicWeb.product_preset_id == ProductPreset.id,
+                ProductPresetPublicWeb.public_web_id == web_id,
             )
+            limited = exists().where(ProductPublicWeb.product_id == cls.id)
+            limited_to_web = exists().where(ProductPublicWeb.product_id == cls.id, ProductPublicWeb.public_web_id == web_id)
+            query = query.filter(or_(~targeted, targets_web), or_(~limited, limited_to_web))
 
-        return query.order_by(db.desc(cls.created)).limit(limit).all()
+        total = query.count()
+        # By id too, so that products created at the same moment keep their place between pages.
+        page = query.order_by(db.desc(cls.created), db.desc(cls.id)).offset(offset).limit(limit)
+        if with_content:
+            page = page.options(orm.selectinload(cls.report_items), orm.selectinload(cls.user))
+        return page.all(), total
 
     @classmethod
     def _auto_complete_reports_on_publish(cls, product_id: int, new_state_id: int, user: User) -> None:
@@ -702,12 +753,14 @@ class Product(db.Model):
             original_product.language = product.language
         original_product.apply_translations(product.submitted_translations, user.id if user else None)
         original_product.links = product.links
-        original_product.product_type_id = product.product_type_id
+        original_product.product_preset_id = product.product_preset_id
         original_product.state_id = product.state_id
         original_product.report_items = []
         original_product.report_items.extend(product.report_items)
-        original_product.public_webs = []
-        original_product.public_webs.extend(product.public_webs)
+        if product.public_web_enabled_given:
+            original_product.public_web_enabled = product.public_web_enabled
+        if product.public_webs_given:
+            original_product.public_webs = list(product.public_webs)
         original_product.updated_at = datetime.now(TZ)
         original_product.updated_by = user.name
         if tag_ids is not None:
@@ -766,7 +819,7 @@ class ProductReportItem(db.Model):
 
 
 class ProductPublicWeb(db.Model):
-    """Product to PublicWeb mapping for targeted publication."""
+    """A web a product is limited to, among its product preset's (a product without any: every one)."""
 
     product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), primary_key=True)
     public_web_id = db.Column(db.Integer, db.ForeignKey("public_web.id", ondelete="CASCADE"), primary_key=True)

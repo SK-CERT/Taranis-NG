@@ -174,7 +174,7 @@
         getAllOSINTSources,
         getAllOSINTSourceGroups,
         getAllReportItemTypes,
-        getAllProductTypes,
+        getAllProductPresets,
         getAllWordLists,
         getAllUsers,
         getAllRoles
@@ -296,7 +296,7 @@
     const osintSources = ref<ACLTargetItem[]>([])
     const osintSourceGroups = ref<ACLTargetItem[]>([])
     const reportItemTypes = ref<ACLTargetItem[]>([])
-    const productTypes = ref<ACLTargetItem[]>([])
+    const productPresets = ref<ACLTargetItem[]>([])
     const wordLists = ref<ACLTargetItem[]>([])
     const loadingItems = ref(false)
 
@@ -311,8 +311,8 @@
                 return osintSourceGroups.value
             case 'REPORT_ITEM_TYPE':
                 return reportItemTypes.value
-            case 'PRODUCT_TYPE':
-                return productTypes.value
+            case 'PRODUCT_PRESET':
+                return productPresets.value
             case 'WORD_LIST':
                 return wordLists.value
             default:
@@ -325,12 +325,12 @@
     const loadItemSources = async (): Promise<void> => {
         loadingItems.value = true
         try {
-            const [nodesResp, osintResp, groupsResp, reportResp, productResp, wordResp] = await Promise.all([
+            const [nodesResp, osintResp, groupsResp, reportResp, productPresetResp, wordResp] = await Promise.all([
                 getAllCollectorsNodes({ search: '' }),
                 getAllOSINTSources({ search: '' }),
                 getAllOSINTSourceGroups({ search: '' }),
                 getAllReportItemTypes({ search: '' }),
-                getAllProductTypes({ search: '' }),
+                getAllProductPresets({ search: '' }),
                 getAllWordLists({ search: '' })
             ])
 
@@ -350,7 +350,7 @@
                 id: String(v['id']),
                 name: String(v['title'] ?? v['name'] ?? '')
             }))
-            productTypes.value = extractItems(productResp).map((v) => ({ id: String(v['id']), name: String(v['title'] ?? v['name'] ?? '') }))
+            productPresets.value = extractItems(productPresetResp).map((v) => ({ id: String(v['id']), name: String(v['name'] ?? '') }))
             wordLists.value = extractItems(wordResp).map((v) => ({ id: String(v['id']), name: String(v['name'] ?? '') }))
         } catch (error) {
             console.error('Error loading ACL item sources:', error)

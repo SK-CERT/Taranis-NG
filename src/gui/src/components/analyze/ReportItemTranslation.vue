@@ -424,8 +424,8 @@
 
     const translateField = (key: string, state: TranslationStateValue | null | undefined) => {
         pendingKey.value = key
-        // A translation a person wrote is only replaced after asking.
-        if (state?.origin === 'manual' && state.value) {
+        // A translation a person wrote or reviewed is only replaced after asking.
+        if (state && state.origin !== 'ai' && state.value) {
             confirmOverwrite.value = true
             return
         }

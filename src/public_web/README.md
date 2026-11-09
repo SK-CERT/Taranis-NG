@@ -37,8 +37,10 @@ unreachable; the per-language interface strings live in `conf/i18n/<lang>.json`.
   `api_key.txt` as the other nodes), or the `PUBLIC_WEB_API_KEY` env var.
 - Operational settings are environment variables:
   - `TARANIS_NG_CORE_URL` (default `http://core`) — core API base URL.
-  - `PUBLIC_WEB_CACHE_TTL` (default `5400`) — cache lifetime in seconds.
-  - `PUBLIC_WEB_MAX_REPORTS` — products to fetch (default: max of homepage/RSS limits).
+  - `PUBLIC_WEB_CACHE_TTL` (default `5400`) — cache lifetime in seconds. Older products are
+    still shown while they load again in the background.
+  - `PUBLIC_WEB_MAX_REPORTS` — at most this many of the newest products (default: every
+    published product, shown a page at a time and all in the RSS feed).
   - `PUBLIC_WEB_DEFAULT_LANGUAGE` (default `en`).
   - `PUBLIC_WEB_MAIL_ADMINS` — fallback feedback/error mail recipients.
   - `PUBLIC_WEB_PRODUCTION` (default `true`) — set `false` to disable outgoing mail.

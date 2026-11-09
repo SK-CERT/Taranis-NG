@@ -182,12 +182,12 @@ class PublishersNode(db.Model):
             node_id (str): Node ID.
 
         Returns:
-            (dict, HTTPStatus): A 409 when presets still use the node's publishers.
+            (dict, HTTPStatus): A 409 when publishing channels still use the node's publishers.
         """
         node = db.session.get(cls, node_id)
         for publisher in node.publishers:
-            if len(publisher.presets) > 0:
-                return {"error": "Publisher presets still use this node's publishers"}, HTTPStatus.CONFLICT
+            if len(publisher.channels) > 0:
+                return {"error": "Publishing channels still use this node's publishers"}, HTTPStatus.CONFLICT
 
         db.session.delete(node)
         db.session.commit()

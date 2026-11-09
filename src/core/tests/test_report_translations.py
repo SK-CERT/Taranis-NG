@@ -30,6 +30,7 @@ from model.state import StateDefinition  # noqa: E402
 from model.translation import (  # noqa: E402
     ORIGIN_AI,
     ORIGIN_MANUAL,
+    ORIGIN_REVIEWED,
     ReportItemAttributeTranslation,
     ReportItemTranslation,
     source_hash,
@@ -254,6 +255,16 @@ def test_ai_keeps_what_a_person_wrote_unless_told_to_replace_it() -> None:
     assert texts == {"title": "Kritická chyba"}
 
 
+def test_ai_keeps_a_reviewed_translation_like_one_a_person_wrote() -> None:
+    report = _report()
+    reviewed = _translate_title(report, "en", "Critical bug", origin=ORIGIN_REVIEWED)
+    reviewed.source_hash = source_hash("an older source")
+
+    texts, result = _select(report, "en")
+    assert "title" not in texts
+    assert result.skipped_manual == ["title"]
+
+
 def test_ai_never_writes_a_field_somebody_else_is_editing() -> None:
     texts, result = _select(_report(), "en", locked={"10"})
 
@@ -277,7 +288,7 @@ def test_only_other_users_locks_of_that_language_count(monkeypatch: pytest.Monke
     assert translation_manager.locked_keys(7, "en", USER.id) == {"title"}
 
 
-def test_a_review_keeps_the_ai_text_as_a_persons_current_translation(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_review_keeps_the_ai_text_as_a_current_reviewed_translation(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(translation_manager.sse_manager, "get_report_item_locks", lambda _report_item_id: {})
     report = _report()
     title = _translate_title(report, "en", "Critical bug")
@@ -289,8 +300,8 @@ def test_a_review_keeps_the_ai_text_as_a_persons_current_translation(monkeypatch
 
     assert sorted(reviewed) == ["10", "title"]
     assert skipped == []
-    assert (title.value, title.origin, title.is_outdated(report.title), title.version) == ("Critical bug", ORIGIN_MANUAL, False, 2)
-    assert (description.value, description.origin) == ("<p>An attacker can</p>", ORIGIN_MANUAL)
+    assert (title.value, title.origin, title.is_outdated(report.title), title.version) == ("Critical bug", ORIGIN_REVIEWED, False, 2)
+    assert (description.value, description.origin) == ("<p>An attacker can</p>", ORIGIN_REVIEWED)
     assert written.version == 1
     assert report.updated_by == USER.name
 
@@ -305,7 +316,7 @@ def test_a_review_of_named_fields_leaves_the_rest_and_fields_others_are_editing(
     reviewed, skipped = translation_manager.review_language(report, "en", USER, ["title", "10"])
 
     assert (reviewed, skipped) == (["title"], ["10"])
-    assert (title.origin, description.origin) == (ORIGIN_MANUAL, ORIGIN_AI)
+    assert (title.origin, description.origin) == (ORIGIN_REVIEWED, ORIGIN_AI)
     assert report.title_translation("sk", "title").origin == ORIGIN_AI
 
 
@@ -577,7 +588,7 @@ def test_a_review_answers_with_the_translations_and_tells_the_others(app: Flask,
 
     assert status == HTTPStatus.OK
     assert (payload["reviewed"], payload["skipped_locked"]) == (["title"], [])
-    assert payload["translations"]["translations"]["en"]["title"]["origin"] == ORIGIN_MANUAL
+    assert payload["translations"]["translations"]["en"]["title"]["origin"] == ORIGIN_REVIEWED
     assert app.published == [{"report_item_id": 7, "translated": True, "languages": ["en"], "user_id": USER.id}]
     assert lists == [True]
 

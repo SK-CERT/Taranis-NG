@@ -89,9 +89,9 @@ def test_the_payload_is_uploaded_from_memory(
     then raised FileNotFoundError over the top of the real error, so what
     reached the operator did not mention permissions at all.
     """
-    preset = publisher_input(FTP_URL="ftp://user:pass@ftp.example.org/incoming/")
+    channel = publisher_input(FTP_URL="ftp://user:pass@ftp.example.org/incoming/")
 
-    _, status = FTPPublisher().publish(preset)
+    _, status = FTPPublisher().publish(channel)
 
     assert status == HTTPStatus.OK
     assert list(unwritable_cwd.iterdir()) == []
@@ -110,9 +110,9 @@ def test_an_unsupported_scheme_is_reported_not_raised(
     This return used to run a ``finally`` that unlinked the staged file, so the
     error the operator saw came from the cleanup rather than from the scheme.
     """
-    preset = publisher_input(FTP_URL="sftp://user:pass@ftp.example.org/incoming/")
+    channel = publisher_input(FTP_URL="sftp://user:pass@ftp.example.org/incoming/")
 
-    body, status = FTPPublisher().publish(preset)
+    body, status = FTPPublisher().publish(channel)
 
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "not supported by the FTP publisher" in body["error"]
@@ -130,9 +130,9 @@ def test_a_failed_upload_reports_the_upload_error(
         raise ftplib.error_perm(msg)  # noqa: S321 - the publisher under test speaks FTP
 
     monkeypatch.setattr(FakeFTP, "storbinary", refuse)
-    preset = publisher_input(FTP_URL="ftp://user:pass@ftp.example.org/incoming/")
+    channel = publisher_input(FTP_URL="ftp://user:pass@ftp.example.org/incoming/")
 
-    body, status = FTPPublisher().publish(preset)
+    body, status = FTPPublisher().publish(channel)
 
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "550 Permission denied on the remote server" in body["error"]

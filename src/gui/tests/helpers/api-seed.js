@@ -298,22 +298,22 @@ export async function deleteNewsItemAggregate(request, token, aggregateId) {
 }
 
 /**
- * Delete a product type.
+ * Delete a product format.
  */
-export async function deleteProductType(request, token, productTypeId) {
+export async function deleteProductFormat(request, token, productFormatId) {
     try {
-        await request.delete(`${CORE_API}/config/product-types/${productTypeId}`, { headers: authHeaders(token) })
+        await request.delete(`${CORE_API}/config/product-formats/${productFormatId}`, { headers: authHeaders(token) })
     } catch {
         // best-effort
     }
 }
 
 /**
- * Delete a publisher preset.
+ * Delete a publishing channel.
  */
-export async function deletePublisherPreset(request, token, presetId) {
+export async function deletePublishingChannel(request, token, channelId) {
     try {
-        await request.delete(`${CORE_API}/config/publishers-presets/${presetId}`, { headers: authHeaders(token) })
+        await request.delete(`${CORE_API}/config/publishing-channels/${channelId}`, { headers: authHeaders(token) })
     } catch {
         // best-effort
     }
@@ -335,7 +335,7 @@ export async function cleanupSeedData(request, token, { reportItemIds = [], aggr
 }
 
 // ─── Idempotent seed-entity helpers ─────────────────────────────────────────
-// The 00-config-seed spec creates nodes / product types / presets with FIXED names
+// The 00-config-seed spec creates nodes / product formats / publishing channels with FIXED names
 // (e.g. "E2E Presenters Node") on UNIQUE columns. If the E2E environment is reused
 // across runs (Playwright's reuseExistingServer keeps test-setup.sh from re-running,
 // and `down -v` doesn't fire on every click in the VS Code runner), a previous run's
@@ -401,10 +401,8 @@ export async function deleteOSINTSourcesByName(request, token, matches) {
 /**
  * Delete every product (from /publish/products) whose `title` matches the predicate.
  * Best-effort: a missing backend or 404 is swallowed. Used by the purge step BEFORE
- * product-types are deleted — ProductType.delete raises a ForeignKeyViolation
- * ("product_product_type_id_fkey") when Products still reference the ProductType, and
- * once that happens the SQLAlchemy session enters a PendingRollback state where ALL
- * subsequent DELETEs in the same worker fail.
+ * product presets are deleted — a product preset that products still use cannot be deleted
+ * ("product_product_preset_id_fkey").
  * @param {import('@playwright/test').APIRequestContext} request
  * @param {string} token
  * @param {(title: string) => boolean} matches
@@ -428,19 +426,19 @@ export async function deleteProductsByName(request, token, matches) {
 }
 
 /**
- * Delete every product type whose `name` matches the predicate. Best-effort.
+ * Delete every product format whose `name` matches the predicate. Best-effort.
  */
-export async function deleteProductTypesByName(request, token, matches) {
+export async function deleteProductFormatsByName(request, token, matches) {
     const headers = authHeaders(token)
     try {
-        const res = await request.get(`${CORE_API}/config/product-types?search=`, { headers })
+        const res = await request.get(`${CORE_API}/config/product-formats?search=`, { headers })
         if (!res.ok()) return
         const body = await res.json()
         const items = body?.items || []
         for (const pt of items) {
             const name = String(pt.name ?? pt.title ?? '')
             if (matches(name)) {
-                await request.delete(`${CORE_API}/config/product-types/${pt.id}`, { headers })
+                await request.delete(`${CORE_API}/config/product-formats/${pt.id}`, { headers })
             }
         }
     } catch {
@@ -449,19 +447,40 @@ export async function deleteProductTypesByName(request, token, matches) {
 }
 
 /**
- * Delete every publisher preset whose `name` matches the predicate. Best-effort.
+ * Delete every product preset whose `name` matches the predicate. Best-effort. Runs after
+ * the products that use them and before the product formats and publishing channels they
+ * deliver through: the database refuses to delete a format or channel still in use.
  */
-export async function deletePublisherPresetsByName(request, token, matches) {
+export async function deleteProductPresetsByName(request, token, matches) {
     const headers = authHeaders(token)
     try {
-        const res = await request.get(`${CORE_API}/config/publishers-presets?search=`, { headers })
+        const res = await request.get(`${CORE_API}/config/product-presets?search=`, { headers })
+        if (!res.ok()) return
+        const body = await res.json()
+        for (const productPreset of body?.items || []) {
+            if (matches(String(productPreset.name ?? ''))) {
+                await request.delete(`${CORE_API}/config/product-presets/${productPreset.id}`, { headers })
+            }
+        }
+    } catch {
+        // Best-effort.
+    }
+}
+
+/**
+ * Delete every publishing channel whose `name` matches the predicate. Best-effort.
+ */
+export async function deletePublishingChannelsByName(request, token, matches) {
+    const headers = authHeaders(token)
+    try {
+        const res = await request.get(`${CORE_API}/config/publishing-channels?search=`, { headers })
         if (!res.ok()) return
         const body = await res.json()
         const items = body?.items || []
-        for (const preset of items) {
-            const name = String(preset.name ?? '')
+        for (const channel of items) {
+            const name = String(channel.name ?? '')
             if (matches(name)) {
-                await request.delete(`${CORE_API}/config/publishers-presets/${preset.id}`, { headers })
+                await request.delete(`${CORE_API}/config/publishing-channels/${channel.id}`, { headers })
             }
         }
     } catch {
@@ -474,7 +493,7 @@ export async function deletePublisherPresetsByName(request, token, matches) {
  * from a clean slate regardless of whether test-setup.sh re-wiped the DB. Self-contained:
  * builds its own API request context, never throws. Call from the spec's beforeEach.
  *
- * The product-type / publisher-preset / manual-source seed tests already use
+ * The product-format / publishing-channel / manual-source seed tests already use
  * generateTestName() (timestamped) so they can't collide with themselves across runs;
  * only the three fixed-name node-add tests need this purge, but the extra purges are
  * harmless and keep the env tidy for downstream specs on a reused stack.
@@ -487,37 +506,41 @@ export async function purgeSeedEntitiesBestEffort(playwright) {
         request = ctx.request
 
         // CASCADE ORDER — dependencies MUST be deleted before their parents:
-        //   1. Product types reference presenters-node-presenters (the DELETE on the presenters
-        //      node raises "Presenters has mapped product types" if any product type still
+        //   1. Product formats reference presenters-node-presenters (the DELETE on the presenters
+        //      node raises "Presenters has mapped product formats" if any product format still
         //      references one of its presenters).
-        //   2. Publisher presets reference publishers-nodes (same shape — DELETE on a
-        //      publishers node with mapped presets returns 400 "Could not delete").
+        //   2. Publishing channels reference publishers-nodes (same shape — DELETE on a
+        //      publishers node with mapped publishing channels returns 400 "Could not delete").
         //   3. Only AFTER both of the above are gone can the three seed nodes be deleted.
         //
-        // The product-type/preset seed tests use generateTestName() (timestamped) so the
+        // The product-format/publishing-channel seed tests use generateTestName() (timestamped) so the
         // purge here has to match a *prefix*, not a fixed name. The three node-add tests use
         // fixed names so they are matched exactly.
         const fixedNodeNames = ['E2E Presenters Node', 'E2E Publishers Node', 'E2E Collectors Node']
         const isFixedNode = (name) => fixedNodeNames.includes(name)
-        const isE2EProductType = (name) => /^E2E Product Type/.test(name)
-        const isE2EPublisherPreset = (name) => /^E2E Publisher Preset/.test(name)
+        // Seeded before product types were renamed product formats: E2E Product Type.
+        const isE2EProductFormat = (name) => /^E2E Product (Format|Type)/.test(name)
+        // Seeded before distributions were renamed product presets: E2E Distribution.
+        const isE2EProductPreset = (name) => /^E2E (Product Preset|Distribution)/.test(name)
+        // Seeded before publisher presets were renamed publishing channels: E2E Publisher Preset.
+        const isE2EPublishingChannel = (name) => /^E2E (Publishing Channel|Publisher Preset)/.test(name)
         const isE2EProduct = (title) => /^E2E (Publish Confirm|Incomplete Reports) /.test(title) || /^E2E Publish Confirm/.test(title)
         const isE2EOSINTSource = (name) => /^E2E Manual Source/.test(name)
 
-        // Step 1: delete E2E Products FIRST — ProductType.delete raises a ForeignKeyViolation
-        // on `product_product_type_id_fkey` when Products still reference the ProductType, and
-        // once that happens the SQLAlchemy session enters a PendingRollback state where ALL
-        // subsequent DELETEs in the same worker silently fail (the publish-confirm test
-        // creates Products via `Save and Publish`).
-        // Step 2: delete ProductTypes (now that no Products reference them).
-        // Step 3: delete PublisherPresets.
+        // Step 1: delete E2E Products FIRST — a product preset that Products still use cannot
+        // be deleted (the publish-confirm test creates Products via `Save and Publish`).
+        // Step 1b: delete E2E product presets — they deliver the E2E product formats through the
+        // E2E publishing channels, and the database refuses to delete a format or channel in use.
+        // Step 2: delete ProductFormats (now that no Product preset delivers them).
+        // Step 3: delete PublishingChannels.
         // Step 4: delete E2E Manual OSINT Sources — the seed test creates them with timestamped
         // names (`generateTestName('E2E Manual Source')`); left over they bloat the env and
         // eventually trip UNIQUE-ish constraints via the `osint_sources` table.
-        // Step 5: delete the three seed Nodes (now that no ProductType maps to their presenters).
+        // Step 5: delete the three seed Nodes (now that no ProductFormat maps to their presenters).
         await deleteProductsByName(request, ctx.token, isE2EProduct)
-        await deleteProductTypesByName(request, ctx.token, isE2EProductType)
-        await deletePublisherPresetsByName(request, ctx.token, isE2EPublisherPreset)
+        await deleteProductPresetsByName(request, ctx.token, isE2EProductPreset)
+        await deleteProductFormatsByName(request, ctx.token, isE2EProductFormat)
+        await deletePublishingChannelsByName(request, ctx.token, isE2EPublishingChannel)
         await deleteOSINTSourcesByName(request, ctx.token, isE2EOSINTSource)
 
         // Step 5: now the parent nodes should be deletable.

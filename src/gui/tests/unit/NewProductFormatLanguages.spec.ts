@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
-import NewProductType from '@/components/config/presenters/NewProductType.vue'
-import { updateProductType } from '@/api/config'
+import NewProductFormat from '@/components/config/presenters/NewProductFormat.vue'
+import { updateProductFormat } from '@/api/config'
 import { useSettingsStore } from '@/stores/settings'
 
-// A product type names the language of its default templates and adds other languages, each
+// A product format names the language of its default templates and adds other languages, each
 // with only template paths and file names; an override a language leaves empty uses the default.
 
 const presenter = {
@@ -27,8 +27,8 @@ const jsonPresenter = {
 }
 
 vi.mock('@/api/config', () => ({
-    createNewProductType: vi.fn(() => Promise.resolve({})),
-    updateProductType: vi.fn(() => Promise.resolve({})),
+    createNewProductFormat: vi.fn(() => Promise.resolve({})),
+    updateProductFormat: vi.fn(() => Promise.resolve({})),
     getAllPresentersNodes: vi.fn(() =>
         Promise.resolve({ data: { items: [{ id: 'n1', name: 'Node', presenters: [presenter, jsonPresenter] }] } })
     )
@@ -60,19 +60,19 @@ const editItem = {
 }
 
 async function openEditor(item: object = editItem) {
-    const wrapper = mountWithPlugins(NewProductType, { props: { editItem: null }, global: { stubs: { VDialog: VDialogStub } } })
+    const wrapper = mountWithPlugins(NewProductFormat, { props: { editItem: null }, global: { stubs: { VDialog: VDialogStub } } })
     await flushPromises()
     await wrapper.setProps({ editItem: item })
     await flushPromises()
     return wrapper
 }
 
-describe('NewProductType languages', () => {
+describe('NewProductFormat languages', () => {
     beforeEach(() => vi.clearAllMocks())
 
     it('shows language-varying template paths and file names with defaults as placeholders', async () => {
         const wrapper = await openEditor()
-        const tabs = wrapper.get('[data-test="product-type-language-tabs"]').findAll('.v-tab')
+        const tabs = wrapper.get('[data-test="product-format-language-tabs"]').findAll('.v-tab')
         expect(tabs.map((tab) => tab.text())).toEqual(['Default', 'Slovak'])
 
         wrapper.vm.parameterTab = 'sk'
@@ -93,7 +93,7 @@ describe('NewProductType languages', () => {
 
         await wrapper.vm.persist()
 
-        const payload = vi.mocked(updateProductType).mock.calls[0]![0] as { language: string; language_templates: object }
+        const payload = vi.mocked(updateProductFormat).mock.calls[0]![0] as { language: string; language_templates: object }
         expect(payload.language).toBe('cs')
         expect(payload.language_templates).toEqual({
             sk: { BODY_TEMPLATE_PATH: 'body_sk.txt' },
@@ -148,13 +148,13 @@ describe('NewProductType languages', () => {
             language_templates: {}
         })
 
-        expect(wrapper.find('[data-test="product-type-language-tabs"]').exists()).toBe(false)
-        expect(wrapper.find('[data-test="product-type-template-language"]').exists()).toBe(false)
+        expect(wrapper.find('[data-test="product-format-language-tabs"]').exists()).toBe(false)
+        expect(wrapper.find('[data-test="product-format-template-language"]').exists()).toBe(false)
         expect(wrapper.find('[data-test="add-template-language"]').exists()).toBe(false)
 
         await wrapper.vm.persist()
 
-        const payload = vi.mocked(updateProductType).mock.calls[0]![0] as { language: string | null; language_templates: object }
+        const payload = vi.mocked(updateProductFormat).mock.calls[0]![0] as { language: string | null; language_templates: object }
         expect(payload.language).toBeNull()
         expect(payload.language_templates).toEqual({})
     })

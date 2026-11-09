@@ -312,8 +312,11 @@ test.describe('Content languages', () => {
         const reportId = await createReport(api, reportType, reportTitle)
         await updateReport(api, reportId, { language: 'sk', title: 'Chyba v ovládači' })
         await updateReport(api, reportId, { title: `${reportTitle} (renamed)` })
-        const productType = (await list(api, '/config/product-types?search=')).find(Boolean)
-        test.skip(!productType, 'no product type in this environment')
+        // One format, so Download is a button rather than a menu of formats.
+        const productPreset = (await list(api, '/users/my-product-presets')).find(
+            (entry) => new Set((entry.deliveries ?? []).map((delivery) => delivery.product_format_id)).size === 1
+        )
+        test.skip(!productPreset, 'no product preset with one format in this environment')
         const productTitle = `${PREFIX} bulletin`
         const created = await api.request.post(`${CORE_API}/publish/products`, {
             headers: headersOf(api.token),
@@ -321,7 +324,7 @@ test.describe('Content languages', () => {
                 id: -1,
                 title: productTitle,
                 description: 'What changed this week',
-                product_type_id: productType.id,
+                product_preset_id: productPreset.id,
                 state_id: null,
                 report_items: [{ id: reportId }],
                 links: [],
@@ -361,7 +364,7 @@ test.describe('Content languages', () => {
             })
             .toEqual(['What changed this week', 'Čo sa zmenilo tento týždeň'])
 
-        // The report's Slovak name is outdated, and the product type has no Slovak templates.
+        // The report's Slovak name is outdated, and the product preset's format has no Slovak templates.
         await expect(page.locator('[data-test="notice-outdated"]')).toContainText(`${reportTitle} (renamed)`)
         await expect(page.locator('[data-test="notice-templates"]')).toBeVisible()
 
@@ -374,19 +377,19 @@ test.describe('Content languages', () => {
         expect((await ticket).postDataJSON().language).toBe('sk')
     })
 
-    test('a product type without templates asks nothing about template languages', async ({ page }) => {
-        await page.goto('/config/presenters?tab=types')
+    test('a product format without templates asks nothing about template languages', async ({ page }) => {
+        await page.goto('/config/presenters?tab=formats')
         await page.getByRole('button', { name: 'Add New' }).first().click()
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await choose(page, dialog, 'Presenters Node')
         await choose(page, dialog, 'Presenter', 'JSON')
 
-        await expect(dialog.locator('[data-test="product-type-language-tabs"]')).toHaveCount(0)
-        await expect(dialog.locator('[data-test="product-type-template-language"]')).toHaveCount(0)
+        await expect(dialog.locator('[data-test="product-format-language-tabs"]')).toHaveCount(0)
+        await expect(dialog.locator('[data-test="product-format-template-language"]')).toHaveCount(0)
 
         // A presenter with templates offers them per language again.
         await choose(page, dialog, 'Presenter', 'PDF')
-        await expect(dialog.locator('[data-test="product-type-template-language"]')).toBeVisible()
+        await expect(dialog.locator('[data-test="product-format-template-language"]')).toBeVisible()
     })
 
     test('a tag defined in configuration goes on a report and filters the list', async ({ page }) => {
