@@ -28,9 +28,11 @@
                     :elevation="isDenseList ? 0 : isHovering ? 12 : 2"
                     class="card-compact flex-grow-1"
                     :class="{
-                        'card-compact--review review-list__row': isReviewCard,
+                        'card-compact--review review-list__row card-item': isReviewCard,
                         'card-compact--list': listMode
                     }"
+                    :data-id="isReviewCard ? card?.id : undefined"
+                    :tabindex="isReviewCard ? 0 : undefined"
                     @click="handleClick"
                 >
                     <v-card-text class="compact-card__body">
@@ -266,6 +268,7 @@
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import HighlightedText from '@/components/common/HighlightedText.vue'
     import { collectHighlightWords } from '@/utils/word-list-highlighting'
+    import { newsItemSourceName } from '@/utils/newsItemSource'
     import TagChips from '@/components/common/tags/TagChips.vue'
 
     type CardData = {
@@ -311,6 +314,8 @@
         news_items?: Array<{
             news_item_data?: {
                 osint_source_name?: string
+                entered_by?: string | null
+                source_label?: string | null
                 source?: string
                 osint_source_type?: string
             }
@@ -421,8 +426,7 @@
         if (props.card?.product_preset_name) {
             return props.card.product_preset_name
         }
-        const sourceName =
-            props.card?.news_items?.[0]?.news_item_data?.osint_source_name || props.card?.news_items?.[0]?.news_item_data?.source
+        const sourceName = newsItemSourceName(props.card?.news_items?.[0]?.news_item_data, t)
         const sourceType = props.card?.news_items?.[0]?.news_item_data?.osint_source_type
         if (sourceName) {
             return sourceType ? `${sourceName} (${sourceType})` : sourceName

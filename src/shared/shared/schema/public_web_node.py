@@ -8,7 +8,7 @@ from shared.schema.presentation import HiddenApiKeySchema, PresentationSchema
 class PublicWebNodeSchema(Schema):
     """Schema for a public-web node (a read-only report-feed consumer)."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Ignore presentation-only fields (title/status/last_seen/...) the GUI round-trips on update."""
 
         unknown = EXCLUDE

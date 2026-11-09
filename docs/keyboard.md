@@ -1,6 +1,10 @@
 # Default keyboard shortcuts
 
 ## Assess
+
+The current item - the one the shortcuts act on - is the one you move to with the keys, or the
+one under the mouse: hovering an item makes it current, and it stays current when the mouse
+moves away. The arrow keys carry on from it.
 - `↓/↑/j/k`: Navigate up/down through list items
 - `Home`: Jump to first list item
 - `End`: Jump to last loaded list item
@@ -51,3 +55,9 @@ The shortcuts for the list behind it (`s`, `g`, `a`, `R`, `/` and switching sour
 
 You can change the keyboard shortcuts in the user profile settings.
 The changes will take effect after restarting the application.
+
+## Analyze and Publish
+
+The lists of reports and products answer to the same movement keys as Assess (`j`/`k`, the
+arrows, Home, End) and open the current item with Enter. Hovering an item makes it current here
+too. The other Assess shortcuts do nothing in these lists.

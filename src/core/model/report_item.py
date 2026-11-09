@@ -1337,6 +1337,10 @@ class ReportItem(db.Model):
         if attribute is None:
             return None
 
+        # Read the version again under a row lock, held until this request commits: two saves
+        # based on the same version would otherwise both pass this check, and the second would
+        # silently overwrite the first.
+        db.session.refresh(attribute, attribute_names=["version"], with_for_update=True)
         current_version = attribute.version or 1
         if int(base_version) == current_version:
             return None
@@ -1400,7 +1404,9 @@ class ReportItem(db.Model):
                         if "attribute_value" in data and attribute.value != data["attribute_value"]:
                             attribute_modified = True
                             attribute.value = data["attribute_value"]
-                        if data.get("value_description", False) and attribute.value_description != data["value_description"]:
+                        # A description cleared to "" is stored too (it used to be ignored); "" and
+                        # None are the same, so sending one for the other changes nothing.
+                        if "value_description" in data and (attribute.value_description or "") != (data["value_description"] or ""):
                             attribute_modified = True
                             attribute.value_description = data["value_description"]
 

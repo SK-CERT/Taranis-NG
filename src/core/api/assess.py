@@ -2,6 +2,7 @@
 
 import io
 from http import HTTPStatus
+from urllib.parse import urlparse
 
 from flask import Response, request, send_file
 from flask_restful import Resource
@@ -9,9 +10,30 @@ from managers import auth_manager, log_manager
 from managers.auth_manager import ACLCheck, auth_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
+from marshmallow import ValidationError
 from model.news_item import NewsItem, NewsItemAggregate, NewsItemData
-from model.osint_source import OSINTSource, OSINTSourceGroup
+from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
+
+
+def is_web_link(link: object) -> bool:
+    """Whether ``link`` is a web address a news item can point to: http(s), a host, no spaces.
+
+    Args:
+        link: The link as submitted.
+
+    Returns:
+        bool: True for a usable link.
+    """
+    if not isinstance(link, str) or not link.strip() or any(character.isspace() for character in link.strip()):
+        return False
+    parsed = urlparse(link.strip())
+    return parsed.scheme in ("http", "https") and bool(parsed.hostname)
+
+
+# The largest page of aggregates one request returns, and the most ids one re-read may name.
+MAX_PAGE = 200
+MAX_IDS = 500
 
 
 class OSINTSourceGroupsAssess(Resource):
@@ -32,29 +54,47 @@ class UnreadCountsByGroup(Resource):
         return NewsItemAggregate.count_unread_by_group(auth_manager.get_user_from_jwt())
 
 
-class ManualOSINTSources(Resource):
-    """Manual OSINT sources for Assess API endpoint."""
+class NewsItemEntryGroups(Resource):
+    """The OSINT source groups a user may enter news items into by hand."""
 
-    @auth_required(["ASSESS_ACCESS"])
-    def get(self) -> dict:
-        """Get all manual OSINT sources for Assess."""
-        return OSINTSource.get_all_manual_json(auth_manager.get_user_from_jwt())
+    # ASSESS_CREATE, not ASSESS_ACCESS: a user who may only enter items has no Assess otherwise.
+    @auth_required("ASSESS_CREATE")
+    def get(self) -> list[dict]:
+        """Get the groups the user may add a news item to."""
+        return OSINTSourceGroup.get_for_entry_json(auth_manager.get_user_from_jwt())
 
 
 class AddNewsItem(Resource):
     """Add news item API endpoint."""
 
     @auth_required("ASSESS_CREATE")
-    def post(self) -> None:
-        """Add a news item."""
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Add a news item, entered by hand, to the OSINT source group given as ``osint_source_group_id``."""
+        user = auth_manager.get_user_from_jwt()
+        data = request.json if isinstance(request.json, dict) else {}
+        group_id = data.get("osint_source_group_id")
+        if not isinstance(group_id, str) or not group_id:
+            return {"error": "Choose the group to add the news item to"}, HTTPStatus.BAD_REQUEST
+        group = OSINTSourceGroup.find(group_id)
+        if group is None:
+            return {"error": "Group not found"}, HTTPStatus.NOT_FOUND
+        if not OSINTSourceGroup.allowed_with_acl(group.id, user, see=False, access=True, modify=False):
+            log_manager.store_user_auth_error_activity(user, f"Unauthorized news item entry into group: {group.id}")
+            return {"error": "Access denied"}, HTTPStatus.FORBIDDEN
+        link = data.get("link")
+        if link not in (None, "") and not is_web_link(link):
+            return {"error": "The link must be a web address (http:// or https://)", "field": "link"}, HTTPStatus.BAD_REQUEST
         try:
-            osint_source_ids = NewsItemAggregate.add_news_item(request.json)
+            aggregate = NewsItemAggregate.add_news_item(data, group.id, user)
             sse_manager.news_items_updated()
-            sse_manager.remote_access_news_items_updated(osint_source_ids)
+        except ValidationError:
+            # A 400 naming the fields, logged (SafeErrorApi), rather than a 500.
+            raise
         except Exception as ex:
             msg = "Post AddNewsItem failed"
             logger.exception(f"{msg}: {ex}")
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+        return {"id": aggregate.id, "osint_source_group_id": group.id}, HTTPStatus.CREATED
 
 
 class NewsItemsByGroup(Resource):
@@ -91,13 +131,21 @@ class NewsItemsByGroup(Resource):
                 filters["range"] = request.args["range"]
             if request.args.get("sort"):
                 filters["sort"] = request.args["sort"]
+            # Keyset paging (cursors as each item carries them) and re-reading a shown window by id.
+            for direction in ("after", "before"):
+                if request.args.get(direction):
+                    filters[direction] = request.args[direction]
 
-            offset = int(request.args.get("offset", 0))
-            limit = min(int(request.args.get("limit", 50)), HTTPStatus.OK)
-        except Exception as ex:
-            msg = "Get NewsItemsByGroup failed"
-            logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+            offset = max(int(request.args.get("offset", 0)), 0)
+            limit = min(max(int(request.args.get("limit", 50)), 1), MAX_PAGE)
+            if request.args.get("ids"):
+                ids = [int(aggregate_id) for aggregate_id in request.args["ids"].split(",")]
+                if len(ids) > MAX_IDS:
+                    return {"error": f"At most {MAX_IDS} ids"}, HTTPStatus.BAD_REQUEST
+                filters["ids"] = ids
+                limit = len(ids)
+        except ValueError:
+            return {"error": "offset, limit and ids must be whole numbers"}, HTTPStatus.BAD_REQUEST
 
         return NewsItemAggregate.get_by_group_json(group_id, filters, offset, limit, user)
 
@@ -271,7 +319,7 @@ def initialize(api: object) -> None:
     """Initialize Assess API endpoints."""
     api.add_resource(OSINTSourceGroupsAssess, "/api/v1/assess/osint-source-groups")
     api.add_resource(UnreadCountsByGroup, "/api/v1/assess/osint-source-groups/unread-counts")
-    api.add_resource(ManualOSINTSources, "/api/v1/assess/manual-osint-sources")
+    api.add_resource(NewsItemEntryGroups, "/api/v1/assess/news-item-entry-groups")
     api.add_resource(AddNewsItem, "/api/v1/assess/news-items")
     api.add_resource(NewsItemsByGroup, "/api/v1/assess/news-item-aggregates-by-group/<string:group_id>")
     api.add_resource(NewsItemResource, "/api/v1/assess/news-items/<int:item_id>")

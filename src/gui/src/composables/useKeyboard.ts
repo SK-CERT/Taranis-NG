@@ -7,10 +7,6 @@ import { Action, type ActionKey } from '@/types/actions'
 import { type GroupNavItem } from '@/types/routing'
 import type { Router } from 'vue-router'
 
-const settingsStore = useSettingsStore()
-const configStore = useConfigStore()
-const assessStore = useAssessStore()
-
 // Input types that do not accept typed characters, so a shortcut may still fire
 // while one has focus. Everything else - text, password, email, number, search,
 // tel, url, date... - swallows the keystroke. The list is deliberately of what
@@ -83,9 +79,17 @@ interface CardInfo {
     // data_id: string
 }
 
+// After the keyboard moves the current card, the list scrolls smoothly under a mouse that has not
+// moved; the pointer events that brings must not take the current card back.
+const HOVER_PAUSE_AFTER_KEYBOARD_MS = 400
+
 interface KeyboardState {
     target: string
     pos: number
+    /** The current card's element, to find it again after the list re-renders around it. */
+    currentElement: HTMLElement | null
+    /** And its data-id, for when the element itself was re-rendered. */
+    currentId: string | null
     use_focus: boolean
     cardItems: CardInfo[]
     shortcuts: Shortcut[]
@@ -94,11 +98,47 @@ interface KeyboardState {
     reloadCallback: (() => void) | null
 }
 
-export function useKeyboard(targetId: string, router: Router) {
+// What the Analyze and Publish lists answer to: moving through the cards and opening one. The rest
+// (read, important, groups...) belongs to Assess.
+const NAVIGATION_ALIASES = new Set<HotkeyActionType>([
+    HotkeyAction.COLLECTION_UP_1,
+    HotkeyAction.COLLECTION_UP_2,
+    HotkeyAction.COLLECTION_DOWN_1,
+    HotkeyAction.COLLECTION_DOWN_2,
+    HotkeyAction.HOME,
+    HotkeyAction.END,
+    HotkeyAction.SHOW_ITEM_1,
+    HotkeyAction.SHOW_ITEM_2,
+    HotkeyAction.SHOW_ITEM_3
+])
+
+type KeyboardOptions = {
+    /** The list whose `.card-item`s the keys move through. */
+    listSelector?: string
+    /**
+     * Only move through the cards and open one: for lists that render on their own schedule
+     * (Analyze, Publish), which are read again on each key and hover instead of being told.
+     */
+    navigationOnly?: boolean
+}
+
+export function useKeyboard(
+    targetId: string,
+    router: Router | null,
+    { listSelector = '.card-list', navigationOnly = false }: KeyboardOptions = {}
+) {
+    // Resolved here, not when the module loads: a view importing this before Pinia is set up
+    // (a route table, a test) must not fail.
+    const settingsStore = useSettingsStore()
+    const configStore = useConfigStore()
+    const assessStore = useAssessStore()
+
     // ============ STATE ============
     const state = ref<KeyboardState>({
         target: targetId,
         pos: 0,
+        currentElement: null,
+        currentId: null,
         use_focus: false,
         cardItems: [],
         shortcuts: [],
@@ -127,6 +167,51 @@ export function useKeyboard(targetId: string, router: Router) {
             card.element.removeAttribute('data-focused')
         })
         updateCardFocus()
+    }
+
+    /** Remember which card is current, so a re-render that moves it does not move the position. */
+    function rememberCurrent(): void {
+        const card = getCurrentCardElement()
+        state.value.currentElement = card
+        state.value.currentId = card?.getAttribute('data-id') ?? null
+    }
+
+    let lastKeyboardMove = 0
+    let lastPointer: { x: number; y: number } | null = null
+
+    /**
+     * Make the card under the mouse the current one, so shortcuts act on it and arrows continue
+     * from it. It stays current when the mouse leaves. Nothing scrolls, and the focus moves only
+     * if it already was on a card - never out of a field being typed in.
+     */
+    function onPointerMove(event: PointerEvent): void {
+        if (!state.value.keyActionEnabled) return
+        // A tap on a touch screen emulates the mouse; only a real mouse hovers.
+        if (event.pointerType && event.pointerType !== 'mouse') return
+        // A list scrolled by the keyboard moves cards under a mouse that has not moved.
+        if (lastPointer && lastPointer.x === event.clientX && lastPointer.y === event.clientY) return
+        lastPointer = { x: event.clientX, y: event.clientY }
+        if (Date.now() - lastKeyboardMove < HOVER_PAUSE_AFTER_KEYBOARD_MS) return
+        if (isBlockingDialogOpen() || getOpenDetailDialog()) return
+
+        const target = event.target as Element | null
+        if (!target || target.closest('.v-overlay')) return
+        const card = target.closest<HTMLElement>(`${listSelector} .card-item`)
+        if (!card || (state.value.use_focus && card === getCurrentCardElement())) return
+        if (navigationOnly) reindexElements()
+        let position = state.value.cardItems.findIndex((item) => item.element === card)
+        if (position === -1) {
+            reindexElements()
+            position = state.value.cardItems.findIndex((item) => item.element === card)
+            if (position === -1) return
+        }
+        const focusWasOnCard = document.activeElement?.classList.contains('card-item') === true
+        state.value.pos = position
+        state.value.use_focus = true
+        rememberCurrent()
+        state.value.cardItems.forEach((item) => item.element.removeAttribute('data-focused'))
+        card.setAttribute('data-focused', 'true')
+        if (focusWasOnCard) card.focus({ preventScroll: true })
     }
 
     /**
@@ -184,6 +269,8 @@ export function useKeyboard(targetId: string, router: Router) {
         if (!state.value.use_focus) {
             state.value.use_focus = true
         }
+        rememberCurrent()
+        lastKeyboardMove = Date.now()
         // Update focus and scroll
         updateCardsFocus()
         scrollToCard()
@@ -198,6 +285,7 @@ export function useKeyboard(targetId: string, router: Router) {
         // console.log('[Keyboard] setCurrentCard: %s', id)
         state.value.pos = position
         state.value.use_focus = true
+        rememberCurrent()
     }
 
     function moveUp(): void {
@@ -224,6 +312,8 @@ export function useKeyboard(targetId: string, router: Router) {
         // console.log(`[Keyboard] resetPosition 0`)
         state.value.pos = 0
         state.value.use_focus = false
+        state.value.currentElement = null
+        state.value.currentId = null
     }
 
     function getKeyAlias(event: KeyboardEvent): HotkeyActionType | null {
@@ -240,13 +330,37 @@ export function useKeyboard(targetId: string, router: Router) {
         return null
     }
 
-    function reindexCardItems(mode: string): void {
-        if (!state.value.keyActionEnabled) return
-
-        const elements = document.querySelectorAll<HTMLElement>('.card-list .card-item')
+    function reindexElements(): void {
+        const elements = document.querySelectorAll<HTMLElement>(`${listSelector} .card-item`)
         state.value.cardItems = Array.from(elements).map((element) => ({
             element
         }))
+    }
+
+    /**
+     * After cards came, went or moved above it, find the current card again - the same element if
+     * it is still there, else the card with its id - so shortcuts keep acting on the card shown as
+     * current instead of on whatever now sits at its old index.
+     */
+    function followCurrentCard(): void {
+        const { currentElement, currentId } = state.value
+        if (!currentElement && !currentId) return
+        let position = currentElement ? state.value.cardItems.findIndex((item) => item.element === currentElement) : -1
+        if (position === -1 && currentId) {
+            position = state.value.cardItems.findIndex((item) => item.element.getAttribute('data-id') === currentId)
+        }
+        if (position !== -1) {
+            state.value.pos = position
+            rememberCurrent()
+        } else if (state.value.pos >= state.value.cardItems.length) {
+            state.value.pos = Math.max(0, state.value.cardItems.length - 1)
+        }
+    }
+
+    function reindexCardItems(mode: string): void {
+        if (!state.value.keyActionEnabled) return
+
+        reindexElements()
         // console.log(`[Keyboard] Reindexed ${state.value.cardItems.length} cards, (${mode})`)
         switch (mode) {
             case 'reset':
@@ -256,6 +370,7 @@ export function useKeyboard(targetId: string, router: Router) {
                 break
 
             default: // refresh, append
+                followCurrentCard()
                 // A refresh runs in the background (after an autosave, a star, a server event), so
                 // it must not pull focus out of a field the user is typing in, or out of any dialog.
                 // It gives the current card back only the focus the refresh took away - not that of
@@ -298,7 +413,7 @@ export function useKeyboard(targetId: string, router: Router) {
         }
         const group = groups[index]
         if (group) {
-            router.push(`/assess/group/${group.id}`)
+            router?.push(`/assess/group/${group.id}`)
         }
     }
 
@@ -440,6 +555,12 @@ export function useKeyboard(targetId: string, router: Router) {
 
         const keyAlias = getKeyAlias(event)
         if (!keyAlias) return
+        if (navigationOnly && !NAVIGATION_ALIASES.has(keyAlias)) return
+        // The cards in the page change as a list scrolls (Assess renders only those near the
+        // screen), not only when it reloads: read them again before acting.
+        reindexElements()
+        followCurrentCard()
+        if (navigationOnly && state.value.cardItems.length === 0) return
 
         const detailDialog = getOpenDetailDialog()
         if (detailDialog) {
@@ -458,6 +579,7 @@ export function useKeyboard(targetId: string, router: Router) {
             keyAlias !== HotkeyAction.OPEN_SEARCH
         ) {
             state.value.use_focus = true
+            rememberCurrent()
             updateCardsFocus()
             scrollToCard()
             return
@@ -613,8 +735,30 @@ export function useKeyboard(targetId: string, router: Router) {
         setDetailDialogCloseCallback,
         setReloadCallback,
         reindexCardItems,
-        setCurrentCard
+        setCurrentCard,
+        onPointerMove
     }
+}
+
+/**
+ * Keyboard and hover for a list of cards outside Assess (Analyze, Publish): the arrow keys and
+ * their shortcuts move through the cards, Enter opens one, and the card under the mouse is the
+ * current one. Wired to the window for as long as the calling component is mounted.
+ */
+export function useListKeyboard(listSelector: string): ReturnType<typeof useKeyboard> {
+    // No router: the group shortcuts, the only ones that navigate, are Assess's.
+    const keyboard = useKeyboard(listSelector, null, { listSelector, navigationOnly: true })
+    const onKeyDown = (event: KeyboardEvent): void => keyboard.keyAction(event)
+    onMounted(() => {
+        keyboard.onInit()
+        window.addEventListener('keydown', onKeyDown)
+        window.addEventListener('pointermove', keyboard.onPointerMove, { passive: true })
+    })
+    onUnmounted(() => {
+        window.removeEventListener('keydown', onKeyDown)
+        window.removeEventListener('pointermove', keyboard.onPointerMove)
+    })
+    return keyboard
 }
 
 export default useKeyboard

@@ -32,7 +32,7 @@ describe('legacy route redirects', () => {
         expect(route.redirect).toEqual({ path, query: { tab } })
     })
 
-    it('maps legacy source entry to the Assess dialog handoff', () => {
+    it('maps legacy source entry to the Assess dialog handoff (the source itself is gone)', () => {
         const route = router.getRoutes().find((candidate) => candidate.path === '/enter/source/:sourceId')
 
         expect(route).toBeDefined()
@@ -40,7 +40,7 @@ describe('legacy route redirects', () => {
         expect(route.redirect({ params: { sourceId: 'manual-42' }, query: { from: 'bookmark' } })).toEqual({
             name: 'assess',
             params: { groupId: 'all' },
-            query: { from: 'bookmark', manualSource: 'manual-42' }
+            query: { from: 'bookmark', manualEntry: 'true' }
         })
     })
 

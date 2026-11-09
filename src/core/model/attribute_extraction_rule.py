@@ -187,6 +187,19 @@ class AttributeExtractionRule(db.Model):
         source_group_ids = {group.id for group in OSINTSourceGroup.get_for_osint_source(osint_source.id)}
         return bool(rule_group_ids & source_group_ids)
 
+    def applies_to_group(self, osint_source_group_id: str | None) -> bool:
+        """Tell whether this rule should run for an item entered by hand into a group.
+
+        Args:
+            osint_source_group_id: The group the item goes into, or None.
+
+        Returns:
+            bool: True when the rule is unscoped, or the group is one of its groups.
+        """
+        if not self.osint_source_groups:
+            return True
+        return osint_source_group_id is not None and any(group.id == osint_source_group_id for group in self.osint_source_groups)
+
     @classmethod
     def find(cls, id: int) -> AttributeExtractionRule | None:  # noqa: A002
         """Find a rule by ID.

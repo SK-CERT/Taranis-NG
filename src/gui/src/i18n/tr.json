@@ -330,8 +330,11 @@
         "source": "Kaynak",
         "link": "Bağlantı",
         "content": "İçerik",
-        "manual_source": "Elle girilen OSINT kaynağı",
-        "successful": "Haber öğesi başarıyla oluşturuldu"
+        "group": "Kaynak grubu",
+        "successful": "Haber öğesi başarıyla oluşturuldu",
+        "manual_entry_by": "{name} tarafından elle girildi",
+        "manual_entry": "Elle giriş",
+        "link_invalid": "http:// veya https:// ile başlayan bir web adresi girin"
     },
     "card_item": {
         "title": "Başlık",

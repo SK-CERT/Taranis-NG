@@ -7,7 +7,7 @@
         <template #content>
             <div
                 v-for="(value, index) in values"
-                :key="`${value.index}-${index}`"
+                :key="rowKey(value)"
                 class="value-holder"
             >
                 <!-- Read-only or remote -->
@@ -71,7 +71,7 @@
     import { LINK_TOKEN_RE, linkToken } from '@/utils/linkReferences'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes'
+    import { rowKey, useAttributes } from './useAttributes'
     import { sanitizeRichTextHtml } from '@/utils/sanitizeRichTextHtml'
     import { useI18n } from 'vue-i18n'
 

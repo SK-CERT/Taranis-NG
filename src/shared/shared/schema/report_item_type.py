@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class AttributeGroupItemSchema(Schema):
     """Marshmallow schema for serializing and deserializing AttributeGroupItem objects."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE
@@ -104,7 +104,7 @@ class AttributeGroupItem:
 class AttributeGroupBaseSchema(Schema):
     """Base Marshmallow schema for attribute groups."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE
@@ -189,7 +189,7 @@ class AttributeGroup:
 class ReportItemTypeBaseSchema(Schema):
     """Base Marshmallow schema for report item types."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE
@@ -279,7 +279,7 @@ class ReportItemType:
 class ReportItemTypeIdSchema(Schema):
     """Marshmallow schema for serializing/deserializing only the report item type ID."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

@@ -152,6 +152,26 @@ async function tracked<R>(write: () => Promise<R>): Promise<R> {
  * Composable for shared attribute editing logic.
  * Handles add/delete operations, locking, and API synchronization.
  */
+/** Tell the user a value did not reach the server; the field keeps their text, still unsaved. */
+function notifySaveFailed(): void {
+    window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: 'common.error_saving' } }))
+}
+
+// A stable identity per value row, for the v-for keys: the position (index) changes when rows are
+// added, deleted or sorted, and a key built from it re-mounts the rows - destroying the input the
+// user is typing in, whose blur then never saves it.
+const rowKeys = new WeakMap<object, number>()
+let nextRowKey = 0
+
+export function rowKey(value: object): number {
+    let key = rowKeys.get(value)
+    if (key === undefined) {
+        key = ++nextRowKey
+        rowKeys.set(value, key)
+    }
+    return key
+}
+
 export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) {
     const userStore = useUserStore()
     const keyTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
@@ -252,6 +272,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 })
             } catch (error) {
                 console.error('Failed to add attribute value:', error)
+                notifySaveFailed()
             }
         } else {
             // Nothing is persisted while a report item is being created, so apply the
@@ -330,11 +351,13 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
             props.values.splice(index, 1)
         }
 
-        setTimeout(() => {
-            props.values.forEach((val, idx) => {
-                val.index = idx
-            })
-        }, 100)
+        renumber()
+    }
+
+    const renumber = (): void => {
+        props.values.forEach((val, idx) => {
+            val.index = idx
+        })
     }
 
     const getLockedStyle = (fieldIndex: number): string => {
@@ -442,9 +465,10 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
      * Hand a refused write over to the dialog that owns this form, which asks the user whose
      * version wins. Nothing was stored, so until they decide, the field keeps their text.
      */
-    const announceConflict = (fieldIndex: number, conflict: ConflictPayload): void => {
-        const value = props.values[fieldIndex]
-        if (!value) {
+    const announceConflict = (value: AttributeValue, conflict: ConflictPayload, mine: unknown): void => {
+        // Found by the value itself, not by its position: rows may have been added, deleted or
+        // sorted while the save was on its way.
+        if (!props.values.includes(value)) {
             return
         }
 
@@ -453,14 +477,14 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 detail: {
                     reportItemId: props.reportItemId,
                     attributeId: conflict.attribute_id,
-                    mine: value.value,
+                    mine,
                     theirs: toLocalValue(conflict.current_value),
                     user: conflict.user,
                     lastUpdated: conflict.last_updated,
                     keepMine: async () => {
                         // Rebase onto the stored version, then send the local value again.
                         value.version = conflict.current_version
-                        await onEdit(fieldIndex)
+                        await saveValue(value)
                     },
                     takeTheirs: () => {
                         applyConflictValue(value, conflict)
@@ -477,7 +501,11 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
 
     const onEdit = (fieldIndex: number): Promise<void> => {
         const value = props.values[fieldIndex]
-        if (!value || props.edit !== true) {
+        return value ? saveValue(value) : Promise.resolve()
+    }
+
+    const saveValue = (value: AttributeValue): Promise<void> => {
+        if (props.edit !== true) {
             return Promise.resolve()
         }
         const key = String(value.id)
@@ -494,12 +522,15 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
     }
 
     const persist = async (value: AttributeValue) => {
-        const fieldIndex = props.values.indexOf(value)
-        if (fieldIndex === -1) {
+        if (!props.values.includes(value)) {
             return
         }
 
         if (props.edit === true) {
+            // What this save sends. The user may type on while it is on its way: only this text,
+            // not theirs since, counts as saved when the answer comes - so the next blur sends the rest.
+            const sent = fingerprint(value)
+            const sentValue = value.value
             try {
                 const dataUpdate: DataUpdatePayload = {
                     update: true
@@ -519,6 +550,8 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                     attrValue = attrValue.replace(/\*/g, '%')
                 } else if (props.attributeGroup?.attribute?.type === 'BOOLEAN') {
                     attrValue = value.value === true ? 'true' : 'false'
+                } else if (typeof attrValue === 'number') {
+                    attrValue = String(attrValue)
                 }
 
                 dataUpdate.attribute_value = attrValue
@@ -539,15 +572,17 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 if (itemData.attribute_version !== undefined) {
                     value.version = Number(itemData.attribute_version)
                 }
-                // This value is now what the server holds, so a later blur won't re-send it.
-                savedFingerprints.value.set(String(value.id), fingerprint(value))
+                // What the server now holds, so a later blur won't re-send it - but will send
+                // whatever was typed after it.
+                savedFingerprints.value.set(String(value.id), sent)
             } catch (error) {
                 const conflict = extractConflict(error)
                 if (conflict) {
-                    announceConflict(fieldIndex, conflict)
+                    announceConflict(value, conflict, sentValue)
                     return
                 }
                 console.error('Failed to save attribute value:', error)
+                notifySaveFailed()
             }
         }
     }
@@ -680,9 +715,10 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                         if (!item || item.id !== Number(itemData.attribute_id)) {
                             continue
                         }
-                        if (hasUnsavedFocus(item)) {
-                            // The user is typing in this very field - keep their text instead of
-                            // overwriting it mid-edit; saving it is handled on blur.
+                        if (hasUnsavedFocus(item) || pendingSaves.has(String(item.id))) {
+                            // The user is typing in this very field, or their save of it is still on
+                            // its way - keep their text instead of overwriting it; the save sends it,
+                            // and the server tells it if somebody else's came first.
                             break
                         }
                         item.value = toLocalValue(itemData.attribute_value)
@@ -732,6 +768,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                         const item = props.values[index]
                         if (item && item.id === dataInfo.attribute_id) {
                             props.values.splice(index, 1)
+                            renumber()
                             break
                         }
                     }

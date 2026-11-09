@@ -97,23 +97,39 @@ export async function getFirstOSINTSourceId(request, token) {
 }
 
 /**
- * Create a manual news item aggregate via the Assess API.
+ * The group a news item entered by hand goes into when a test names none: the default group,
+ * else the first the user may enter into.
+ * @returns {Promise<string | null>}
+ */
+export async function getEntryGroupId(request, token) {
+    try {
+        const res = await request.get(`${CORE_API}/assess/news-item-entry-groups`, { headers: authHeaders(token) })
+        if (!res.ok()) return null
+        const groups = await res.json()
+        const group = groups.find((candidate) => candidate.default) || groups[0]
+        return group ? group.id : null
+    } catch {
+        return null
+    }
+}
+
+/**
+ * Create a news item by hand via the Assess API, in a group (the default group unless given).
  * @returns {Promise<{ aggregateId: number | null }>} the created aggregate ID (or null on failure)
  */
-export async function createNewsItem(request, token, { title, description = 'E2E test item', osintSourceId }) {
+export async function createNewsItem(request, token, { title, description = 'E2E test item', groupId }) {
     try {
         // The AddNewsItem endpoint expects a NewsItemData-shaped payload with
         // `collected`/`published` in the format "%d.%m.%Y - %H:%M" — see
         // `shared/schema/news_item.py:NewsItemDataBaseSchema.collected`. ISO 8601 strings
-        // (`new Date().toISOString()`) are REJECTED with ValidationError
-        // {'collected': ['Not a valid datetime.']} and the POST returns 500 — silently
-        // failing this helper and returning aggregateId: null, which in turn makes the
-        // downstream createReportItem link to NO aggregate. Format the timestamp locally.
+        // (`new Date().toISOString()`) are rejected with a 400 naming the field.
         const formatTaranisTimestamp = (d) => {
             const pad = (n) => String(n).padStart(2, '0')
             return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`
         }
         const time = formatTaranisTimestamp(new Date())
+        const osintSourceGroupId = groupId || (await getEntryGroupId(request, token))
+        if (!osintSourceGroupId) return { aggregateId: null }
 
         const res = await request.post(`${CORE_API}/assess/news-items`, {
             headers: authHeaders(token),
@@ -127,21 +143,13 @@ export async function createNewsItem(request, token, { title, description = 'E2E
                 author: 'E2E',
                 collected: time,
                 content: description,
-                osint_source_id: osintSourceId || null,
+                osint_source_group_id: osintSourceGroupId,
                 attributes: []
             }
         })
         if (!res.ok()) return { aggregateId: null }
-        // The endpoint returns no body; fetch the aggregate by searching.
-        const groupsRes = await request.get(`${CORE_API}/assess/news-item-aggregates-by-group/all`, {
-            headers: authHeaders(token),
-            params: { offset: 0, limit: 50, sort: 'DATE_DESC', search: title }
-        })
-        if (!groupsRes.ok()) return { aggregateId: null }
-        const body = await groupsRes.json()
-        const items = body?.items || body?.data?.items || []
-        const match = items.find((it) => it.title === title)
-        return { aggregateId: match ? match.id : null }
+        const body = await res.json()
+        return { aggregateId: body?.id ?? null }
     } catch {
         return { aggregateId: null }
     }
@@ -526,7 +534,8 @@ export async function purgeSeedEntitiesBestEffort(playwright) {
         // Seeded before publisher presets were renamed publishing channels: E2E Publisher Preset.
         const isE2EPublishingChannel = (name) => /^E2E (Publishing Channel|Publisher Preset)/.test(name)
         const isE2EProduct = (title) => /^E2E (Publish Confirm|Incomplete Reports) /.test(title) || /^E2E Publish Confirm/.test(title)
-        const isE2EOSINTSource = (name) => /^E2E Manual Source/.test(name)
+        // "E2E Manual Source" from before manual sources were removed.
+        const isE2EOSINTSource = (name) => /^E2E (Seed|Manual) Source/.test(name)
 
         // Step 1: delete E2E Products FIRST — a product preset that Products still use cannot
         // be deleted (the publish-confirm test creates Products via `Save and Publish`).

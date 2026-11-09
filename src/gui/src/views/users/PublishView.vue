@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+    import { useListKeyboard } from '@/composables/useKeyboard'
     import { ref, computed, onMounted, nextTick } from 'vue'
     import { onBeforeRouteLeave } from 'vue-router'
     import { usePublishStore } from '@/stores/publish'
@@ -30,6 +31,9 @@
     import ToolbarFilterPublish from '@/components/publish/ToolbarFilterPublish.vue'
     import ContentDataPublish from '@/components/publish/ContentDataPublish.vue'
     import NewProduct from '@/components/publish/NewProduct.vue'
+
+    // The arrow keys move through the cards, Enter opens one; the card under the mouse is the current one.
+    useListKeyboard('.publish-list')
 
     const publishStore = usePublishStore()
     const { checkPermission } = useAuth()

@@ -42,7 +42,7 @@ class DataProvider:
 class DataProviderSchema(Schema):
     """Marshmallow schema for serializing and deserializing DataProvider objects."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

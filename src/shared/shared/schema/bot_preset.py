@@ -2,7 +2,7 @@
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
-from shared.schema.parameter_value import ParameterValueSchema
+from shared.schema.parameter_value import ParameterValue, ParameterValueSchema
 from shared.schema.presentation import PresentationSchema
 
 
@@ -15,7 +15,7 @@ class BotPresetSchemaBase(Schema):
         parameter_values (list): List of parameter values associated with the bot preset.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE
@@ -25,7 +25,7 @@ class BotPresetSchemaBase(Schema):
     parameter_values = fields.List(fields.Nested(ParameterValueSchema))
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> "BotPreset":  # noqa: ANN003, ARG002
         """Create a BotPreset instance from the deserialized data.
 
         Args:
@@ -65,7 +65,7 @@ class BotPresetPresentationSchema(BotPresetSchema, PresentationSchema):
 class BotPreset:
     """Class representing a Bot Preset, containing its ID, name, and parameter values."""
 
-    def __init__(self, id, name, parameter_values):
+    def __init__(self, id: str, name: str, parameter_values: list[ParameterValue]) -> None:  # noqa: A002
         """Initialize a BotPreset instance with ID, name, and parameter values.
 
         Args:
@@ -76,6 +76,6 @@ class BotPreset:
         self.id = id
         self.name = name
 
-        self.param_key_values = dict()
+        self.param_key_values = {}
         for pv in parameter_values:
             self.param_key_values.update({pv.parameter.key: pv.value})

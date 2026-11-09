@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+    import { useListKeyboard } from '@/composables/useKeyboard'
     import { ref, computed, watch } from 'vue'
     import { useRoute, onBeforeRouteLeave } from 'vue-router'
     import { useAnalyzeStore } from '@/stores/analyze'
@@ -46,6 +47,9 @@
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import RemoteReportItem from '@/components/analyze/RemoteReportItem.vue'
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
+
+    // The arrow keys move through the cards, Enter opens one; the card under the mouse is the current one.
+    useListKeyboard('.analyze-list')
 
     const route = useRoute()
     const analyzeStore = useAnalyzeStore()

@@ -330,8 +330,11 @@
         "source": "Көзі",
         "link": "Сілтеме",
         "content": "Мазмұны",
-        "manual_source": "Қолмен енгізілетін OSINT көзі",
-        "successful": "Жаңалық сәтті жасалды"
+        "group": "Көздер тобы",
+        "successful": "Жаңалық сәтті жасалды",
+        "manual_entry_by": "{name} қолмен енгізген",
+        "manual_entry": "Қолмен енгізу",
+        "link_invalid": "http:// немесе https:// басталатын веб-мекенжайды енгізіңіз"
     },
     "card_item": {
         "title": "Тақырыбы",

@@ -59,6 +59,13 @@ describe('NotificationSnackbar', () => {
         expect(wrapper.exists()).toBe(true)
     })
 
+    // At the top right the messages covered the buttons there (Save, Add New, the account menu);
+    // nothing the user needs sits at the bottom centre.
+    it('should appear at the bottom centre', () => {
+        const wrapper = mountSnackbar()
+        expect(wrapper.findComponent({ name: 'VSnackbar' }).props('location')).toBe('bottom center')
+    })
+
     it('should display notification on event', async () => {
         const wrapper = mountSnackbar()
 

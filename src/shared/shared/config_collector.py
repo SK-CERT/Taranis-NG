@@ -154,10 +154,6 @@ class ConfigCollector(ConfigBase):
         )
         self.modules.append(mod)
 
-        mod = ModuleType("MANUAL_COLLECTOR", "Manual Collector", "Collector for manual input of news items")
-        mod.parameters = self.add_default()
-        self.modules.append(mod)
-
         mod = ModuleType("RSS_COLLECTOR", "RSS Collector", "Collector for gathering data from RSS and Atom feeds")
         mod.parameters = self.add_default()
         mod.parameters.extend(

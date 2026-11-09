@@ -29,6 +29,7 @@
     "dependencies": {
         "@mdi/font": "^7.4.47",
         "@simplewebauthn/browser": "^14.0.0",
+        "@tanstack/vue-virtual": "^3.13.47",
         "@tiptap/extensions": "^3.32.2",
         "@tiptap/pm": "^3.32.2",
         "@tiptap/starter-kit": "^3.32.2",

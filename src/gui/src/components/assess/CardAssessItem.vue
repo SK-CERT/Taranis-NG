@@ -116,10 +116,13 @@
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
     import HighlightedText from '@/components/common/HighlightedText.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { newsItemSourceName } from '@/utils/newsItemSource'
     import { Action, type ActionKey } from '@/types/actions'
 
     type NewsItemData = {
         osint_source_name?: string
+        entered_by?: string | null
+        source_label?: string | null
         source?: string
         osint_source_type?: string
         published?: string
@@ -193,7 +196,7 @@
     const { formatDateTime } = useLocaleFormatters()
     const itemData = computed(() => props.newsItem.news_item_data || {})
 
-    const sourceName = computed(() => itemData.value.osint_source_name || itemData.value.source || t('card_item.unknown_source'))
+    const sourceName = computed(() => newsItemSourceName(itemData.value, t) || t('card_item.unknown_source'))
     const sourceType = computed(() => itemData.value.osint_source_type?.split(' ')[0] || '')
     const publishedDate = computed(() => itemData.value.published || '')
     const formatDisplayDate = (value: string): string => (value ? formatDateTime(value) || value : t('card_item.not_available'))

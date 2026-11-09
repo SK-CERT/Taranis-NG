@@ -20,7 +20,7 @@ class PublicWebSchema(Schema):
     languages, ...) owned by the GUI; the backend stores it verbatim.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Ignore unknown fields so the GUI can evolve the config shape freely."""
 
         unknown = EXCLUDE

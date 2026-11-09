@@ -226,12 +226,15 @@
     import HighlightedText from '@/components/common/HighlightedText.vue'
     import { Action, type ActionKey } from '@/types/actions'
     import { collectHighlightWords } from '@/utils/word-list-highlighting'
+    import { newsItemSourceName } from '@/utils/newsItemSource'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { useRtl } from 'vuetify'
     import { notifyDeleteError } from '@/utils/deleteError'
 
     type NewsItemData = {
         osint_source_name?: string
+        entered_by?: string | null
+        source_label?: string | null
         source?: string
         osint_source_type?: string
         published?: string
@@ -305,12 +308,7 @@
     const opened = ref(false)
 
     const firstNewsItem = computed(() => props.card.news_items?.[0])
-    const sourceName = computed(
-        () =>
-            firstNewsItem.value?.news_item_data?.osint_source_name ||
-            firstNewsItem.value?.news_item_data?.source ||
-            t('card_item.unknown_source')
-    )
+    const sourceName = computed(() => newsItemSourceName(firstNewsItem.value?.news_item_data, t) || t('card_item.unknown_source'))
     const sourceType = computed(() => firstNewsItem.value?.news_item_data?.osint_source_type?.split(' ')[0] || '')
     const publishedDate = computed(() => firstNewsItem.value?.news_item_data?.published || '')
     const formatDisplayDate = (value: string): string => (value ? formatDateTime(value) || value : t('card_item.not_available'))

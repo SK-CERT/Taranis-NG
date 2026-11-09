@@ -10,7 +10,7 @@ from shared.schema.report_item_type import ReportItemTypePresentationSchema
 class RemoteAccessSchema(Schema):
     """Schema for remote access details."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE
@@ -33,7 +33,7 @@ class RemoteAccessPresentationSchema(HiddenApiKeySchema, RemoteAccessSchema, Pre
 class RemoteNodeSchema(Schema):
     """Schema for remote node details."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

@@ -208,6 +208,9 @@ extra-paths = [
 error-on-warning = false  # exit 0 even when warning diagnostics are emitted
 
 [tool.ty.rules]
+# Marshmallow schemas redefine the nested `class Meta` of the schema they extend: Meta only
+# holds options, it is not meant to subclass the parent's. ty reports each as
+# invalid-attribute-override; those lines carry `# ty: ignore[invalid-attribute-override]`.
 # Re-tighten to "error" once the legacy service owning these patterns is fixed.
 unresolved-attribute = "warn"     # self.preset / None-union attrs (bots, collectors)
 unresolved-import = "warn"        # .app relative imports (bots, collectors, publishers)

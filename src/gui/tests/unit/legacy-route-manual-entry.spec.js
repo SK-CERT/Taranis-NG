@@ -27,10 +27,10 @@ vi.mock('@/api/assess', async () => {
     const actual = await vi.importActual('@/api/assess')
     return {
         ...actual,
-        getManualOSINTSources: vi.fn().mockResolvedValue({
+        getNewsItemEntryGroups: vi.fn().mockResolvedValue({
             data: [
-                { id: 'manual-1', name: 'First source' },
-                { id: 'manual-42', name: 'Bookmarked source' }
+                { id: 'g-default', name: 'Default', default: true },
+                { id: 'g-intel', name: 'Intel', default: false }
             ]
         })
     }
@@ -38,7 +38,7 @@ vi.mock('@/api/assess', async () => {
 
 const AddNewsItemDialogStub = {
     name: 'AddNewsItemDialog',
-    props: ['modelValue', 'manualSources', 'initialSourceId'],
+    props: ['modelValue', 'groups', 'initialGroupId'],
     template: '<div class="add-news-item-dialog" />'
 }
 
@@ -81,12 +81,14 @@ describe('legacy manual-entry route', () => {
         authState.checkPermission.mockImplementation((permission) => authState.permissions.has(permission))
     })
 
-    it('opens manual entry with the requested source and canonicalizes the URL', async () => {
+    // The source of an old bookmark no longer exists; the dialog opens to choose a group.
+    it('opens manual entry from a link to a manual source and canonicalizes the URL', async () => {
         const { router, wrapper } = await mountLegacyEntry()
         const dialog = wrapper.findComponent({ name: 'AddNewsItemDialog' })
 
         expect(dialog.props('modelValue')).toBe(true)
-        expect(dialog.props('initialSourceId')).toBe('manual-42')
+        expect(dialog.props('groups').map((group) => group.id)).toEqual(['g-default', 'g-intel'])
+        expect(dialog.props('initialGroupId')).toBeNull()
         expect(router.currentRoute.value.fullPath).toBe('/assess/group/all')
     })
 
@@ -95,7 +97,7 @@ describe('legacy manual-entry route', () => {
         const assessApi = await import('@/api/assess')
         const { router, wrapper } = await mountLegacyEntry()
 
-        expect(assessApi.getManualOSINTSources).not.toHaveBeenCalled()
+        expect(assessApi.getNewsItemEntryGroups).not.toHaveBeenCalled()
         expect(wrapper.findComponent({ name: 'AddNewsItemDialog' }).exists()).toBe(false)
         expect(router.currentRoute.value.fullPath).toBe('/assess/group/all')
     })

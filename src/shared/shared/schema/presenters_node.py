@@ -51,7 +51,7 @@ class PresentersNode:
 class PresentersNodeSchema(Schema):
     """Marshmallow schema for a presenters node."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Configure unknown-field handling."""
 
         unknown = EXCLUDE
