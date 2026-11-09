@@ -295,23 +295,23 @@ def _free_name(connection: Connection, name: str, suffix: str) -> str:
     return candidate
 
 
-def _add_preset(connection: Connection, name: str, description: str | None) -> int:
+def _add_preset(connection: Connection, name: str, description: str | None, public_web_enabled: bool) -> int:
     return connection.execute(
         sa.text(
             "INSERT INTO product_preset (name, description, public_web_enabled, created, updated_at, updated_by) "
-            "VALUES (:name, :description, true, now(), now(), 'migration') RETURNING id",
+            "VALUES (:name, :description, :public_web_enabled, now(), now(), 'migration') RETURNING id",
         ),
-        {"name": name, "description": description or ""},
+        {"name": name, "description": description or "", "public_web_enabled": public_web_enabled},
     ).scalar_one()
 
 
-def _presets_for_formats(connection: Connection) -> dict[int, int]:
+def _presets_for_formats(connection: Connection, public_web_enabled: bool) -> dict[int, int]:
     """Create a product preset for each product format; returns format id -> product preset id."""
     mapping = {}
     formats = connection.execute(sa.text("SELECT id, title, description FROM product_format ORDER BY id")).all()
     for format_id, title, description in formats:
         name = _free_name(connection, (title or "").strip() or f"Product type {format_id}", f"type {format_id}")
-        preset_id = _add_preset(connection, name, description)
+        preset_id = _add_preset(connection, name, description, public_web_enabled)
         connection.execute(
             sa.text(
                 "INSERT INTO product_preset_delivery (product_preset_id, position, product_format_id) VALUES (:preset_id, 0, :format_id)",
@@ -322,7 +322,7 @@ def _presets_for_formats(connection: Connection) -> dict[int, int]:
     return mapping
 
 
-def _point_products_at_presets(connection: Connection, mapping: dict[int, int]) -> None:
+def _point_products_at_presets(connection: Connection, mapping: dict[int, int], public_web_enabled: bool) -> None:
     """Give every product its format's product preset, then drop the product type column."""
     op.add_column("product", sa.Column("product_preset_id", sa.Integer(), nullable=True))
     for format_id, preset_id in mapping.items():
@@ -333,7 +333,7 @@ def _point_products_at_presets(connection: Connection, mapping: dict[int, int]) 
     untyped = connection.execute(sa.text("SELECT count(*) FROM product WHERE product_preset_id IS NULL")).scalar_one()
     if untyped:
         # No format: these can be listed and shown on the public web, but not rendered.
-        preset_id = _add_preset(connection, _free_name(connection, UNTYPED_NAME, "migration"), "")
+        preset_id = _add_preset(connection, _free_name(connection, UNTYPED_NAME, "migration"), "", public_web_enabled)
         connection.execute(
             sa.text("UPDATE product SET product_preset_id = :preset_id WHERE product_preset_id IS NULL"),
             {"preset_id": preset_id},
@@ -402,15 +402,21 @@ def upgrade() -> None:
     _drop_premature_tables(connection)
     _rename_schema(connection, upgrade=True)
     _create_preset_tables()
-    mapping = _presets_for_formats(connection)
-    _point_products_at_presets(connection, mapping)
+    public_web_enabled = connection.execute(sa.text("SELECT count(*) FROM public_web")).scalar_one() > 0
+    mapping = _presets_for_formats(connection, public_web_enabled)
+    _point_products_at_presets(connection, mapping, public_web_enabled)
     _move_acl_entries(connection, item_type, PRODUCT_TYPE_ITEM, PRODUCT_PRESET_ITEM, mapping)
     _rename_permissions(connection, upgrade=True)
     for action in ACTIONS:
         _grant(connection, f"CONFIG_PRODUCT_PRESET_{action}", "product preset", f"CONFIG_PRODUCT_FORMAT_{action}")
 
     _ensure_product_public_web(connection)
-    _add_column(connection, "product", sa.Column("public_web_enabled", sa.Boolean(), nullable=False, server_default=sa.true()))
+    default_public_web_enabled = sa.true() if public_web_enabled else sa.false()
+    _add_column(
+        connection,
+        "product",
+        sa.Column("public_web_enabled", sa.Boolean(), nullable=False, server_default=default_public_web_enabled),
+    )
     _add_column(connection, "report_item_type", sa.Column("icon", sa.String(length=ICON_LENGTH), nullable=True))
     _index_attribute_enums(connection)
 

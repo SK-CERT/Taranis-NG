@@ -23,7 +23,7 @@ import sqlalchemy
 from managers import content_language, translation_status
 from managers.db_manager import db
 from managers.link_references import generate_link_key
-from marshmallow import fields, post_load
+from marshmallow import fields, post_load, pre_load
 from model.acl_entry import ACLEntry
 from model.attribute import Attribute
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
@@ -181,6 +181,26 @@ class NewReportItemAttributeSchema(ReportItemAttributeBaseSchema):
     Returns:
         An instance of the ReportItemAttribute class.
     """
+
+    @pre_load
+    def normalize_scalar_value(self, data: dict, **kwargs) -> dict:  # noqa: ARG002, ANN003
+        """Normalize the scalar value.
+
+        This method normalizes the scalar value before it is used to create a ReportItemAttribute object.
+
+        Args:
+            data (dict): A dictionary containing the data for the report item attribute.
+            **kwargs: Additional keyword arguments from marshmallow.
+
+        Returns:
+            dict: The normalized data dictionary.
+        """
+        value = data.get("value")
+        if isinstance(value, bool):
+            data = {**data, "value": str(value).lower()}
+        elif isinstance(value, (int, float)):
+            data = {**data, "value": str(value)}
+        return data
 
     @post_load
     def make_report_item_attribute(self, data: dict, **kwargs) -> ReportItemAttribute:  # noqa: ARG002, ANN003
