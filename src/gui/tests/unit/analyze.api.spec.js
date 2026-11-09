@@ -1,9 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createNewReportItem, downloadReportItemAttachment, updateAttachmentDescription, uploadAttachment } from '@/api/analyze'
+import {
+    createNewReportItem,
+    downloadReportItemAttachment,
+    getReportItemData,
+    updateAttachmentDescription,
+    uploadAttachment
+} from '@/api/analyze'
 import ApiService from '@/services/api_service'
 
 vi.mock('@/services/api_service', () => ({
     default: {
+        get: vi.fn(),
         post: vi.fn(),
         put: vi.fn(),
         upload: vi.fn(),
@@ -72,5 +79,21 @@ describe('analyze api', () => {
         downloadReportItemAttachment(42, 9, 'evidence.txt')
 
         expect(ApiService.download).toHaveBeenCalledWith('/analyze/report-items/42/file-attributes/9/file', undefined, 'evidence.txt')
+    })
+
+    // Another user's view refetches what changed; with `for...in` it asked for the array's indexes
+    // (0--1) instead of the news items added, and read a translated value in the source language.
+    it('getReportItemData asks for the added ids themselves, in the language being edited', () => {
+        getReportItemData(7, { add: true, aggregate_ids: [11, 12], remote_report_item_ids: [5], language: 'cs', source_language: 'en' })
+
+        expect(ApiService.get).toHaveBeenCalledWith(
+            '/analyze/report-items/7/data?add=true&aggregate_ids=11--12&remote_report_item_ids=5&language=cs&source_language=en'
+        )
+    })
+
+    it('getReportItemData leaves out what did not change', () => {
+        getReportItemData(7, { update: true, attribute_id: 3 })
+
+        expect(ApiService.get).toHaveBeenCalledWith('/analyze/report-items/7/data?update=true&attribute_id=3')
     })
 })

@@ -7,7 +7,7 @@
         <template #content>
             <div
                 v-for="(value, index) in values"
-                :key="`${value.index}-${index}`"
+                :key="rowKey(value)"
                 class="value-holder"
                 :class="{ 'drag-over': dragOverIndex === index, 'dragging': dragIndex === index }"
                 @dragover="onDragOver(index, $event)"
@@ -157,7 +157,7 @@
     import { useCitingField } from '@/composables/useCitingField'
     import { isHttpUrl } from '@/utils/linkReferences'
     import { ICONS } from '@/config/ui-constants'
-    import { useAttributes } from './useAttributes'
+    import { rowKey, useAttributes } from './useAttributes'
 
     type AttributeValueItem = {
         index?: string | number

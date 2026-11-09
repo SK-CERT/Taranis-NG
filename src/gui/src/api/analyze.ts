@@ -94,21 +94,21 @@ export function getReportItemData(report_item_id, data) {
     if (data.completed !== undefined) {
         params += '&completed=' + encodeURIComponent(data.completed)
     }
+    // The ids themselves: `for...in` over the array gave its indexes, so another user's view
+    // fetched (and showed) whichever news items had ids 0, 1, ... instead of the ones added.
     if (data.aggregate_ids !== undefined) {
-        let aggregate_ids = ''
-        for (const aggregate_id in data.aggregate_ids) {
-            aggregate_ids += '--' + aggregate_id
-        }
-        aggregate_ids = aggregate_ids.replace('--', '')
-        params += '&aggregate_ids=' + encodeURIComponent(aggregate_ids)
+        params += '&aggregate_ids=' + encodeURIComponent(Array.from(data.aggregate_ids).join('--'))
     }
     if (data.remote_report_item_ids !== undefined) {
-        let remote_report_item_ids = ''
-        for (const remote_report_item_id in data.remote_report_item_ids) {
-            remote_report_item_ids += '--' + remote_report_item_id
-        }
-        remote_report_item_ids = remote_report_item_ids.replace('--', '')
-        params += '&remote_report_item_ids=' + encodeURIComponent(remote_report_item_ids)
+        params += '&remote_report_item_ids=' + encodeURIComponent(Array.from(data.remote_report_item_ids).join('--'))
+    }
+    // A translated value is read in its language; without it core answers with the source's value
+    // and version, and the next save of the translation is refused as a conflict.
+    if (data.language) {
+        params += '&language=' + encodeURIComponent(data.language)
+    }
+    if (data.source_language) {
+        params += '&source_language=' + encodeURIComponent(data.source_language)
     }
 
     // Deliberately the first '&' only: it becomes the '?' that opens the query

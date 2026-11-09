@@ -9,7 +9,7 @@ from shared.schema.presentation import PresentationSchema
 class OrganizationSchema(Schema):
     """Schema for Organization."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -28,7 +28,7 @@ class OrganizationPresentationSchema(OrganizationSchema, PresentationSchema):
 class OrganizationIdSchema(Schema):
     """Schema for an organization id."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE

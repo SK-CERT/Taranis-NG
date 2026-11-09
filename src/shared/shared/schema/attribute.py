@@ -50,7 +50,7 @@ class AttributeEnumSchema(Schema):
     It includes fields for id, index, value, and description.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for defining options in the attribute schema."""
 
         unknown = EXCLUDE
@@ -93,7 +93,7 @@ class AttributeEnum:
 class AttributeBaseSchema(Schema):
     """Base schema class for attributes."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for defining options for the attribute schema."""
 
         unknown = EXCLUDE

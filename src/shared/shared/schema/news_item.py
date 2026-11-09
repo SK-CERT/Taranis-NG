@@ -1,6 +1,6 @@
 """Module for News item schema."""
 
-import datetime
+import datetime as dt
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
@@ -53,7 +53,7 @@ class NewsItemAttribute:
 class NewsItemDataBaseSchema(Schema):
     """Base schema for news item data."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for defining options for the NewsItemData schema."""
 
         unknown = EXCLUDE
@@ -86,7 +86,7 @@ class NewsItemData:
         link: str,
         published: str,
         author: str,
-        collected: datetime.datetime,
+        collected: dt.datetime,
         content: str,
         osint_source_id: str,
         attributes: list,
@@ -285,7 +285,7 @@ class NewsItemAggregateId:
 class NewsItemAggregateIdSchema(Schema):
     """Schema for news item aggregate ID."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for defining options for the NewsItemAggregateId schema."""
 
         unknown = EXCLUDE

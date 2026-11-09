@@ -18,7 +18,7 @@ class ProductPresetDeliverySchema(Schema):
     A delivery without a language renders the product in the language it is written in.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class."""
 
         unknown = EXCLUDE
@@ -35,7 +35,7 @@ class ProductPresetDeliverySchema(Schema):
 class ProductPresetSchema(Schema):
     """A product preset as it is configured."""
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class."""
 
         unknown = EXCLUDE

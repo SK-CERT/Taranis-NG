@@ -7,7 +7,7 @@
         <template #content>
             <div
                 v-for="(value, index) in values"
-                :key="`${value.index}-${index}`"
+                :key="rowKey(value)"
                 class="w-100 mb-1"
             >
                 <!-- Read-only or remote -->
@@ -108,7 +108,7 @@
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
     import CalculatorCVSS from '../CalculatorCVSS.vue'
-    import { useAttributes } from './useAttributes'
+    import { rowKey, useAttributes } from './useAttributes'
     import { calculateScoreItems, detectVersion, createInstance, stripParentheses, SEVERITY_COLORS } from '../cvss-utils'
     import type { ScoreItem } from '../cvss-utils'
 

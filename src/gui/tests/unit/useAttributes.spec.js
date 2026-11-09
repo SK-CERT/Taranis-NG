@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { defineComponent } from 'vue'
 import { mount } from '@vue/test-utils'
-import { useAttributes, isLabelOnly } from '@/components/common/attribute/useAttributes'
+import { useAttributes, isLabelOnly, rowKey } from '@/components/common/attribute/useAttributes'
 
 // Mock dependencies
 const { mockHasPermission } = vi.hoisted(() => ({
@@ -609,6 +609,168 @@ describe('useAttributes', () => {
 
             const payload = vi.mocked(analyzeApi.updateReportItem).mock.calls[0][1]
             expect(payload).not.toHaveProperty('base_version')
+            scope.stop()
+        })
+    })
+
+    // ── saves that must not be lost ───────────────
+    describe('saves that must not be lost', () => {
+        const deferred = () => {
+            let resolve
+            const promise = new Promise((r) => (resolve = r))
+            return { promise, resolve }
+        }
+        const stored = (version) => ({ data: { attribute_last_updated: 'now', attribute_user: 'admin', attribute_version: version } })
+        const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+        it('sends what was typed while the previous save was on its way', async () => {
+            vi.mocked(analyzeApi.lockReportItem).mockResolvedValue({})
+            vi.mocked(analyzeApi.unlockReportItem).mockResolvedValue({})
+            const firstPut = deferred()
+            vi.mocked(analyzeApi.updateReportItem).mockReturnValueOnce(firstPut.promise).mockResolvedValue({ data: 'ref' })
+            vi.mocked(analyzeApi.getReportItemData).mockResolvedValueOnce(stored(4)).mockResolvedValue(stored(5))
+
+            const props = makeProps({ edit: true, values: [{ id: 5, value: '', version: 3 }] })
+            const { result, scope } = setupComposable(props)
+
+            await result.onFocus(0)
+            props.values[0].value = 'ab'
+            const saving = result.onEdit(0)
+            await flush()
+            // Typed on before the answer came.
+            props.values[0].value = 'abc'
+            firstPut.resolve({ data: 'ref' })
+            await saving
+            await result.onBlur(0)
+
+            expect(analyzeApi.updateReportItem).toHaveBeenCalledTimes(2)
+            expect(analyzeApi.updateReportItem).toHaveBeenLastCalledWith(
+                'report-1',
+                expect.objectContaining({ attribute_id: 5, attribute_value: 'abc', base_version: 4 })
+            )
+            scope.stop()
+        })
+
+        it("does not let another user's change overwrite a save still on its way", async () => {
+            const put = deferred()
+            vi.mocked(analyzeApi.updateReportItem).mockReturnValueOnce(put.promise)
+            vi.mocked(analyzeApi.getReportItemData).mockResolvedValue({
+                data: {
+                    attribute_id: 5,
+                    attribute_value: 'theirs',
+                    attribute_last_updated: 'now',
+                    attribute_user: 'other',
+                    attribute_version: 9
+                }
+            })
+
+            const props = makeProps({ edit: true, values: [{ id: 5, value: 'mine', version: 3 }] })
+            const { result, scope } = setupComposable(props)
+
+            const saving = result.onEdit(0)
+            window.dispatchEvent(
+                new CustomEvent('report-item-updated', {
+                    detail: { report_item_id: 'report-1', user_id: 202, update: true, attribute_id: 5 }
+                })
+            )
+            await flush()
+
+            expect(props.values[0].value).toBe('mine')
+            put.resolve({ data: 'ref' })
+            await saving
+            scope.stop()
+        })
+
+        it('resolves a conflict on the value that was refused, also after the rows moved', async () => {
+            vi.mocked(analyzeApi.updateReportItem).mockRejectedValueOnce({
+                response: {
+                    status: 409,
+                    data: {
+                        conflict: {
+                            attribute_id: 6,
+                            current_version: 7,
+                            current_value: 'theirs',
+                            current_value_description: '',
+                            user: 'analyst'
+                        }
+                    }
+                }
+            })
+            vi.mocked(analyzeApi.updateReportItem).mockResolvedValue({ data: 'ref' })
+            vi.mocked(analyzeApi.getReportItemData).mockResolvedValue(stored(8))
+
+            const props = makeProps({
+                edit: true,
+                values: [
+                    { id: 5, value: 'first', version: 1 },
+                    { id: 6, value: 'second (mine)', version: 3 }
+                ]
+            })
+            const { result, scope } = setupComposable(props)
+            const events = []
+            const listener = (event) => events.push(event.detail)
+            window.addEventListener('report-item-conflict', listener)
+
+            await result.onEdit(1)
+            // The first row goes away before the user answers.
+            props.values.splice(0, 1)
+            await events[0].keepMine()
+
+            expect(events[0].mine).toBe('second (mine)')
+            expect(analyzeApi.updateReportItem).toHaveBeenLastCalledWith(
+                'report-1',
+                expect.objectContaining({ attribute_id: 6, attribute_value: 'second (mine)', base_version: 7 })
+            )
+            window.removeEventListener('report-item-conflict', listener)
+            scope.stop()
+        })
+
+        it('tells the user when a value could not be saved', async () => {
+            vi.mocked(analyzeApi.updateReportItem).mockRejectedValue({ response: { status: 500 } })
+            const notifications = []
+            const listener = (event) => notifications.push(event.detail)
+            window.addEventListener('notification', listener)
+            vi.spyOn(console, 'error').mockImplementation(() => {})
+
+            const { result, scope } = setupComposable(makeProps({ edit: true, values: [{ id: 5, value: 'x', version: 1 }] }))
+            await result.onEdit(0)
+
+            expect(notifications).toEqual([{ type: 'error', loc: 'common.error_saving' }])
+            window.removeEventListener('notification', listener)
+            scope.stop()
+        })
+
+        it('sends a number as text', async () => {
+            vi.mocked(analyzeApi.updateReportItem).mockResolvedValue({ data: 'ref' })
+            vi.mocked(analyzeApi.getReportItemData).mockResolvedValue(stored(2))
+            const props = makeProps({
+                edit: true,
+                values: [{ id: 5, value: 42, version: 1 }],
+                attributeGroup: { id: 'ag-1', min_occurrence: 0, max_occurrence: 10, attribute: { type: 'NUMBER' } }
+            })
+            const { result, scope } = setupComposable(props)
+            await result.onEdit(0)
+
+            expect(analyzeApi.updateReportItem).toHaveBeenCalledWith('report-1', expect.objectContaining({ attribute_value: '42' }))
+            scope.stop()
+        })
+
+        it('numbers the rows again right after a delete, and keys them by the row itself', async () => {
+            const props = makeProps({
+                values: [
+                    { id: -1, index: 0, value: 'a' },
+                    { id: -1, index: 1, value: 'b' },
+                    { id: -1, index: 2, value: 'c' }
+                ]
+            })
+            const { result, scope } = setupComposable(props)
+            const keyOfC = rowKey(props.values[2])
+
+            await result.del(0)
+
+            expect(props.values.map((value) => value.index)).toEqual([0, 1])
+            expect(rowKey(props.values[1])).toBe(keyOfC)
+            expect(rowKey(props.values[0])).not.toBe(keyOfC)
             scope.stop()
         })
     })

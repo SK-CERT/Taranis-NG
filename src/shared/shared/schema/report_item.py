@@ -26,7 +26,7 @@ class ReportItemAttributeBaseSchema(Schema):
         attribute_group_item_id (int): The ID of the attribute group item.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the ReportItemAttributeBase schema."""
 
         unknown = EXCLUDE
@@ -145,7 +145,7 @@ class ReportItemBaseSchema(Schema):
             Dump only: core sets it from the author's settings and changes it on request.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the ReportItem schema."""
 
         unknown = EXCLUDE
@@ -373,7 +373,7 @@ class ReportItemIdSchema(Schema):
         An instance of the ReportItemId class.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for configuring the behavior of the ReportItemId schema."""
 
         unknown = EXCLUDE

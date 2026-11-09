@@ -15,7 +15,7 @@ class TraefikSettingsSchema(Schema):
     empty ``default_key`` on update means "keep the stored one".
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

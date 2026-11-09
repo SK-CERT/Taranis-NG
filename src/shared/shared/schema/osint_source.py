@@ -56,7 +56,7 @@ class OSINTSourceGroupIdSchema(Schema):
         id (fields.Str): A string field representing the ID of the OSINT source group.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for the schema.
 
         Attributes:
@@ -130,7 +130,7 @@ class OSINTSourceIdSchema(Schema):
             Creates an OSINTSourceId instance from the deserialized data.
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for the schema.
 
         Attributes:
@@ -222,7 +222,7 @@ class OSINTSourceSchema(Schema):
         status (fields.Str): The status of the OSINT source (e.g., "green", "gray").
     """
 
-    class Meta:
+    class Meta:  # ty: ignore[invalid-attribute-override]
         """Meta class for the schema.
 
         Attributes:

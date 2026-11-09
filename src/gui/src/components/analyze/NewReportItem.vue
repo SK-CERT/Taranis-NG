@@ -679,6 +679,9 @@
     const focused_field = ref<ReportField | null>(null)
     const showConflict = ref<boolean>(false)
     const conflict = ref<ConflictDetail | null>(null)
+    // Several saves can be refused at once (fields edited quickly on an out-of-date copy): each
+    // is asked about in turn, none is dropped.
+    const conflictQueue: ConflictDetail[] = []
 
     // Languages: the report's own (null while not set), its translated names per language, and
     // the open tab. Translated attribute values live on each value as `translations`.
@@ -930,6 +933,10 @@
                         value = value.replaceAll('*', '%')
                     } else if (attrType === 'BOOLEAN') {
                         value = value === true ? 'true' : 'false'
+                    } else if (typeof value === 'number') {
+                        // A number field holds a number (v-model.number); the server stores text,
+                        // and refused the whole new report over it.
+                        value = String(value)
                     }
 
                     if (attrType !== 'ATTACHMENT') {
@@ -1710,17 +1717,30 @@
         return formattedValue ? { text: formattedValue, direction: 'auto' } : { text: rawValue, direction: 'auto' }
     })
 
+    const showNextConflict = () => {
+        const next = conflictQueue.shift() ?? null
+        conflict.value = next
+        showConflict.value = next !== null
+    }
+
     const reportItemConflictEvent = (event: Event) => {
         const detail = (event as CustomEvent<ConflictDetail>).detail
         if (!detail || detail.reportItemId !== report_item.id) return
-        conflict.value = detail
-        showConflict.value = true
+        // A newer refusal of the same value replaces the one still waiting.
+        const waiting = conflictQueue.findIndex((queued) => queued.attributeId === detail.attributeId)
+        if (waiting !== -1) {
+            conflictQueue.splice(waiting, 1, detail)
+        } else if (conflict.value && conflict.value.attributeId === detail.attributeId) {
+            conflict.value = detail
+        } else {
+            conflictQueue.push(detail)
+        }
+        if (!conflict.value) showNextConflict()
     }
 
     const resolveConflict = async (choice: 'mine' | 'theirs') => {
         const pending = conflict.value
-        showConflict.value = false
-        conflict.value = null
+        showNextConflict()
         if (!pending) return
 
         if (choice === 'mine') {

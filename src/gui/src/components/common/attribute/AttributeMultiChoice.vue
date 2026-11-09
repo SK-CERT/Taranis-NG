@@ -7,7 +7,7 @@
         <template #content>
             <div
                 v-for="(value, index) in values"
-                :key="`${value.index}-${index}`"
+                :key="rowKey(value)"
                 class="value-holder"
             >
                 <!-- Read-only or remote -->
@@ -64,7 +64,7 @@
     import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes'
+    import { rowKey, useAttributes } from './useAttributes'
     import { constantLabel, enumOptionLabel, enumOptionValue, enumOptionsOf, type EnumAttributeGroup, type EnumOption } from './enumOptions'
 
     type AttributeValueItem = {
