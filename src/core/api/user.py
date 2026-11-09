@@ -19,6 +19,7 @@ from flask_restful import Resource
 from managers import api_key_manager, auth_manager, notification_manager, totp_manager, webauthn_manager
 from managers.auth_manager import auth_required
 from managers.db_manager import db
+from managers.stored_secrets import hide_secret_parameters
 from model.apikey import ApiKey
 from model.product_preset import ProductPreset
 from model.publishing_channel import PublishingChannel
@@ -139,7 +140,8 @@ class UserPublishingChannels(Resource):
         Returns:
             list: A list of all publishing channels in JSON format.
         """
-        return PublishingChannel.get_all_json(None)
+        # Anyone who may publish lists the channels: never their passwords, tokens or keys.
+        return hide_secret_parameters(PublishingChannel.get_all_json(None))
 
 
 class UserTotp(Resource):

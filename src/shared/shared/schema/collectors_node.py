@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from marshmallow import Schema, fields, post_load, validate
 
 from shared.schema.collector import CollectorSchema
-from shared.schema.presentation import PresentationSchema
+from shared.schema.presentation import HiddenApiKeySchema, PresentationSchema
 
 
 class CollectorsNode:
@@ -80,5 +80,5 @@ class CollectorsNodeSchema(Schema):
         return CollectorsNode(**data)
 
 
-class CollectorsNodePresentationSchema(CollectorsNodeSchema, PresentationSchema):
+class CollectorsNodePresentationSchema(HiddenApiKeySchema, CollectorsNodeSchema, PresentationSchema):
     """Presentation-oriented schema for collectors nodes."""

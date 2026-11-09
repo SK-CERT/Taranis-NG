@@ -1320,7 +1320,8 @@
             "never_seen": "Chưa từng kết nối",
             "last_seen": "lần cuối thấy",
             "disabled": "Đã tắt"
-        }
+        },
+        "stored_secret": "Đã lưu – để trống để giữ nguyên"
     },
     "collectors": {
         "groups": {

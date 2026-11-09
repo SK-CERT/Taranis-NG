@@ -1320,7 +1320,8 @@
             "never_seen": "Nikdy nepřipojen",
             "last_seen": "naposledy viděn",
             "disabled": "Vypnuto"
-        }
+        },
+        "stored_secret": "Uloženo – ponechte prázdné, chcete-li zachovat"
     },
     "collectors": {
         "groups": {

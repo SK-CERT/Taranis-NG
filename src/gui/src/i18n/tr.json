@@ -1320,7 +1320,8 @@
             "never_seen": "Hiç bağlanmadı",
             "last_seen": "son görülme",
             "disabled": "Devre dışı"
-        }
+        },
+        "stored_secret": "Kayıtlı – korumak için boş bırakın"
     },
     "collectors": {
         "groups": {

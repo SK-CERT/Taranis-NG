@@ -2,10 +2,10 @@
 
 from http import HTTPStatus
 
+from managers.stored_secrets import keep_stored_api_key
 from model.presenter import Presenter
 from model.presenters_node import PresentersNode
 from remote.presenters_api import PresentersApi
-
 from shared.schema.presenters_node import PresentersNode as PresentersNodeSchema
 
 
@@ -37,6 +37,8 @@ def update_presenters_node(node_id: str, data: dict) -> HTTPStatus:
     Returns:
         HTTPStatus: status code returned by the remote presenters API.
     """
+    # The GUI never receives the key: saved empty, it stays as stored.
+    data = keep_stored_api_key(data, PresentersNode, node_id)
     node = PresentersNodeSchema.create(data)
     presenters_info, status_code = PresentersApi(node.api_url, node.api_key).get_presenters_info()
     if status_code == HTTPStatus.OK:

@@ -75,6 +75,8 @@
                         v-model="localItem.api_key"
                         :spellcheck="false"
                         :label="t('settings.api_key')"
+                        :placeholder="keyStored ? t('common.stored_secret') : undefined"
+                        :persistent-placeholder="keyStored"
                         :type="showApiKey ? 'text' : 'password'"
                         :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
                         variant="outlined"
@@ -282,6 +284,8 @@
 
     const localItem = ref<RemoteNodeItem>({ ...defaultItem })
     const isEdit = computed(() => !!localItem.value.id)
+    // Core never sends a stored key back (only api_key_set); saved empty, it keeps the stored one.
+    const keyStored = computed(() => isEdit.value && (localItem.value as { api_key_set?: boolean }).api_key_set === true)
 
     const canCreate = computed(() => checkPermission('CONFIG_REMOTE_NODE_CREATE'))
     const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_REMOTE_NODE_UPDATE' : 'CONFIG_REMOTE_NODE_CREATE'))

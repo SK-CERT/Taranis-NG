@@ -13,6 +13,7 @@ import datetime as dt
 import sqlalchemy
 from managers import content_language
 from managers.db_manager import db
+from managers.stored_secrets import keep_secret_parameter
 from marshmallow import fields, post_load
 from model.parameter import Parameter
 from model.parameter_value import NewParameterValueSchema, ParameterValue
@@ -223,7 +224,8 @@ class ProductFormat(db.Model):
         for value in product_format.parameter_values:
             for updated_value in updated_product_format.parameter_values:
                 if value.parameter_id == updated_value.parameter_id:
-                    value.value = updated_value.value
+                    # A secret saved empty keeps its value: the GUI never receives it.
+                    value.value = keep_secret_parameter(value.parameter.key, value.value, updated_value.value)
         # create missing parameters (re-save old version, re-assigning no new type)
         id_param_lookup = {param.parameter.id: param for param in product_format.parameter_values}
         for par in updated_product_format.parameter_values:

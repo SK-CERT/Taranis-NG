@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from model.user import User
 
 from managers.db_manager import db
-from marshmallow import EXCLUDE, Schema, fields, post_load
+from marshmallow import EXCLUDE, Schema, ValidationError, fields, post_load
 from model.auth_provider import AuthProvider, UserAuthIdentity
 from model.organization import Organization
 from model.permission import Permission
@@ -352,6 +352,8 @@ class User(db.Model):
         Args:
             data: A dictionary containing the user data.
         """
+        if not isinstance(data, dict):
+            raise ValidationError({"_schema": ["Send the user as an object."]})
         cls._validate_identities(None, data.get("identities") or [])
         new_user_schema = NewUserSchema()
         user = new_user_schema.load(data)
@@ -597,6 +599,9 @@ class User(db.Model):
         """
         schema = UpdateUserSchema()
         updated_user = schema.load(data)
+        if not updated_user.get("username") or not updated_user.get("name"):
+            # An update replaces the whole account record; without these it raised KeyError (500).
+            raise ValidationError({"username": ["Required."], "name": ["Required."]})
         user = db.session.get(cls, user_id)
         user.username = updated_user["username"]
         user.name = updated_user["name"]
@@ -862,7 +867,9 @@ class UserWordList(db.Model):
         Returns:
             dict: The updated word list information in JSON format.
         """
-        ids = [item["id"] for item in data]
+        if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
+            raise ValidationError({"_schema": ["Send the word lists as a list of {id}."]})
+        ids = [item.get("id") for item in data]
         user.word_lists = [db.session.get(WordList, i) for i in ids if i is not None]
 
         db.session.commit()

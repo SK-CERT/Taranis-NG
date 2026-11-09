@@ -1320,7 +1320,8 @@
             "never_seen": "Nunca conectado",
             "last_seen": "visto pela última vez",
             "disabled": "Desativado"
-        }
+        },
+        "stored_secret": "Armazenado – deixe vazio para manter"
     },
     "collectors": {
         "groups": {
