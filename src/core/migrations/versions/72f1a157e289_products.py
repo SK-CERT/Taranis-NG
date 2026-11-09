@@ -411,12 +411,12 @@ def upgrade() -> None:
         _grant(connection, f"CONFIG_PRODUCT_PRESET_{action}", "product preset", f"CONFIG_PRODUCT_FORMAT_{action}")
 
     _ensure_product_public_web(connection)
-    default_public_web_enabled = sa.true() if public_web_enabled else sa.false()
-    _add_column(
-        connection,
-        "product",
-        sa.Column("public_web_enabled", sa.Boolean(), nullable=False, server_default=default_public_web_enabled),
-    )
+    # The column keeps the model's default; without a public web, the products that exist start
+    # off it, as the product presets made above do.
+    adds_public_web_enabled = "public_web_enabled" not in _columns(connection, "product")
+    _add_column(connection, "product", sa.Column("public_web_enabled", sa.Boolean(), nullable=False, server_default=sa.true()))
+    if adds_public_web_enabled and not public_web_enabled:
+        connection.execute(sa.text("UPDATE product SET public_web_enabled = false"))
     _add_column(connection, "report_item_type", sa.Column("icon", sa.String(length=ICON_LENGTH), nullable=True))
     _index_attribute_enums(connection)
 

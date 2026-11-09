@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 /**
@@ -6,6 +6,9 @@ import { createPinia, setActivePinia } from 'pinia'
  * from there. It must not do that while a dialog is open: the autosave of an Assess comment
  * refreshes the list, and taking the focus to the card behind the dialog threw away
  * whatever the user typed next (issue #1753).
+ *
+ * Nor may it move the view: starring a card refreshes the list, and focusing the current card
+ * scrolled back to it - to the top, after the user had scrolled down with the mouse.
  */
 describe('keyboard card focus on a list refresh', () => {
     // useKeyboard resolves its Pinia stores at module scope, so a store must be
@@ -88,5 +91,26 @@ describe('keyboard card focus on a list refresh', () => {
         keyboard.reindexCardItems('refresh')
 
         expect(document.activeElement).toBe(search)
+    })
+
+    it('puts the focus back without scrolling to the card', () => {
+        const keyboard = keyboardOnCard(1)
+        const card = document.querySelector('[data-id="1"]')
+        const focus = vi.spyOn(card, 'focus')
+
+        keyboard.reindexCardItems('refresh')
+
+        expect(focus).toHaveBeenCalledWith({ preventScroll: true })
+    })
+
+    it('leaves the focus on the star the user clicked on another card', () => {
+        const keyboard = keyboardOnCard(1)
+        const star = document.createElement('button')
+        document.querySelector('[data-id="2"]').appendChild(star)
+        star.focus()
+
+        keyboard.reindexCardItems('refresh')
+
+        expect(document.activeElement).toBe(star)
     })
 })

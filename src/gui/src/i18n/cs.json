@@ -234,7 +234,7 @@
         "metrics": {
             "news_items_summary": "Žádné novinky | Celkem {count} novinka | Celkem {count} novinky | Celkem {count} novinek",
             "report_items_summary": "Žádné analýzy | Celkem {count} analýza | Celkem {count} analýzy | Celkem {count} analýz",
-            "products_summary": "Žádné publikace | Celkem {count} publikace | Celkem {count} publikace | Celkem {count} publikací"
+            "products_summary": "Žádné produkty | Celkem {count} produkt | Celkem {count} produkty | Celkem {count} produktů"
         },
         "assess": {
             "trending": "Aktuální trendy",
@@ -255,9 +255,9 @@
             "total": "analýz celkem"
         },
         "publish": {
-            "status": "Stavy publikací",
+            "status": "Stavy produktů",
             "products": "",
-            "total": "publikací celkem"
+            "total": "produktů celkem"
         },
         "about": {
             "system": "Systém",
@@ -276,7 +276,7 @@
     "nav_menu": {
         "enter": "Vytvořit novinku",
         "newsitems": "Novinky",
-        "products": "Publikace",
+        "products": "Produkty",
         "favourites": "Oblíbené",
         "configuration": "Nastavení",
         "collectors_nodes": "Instance kolektorů",
@@ -294,7 +294,7 @@
         "report_items": "Analýzy",
         "attributes": "Atributy",
         "report_types": "Typy analýz",
-        "product_formats": "Formáty publikací",
+        "product_formats": "Formáty produktů",
         "product_presets": "Produkty",
         "roles": "Role",
         "acls": "ACL",
@@ -802,9 +802,9 @@
         }
     },
     "product": {
-        "add_new": "Nový typ publikace",
-        "edit": "Upravit typ publikace",
-        "error": "Nepodařilo se vytvořit tento typ publikace",
+        "add_new": "Nový produkt",
+        "edit": "Upravit produkt",
+        "error": "Nepodařilo se vytvořit tento produkt",
         "title": "Nadpis",
         "name": "Název",
         "description": "Popis",
@@ -817,39 +817,39 @@
         "public_web_all": "Po publikování se zobrazí také na všech veřejných webech.",
         "public_web_some": "Po publikování se zobrazí také na veřejných webech {webs}.",
         "public_web_targets": "Veřejné weby",
-        "successful": "Nový typ publikace byl úspěšně přidán",
-        "successful_edit": "Typ publikace byl uložen",
-        "created_successfully": "Publikace byla úspěšně vytvořena",
-        "updated_successfully": "Publikace byla úspěšně aktualizována",
-        "removed": "Typ publikace byl úspěšně smazán",
-        "removed_error": "Typ publikace je používán a nelze jej smazat",
-        "preview": "Zobrazit náhled publikace",
-        "publish": "Zveřejnit publikaci",
-        "publish_confirmation": "Opravdu chcete zveřejnit tuto publikaci?",
-        "publish_confirmation_message": "Opravdu chcete tuto publikaci zveřejnit?",
+        "successful": "Nový produkt byl úspěšně přidán",
+        "successful_edit": "Produkt byl uložen",
+        "created_successfully": "Produkt byl úspěšně vytvořen",
+        "updated_successfully": "Produkt byl úspěšně aktualizován",
+        "removed": "Produkt byl úspěšně smazán",
+        "removed_error": "Produkt se používá a nelze jej smazat",
+        "preview": "Zobrazit náhled produktu",
+        "publish": "Zveřejnit produkt",
+        "publish_confirmation": "Opravdu chcete zveřejnit tento produkt?",
+        "publish_confirmation_message": "Opravdu chcete tento produkt zveřejnit?",
         "publish_confirmation_product_preset": "Produkt: {productPreset}",
         "publish_confirmation_deliveries": "Odesílá se do: {deliveries}",
         "no_product_preset": "Není vybrán žádný produkt",
-        "publish_successful": "Publikace byla úspěšně zveřejněna",
-        "publish_failed": "Nepodařilo se zveřejnit publikaci",
+        "publish_successful": "Produkt byl úspěšně zveřejněn",
+        "publish_failed": "Nepodařilo se zveřejnit produkt",
         "publish_failed_deliveries": "Nepodařilo se odeslat do: {deliveries}",
-        "publish_error": "Při zveřejňování publikace došlo k chybě",
+        "publish_error": "Při zveřejňování produktu došlo k chybě",
         "no_delivery_selected": "Zaškrtněte alespoň jeden kanál",
-        "total_count": "Žádné publikace | {count} publikace | {count} publikace | {count} publikací",
+        "total_count": "Žádné produkty | {count} produkt | {count} produkty | {count} produktů",
         "confirm_close": {
-            "message": "Máte neuložené změny. Opravdu chcete zavřít tuto publikaci?"
+            "message": "Máte neuložené změny. Opravdu chcete zavřít tento produkt?"
         },
         "publish_unsaved": {
-            "title": "Zveřejnit neuloženou publikaci",
-            "message": "Tato publikace má neuložené změny. Jak chcete pokračovat?",
+            "title": "Zveřejnit neuložený produkt",
+            "message": "Tento produkt má neuložené změny. Jak chcete pokračovat?",
             "close": "Zavřít",
             "save_and_publish": "Uložit a zveřejnit",
             "publish_only": "Zveřejnit bez uložení"
         },
         "add_incomplete_reports": {
             "title": "Přidat nedokončené reporty",
-            "message": "Přidáváte reporty, které ještě nejsou dokončené. Dokončení publikace později tyto reporty automaticky označí jako dokončené. Chcete pokračovat?",
-            "message_published": "Tato publikace je již zveřejněna. Přidání nedokončených reportů je automaticky označí jako dokončené. Chcete pokračovat?",
+            "message": "Přidáváte reporty, které ještě nejsou dokončené. Dokončení produktu později tyto reporty automaticky označí jako dokončené. Chcete pokračovat?",
+            "message_published": "Tento produkt je již zveřejněn. Přidání nedokončených reportů je automaticky označí jako dokončené. Chcete pokračovat?",
             "confirm": "Přidat reporty",
             "confirm_published": "Přidat a dokončit",
             "untitled": "Report bez názvu"
@@ -861,7 +861,7 @@
         "language_notice": {
             "missing": "Tyto reporty nejsou přeloženy do jazyka {language}; použije se anglická verze nebo jejich původní jazyk:",
             "outdated": "Tyto překlady do jazyka {language} jsou zastaralé, protože se jejich originál po přeložení změnil:",
-            "templates": "Formát publikace nemá šablony pro jazyk {language}; místo nich se použijí šablony {used}.",
+            "templates": "Formát produktu nemá šablony pro jazyk {language}; místo nich se použijí šablony {used}.",
             "default_templates": "výchozí"
         },
         "texts_not_translated": "Název nebo popis se do některých jazyků nepodařilo přeložit",
@@ -1024,17 +1024,17 @@
             "filter_published": "Aktuálně zobrazeno: publikované",
             "filter_unpublished": "Aktuálně zobrazeno: nepublikované",
             "range": {
-                "ALL": "Zobrazit všechny reporty",
-                "TODAY": "Zobrazit dnešní reporty",
-                "WEEK": "Zobrazit reporty za minulý týden",
-                "MONTH": "Zobrazit reporty za minulý měsíc",
+                "ALL": "Zobrazit všechny produkty",
+                "TODAY": "Zobrazit dnešní produkty",
+                "WEEK": "Zobrazit produkty za minulý týden",
+                "MONTH": "Zobrazit produkty za minulý měsíc",
                 "LAST_7_DAYS": "Zobrazit produkty za posledních 7 dní",
                 "LAST_31_DAYS": "Zobrazit produkty za posledních 31 dní"
             },
             "sort": {
                 "date": {
-                    "ascending": "Seřadit reporty podle data vytvoření vzestupně",
-                    "descending": "Seřadit reporty podle data vytvoření sestupně"
+                    "ascending": "Seřadit produkty podle data vytvoření vzestupně",
+                    "descending": "Seřadit produkty podle data vytvoření sestupně"
                 }
             },
             "compact_mode": "Přepnout kompaktní zobrazení",
@@ -1042,9 +1042,9 @@
             "select_all": "Vybrat vše",
             "unselect_all": "Zrušit výběr všeho",
             "delete_items": "Smazat produkty",
-            "delete_item": "Smazat report"
+            "delete_item": "Smazat produkt"
         },
-        "select_all_success": "Nebyly vybrány žádné publikace | Vybrána {count} publikace | Vybrány {count} publikace | Vybráno {count} publikací",
+        "select_all_success": "Nebyly vybrány žádné produkty | Vybrán {count} produkt | Vybrány {count} produkty | Vybráno {count} produktů",
         "no_items": "Nebyly nalezeny žádné produkty",
         "all_products": "Všechny produkty"
     },
@@ -1210,7 +1210,7 @@
         },
         "entity_types": {
             "report_item": "Analýza",
-            "product": "Publikace"
+            "product": "Produkt"
         },
         "state_types": {
             "normal": "Normální",
@@ -1435,20 +1435,20 @@
             "total_count": "Žádné uzly prezentérů | {count} uzel prezentéru | {count} uzly prezentérů | {count} uzlů prezentérů"
         },
         "formats": {
-            "tab_description": "Zde můžete spravovat formáty publikací.",
-            "add_new": "Přidat nový formát publikace",
-            "edit": "Upravit formát publikace",
+            "tab_description": "Zde můžete spravovat formáty produktů.",
+            "add_new": "Přidat nový formát produktu",
+            "edit": "Upravit formát produktu",
             "node": "Instance prezenterů",
             "presenter": "Prezenter",
-            "error": "Nepodařilo se vytvořit formát publikace.",
+            "error": "Nepodařilo se vytvořit formát produktu.",
             "name": "Název",
             "description": "Popis",
             "parameters": "Parametry",
-            "successful": "Nový formát publikace byl přidán",
-            "successful_edit": "Formát publikace byl upraven",
-            "removed": "Formát publikace byl smazán",
-            "removed_error": "Formát publikace se používá a nelze jej smazat",
-            "total_count": "Žádné formáty publikací | {count} formát publikace | {count} formáty publikací | {count} formátů publikací",
+            "successful": "Nový formát produktu byl přidán",
+            "successful_edit": "Formát produktu byl upraven",
+            "removed": "Formát produktu byl smazán",
+            "removed_error": "Formát produktu se používá a nelze jej smazat",
+            "total_count": "Žádné formáty produktů | {count} formát produktu | {count} formáty produktů | {count} formátů produktů",
             "help": "Popis parametrů šablony",
             "close": "Zavřít",
             "choose_report_type": "Vyberte typ analýzy pro zobrazení popisu parametrů",
@@ -1523,7 +1523,7 @@
         "deliveries": "Jazyky, formáty a kanály",
         "deliveries_hint": "Každý řádek je produkt v jednom jazyce a formátu a kanály, do kterých se odesílá. Kanál dostane každý jazyk a formát zvlášť, takže angličtina a čeština na jednu adresu jsou dva e-maily. Řádek bez kanálu slouží jen k náhledu.",
         "language": "Jazyk",
-        "own_language": "Jazyk publikace",
+        "own_language": "Jazyk produktu",
         "format": "Formát",
         "channels": "Kanály",
         "format_only": "Jen formát",
@@ -1532,14 +1532,14 @@
         "move_down": "Posunout dolů",
         "remove_format": "Odebrat formát",
         "public_web": "Veřejný web",
-        "public_web_enabled": "Zobrazovat publikované publikace na veřejném webu",
+        "public_web_enabled": "Zobrazovat zveřejněné produkty na veřejném webu",
         "public_web_ids": "Weby",
         "public_web_ids_hint": "Nic nevybráno: všechny weby.",
         "needs_delivery": "Přidejte formát, nebo zapněte zobrazení na veřejném webu.",
         "successful": "Nový produkt byl přidán",
         "successful_edit": "Produkt byl uložen",
         "removed": "Produkt byl smazán",
-        "removed_error": "Produkt používají publikace, a proto jej nelze smazat",
+        "removed_error": "Produkt se používá, a proto jej nelze smazat",
         "error": "Produkt se nepodařilo uložit"
     },
     "bots": {

@@ -129,7 +129,11 @@ export function useKeyboard(targetId: string, router: Router) {
         updateCardFocus()
     }
 
-    function updateCardFocus(): void {
+    /**
+     * Focus the current card. Focusing scrolls it into view, unless ``preventScroll``: a refresh
+     * in the background must not move the view, which the user may have scrolled far from it.
+     */
+    function updateCardFocus(preventScroll = false): void {
         if (state.value.use_focus) {
             const card = getCurrentCardElement()
             if (!card) {
@@ -137,7 +141,7 @@ export function useKeyboard(targetId: string, router: Router) {
             }
             // console.log('[Keyboard] updateCardFocus:', String(state.value.pos))
             card.setAttribute('data-focused', 'true') // not used yet, but can be used for styling
-            card.focus()
+            card.focus({ preventScroll })
         }
     }
 
@@ -252,13 +256,21 @@ export function useKeyboard(targetId: string, router: Router) {
                 break
 
             default: // refresh, append
-                // A refresh runs in the background (after an autosave, or a server event), so it
-                // must not pull focus out of a field the user is typing in, or out of any dialog.
-                if (!isInputFieldFocused() && !document.querySelector('.v-overlay--active.v-dialog')) {
-                    updateCardFocus()
+                // A refresh runs in the background (after an autosave, a star, a server event), so
+                // it must not pull focus out of a field the user is typing in, or out of any dialog.
+                // It gives the current card back only the focus the refresh took away - not that of
+                // the star just clicked on another card - and never scrolls to it.
+                if (!isInputFieldFocused() && !document.querySelector('.v-overlay--active.v-dialog') && focusWasLost()) {
+                    updateCardFocus(true)
                 }
                 break
         }
+    }
+
+    // Nothing has the focus: none was given, or what had it was re-rendered away.
+    function focusWasLost(): boolean {
+        const active = document.activeElement
+        return !active || active === document.body
     }
 
     function isInputFieldFocused(): boolean {
