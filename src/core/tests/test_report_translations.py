@@ -513,6 +513,30 @@ def test_a_new_report_loads_without_presenter_only_fields() -> None:
     assert not hasattr(report.attributes[0], "value_label")
 
 
+def test_new_report_schema_coerces_json_scalar_attribute_values() -> None:
+    """JSON number and boolean values are stored as the model's string values."""
+    from model.report_item import NewReportItemSchema  # noqa: PLC0415 - next to the only test using it
+
+    report = NewReportItemSchema().load(
+        {
+            "id": None,
+            "uuid": None,
+            "title": "TLS-001",
+            "title_prefix": "",
+            "report_item_type_id": 21,
+            "state_id": 2,
+            "news_item_aggregates": [],
+            "remote_report_items": [],
+            "attributes": [
+                {"id": -1, "value": 2026, "attribute_group_item_id": 239},
+                {"id": -1, "value": True, "attribute_group_item_id": 241},
+            ],
+        },
+    )
+
+    assert [attribute.value for attribute in report.attributes] == ["2026", "true"]
+
+
 # ---- a new report's language ---------------------------------------------------------
 
 # What the report dialog sends for a new report.
