@@ -29,6 +29,18 @@
             "subject": "cha'DIch DuHmeylIj lI'Qa'moHlu'",
             "text": "Taranis NG mIvwa'lIj cha'DIch DuHmey lI'Qa'moH loHwI'. 'elDI' veb, chaH DacherQa'meH tlhoblu'laH."
         },
+        "api_key_created": {
+            "subject": "chu' API ngaQHa'moHwI' chenmoHlu'",
+            "text": "Taranis NG mI'meylIjvaD chu' API ngaQHa'moHwI' chenmoHlu'. lo'bogh ghunmeH ghItlhmey API lo'laH chaH, DuHmeylIj lo'taHvIS."
+        },
+        "api_key_deleted": {
+            "subject": "API ngaQHa'moHwI' Qaw'lu'",
+            "text": "Taranis NG mI'meylIj API ngaQHa'moHwI' Qaw'lu'. lo'pu'bogh ghunmeH ghItlhmey API lo'laHbe' chaH DaH."
+        },
+        "api_key_expired": {
+            "subject": "API ngaQHa'moHwI' Dorpu'",
+            "text": "Taranis NG mI'meylIj API ngaQHa'moHwI' Dorpu'. lo'taHbogh ghunmeH ghItlhmey API lo'laHbe' chaH DaH; poQlu'taHchugh chu' ngaQHa'moHwI' yIchenmoH."
+        },
         "test": {
             "subject": "QInvam waHlu'",
             "text": "Taranis NG QIn waHlu'bogh 'oH QInvam'e'. DalaDlaHchugh, QIn DuHmey Qap."
@@ -41,7 +53,11 @@
         "ip": "IP Daq",
         "passkey": "'elmeH ngaQHa'moHwI'",
         "authenticator": "'olwI' jan",
-        "factors": "lI'Qa'moHlu'bogh"
+        "factors": "lI'Qa'moHlu'bogh",
+        "api_key": "API ngaQHa'moHwI'",
+        "api_key_prefix": "ngaQHa'moHwI' tagh",
+        "expires": "Dor",
+        "expired": "Dorpu'"
     },
     "actor_self": "SoH",
     "actor_admin": "loHwI' {admin}",

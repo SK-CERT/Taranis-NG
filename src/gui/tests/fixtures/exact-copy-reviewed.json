@@ -350,6 +350,8 @@
         ],
         "de": [
             "access_management.roles.name",
+            "api_keys.name",
+            "api_keys.status",
             "assess.version_label",
             "asset.name",
             "asset_group.name",
@@ -471,6 +473,9 @@
         "fr": [
             "access_management.roles.description",
             "analyze.source",
+            "api_keys.description",
+            "api_keys.permission_description",
+            "api_keys.status_active",
             "assess.aggregate_description",
             "assess.description",
             "assess.source",
@@ -639,6 +644,7 @@
             "tags.status_in_language"
         ],
         "nl": [
+            "api_keys.status",
             "attribute.status",
             "attribute.type",
             "bots.nodes.api_key",

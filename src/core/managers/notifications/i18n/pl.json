@@ -29,6 +29,18 @@
             "subject": "Twoje drugie składniki zostały zresetowane",
             "text": "Administrator zresetował drugie składniki Twojego konta Taranis NG. Przy następnym logowaniu możesz zostać poproszony o ich ponowne skonfigurowanie."
         },
+        "api_key_created": {
+            "subject": "Utworzono nowy klucz API",
+            "text": "Dla Twojego konta Taranis NG utworzono nowy klucz API. Programy, które go używają, mogą wywoływać API z Twoimi uprawnieniami."
+        },
+        "api_key_deleted": {
+            "subject": "Usunięto klucz API",
+            "text": "Klucz API Twojego konta Taranis NG został usunięty. Programy, które go używały, nie mogą już wywoływać API."
+        },
+        "api_key_expired": {
+            "subject": "Klucz API wygasł",
+            "text": "Klucz API Twojego konta Taranis NG wygasł. Programy, które nadal go używają, nie mogą już wywoływać API; utwórz nowy klucz, jeśli jest nadal potrzebny."
+        },
         "test": {
             "subject": "Testowy e-mail",
             "text": "To jest testowy e-mail z Taranis NG. Jeśli go czytasz, ustawienia e-mail działają."
@@ -41,7 +53,11 @@
         "ip": "Adres IP",
         "passkey": "Klucz dostępu",
         "authenticator": "Moduł uwierzytelniający",
-        "factors": "Zresetowano"
+        "factors": "Zresetowano",
+        "api_key": "Klucz API",
+        "api_key_prefix": "Klucz zaczyna się od",
+        "expires": "Wygasa",
+        "expired": "Wygasł"
     },
     "actor_self": "Ty",
     "actor_admin": "Administrator {admin}",

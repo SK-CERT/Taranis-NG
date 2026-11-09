@@ -29,6 +29,18 @@
             "subject": "I tuoi secondi fattori sono stati reimpostati",
             "text": "Un amministratore ha reimpostato i secondi fattori del tuo account Taranis NG. Al prossimo accesso potrebbe esserti chiesto di configurarli di nuovo."
         },
+        "api_key_created": {
+            "subject": "Nuova chiave API creata",
+            "text": "È stata creata una nuova chiave API per il tuo account Taranis NG. I programmi che la usano possono chiamare l’API con i tuoi permessi."
+        },
+        "api_key_deleted": {
+            "subject": "Chiave API eliminata",
+            "text": "Una chiave API del tuo account Taranis NG è stata eliminata. I programmi che la usavano non possono più chiamare l’API."
+        },
+        "api_key_expired": {
+            "subject": "Chiave API scaduta",
+            "text": "Una chiave API del tuo account Taranis NG è scaduta. I programmi che la usano ancora non possono più chiamare l’API; crea una nuova chiave se serve ancora."
+        },
         "test": {
             "subject": "E-mail di prova",
             "text": "Questa è un’e-mail di prova di Taranis NG. Se la stai leggendo, le impostazioni e-mail funzionano."
@@ -41,7 +53,11 @@
         "ip": "Indirizzo IP",
         "passkey": "Passkey",
         "authenticator": "Autenticatore",
-        "factors": "Reimpostato"
+        "factors": "Reimpostato",
+        "api_key": "Chiave API",
+        "api_key_prefix": "La chiave inizia con",
+        "expires": "Scade il",
+        "expired": "Scaduta il"
     },
     "actor_self": "Tu",
     "actor_admin": "Amministratore {admin}",

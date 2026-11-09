@@ -89,7 +89,7 @@ Currently, you may manage the following:
 | `role`     | (WIP) List, create, edit and delete user roles. | `--list`, `-l` : list all roles<br /> `--filter`, `-f` : filter roles by their name or description<br /> `--create`, `-c` : create a new role<br /> `--edit`, `-e` : edit an existing role<br /> `--delete`, `-d` : delete a role<br /> `--id` : specify the role id (in combination with `--edit` or `--delete`)<br /> `--name` : specify the role name<br /> `--description` : specify the role description (default is `""`)<br /> `--permissions` : specify a list of permissions, divided with a comma (`,`), that the role would allow |
 | `collector, bot`     | (WIP) List, create, edit, delete and update nodes. | `--list`, `-l` : list all nodes<br /> `--create`, `-c` : create a new node<br /> `--edit`, `-e` : edit an existing node<br /> `--delete`, `-d` : delete a node<br /> `--update`, `-u` : re-initialize node<br /> `--all`, `-a` : update all nodes (in combination with `--update`)<br /> `--show-api-key` : show API key in plaintext (in combination with `--list`)<br /> `--id` : specify the node id (in combination with `--edit`, `--delete` or `--update`)<br /> `--name` : specify the node name<br /> `--description` : specify the collector description (default is `""`)<br /> `--api-url` : specify the collector node API url<br /> `--api-key` : specify the collector node API key |
 | `dictionary`     | Update CPE, CWE and CVE dictionaries. | `--upload-cpe` : upload the CPE dictionary (expected on STDIN in XML format) to the path indicated by `CPE_UPDATE_FILE` environment variable, and update the database from that file.<br /> `--upload-cve` : upload the CVE dictionary (expected on STDIN in XML format) to the path indicated by `CVE_UPDATE_FILE` environment variable, and update the database from that file.<br /> `--upload-cwe` : upload the CWE dictionary (expected on STDIN in XML format) to the path indicated by `CWE_UPDATE_FILE` environment variable, and update the database from that file. |
-| `apikey`     | List, create and delete apikeys. | `--list`, `-l` : list all apikeys<br /> `--create`, `-c` : create a new apikey<br /> `--delete`, `-d` : delete a apikey<br /> `--name` : specify the apikey name<br /> `--user` : specify the user's name<br /> `--expires` : specify the apikey expiration datetime |
+| `apikey`     | List, create, enable, disable and delete API keys. Only a hash of each key is stored: the key is printed once, when it is created. API keys can also be managed in the GUI (**Configuration → Access Management → API keys**, and **User settings → API keys** for one's own). | `--list`, `-l` : list all API keys (never the keys themselves)<br /> `--create`, `-c` : create a new API key and print it<br /> `--enable` / `--disable` : enable or disable an API key<br /> `--delete`, `-d` : delete an API key<br /> `--id` : specify the API key id (in combination with `--enable`, `--disable` or `--delete`)<br /> `--name`, `-n` : specify the API key name, unique per user<br /> `--user`, `-u` : specify the username of the key's owner<br /> `--description` : what the key is for<br /> `--expires`, `-e` : specify the expiration datetime (`YYYY-MM-DD HH:MM`, server time zone)<br /> `--permissions` : limit the key to these permissions, divided by a comma (`,`)<br /> `--allowed-ips` : public IP addresses or CIDR ranges the key may be used from, divided by a comma (`,`) |
 
 
 Here are some examples:
@@ -231,28 +231,68 @@ zcat cwec_latest.xml.zip | \
 
 Some Linux distributions might provide gzcat instead of zcat.
 
-### Create new ApiKey
-
-```bash
-manage.py apikey \
-    --create \
-    --name "My ApiKey"
-```
-
-### Create a new API key for a user with an expiration date
+### Create a new API key
 
 ```bash
 manage.py apikey \
     --create \
     --name "My ApiKey" \
-    --user "test_user" \
-    --expire "2022-12-31 16:55"
+    --user "test_user"
 ```
 
 Command output:
 
 ```
-ApiKey 'My ApiKey' with id 3 created.
+ApiKey 'My ApiKey' with id 3 created for user 'test_user'.
+API key (shown only once): tnk_ZmV5B0Zq1c3Yk2hJ9c0wPq8u6TtR1vXx4Ae7sL2mN0o
+```
+
+Only a hash of the key is stored, so copy it now; it cannot be shown again. A script sends it
+in the `Authorization` header and acts with the permissions of the key's owner:
+
+```bash
+curl -H "Authorization: ApiKey tnk_ZmV5B0Zq1c3Yk2hJ9c0wPq8u6TtR1vXx4Ae7sL2mN0o" \
+    https://taranis.example.com/api/v1/assess/osint-source-groups
+```
+
+### Create a limited API key that expires
+
+```bash
+manage.py apikey \
+    --create \
+    --name "SOAR sync" \
+    --user "soar" \
+    --expires "2027-12-31 16:55" \
+    --permissions "ASSESS_ACCESS,ANALYZE_ACCESS" \
+    --allowed-ips "185.10.20.0/24,2a01:4f8::/32"
+```
+
+A limited key can do only what it is limited to and its owner can still do. An expiry, a
+maximum lifetime and an IP allowlist can be required for every new key, and a site-wide IP
+allowlist can be set for all of them, under **Configuration → Access Management → Security**.
+When a key expires, its owner is notified (on the channels set up under **Notifications**),
+once; the check runs every five minutes.
+
+Only public addresses can be listed. Private (`10.0.0.0/8`, `172.16.0.0/12`,
+`192.168.0.0/16`, `fc00::/7`), shared (`100.64.0.0/10`), loopback, link-local, multicast,
+broadcast, documentation, benchmarking and other reserved ranges are refused, and so is any
+range that reaches into one of them (such as `0.0.0.0/0`). IPv6 must be global unicast
+(`2000::/3`).
+
+IP allowlists are checked against the client address that the trusted reverse proxies
+(`TRUSTED_PROXY_HOPS`, 1 for the bundled Traefik) report in `X-Forwarded-For`. Set it to the
+real number of proxies in front of core, and do not let clients reach core except through
+them: whoever talks to core directly can write that header and claim any address. A client
+connecting over IPv6 through Docker's userland proxy shows up as the Docker bridge address
+(e.g. `172.18.0.1`) unless IPv6 is enabled for the network (`enable_ipv6`). The API key
+dialogs show the address core sees for you, so you can check it before relying on a list;
+an address that is not public cannot be used for one.
+
+### Disable or delete an API key
+
+```bash
+manage.py apikey --disable --name "SOAR sync" --user "soar"
+manage.py apikey --delete --id 3
 ```
 
 # <a id="_toc6"></a>Using AI in Taranis NG

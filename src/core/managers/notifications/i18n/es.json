@@ -29,6 +29,18 @@
             "subject": "Se restablecieron sus segundos factores",
             "text": "Un administrador restableció los segundos factores de su cuenta de Taranis NG. Es posible que se le pida configurarlos de nuevo la próxima vez que inicie sesión."
         },
+        "api_key_created": {
+            "subject": "Nueva clave de API creada",
+            "text": "Se ha creado una nueva clave de API para su cuenta de Taranis NG. Los programas que la usen pueden llamar a la API con sus permisos."
+        },
+        "api_key_deleted": {
+            "subject": "Clave de API eliminada",
+            "text": "Se ha eliminado una clave de API de su cuenta de Taranis NG. Los programas que la usaban ya no pueden llamar a la API."
+        },
+        "api_key_expired": {
+            "subject": "Clave de API caducada",
+            "text": "Ha caducado una clave de API de su cuenta de Taranis NG. Los programas que todavía la usan ya no pueden llamar a la API; cree una clave nueva si aún la necesita."
+        },
         "test": {
             "subject": "Correo de prueba",
             "text": "Este es un correo de prueba de Taranis NG. Si lo está leyendo, la configuración de correo funciona."
@@ -41,7 +53,11 @@
         "ip": "Dirección IP",
         "passkey": "Clave de acceso",
         "authenticator": "Autenticador",
-        "factors": "Restablecido"
+        "factors": "Restablecido",
+        "api_key": "Clave de API",
+        "api_key_prefix": "La clave empieza por",
+        "expires": "Caduca",
+        "expired": "Caducó"
     },
     "actor_self": "Usted",
     "actor_admin": "Administrador {admin}",

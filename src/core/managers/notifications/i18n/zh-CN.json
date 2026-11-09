@@ -29,6 +29,18 @@
             "subject": "您的第二因素已被重置",
             "text": "管理员重置了您的 Taranis NG 帐户的第二因素。下次登录时可能会要求您重新设置。"
         },
+        "api_key_created": {
+            "subject": "已创建新的 API 密钥",
+            "text": "已为您的 Taranis NG 账户创建新的 API 密钥。使用它的程序可以以您的权限调用 API。"
+        },
+        "api_key_deleted": {
+            "subject": "API 密钥已删除",
+            "text": "您的 Taranis NG 账户的一个 API 密钥已被删除。使用它的程序将无法再调用 API。"
+        },
+        "api_key_expired": {
+            "subject": "API 密钥已过期",
+            "text": "您的 Taranis NG 账户的一个 API 密钥已过期。仍在使用它的程序将无法再调用 API；如仍需要，请新建密钥。"
+        },
         "test": {
             "subject": "测试邮件",
             "text": "这是来自 Taranis NG 的测试邮件。如果您正在阅读它，说明邮件设置工作正常。"
@@ -41,7 +53,11 @@
         "ip": "IP 地址",
         "passkey": "通行密钥",
         "authenticator": "认证器",
-        "factors": "已重置"
+        "factors": "已重置",
+        "api_key": "API 密钥",
+        "api_key_prefix": "密钥开头",
+        "expires": "到期时间",
+        "expired": "过期时间"
     },
     "actor_self": "您本人",
     "actor_admin": "管理员 {admin}",
