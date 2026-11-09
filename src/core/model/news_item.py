@@ -838,6 +838,10 @@ class NewsItem(db.Model):
             True if user is allowed to access news item, False otherwise
         """
         news_item = db.session.get(cls, news_item_id)
+        if news_item is None:
+            # An id that does not resolve (deleted meanwhile, or never there) allows nothing;
+            # it raised AttributeError, a 500 for opening a news item someone just deleted.
+            return False
         if news_item.news_item_data.remote_source is not None:
             return True
         query = db.session.query(NewsItem.id).distinct().group_by(NewsItem.id).filter(NewsItem.id == news_item_id)
@@ -868,6 +872,8 @@ class NewsItem(db.Model):
              tuple[bool, bool, bool]: Whether the user has see, access and modify permissions.
         """
         news_item = db.session.get(cls, news_item_id)
+        if news_item is None:
+            return False, False, False
         if news_item.news_item_data.remote_source is not None:
             return True, True, True
         query = (
@@ -1709,6 +1715,32 @@ class NewsItemAggregate(db.Model):
         db.session.commit()
 
     @classmethod
+    def allowed_for(cls, aggregate: NewsItemAggregate | None, user: User, *, modify: bool = False) -> bool:
+        """Whether a user may use an aggregate: in a group they may access, with a news item they may access (or change).
+
+        Args:
+            aggregate (NewsItemAggregate | None): The aggregate; None (not found) is not allowed.
+            user (User): User
+            modify (bool): Whether they need to change a news item, not only read it.
+
+        Returns:
+            bool: True when allowed.
+        """
+        if aggregate is None:
+            return False
+        if aggregate.osint_source_group_id is not None and not OSINTSourceGroup.allowed_with_acl(
+            aggregate.osint_source_group_id,
+            user,
+            see=False,
+            access=True,
+            modify=False,
+        ):
+            return False
+        return any(
+            NewsItem.allowed_with_acl(news_item.id, user, see=False, access=not modify, modify=modify) for news_item in aggregate.news_items
+        )
+
+    @classmethod
     def update(cls, news_item_aggregate_id: int, data: dict, user: User) -> tuple[str, set[int], int]:
         """Update.
 
@@ -1720,6 +1752,26 @@ class NewsItemAggregate(db.Model):
             Success message, OSINT source IDs and status code
         """
         aggregate = cls.find(news_item_aggregate_id)
+        if aggregate is None:
+            return "aggregate_not_found", set(), HTTPStatus.NOT_FOUND
+
+        # The aggregate's own title, description and comments were changed for any aggregate id,
+        # whatever the user may see. Now only in a group the user may access, and when they may
+        # change at least one of its news items (the toggles below apply to those only).
+        editable = [
+            news_item
+            for news_item in aggregate.news_items
+            if NewsItem.allowed_with_acl(news_item.id, user, see=False, access=False, modify=True)
+        ]
+        group_allowed = aggregate.osint_source_group_id is None or OSINTSourceGroup.allowed_with_acl(
+            aggregate.osint_source_group_id,
+            user,
+            see=False,
+            access=True,
+            modify=False,
+        )
+        if not group_allowed or (aggregate.news_items and not editable):
+            return "forbidden", set(), HTTPStatus.FORBIDDEN
 
         all_important = True
         for news_item in aggregate.news_items:
@@ -1729,7 +1781,7 @@ class NewsItemAggregate(db.Model):
         osint_source_ids = set()  # used for remote_access SSE event
 
         for news_item in aggregate.news_items:
-            if NewsItem.allowed_with_acl(news_item.id, user, see=False, access=False, modify=True):
+            if news_item in editable:
                 if "vote" in data:
                     osint_source_ids.add(news_item.news_item_data.osint_source_id)
                     news_item.vote(data, user.id)
@@ -1770,6 +1822,8 @@ class NewsItemAggregate(db.Model):
             return "aggregate_in_use", HTTPStatus.INTERNAL_SERVER_ERROR
 
         aggregate = cls.find(news_item_aggregate_id)
+        if aggregate is None:
+            return "aggregate_not_found", HTTPStatus.NOT_FOUND
         for news_item in aggregate.news_items:
             if NewsItem.allowed_with_acl(news_item.id, user, see=False, access=False, modify=True):
                 aggregate.news_items.remove(news_item)
@@ -1811,6 +1865,8 @@ class NewsItemAggregate(db.Model):
             Success message, OSINT source IDs and status code
         """
         osint_source_ids = set()
+        if not isinstance(data, dict) or not isinstance(data.get("action"), str) or not isinstance(data.get("items"), list):
+            return "Send the action and the items it applies to", osint_source_ids, HTTPStatus.BAD_REQUEST
 
         if data["action"] == "GROUP":
             if not cls.action_allowed(data["items"]):
@@ -1879,6 +1935,8 @@ class NewsItemAggregate(db.Model):
         Returns:
             Success message and status code
         """
+        if not isinstance(data.get("items"), list):
+            return "Send the items to delete", HTTPStatus.BAD_REQUEST
         if cls.action_allowed(data["items"]):
             processed_aggregates = set()
             for item in data["items"]:

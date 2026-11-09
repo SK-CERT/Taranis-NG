@@ -200,12 +200,16 @@
                         >
                             <v-text-field
                                 v-model="parameterValues[index]"
+                                :type="isSecretParameter(param.key) ? 'password' : 'text'"
                                 :spellcheck="false"
                                 :label="String(param.name || param.key || '')"
                                 variant="outlined"
                                 density="comfortable"
                                 :disabled="saving || !canSave"
-                                :placeholder="String(param.default_value ?? '')"
+                                :placeholder="
+                                    storedSecrets.has(String(param.key)) ? t('common.stored_secret') : String(param.default_value ?? '')
+                                "
+                                :persistent-placeholder="storedSecrets.has(String(param.key))"
                                 :rules="dynamicParameterRules(param, t('error.required'))"
                             >
                                 <template
@@ -365,6 +369,7 @@
     import { useConfigStore } from '@/stores/config'
     import { createNewProductFormat, updateProductFormat, getAllPresentersNodes } from '@/api/config'
     import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
+    import { isSecretParameter, storedSecretKeys } from '@/utils/secretParameters'
 
     type PresenterParameter = {
         id?: string | number
@@ -501,6 +506,8 @@
     }
 
     const localItem = ref<ProductFormatItem>({ ...defaultItem, language_templates: {} })
+    // Credentials the record has stored: core sends them empty, and saving them empty keeps them.
+    const storedSecrets = computed(() => storedSecretKeys(localItem.value.parameter_values as Parameters<typeof storedSecretKeys>[0]))
 
     // ---- templates per language -------------------------------------------------------------
     const { languageOptions, languageName } = useContentLanguages()

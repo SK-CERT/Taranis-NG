@@ -6,6 +6,7 @@ Returns:
 
 from http import HTTPStatus
 
+from managers.stored_secrets import keep_stored_api_key
 from model.publisher import Publisher
 from model.publishers_node import PublishersNode
 from model.publishing_channel import PublishingChannel
@@ -42,6 +43,8 @@ def update_publishers_node(node_id: int, data: dict) -> HTTPStatus:
     Returns:
         int: HTTP status code
     """
+    # The GUI never receives the key: saved empty, it stays as stored.
+    data = keep_stored_api_key(data, PublishersNode, node_id)
     node = PublishersNodeSchema.create(data)
     publishers_info, status_code = PublishersApi(node.api_url, node.api_key).get_publishers_info()
     if status_code == HTTPStatus.OK:

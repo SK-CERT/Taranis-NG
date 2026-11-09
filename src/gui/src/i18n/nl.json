@@ -1317,7 +1317,8 @@
             "never_seen": "Nooit verbonden",
             "last_seen": "laatst gezien",
             "disabled": "Uitgeschakeld"
-        }
+        },
+        "stored_secret": "Opgeslagen – laat leeg om te behouden"
     },
     "collectors": {
         "groups": {

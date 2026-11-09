@@ -1,10 +1,18 @@
 """Module for NotificationTemplate model."""
 
+from __future__ import annotations
+
+from http import HTTPStatus
+from typing import TYPE_CHECKING
+
 from managers.db_manager import db
 from marshmallow import fields, post_load
+from shared.schema.notification_template import EmailRecipientSchema, NotificationTemplatePresentationSchema, NotificationTemplateSchema
 from sqlalchemy import or_, orm
 
-from shared.schema.notification_template import EmailRecipientSchema, NotificationTemplatePresentationSchema, NotificationTemplateSchema
+if TYPE_CHECKING:
+    from model.organization import Organization
+    from model.user import User
 
 
 class NewEmailRecipientSchema(EmailRecipientSchema):
@@ -18,7 +26,7 @@ class NewEmailRecipientSchema(EmailRecipientSchema):
     """
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> EmailRecipient:  # noqa: ARG002, ANN003
         """Create an instance of EmailRecipient using the provided data.
 
         Args:
@@ -47,7 +55,7 @@ class EmailRecipient(db.Model):
 
     notification_template_id = db.Column(db.Integer, db.ForeignKey("notification_template.id"))
 
-    def __init__(self, email, name):
+    def __init__(self, email: str, name: str | None) -> None:
         """Initialize a NotificationTemplate object."""
         self.id = None
         self.email = email
@@ -64,7 +72,7 @@ class NewNotificationTemplateSchema(NotificationTemplateSchema):
     recipients = fields.Nested(NewEmailRecipientSchema, many=True)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> NotificationTemplate:  # noqa: ARG002, ANN003
         """Create a new `NotificationTemplate` object based on the given data.
 
         Args:
@@ -100,7 +108,15 @@ class NotificationTemplate(db.Model):
 
     organizations = db.relationship("Organization", secondary="notification_template_organization")
 
-    def __init__(self, id, name, description, message_title, message_body, recipients):
+    def __init__(
+        self,
+        id: int | None,  # noqa: A002, ARG002
+        name: str,
+        description: str | None,
+        message_title: str | None,
+        message_body: str | None,
+        recipients: list[EmailRecipient],
+    ) -> None:
         """Initialize a NotificationTemplate object."""
         self.id = None
         self.name = name
@@ -113,28 +129,27 @@ class NotificationTemplate(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the notification template."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-email-outline"
 
     @classmethod
-    def find(cls, id):
+    def find(cls, template_id: int) -> NotificationTemplate | None:
         """Find a notification template by its ID.
 
         Args:
             cls: The class object.
-            id: The ID of the notification template.
+            template_id: The ID of the notification template.
 
         Returns:
-            The notification template with the specified ID.
+            The notification template with the specified ID, or None.
         """
-        group = db.session.get(cls, id)
-        return group
+        return db.session.get(cls, template_id)
 
     @classmethod
-    def get(cls, search, organization):
+    def get(cls, search: str | None, organization: Organization | None) -> tuple[list[NotificationTemplate], int]:
         """Retrieve notification templates based on search criteria and organization.
 
         Args:
@@ -166,7 +181,7 @@ class NotificationTemplate(db.Model):
         return query.order_by(db.asc(NotificationTemplate.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, user, search):
+    def get_all_json(cls, user: User, search: str | None) -> dict:
         """Retrieve all notification templates in JSON format.
 
         Args:
@@ -185,7 +200,7 @@ class NotificationTemplate(db.Model):
         return {"total_count": count, "items": template_schema.dump(templates)}
 
     @classmethod
-    def add(cls, user, data):
+    def add(cls, user: User, data: dict) -> None:
         """Add a new notification template to the database.
 
         Args:
@@ -200,7 +215,7 @@ class NotificationTemplate(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, user, template_id):
+    def delete(cls, user: User, template_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a notification template.
 
         Args:
@@ -209,12 +224,15 @@ class NotificationTemplate(db.Model):
             template_id (int): The ID of the template to be deleted.
         """
         template = db.session.get(cls, template_id)
+        if template is None:
+            return {"error": "Notification template not found"}, HTTPStatus.NOT_FOUND
         if any(org in user.organizations for org in template.organizations):
             db.session.delete(template)
             db.session.commit()
+        return None
 
     @classmethod
-    def update(cls, user, template_id, data):
+    def update(cls, user: User, template_id: int, data: dict) -> tuple[dict, HTTPStatus] | None:
         """Update a notification template.
 
         Args:
@@ -226,6 +244,8 @@ class NotificationTemplate(db.Model):
         new_template_schema = NewNotificationTemplateSchema()
         updated_template = new_template_schema.load(data)
         template = db.session.get(cls, template_id)
+        if template is None:
+            return {"error": "Notification template not found"}, HTTPStatus.NOT_FOUND
         if any(org in user.organizations for org in template.organizations):
             template.name = updated_template.name
             template.description = updated_template.description
@@ -233,6 +253,7 @@ class NotificationTemplate(db.Model):
             template.message_body = updated_template.message_body
             template.recipients = updated_template.recipients
             db.session.commit()
+        return None
 
 
 class NotificationTemplateOrganization(db.Model):

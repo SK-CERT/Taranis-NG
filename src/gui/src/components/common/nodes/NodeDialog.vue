@@ -64,7 +64,9 @@
                         variant="outlined"
                         density="comfortable"
                         :type="showApiKey ? 'text' : 'password'"
-                        :rules="config.apiKeyRequired ? [(v) => isNonBlankNodeApiKey(v) || t('error.required')] : []"
+                        :rules="config.apiKeyRequired && !keyStored ? [(v) => isNonBlankNodeApiKey(v) || t('error.required')] : []"
+                        :placeholder="keyStored ? t('common.stored_secret') : undefined"
+                        :persistent-placeholder="keyStored"
                         :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
                         :disabled="saving"
                         @click:append-inner="showApiKey = !showApiKey"
@@ -166,6 +168,8 @@
 
     const localItem = ref<NodeItem>({ ...defaultItem })
     const isEdit = computed(() => !!localItem.value.id)
+    // Core never sends a stored key back (only api_key_set); saved empty, it keeps the stored one.
+    const keyStored = computed(() => isEdit.value && localItem.value['api_key_set'] === true)
 
     const canCreate = computed(() => checkPermission(`${config.value.permissionPrefix}_CREATE` as PermissionKey))
     const canSave = computed(() => checkPermission(`${config.value.permissionPrefix}_${isEdit.value ? 'UPDATE' : 'CREATE'}` as PermissionKey))

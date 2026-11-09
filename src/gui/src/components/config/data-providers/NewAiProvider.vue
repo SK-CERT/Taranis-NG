@@ -65,12 +65,14 @@
                         v-model="localItem.api_key"
                         :spellcheck="false"
                         :label="t('settings.api_key')"
+                        :placeholder="keyStored ? t('common.stored_secret') : undefined"
+                        :persistent-placeholder="keyStored"
                         variant="outlined"
                         density="comfortable"
                         :type="showApiKey ? 'text' : 'password'"
                         class="mb-3"
                         :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
-                        :rules="[(v) => !!v || t('error.required')]"
+                        :rules="keyStored ? [] : [(v) => !!v || t('error.required')]"
                         :disabled="saving"
                         @click:append-inner="showApiKey = !showApiKey"
                     />
@@ -200,6 +202,8 @@
     ])
 
     const isEdit = computed(() => !!localItem.value.id)
+    // Core never sends a stored key back (only api_key_set); saved empty, it keeps the stored one.
+    const keyStored = computed(() => isEdit.value && (localItem.value as { api_key_set?: boolean }).api_key_set === true)
     const canCreate = computed(() => checkPermission('CONFIG_AI_CREATE'))
     const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_AI_UPDATE' : 'CONFIG_AI_CREATE'))
 

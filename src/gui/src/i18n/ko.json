@@ -1317,7 +1317,8 @@
             "never_seen": "연결된 적 없음",
             "last_seen": "마지막 확인",
             "disabled": "비활성화됨"
-        }
+        },
+        "stored_secret": "저장됨 – 유지하려면 비워 두세요"
     },
     "collectors": {
         "groups": {

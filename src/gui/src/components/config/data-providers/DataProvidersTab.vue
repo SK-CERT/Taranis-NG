@@ -39,7 +39,7 @@
                 </template>
 
                 <template #item.api_key="{ item }">
-                    {{ asDataProviderItem(item).api_key ? '••••••••' : '' }}
+                    {{ asDataProviderItem(item).api_key_set ? '••••••••' : '' }}
                 </template>
 
                 <template #item.updated_at="{ item }">
@@ -97,6 +97,7 @@
         api_type?: string
         api_url?: string
         api_key?: string
+        api_key_set?: boolean
         user_agent?: string
         web_url?: string
         updated_by?: string
