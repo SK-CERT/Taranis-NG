@@ -2,7 +2,7 @@
 
 from marshmallow import EXCLUDE, Schema, fields
 
-from shared.schema.presentation import PresentationSchema
+from shared.schema.presentation import HiddenApiKeySchema, PresentationSchema
 
 
 class PublicWebNodeSchema(Schema):
@@ -30,7 +30,7 @@ class PublicWebNodeSchema(Schema):
     enabled = fields.Bool(load_default=None, allow_none=True)
 
 
-class PublicWebNodePresentationSchema(PublicWebNodeSchema, PresentationSchema):
+class PublicWebNodePresentationSchema(HiddenApiKeySchema, PublicWebNodeSchema, PresentationSchema):
     """Schema for presenting a public-web node in the configuration UI."""
 
     status = fields.Str()

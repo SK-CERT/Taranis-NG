@@ -102,11 +102,14 @@
                                 v-model="parameterValues[index]"
                                 :spellcheck="false"
                                 :label="String(param.name || param.key || '')"
-                                :type="typeof param.key === 'string' && param.key.includes('PASSWORD') ? 'password' : 'text'"
+                                :type="isSecretParameter(param.key) ? 'password' : 'text'"
                                 variant="outlined"
                                 density="comfortable"
                                 :disabled="saving || !canSave"
-                                :placeholder="String(param.default_value ?? '')"
+                                :placeholder="
+                                    storedSecrets.has(String(param.key)) ? t('common.stored_secret') : String(param.default_value ?? '')
+                                "
+                                :persistent-placeholder="storedSecrets.has(String(param.key))"
                                 :rules="dynamicParameterRules(param, t('error.required'))"
                             >
                                 <template
@@ -198,6 +201,7 @@
     import { createNewOSINTSource, updateOSINTSource, getAllCollectorsNodes } from '@/api/config'
     import NewOSINTSourceGroup from '@/components/config/collectors/NewOSINTSourceGroup.vue'
     import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
+    import { isSecretParameter, storedSecretKeys } from '@/utils/secretParameters'
 
     type CollectorParameter = {
         id?: string | number
@@ -339,6 +343,8 @@
     }
 
     const localItem = ref<OSINTSourceItem>({ ...defaultItem })
+    // Credentials the record has stored: core sends them empty, and saving them empty keeps them.
+    const storedSecrets = computed(() => storedSecretKeys(localItem.value.parameter_values as Parameters<typeof storedSecretKeys>[0]))
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_OSINT_SOURCE_CREATE'))

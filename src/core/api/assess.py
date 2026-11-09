@@ -211,6 +211,8 @@ class GroupAction(Resource):
             (int): The response code
         """
         user = auth_manager.get_user_from_jwt()
+        if not isinstance(request.json, dict):
+            return {"error": "Send the action and the items it applies to"}, HTTPStatus.BAD_REQUEST
         action = request.json.get("action")
         osint_source_ids = set()
 

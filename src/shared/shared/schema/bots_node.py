@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from marshmallow import EXCLUDE, Schema, fields, post_load, validate
 
 from shared.schema.bot import BotSchema
-from shared.schema.presentation import PresentationSchema
+from shared.schema.presentation import HiddenApiKeySchema, PresentationSchema
 
 
 class BotsNode:
@@ -89,5 +89,5 @@ class BotsNodeSchema(Schema):
         return BotsNode(**data)
 
 
-class BotsNodePresentationSchema(BotsNodeSchema, PresentationSchema):
+class BotsNodePresentationSchema(HiddenApiKeySchema, BotsNodeSchema, PresentationSchema):
     """Presentation variant of `BotsNodeSchema`."""

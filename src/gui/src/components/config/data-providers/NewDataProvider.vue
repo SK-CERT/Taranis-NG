@@ -67,6 +67,8 @@
                                 v-model="localItem.api_key"
                                 :spellcheck="false"
                                 :label="t('settings.api_key')"
+                                :placeholder="keyStored ? t('common.stored_secret') : undefined"
+                                :persistent-placeholder="keyStored"
                                 variant="outlined"
                                 density="comfortable"
                                 :type="showApiKey ? 'text' : 'password'"
@@ -193,6 +195,8 @@
 
     const canCreate = computed(() => checkPermission('CONFIG_DATA_PROVIDER_CREATE'))
     const isEdit = computed(() => !!localItem.value.id)
+    // Core never sends a stored key back (only api_key_set); saved empty, it keeps the stored one.
+    const keyStored = computed(() => isEdit.value && (localItem.value as { api_key_set?: boolean }).api_key_set === true)
     const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_DATA_PROVIDER_UPDATE' : 'CONFIG_DATA_PROVIDER_CREATE'))
 
     // Persists the form. Returns true on success so the guard can decide whether to close.

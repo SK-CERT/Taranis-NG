@@ -1317,7 +1317,8 @@
             "never_seen": "لم يتصل قط",
             "last_seen": "آخر ظهور",
             "disabled": "معطّل"
-        }
+        },
+        "stored_secret": "محفوظ – اتركه فارغًا للإبقاء عليه"
     },
     "collectors": {
         "groups": {

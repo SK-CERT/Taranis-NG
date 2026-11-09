@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import requests
 from managers.log_manager import logger
+from managers.stored_secrets import keep_stored_api_key
 from model.collector import Collector
 from model.collectors_node import CollectorsNode
 from model.osint_source import OSINTSource
@@ -50,6 +51,8 @@ def update_collectors_node(node_id: str, data: dict) -> HTTPStatus:
     Returns:
         (HTTPStatus): The status of asking the node what it can collect.
     """
+    # The GUI never receives the key: saved empty, it stays as stored.
+    data = keep_stored_api_key(data, CollectorsNode, node_id)
     node = CollectorNodeSchema.create(data)
     collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
     if status_code == HTTPStatus.OK:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from marshmallow import EXCLUDE, Schema, fields, post_load, validate
 
-from shared.schema.presentation import PresentationSchema
+from shared.schema.presentation import HiddenApiKeySchema, PresentationSchema
 from shared.schema.publisher import PublisherSchema
 
 
@@ -77,5 +77,5 @@ class PublishersNodeSchema(Schema):
         return PublishersNode(**data)
 
 
-class PublishersNodePresentationSchema(PublishersNodeSchema, PresentationSchema):
+class PublishersNodePresentationSchema(HiddenApiKeySchema, PublishersNodeSchema, PresentationSchema):
     """Presentation-oriented schema for publishers nodes."""

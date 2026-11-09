@@ -1317,7 +1317,8 @@
             "never_seen": "Never connected",
             "last_seen": "last seen",
             "disabled": "Disabled"
-        }
+        },
+        "stored_secret": "Stored – leave empty to keep it"
     },
     "collectors": {
         "groups": {

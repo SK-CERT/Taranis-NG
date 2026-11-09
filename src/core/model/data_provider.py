@@ -10,10 +10,10 @@ if TYPE_CHECKING:
 from datetime import datetime
 
 from managers.db_manager import db
+from managers.stored_secrets import keep_stored_api_key
 from marshmallow import post_load
-
 from shared.common import TZ
-from shared.schema.data_provider import DataProviderSchema
+from shared.schema.data_provider import DataProviderPresentationSchema, DataProviderSchema
 
 
 class DataProvider(db.Model):
@@ -98,7 +98,7 @@ class DataProvider(db.Model):
             dict: Dictionary containing total count and list of Data Providers in JSON format.
         """
         data_providers, count = cls.get(search)
-        schema = DataProviderSchema(many=True)
+        schema = DataProviderPresentationSchema(many=True)
         return {"total_count": count, "items": schema.dump(data_providers)}
 
     @classmethod
@@ -130,7 +130,7 @@ class DataProvider(db.Model):
             user_name (str): User who is updating the Data Provider.
         """
         schema = DataProviderSchema()
-        new = schema.load(data)
+        new = schema.load(keep_stored_api_key(data, cls, data_provider_id))
         old = db.session.get(cls, data_provider_id)
         old.name = new.name
         old.api_type = new.api_type

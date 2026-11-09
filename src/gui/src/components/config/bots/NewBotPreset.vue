@@ -102,11 +102,12 @@
                                 v-model="parameterValues[index]"
                                 :spellcheck="false"
                                 :label="param.name"
-                                :type="param.key && param.key.includes('PASSWORD') ? 'password' : 'text'"
+                                :type="isSecretParameter(param.key) ? 'password' : 'text'"
                                 variant="outlined"
                                 density="comfortable"
                                 :disabled="saving"
-                                :placeholder="param.default_value"
+                                :placeholder="storedSecrets.has(String(param.key)) ? t('common.stored_secret') : param.default_value"
+                                :persistent-placeholder="storedSecrets.has(String(param.key))"
                                 :rules="dynamicParameterRules(param, t('error.required'))"
                             >
                                 <template
@@ -164,6 +165,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { createNewBotPreset, updateBotPreset, getAllBotsNodes } from '@/api/config'
     import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
+    import { isSecretParameter, storedSecretKeys } from '@/utils/secretParameters'
 
     type PresetParameter = {
         id?: string | number
@@ -250,6 +252,8 @@
     }
 
     const localItem = ref<BotPresetItem>({ ...defaultItem })
+    // Credentials the record has stored: core sends them empty, and saving them empty keeps them.
+    const storedSecrets = computed(() => storedSecretKeys(localItem.value.parameter_values as Parameters<typeof storedSecretKeys>[0]))
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_BOT_PRESET_CREATE'))

@@ -2,6 +2,8 @@
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
+from shared.schema.presentation import HiddenApiKeySchema
+
 
 class AiProvider:
     """Data model for AI model."""
@@ -68,3 +70,7 @@ class AiProviderSchema(Schema):
             AiProvider: An instance of AiProvider initialized with the provided data.
         """
         return AiProvider(**data)
+
+
+class AiProviderPresentationSchema(HiddenApiKeySchema, AiProviderSchema):
+    """An AI provider for the configuration: whether it has an API key, never the key."""
