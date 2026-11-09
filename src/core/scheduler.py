@@ -3,7 +3,7 @@
 import time
 
 from app import create_app
-from managers import auth_manager, notification_manager, public_web_manager, sse_manager, tagcloud_manager
+from managers import api_key_manager, auth_manager, notification_manager, public_web_manager, sse_manager, tagcloud_manager
 from shared.time_manager import SchedulerManager
 
 
@@ -18,6 +18,7 @@ def main() -> None:
         auth_manager.schedule(SchedulerManager, app)
         public_web_manager.schedule(SchedulerManager, app)
         notification_manager.schedule(SchedulerManager, app)
+        api_key_manager.schedule(SchedulerManager, app)
 
     # Keep scheduler running
     while True:

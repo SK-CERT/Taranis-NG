@@ -29,6 +29,18 @@
             "subject": "두 번째 인증 요소가 초기화되었습니다",
             "text": "관리자가 Taranis NG 계정의 두 번째 인증 요소를 초기화했습니다. 다음 로그인 때 다시 설정하라는 요청을 받을 수 있습니다."
         },
+        "api_key_created": {
+            "subject": "새 API 키가 생성되었습니다",
+            "text": "Taranis NG 계정에 새 API 키가 생성되었습니다. 이 키를 사용하는 프로그램은 회원님의 권한으로 API를 호출할 수 있습니다."
+        },
+        "api_key_deleted": {
+            "subject": "API 키가 삭제되었습니다",
+            "text": "Taranis NG 계정의 API 키가 삭제되었습니다. 이 키를 사용하던 프로그램은 더 이상 API를 호출할 수 없습니다."
+        },
+        "api_key_expired": {
+            "subject": "API 키가 만료되었습니다",
+            "text": "Taranis NG 계정의 API 키가 만료되었습니다. 이 키를 아직 사용하는 프로그램은 더 이상 API를 호출할 수 없습니다. 계속 필요하면 새 키를 만드세요."
+        },
         "test": {
             "subject": "테스트 이메일",
             "text": "Taranis NG에서 보낸 테스트 이메일입니다. 이 메일을 읽고 있다면 이메일 설정이 정상입니다."
@@ -41,7 +53,11 @@
         "ip": "IP 주소",
         "passkey": "패스키",
         "authenticator": "인증기",
-        "factors": "초기화 항목"
+        "factors": "초기화 항목",
+        "api_key": "API 키",
+        "api_key_prefix": "키 시작 부분",
+        "expires": "만료",
+        "expired": "만료됨"
     },
     "actor_self": "본인",
     "actor_admin": "관리자 {admin}",

@@ -137,9 +137,14 @@ class PublicWeb(db.Model):
         return query.order_by(db.asc(cls.name)).all(), query.count()
 
     @classmethod
+    def _live(cls):  # noqa: ANN206 (a SQLAlchemy query)
+        """Enabled webs of enabled nodes: what is actually published. A disabled node's webs are not."""
+        return cls.query.join(cls.node).filter(cls.enabled.is_(True), PublicWebNode.enabled.is_(True))
+
+    @classmethod
     def get_all_enabled(cls) -> list[PublicWeb]:
-        """Every enabled web across all nodes, whoever fronts them."""
-        return cls.query.filter_by(enabled=True).order_by(db.asc(cls.id)).all()
+        """Every enabled web across all enabled nodes, whoever fronts them."""
+        return cls._live().order_by(db.asc(cls.id)).all()
 
     @classmethod
     def get_enabled_fronted_by_core(cls) -> list[PublicWeb]:
@@ -153,9 +158,9 @@ class PublicWeb(db.Model):
         that same hostname.
 
         Returns:
-            (list[PublicWeb]): Enabled webs whose node is fronted by core.
+            (list[PublicWeb]): Enabled webs whose node is enabled and fronted by core.
         """
-        return cls.query.join(cls.node).filter(cls.enabled.is_(True), PublicWebNode.fronted_by_core.is_(True)).order_by(db.asc(cls.id)).all()
+        return cls._live().filter(PublicWebNode.fronted_by_core.is_(True)).order_by(db.asc(cls.id)).all()
 
     @classmethod
     def get_enabled_for_node(cls, node_id: int) -> list[PublicWeb]:
@@ -169,10 +174,10 @@ class PublicWeb(db.Model):
             node_id (int): The owning node.
 
         Returns:
-            (list[PublicWeb]): The node's enabled webs, in the same order as
-                :meth:`get_all_enabled`.
+            (list[PublicWeb]): The node's enabled webs - none while the node is disabled -
+                in the same order as :meth:`get_all_enabled`.
         """
-        return cls.query.filter_by(enabled=True, node_id=node_id).order_by(db.asc(cls.id)).all()
+        return cls._live().filter(cls.node_id == node_id).order_by(db.asc(cls.id)).all()
 
     @classmethod
     def get_all_json_for_node(cls, node_id: int, search: str | None = None) -> dict:

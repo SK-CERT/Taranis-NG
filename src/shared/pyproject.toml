@@ -11,6 +11,11 @@ dependencies = [
     "marshmallow==4.3.1"
 ]
 
+# The public-web built-in report templates are read at runtime (importlib.resources)
+# by core and public-web, so they must ship in the wheel.
+[tool.setuptools.package-data]
+"shared.public_web_templates" = ["*.html"]
+
 # NOTE: no [dependency-groups] here, and none in the services either. pytest is declared
 # exactly once, in the root pyproject's `test` group, and installed into the single root
 # .venv by scripts/dev_setup.py. pytest itself does read the settings below, because it

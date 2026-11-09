@@ -18,6 +18,7 @@ from flask import request, send_file
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from managers import (
+    api_key_manager,
     auth_manager,
     bots_manager,
     certificate_manager,
@@ -36,6 +37,7 @@ from managers.sse_manager import sse_manager
 from model import (
     acl_entry,
     ai_provider,
+    apikey,
     attribute,
     attribute_extraction_rule,
     auth_provider,
@@ -50,6 +52,7 @@ from model import (
     product_preset,
     public_web,
     public_web_node,
+    public_web_template,
     publishers_node,
     publishing_channel,
     remote,
@@ -1481,6 +1484,113 @@ class UserMfaResetResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
+def _api_key_error(ex: Exception, what: str) -> tuple[dict, HTTPStatus]:
+    """Answer a rejected API key change: a broken rule says what to fix, anything else is logged."""
+    db.session.rollback()
+    if isinstance(ex, ValueError):
+        return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+    if isinstance(ex, IntegrityError):
+        return {"error": "The user already has an API key with this name"}, HTTPStatus.BAD_REQUEST
+    msg = f"Could not {what} the API key"
+    log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+    return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class ApiKeysResource(Resource):
+    """API keys of every user (Access Management).
+
+    Key management never accepts an API key: a key cannot mint, widen or keep alive other keys.
+    """
+
+    @auth_required("CONFIG_API_KEY_ACCESS", allow_api_key=False)
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """List API keys, optionally of one owner (``user_id``) and matching ``search``.
+
+        Returns:
+            (dict): The keys, the policy, the caller's address and the users (with their status).
+        """
+        user_id = request.args.get("user_id", type=int)
+        keys = apikey.ApiKey.get_filtered(request.args.get("search"), user_id)
+        # Every user, for the owner filter; the dialog offers only active ones as new owners.
+        owners = user.User.query.order_by(user.User.username).all()
+        return api_key_manager.list_payload(keys, owners=owners), HTTPStatus.OK
+
+    @auth_required("CONFIG_API_KEY_CREATE", allow_api_key=False)
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create an API key for a user.
+
+        Returns:
+            (dict): The new key and, this once, its plaintext under ``key``.
+        """
+        data = request.json or {}
+        owner = user.User.find_by_id(data.get("user_id")) if isinstance(data.get("user_id"), int) else None
+        if owner is None:
+            return {"error": "Choose the user the API key acts as"}, HTTPStatus.BAD_REQUEST
+        try:
+            item, plaintext = api_key_manager.create(owner, data, get_user_from_jwt())
+        except Exception as ex:
+            return _api_key_error(ex, "create")
+        return {"item": item, "key": plaintext}, HTTPStatus.CREATED
+
+
+class ApiKeyResource(Resource):
+    """One API key of any user (Access Management)."""
+
+    @auth_required("CONFIG_API_KEY_UPDATE", allow_api_key=False)
+    def put(self, api_key_id: int) -> tuple[dict, HTTPStatus]:
+        """Change an API key's name, description, enabled state, scope or allowed IPs.
+
+        Args:
+            api_key_id (int): The API key ID
+        Returns:
+            (dict): The changed key
+        """
+        record = apikey.ApiKey.find(api_key_id)
+        if record is None:
+            return {"error": "API key not found"}, HTTPStatus.NOT_FOUND
+        try:
+            return {"item": api_key_manager.update(record, request.json or {}, get_user_from_jwt())}, HTTPStatus.OK
+        except Exception as ex:
+            return _api_key_error(ex, "update")
+
+    @auth_required("CONFIG_API_KEY_DELETE", allow_api_key=False)
+    def delete(self, api_key_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete an API key.
+
+        Args:
+            api_key_id (int): The API key ID
+        Returns:
+            (dict): Empty on success
+        """
+        record = apikey.ApiKey.find(api_key_id)
+        if record is None:
+            return {"error": "API key not found"}, HTTPStatus.NOT_FOUND
+        try:
+            api_key_manager.delete(record, get_user_from_jwt())
+        except Exception as ex:
+            db.session.rollback()
+            return _delete_failed("Could not delete the API key", ex)
+        return {}, HTTPStatus.OK
+
+
+class ApiKeyPermissionsResource(Resource):
+    """The permissions a key of one user can be limited to."""
+
+    @auth_required("CONFIG_API_KEY_ACCESS", allow_api_key=False)
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """List the permissions of the user given by ``user_id``.
+
+        Returns:
+            (dict): The permissions, by id
+        """
+        user_id = request.args.get("user_id", type=int)
+        owner = user.User.find_by_id(user_id) if user_id is not None else None
+        if owner is None:
+            return {"error": "User not found"}, HTTPStatus.NOT_FOUND
+        items = api_key_manager.permission_options(owner)
+        return {"total_count": len(items), "items": items}, HTTPStatus.OK
+
+
 class ExternalUsersResource(Resource):
     """External users API endpoint."""
 
@@ -2093,9 +2203,14 @@ class PublicWebNodeResource(Resource):
                 if problem:
                     return {"error": problem}, HTTPStatus.BAD_REQUEST
 
+            was_enabled = bool(node.enabled)
             public_web_node.PublicWebNode.update(node_id, data)
             if api_url and connection_changed:
                 node.update_last_seen()
+            if bool(node.enabled) != was_enabled:
+                # Switched off, the node stops serving its webs now rather than when its
+                # cache expires; switched on, it reads them again.
+                public_web_manager.reset_node(node)
         except Exception as ex:
             msg = "Could not update public-web node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2291,6 +2406,127 @@ class PublicWebImageResource(Resource):
             _notify_public_web_node(node_id)
         except Exception as ex:
             return _delete_failed("Could not delete public web image", ex)
+
+
+def _notify_all_public_web_nodes() -> None:
+    """Best-effort: push a cache reset to every node, so a template change shows now.
+
+    See :func:`_notify_public_web_node`; a template is not tied to one node.
+    """
+    try:
+        from managers import public_web_manager  # noqa: PLC0415 (avoid import cycle at load)
+
+        public_web_manager.notify_nodes(public_web_node.PublicWebNode.get_all())
+    except Exception as ex:
+        log_manager.store_data_error_activity(get_user_from_jwt(), "Could not notify public-web nodes", ex)
+
+
+class PublicWebTemplatesResource(Resource):
+    """The report templates of the public webs."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self) -> dict:
+        """Get all report templates.
+
+        Returns:
+            (dict): The templates
+        """
+        search = request.args.get("search")
+        return public_web_template.PublicWebTemplate.get_all_json(search)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create a report template.
+
+        Returns:
+            (dict, int): The id of the created template, or the reason it was refused
+        """
+        try:
+            template = public_web_template.PublicWebTemplate.add(request.json or {}, get_user_from_jwt().name)
+        except public_web_template.TemplateValidationError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not create report template"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        _notify_all_public_web_nodes()
+        return {"id": template.id}, HTTPStatus.OK
+
+
+class PublicWebTemplateResource(Resource):
+    """A single report template."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def put(self, template_id: int) -> tuple[dict, HTTPStatus]:
+        """Update a report template.
+
+        Args:
+            template_id (int): The template ID
+        Returns:
+            (dict, int): The result, or the reason it was refused
+        """
+        try:
+            template = public_web_template.PublicWebTemplate.update(template_id, request.json or {}, get_user_from_jwt().name)
+        except public_web_template.TemplateValidationError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not update report template"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        if template is None:
+            return {"error": "Template not found"}, HTTPStatus.NOT_FOUND
+        _notify_all_public_web_nodes()
+        return {"id": template.id}, HTTPStatus.OK
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def delete(self, template_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete a report template.
+
+        Args:
+            template_id (int): The template ID
+        """
+        try:
+            result = public_web_template.PublicWebTemplate.delete(template_id)
+        except Exception as ex:
+            return _delete_failed("Could not delete report template", ex)
+        _notify_all_public_web_nodes()
+        return result
+
+
+class PublicWebTemplateBuiltinResource(Resource):
+    """The built-in report templates: read-only, never deleted, but those public-web falls back on can be switched off."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self) -> dict:
+        """Get the built-in templates.
+
+        Returns:
+            (dict): ``{"items": [{"name", "source", "can_disable", "enabled", "updated_at", "updated_by"}]}``,
+            name being what ``extends``/``import`` refer to
+        """
+        return public_web_template.PublicWebBuiltinTemplate.get_all_json()
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def put(self) -> tuple[dict, HTTPStatus]:
+        """Switch a built-in template on or off: ``{"name": "builtin/<file>", "enabled": bool}``.
+
+        Returns:
+            (dict, int): The built-in's name and state, or the reason it was refused
+        """
+        data = request.json or {}
+        name, enabled = data.get("name"), data.get("enabled")
+        if not isinstance(name, str) or not isinstance(enabled, bool):
+            return {"error": "Send the built-in template's name and whether it is enabled."}, HTTPStatus.BAD_REQUEST
+        try:
+            row = public_web_template.PublicWebBuiltinTemplate.set_enabled(name, enabled, get_user_from_jwt().name)
+        except public_web_template.TemplateValidationError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not switch the built-in report template"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        _notify_all_public_web_nodes()
+        return {"name": row.name, "enabled": row.enabled}, HTTPStatus.OK
 
 
 class PublicWebEmailTestResource(Resource):
@@ -3200,6 +3436,9 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(UserResource, "/api/v1/config/users/<int:user_id>")
     api.add_resource(UserStatusResource, "/api/v1/config/users/<int:user_id>/status")
     api.add_resource(UserMfaResetResource, "/api/v1/config/users/<int:user_id>/reset-mfa")
+    api.add_resource(ApiKeysResource, "/api/v1/config/api-keys")
+    api.add_resource(ApiKeyPermissionsResource, "/api/v1/config/api-keys/permissions")
+    api.add_resource(ApiKeyResource, "/api/v1/config/api-keys/<int:api_key_id>")
 
     api.add_resource(AuthProvidersResource, "/api/v1/config/auth-providers")
     api.add_resource(AuthProviderResource, "/api/v1/config/auth-providers/<int:auth_provider_id>")
@@ -3232,6 +3471,9 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(RemoteAccessesResource, "/api/v1/config/remote-accesses")
     api.add_resource(RemoteAccessResource, "/api/v1/config/remote-accesses/<int:remote_access_id>")
 
+    api.add_resource(PublicWebTemplatesResource, "/api/v1/config/public-web-templates")
+    api.add_resource(PublicWebTemplateBuiltinResource, "/api/v1/config/public-web-templates/builtin")
+    api.add_resource(PublicWebTemplateResource, "/api/v1/config/public-web-templates/<int:template_id>")
     api.add_resource(PublicWebNodesResource, "/api/v1/config/public-web-nodes")
     api.add_resource(PublicWebNodeResource, "/api/v1/config/public-web-nodes/<int:node_id>")
     api.add_resource(PublicWebsResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs")
@@ -3285,6 +3527,12 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Permission.add("CONFIG_USER_CREATE", "Config user create", "Create user configuration")
     Permission.add("CONFIG_USER_UPDATE", "Config user update", "Update user configuration")
     Permission.add("CONFIG_USER_DELETE", "Config user delete", "Delete user configuration")
+
+    Permission.add("CONFIG_API_KEY_ACCESS", "Config API keys access", "Access to the API keys of all users")
+    Permission.add("CONFIG_API_KEY_CREATE", "Config API key create", "Create API keys for any user")
+    Permission.add("CONFIG_API_KEY_UPDATE", "Config API key update", "Rename, enable, disable and limit API keys of any user")
+    Permission.add("CONFIG_API_KEY_DELETE", "Config API key delete", "Delete API keys of any user")
+    Permission.add("MY_API_KEYS_MANAGE", "Own API keys", "Create and manage own API keys")
 
     Permission.add("CONFIG_ROLE_ACCESS", "Config roles access", "Access to roles configuration")
     Permission.add("CONFIG_ROLE_CREATE", "Config role create", "Create role configuration")

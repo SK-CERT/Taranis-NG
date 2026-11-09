@@ -19,19 +19,10 @@ from lib.web import site as web_site
 
 
 def _attribute(key: str, value: str, attribute_type: str = "STRING") -> dict:
-    return {"key": key, "type": attribute_type, "value": value, "description": None}
+    return {"key": key, "attribute_type": attribute_type, "value": value, "description": None}
 
 
 def _product(product_id: int, title: str = "Bulletin") -> dict:
-    intro = {
-        "title": "Intro",
-        "type": "Vulnerability Report - Intro",
-        "attributes": [
-            _attribute("description", "Overview"),
-            _attribute("tlp", "CLEAR", "ENUM"),
-            _attribute("generate_events", "generate", "RADIO"),
-        ],
-    }
     item = {
         "title": "Kernel bug",
         "type": "Vulnerability Report",
@@ -45,11 +36,11 @@ def _product(product_id: int, title: str = "Bulletin") -> dict:
     return {
         "id": product_id,
         "title": f"{title} {product_id}",
-        "description": "",
+        "description": "Overview",
         "links": [],
         "created": "2026-10-01T10:00:00",
         "user": {"name": "Analyst", "username": "analyst"},
-        "report_items": [intro, item],
+        "report_items": [item],
     }
 
 
@@ -75,6 +66,10 @@ class _Core:
         self.one_by_one.append(product_id)
         return next(product for product in self.products if product["id"] == product_id)
 
+    def get_report_templates(self) -> dict[str, list]:
+        """No custom report templates: the products are vulnerability reports, shown with the built-in ones."""
+        return {"items": [], "disabled_builtins": []}
+
 
 class _OldCore(_Core):
     """Core from before paging: it ignores offset and ``full``, and lists ids and titles only."""
@@ -95,7 +90,7 @@ def _in_memory(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _ids(reports: list) -> list[int]:
-    return [int(report.get_id()) for report in reports]
+    return [int(report["id"]) for report in reports]
 
 
 def _join_loads() -> None:
@@ -153,7 +148,7 @@ def test_reports_are_loaded_once_and_then_read_from_the_cache() -> None:
 
     assert _ids(cache.get_all_reports(1, "en")) == [3, 2, 1]
     assert _ids(cache.get_all_reports(1, "en")) == [3, 2, 1]
-    assert cache.get_report("2", 1, "en").get_title() == "Bulletin 2"
+    assert cache.get_report("2", 1, "en")["title"] == "Bulletin 2"
     assert len(core.pages) == 1
 
 
@@ -199,4 +194,4 @@ def test_a_load_that_started_before_a_reset_is_not_kept() -> None:
     load.join(5)
     _join_loads()
 
-    assert [report.get_title() for report in cache.get_all_reports(1, "en")] == ["After 2", "After 1"]
+    assert [report["title"] for report in cache.get_all_reports(1, "en")] == ["After 2", "After 1"]

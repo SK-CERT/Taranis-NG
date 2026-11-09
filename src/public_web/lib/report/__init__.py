@@ -1,24 +1,11 @@
-"""Report processing utilities for public-web.
+"""Text and date helpers for the report data and its templates.
 
-This module provides classes and functions for processing vulnerability reports.
+See ``product`` (template data), ``vulnerability`` (vulnerability helpers),
+``filters`` (template filters) and ``renderer`` (report templates).
 """
 
 import re
 from datetime import datetime
-
-
-class MissingFieldError(TypeError):
-    """Raised when a mandatory field is missing from a report."""
-
-    def __init__(self, field: str, report_type: object) -> None:
-        """Initialize a new MissingFieldError.
-
-        Args:
-            field: The missing field name.
-            report_type: The type of report where the field is missing.
-        """
-        msg = f"Mandatory report field {field} is missing in {type(report_type)} JSON!"
-        super().__init__(msg)
 
 
 def format_iso_date(date: str | None) -> str:

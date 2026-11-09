@@ -165,6 +165,30 @@ export function updateUserStatus(user_id, status) {
     return ApiService.put('/config/users/' + user_id + '/status', { status: status })
 }
 
+export function getAllApiKeys(filter: { search?: string; user_id?: number | null } = {}) {
+    const query = new URLSearchParams()
+    if (filter.search) query.set('search', filter.search)
+    if (filter.user_id) query.set('user_id', String(filter.user_id))
+    const suffix = query.toString()
+    return ApiService.get('/config/api-keys' + (suffix ? '?' + suffix : ''))
+}
+
+export function getApiKeyPermissions(user_id: number) {
+    return ApiService.get('/config/api-keys/permissions?user_id=' + encodeURIComponent(String(user_id)))
+}
+
+export function createApiKey(api_key) {
+    return ApiService.post('/config/api-keys', api_key)
+}
+
+export function updateApiKey(id: number, changes) {
+    return ApiService.put('/config/api-keys/' + id, changes)
+}
+
+export function deleteApiKey(id: number) {
+    return ApiService.delete('/config/api-keys/' + id)
+}
+
 export function resetUserMfa(user_id, options) {
     const body = options ? { reset_totp: !!options.reset_totp, reset_passkeys: !!options.reset_passkeys } : {}
     return ApiService.post('/config/users/' + user_id + '/reset-mfa', body)
@@ -447,6 +471,32 @@ export function uploadPublicWebImage(nodeId, webId, kind, formData) {
 
 export function deletePublicWebImage(nodeId, webId, kind) {
     return ApiService.delete('/config/public-web-nodes/' + nodeId + '/webs/' + webId + '/images/' + kind)
+}
+
+export function getAllPublicWebTemplates(filter: { search?: string } = {}) {
+    return ApiService.get('/config/public-web-templates?search=' + (filter.search || ''))
+}
+
+export function createPublicWebTemplate(template) {
+    return ApiService.post('/config/public-web-templates', template)
+}
+
+export function updatePublicWebTemplate(template) {
+    return ApiService.put('/config/public-web-templates/' + template.id, template)
+}
+
+export function deletePublicWebTemplate(template) {
+    return ApiService.delete('/config/public-web-templates/' + template.id)
+}
+
+/** The built-in report templates (read-only), by the name `extends` and `import` use, and whether each is on. */
+export function getBuiltinPublicWebTemplates() {
+    return ApiService.get('/config/public-web-templates/builtin')
+}
+
+/** Switch a built-in report template on or off; the base layout and the macros cannot be. */
+export function setBuiltinPublicWebTemplateEnabled(name: string, enabled: boolean) {
+    return ApiService.put('/config/public-web-templates/builtin', { name, enabled })
 }
 
 export function testPublicWebEmail(nodeId, payload) {

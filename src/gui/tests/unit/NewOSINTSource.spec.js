@@ -403,3 +403,118 @@ describe('NewOSINTSource — moving a source to another collectors node', () => 
         expect(wrapper.vm.parameterValues).toEqual(['socks5://proxy:1080', 'https://example.org/NEW-feed'])
     })
 })
+
+// ── Opening the dialog before its node list has arrived ─────────────────────
+// Every node panel mounts a dialog of its own, and each one fetches the node list itself. An
+// Add New (or a row's edit) clicked before that fetch returns opens the form with no node or
+// collector, and the dirty-tracking baseline is taken right then. Resolving the node, the
+// collector and its default parameters afterwards is not the operator's change; counting it as
+// one made Cancel ask about unsaved changes on an untouched form.
+
+function deferred() {
+    let resolve
+    const promise = new Promise((r) => {
+        resolve = r
+    })
+    return { promise, resolve }
+}
+
+describe('NewOSINTSource — opened before the node list arrives', () => {
+    let pendingNodes
+
+    beforeEach(async () => {
+        vi.clearAllMocks()
+        mockCheckPermission.mockReturnValue(true)
+        configApi = await import('@/api/config')
+        pendingNodes = deferred()
+        vi.mocked(configApi.getAllCollectorsNodes).mockReturnValue(pendingNodes.promise)
+    })
+
+    async function openCreate(props = {}) {
+        const wrapper = mountWithPlugins(NewOSINTSource, {
+            props,
+            global: { stubs: { VDialog: VDialogStub } }
+        })
+        await flushPromises()
+        // What the activator does: open the dialog, then run the button's own click handler.
+        wrapper.vm.dialog = true
+        wrapper.vm.openCreateDialog()
+        await flushPromises()
+        return wrapper
+    }
+
+    it('closes an untouched new source on Cancel, without a prompt', async () => {
+        const wrapper = await openCreate({ preselectNodeId: 'node-remote' })
+        expect(wrapper.vm.selectedCollector).toBeNull()
+
+        pendingNodes.resolve({ items: makeTwoNodes() })
+        await flushPromises()
+        expect(wrapper.vm.selectedNode.id).toBe('node-remote')
+        expect(wrapper.vm.selectedCollector.id).toBe('rss-remote')
+
+        wrapper.vm.requestClose()
+        expect(wrapper.vm.confirmVisible).toBe(false)
+        expect(wrapper.vm.dialog).toBe(false)
+    })
+
+    it('still prompts when the operator typed before the nodes arrived', async () => {
+        const wrapper = await openCreate()
+        wrapper.vm.localItem.name = 'Typed early'
+        await flushPromises()
+
+        pendingNodes.resolve({ items: makeTwoNodes() })
+        await flushPromises()
+
+        wrapper.vm.requestClose()
+        expect(wrapper.vm.confirmVisible).toBe(true)
+        expect(wrapper.vm.dialog).toBe(true)
+    })
+
+    it('closes an untouched existing source on Cancel, without a prompt', async () => {
+        // As in the view: the edit dialog is mounted empty and a row's edit fills it later.
+        const wrapper = mountWithPlugins(NewOSINTSource, {
+            props: { editItem: null },
+            global: { stubs: { VDialog: VDialogStub } }
+        })
+        await flushPromises()
+        await wrapper.setProps({ editItem: makeWebSourceOnLocalNode() })
+        await flushPromises()
+        expect(wrapper.vm.dialog).toBe(true)
+        expect(wrapper.vm.selectedCollector).toBeNull()
+
+        pendingNodes.resolve({ items: makeTwoNodes() })
+        await flushPromises()
+        expect(wrapper.vm.selectedCollector.id).toBe('web-local')
+        expect(wrapper.vm.parameterValues).toEqual(['socks5://proxy:1080', 'https://example.org/advisories'])
+
+        wrapper.vm.requestClose()
+        expect(wrapper.vm.confirmVisible).toBe(false)
+        expect(wrapper.vm.dialog).toBe(false)
+    })
+})
+
+describe("NewOSINTSource — a node panel's Add New", () => {
+    beforeEach(async () => {
+        vi.clearAllMocks()
+        mockCheckPermission.mockReturnValue(true)
+        configApi = await import('@/api/config')
+        vi.mocked(configApi.getAllCollectorsNodes).mockResolvedValue({ items: makeTwoNodes() })
+    })
+
+    it("starts on that panel's node, not the first one", async () => {
+        const wrapper = mountWithPlugins(NewOSINTSource, {
+            props: { preselectNodeId: 'node-remote' },
+            global: { stubs: { VDialog: VDialogStub } }
+        })
+        await flushPromises()
+
+        wrapper.vm.dialog = true
+        wrapper.vm.openCreateDialog()
+        await flushPromises()
+
+        expect(wrapper.vm.selectedNode.id).toBe('node-remote')
+        expect(wrapper.vm.selectedCollector.id).toBe('rss-remote')
+        wrapper.vm.requestClose()
+        expect(wrapper.vm.confirmVisible).toBe(false)
+    })
+})

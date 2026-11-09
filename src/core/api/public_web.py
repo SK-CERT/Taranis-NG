@@ -30,17 +30,26 @@ from managers.link_references import CITING_TYPES, ReferenceIndex, build_index
 from managers.log_manager import logger
 from model.product import Product
 from model.public_web import PublicWeb
+from model.public_web_template import PublicWebBuiltinTemplate, PublicWebTemplate
 from model.state import StateDefinition, StateEnum
 from shared.schema.attribute import AttributeType
 
 
+def _node_disabled() -> tuple[dict, HTTPStatus]:
+    """What a disabled node is told when it asks for anything but its webs."""
+    return {"error": "This public-web node is disabled in Taranis"}, HTTPStatus.FORBIDDEN
+
+
 def _serialize_web(web: PublicWeb) -> dict:
-    """Serialize a web for the public-web app: hostname, config, and image kinds present."""
+    """Serialize a web for the public-web app: hostname, config, and image kinds present.
+
+    A disabled node's webs are all disabled, whatever their own switch says.
+    """
     return {
         "id": web.id,
         "name": web.name,
         "hostname": web.hostname,
-        "enabled": bool(web.enabled),
+        "enabled": bool(web.enabled) and bool(web.node is None or web.node.enabled),
         "config": web.config or {},
         "images": [image.kind for image in web.images],
     }
@@ -75,25 +84,30 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, 
     Citing text has its link references rendered to ``[n]``. A link is reported by
     its URL alone (its citation key stays internal), and a link without URL is left out.
 
-    Rendered in a language, an entry gains ``label`` (the attribute's name in it), a translatable
-    text is translated, and a choice constant gives its translation as ``value`` and itself as
-    ``source_value``.
+    Rendered in a language, ``label`` and ``group`` name the attribute and its group in it, a
+    translatable text is translated, and a choice constant gives its translation as ``value`` and
+    itself as ``source_value``.
     """
     group_item = attribute.attribute_group_item
     key = group_item.title.lower().replace(" ", "_") if group_item and group_item.title else ""
     attribute_type = _attribute_type(attribute)
-    type_name = attribute_type.name if attribute_type else None
-    localized = {}
+    group = getattr(group_item, "attribute_group", None)
+    # Where the attribute sits in its report item type, and how it is labelled there:
+    # report templates show attributes as the analyst saw them.
+    entry = {
+        "key": key,
+        "attribute_type": attribute_type.name if attribute_type else None,
+        "label": group_item.title if group_item else None,
+        "group": group.title if group else None,
+        "multiple": group_item.max_occurrence != 1 if group_item else None,
+        "order": [getattr(group, "index", None) or 0, getattr(group_item, "index", None) or 0],
+    }
     constants = None
     if rendering is not None and group_item is not None:
-        localized["label"] = content_localizer.label(
-            group_item.translations,
-            "title",
-            group_item.title,
-            rendering.language,
-            rendering.label_language,
-            via_english=False,
-        )
+        language, source = rendering.language, rendering.label_language
+        entry["label"] = content_localizer.label(group_item.translations, "title", group_item.title, language, source, via_english=False)
+        if group is not None:
+            entry["group"] = content_localizer.label(group.translations, "title", group.title, language, source, via_english=False)
         constants = rendering.constants.get(attribute.attribute_group_item_id)
 
     def choice(value: str | None) -> dict:
@@ -103,15 +117,12 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, 
         return {"value": label, "source_value": value}
 
     if attribute_type == AttributeType.MULTI_CHOICE:
-        return [
-            {"key": key, "type": type_name, **choice(selected), "description": attribute.value_description, **localized}
-            for selected in (attribute.value or "").split("\n")
-            if selected
-        ]
+        selected_values = [selected for selected in (attribute.value or "").split("\n") if selected]
+        return [{**entry, **choice(selected), "description": attribute.value_description} for selected in selected_values]
 
     if attribute_type == AttributeType.LINK:
         url = (attribute.value or "").strip()
-        return [{"key": key, "type": type_name, "value": url, "description": None, **localized}] if url else []
+        return [{**entry, "value": url, "description": None}] if url else []
 
     value = attribute.value
     if rendering is not None:
@@ -122,12 +133,12 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, 
             skip_outdated=True,
             via_english=False,
         )
-    if type_name in CITING_TYPES:
+    if entry["attribute_type"] in CITING_TYPES:
         value = index.render(value, local_numbers)
-    entry = {"key": key, "type": type_name, "value": value, "description": attribute.value_description, **localized}
+    serialized = {**entry, "value": value, "description": attribute.value_description}
     if constants is not None:
-        entry.update(choice(attribute.value))
-    return [entry]
+        serialized.update(choice(attribute.value))
+    return [serialized]
 
 
 def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: dict, language: str | None, constants: dict) -> dict:  # noqa: ANN001
@@ -153,6 +164,7 @@ def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: di
         "created": report_item.created.isoformat() if report_item.created else None,
         "last_updated": report_item.last_updated.isoformat() if report_item.last_updated else None,
         "type": report_type.title if report_type else None,
+        "type_id": report_type.id if report_type else None,
         "type_description": report_type.description if report_type else None,
         "attributes": [
             entry for attribute in report_item.attributes for entry in _serialize_attribute(attribute, index, local_numbers, rendering)
@@ -219,9 +231,12 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
     ]
 
     user = product.user
+    preset = product.product_preset
     result = {
         "id": product.id,
         "title": product.title,
+        # What the product is published as; public-web picks the product template by it.
+        "product_preset": {"id": preset.id, "title": preset.name} if preset else None,
         "description": index.render(product.description),
         "links": list(index.urls),
         "created": product.created.isoformat() if product.created else None,
@@ -284,8 +299,11 @@ class PublicWebProducts(Resource):
         Returns:
             dict: ``{"total_count": int, "items": [...]}``: how many products are published in
                 all, and this page of them, ``{"id", "title", "created"}`` each unless ``full``.
+                403 for a disabled node.
         """
         public_web_node.touch()
+        if not public_web_node.enabled:
+            return _node_disabled()
         try:
             limit = min(int(request.args.get("limit", 50)), 200)
         except (TypeError, ValueError):
@@ -330,9 +348,11 @@ class PublicWebProduct(Resource):
 
         Returns:
             dict: The serialized product, or 404 if it does not exist or is
-            not published.
+            not published; 403 for a disabled node.
         """
         public_web_node.touch()
+        if not public_web_node.enabled:
+            return _node_disabled()
         try:
             web_id_arg = request.args.get("web_id")
             web_id = int(web_id_arg) if web_id_arg else None
@@ -350,6 +370,25 @@ class PublicWebProduct(Resource):
         return _serialize_product(product, language), HTTPStatus.OK
 
 
+class PublicWebTemplates(Resource):
+    """The report templates, for public-web to render products with: the custom ones and the built-ins switched off."""
+
+    @api_key_required("public_web")
+    def get(self, public_web_node=None):  # noqa: ANN001, ANN201
+        """Return every report template, and the built-in ones switched off.
+
+        Returns:
+            dict: ``{"total_count": int, "items": [{"id", "name", "product_preset_id",
+            "report_item_type_id", "source", "require_tlp_clear"}], "disabled_builtins": [name]}``;
+            403 for a disabled node.
+        """
+        public_web_node.touch()
+        if not public_web_node.enabled:
+            return _node_disabled()
+        items = [PublicWebTemplate.node_json(template) for template in PublicWebTemplate.get_all()]
+        return {"total_count": len(items), "items": items, "disabled_builtins": PublicWebBuiltinTemplate.disabled()}, HTTPStatus.OK
+
+
 class PublicWebWebs(Resource):
     """List the webs (branded feeds + their config) belonging to the authenticated node."""
 
@@ -358,11 +397,13 @@ class PublicWebWebs(Resource):
         """Return the node's webs, each with hostname, config and image kinds present.
 
         Returns:
-            dict: ``{"total_count": int, "items": [ ...serialized webs... ]}``
+            dict: ``{"total_count": int, "items": [ ...serialized webs... ]}``; every web
+            disabled while the node is.
         """
         public_web_node.touch()
         # Include disabled webs so the public-web app can return 503 for known
-        # but disabled hostnames instead of serving a different web.
+        # but disabled hostnames instead of serving a different web. A disabled
+        # node still gets its webs, all disabled, so it answers 503 for each.
         items = [_serialize_web(web) for web in public_web_node.webs]
         logger.debug(f"Public-web '{public_web_node.name}': served config for {len(items)} web(s)")
         return {"total_count": len(items), "items": items}, HTTPStatus.OK
@@ -373,8 +414,10 @@ class PublicWebWebImage(Resource):
 
     @api_key_required("public_web")
     def get(self, web_id, kind, public_web_node=None):  # noqa: ANN001, ANN201
-        """Return the binary image, or 404 if the web isn't this node's or has no such image."""
+        """Return the binary image, or 404 if the web isn't this node's or has no such image; 403 for a disabled node."""
         public_web_node.touch()
+        if not public_web_node.enabled:
+            return _node_disabled()
         web = PublicWeb.find(web_id)
         if web is None or web.node_id != public_web_node.id:
             return {"error": "Web not found"}, HTTPStatus.NOT_FOUND
@@ -388,5 +431,6 @@ def initialize(api: Api) -> None:
     """Register the public-web node endpoints."""
     api.add_resource(PublicWebProducts, "/api/v1/public-web/products")
     api.add_resource(PublicWebProduct, "/api/v1/public-web/products/<int:product_id>")
+    api.add_resource(PublicWebTemplates, "/api/v1/public-web/templates")
     api.add_resource(PublicWebWebs, "/api/v1/public-web/webs")
     api.add_resource(PublicWebWebImage, "/api/v1/public-web/webs/<int:web_id>/images/<string:kind>")

@@ -58,6 +58,11 @@ class PublicWebNode(db.Model):
             asks its own CA account for a name it does not serve, which a CA that
             pre-validates domains refuses and Traefik then retries forever. Two Traefiks would
             also both claim the hostname, leaving DNS to decide the winner.
+        enabled: Whether the node is in use. Off, core leaves it alone - no health check,
+            no cache resets - and serves it nothing: Traefik publishes none of its webs, the
+            node is told every web of its is disabled (so it answers 503), and its requests
+            for products, templates and images are refused. The node, its webs and their
+            settings are kept, so switching it on again restores it as it was.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -77,6 +82,7 @@ class PublicWebNode(db.Model):
     # False by default so a node registered by a path that does not set it - ansible
     # above all - is treated as remote, which is the safe direction.
     fronted_by_core = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
+    enabled = db.Column(db.Boolean, nullable=False, default=True, server_default="true")
 
     # The distinct branded feeds ("webs") this node serves, one per hostname.
     webs = db.relationship("PublicWeb", back_populates="node", cascade="all, delete-orphan")
@@ -90,9 +96,11 @@ class PublicWebNode(db.Model):
         id: int | None = None,  # noqa: A002, ARG002
         fronted_by_core: bool = False,
         cert_resolver: str | None = "",
+        enabled: bool | None = True,
     ) -> None:
-        """Initialize a new PublicWebNode (id is auto-assigned)."""
+        """Initialize a new PublicWebNode (id is auto-assigned); a node is enabled unless told otherwise."""
         self.id = None
+        self.enabled = enabled is not False
         self.name = name
         self.description = description
         self.api_url = api_url
@@ -160,7 +168,12 @@ class PublicWebNode(db.Model):
 
     @classmethod
     def update(cls, node_id: int, data: dict) -> None:
-        """Update an existing node. An empty api_key leaves the current key unchanged."""
+        """Update an existing node.
+
+        An empty api_key leaves the current key unchanged, and so does a missing ``enabled``:
+        ansible re-registers a node without it, and must not switch back on a node an
+        administrator switched off.
+        """
         schema = NewPublicWebNodeSchema()
         updated = schema.load(data)
         node = db.session.get(cls, node_id)
@@ -170,6 +183,8 @@ class PublicWebNode(db.Model):
         node.cert_resolver = updated.cert_resolver
         if updated.api_key:
             node.api_key = updated.api_key
+        if isinstance(data.get("enabled"), bool):
+            node.enabled = data["enabled"]
         db.session.commit()
 
     @classmethod
@@ -193,7 +208,8 @@ class PublicWebNode(db.Model):
         """Health colour for the configuration UI: green, orange or red.
 
         A node that has never been seen is red — registering it in the GUI is
-        not evidence that anything is running at the other end.
+        not evidence that anything is running at the other end. A disabled node is
+        not checked, so its colour only says when it was last in touch.
         """
         inactive = self.seconds_since_last_seen()
         if inactive is None:

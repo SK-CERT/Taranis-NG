@@ -520,8 +520,9 @@ export async function purgeSeedEntitiesBestEffort(playwright) {
         const isFixedNode = (name) => fixedNodeNames.includes(name)
         // Seeded before product types were renamed product formats: E2E Product Type.
         const isE2EProductFormat = (name) => /^E2E Product (Format|Type)/.test(name)
-        // Seeded before distributions were renamed product presets: E2E Distribution.
-        const isE2EProductPreset = (name) => /^E2E (Product Preset|Distribution)/.test(name)
+        // Seeded before distributions were renamed product presets: E2E Distribution. Upgrading a
+        // database made one preset per product format, named after it.
+        const isE2EProductPreset = (name) => /^E2E (Product Preset|Distribution|Product Format|Product Type)/.test(name)
         // Seeded before publisher presets were renamed publishing channels: E2E Publisher Preset.
         const isE2EPublishingChannel = (name) => /^E2E (Publishing Channel|Publisher Preset)/.test(name)
         const isE2EProduct = (title) => /^E2E (Publish Confirm|Incomplete Reports) /.test(title) || /^E2E Publish Confirm/.test(title)

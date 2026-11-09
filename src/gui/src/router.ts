@@ -141,7 +141,8 @@ const routes: RouteRecordRaw[] = [
                 Permissions.CONFIG_ROLE_ACCESS,
                 Permissions.CONFIG_ACL_ACCESS,
                 Permissions.CONFIG_ORGANIZATION_ACCESS,
-                Permissions.CONFIG_AUTH_PROVIDER_ACCESS
+                Permissions.CONFIG_AUTH_PROVIDER_ACCESS,
+                Permissions.CONFIG_API_KEY_ACCESS
             ]
         }
     },

@@ -144,6 +144,15 @@ def test_an_administrator_is_named_as_the_one_who_made_the_change(outbox: Simple
     assert "Resetováno: Aplikace authenticator (TOTP)" in row.body
 
 
+def test_what_taranis_noticed_by_itself_names_nobody(outbox: SimpleNamespace) -> None:
+    notification_manager.notify_user(ALICE, notification_manager.API_KEY_EXPIRED, system=True, api_key_name="SOAR sync")
+
+    [row] = outbox.session.added
+    assert row.subject == "[Taranis NG] Platnost API klíče vypršela"
+    assert "API klíč: SOAR sync" in row.body
+    assert "Změnil(a)" not in row.body
+
+
 def test_the_ip_address_is_reported_from_the_request_that_made_the_change(outbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(notification_manager.log_manager, "resolve_ip_address", lambda: "192.0.2.10")
 

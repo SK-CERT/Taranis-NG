@@ -32,7 +32,8 @@ class _Session:
 @pytest.fixture
 def calls(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     calls: list[str] = []
-    monkeypatch.setattr(auth_manager, "get_user_from_api_key", lambda: calls.append("api key"))
+    monkeypatch.setattr(auth_manager, "uses_api_key", lambda: False)
+    monkeypatch.setattr(auth_manager, "get_user_from_api_key", lambda: calls.append("api key") or USER)
     monkeypatch.setattr(auth_manager, "get_user_from_jwt_token", lambda: calls.append("jwt") or USER)
     return calls
 
@@ -41,11 +42,19 @@ def test_a_session_a_failed_flush_left_unusable_is_rolled_back_before_the_lookup
     monkeypatch.setattr(auth_manager, "db", SimpleNamespace(session=_Session(calls, active=False)))
 
     assert auth_manager.get_user_from_jwt() is USER
-    assert calls == ["rollback", "api key", "jwt"]
+    assert calls == ["rollback", "jwt"]
 
 
 def test_a_usable_session_keeps_what_it_holds(calls: list[str], monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(auth_manager, "db", SimpleNamespace(session=_Session(calls, active=True)))
 
     assert auth_manager.get_user_from_jwt() is USER
-    assert calls == ["api key", "jwt"]
+    assert calls == ["jwt"]
+
+
+def test_a_request_made_with_an_api_key_is_identified_by_the_key_alone(calls: list[str], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(auth_manager, "db", SimpleNamespace(session=_Session(calls, active=True)))
+    monkeypatch.setattr(auth_manager, "uses_api_key", lambda: True)
+
+    assert auth_manager.get_user_from_jwt() is USER
+    assert calls == ["api key"]

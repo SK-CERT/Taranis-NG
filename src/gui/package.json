@@ -39,6 +39,7 @@
         "date-fns": "^4.4.0",
         "dompurify": "^3.4.17",
         "pinia": "^4.1.0",
+        "prism-code-editor": "^5.4.0",
         "qrcode": "^1.5.4",
         "vee-validate": "^4.14.11",
         "vue": "^3.5.44",

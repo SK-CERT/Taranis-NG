@@ -173,6 +173,10 @@ def test_the_columns_and_index_of_their_own_are_the_models(recorded: tuple[Modul
     assert recorder.indexes == {index.name: ("attribute_enum", [column.name for column in index.columns])}
     upgrade = _source("upgrade")
     assert "sa.Column('public_web_enabled', sa.Boolean(), nullable=False, server_default=sa.true())" in upgrade
+    # Without a public web, existing products start off it - by an update, not by a column
+    # default the model does not have.
+    assert "if adds_public_web_enabled and (not public_web_enabled):" in upgrade
+    assert "UPDATE product SET public_web_enabled = false" in upgrade
     assert "sa.Column('icon', sa.String(length=ICON_LENGTH), nullable=True)" in upgrade
     assert ReportItemType.__table__.c.icon.type.length == module.ICON_LENGTH == ProductPreset.__table__.c.icon.type.length
 
