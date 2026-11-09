@@ -138,7 +138,6 @@ export const COLLECTOR_TYPE_ICONS: Readonly<Record<string, string>> = Object.fre
     EMAIL_COLLECTOR: 'mdi-email-outline',
     SLACK_COLLECTOR: 'mdi-slack',
     TWITTER_COLLECTOR: 'mdi-twitter',
-    MANUAL_COLLECTOR: 'mdi-hand-back-right-outline',
     SCHEDULED_TASKS_COLLECTOR: 'mdi-clock-outline'
 })
 

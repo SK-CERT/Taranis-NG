@@ -294,11 +294,12 @@ def _children(revision: str) -> list[str]:
     return [path.name for path in MIGRATION.parent.glob("*.py") if revises.search(path.read_text(encoding="utf-8"))]
 
 
-def test_the_migration_extends_the_api_keys_head_and_is_the_head() -> None:
+def test_the_migration_extends_the_api_keys_head() -> None:
     assert _assignment("revision") == "7d3b9e5f1a2c"
     assert _assignment("down_revision") == "5a9e3c7d1b42"
     assert _children("5a9e3c7d1b42") == [MIGRATION.name]
-    assert _children("7d3b9e5f1a2c") == []
+    # Followed only by the manual entry revision (test_manual_entry_migration.py).
+    assert _children("7d3b9e5f1a2c") == ["9c4e2a7b5d13_manual_entry_without_sources.py"]
 
 
 def test_the_builtin_switch_table_survives_a_premature_create_all() -> None:

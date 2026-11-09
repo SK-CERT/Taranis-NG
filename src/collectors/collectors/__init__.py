@@ -10,7 +10,6 @@ __all__ = [
     "csaf_integrity",
     "csaf_sources",
     "email_collector",
-    "manual_collector",
     "rss_collector",
     "slack_collector",
     "twitter_collector",

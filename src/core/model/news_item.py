@@ -34,7 +34,7 @@ from shared.schema.news_item import (
     NewsItemRemoteSchema,
     NewsItemSchema,
 )
-from sqlalchemy import and_, func, or_, orm, text
+from sqlalchemy import and_, func, or_, orm, text, tuple_
 
 # Attribute keys that describe one revision of a versioned item rather than the item. When a
 # newer revision arrives these are replaced, not merged, so an item never shows two TLP labels
@@ -142,6 +142,27 @@ class NewNewsItemAttributeSchema(NewsItemAttributeSchema):
         return NewsItemAttribute(**data)
 
 
+def news_item_acl_conditions() -> list:
+    """The ACL entries that govern a news item, for a query joined to its data, source and aggregate.
+
+    Those of its OSINT source and the source's collector; for an item without a source - entered
+    by hand, or its source deleted - those of the group its aggregate is in.
+
+    Returns:
+        list: Join conditions for ``ACLEntry``, to be OR-ed.
+    """
+    return [
+        and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
+        and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
+        and_(
+            NewsItemData.osint_source_id.is_(None),
+            NewsItemData.remote_source.is_(None),
+            NewsItemAggregate.osint_source_group_id == ACLEntry.item_id,
+            ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP,
+        ),
+    ]
+
+
 class NewsItemData(db.Model):
     """News item data model.
 
@@ -180,6 +201,13 @@ class NewsItemData(db.Model):
     osint_source_id = db.Column(db.String, db.ForeignKey("osint_source.id"), nullable=True)
     osint_source = db.relationship("OSINTSource")
     remote_source = db.Column(db.String())
+
+    # An item a user typed in Assess has no OSINT source: it goes straight into the group they
+    # chose. `entered_by` (their name when they entered it) marks it as such; the user row may
+    # go later. `source_label` keeps the name of the manual source an older item came from.
+    entered_by = db.Column(db.String(), nullable=True)
+    entered_by_user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    source_label = db.Column(db.String(), nullable=True)
 
     # Versioned items (e.g. CSAF advisories) carry the provider's label for the revision held
     # here, and a key shared by every revision of the item. A newer revision updates this row
@@ -238,6 +266,9 @@ class NewsItemData(db.Model):
         self.content = content
         self.attributes = attributes
         self.osint_source_id = osint_source_id
+        self.entered_by = None
+        self.entered_by_user_id = None
+        self.source_label = None
         self.version = version
         self.version_key = version_key
         # Not stored: how an incoming revision is to be handled when it replaces a stored one
@@ -261,8 +292,10 @@ class NewsItemData(db.Model):
 
     @property
     def osint_source_name(self) -> str:
-        """Return OSINT source name."""
-        return self.osint_source.name if self.osint_source else ""
+        """Return OSINT source name; for an item entered by hand, the manual source it came from, if any."""
+        if self.osint_source:
+            return self.osint_source.name
+        return self.source_label or ""
 
     @property
     def osint_source_type(self) -> str:
@@ -291,15 +324,13 @@ class NewsItemData(db.Model):
             return True
         query = db.session.query(NewsItemData.id).distinct().group_by(NewsItemData.id).filter(NewsItemData.id == news_item_data_id)
 
-        query = query.join(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
+        # LEFT JOINs: an item entered by hand (or whose source was deleted) has no source; its
+        # group's ACL stands in for the source's.
+        query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
+        query = query.outerjoin(NewsItem, NewsItem.news_item_data_id == NewsItemData.id)
+        query = query.outerjoin(NewsItemAggregate, NewsItemAggregate.id == NewsItem.news_item_aggregate_id)
 
-        query = query.outerjoin(
-            ACLEntry,
-            or_(
-                and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
-                and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
-            ),
-        )
+        query = query.outerjoin(ACLEntry, or_(*news_item_acl_conditions()))
 
         query = ACLEntry.apply_query(query, user, see, access, modify)
 
@@ -849,13 +880,8 @@ class NewsItem(db.Model):
         query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
         # LEFT JOIN because when deleting Osint sources -> SET NULL to News items -> ACL right fails
         query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
-        query = query.outerjoin(
-            ACLEntry,
-            or_(
-                and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
-                and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
-            ),
-        )
+        query = query.outerjoin(NewsItemAggregate, NewsItemAggregate.id == NewsItem.news_item_aggregate_id)
+        query = query.outerjoin(ACLEntry, or_(*news_item_acl_conditions()))
 
         query = ACLEntry.apply_query(query, user, see, access, modify)
 
@@ -891,18 +917,17 @@ class NewsItem(db.Model):
 
         query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
         query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
+        query = query.outerjoin(NewsItemAggregate, NewsItemAggregate.id == NewsItem.news_item_aggregate_id)
 
-        query = query.outerjoin(
-            ACLEntry,
-            or_(
-                and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
-                and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
-            ),
-        )
+        query = query.outerjoin(ACLEntry, or_(*news_item_acl_conditions()))
 
         query = ACLEntry.apply_query(query, user, see=False, access=False, modify=False)
 
         result = query.all()
+        if not result:
+            # Every ACL entry of the item leaves the user out: no row survives the filter. This
+            # raised IndexError, failing the whole page an aggregate with such an item was on.
+            return False, False, False
         see = result[0].see > 0 or result[0].acls == 0
         access = result[0].access > 0 or result[0].acls == 0
         modify = result[0].modify > 0 or result[0].acls == 0
@@ -1268,20 +1293,31 @@ class NewsItemAggregate(db.Model):
                 date_limit = datetime.now(TZ) - timedelta(days=31)
             query = query.filter(NewsItemAggregate.created >= date_limit)
 
-        if "sort" in filters:
-            if filters["sort"] == "DATE_DESC":
-                query = query.order_by(db.desc(NewsItemAggregate.created), db.desc(NewsItemAggregate.id))
+        # A window the GUI shows, re-read in place: whichever of these still match. The count is
+        # still that of the whole list, which the GUI shows as its total.
+        list_query = query
+        if filters.get("ids") is not None:
+            query = query.filter(NewsItemAggregate.id.in_(filters["ids"]))
 
-            elif filters["sort"] == "DATE_ASC":
-                query = query.order_by(db.asc(NewsItemAggregate.created), db.asc(NewsItemAggregate.id))
+        sort = filters.get("sort")
+        if sort in SORT_KEYS:
+            column, descending = SORT_KEYS[sort]
+            if descending:
+                query = query.order_by(db.desc(column), db.desc(NewsItemAggregate.id))
+            else:
+                query = query.order_by(db.asc(column), db.asc(NewsItemAggregate.id))
 
-            elif filters["sort"] == "RELEVANCE_DESC":
-                query = query.order_by(db.desc(NewsItemAggregate.relevance), db.desc(NewsItemAggregate.id))
+            # Keyset paging: the items after (or before) a given one in this order. Unlike an
+            # offset, it does not shift when items are collected or removed elsewhere in the list.
+            for direction in ("after", "before"):
+                cursor = parse_cursor(filters.get(direction), sort)
+                if cursor is not None:
+                    key = tuple_(column, NewsItemAggregate.id)
+                    later = descending == (direction == "after")
+                    query = query.filter(key < cursor if later else key > cursor)
 
-            elif filters["sort"] == "RELEVANCE_ASC":
-                query = query.order_by(db.asc(NewsItemAggregate.relevance), db.asc(NewsItemAggregate.id))
-
-        return query.offset(offset).limit(limit).all(), query.count()
+        total = list_query.count() if filters.get("ids") is not None else query.count()
+        return query.offset(offset).limit(limit).all(), total
 
     @classmethod
     def get_by_group_json(cls, group_id: str, filters: dict, offset: int, limit: int, user: User) -> dict:
@@ -1331,10 +1367,14 @@ class NewsItemAggregate(db.Model):
 
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         items = news_item_aggregate_schema.dump(news_item_aggregates)
-        for aggregate in items:
+        sort = filters.get("sort")
+        for aggregate, news_item_aggregate in zip(items, news_item_aggregates, strict=True):
             for news_item in aggregate["news_items"][:]:
                 if news_item["see"] is False:
                     aggregate["news_items"].remove(news_item)
+            # Where the item stands in this order, to page on from it (see get_by_group).
+            if sort in SORT_KEYS:
+                aggregate["cursor"] = make_cursor(news_item_aggregate, sort)
 
         return {"total_count": count, "items": items}
 
@@ -1362,12 +1402,14 @@ class NewsItemAggregate(db.Model):
             NewsItemAggregateSearchIndex.prepare(aggregate, commit=False)
 
     @classmethod
-    def create_new_for_group(cls, news_item_data: NewsItemData, osint_source_group_id: str) -> None:
+    def create_new_for_group(cls, news_item_data: NewsItemData, osint_source_group_id: str) -> NewsItemAggregate:
         """Create new for group. The caller commits.
 
         Args:
             news_item_data (NewsItemData): News item data
             osint_source_group_id (str): OSINT source group GUID
+        Returns:
+            NewsItemAggregate: The new aggregate
         """
         news_item = NewsItem()
         news_item.news_item_data = news_item_data
@@ -1382,6 +1424,7 @@ class NewsItemAggregate(db.Model):
         db.session.add(aggregate)
 
         NewsItemAggregateSearchIndex.prepare(aggregate, commit=False)
+        return aggregate
 
     @classmethod
     def add_news_items(cls, news_items_data_list: list[dict]) -> set[int]:
@@ -1520,11 +1563,14 @@ class NewsItemAggregate(db.Model):
             NewsItemAggregateSearchIndex.prepare(aggregate, commit=False)
 
     @staticmethod
-    def _apply_attribute_extraction(news_item_data: NewsItemData) -> None:
+    def _apply_attribute_extraction(news_item_data: NewsItemData, osint_source_group_id: str | None = None) -> None:
         """Attach attributes found in a manually entered item's text.
 
         Collected items are processed in the collector, where the text arrives; this covers
         the manual path, which has no collector. Both call the same shared matcher.
+
+        A rule limited to some groups runs for an item entered into one of them: such an item
+        has no source, so the group it is entered into decides.
 
         A failure here must never stop the item being saved: the user typed it, and losing
         their input because a pattern misbehaved would be far worse than missing an
@@ -1532,12 +1578,19 @@ class NewsItemAggregate(db.Model):
 
         Args:
             news_item_data (NewsItemData): The sanitized item, before it is persisted.
+            osint_source_group_id (str | None): The group the item is entered into.
         """
         try:
             rules = AttributeExtractionRule.get_all_enabled()
             if not bool(rules):
                 return
             source = OSINTSource.find(news_item_data.osint_source_id) if news_item_data.osint_source_id else None
+
+            def applies(rule: AttributeExtractionRule) -> bool:
+                if source is not None:
+                    return rule.applies_to_source(source)
+                return rule.applies_to_group(osint_source_group_id)
+
             applicable = [
                 ExtractionRule(
                     name=rule.name,
@@ -1547,7 +1600,7 @@ class NewsItemAggregate(db.Model):
                     max_matches=rule.max_matches,
                 )
                 for rule in rules
-                if rule.applies_to_source(source)
+                if applies(rule)
             ]
             if not applicable:
                 return
@@ -1569,20 +1622,30 @@ class NewsItemAggregate(db.Model):
             logger.exception(f"Attribute extraction failed for a manually added news item: {error}")
 
     @classmethod
-    def add_news_item(cls, news_item_data: NewsItemData) -> dict[int]:
-        """Add news item.
+    def add_news_item(cls, data: dict, osint_source_group_id: str, user: User) -> NewsItemAggregate:
+        """Add a news item a user entered by hand, into the group they chose.
+
+        It has no OSINT source: the group is given, and the item records who entered it. The
+        caller checks that the user may add to the group (see OSINTSourceGroup.get_for_entry).
 
         Args:
-            news_item_data (NewsItemData): News item data
+            data (dict): The news item as the GUI sends it.
+            osint_source_group_id (str): The group to add it to.
+            user (User): Who entered it.
+
         Returns:
-            dict[int]: OSINT source IDs
+            NewsItemAggregate: The new aggregate holding the item.
         """
         news_item_data_schema = NewNewsItemDataSchema()
-        news_item_data = news_item_data_schema.load(news_item_data)
+        news_item_data = news_item_data_schema.load(data)
         if not news_item_data.id:
             news_item_data.id = str(uuid.uuid4())
         if not news_item_data.hash:
             news_item_data.hash = news_item_data.id
+        # Never a source, whatever was sent: there are no manual sources any more.
+        news_item_data.osint_source_id = None
+        news_item_data.entered_by = user.name or user.username
+        news_item_data.entered_by_user_id = user.id
         # sanitize news item from user manual input
         news_item_data.title = smart_truncate(strip_html(news_item_data.title), 200)
         news_item_data.review = smart_truncate(strip_html(news_item_data.review))
@@ -1591,13 +1654,13 @@ class NewsItemAggregate(db.Model):
         # Manually entered items never pass through a collector, so extraction is applied
         # here instead. This is the single place a manual item is created, and the text has
         # just been sanitized above, which is what the rules should see.
-        cls._apply_attribute_extraction(news_item_data)
+        cls._apply_attribute_extraction(news_item_data, osint_source_group_id)
         db.session.add(news_item_data)
-        cls.create_new_for_all_groups(news_item_data)
+        aggregate = cls.create_new_for_group(news_item_data, osint_source_group_id)
         TagCloud.generate_tag_cloud_words(news_item_data)
         db.session.commit()
 
-        return {news_item_data.osint_source_id}
+        return aggregate
 
     @classmethod
     def reassign_to_new_groups(cls, osint_source_id: int, default_group_id: int) -> None:
@@ -2132,6 +2195,52 @@ class NewsItemAggregate(db.Model):
             list[NewsItemAggregate]: News item aggregates
         """
         return cls.query.filter(cls.osint_source_group_id == source_group_id).all()
+
+
+# The orders Assess lists aggregates in: the column sorted on, and whether descending. The id
+# breaks ties, the same way.
+SORT_KEYS: dict[str, tuple] = {
+    "DATE_DESC": (NewsItemAggregate.created, True),
+    "DATE_ASC": (NewsItemAggregate.created, False),
+    "RELEVANCE_DESC": (NewsItemAggregate.relevance, True),
+    "RELEVANCE_ASC": (NewsItemAggregate.relevance, False),
+}
+
+
+def make_cursor(aggregate: NewsItemAggregate, sort: str) -> str:
+    """Where an aggregate stands in an order: its sort value and id, as ``value|id``.
+
+    Args:
+        aggregate (NewsItemAggregate): The aggregate.
+        sort (str): One of SORT_KEYS.
+
+    Returns:
+        str: The cursor; ``parse_cursor`` reads it back.
+    """
+    if not sort.startswith("DATE"):
+        return f"{aggregate.relevance or 0}|{aggregate.id}"
+    created = aggregate.created.isoformat() if aggregate.created else ""
+    return f"{created}|{aggregate.id}"
+
+
+def parse_cursor(cursor: object, sort: str) -> tuple | None:
+    """Read a cursor of ``make_cursor`` back, for the given order.
+
+    Args:
+        cursor (object): The cursor as the request gave it.
+        sort (str): One of SORT_KEYS.
+
+    Returns:
+        tuple | None: ``(value, id)``, or None for a missing or malformed cursor.
+    """
+    if not isinstance(cursor, str) or "|" not in cursor:
+        return None
+    value, _, aggregate_id = cursor.rpartition("|")
+    try:
+        key = datetime.fromisoformat(value) if sort.startswith("DATE") else int(value)
+        return key, int(aggregate_id)
+    except ValueError:
+        return None
 
 
 class NewsItemAggregateSearchIndex(db.Model):

@@ -149,35 +149,6 @@ class OSINTSource(db.Model):
         return cls.query.order_by(db.asc(OSINTSource.name)).all()
 
     @classmethod
-    def get_all_manual(cls, user: User) -> list[OSINTSource]:
-        """Get all manual OSINT sources.
-
-        Args:
-            user (User): User object.
-
-        Returns:
-            List[OSINTSource]: List of manual OSINT sources.
-        """
-        # A switched-off source must not be offered for manual entry either.
-        query = (
-            cls.query.join(Collector, OSINTSource.collector_id == Collector.id)
-            .filter(Collector.type == "MANUAL_COLLECTOR")
-            .filter(OSINTSource.enabled.is_(True))
-        )
-
-        query = query.outerjoin(
-            ACLEntry,
-            or_(
-                and_(OSINTSource.id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
-                and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
-            ),
-        )
-
-        query = ACLEntry.apply_query(query, user, see=False, access=True, modify=False)
-
-        return query.order_by(db.asc(OSINTSource.name)).all()
-
-    @classmethod
     def get(cls, search: str) -> tuple[list[OSINTSource], int]:
         """Get OSINT sources.
 
@@ -242,22 +213,6 @@ class OSINTSource(db.Model):
         schema = OSINTSourcePresentationSchema(many=True)
         items = schema.dump(sources)
         return {"total_count": count, "items": items}
-
-    @classmethod
-    def get_all_manual_json(cls, user: User) -> dict:
-        """Get all manual OSINT sources in JSON format.
-
-        Args:
-            user (User): User object.
-
-        Returns:
-            dict: JSON response.
-        """
-        sources = cls.get_all_manual(user)
-        for source in sources:
-            source.osint_source_groups = OSINTSourceGroup.get_for_osint_source(source.id)
-        sources_schema = OSINTSourcePresentationSchema(many=True)
-        return sources_schema.dump(sources)
 
     @classmethod
     def get_all_for_collector_json(cls, collector_node: CollectorsNode, collector_type: str) -> dict | None:
@@ -698,6 +653,33 @@ class OSINTSourceGroup(db.Model):
         groups, count = cls.get(search, user, acl_check)
         group_schema = OSINTSourceGroupPresentationSchema(many=True)
         return {"total_count": count, "items": group_schema.dump(groups)}
+
+    @classmethod
+    def get_for_entry(cls, user: User) -> list[OSINTSourceGroup]:
+        """The groups a user may enter news items into by hand: those they may access.
+
+        Args:
+            user (User): User object.
+
+        Returns:
+            List[OSINTSourceGroup]: The groups, the default one first.
+        """
+        query = cls.query.distinct().group_by(OSINTSourceGroup.id)
+        query = query.outerjoin(ACLEntry, and_(OSINTSourceGroup.id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP))
+        query = ACLEntry.apply_query(query, user, see=False, access=True, modify=False)
+        return query.order_by(db.desc(OSINTSourceGroup.default), db.asc(OSINTSourceGroup.name)).all()
+
+    @classmethod
+    def get_for_entry_json(cls, user: User) -> list[dict]:
+        """The groups a user may enter news items into, for the Add news item dialog.
+
+        Args:
+            user (User): User object.
+
+        Returns:
+            list[dict]: ``{id, name, default}`` of each group.
+        """
+        return [{"id": group.id, "name": group.name, "default": bool(group.default)} for group in cls.get_for_entry(user)]
 
     @classmethod
     def get_all_with_source(cls, osint_source_id: str) -> list[OSINTSourceGroup]:

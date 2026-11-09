@@ -227,6 +227,7 @@
     import GroupNavList from '@/components/common/GroupNavList.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
+    import { newsItemSourceName } from '@/utils/newsItemSource'
     import { type GroupNavItem } from '@/types/routing'
 
     type SelectorItem = {
@@ -238,6 +239,8 @@
             id: number | string
             news_item_data?: {
                 osint_source_name?: string
+                entered_by?: string | null
+                source_label?: string | null
                 source?: string
                 published?: string
                 link?: string
@@ -325,11 +328,7 @@
     }
 
     const getNewsItemSource = (item: SelectorItem): string => {
-        return (
-            getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
-            getFirstNewsItem(item)?.news_item_data?.source ||
-            t('card_item.unknown_source')
-        )
+        return newsItemSourceName(getFirstNewsItem(item)?.news_item_data, t) || t('card_item.unknown_source')
     }
 
     const getPublishedDate = (item: SelectorItem): string => {

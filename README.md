@@ -21,6 +21,7 @@ that mention vulnerabilities in the software.
 Key capabilities include:
 
 - collecting data from multiple source types and environments;
+- entering news items by hand into a chosen source group;
 - extracting content from JavaScript-rendered web pages;
 - creating analyses with configurable report-item types;
 - generating products from reusable templates;
@@ -37,7 +38,6 @@ Key capabilities include:
 | Collector | web              | crawl web sites                                     |
 |           | csaf             | read [CSAF](https://www.csaf.io/) advisories        |
 |           | email            | read e-mails                                        |
-|           | manual entry     | enter news item manually                            |
 |           | rss              | read RSS, Atom feeds                                |
 |           | scheduled tasks  | populate feed automatically                         |
 |           | slack            | read [Slack](https://slack.com/) messages           |

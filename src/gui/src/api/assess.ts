@@ -20,6 +20,12 @@ function buildFilterQueryString(filter_data) {
     if (filter_data.filter.range != 'ALL') {
         filter += '&range=' + encodeURIComponent(filter_data.filter.range)
     }
+    // A shown window re-read by id, and keyset paging after/before an item's cursor.
+    for (const key of ['ids', 'after', 'before']) {
+        if (filter_data[key]) {
+            filter += '&' + key + '=' + encodeURIComponent(filter_data[key])
+        }
+    }
     return filter
 }
 
@@ -32,8 +38,9 @@ export function getUnreadCountsByGroup() {
     return ApiService.get('/assess/osint-source-groups/unread-counts')
 }
 
-export function getManualOSINTSources() {
-    return ApiService.get('/assess/manual-osint-sources')
+/** The groups the user may enter a news item into by hand (needs ASSESS_CREATE only). */
+export function getNewsItemEntryGroups() {
+    return ApiService.get('/assess/news-item-entry-groups')
 }
 
 export function getNewsItemsByGroup(group_id, filter_data) {

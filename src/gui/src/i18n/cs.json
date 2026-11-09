@@ -330,8 +330,11 @@
         "source": "Zdroj",
         "link": "Odkaz",
         "content": "Obsah",
-        "manual_source": "Ruční zdroj OSINT",
-        "successful": "Novinka byla vytvořena"
+        "group": "Skupina zdrojů",
+        "successful": "Novinka byla vytvořena",
+        "manual_entry_by": "Ruční zadání: {name}",
+        "manual_entry": "Ruční zadání",
+        "link_invalid": "Zadejte webovou adresu začínající http:// nebo https://"
     },
     "card_item": {
         "title": "Název",

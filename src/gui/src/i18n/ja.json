@@ -330,8 +330,11 @@
         "source": "ソース",
         "link": "リンク",
         "content": "内容",
-        "manual_source": "手動OSINTソース",
-        "successful": "ニュース項目を作成しました"
+        "group": "ソースグループ",
+        "successful": "ニュース項目を作成しました",
+        "manual_entry_by": "{name} による手動入力",
+        "manual_entry": "手動入力",
+        "link_invalid": "http:// または https:// で始まる Web アドレスを入力してください"
     },
     "card_item": {
         "title": "タイトル",

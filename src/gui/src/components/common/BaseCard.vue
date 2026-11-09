@@ -203,7 +203,8 @@
     }
 
     .review-list__row:hover::before,
-    .review-list__row:focus-visible::before {
+    .review-list__row:focus-visible::before,
+    .review-list__row[data-focused='true']::before {
         background: rgba(var(--v-theme-primary), 0.05);
     }
 
@@ -218,7 +219,8 @@
     }
 
     .review-list__row:hover::after,
-    .review-list__row:focus-visible::after {
+    .review-list__row:focus-visible::after,
+    .review-list__row[data-focused='true']::after {
         border-color: rgba(var(--v-theme-primary), 0.52);
     }
 

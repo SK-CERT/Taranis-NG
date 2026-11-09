@@ -17,7 +17,7 @@ import AssessView from '@/views/users/AssessView.vue'
  */
 
 vi.mock('@/api/assess', () => ({
-    getManualOSINTSources: vi.fn().mockResolvedValue({ data: [] }),
+    getNewsItemEntryGroups: vi.fn().mockResolvedValue({ data: [] }),
     getNewsItemsByGroup: vi.fn().mockResolvedValue({ data: { total_count: 0, items: [] } }),
     voteNewsItemAggregate: vi.fn(),
     readNewsItemAggregate: vi.fn(),

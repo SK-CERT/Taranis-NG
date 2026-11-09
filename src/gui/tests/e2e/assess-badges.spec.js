@@ -65,7 +65,7 @@ test.describe('Assess report badges', () => {
         // the empty-state "No news items found" paragraph.
         await expect(page.getByText('News Items', { exact: true })).toBeVisible({ timeout: 10000 })
 
-        // The "Add New" button only appears when manual OSINT sources are configured.
+        // The "Add New" button appears when the user may enter items into some group.
         // Scope to the toolbar: the empty-state placeholder renders a second "Add New"
         // button, so an unscoped role locator is a strict-mode violation.
         const addBtn = page.locator('.toolbar-filter').getByRole('button', { name: 'Add New' })
@@ -77,13 +77,10 @@ test.describe('Assess report badges', () => {
         await expect(dialog).toBeVisible({ timeout: 5000 })
 
         // Fill the form by label (NOT by positional nth).
-        // The AddNewsItemDialog may render a v-select for the manual OSINT source even when
-        // only one source exists — the v-select's internal <input type="text"> is at index 0
-        // in the DOM, so positional .first() targets that hidden input (not the visible Title
-        // text-field), and .nth(1) lands on Title — leaving Source empty. Label-based fills
-        // target the correct v-text-field regardless of v-select presence.
-        // Use exact: true to avoid matching the v-select labelled "Manual OSINT Source"
-        // (which contains the substring "Source" — would be returned before the Source v-text-field).
+        // The AddNewsItemDialog renders a v-select for the group when there are several — its
+        // internal <input type="text"> comes first in the DOM, so positional .first() would
+        // target that hidden input, not the Title field. Label-based fills target the right
+        // field either way; exact: true keeps "Source" from matching "Source group".
         await dialog.getByLabel('Title', { exact: true }).fill(NEWS_ITEM_TITLE)
         await dialog.getByLabel('Review', { exact: true }).fill('News item for dual-badge testing')
         await dialog.getByLabel('Source', { exact: true }).fill('E2E')

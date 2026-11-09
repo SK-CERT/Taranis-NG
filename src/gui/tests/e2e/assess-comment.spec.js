@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { login } from '../helpers/test-helpers'
-import { createApiContext, getFirstOSINTSourceId, createNewsItem, cleanupSeedData } from '../helpers/api-seed'
+import { createApiContext, createNewsItem, cleanupSeedData } from '../helpers/api-seed'
 
 /**
  * Assess comment E2E Tests (issue #1753)
@@ -21,8 +21,7 @@ test.describe('Assess comment', () => {
     test.beforeAll(async ({ playwright }) => {
         apiCtx = await createApiContext(playwright)
         const { request, token } = apiCtx
-        const osintSourceId = await getFirstOSINTSourceId(request, token)
-        ;({ aggregateId } = await createNewsItem(request, token, { title: NEWS_ITEM_TITLE, osintSourceId }))
+        ;({ aggregateId } = await createNewsItem(request, token, { title: NEWS_ITEM_TITLE }))
     })
 
     test.afterAll(async () => {

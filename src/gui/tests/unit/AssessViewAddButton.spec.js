@@ -16,10 +16,10 @@ import AssessView from '@/views/users/AssessView.vue'
  */
 
 // vi.mock is hoisted above module-level consts, so the fixture is declared with it.
-const { manualSources } = vi.hoisted(() => ({ manualSources: [{ id: 'src-1', name: 'Manual source' }] }))
+const { entryGroups } = vi.hoisted(() => ({ entryGroups: [{ id: 'group-a', name: 'Group A', default: true }] }))
 
 vi.mock('@/api/assess', () => ({
-    getManualOSINTSources: vi.fn().mockResolvedValue({ data: manualSources }),
+    getNewsItemEntryGroups: vi.fn().mockResolvedValue({ data: entryGroups }),
     getNewsItemsByGroup: vi.fn().mockResolvedValue({ data: { total_count: 0, items: [] } }),
     voteNewsItemAggregate: vi.fn(),
     readNewsItemAggregate: vi.fn(),
@@ -80,7 +80,7 @@ const ContentDataAssessStub = {
 
 const AddNewsItemDialogStub = {
     name: 'AddNewsItemDialog',
-    props: ['modelValue', 'manualSources', 'initialSourceId'],
+    props: ['modelValue', 'groups', 'initialGroupId'],
     template: '<div><slot name="activator" :props="{}" /></div>'
 }
 
@@ -131,6 +131,12 @@ describe('AssessView add button', () => {
 
         expect(wrapper.findAll('.add-new-button')).toHaveLength(1)
         expect(wrapper.find('.toolbar .add-new-button').exists()).toBe(true)
+    })
+
+    it('proposes the group open in Assess for the new item', async () => {
+        const wrapper = await mountAssessView()
+
+        expect(wrapper.findComponent({ name: 'AddNewsItemDialog' }).props('initialGroupId')).toBe('group-a')
     })
 
     it('does not let the report-item dialog contribute one of its own', async () => {
