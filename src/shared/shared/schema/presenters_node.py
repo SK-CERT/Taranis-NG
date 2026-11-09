@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from marshmallow import EXCLUDE, Schema, fields, post_load, validate
 
-from shared.schema.presentation import PresentationSchema
+from shared.schema.presentation import HiddenApiKeySchema, PresentationSchema
 from shared.schema.presenter import PresenterSchema
 
 
@@ -77,5 +77,5 @@ class PresentersNodeSchema(Schema):
         return PresentersNode(**data)
 
 
-class PresentersNodePresentationSchema(PresentersNodeSchema, PresentationSchema):
+class PresentersNodePresentationSchema(HiddenApiKeySchema, PresentersNodeSchema, PresentationSchema):
     """Presentation-oriented schema for presenters nodes."""

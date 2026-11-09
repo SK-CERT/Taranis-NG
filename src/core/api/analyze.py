@@ -69,8 +69,10 @@ class ReportItems(Resource):
             report_filter.update(tag.list_filter(request.args))
 
             group = request.args.get("group")
-            offset = request.args.get("offset", 0)
-            limit = min(int(request.args.get("limit", 50)), 200)
+            offset = max(int(request.args.get("offset", 0)), 0)
+            limit = min(max(int(request.args.get("limit", 50)), 1), 200)
+        except ValueError:
+            return {"error": "Invalid list parameters: offset, limit and ids must be whole numbers"}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Get ReportItems failed"
             logger.exception(f"{msg}: {ex}")
@@ -520,8 +522,12 @@ class ReportItemLlmGenerate(Resource):
     def post(self, attribute_id: int) -> dict:
         """Generate an AI overview."""
         try:
+            if not isinstance(request.json, dict):
+                return {"error": "Send the news item ids as an object"}, HTTPStatus.BAD_REQUEST
             news_item_agreggate_ids = request.json.get("news_item_agreggate_ids")
             attr = AttributeGroupItem.find(attribute_id)
+            if attr is None:
+                return {"error": f"Unknown attribute (Attribute ID: {attribute_id})"}, HTTPStatus.NOT_FOUND
             ai_prompt = attr.ai_prompt
             ai_provider = attr.ai_provider
             if not ai_provider or not ai_prompt:

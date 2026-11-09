@@ -6,9 +6,10 @@ from datetime import datetime
 
 from managers import tlp
 from managers.db_manager import db
+from managers.stored_secrets import keep_stored_api_key
 from marshmallow import post_load
 from shared.common import TZ
-from shared.schema.ai_provider import AiProviderSchema
+from shared.schema.ai_provider import AiProviderPresentationSchema, AiProviderSchema
 
 
 class NewAiProviderSchema(AiProviderSchema):
@@ -118,7 +119,7 @@ class AiProvider(db.Model):
             dict: Dictionary containing total count and list of local AI models in JSON format.
         """
         ai_providers, count = cls.get(search)
-        schema = AiProviderSchema(many=True)
+        schema = AiProviderPresentationSchema(many=True)
         return {"total_count": count, "items": schema.dump(ai_providers)}
 
     @classmethod
@@ -153,7 +154,7 @@ class AiProvider(db.Model):
             AiProvider: The updated local AI model.
         """
         schema = AiProviderSchema()
-        new = schema.load(data)
+        new = schema.load(keep_stored_api_key(data, cls, id))
         old = db.session.get(cls, id)
         old.name = new.name
         old.api_type = new.api_type

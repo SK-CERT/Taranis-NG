@@ -137,6 +137,32 @@ describe('configuration create/update/delete roles', () => {
     })
 })
 
+describe('stored node API keys', () => {
+    beforeEach(() => allowedPermissions.clear())
+
+    // Core no longer sends the key back, only whether one is stored: the field then says so,
+    // and may be saved empty to keep it.
+    it('does not require retyping a stored key', async () => {
+        allowedPermissions.add('CONFIG_COLLECTORS_NODE_UPDATE')
+        const detail = mountNodeDialog({ id: 'node-1', name: 'Node 1', api_url: 'http://n', api_key: '', api_key_set: true })
+        await flushPromises()
+
+        const keyField = detail.findAllComponents({ name: 'VTextField' }).find((field) => field.props('label') === 'API Key')
+        expect(keyField.props('placeholder')).toBe('Stored – leave empty to keep it')
+        expect(keyField.props('rules')).toEqual([])
+    })
+
+    it('still requires a key for a new node', async () => {
+        allowedPermissions.add('CONFIG_COLLECTORS_NODE_CREATE')
+        const create = mountNodeDialog()
+        await flushPromises()
+
+        const keyField = create.findAllComponents({ name: 'VTextField' }).find((field) => field.props('label') === 'API Key')
+        expect(keyField.props('rules')).toHaveLength(1)
+        expect(keyField.props('placeholder')).toBeUndefined()
+    })
+})
+
 describe('fine-grained nested row actions', () => {
     const mountTable = (props = {}) =>
         mountWithPlugins(EditableEntityTable, {
