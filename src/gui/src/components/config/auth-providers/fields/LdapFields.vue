@@ -11,7 +11,7 @@
                 :label="t('auth_provider.server_url')"
                 variant="outlined"
                 density="comfortable"
-                placeholder="ldaps://ldap.example.org"
+                :placeholder="serverUrlPlaceholder"
                 :rules="[(v) => !!v || t('error.required')]"
                 :disabled="saving"
             />
@@ -242,6 +242,8 @@
     import { ICONS } from '@/config/ui-constants'
     import AuthProviderHelp from '../AuthProviderHelp.vue'
     import type { ProviderConfig } from '../types'
+
+    const serverUrlPlaceholder = 'ldaps://ldap.example.org'
 
     /** The two bind modes, named to mirror the backend paths in ldap_authenticator.py. */
     type LdapBindMode = 'direct' | 'search'
