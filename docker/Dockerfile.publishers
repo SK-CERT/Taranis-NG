@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.14
 
-FROM python:3.14-alpine3.24 AS build_shared
+FROM python:3.15-alpine3.24 AS build_shared
 
 WORKDIR /build_shared/
 
@@ -9,7 +9,8 @@ COPY ./src/shared/. .
 RUN uv build
 
 
-FROM python:3.14-alpine3.24 AS production
+
+FROM python:3.15-alpine3.24 AS production
 
 WORKDIR /app/
 
