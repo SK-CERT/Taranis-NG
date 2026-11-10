@@ -32,7 +32,7 @@
         "@tanstack/vue-virtual": "^3.13.52",
         "@tiptap/extensions": "^3.32.2",
         "@tiptap/pm": "^3.32.2",
-        "@tiptap/starter-kit": "^3.32.2",
+        "@tiptap/starter-kit": "^3.33.1",
         "@tiptap/vue-3": "^3.32.2",
         "ae-cvss-calculator": "^1.0.13",
         "axios": "^1.21.0",
