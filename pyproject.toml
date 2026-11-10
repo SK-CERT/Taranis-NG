@@ -2,7 +2,7 @@
 name = "TARANIS-NG"
 version = "26.10.1"
 description = "OSINT gathering and analysis tool for CSIRT teams and organisations."
-readme = "README.md"
+readme = "README.md"f
 requires-python = ">=3.11"
 license = { text = "EUPL-1.2" }
 authors = [
@@ -117,7 +117,7 @@ testpaths = [
 pythonpath = ["src/core", "src/shared"]
 
 [tool.ruff]
-required-version = "0.17.3"
+required-version = "0.17.4"
 line-length = 142
 target-version = "py313"
 fix = true
