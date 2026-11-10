@@ -18,7 +18,7 @@ dependencies = [
     "pysequoia==0.1.36",
     "python-dateutil==4.0.0",
     "python-dotenv==1.2.4",
-    "regex==2026.9.29",
+    "regex==2026.11.7",
     "requests==2.34.2",
     "schedule==1.2.2",
     "selenium==4.52.0",
