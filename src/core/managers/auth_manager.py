@@ -1112,6 +1112,8 @@ def auth_required(
                 activity_detail,
                 request_data=request.get_json(force=True, silent=True),
             )
+            # The endpoint asks for its user again (get_user_from_jwt): it is the one just checked.
+            g.authenticated_user = user
             return fn(*args, **kwargs)
 
         return wrapper
@@ -1261,6 +1263,11 @@ def get_user_from_jwt() -> User:
     """
     if not db.session.is_active:
         db.session.rollback()
+    # Behind auth_required the user was resolved and checked moments ago, in this request: looking
+    # it up again re-verified the token and reloaded the user (with its permissions and hotkeys).
+    authenticated = g.get("authenticated_user") if has_request_context() else None
+    if authenticated is not None:
+        return authenticated
     if uses_api_key():
         return get_user_from_api_key()
     return get_user_from_jwt_token()

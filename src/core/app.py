@@ -101,7 +101,10 @@ def _install_security_headers(app: Flask) -> None:
     @app.after_request
     def set_security_headers(response: Response) -> Response:
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("X-Frame-Options", "DENY")
+        # A handler that set its own frame-ancestors decides who may frame it; X-Frame-Options
+        # beside it is ignored by browsers, and Firefox reports that in the framed page's console.
+        if "frame-ancestors" not in response.headers.get("Content-Security-Policy", ""):
+            response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
 
         # One hook decides the CSP outright. Splitting this across two

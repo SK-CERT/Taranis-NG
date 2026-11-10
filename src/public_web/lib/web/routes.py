@@ -21,7 +21,7 @@ from flask import (
 )
 from lib import send_mail
 from lib.logger import get_logger
-from lib.report.product import matches_keyword
+from lib.report.product import matches_keyword, remove_link_references
 from lib.web import translate, translate_ui
 from lib.web.cache import WebCache
 from lib.web.site import IMAGE_KINDS, current_site, load_site
@@ -57,13 +57,6 @@ def _keep_chosen_language(endpoint: str, values: dict) -> None:
         values.setdefault("lang", site.language)
 
 
-def _remove_link_references(text: str, links: list[str | None]) -> str:
-    """Removes references ([1], [2]...) from text."""
-    for i, _ in enumerate(links, start=1):
-        text = text.replace(f" [{i}]", "").replace(f"[{i}]", "")
-    return text
-
-
 def _render_options(selected_items: list[int] | None = None) -> dict:
     """What the report templates get besides the product: language, branding, ``t()``."""
     site = current_site()
@@ -78,7 +71,7 @@ def _render_options(selected_items: list[int] | None = None) -> dict:
 def _get_rss_description(report: dict) -> str:
     """Returns the plain-text RSS description of a report, without [n] link references."""
     text = cache.renderer(current_site().id).render_text(report, **_render_options())
-    return _remove_link_references(text, report["links"])
+    return remove_link_references(text, report["links"])
 
 
 @reports_bp.route("/", endpoint="home")

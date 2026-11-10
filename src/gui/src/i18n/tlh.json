@@ -2319,7 +2319,24 @@
             "webs_hint": "pagh wIvlu': Hoch Daq. Daq ghItlhbogh naQ lo' Daq, pagh Hoch Daq naQ lo'.",
             "every_web": "Hoch Daq",
             "web_taken": "'{name}' Daq",
-            "every_web_taken": "'{name}' Hoch Daq naQ moj: naQvam Daqmey yIwIv."
+            "every_web_taken": "'{name}' Hoch Daq naQ moj: naQvam Daqmey yIwIv.",
+            "tab_template": "naQ"
+        },
+        "preview": {
+            "title": "nuD",
+            "choose_target": "nuD legh: ghItlhmey yIwIv.",
+            "web": "Qo' Sar",
+            "product": "Doch",
+            "no_products": "Doch tu'be'.",
+            "view_detail": "ghItlh nav",
+            "view_summary": "ghom nav",
+            "view_rss": "RSS Doch",
+            "refresh": "chu'",
+            "errors_title": "ghItlhmey luj; Qo'noS ghItlhmey 'ang:",
+            "line": "tlhegh {line}",
+            "xml": "RSS Doch (XML)",
+            "failed": "nuD luj.",
+            "open_new_tab": "'echlet chu'Daq yIpoSmoH"
         }
     },
     "routing": {

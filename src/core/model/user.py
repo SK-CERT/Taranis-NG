@@ -133,9 +133,13 @@ class User(db.Model):
 
     organizations = db.relationship("Organization", secondary="user_organization")
     roles = db.relationship(Role, secondary="user_role")
-    permissions = db.relationship(Permission, secondary="user_permission", lazy="joined")
-    hotkeys = db.relationship(Hotkey, cascade="all, delete-orphan", lazy="joined")
-    word_lists = db.relationship(WordList, secondary="user_word_list", lazy="joined")
+    # Loaded with the user on every request, but each in a query of its own: joined into the one
+    # that loads the user, they multiplied into permissions x hotkeys x every entry of every word
+    # list the user highlights with (word lists join their categories and entries in turn). Word
+    # lists only load when read (the profile's highlighting settings).
+    permissions = db.relationship(Permission, secondary="user_permission", lazy="selectin")
+    hotkeys = db.relationship(Hotkey, cascade="all, delete-orphan", lazy="selectin")
+    word_lists = db.relationship(WordList, secondary="user_word_list", lazy="select")
     auth_identities = db.relationship(UserAuthIdentity, back_populates="user", cascade="all, delete-orphan")
     webauthn_credentials = db.relationship(WebauthnCredential, back_populates="user", cascade="all, delete-orphan")
 

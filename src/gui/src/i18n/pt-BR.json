@@ -2319,7 +2319,24 @@
             "webs_hint": "Nenhum escolhido: todos os sites. Um site usa o modelo que o inclui; caso contrário, o de todos os sites.",
             "every_web": "Todos os sites",
             "web_taken": "Já em '{name}'",
-            "every_web_taken": "'{name}' já é o modelo para todos os sites: escolha os sites aos quais este se aplica."
+            "every_web_taken": "'{name}' já é o modelo para todos os sites: escolha os sites aos quais este se aplica.",
+            "tab_template": "Modelo"
+        },
+        "preview": {
+            "title": "Pré-visualização",
+            "choose_target": "Escolha para que é o modelo para ver uma pré-visualização.",
+            "web": "Site",
+            "product": "Produto",
+            "no_products": "Nenhum produto publicado neste site ao qual o modelo se aplique.",
+            "view_detail": "Página do relatório",
+            "view_summary": "Entrada da página inicial",
+            "view_rss": "Item RSS",
+            "refresh": "Atualizar",
+            "errors_title": "O modelo falhou; o integrado é exibido em seu lugar:",
+            "line": "linha {line}",
+            "xml": "Item do feed (XML)",
+            "failed": "Não foi possível criar a pré-visualização.",
+            "open_new_tab": "Abrir em uma nova aba"
         }
     },
     "routing": {

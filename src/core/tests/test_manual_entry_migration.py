@@ -38,12 +38,13 @@ def _upgrade_source() -> str:
     return ast.unparse(next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "upgrade"))
 
 
-def test_the_migration_extends_the_public_web_templates_head_and_is_the_head() -> None:
+def test_the_migration_extends_the_public_web_templates_head() -> None:
     module = _load()
     assert module.revision == "9c4e2a7b5d13"
     assert module.down_revision == "7d3b9e5f1a2c"
     assert _children("7d3b9e5f1a2c") == [MIGRATION.name]
-    assert _children("9c4e2a7b5d13") == []
+    # Followed only by the index revision (test_api_indexes_migration.py).
+    assert _children("9c4e2a7b5d13") == ["4b8e6d2a9c71_api_indexes.py"]
 
 
 def test_it_adds_what_the_model_declares_and_tolerates_create_all() -> None:

@@ -192,7 +192,8 @@ class NewsItemData(db.Model):
     language = db.Column(db.String())
     content = db.Column(db.String())
 
-    collected = db.Column(db.DateTime)
+    # The dashboard counts and lists items by when they were collected.
+    collected = db.Column(db.DateTime, index=True)
     published = db.Column(db.String())
     updated = db.Column(db.DateTime)
 
@@ -934,6 +935,52 @@ class NewsItem(db.Model):
 
         return see, access, modify
 
+    @classmethod
+    def get_acl_statuses(cls, news_items: list[NewsItem], user: User) -> dict[int, tuple[bool, bool, bool]]:
+        """``get_acl_status`` for many news items at once: one query instead of one per item.
+
+        Args:
+            news_items (list[NewsItem]): The news items (loaded, with their data).
+            user (User): User
+
+        Returns:
+            dict[int, tuple[bool, bool, bool]]: See, access and modify per news item ID.
+        """
+        statuses: dict[int, tuple[bool, bool, bool]] = {}
+        local_ids = []
+        for news_item in news_items:
+            if news_item.news_item_data is not None and news_item.news_item_data.remote_source is not None:
+                statuses[news_item.id] = (True, True, True)
+            else:
+                local_ids.append(news_item.id)
+        if not local_ids:
+            return statuses
+
+        query = (
+            db.session.query(
+                NewsItem.id,
+                func.count().filter(ACLEntry.id > 0).label("acls"),
+                func.count().filter(ACLEntry.see.is_(True)).label("see"),
+                func.count().filter(ACLEntry.access.is_(True)).label("access"),
+                func.count().filter(ACLEntry.modify.is_(True)).label("modify"),
+            )
+            .filter(NewsItem.id.in_(local_ids))
+            .group_by(NewsItem.id)
+        )
+        query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
+        query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
+        query = query.outerjoin(NewsItemAggregate, NewsItemAggregate.id == NewsItem.news_item_aggregate_id)
+        query = query.outerjoin(ACLEntry, or_(*news_item_acl_conditions()))
+        query = ACLEntry.apply_query(query, user, see=False, access=False, modify=False)
+
+        for row in query.all():
+            unrestricted = row.acls == 0
+            statuses[row.id] = (row.see > 0 or unrestricted, row.access > 0 or unrestricted, row.modify > 0 or unrestricted)
+        # No row: every ACL entry of the item leaves the user out.
+        for news_item_id in local_ids:
+            statuses.setdefault(news_item_id, (False, False, False))
+        return statuses
+
     def vote(self, data: dict, user_id: int) -> None:
         """Vote.
 
@@ -1061,7 +1108,7 @@ class NewsItemVote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     like = db.Column(db.Boolean)
     dislike = db.Column(db.Boolean)
-    news_item_id = db.Column(db.Integer, db.ForeignKey("news_item.id"))
+    news_item_id = db.Column(db.Integer, db.ForeignKey("news_item.id"), index=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
 
     remote_node_id = db.Column(db.Integer, db.ForeignKey("remote_node.id"), nullable=True)
@@ -1086,6 +1133,22 @@ class NewsItemVote(db.Model):
             News item vote
         """
         return cls.query.filter_by(news_item_id=news_item_id, user_id=user_id).first()
+
+    @classmethod
+    def find_for_user(cls, news_item_ids: list[int], user_id: int) -> dict[int, NewsItemVote]:
+        """A user's votes on several news items, in one query.
+
+        Args:
+            news_item_ids (list[int]): News item IDs
+            user_id (int): User ID
+
+        Returns:
+            dict[int, NewsItemVote]: The vote per news item ID, for those the user voted on.
+        """
+        if not news_item_ids:
+            return {}
+        votes = cls.query.filter(cls.news_item_id.in_(news_item_ids), cls.user_id == user_id).all()
+        return {vote.news_item_id: vote for vote in votes}
 
     @classmethod
     def delete_all(cls, news_item_id: int) -> None:
@@ -1156,6 +1219,12 @@ class NewsItemAggregate(db.Model):
     news_items = db.relationship("NewsItem", lazy="joined")
 
     news_item_attributes = db.relationship("NewsItemAttribute", secondary="news_item_aggregate_news_item_attribute", lazy="selectin")
+
+    # Assess lists aggregates newest first (and pages by created and id), in one group or in all.
+    __table_args__ = (
+        db.Index("ix_news_item_aggregate_created_id", "created", "id"),
+        db.Index("ix_news_item_aggregate_group_created_id", "osint_source_group_id", "created", "id"),
+    )
 
     @classmethod
     def find(cls, news_item_aggregate_id: int) -> NewsItemAggregate:
@@ -1339,15 +1408,21 @@ class NewsItemAggregate(db.Model):
         aggregate_ids = [nia.id for nia in news_item_aggregates]
         report_counts = ReportItemNewsItemAggregate.counts_for_aggregates(aggregate_ids)
 
+        # The ACL status and the user's vote of every news item on the page, in two queries
+        # rather than two per item.
+        page_news_items = [news_item for aggregate in news_item_aggregates for news_item in aggregate.news_items]
+        acl_statuses = NewsItem.get_acl_statuses(page_news_items, user)
+        votes = NewsItemVote.find_for_user([news_item.id for news_item in page_news_items], user.id)
+
         for news_item_aggregate in news_item_aggregates:
             news_item_aggregate.me_like = False
             news_item_aggregate.me_dislike = False
             for news_item in news_item_aggregate.news_items:
-                see, access, modify = NewsItem.get_acl_status(news_item.id, user)
+                see, access, modify = acl_statuses[news_item.id]
                 news_item.see = see
                 news_item.access = access
                 news_item.modify = modify
-                vote = NewsItemVote.find(news_item.id, user.id)
+                vote = votes.get(news_item.id)
                 if vote is not None:
                     news_item.me_like = vote.like
                     news_item.me_dislike = vote.dislike
@@ -1385,7 +1460,9 @@ class NewsItemAggregate(db.Model):
         Args:
             news_item_data (NewsItemData): News item data
         """
-        groups = OSINTSourceGroup.get_all_with_source(news_item_data.osint_source_id)
+        # One query for the source's groups; get_all_with_source loaded every group with all its
+        # sources for each item stored.
+        groups = OSINTSourceGroup.get_for_osint_source(news_item_data.osint_source_id) if news_item_data.osint_source_id else []
         for group in groups:
             news_item = NewsItem()
             news_item.news_item_data = news_item_data
@@ -2349,7 +2426,8 @@ class ReportItemNewsItemAggregate(db.Model):
     """
 
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), primary_key=True)
-    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"), primary_key=True)
+    # The primary key leads with the report: finding the reports of an aggregate needs its own index.
+    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"), primary_key=True, index=True)
 
     @classmethod
     def assigned(cls, aggregate_id: int) -> bool:
@@ -2372,6 +2450,26 @@ class ReportItemNewsItemAggregate(db.Model):
             int: Count
         """
         return cls.query.filter_by(news_item_aggregate_id=aggregate_id).count()
+
+    @classmethod
+    def counts_for_reports(cls, report_item_ids: list[int]) -> dict[int, int]:
+        """How many aggregates each report item holds, in one query.
+
+        Args:
+            report_item_ids: Report item IDs.
+
+        Returns:
+            dict mapping report_item_id -> number of aggregates; reports with none are absent.
+        """
+        if not report_item_ids:
+            return {}
+        rows = (
+            db.session.query(cls.report_item_id, func.count())
+            .filter(cls.report_item_id.in_(report_item_ids))
+            .group_by(cls.report_item_id)
+            .all()
+        )
+        return dict(rows)
 
     @classmethod
     def counts_for_aggregates(cls, aggregate_ids: list[int]) -> dict[int, tuple[int, int]]:

@@ -2319,7 +2319,24 @@
             "webs_hint": "Aucun choisi : tous les sites. Un site utilise le modèle qui le cite, sinon celui de tous les sites.",
             "every_web": "Tous les sites",
             "web_taken": "Déjà dans '{name}'",
-            "every_web_taken": "'{name}' est déjà son modèle pour tous les sites : choisissez les sites auxquels celui-ci s'applique."
+            "every_web_taken": "'{name}' est déjà son modèle pour tous les sites : choisissez les sites auxquels celui-ci s'applique.",
+            "tab_template": "Modèle"
+        },
+        "preview": {
+            "title": "Aperçu",
+            "choose_target": "Choisissez à quoi sert le modèle pour voir un aperçu.",
+            "web": "Site",
+            "product": "Produit",
+            "no_products": "Aucun produit publié sur ce site auquel le modèle s'applique.",
+            "view_detail": "Page du rapport",
+            "view_summary": "Entrée de la page d'accueil",
+            "view_rss": "Élément RSS",
+            "refresh": "Actualiser",
+            "errors_title": "Le modèle a échoué ; le modèle intégré est affiché à sa place :",
+            "line": "ligne {line}",
+            "xml": "Élément du flux (XML)",
+            "failed": "L'aperçu n'a pas pu être créé.",
+            "open_new_tab": "Ouvrir dans un nouvel onglet"
         }
     },
     "routing": {

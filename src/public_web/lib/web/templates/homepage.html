@@ -12,6 +12,7 @@
                 {{ content["homepage_title"] }}
             </h3>
             <div class="d-flex align-items-center ms-auto gap-3">
+                {{ macros.theme_toggle() }}
                 {{ macros.language_picker() }}
                 <a href="{{ url_for('reports.feed') }}"
                    class="d-flex align-items-center text-primary fw-normal h5 m-0 text-decoration-none">
@@ -75,7 +76,7 @@
                 <p class="m-0">
                     {% if search_arg %}
                         {{ translate_ui("homepage_no_reports_search") }}
-                        <a href="{{ url_for('reports.home') }}">{{ translate_ui("to_homepage") }}</a>.
+                        <a class="alert-link" href="{{ url_for('reports.home') }}">{{ translate_ui("to_homepage") }}</a>.
                     {% else %}
                         {{ translate_ui("homepage_no_reports") }}
                     {% endif %}

@@ -35,25 +35,93 @@
             <meta name="color-scheme" content="light dark">
 
             <script>
-                  (function() {
-                        const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+(function () {
+    var KEY = "taranis-public-web-theme";
+    var NEXT = { auto: "light", light: "dark", dark: "auto" };
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    var stored = null;
+    try {
+        stored = window.localStorage.getItem(KEY);
+    } catch (error) {
+        // A sandboxed frame (the template preview) has no storage.
+    }
+    var asked = /(?:^#|&)theme=(auto|light|dark)(?:&|$)/.exec(window.location.hash);
+    var choice = asked ? asked[1] : stored === "light" || stored === "dark" ? stored : "auto";
 
-                        function applyTheme(eventOrList) {
-                              const isDark = typeof eventOrList.matches === "boolean"
-                                    ? eventOrList.matches
-                                    : darkModeQuery.matches;
-                              document.documentElement.setAttribute("data-bs-theme", isDark ? "dark" : "light");
-                        }
+    function apply() {
+        var dark = choice === "dark" || (choice === "auto" && media.matches);
+        document.documentElement.setAttribute("data-bs-theme", dark ? "dark" : "light");
+        var toggles = document.querySelectorAll("[data-theme-toggle]");
+        for (var index = 0; index < toggles.length; index += 1) {
+            var label = toggles[index].getAttribute("data-label-" + choice);
+            if (label) {
+                toggles[index].setAttribute("title", label);
+                toggles[index].setAttribute("aria-label", label);
+            }
+            var icons = toggles[index].querySelectorAll("[data-theme-icon]");
+            for (var iconIndex = 0; iconIndex < icons.length; iconIndex += 1) {
+                icons[iconIndex].classList.toggle("d-none", icons[iconIndex].getAttribute("data-theme-icon") !== choice);
+            }
+        }
+    }
 
-                        applyTheme(darkModeQuery);
+    apply();
+    if (typeof media.addEventListener === "function") {
+        media.addEventListener("change", apply);
+    } else if (typeof media.addListener === "function") {
+        media.addListener(apply);
+    }
+    document.addEventListener("DOMContentLoaded", apply);
+    document.addEventListener("click", function (event) {
+        var toggle = event.target.closest ? event.target.closest("[data-theme-toggle]") : null;
+        if (!toggle) {
+            return;
+        }
+        choice = NEXT[choice];
+        try {
+            if (choice === "auto") {
+                window.localStorage.removeItem(KEY);
+            } else {
+                window.localStorage.setItem(KEY, choice);
+            }
+        } catch (error) {
+            // No storage: the pick lasts for this page.
+        }
+        if (window.parent !== window) {
+            window.parent.postMessage({ taranisPublicWebTheme: choice }, "*");
+        }
+        apply();
+    });
 
-                        if (typeof darkModeQuery.addEventListener === "function") {
-                              darkModeQuery.addEventListener("change", applyTheme);
-                        } else if (typeof darkModeQuery.addListener === "function") {
-                              darkModeQuery.addListener(applyTheme);
-                        }
-                  })();
-            </script>
+    if (document.documentElement.hasAttribute("data-taranis-preview")) {
+        document.addEventListener("click", function (event) {
+            if (!event.target.closest) {
+                return;
+            }
+            var language = event.target.closest("[data-language-choice]");
+            if (language && window.parent !== window) {
+                event.preventDefault();
+                window.parent.postMessage({ taranisPublicWebLanguage: language.getAttribute("data-language-choice") }, "*");
+            }
+            var opener = event.target.closest('[data-bs-toggle="dropdown"]');
+            var menu = opener ? opener.nextElementSibling : null;
+            var shown = document.querySelectorAll(".dropdown-menu.show");
+            for (var index = 0; index < shown.length; index += 1) {
+                if (shown[index] !== menu) {
+                    shown[index].classList.remove("show");
+                    if (shown[index].previousElementSibling) {
+                        shown[index].previousElementSibling.setAttribute("aria-expanded", "false");
+                    }
+                }
+            }
+            if (menu && menu.classList.contains("dropdown-menu")) {
+                menu.setAttribute("data-bs-popper", "static");
+                opener.setAttribute("aria-expanded", menu.classList.toggle("show") ? "true" : "false");
+            }
+        });
+    }
+})();
+</script>
 
         <!-- Tags for social networks (e.g. Mastodon) -->
 
@@ -86,6 +154,19 @@
                 </ol>
             </nav>
             <div class="d-flex align-items-center gap-2 ms-auto">
+                <button type="button"
+            class="btn btn-outline-secondary btn-sm d-flex align-items-center"
+            data-theme-toggle
+            data-label-auto="Color mode: Automatic (as the browser is set)"
+            data-label-light="Color mode: Light"
+            data-label-dark="Color mode: Dark"
+            title="Color mode: Automatic (as the browser is set)"
+            aria-label="Color mode: Automatic (as the browser is set)"
+            data-test="theme-toggle">
+        <span class="mdi mdi-theme-light-dark fs-5" data-theme-icon="auto" aria-hidden="true"></span>
+        <span class="mdi mdi-white-balance-sunny fs-5 d-none" data-theme-icon="light" aria-hidden="true"></span>
+        <span class="mdi mdi-weather-night fs-5 d-none" data-theme-icon="dark" aria-hidden="true"></span>
+    </button>
                 <div class="dropdown" data-test="language-picker">
                     <button type="button"
                             class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center"
@@ -101,12 +182,14 @@
                             <a class="dropdown-item active"
                                href="/reports/102?lang=en"
                                hreflang="en"
+                               data-language-choice="en"
                                lang="en" aria-current="true">English</a>
                         </li>
                         <li>
                             <a class="dropdown-item"
                                href="/reports/102?lang=cs"
                                hreflang="cs"
+                               data-language-choice="cs"
                                lang="cs">Čeština</a>
                         </li>
                     </ul>
@@ -140,7 +223,7 @@
                                 <div class="">
                                     <label for="question1">
                                         Do you find this report well prepared?
-                                        <span class="text-danger">*</span>
+                                        <span class="text-danger-emphasis">*</span>
                                     </label>
                                     <div id="question1">
                                         <div class="form-check-inline">
@@ -171,7 +254,7 @@
                                 <div class="mt-3">
                                     <label for="question2">
                                         Do you use this technology?
-                                        <span class="text-danger">*</span>
+                                        <span class="text-danger-emphasis">*</span>
                                     </label>
                                     <div id="question2">
                                         <div class="form-check-inline">
@@ -244,7 +327,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <span id="feedback-message" class="form-text form-error text-danger d-none"></span>
+                    <span id="feedback-message" class="form-text form-error text-danger-emphasis d-none"></span>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Close
                     </button>
@@ -407,8 +490,8 @@
                     data = await response.json();
                     console.log(`Feedback ended with status: '${response.status}'`);
                     feedback_message.innerHTML = ok_message;
-                    feedback_message.classList.remove('text-danger');
-                    feedback_message.classList.add('text-success');
+                    feedback_message.classList.remove('text-danger-emphasis');
+                    feedback_message.classList.add('text-success-emphasis');
                 } else {
                     console.log(`Feedback ended with error: '${response.status}', '${response.statusText}'`);
                     feedback_message.innerHTML = something_went_wrong_message;

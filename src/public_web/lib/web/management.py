@@ -15,6 +15,7 @@ from flask import Blueprint, jsonify, request
 from lib import config, send_mail
 from lib.logger import get_logger
 from lib.web.cache import WebCache
+from lib.web.preview import PreviewError, render_preview
 from shared.auth import make_api_key_required
 
 logger = get_logger("management", silent=True)
@@ -42,6 +43,18 @@ def isalive() -> tuple:
     keeps working across an upgrade. The legacy path can go a release later.
     """
     return jsonify({"status": "ok"}), HTTPStatus.OK
+
+
+@management_bp.route("/management/preview", methods=["POST"], endpoint="preview")
+@api_key_required
+def preview() -> tuple:
+    """Render a product with a report template that is not saved yet (see lib/web/preview.py)."""
+    from lib.web.routes import cache as site_cache  # noqa: PLC0415 (the site's cache, as the pages use it)
+
+    try:
+        return jsonify(render_preview(request.get_json(silent=True) or {}, site_cache)), HTTPStatus.OK
+    except PreviewError as error:
+        return jsonify({"error": str(error)}), error.status
 
 
 @management_bp.route("/management/reset-cache", methods=["POST"], endpoint="reset_cache")

@@ -31,7 +31,7 @@ import html
 import re
 from typing import TYPE_CHECKING, Any
 
-from jinja2 import ChoiceLoader, DictLoader
+from jinja2 import ChoiceLoader, DictLoader, FunctionLoader
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from lib.logger import get_logger
 from lib.report.filters import FILTERS
@@ -55,16 +55,32 @@ _TAG = re.compile(r"<[^>]*>")
 class ReportRenderer:
     """Renders products with one fixed set of custom templates (see :func:`get_renderer`)."""
 
-    def __init__(self, templates: list[dict], disabled_builtins: Iterable[str] = ()) -> None:
-        """Build the template environment for the given custom templates and switched-off built-ins (as served by core)."""
+    def __init__(
+        self,
+        templates: list[dict],
+        disabled_builtins: Iterable[str] = (),
+        on_error: Callable[[str, str, Exception], None] | None = None,
+    ) -> None:
+        """Build the template environment for the given custom templates and switched-off built-ins (as served by core).
+
+        ``on_error(template, what, error)`` hears of each template that failed and was replaced
+        by its fallback (the preview lists them); they are logged either way.
+        """
+        self._on_error = on_error
         # Only the built-ins public-web falls back on can be off; the bases are always there.
         self._disabled = frozenset(disabled_builtins) & frozenset(DEFAULTS)
         self._product_templates = {t["product_preset_id"]: t for t in templates if t.get("product_preset_id") is not None}
         self._item_templates = {t["report_item_type_id"]: t for t in templates if t.get("report_item_type_id") is not None}
         custom = {f"product/{product_preset_id}": t.get("source") or "" for product_preset_id, t in self._product_templates.items()}
         custom |= {f"item/{type_id}": t.get("source") or "" for type_id, t in self._item_templates.items()}
+        # Custom templates carry their name as file name, so an error in one names its line.
         self.env = ImmutableSandboxedEnvironment(
-            loader=ChoiceLoader([DictLoader(custom), DictLoader(builtin_sources())]),
+            loader=ChoiceLoader(
+                [
+                    FunctionLoader(lambda name: (custom[name], name, lambda: True) if name in custom else None),
+                    DictLoader(builtin_sources()),
+                ],
+            ),
             autoescape=True,
         )
         self.env.filters.update(FILTERS)
@@ -127,8 +143,10 @@ class ReportRenderer:
         for name in names if last_resort is not None else names[:-1]:
             try:
                 return self.env.get_template(name).render(context)
-            except Exception:
+            except Exception as error:
                 logger.exception("Report template %s failed for %s.", name, what)
+                if self._on_error is not None:
+                    self._on_error(name, what, error)
         if last_resort is not None:
             return last_resort
         return self.env.get_template(names[-1]).render(context)

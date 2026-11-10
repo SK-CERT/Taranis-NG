@@ -331,3 +331,10 @@ def matches_keyword(product: dict, keyword: str) -> bool:
         texts = product["_keyword_texts"] = _keyword_texts(product)
     needle = keyword.lower().strip()
     return any(needle in text for text in texts)
+
+
+def remove_link_references(text: str, links: list[str | None]) -> str:
+    """Remove the link references ([1], [2]...) from a plain text (the RSS description)."""
+    for i, _ in enumerate(links, start=1):
+        text = text.replace(f" [{i}]", "").replace(f"[{i}]", "")
+    return text
