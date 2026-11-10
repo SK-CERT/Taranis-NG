@@ -2,7 +2,7 @@
 name = "TARANIS-NG"
 version = "26.10.1"
 description = "OSINT gathering and analysis tool for CSIRT teams and organisations."
-readme = "README.md"f
+readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "EUPL-1.2" }
 authors = [
