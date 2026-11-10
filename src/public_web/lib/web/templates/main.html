@@ -35,26 +35,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <meta name="color-scheme" content="light dark">
 
-            <script>
-                  (function() {
-                        const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-                        function applyTheme(eventOrList) {
-                              const isDark = typeof eventOrList.matches === "boolean"
-                                    ? eventOrList.matches
-                                    : darkModeQuery.matches;
-                              document.documentElement.setAttribute("data-bs-theme", isDark ? "dark" : "light");
-                        }
-
-                        applyTheme(darkModeQuery);
-
-                        if (typeof darkModeQuery.addEventListener === "function") {
-                              darkModeQuery.addEventListener("change", applyTheme);
-                        } else if (typeof darkModeQuery.addListener === "function") {
-                              darkModeQuery.addListener(applyTheme);
-                        }
-                  })();
-            </script>
+            {#- Light, dark or as the browser says; switched by the page's mode button (macros.theme_toggle). #}
+            <script>{{ page_script }}</script>
 
         <!-- Tags for social networks (e.g. Mastodon) -->
         {# djlint:off H011 #}

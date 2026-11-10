@@ -73,7 +73,7 @@ describe('CodeEditor', () => {
         const wrapper = mountEditor({ modelValue: '<p></p>', readonly: true })
         const textarea = wrapper.find('textarea')
         const typing = () => {
-            const event = new Event('beforeinput', { cancelable: true })
+            const event = new window.InputEvent('beforeinput', { cancelable: true, inputType: 'insertText', data: 'x' })
             textarea.element.dispatchEvent(event)
             return event.defaultPrevented
         }

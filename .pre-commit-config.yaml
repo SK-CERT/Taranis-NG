@@ -1,18 +1,18 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.3
+    rev: v0.17.4
     hooks:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.95
+    rev: v0.0.99
     hooks:
       - id: ty
 
   - repo: https://github.com/djlint/djLint
-    rev: v1.49.1
+    rev: v1.49.10
     hooks:
       - id: djlint
         files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui/index\\.html)$"

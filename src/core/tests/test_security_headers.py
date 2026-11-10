@@ -65,3 +65,17 @@ def test_a_handler_set_policy_is_not_overwritten() -> None:
 
     _install_security_headers(app)
     assert app.test_client().get("/api/v1/anything").headers["Content-Security-Policy"] == "default-src 'self'"
+
+
+def test_a_handler_set_frame_ancestors_gets_no_x_frame_options() -> None:
+    # Beside frame-ancestors it is ignored, and Firefox says so in the framed page's console.
+    app = Flask(__name__)
+
+    @app.route("/api/v1/page")
+    def route() -> Response:
+        return Response(b"<p></p>", mimetype="text/html", headers={"Content-Security-Policy": "default-src 'none'; frame-ancestors 'self'"})
+
+    _install_security_headers(app)
+    headers = app.test_client().get("/api/v1/page").headers
+    assert "X-Frame-Options" not in headers
+    assert headers["Content-Security-Policy"] == "default-src 'none'; frame-ancestors 'self'"

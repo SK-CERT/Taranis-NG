@@ -314,8 +314,8 @@ def test_the_report_page_offers_the_other_languages(app: Flask, routes: ModuleTy
     page = _page(app, routes, _bulletin(), "en")
 
     assert 'data-test="language-picker"' in page
-    assert '<a class="dropdown-item" href="/reports/7?lang=cs" hreflang="cs" lang="cs">Čeština</a>' in page
-    assert 'href="/reports/7?lang=en" hreflang="en" lang="en" aria-current="true">English</a>' in page
+    assert '<a class="dropdown-item" href="/reports/7?lang=cs" hreflang="cs" data-language-choice="cs" lang="cs">Čeština</a>' in page
+    assert 'href="/reports/7?lang=en" hreflang="en" data-language-choice="en" lang="en" aria-current="true">English</a>' in page
 
 
 def test_a_web_in_one_language_offers_no_choice(app: Flask) -> None:
@@ -331,7 +331,7 @@ def test_a_page_read_from_an_unreviewed_ai_translation_warns_and_links_the_origi
     assert 'data-ai-translation="unreviewed"' in page
     assert "alert-warning" in page
     assert "Tento report bol preložený pomocou AI; preklad zatiaľ nikto neskontroloval. Pôvodný jazyk: " in page
-    assert '<a href="/reports/7?lang=cs" lang="cs">čeština</a>.' in page
+    assert '<a class="alert-link" href="/reports/7?lang=cs" lang="cs">čeština</a>.' in page
 
 
 def test_a_page_read_from_a_reviewed_ai_translation_says_a_person_reviewed_it(app: Flask, routes: ModuleType) -> None:

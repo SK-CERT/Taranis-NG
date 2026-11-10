@@ -2319,7 +2319,24 @@
             "webs_hint": "Ninguno elegido: todos los sitios. Un sitio usa la plantilla que lo incluye; si no, la de todos los sitios.",
             "every_web": "Todos los sitios",
             "web_taken": "Ya en '{name}'",
-            "every_web_taken": "'{name}' ya es su plantilla para todos los sitios: elija los sitios a los que se aplica esta."
+            "every_web_taken": "'{name}' ya es su plantilla para todos los sitios: elija los sitios a los que se aplica esta.",
+            "tab_template": "Plantilla"
+        },
+        "preview": {
+            "title": "Vista previa",
+            "choose_target": "Elija para qué es la plantilla para ver una vista previa.",
+            "web": "Web",
+            "product": "Producto",
+            "no_products": "No hay ningún producto publicado en esta web al que se aplique la plantilla.",
+            "view_detail": "Página del informe",
+            "view_summary": "Entrada de la página de inicio",
+            "view_rss": "Elemento RSS",
+            "refresh": "Actualizar",
+            "errors_title": "La plantilla falló; se muestra la integrada en su lugar:",
+            "line": "línea {line}",
+            "xml": "Elemento del feed (XML)",
+            "failed": "No se pudo crear la vista previa.",
+            "open_new_tab": "Abrir en una pestaña nueva"
         }
     },
     "routing": {

@@ -2319,7 +2319,24 @@
             "webs_hint": "Niets gekozen: alle websites. Een website gebruikt het sjabloon dat haar noemt, anders dat voor alle websites.",
             "every_web": "Alle websites",
             "web_taken": "Al in '{name}'",
-            "every_web_taken": "'{name}' is al het sjabloon voor alle websites: kies de websites waarvoor dit sjabloon is."
+            "every_web_taken": "'{name}' is al het sjabloon voor alle websites: kies de websites waarvoor dit sjabloon is.",
+            "tab_template": "Sjabloon"
+        },
+        "preview": {
+            "title": "Voorbeeld",
+            "choose_target": "Kies waarvoor de sjabloon is om een voorbeeld te zien.",
+            "web": "Website",
+            "product": "Product",
+            "no_products": "Geen gepubliceerd product op deze website waarop de sjabloon van toepassing is.",
+            "view_detail": "Rapportpagina",
+            "view_summary": "Item op de startpagina",
+            "view_rss": "RSS-item",
+            "refresh": "Vernieuwen",
+            "errors_title": "De sjabloon is mislukt; de ingebouwde wordt in plaats daarvan getoond:",
+            "line": "regel {line}",
+            "xml": "Feeditem (XML)",
+            "failed": "Het voorbeeld kon niet worden gemaakt.",
+            "open_new_tab": "In een nieuw tabblad openen"
         }
     },
     "routing": {

@@ -1,14 +1,22 @@
 """ACL Entry Model."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.role import Role
 from model.user import User
-from sqlalchemy import and_, or_, orm
-
 from shared.schema.acl_entry import ACLEntryPresentationSchema, ACLEntrySchema, ItemType
 from shared.schema.role import RoleIdSchema
 from shared.schema.user import UserIdSchema
+from sqlalchemy import and_, or_, orm
+
+if TYPE_CHECKING:
+    from shared.schema.role import RoleId
+    from shared.schema.user import UserId
+    from sqlalchemy.orm import Query
 
 
 class NewACLEntrySchema(ACLEntrySchema):
@@ -25,11 +33,12 @@ class NewACLEntrySchema(ACLEntrySchema):
     roles = fields.Nested(RoleIdSchema, many=True)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> ACLEntry:  # noqa: ARG002, ANN003
         """Create a new ACL Entry.
 
         Args:
             data (dict): Data to create the new ACL Entry.
+            **kwargs: Additional keyword arguments from marshmallow.
 
         Returns:
             ACLEntry: New ACL Entry object.
@@ -63,6 +72,9 @@ class ACLEntry(db.Model):
     item_type = db.Column(db.Enum(ItemType))
     item_id = db.Column(db.String(64))
 
+    # ACL checks join the entries of an item by its type and id.
+    __table_args__ = (db.Index("ix_acl_entry_item", "item_type", "item_id"),)
+
     everyone = db.Column(db.Boolean)
     users = db.relationship("User", secondary="acl_entry_user")
     roles = db.relationship("Role", secondary="acl_entry_role")
@@ -71,7 +83,20 @@ class ACLEntry(db.Model):
     access = db.Column(db.Boolean)
     modify = db.Column(db.Boolean)
 
-    def __init__(self, id, name, description, item_type, item_id, everyone, users, see, access, modify, roles):
+    def __init__(
+        self,
+        id: int | None,  # noqa: A002, ARG002
+        name: str,
+        description: str | None,
+        item_type: ItemType | None,
+        item_id: str | None,
+        everyone: bool | None,
+        users: list[UserId],
+        see: bool | None,
+        access: bool | None,
+        modify: bool | None,
+        roles: list[RoleId],
+    ) -> None:
         """Create a new ACL Entry."""
         self.id = None
         self.name = name
@@ -96,27 +121,26 @@ class ACLEntry(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct ACL Entry."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-lock-check"
 
     @classmethod
-    def find(cls, id):
+    def find(cls, acl_id: int) -> ACLEntry | None:
         """Find ACL Entry by ID.
 
         Args:
-            id (int): ACL Entry ID.
+            acl_id (int): ACL Entry ID.
 
         Returns:
-            ACLEntry: ACL Entry object.
+            ACLEntry | None: ACL Entry object, or None.
         """
-        acl = db.session.get(cls, id)
-        return acl
+        return db.session.get(cls, acl_id)
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[ACLEntry]:
         """Get all ACL Entries.
 
         Returns:
@@ -125,14 +149,14 @@ class ACLEntry(db.Model):
         return cls.query.order_by(db.asc(ACLEntry.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str | None) -> tuple[list[ACLEntry], int]:
         """Get ACL Entries.
 
         Args:
             search (str): Search string.
 
         Returns:
-            list: List of ACL Entries.
+            tuple: The ACL Entries and how many there are.
         """
         query = cls.query
 
@@ -143,7 +167,7 @@ class ACLEntry(db.Model):
         return query.order_by(db.asc(ACLEntry.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str | None) -> dict:
         """Get all ACL Entries in JSON format.
 
         Args:
@@ -157,7 +181,7 @@ class ACLEntry(db.Model):
         return {"total_count": count, "items": acl_schema.dump(acls)}
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict) -> None:
         """Add a new ACL Entry.
 
         Args:
@@ -169,7 +193,7 @@ class ACLEntry(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, acl_id, data):
+    def update(cls, acl_id: int, data: dict) -> None:
         """Update an ACL Entry.
 
         Args:
@@ -192,18 +216,18 @@ class ACLEntry(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, id):
+    def delete(cls, acl_id: int) -> None:
         """Delete an ACL Entry.
 
         Args:
-            id (int): ACL Entry ID.
+            acl_id (int): ACL Entry ID.
         """
-        acl = db.session.get(cls, id)
+        acl = db.session.get(cls, acl_id)
         db.session.delete(acl)
         db.session.commit()
 
     @classmethod
-    def apply_query(cls, query, user, see, access, modify):
+    def apply_query(cls, query: Query, user: User, see: bool, access: bool, modify: bool) -> Query:
         """Apply Query.
 
         This method is used to apply the query to the ACL Entry.
@@ -217,10 +241,11 @@ class ACLEntry(db.Model):
 
         Returns:
             Query: Query with the applied ACL Entry.
+
+        Raises:
+            ValueError: If none of the flags is a boolean, so no branch applies.
         """
-        roles = []
-        for role in user.roles:
-            roles.append(role.id)
+        roles = [role.id for role in user.roles]
 
         query = query.outerjoin(ACLEntryUser, and_(ACLEntryUser.acl_entry_id == ACLEntry.id, ACLEntryUser.user_id == user.id))
 
@@ -262,6 +287,10 @@ class ACLEntry(db.Model):
                     ),
                 ),
             )
+
+        # Not reached with boolean flags. Returning the query here would apply no ACL at all.
+        msg = "apply_query needs see, access and modify as booleans"
+        raise ValueError(msg)
 
 
 class ACLEntryUser(db.Model):

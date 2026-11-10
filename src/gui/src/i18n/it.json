@@ -2319,7 +2319,24 @@
             "webs_hint": "Nessuno scelto: tutti i siti. Un sito usa il modello che lo elenca, altrimenti quello per tutti i siti.",
             "every_web": "Tutti i siti",
             "web_taken": "Già in '{name}'",
-            "every_web_taken": "'{name}' è già il suo modello per tutti i siti: scegli i siti a cui si applica questo."
+            "every_web_taken": "'{name}' è già il suo modello per tutti i siti: scegli i siti a cui si applica questo.",
+            "tab_template": "Modello"
+        },
+        "preview": {
+            "title": "Anteprima",
+            "choose_target": "Scegli a cosa serve il modello per vedere un'anteprima.",
+            "web": "Sito",
+            "product": "Prodotto",
+            "no_products": "Nessun prodotto pubblicato su questo sito a cui si applica il modello.",
+            "view_detail": "Pagina del report",
+            "view_summary": "Voce della home page",
+            "view_rss": "Elemento RSS",
+            "refresh": "Aggiorna",
+            "errors_title": "Il modello non è riuscito; al suo posto è mostrato quello integrato:",
+            "line": "riga {line}",
+            "xml": "Elemento del feed (XML)",
+            "failed": "Impossibile creare l'anteprima.",
+            "open_new_tab": "Apri in una nuova scheda"
         }
     },
     "routing": {

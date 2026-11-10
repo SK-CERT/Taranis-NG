@@ -24,7 +24,7 @@ dependencies = [
     "requests==2.34.2",
     "tweepy==4.17.0",
     "urllib3==2.8.0",
-    "pymisp==2.5.34.4",
+    "pymisp==3.0.0",
     "taranis-ng-shared==26.10.1",
 ]
 
