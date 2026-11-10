@@ -26,3 +26,35 @@ export type PublicWebBuiltinTemplate = {
     updated_at?: string | null
     updated_by?: string | null
 }
+
+/** A web a template can be previewed on; `unavailable` says why its node cannot render (null: it can). */
+export type PreviewWeb = {
+    id: number
+    name: string
+    node: string
+    unavailable: string | null
+    languages: string[]
+    default_language: string | null
+}
+
+export type PreviewProduct = { id: number; title: string; created: string | null }
+
+export type PreviewOptions = { webs: PreviewWeb[]; web_id: number | null; products: PreviewProduct[] }
+
+export type PreviewView = 'detail' | 'summary' | 'rss'
+
+/** A template that failed while rendering; the built-in one was shown in its place. */
+export type PreviewTemplateError = { template: string; line: number | null; message: string }
+
+export type PreviewResult = {
+    view: PreviewView
+    /** The rendered page (report page, homepage): core's URL of it, under the API base, good for a few views. */
+    page_url?: string
+    rss?: { title: string; link: string; description: string }
+    xml?: string
+    errors: PreviewTemplateError[]
+    warnings: string[]
+    language?: string
+    web_id?: number
+    product_id?: number
+}

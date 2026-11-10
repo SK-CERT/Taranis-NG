@@ -26,3 +26,9 @@ input[type='radio'] {
         line-height: 1;
         vertical-align: middle;
 }
+
+/* Bootstrap keeps the outline-secondary grey (#6c757d) in dark mode: 3.3:1 on the dark page.
+   Its dark secondary text colour reads at 7.3:1; hover and active keep Bootstrap's filled grey. */
+[data-bs-theme="dark"] .btn-outline-secondary {
+    --bs-btn-color: var(--bs-secondary-color);
+}

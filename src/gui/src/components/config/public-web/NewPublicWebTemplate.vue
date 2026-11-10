@@ -1,7 +1,7 @@
 <template>
     <v-dialog
         v-model="dialog"
-        max-width="1100"
+        :max-width="sideBySide ? 1800 : 1100"
         persistent
         scrollable
         @keydown.esc.stop="requestClose"
@@ -22,11 +22,51 @@
             />
 
             <v-card-text>
+                <!-- Template and preview side by side when the dialog is wide enough, on two tabs otherwise. -->
+                <v-tabs
+                    v-if="!sideBySide"
+                    v-model="activeTab"
+                    color="primary"
+                    density="comfortable"
+                    class="mb-3"
+                >
+                    <v-tab
+                        value="template"
+                        prepend-icon="mdi-code-braces"
+                        data-test="template-tab-source"
+                        >{{ t('public_web.templates.tab_template') }}</v-tab
+                    >
+                    <v-tab
+                        value="preview"
+                        prepend-icon="mdi-eye-outline"
+                        data-test="template-tab-preview"
+                        >{{ t('public_web.preview.title') }}</v-tab
+                    >
+                </v-tabs>
+
+                <!-- What core found wrong with the template, with its line. -->
+                <v-alert
+                    v-if="saveError"
+                    type="error"
+                    variant="tonal"
+                    class="mb-4"
+                    closable
+                    data-test="template-error"
+                    @click:close="saveError = ''"
+                >
+                    {{ saveError }}
+                </v-alert>
+
+                <!-- What the template is for: across the dialog side by side, on the Template tab otherwise.
+                     Hidden, not removed, so a save from the Preview tab still validates it. -->
                 <v-form
+                    v-show="showSource"
                     ref="formRef"
+                    class="pt-2"
                     @submit.prevent="saveAndClose"
                 >
-                    <v-row>
+                    <!-- mb-2: the target's hint takes two lines in a narrow column. -->
+                    <v-row class="mb-2">
                         <v-col
                             cols="12"
                             md="4"
@@ -115,86 +155,110 @@
                         :disabled="saving"
                         data-test="template-require-tlp"
                     />
-
-                    <div class="d-flex align-center mb-1">
-                        <span class="text-title-small">{{ t('public_web.templates.source') }}</span>
-                        <v-spacer />
-                        <v-menu location="bottom end">
-                            <template #activator="{ props: menuProps }">
-                                <v-btn
-                                    v-bind="menuProps"
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-content-copy"
-                                    :disabled="saving"
-                                    data-test="template-start-from"
-                                >
-                                    {{ t('public_web.templates.start_from') }}
-                                </v-btn>
-                            </template>
-                            <v-list density="compact">
-                                <v-list-item
-                                    v-for="start in starts"
-                                    :key="start.name"
-                                    :title="start.title"
-                                    data-test="template-start"
-                                    @click="localItem.source = start.source"
-                                />
-                            </v-list>
-                        </v-menu>
-                    </div>
-                    <CodeEditor
-                        v-model="localItem.source"
-                        :aria-label="t('public_web.templates.source')"
-                        :disabled="saving"
-                        min-height="22rem"
-                        max-height="60vh"
-                        data-test="template-source"
-                    />
                 </v-form>
 
-                <!-- What core found wrong with the template, with its line. -->
-                <v-alert
-                    v-if="saveError"
-                    type="error"
-                    variant="tonal"
-                    class="mt-4"
-                    closable
-                    data-test="template-error"
-                    @click:close="saveError = ''"
+                <div
+                    class="template-panes"
+                    :class="{ 'template-panes--split': sideBySide }"
+                    data-test="template-panes"
                 >
-                    {{ saveError }}
-                </v-alert>
-
-                <v-expansion-panels class="mt-4">
-                    <v-expansion-panel :title="t('public_web.templates.help_title')">
-                        <v-expansion-panel-text>
-                            <p class="mb-2">
-                                {{ kind === 'product' ? t('public_web.templates.help_product') : t('public_web.templates.help_item') }}
-                            </p>
-                            <ul class="template-help mb-2">
-                                <li
-                                    v-for="entry in contextHelp"
-                                    :key="entry.name"
-                                >
-                                    <code>{{ entry.name }}</code> — {{ t(entry.description) }}
-                                </li>
-                            </ul>
-                            <template v-if="attrKeys.length">
-                                <p class="mb-1">{{ t('public_web.templates.help_attrs') }}</p>
-                                <div class="d-flex flex-wrap ga-1">
-                                    <code
-                                        v-for="key in attrKeys"
-                                        :key="key"
-                                        data-test="template-attr-key"
-                                        >{{ `item.attrs.${key}` }}</code
+                    <div
+                        v-show="showSource"
+                        class="template-panes__source"
+                    >
+                        <div class="template-panes__heading">
+                            <span class="text-title-small">{{ t('public_web.templates.source') }}</span>
+                            <v-spacer />
+                            <v-menu location="bottom end">
+                                <template #activator="{ props: menuProps }">
+                                    <v-btn
+                                        v-bind="menuProps"
+                                        variant="text"
+                                        size="small"
+                                        prepend-icon="mdi-content-copy"
+                                        :disabled="saving"
+                                        data-test="template-start-from"
                                     >
-                                </div>
-                            </template>
-                            <p class="mt-2 mb-0 text-medium-emphasis">{{ t('public_web.templates.help_more') }}</p>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                </v-expansion-panels>
+                                        {{ t('public_web.templates.start_from') }}
+                                    </v-btn>
+                                </template>
+                                <v-list density="compact">
+                                    <v-list-item
+                                        v-for="start in starts"
+                                        :key="start.name"
+                                        :title="start.title"
+                                        data-test="template-start"
+                                        @click="localItem.source = start.source"
+                                    />
+                                </v-list>
+                            </v-menu>
+                        </div>
+                        <CodeEditor
+                            v-model="localItem.source"
+                            :aria-label="t('public_web.templates.source')"
+                            :disabled="saving"
+                            :min-height="sideBySide ? SPLIT_EDITOR_HEIGHT : '22rem'"
+                            :max-height="sideBySide ? SPLIT_EDITOR_HEIGHT : '60vh'"
+                            :completions="{ kind, attrKeys }"
+                            data-test="template-source"
+                        />
+
+                        <v-expansion-panels class="mt-4">
+                            <v-expansion-panel
+                                value="help"
+                                :title="t('public_web.templates.help_title')"
+                            >
+                                <v-expansion-panel-text>
+                                    <p class="mb-2">
+                                        {{
+                                            kind === 'product' ? t('public_web.templates.help_product') : t('public_web.templates.help_item')
+                                        }}
+                                    </p>
+                                    <ul class="template-help mb-2">
+                                        <li
+                                            v-for="entry in contextHelp"
+                                            :key="entry.name"
+                                        >
+                                            <code>{{ entry.name }}</code> — {{ t(entry.description) }}
+                                        </li>
+                                    </ul>
+                                    <template v-if="attrKeys.length">
+                                        <p class="mb-1">{{ t('public_web.templates.help_attrs') }}</p>
+                                        <div class="d-flex flex-wrap ga-1">
+                                            <code
+                                                v-for="key in attrKeys"
+                                                :key="key"
+                                                data-test="template-attr-key"
+                                                >{{ `item.attrs.${key}` }}</code
+                                            >
+                                        </div>
+                                    </template>
+                                    <p class="mt-2 mb-0 text-medium-emphasis">{{ t('public_web.templates.help_more') }}</p>
+                                </v-expansion-panel-text>
+                            </v-expansion-panel>
+                        </v-expansion-panels>
+                    </div>
+
+                    <div
+                        v-show="showPreview"
+                        class="template-panes__preview"
+                    >
+                        <div
+                            v-if="sideBySide"
+                            class="template-panes__heading"
+                        >
+                            <span class="text-title-small">{{ t('public_web.preview.title') }}</span>
+                        </div>
+                        <PublicWebTemplatePreview
+                            :active="dialog && showPreview"
+                            :product-preset-id="localItem.product_preset_id"
+                            :report-item-type-id="localItem.report_item_type_id"
+                            :source="localItem.source"
+                            :require-tlp-clear="localItem.require_tlp_clear"
+                            :public-web-ids="localItem.public_web_ids"
+                        />
+                    </div>
+                </div>
             </v-card-text>
         </v-card>
 
@@ -210,8 +274,10 @@
 <script setup lang="ts">
     import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useDisplay } from 'vuetify'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import CodeEditor from '@/components/common/CodeEditor.vue'
+    import PublicWebTemplatePreview from './PublicWebTemplatePreview.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useAuth } from '@/composables/useAuth'
@@ -253,6 +319,15 @@
     const dialog = ref(false)
     const saving = ref(false)
     const saveError = ref('')
+    // Template and preview side by side from this window width (each about 640 px wide, the
+    // dialog then up to 1800 px); on two tabs below it, the preview rendering only on its own.
+    const SIDE_BY_SIDE_MIN_WIDTH = 1400
+    const SPLIT_EDITOR_HEIGHT = 'max(32rem, calc(100vh - 18rem))'
+    const { width: windowWidth } = useDisplay()
+    const sideBySide = computed(() => windowWidth.value >= SIDE_BY_SIDE_MIN_WIDTH)
+    const activeTab = ref<'template' | 'preview'>('template')
+    const showSource = computed(() => sideBySide.value || activeTab.value === 'template')
+    const showPreview = computed(() => sideBySide.value || activeTab.value === 'preview')
 
     const emptyItem = (): PublicWebTemplate => ({
         id: null,
@@ -433,7 +508,10 @@
     async function persist(): Promise<boolean> {
         saveError.value = ''
         const { valid } = (await formRef.value?.validate()) ?? { valid: false }
-        if (!valid) return false
+        if (!valid) {
+            activeTab.value = 'template'
+            return false
+        }
         saving.value = true
         try {
             const template = { ...localItem.value }
@@ -462,6 +540,7 @@
         localItem.value = emptyItem()
         kind.value = 'product'
         saveError.value = ''
+        activeTab.value = 'template'
         dialog.value = false
     }
 
@@ -496,6 +575,21 @@
 </script>
 
 <style scoped>
+    .template-panes--split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    /* The same height on both sides, so the editor and the preview start level. */
+    .template-panes__heading {
+        display: flex;
+        align-items: center;
+        min-height: 2.25rem;
+        margin-bottom: 0.25rem;
+    }
+
     .template-help {
         padding-inline-start: 1.25rem;
     }

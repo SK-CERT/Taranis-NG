@@ -2319,7 +2319,24 @@
             "webs_hint": "Không chọn: mọi trang web. Một trang web dùng mẫu liệt kê nó, nếu không thì dùng mẫu cho mọi trang web.",
             "every_web": "Mọi trang web",
             "web_taken": "Trong '{name}'",
-            "every_web_taken": "'{name}' đã là mẫu cho mọi trang web: hãy chọn các trang web mà mẫu này dành cho."
+            "every_web_taken": "'{name}' đã là mẫu cho mọi trang web: hãy chọn các trang web mà mẫu này dành cho.",
+            "tab_template": "Mẫu"
+        },
+        "preview": {
+            "title": "Xem trước",
+            "choose_target": "Chọn mẫu dùng cho gì để xem trước.",
+            "web": "Web",
+            "product": "Sản phẩm",
+            "no_products": "Không có sản phẩm đã xuất bản nào trên web này mà mẫu áp dụng.",
+            "view_detail": "Trang báo cáo",
+            "view_summary": "Mục trang chủ",
+            "view_rss": "Mục RSS",
+            "refresh": "Làm mới",
+            "errors_title": "Mẫu bị lỗi; mẫu tích hợp được hiển thị thay thế:",
+            "line": "dòng {line}",
+            "xml": "Mục nguồn cấp (XML)",
+            "failed": "Không thể tạo bản xem trước.",
+            "open_new_tab": "Mở trong thẻ mới"
         }
     },
     "routing": {

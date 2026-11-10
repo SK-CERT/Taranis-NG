@@ -2319,7 +2319,24 @@
             "webs_hint": "Nic nie wybrano: wszystkie witryny. Witryna używa szablonu, który ją wymienia, a w przeciwnym razie szablonu dla wszystkich witryn.",
             "every_web": "Wszystkie witryny",
             "web_taken": "Już w '{name}'",
-            "every_web_taken": "'{name}' jest już jego szablonem dla wszystkich witryn: wybierz witryny, dla których jest ten."
+            "every_web_taken": "'{name}' jest już jego szablonem dla wszystkich witryn: wybierz witryny, dla których jest ten.",
+            "tab_template": "Szablon"
+        },
+        "preview": {
+            "title": "Podgląd",
+            "choose_target": "Wybierz, do czego jest szablon, aby zobaczyć podgląd.",
+            "web": "Strona",
+            "product": "Produkt",
+            "no_products": "Brak opublikowanego produktu na tej stronie, do którego odnosi się szablon.",
+            "view_detail": "Strona raportu",
+            "view_summary": "Wpis na stronie głównej",
+            "view_rss": "Element RSS",
+            "refresh": "Odśwież",
+            "errors_title": "Szablon zawiódł; zamiast niego wyświetlany jest wbudowany:",
+            "line": "wiersz {line}",
+            "xml": "Element kanału (XML)",
+            "failed": "Nie udało się utworzyć podglądu.",
+            "open_new_tab": "Otwórz w nowej karcie"
         }
     },
     "routing": {

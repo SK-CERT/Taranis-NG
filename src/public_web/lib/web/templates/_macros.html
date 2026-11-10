@@ -38,6 +38,7 @@
                         <a class="dropdown-item{% if choice.current %} active{% endif %}"
                            href="{{ choice.url }}"
                            hreflang="{{ choice.code }}"
+                           data-language-choice="{{ choice.code }}"
                            lang="{{ choice.code }}"
                            {%- if choice.current %} aria-current="true"{% endif %}>{{ choice.name }}</a>
                     </li>
@@ -47,8 +48,33 @@
     {%- endif %}
 {%- endmacro %}
 
+{#- The colour mode: automatic (as the browser is set, the default), light or dark. One button
+goes through them; the script in main.html applies the mode, keeps it, and shows its icon and
+label here. It works in the GUI's template preview too, where no other script runs. -#}
+{% macro theme_toggle() -%}
+    {%- set name = translate_ui("theme") %}
+    {%- set labels = {
+        "auto": name ~ ": " ~ translate_ui("theme_auto"),
+        "light": name ~ ": " ~ translate_ui("theme_light"),
+        "dark": name ~ ": " ~ translate_ui("theme_dark"),
+    } %}
+    <button type="button"
+            class="btn btn-outline-secondary btn-sm d-flex align-items-center"
+            data-theme-toggle
+            data-label-auto="{{ labels.auto }}"
+            data-label-light="{{ labels.light }}"
+            data-label-dark="{{ labels.dark }}"
+            title="{{ labels.auto }}"
+            aria-label="{{ labels.auto }}"
+            data-test="theme-toggle">
+        <span class="mdi mdi-theme-light-dark fs-5" data-theme-icon="auto" aria-hidden="true"></span>
+        <span class="mdi mdi-white-balance-sunny fs-5 d-none" data-theme-icon="light" aria-hidden="true"></span>
+        <span class="mdi mdi-weather-night fs-5 d-none" data-theme-icon="dark" aria-hidden="true"></span>
+    </button>
+{%- endmacro %}
+
 {% macro required() -%}
-    <span class="text-danger">*</span>
+    <span class="text-danger-emphasis">*</span>
 {%- endmacro %}
 
 {% macro feedback_modal(feedback_q) -%}
@@ -114,7 +140,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <span id="feedback-message" class="form-text form-error text-danger d-none"></span>
+                    <span id="feedback-message" class="form-text form-error text-danger-emphasis d-none"></span>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         {{ translate_ui("form_close") }}
                     </button>

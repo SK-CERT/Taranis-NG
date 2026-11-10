@@ -25,6 +25,7 @@
                 </ol>
             </nav>
             <div class="d-flex align-items-center gap-2 ms-auto">
+                {{ macros.theme_toggle() }}
                 {{ macros.language_picker() }}
                 <button id="feedback-button"
                         type="button"
@@ -44,7 +45,7 @@
                 <span class="mdi mdi-alert me-2 fs-4 flex-shrink-0" role="img" aria-label="Warning"></span>
                 <p class="m-0">
                     {{ translate_ui("report_incomplete_warning") }}
-                    <a href="{{ url_for('reports.show', report_id=report['id']) }}">
+                    <a class="alert-link" href="{{ url_for('reports.show', report_id=report['id']) }}">
                         {{ translate_ui("report_here") -}}
                     </a>.
                 </p>
@@ -80,7 +81,7 @@
                     {%- if original %}
                         {{ translate_ui("report_original_language") }}
                         {% if original_choice -%}
-                            <a href="{{ original_choice.url }}" lang="{{ original }}">{{ language_name(original) }}</a>
+                            <a class="alert-link" href="{{ original_choice.url }}" lang="{{ original }}">{{ language_name(original) }}</a>
                         {%- else -%}
                             {{ language_name(original) }}
                         {%- endif -%}.
@@ -138,8 +139,8 @@
                     data = await response.json();
                     console.log(`Feedback ended with status: '${response.status}'`);
                     feedback_message.innerHTML = ok_message;
-                    feedback_message.classList.remove('text-danger');
-                    feedback_message.classList.add('text-success');
+                    feedback_message.classList.remove('text-danger-emphasis');
+                    feedback_message.classList.add('text-success-emphasis');
                 } else {
                     console.log(`Feedback ended with error: '${response.status}', '${response.statusText}'`);
                     feedback_message.innerHTML = something_went_wrong_message;
