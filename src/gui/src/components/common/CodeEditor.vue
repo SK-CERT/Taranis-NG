@@ -9,12 +9,17 @@
 
 <script lang="ts">
     // Set up once for every editor, when the module loads.
+    import type { PrismEditor } from 'prism-code-editor'
+    import { registerCompletions } from 'prism-code-editor/autocomplete'
     import { setIgnoreTab } from 'prism-code-editor/commands'
     import { languages } from 'prism-code-editor/prism'
+    import { jinjaCompletions, type JinjaCompletionSettings } from '@/utils/jinjaCompletions'
     // The Jinja grammar (registered as "jinja2", with HTML around it) and its editing behaviour.
     import 'prism-code-editor/prism/languages/django'
     import 'prism-code-editor/languages/django'
     import 'prism-code-editor/layout.css'
+    import 'prism-code-editor/autocomplete.css'
+    import 'prism-code-editor/autocomplete-icons.css'
 
     // Tab moves the focus on, as in any other field (Ctrl+M switches it to indenting).
     setIgnoreTab(true)
@@ -25,6 +30,18 @@
     const jinja = languages['jinja2'] as unknown as { django?: { inside?: { filter?: Pattern } } } | undefined
     const filter = jinja?.django?.inside?.filter
     if (filter?.pattern) filter.pattern = /(\|\s*)\w+/
+
+    // Completions are registered per language, for every editor at once; each editor that offers
+    // them says here what it is editing (a product or an item template, and of which type).
+    export const completionSettings = new WeakMap<PrismEditor, () => JinjaCompletionSettings | null>()
+    registerCompletions(['jinja2', 'django', 'html', 'markup'], {
+        sources: [
+            (context, editor) => {
+                const settings = completionSettings.get(editor)?.()
+                return settings ? jinjaCompletions(context.before, settings) : null
+            }
+        ]
+    })
 </script>
 
 <script setup lang="ts">
@@ -38,7 +55,9 @@
      */
     import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
     import { useTheme } from 'vuetify'
-    import { createEditor, type PrismEditor } from 'prism-code-editor'
+    import { createEditor } from 'prism-code-editor'
+    import { autoComplete, fuzzyFilter } from 'prism-code-editor/autocomplete'
+    import { cursorPosition } from 'prism-code-editor/cursor'
     import { defaultKeymap, editHistory, editorCommands } from 'prism-code-editor/commands'
     import { matchBrackets } from 'prism-code-editor/match-brackets'
     import { highlightBracketPairs } from 'prism-code-editor/highlight-brackets'
@@ -51,8 +70,10 @@
             ariaLabel?: string
             minHeight?: string
             maxHeight?: string
+            /** Offer Jinja completions (Ctrl+Space, or as you type inside {{ }} and {% %}) for this kind of template. */
+            completions?: JinjaCompletionSettings | null
         }>(),
-        { readonly: false, disabled: false, ariaLabel: '', minHeight: '0', maxHeight: 'none' }
+        { readonly: false, disabled: false, ariaLabel: '', minHeight: '0', maxHeight: 'none', completions: null }
     )
 
     const model = defineModel<string>({ default: '' })
@@ -79,8 +100,14 @@
             editHistory(),
             editorCommands(defaultKeymap),
             matchBrackets(false),
-            highlightBracketPairs()
+            highlightBracketPairs(),
+            // The completion list is placed at the cursor, which this extension tracks: without
+            // it the list never opens.
+            cursorPosition(),
+            autoComplete({ filter: fuzzyFilter })
         )
+        // Read when asked, so a change of kind or type in the dialog applies to the next completion.
+        completionSettings.set(editor.value, () => (props.readonly || props.disabled ? null : props.completions))
         if (props.ariaLabel) editor.value.textarea.setAttribute('aria-label', props.ariaLabel)
     })
 
@@ -166,6 +193,20 @@
         --pce-bg-highlight: rgba(var(--v-theme-on-surface), 0.04);
         --pce-border-highlight: none;
         --padding-inline: 0.75em;
+        /* The completion list. */
+        --pce-widget-bg: rgb(var(--v-theme-surface));
+        --pce-widget-border: rgba(var(--v-border-color), 0.38);
+        --pce-widget-color: var(--code-text);
+        --pce-widget-bg-active: rgba(var(--v-theme-primary), 0.16);
+        --pce-widget-color-active: var(--code-text);
+        --pce-widget-bg-hover: rgba(var(--v-theme-on-surface), 0.06);
+        --pce-ac-match: rgb(var(--v-theme-primary));
+        --pce-tabstop: rgba(var(--v-theme-primary), 0.2);
+        --pce-ac-icon-variable: var(--code-variable);
+        --pce-ac-icon-property: var(--code-variable);
+        --pce-ac-icon-function: var(--code-filter);
+        --pce-ac-icon-keyword: var(--code-keyword);
+        --pce-ac-icon-constant: var(--code-string);
 
         min-height: var(--code-editor-min-height);
         max-height: var(--code-editor-max-height);

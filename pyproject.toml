@@ -49,9 +49,9 @@ classifiers = [
 # Lockstep is enforced by scripts/check_tool_versions.py (run as a pre-commit hook).
 [dependency-groups]
 dev = [
-    "djlint==1.49.1",
-    "ruff==0.17.3",
-    "ty==0.0.95",
+    "djlint==1.49.10",
+    "ruff==0.17.4",
+    "ty==0.0.99",
     # Keep in lockstep with [tool.uv] required-version below. Declared here so
     # `uv sync` reinstalls it into .venv instead of pruning it — an undeclared
     # .venv/bin/uv gets removed by the first sync, after which no uv on the
@@ -72,7 +72,7 @@ test = [
 # on the CONTROL host only — worker hosts are driven through the compose CLI.
 ansible = [
     "ansible-core==2.21.3",
-    "ansible-lint==26.10.1",
+    "ansible-lint==26.11.0",
     "docker>=7.1.0",
 ]
 
@@ -117,7 +117,7 @@ testpaths = [
 pythonpath = ["src/core", "src/shared"]
 
 [tool.ruff]
-required-version = "0.17.3"
+required-version = "0.17.4"
 line-length = 142
 target-version = "py313"
 fix = true

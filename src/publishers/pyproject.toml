@@ -17,14 +17,14 @@ dependencies = [
     "packaging==26.3",
     "gevent==26.9.0",
     "gunicorn==26.2.0",
-    "marshmallow==4.3.1",
+    "marshmallow==4.4.0",
     "Mastodon.py==2.2.1",
     "paramiko==5.1.0",
     "python-dotenv==1.2.4",
     "requests==2.34.2",
     "tweepy==4.17.0",
     "urllib3==2.8.0",
-    "pymisp==2.5.34.4",
+    "pymisp==3.0.0",
     "taranis-ng-shared==26.10.1",
 ]
 

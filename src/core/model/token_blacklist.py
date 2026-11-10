@@ -15,7 +15,8 @@ class TokenBlacklist(db.Model):
     """
 
     id = db.Column(db.Integer, primary_key=True)
-    token = db.Column(db.String(), nullable=False)
+    # Looked up on every authenticated request.
+    token = db.Column(db.String(), nullable=False, index=True)
     created = db.Column(db.DateTime, default=datetime.now)
 
     def __init__(self, jwt_id: str) -> None:

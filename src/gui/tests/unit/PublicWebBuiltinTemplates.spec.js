@@ -3,7 +3,13 @@ import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import PublicWebTemplatesTab from '@/components/config/public-web/PublicWebTemplatesTab.vue'
 import BuiltinTemplateDialog from '@/components/config/public-web/BuiltinTemplateDialog.vue'
-import { getAllPublicWebTemplates, getBuiltinPublicWebTemplates, setBuiltinPublicWebTemplateEnabled } from '@/api/config'
+import {
+    getAllPublicWebTemplates,
+    getBuiltinPublicWebTemplates,
+    getPublicWebTemplatePreviewOptions,
+    previewPublicWebTemplate,
+    setBuiltinPublicWebTemplateEnabled
+} from '@/api/config'
 
 const BUILTINS = [
     { name: 'builtin/_macros.html', source: '{% macro x() %}{% endmacro %}', can_disable: false, enabled: true },
@@ -27,7 +33,9 @@ vi.mock('@/api/config', async (importOriginal) => ({
     getAllPublicWebTemplates: vi.fn().mockResolvedValue({ data: { total_count: 0, items: [] } }),
     deletePublicWebTemplate: vi.fn(),
     getBuiltinPublicWebTemplates: vi.fn(),
-    setBuiltinPublicWebTemplateEnabled: vi.fn()
+    setBuiltinPublicWebTemplateEnabled: vi.fn(),
+    getPublicWebTemplatePreviewOptions: vi.fn(),
+    previewPublicWebTemplate: vi.fn()
 }))
 
 const permissions = vi.hoisted(() => ({ update: true }))
@@ -199,5 +207,39 @@ describe('BuiltinTemplateDialog', () => {
         await flushPromises()
         expect(wrapper.text()).toContain('Copying failed.')
         vi.unstubAllGlobals()
+    })
+
+    it('previews the built-in on its Preview tab, rendered with the built-ins alone', async () => {
+        vi.mocked(getPublicWebTemplatePreviewOptions).mockResolvedValue({
+            data: {
+                webs: [{ id: 1, name: 'Main', node: 'node', unavailable: null, languages: ['en'], default_language: 'en' }],
+                web_id: 1,
+                products: [{ id: 42, title: 'Newest advisory', created: null }]
+            }
+        })
+        vi.mocked(previewPublicWebTemplate).mockResolvedValue({
+            data: { view: 'detail', page_url: '/config/public-web-templates/preview/ticket-1', errors: [], warnings: [] }
+        })
+        const wrapper = mountWithPlugins(BuiltinTemplateDialog, {
+            props: { modelValue: true, template: BUILTINS[1], usedFor: 'Any other report item' },
+            global: { stubs: { VDialog: { template: '<div><slot /></div>' } } }
+        })
+        mounted.push(wrapper)
+        await flushPromises()
+        // The source first: nothing is rendered until the Preview tab is opened.
+        expect(getPublicWebTemplatePreviewOptions).not.toHaveBeenCalled()
+
+        await wrapper.find('[data-test="builtin-tab-preview"]').trigger('click')
+        await flushPromises()
+
+        expect(getPublicWebTemplatePreviewOptions).toHaveBeenCalledWith(expect.objectContaining({ builtin: 'builtin/item_generic.html' }))
+        expect(previewPublicWebTemplate).toHaveBeenCalledWith({
+            builtin: 'builtin/item_generic.html',
+            web_id: 1,
+            language: 'en',
+            product_id: 42,
+            view: 'detail'
+        })
+        expect(wrapper.find('[data-test="preview-frame"]').attributes('src')).toBe('/api/v1/config/public-web-templates/preview/ticket-1')
     })
 })

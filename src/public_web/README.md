@@ -142,6 +142,45 @@ Filters: `clean` (escapes everything but `<a>` links), `clean_rich`,
 `capitalize_first`, `fix_spaces`, and the presenter filters `strfdate`,
 `regex_replace`, `truncate_on_symbol`, `tlp_color`.
 
+### Preview
+
+The template dialog (Configuration → Public Web → Report templates) previews a template
+before it is saved: core checks the source, then asks the web's node
+(`POST /management/preview`, authenticated with the node key) to render a published
+product with it - the newest one the template applies to, or one picked in the dialog -
+as the report page, the homepage entry, or the whole RSS item. The node renders it with
+the web's stored templates, the previewed one in place of its target's, in the web's own
+page with its branding; its stylesheet and images are inlined, so the preview does not
+depend on the browser reaching the web's hostname, and its scripts are left out but the
+web's page script (see [Colour mode and the preview's language](#colour-mode-and-the-previews-language)).
+A custom template that fails is replaced by the built-in one, as on the site, and the failure
+(template, line, message) is listed under the preview. The node caches nothing; core keeps
+the rendered page for ten minutes under a random ticket and serves it from
+`/api/v1/config/public-web-templates/preview/<ticket>` with a policy of its own (the web's
+CDN stylesheets and fonts allowed, no script but the page script, framed only by the
+GUI), shown in the dialog's Preview tab and, from there, in a browser tab. No node that
+core can reach, no preview.
+
+A built-in template is previewed in its own dialog the same way, on a published product it
+shows in (the item ones on a product holding items of their types, the others on any). The node
+renders it with the built-ins alone, every one of them on, whatever the web's own templates
+and switches, so the preview shows what the built-ins make of the product.
+
+### Colour mode and the preview's language
+
+Every page has a colour-mode button beside the language menu; each click goes to the next
+mode: auto -> light -> dark -> auto, and the button shows the mode in use. Auto, the
+default, follows the browser's setting, also when it changes; a pick is kept in the
+browser's storage. The script doing it is `shared/public_web_script.py`, inline in each
+page's head so the mode is set before the page is drawn. The template preview runs it too: core's policy
+for the preview page allows exactly that script by its hash, and the frame is sandboxed
+without an origin. Such a frame has no storage, so the page posts a pick to the GUI, which
+opens the next rendering with it (`#theme=dark`).
+
+The preview's language is picked in the page's own language menu. The node marks the preview
+page (`data-taranis-preview`), where Bootstrap's script does not run: the page script opens
+the menu, and a language picked in it is posted to the GUI, which renders the preview in it.
+
 ## Configuration
 
 There is **no config file**. Per-web presentation (branding text per language,

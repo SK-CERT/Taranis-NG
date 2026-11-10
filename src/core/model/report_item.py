@@ -99,7 +99,7 @@ class ReportItemAttribute(db.Model):
     )
     attribute_group_item_title = db.Column(db.String)
 
-    report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), nullable=True)
+    report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), nullable=True, index=True)
     report_item = db.relationship("ReportItem", back_populates="attributes")
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
@@ -822,6 +822,9 @@ class ReportItem(db.Model):
         results, count = cls.get(group, filter, offset, limit, user)
         report_items = []
         initial_state = StateDefinition.get_initial_state(StateEntityTypeEnum.REPORT_ITEM.value)
+        # The news item count of every report on the page in one query, not by loading each
+        # report's aggregates (with their news items) one report at a time.
+        news_items_counts = ReportItemNewsItemAggregate.counts_for_reports([result.ReportItem.id for result in results])
 
         for result in results:
             report_item = result.ReportItem
@@ -830,7 +833,7 @@ class ReportItem(db.Model):
             # Synchronized report items are always read-only, even if their local
             # report-item type ACL would otherwise permit modification.
             report_item.modify = False if group else result.modify > 0 or result.acls == 0
-            report_item.news_items_count = len(report_item.news_item_aggregates)
+            report_item.news_items_count = news_items_counts.get(report_item.id, 0)
             if not report_item.state and initial_state:
                 report_item.state = initial_state
             report_items.append(report_item)
@@ -849,8 +852,9 @@ class ReportItem(db.Model):
             The detailed JSON representation of the report item.
         """
         report_item = db.session.get(cls, id)
+        in_reports = ReportItemNewsItemAggregate.counts_for_aggregates([nia.id for nia in report_item.news_item_aggregates])
         for nia in report_item.news_item_aggregates:
-            nia.in_reports_count = ReportItemNewsItemAggregate.count(nia.id)
+            nia.in_reports_count = in_reports.get(nia.id, (0, 0))[0]
 
         report_item_schema = ReportItemSchema()
         data = report_item_schema.dump(report_item)

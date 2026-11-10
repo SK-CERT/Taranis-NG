@@ -682,26 +682,6 @@ class OSINTSourceGroup(db.Model):
         return [{"id": group.id, "name": group.name, "default": bool(group.default)} for group in cls.get_for_entry(user)]
 
     @classmethod
-    def get_all_with_source(cls, osint_source_id: str) -> list[OSINTSourceGroup]:
-        """Get all OSINT source groups with a specific source.
-
-        Args:
-            osint_source_id (str): Source ID.
-
-        Returns:
-            List[OSINTSourceGroup]: List of OSINT source groups.
-        """
-        all_groups = cls.get_all()
-        groups = []
-        for group in all_groups:
-            for source in group.osint_sources:
-                if source.id == osint_source_id:
-                    groups.append(group)
-                    break
-
-        return groups
-
-    @classmethod
     def add(cls, data: dict) -> None:
         """Add a new OSINT source group.
 
