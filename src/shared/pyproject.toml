@@ -8,7 +8,7 @@ version = "26.10.1"
 description = "Taranis-NG Shared Classes"
 requires-python = ">=3.11"
 dependencies = [
-    "marshmallow==4.3.1"
+    "marshmallow==4.4.0"
 ]
 
 # The public-web built-in report templates are read at runtime (importlib.resources)
