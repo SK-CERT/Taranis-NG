@@ -8,15 +8,19 @@ re-indenting a template or switching attribute quotes does not count as a change
 while any difference a visitor could see does.
 
 Re-record (only when a visible change is intended): ``UPDATE_GOLDEN=1 pytest tests/test_golden_pages.py``.
-Three later changes were edited in by hand instead, to keep the recordings: ``<html lang>``
+Four later changes were edited in by hand instead, to keep the recordings: ``<html lang>``
 names the page's language (it was always "cs"), a language picked with ``?lang=``
-stays in the page's links, and the homepage and the report page have a language menu.
+stays in the page's links, the homepage and the report page have a language menu, and
+every page links the RSS and Atom feeds of each language (the homepage in a menu behind
+the RSS icon). The feeds were re-recorded when they gained their dates (``rss.xml``) and
+Atom (``atom.xml``).
 """
 
 from __future__ import annotations
 
 import difflib
 import os
+import re
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
@@ -68,14 +72,58 @@ def canonical_html(html: str) -> list[str]:
     return parser.lines
 
 
+ATOM = "{http://www.w3.org/2005/Atom}"
+DC = "{http://purl.org/dc/elements/1.1/}"
+
+
+CONTENT = "{http://purl.org/rss/1.0/modules/content/}"
+
+
+def _this_year(text: str) -> str:
+    """The copyright line names the current year; the recording holds it as ``<year>``."""
+    return re.sub(r"© \d{4} ", "© <year> ", text)
+
+
 def canonical_rss(xml: str) -> list[str]:
-    """The feed's channel and items, without the build timestamp."""
+    """The feed's channel and items, dates included: they come from the products, not the clock."""
     channel = ET.fromstring(xml).find("channel")  # noqa: S314 (our own output)
-    lines = [f"{tag}: {_collapse(channel.findtext(tag) or '')}" for tag in ("title", "link", "description")]
+    lines = [
+        f"{tag}: {_this_year(_collapse(channel.findtext(tag) or ''))}"
+        for tag in ("title", "link", "description", "language", "pubDate", "lastBuildDate", "generator", "copyright")
+    ]
+    lines.extend(f"image.{tag}: {channel.findtext(f'image/{tag}')}" for tag in ("url", "title", "link"))
+    lines.extend(f"atom:link {link.get('rel')}: {link.get('href')}" for link in channel.findall(f"{ATOM}link"))
     for item in channel.findall("item"):
-        lines.extend(f"item.{tag}: {_collapse(item.findtext(tag) or '')}" for tag in ("title", "link", "guid"))
+        lines.extend(f"item.{tag}: {_collapse(item.findtext(tag) or '')}" for tag in ("title", "link", "guid", "pubDate", f"{DC}creator"))
         # The description is plain text; its line breaks matter less than its words.
         lines.append(f"item.description: {_collapse(item.findtext('description') or '')}")
+        lines.append(f"item.content: {_collapse(item.findtext(f'{CONTENT}encoded') or '')}")
+    return lines
+
+
+def canonical_atom(xml: str) -> list[str]:
+    """The Atom feed and its entries: ids, titles, links, dates and summaries."""
+    feed = ET.fromstring(xml)  # noqa: S314 (our own output)
+    lines = [f"xml:lang: {feed.get('{http://www.w3.org/XML/1998/namespace}lang')}"]
+    tags = ("id", "title", "subtitle", "updated", "rights", "icon", "logo")
+    lines.extend(f"{tag}: {_this_year(_collapse(feed.findtext(ATOM + tag) or ''))}" for tag in tags)
+    lines.extend(
+        f"author: {_collapse(author.findtext(ATOM + 'name') or '')} {author.findtext(ATOM + 'uri') or ''}".strip()
+        for author in feed.findall(f"{ATOM}author")
+    )
+    lines.extend(f"link {link.get('rel')}: {link.get('href')}" for link in feed.findall(f"{ATOM}link"))
+    generator = feed.find(f"{ATOM}generator")
+    if generator is not None:
+        lines.append(f"generator: {generator.text} {generator.get('uri')} {generator.get('version')}")
+    for entry in feed.findall(f"{ATOM}entry"):
+        lines.extend(
+            f"entry.{tag}: {_collapse(entry.findtext(ATOM + tag) or '')}" for tag in ("id", "title", "published", "updated", "summary")
+        )
+        lines.extend(f"entry.link {link.get('rel')}: {link.get('href')}" for link in entry.findall(f"{ATOM}link"))
+        lines.extend(f"entry.author: {_collapse(author.findtext(ATOM + 'name') or '')}" for author in entry.findall(f"{ATOM}author"))
+        content = entry.find(f"{ATOM}content")
+        if content is not None:
+            lines.append(f"entry.content ({content.get('type')}): {_collapse(content.text or '')}")
     return lines
 
 
@@ -101,10 +149,18 @@ def test_page_matches_golden(site_client, name: str, path: str) -> None:  # noqa
 
 
 def test_rss_matches_golden(site_client) -> None:  # noqa: ANN001
-    """The RSS items keep their titles, links and plain-text descriptions."""
+    """The RSS items keep their titles, links and plain-text descriptions, and say when they were published."""
     response = site_client.client.get("/rss", headers={"Host": "localhost"})
     assert response.status_code == 200
     _compare("rss", response.text, canonical_rss, "xml")
+
+
+def test_atom_matches_golden(site_client) -> None:  # noqa: ANN001
+    """The Atom feed carries the same reports, with when each was published and last changed."""
+    response = site_client.client.get("/atom", headers={"Host": "localhost"})
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "application/xml; charset=utf-8"
+    _compare("atom", response.text, canonical_atom, "xml")
 
 
 def test_amber_report_is_not_served(site_client) -> None:  # noqa: ANN001

@@ -95,6 +95,8 @@ class Product(db.Model):
 
     created = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now)
+    # When it was first published (see note_first_publication); local time, like created.
+    published_at = db.Column(db.DateTime, nullable=True)
 
     # A product preset in use cannot be deleted.
     product_preset_id = db.Column(db.Integer, db.ForeignKey("product_preset.id"), nullable=False)
@@ -610,8 +612,10 @@ class Product(db.Model):
             query = query.filter(holds_one_of)
 
         total = query.count()
-        # By id too, so that products created at the same moment keep their place between pages.
-        page = query.order_by(db.desc(cls.created), db.desc(cls.id)).offset(offset).limit(limit)
+        # Newest published first (older products have no publication time: their creation);
+        # by id too, so that products of the same moment keep their place between pages.
+        newest = func.coalesce(cls.published_at, cls.created)
+        page = query.order_by(db.desc(newest), db.desc(cls.id)).offset(offset).limit(limit)
         if with_content:
             page = page.options(orm.selectinload(cls.report_items), orm.selectinload(cls.user))
         return page.all(), total
@@ -716,6 +720,18 @@ class Product(db.Model):
         except Exception as error:
             logger.exception(f"Failed to auto-complete newly-added reports on product update: {error}")
 
+    def note_first_publication(self) -> None:
+        """Remember when the product first went public: the first time it is in the published state.
+
+        The date stays, also when it is taken off and published again: the public web and its
+        feeds give it as the day the product was published.
+        """
+        if self.published_at is not None or self.state_id is None:
+            return
+        published = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
+        if published is not None and self.state_id == published.id:
+            self.published_at = datetime.now(TZ).replace(tzinfo=None)
+
     def store_report_order(self) -> None:
         """Give the product's link rows the positions its ``report_items`` list has them in.
 
@@ -757,6 +773,7 @@ class Product(db.Model):
         if product.language is None:
             product.language = cls._author_language(user)
         product.apply_translations(product.submitted_translations, user.id)
+        product.note_first_publication()
         db.session.add(product)
         product.store_report_order()
         if tag_ids:
@@ -807,6 +824,7 @@ class Product(db.Model):
         original_product.links = product.links
         original_product.product_preset_id = product.product_preset_id
         original_product.state_id = product.state_id
+        original_product.note_first_publication()
         original_product.report_items = []
         original_product.report_items.extend(product.report_items)
         # Reports kept keep their link rows, so a new order is only in the positions.

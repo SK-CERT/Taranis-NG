@@ -12,6 +12,7 @@ from lib import config
 from lib.web import (
     chosen_language,
     current_language,
+    feed_links,
     language_choices,
     language_name,
     translate_report,
@@ -32,6 +33,7 @@ app = Flask(__name__)
 app.jinja_env.globals.update(
     chosen_language=chosen_language,
     current_language=current_language,
+    feed_links=feed_links,
     language_choices=language_choices,
     language_name=language_name,
     translate_report=translate_report,

@@ -8,7 +8,6 @@ import threading
 import time
 
 from cachelib import FileSystemCache
-from flask import Response
 from lib import config
 from lib.logger import get_logger
 from lib.report.product import InvalidProductError, build_product, displayable
@@ -19,7 +18,7 @@ logger = get_logger("web-cache", silent=True)
 
 CACHE_KEY_ALL_REPORTS = "ALL_REPORTS"
 CACHE_KEY_RESET_AT = "RESET_AT"
-CACHE_KEY_RSS_RESPONSE = "RSS_RESPONSE"
+CACHE_KEY_FEED = "FEED"
 CACHE_KEY_TEMPLATES = "REPORT_TEMPLATES"
 CACHE_KEY_WEBS = "WEBS"
 
@@ -236,13 +235,13 @@ class WebCache:
             return None
         return self._accept(data, self.renderer(web_id))
 
-    def get_rss_response(self) -> Response | None:
-        """Returns cached RSS response, or None if the cache is empty/expired."""
-        return self.cache.get(CACHE_KEY_RSS_RESPONSE)
+    def get_feed(self, key: str) -> dict | None:
+        """A feed page made before for exactly what ``key`` digests (see routes); None if not kept."""
+        return self.cache.get(f"{CACHE_KEY_FEED}:{key}")
 
-    def cache_rss_response(self, response: Response) -> None:
-        """Saves the RSS response to cache."""
-        self.cache.set(CACHE_KEY_RSS_RESPONSE, response)
+    def set_feed(self, key: str, feed: dict) -> None:
+        """Keep a feed page made for what ``key`` digests, until the cache is reset or expires."""
+        self.cache.set(f"{CACHE_KEY_FEED}:{key}", feed)
 
     def clear(self) -> None:
         """Drop everything (webs, images, templates, reports) so the next requests refetch.

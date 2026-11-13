@@ -65,6 +65,7 @@ ALLOWED_LITERALS = {
     "(Gitlab, Apple...)",
     # Syndication format, shown as the link's own name
     "RSS",
+    "Atom",
     # Vendor and advisory-site names linked from a CVE
     "cve.org ,",
     "cwe.mitre.org",

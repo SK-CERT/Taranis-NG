@@ -209,6 +209,45 @@
                                 </v-col>
                             </v-row>
 
+                            <!-- The feeds: how many reports a page carries, and the WebSub hub that
+                                 tells subscribers about changes at once. -->
+                            <v-row>
+                                <v-col
+                                    cols="6"
+                                    sm="3"
+                                >
+                                    <v-text-field
+                                        v-model.number="localItem.config.feed_page_size"
+                                        type="number"
+                                        min="1"
+                                        :label="t('public_web.webs.feed_page_size')"
+                                        :hint="t('public_web.webs.feed_page_size_hint')"
+                                        persistent-hint
+                                        variant="outlined"
+                                        density="comfortable"
+                                        :disabled="saving"
+                                        data-test="web-feed-page-size"
+                                    />
+                                </v-col>
+                                <v-col
+                                    cols="12"
+                                    sm="9"
+                                >
+                                    <v-text-field
+                                        v-model.trim="localItem.config.websub_hub"
+                                        :label="t('public_web.webs.websub_hub')"
+                                        :hint="t('public_web.webs.websub_hub_hint')"
+                                        persistent-hint
+                                        :rules="[websubHubRule]"
+                                        placeholder="https://pubsubhubbub.appspot.com/"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        :disabled="saving"
+                                        data-test="web-websub-hub"
+                                    />
+                                </v-col>
+                            </v-row>
+
                             <v-row>
                                 <v-col
                                     cols="12"
@@ -485,11 +524,14 @@
         getAllOrganizations,
         testPublicWebEmail
     } from '@/api/config'
+    import { isHttpUrl } from '@/utils/linkReferences'
 
     type WebConfig = {
         languages: string[]
         default_language: string
         max_reports_homepage: number | null
+        feed_page_size: number | null
+        websub_hub: string
         logo_width: number | null
         logo_height: number | null
         organization: string
@@ -548,6 +590,12 @@
     function hostnameRule(value: string): true | string {
         if (!value) return true
         return HOSTNAME_PATTERN.test(value.trim()) || t('public_web.webs.hostname_invalid')
+    }
+
+    // A WebSub hub is a web address; empty means none.
+    function websubHubRule(value: string): true | string {
+        if (!value || !value.trim()) return true
+        return isHttpUrl(value) || t('public_web.webs.websub_hub_invalid')
     }
 
     // Same shape the backend enforces for the instance-wide resolver name.
@@ -622,6 +670,8 @@
             languages: ['en'],
             default_language: 'en',
             max_reports_homepage: 10,
+            feed_page_size: 50,
+            websub_hub: '',
             logo_width: 90,
             logo_height: 45,
             organization: '',

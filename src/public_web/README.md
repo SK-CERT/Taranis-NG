@@ -1,7 +1,7 @@
 # public-web — Taranis-NG public report feed
 
 A public, human-readable web feed of published products (homepage list,
-per-report page, RSS, feedback form, localization, custom branding). Products are
+per-report page, RSS and Atom feeds, feedback form, localization, custom branding). Products are
 rendered through report templates, so any kind of product can be shown; out of the
 box it shows vulnerability reports.
 
@@ -41,6 +41,68 @@ can clear it on demand with the cache button on the node in Configuration -> Pub
 answer). The node is
 managed under core's Configuration (seeded automatically from `api_key.txt` by
 `prestart_core.sh`).
+
+Pages (homepage, search, reports) and uploaded branding images carry an `ETag` digesting what was
+made. A browser asking again with `If-None-Match` gets an empty `304 Not Modified` while it is the
+same; the page is still made, only not sent. Pages say `Cache-Control: private, no-cache` (they can
+differ per visitor: language, cookies). The feeds have their own validators, see below, and
+`/static` files Flask's.
+
+### Feeds
+
+`/rss` (also `/feed`) serves RSS 2.0 and `/atom` serves Atom (RFC 4287): the web's published
+reports, newest first. The code is in `lib/web/feeds.py` (building), `lib/web/routes.py`
+(serving) and `lib/web/websub.py` (telling the hub).
+
+- **Pages:** a feed carries the newest `feed_page_size` reports (the web's "Reports per feed page",
+  50 by default). The older ones are on `?page=2`, `?page=3`… linked as an RFC 5005 paged feed
+  (`first`, `previous`, `next`, `last`; in RSS as `atom:link`). A page past the last is a 404.
+- **Not modified:** a feed page is made once for what it shows and kept. Its `ETag` digests it,
+  and `Last-Modified` is its latest change. A reader asking again with `If-None-Match` or
+  `If-Modified-Since` gets an empty `304` until something changes. `Cache-Control: public,
+  no-cache` lets caches keep it while asking every time.
+- **Whole reports:** each item has its summary as plain text (`description`, Atom `summary`) and
+  the report's whole text as HTML (RSS `content:encoded`, Atom `content type="html"`), rendered as
+  on the report page, with the web's own paths made absolute.
+- **Logo, icon and rights:** the web's logo is the RSS `<image>` and Atom `<logo>`, its favicon
+  the Atom `<icon>`. `© <year> <organization>` is the RSS `<copyright>` and Atom `<rights>`.
+- **WebSub:** a web with a hub (its "WebSub hub", e.g. `https://pubsubhubbub.appspot.com/`) names it
+  in its feeds (`rel="hub"`, also as a `Link` header with `rel="self"`). After every cache reset
+  (core pushes one when a published product, a web or a template changes, and on the Clear cache
+  button), the node tells the hub, in the background, that the web's feeds changed: plain `/rss`,
+  `/feed` and `/atom`, and each language's. Subscribers then hear of new reports at once instead of
+  at their next poll. A hub that is down is only logged.
+
+- **Languages:** a feed is in the language of its request: `?lang=`, else the reader's
+  Accept-Language, else the web's default. A web with several languages therefore offers one feed
+  per language and format (`/rss?lang=cs`, `/atom?lang=en`); with `lang`, the item links keep
+  it, so reports open in that language too. A web with a single language keeps plain `/rss` and
+  `/atom`.
+- **Discovery:** every page lists these feeds as `<link rel="alternate" hreflang>`, its own
+  language first.
+- **Homepage:** an RSS icon opens a menu with the same feeds per language. A feed's name
+  downloads it (`download="rss-cs.xml"`); of the icons beside it, one copies its full address
+  for a feed reader (the page script, `shared/public_web_script.py`) and one opens it in a new
+  tab. The menu stays open while they are used, so "copied" can be seen.
+- **Content type:** both feeds go out as `application/xml; charset=utf-8`, so that a browser
+  tab shows them; `application/rss+xml` and `application/atom+xml` some browsers download.
+  Feed readers tell RSS from Atom by the content.
+
+- Each item says when it was published (RSS `pubDate`, Atom `published`). That is the moment
+  core recorded the product first entering the published state; a product published before
+  core recorded it gives its creation. The report page shows the same day.
+- Atom entries also carry `updated`, the product's last save, and never earlier than its
+  publication.
+- The channel's `lastBuildDate` (the Atom feed's `updated`) is its latest change; RSS
+  `pubDate` is its newest publication.
+- Core sends the dates (`published`, `updated`) as ISO 8601 with an offset. A date without one
+  (an older core's `created`) is read in `TZ`.
+- **Generator:** both feeds name Taranis-NG (Atom with its project URL), without a version, which
+  the public web does not reveal anywhere.
+- **Authors:** the Atom feed's author is the web's organization (with its URL), as the report
+  pages name it. Each entry's author is the product's author; an entry without one falls back on
+  the feed's. RSS's own `author` must be an e-mail address, so RSS items name the product's
+  author in Dublin Core's `dc:creator` instead.
 
 ## Which products a web shows
 
@@ -141,7 +203,8 @@ do, so it carries a `lang` attribute when it differs from the page's.
 
 Filters: `clean` (escapes everything but `<a>` links), `clean_rich`,
 `link_refs(links)` (turns `[n]` into links), `safe_url`, `cvss_score`,
-`cvss_severity`, `iso_date`, `ymd_date`, `affected_system`, `single`, `as_list`,
+`cvss_severity`, `cvss_calculator_url` (the FIRST calculator showing a CVSS 3.0, 3.1 or
+4.0 vector; none for CVSS 2.0), `iso_date`, `ymd_date`, `affected_system`, `single`, `as_list`,
 `capitalize_first`, `fix_spaces`, and the presenter filters `strfdate`,
 `regex_replace`, `truncate_on_symbol`, `tlp_color`.
 
