@@ -684,7 +684,7 @@
     }
 
     type FormRef = {
-        reset?: () => void
+        resetValidation?: () => void
         validate?: () => Promise<{ valid: boolean }>
     }
 
@@ -1271,7 +1271,9 @@
             const own = product.value.public_web_ids || []
             return own.length > 0 ? choices.filter((id) => own.includes(id)) : choices
         },
-        set: (ids) => {
+        // Null when a form reset clears the checkboxes: none ticked.
+        set: (value: number[] | null) => {
+            const ids = value ?? []
             product.value.public_web_enabled = ids.length > 0
             product.value.public_web_ids =
                 ids.length === 0 || ids.length === webChoices.value.length
@@ -1307,7 +1309,9 @@
         canModifyFlag.value = false
         canAccessFlag.value = false
         reportItems.value = []
-        formRef.value?.reset?.()
+        // Only the validation: VForm.reset() would set every field's model to null, overwriting
+        // the defaults just set (and the web checkboxes' setter cannot take null).
+        formRef.value?.resetValidation?.()
         selectDefaultState()
         initialFormState.value = snapshotForm()
     }
@@ -1767,6 +1771,12 @@
         canAccessFlag.value = editMeta?.access ?? (data as ProductEditPayload).access ?? true
         showError.value = false
 
+        // A text in the product's own language is its original, not a translation: the form has no
+        // tab for it and core refuses to store one, so a stray stored one would make every save
+        // fail. It is left out here, and saving drops it.
+        const ownLanguage = (data as ProductDetailPayload).language ?? null
+        const storedTexts = Object.entries((data as ProductDetailPayload).translations ?? {}).filter(([language]) => language !== ownLanguage)
+
         product.value = {
             id: data.id,
             title: data.title,
@@ -1775,9 +1785,9 @@
             state_id: data.state_id,
             report_items: data.report_items || [],
             links: data.links || [],
-            language: (data as ProductDetailPayload).language ?? null,
+            language: ownLanguage,
             translations: Object.fromEntries(
-                Object.entries((data as ProductDetailPayload).translations ?? {}).map(([language, states]) => [
+                storedTexts.map(([language, states]) => [
                     language,
                     Object.fromEntries(
                         PRODUCT_FIELDS.filter((field) => states[field]?.value).map((field) => [
@@ -1793,7 +1803,7 @@
         }
         resetLanguages()
         storedTranslations.value = Object.fromEntries(
-            Object.entries((data as ProductDetailPayload).translations ?? {}).map(([language, states]) => [
+            storedTexts.map(([language, states]) => [
                 language,
                 Object.fromEntries(
                     PRODUCT_FIELDS.filter((field) => states[field]).map((field) => [

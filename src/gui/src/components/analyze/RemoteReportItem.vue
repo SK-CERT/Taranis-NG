@@ -130,10 +130,16 @@
     // A remote item arrives without its attribute definitions; its links are the values that
     // carry a citation key, and its texts cite them.
     const remoteValues = computed(() => reportItem.value.attributes.flatMap((group) => group.attributes))
+    const remoteTexts = computed(() => remoteValues.value.map((value) => value.value))
     provideLinkReferences(
         createLinkReferences(
-            computed(() => numberLinks(remoteValues.value.filter((value) => isLinkKey(value.value_description) && isHttpUrl(value.value)))),
-            computed(() => remoteValues.value.map((value) => value.value))
+            computed(() =>
+                numberLinks(
+                    remoteValues.value.filter((value) => isLinkKey(value.value_description) && isHttpUrl(value.value)),
+                    remoteTexts.value
+                )
+            ),
+            remoteTexts
         )
     )
 

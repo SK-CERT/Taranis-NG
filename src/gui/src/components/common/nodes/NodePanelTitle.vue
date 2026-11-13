@@ -43,6 +43,14 @@
         >
             <slot name="add" />
         </span>
+        <!-- Whatever else the node can be asked to do, before edit and delete. -->
+        <span
+            v-if="$slots['actions']"
+            @click.stop
+            @keydown.stop
+        >
+            <slot name="actions" />
+        </span>
         <ActionButton
             v-if="canUpdate"
             action="edit"

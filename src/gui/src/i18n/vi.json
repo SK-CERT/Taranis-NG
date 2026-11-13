@@ -2178,7 +2178,10 @@
             "total_count": "{count} nút public-web | {count} nút public-web",
             "enabled": "Đã bật",
             "enabled_hint": "Tắt: Taranis ngừng kiểm tra và làm mới nút này, không công bố trang web nào của nút và không gửi báo cáo cho nút. Các trang web và cài đặt của nút được giữ lại để bật lại sau.",
-            "disabled_notice": "Nút này đang tắt: không trang web nào của nút được công bố."
+            "disabled_notice": "Nút này đang tắt: không trang web nào của nút được công bố.",
+            "clear_cache": "Xóa bộ nhớ đệm",
+            "cache_cleared": "Đã xóa bộ nhớ đệm của {name}",
+            "cache_clear_failed": "Không thể xóa bộ nhớ đệm của {name}"
         },
         "webs": {
             "total_count": "{count} trang web | {count} trang web",

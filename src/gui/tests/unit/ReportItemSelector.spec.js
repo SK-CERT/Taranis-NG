@@ -51,7 +51,7 @@ const NewReportItemStub = {
 const stubs = {
     ContentDataAnalyze: { name: 'ContentDataAnalyze', template: '<div />' },
     ToolbarFilterAnalyze: { name: 'ToolbarFilterAnalyze', template: '<div />' },
-    CardAnalyze: { name: 'CardAnalyze', template: '<div />' },
+    CardAnalyze: { name: 'CardAnalyze', props: ['card', 'showRemoveAction'], template: '<div class="card-stub">{{ card.id }}</div>' },
     NewReportItem: NewReportItemStub
 }
 
@@ -83,5 +83,73 @@ describe('ReportItemSelector — REPORT_SELECTOR_READ_ONLY', () => {
     it('falls back to read-only when the setting is missing', async () => {
         mockSettings.value = [{ key: 'SOME_OTHER_SETTING', value: 'false' }]
         expect(readOnlyProp(await mountSelector())).toBe(true)
+    })
+})
+
+describe('ReportItemSelector — report order', () => {
+    const reports = () => [
+        { id: 11, title: 'First' },
+        { id: 12, title: 'Second' },
+        { id: 13, title: 'Third' }
+    ]
+
+    async function mountWith(props) {
+        const wrapper = mountWithPlugins(ReportItemSelector, { props, global: { stubs } })
+        await flushPromises()
+        return wrapper
+    }
+
+    const shown = (wrapper) => wrapper.findAll('.card-stub').map((card) => Number(card.text()))
+    const handedOn = (wrapper) =>
+        wrapper
+            .emitted('items-changed')
+            .at(-1)[0]
+            .map((item) => item.id)
+    const buttons = (wrapper, direction) => wrapper.findAll(`[data-test="report-move-${direction}"]`)
+
+    beforeEach(() => {
+        setActivePinia(createPinia())
+        vi.clearAllMocks()
+        mockSettings.value = []
+    })
+
+    it('moves a report up and down and hands the new order on', async () => {
+        const wrapper = await mountWith({ values: reports(), modify: true })
+
+        await buttons(wrapper, 'up')[2].trigger('click')
+        expect(handedOn(wrapper)).toEqual([11, 13, 12])
+        expect(shown(wrapper)).toEqual([11, 13, 12])
+
+        await buttons(wrapper, 'down')[0].trigger('click')
+        expect(handedOn(wrapper)).toEqual([13, 11, 12])
+        expect(shown(wrapper)).toEqual([13, 11, 12])
+    })
+
+    it('cannot move the first report up or the last one down', async () => {
+        const wrapper = await mountWith({ values: reports(), modify: true })
+
+        expect(buttons(wrapper, 'up').map((button) => button.attributes('disabled') !== undefined)).toEqual([true, false, false])
+        expect(buttons(wrapper, 'down').map((button) => button.attributes('disabled') !== undefined)).toEqual([false, false, true])
+    })
+
+    it('puts a dragged report where it is dropped', async () => {
+        const wrapper = await mountWith({ values: reports(), modify: true })
+        const rows = wrapper.findAll('[data-test="report-order-row"]')
+        const dataTransfer = { setData: vi.fn(), effectAllowed: '', dropEffect: '' }
+
+        await rows[0].find('[data-test="report-drag-handle"]').trigger('dragstart', { dataTransfer })
+        await rows[2].trigger('dragover', { dataTransfer })
+        await rows[2].trigger('drop')
+
+        expect(handedOn(wrapper)).toEqual([12, 13, 11])
+    })
+
+    it('offers no reordering to whoever may not change the product, nor for a single report', async () => {
+        const readOnly = await mountWith({ values: reports(), modify: false })
+        expect(readOnly.find('[data-test="report-drag-handle"]').exists()).toBe(false)
+        expect(shown(readOnly)).toEqual([11, 12, 13])
+
+        const single = await mountWith({ values: reports().slice(0, 1), modify: true })
+        expect(buttons(single, 'up')).toHaveLength(0)
     })
 })

@@ -275,6 +275,24 @@ describe('NewProduct languages', () => {
         expect(saved.translations).toEqual({ en: { title: { value: 'Weekly bulletin', origin: 'manual' } } })
     })
 
+    it('leaves out a stored text in the products own language, so saving works and drops it', async () => {
+        // Core refuses a translation into the product's own language; one stored earlier must
+        // not make every save fail.
+        const wrapper = await openProduct({
+            translations: {
+                cs: { title: { value: 'Bulletin', origin: 'ai', version: 1, outdated: false } },
+                en: { title: { value: 'Bulletin (en)', origin: 'ai', version: 1, outdated: false } }
+            }
+        })
+
+        await wrapper.vm.handleUpdateRecord()
+
+        const saved = vi.mocked(updateProduct).mock.calls.at(-1)?.[0] as { language: string; translations: object }
+        expect(saved.language).toBe('cs')
+        expect(saved.translations).toEqual({ en: { title: { value: 'Bulletin (en)', origin: 'ai' } } })
+        expect(tabs(wrapper)).toEqual(['Czech (original)', 'English', 'Slovak', 'German'])
+    })
+
     it('takes a title a person typed as no longer the AIs, before it is saved', async () => {
         const wrapper = await openProduct()
         wrapper.vm.activeLanguage = 'en'

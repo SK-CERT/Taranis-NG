@@ -2178,7 +2178,10 @@
             "total_count": "{count} 个 public-web 节点 | {count} 个 public-web 节点",
             "enabled": "已启用",
             "enabled_hint": "关闭：Taranis 停止检查和刷新此节点，不发布其任何站点，也不向其发送报告。其站点和设置会保留，以便重新启用。",
-            "disabled_notice": "此节点已关闭：其站点均未发布。"
+            "disabled_notice": "此节点已关闭：其站点均未发布。",
+            "clear_cache": "清除缓存",
+            "cache_cleared": "已清除 {name} 的缓存",
+            "cache_clear_failed": "无法清除 {name} 的缓存"
         },
         "webs": {
             "total_count": "{count} 个站点 | {count} 个站点",

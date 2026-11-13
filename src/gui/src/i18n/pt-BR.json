@@ -2178,7 +2178,10 @@
             "total_count": "{count} nó public-web | {count} nós public-web",
             "enabled": "Habilitado",
             "enabled_hint": "Desativado: o Taranis deixa de verificar e atualizar este nó, não publica nenhum de seus sites e não lhe envia relatórios. Seus sites e configurações são mantidos para quando ele for reativado.",
-            "disabled_notice": "Este nó está desativado: nenhum de seus sites é publicado."
+            "disabled_notice": "Este nó está desativado: nenhum de seus sites é publicado.",
+            "clear_cache": "Limpar cache",
+            "cache_cleared": "Cache de {name} limpo",
+            "cache_clear_failed": "Não foi possível limpar o cache de {name}"
         },
         "webs": {
             "total_count": "{count} site | {count} sites",

@@ -72,7 +72,7 @@ class _Rendering:
     label_language: str | None
 
 
-def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, rendering: _Rendering | None = None) -> list[dict]:  # noqa: ANN001
+def _serialize_attribute(attribute, index: ReferenceIndex, local_links: dict, rendering: _Rendering | None = None) -> list[dict]:  # noqa: ANN001
     """Serialize one report item attribute into zero or more entries.
 
     The key is derived from the attribute group item title ("Affected systems"
@@ -134,15 +134,30 @@ def _serialize_attribute(attribute, index: ReferenceIndex, local_numbers: dict, 
             via_english=False,
         )
     if entry["attribute_type"] in CITING_TYPES:
-        value = index.render(value, local_numbers)
+        value = index.render(value, local_links)
     serialized = {**entry, "value": value, "description": attribute.value_description}
     if constants is not None:
         serialized.update(choice(attribute.value))
     return [serialized]
 
 
-def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: dict, language: str | None, constants: dict) -> dict:  # noqa: ANN001
+def _form_position(attribute) -> tuple:  # noqa: ANN001
+    """Where an attribute value sits in its report's form: by group, group item and id."""
+    group_item = attribute.attribute_group_item
+    group = getattr(group_item, "attribute_group", None)
+    return (
+        getattr(group, "index", None) or 0,
+        getattr(group_item, "index", None) or 0,
+        getattr(attribute, "id", None) is None,
+        getattr(attribute, "id", None) or 0,
+    )
+
+
+def _serialize_report_item(report_item, index: ReferenceIndex, local_links: dict, language: str | None, constants: dict) -> dict:  # noqa: ANN001
     """Serialize a report item with its attributes, in ``language`` when given.
+
+    The attributes come in form order, the order they are read in: rendering their citations in
+    it numbers the links in the order the text cites them.
 
     In a language, the report says which it is shown in (``language``, None when its own is not
     known): ``language``, else English, else the one it was written in, whichever it has first. Its
@@ -167,7 +182,9 @@ def _serialize_report_item(report_item, index: ReferenceIndex, local_numbers: di
         "type_id": report_type.id if report_type else None,
         "type_description": report_type.description if report_type else None,
         "attributes": [
-            entry for attribute in report_item.attributes for entry in _serialize_attribute(attribute, index, local_numbers, rendering)
+            entry
+            for attribute in sorted(report_item.attributes, key=_form_position)
+            for entry in _serialize_attribute(attribute, index, local_links, rendering)
         ],
     }
     if rendering is None:
@@ -213,43 +230,45 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
             person reviewed them all (``ai_translation``: "unreviewed", "reviewed" or None), and what
             it was written in (``original_language``).
     """
-    index, local_numbers = build_index(
+    index, local_links = build_index(
         product.links,
         [[(link["key"], link["url"]) for link in report_item.links] for report_item in product.report_items],
     )
+    title, title_language = product.title, None
+    description, description_language = product.description, None
     constants = {}
     if language:
+        # Like a report: in ``language``, else English, else as written.
+        title, title_language = content_localizer.product_text(product, "title", language, skip_outdated=True)
+        description, description_language = content_localizer.product_text(product, "description", language, skip_outdated=True)
         report_types = {
             report_item.report_item_type.id: report_item.report_item_type
             for report_item in product.report_items
             if report_item.report_item_type
         }
         constants = content_localizer.constants_of(report_types.values())
+    # Rendered in reading order, which numbers the links: the description shown, then the reports.
+    description = index.render(description)
     report_items = [
         _serialize_report_item(report_item, index, local, language, constants)
-        for report_item, local in zip(product.report_items, local_numbers, strict=True)
+        for report_item, local in zip(product.report_items, local_links, strict=True)
     ]
 
     user = product.user
     preset = product.product_preset
     result = {
         "id": product.id,
-        "title": product.title,
+        "title": title,
         # What the product is published as; public-web picks the product template by it.
         "product_preset": {"id": preset.id, "title": preset.name} if preset else None,
-        "description": index.render(product.description),
-        "links": list(index.urls),
+        "description": description,
+        "links": index.urls,
         "created": product.created.isoformat() if product.created else None,
         "user": {"name": user.name, "username": user.username} if user else None,
         "report_items": report_items,
     }
     if language:
         available = content_localizer.available_languages(product)
-        # Like a report: in ``language``, else English, else as written.
-        title, title_language = content_localizer.product_text(product, "title", language, skip_outdated=True)
-        description, description_language = content_localizer.product_text(product, "description", language, skip_outdated=True)
-        result["title"] = title
-        result["description"] = index.render(description)
         result["language"] = content_localizer.shown_language(language, product.language, available)
         result["available_languages"] = available
         # Read, in part, from AI translations: the page says so, whether a person reviewed them,

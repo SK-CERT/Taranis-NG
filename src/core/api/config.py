@@ -2629,6 +2629,48 @@ class PublicWebEmailTestResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
+class PublicWebNodeCacheResource(Resource):
+    """Clear a public-web node's cache on demand."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def post(self, node_id: int) -> tuple[dict, HTTPStatus]:
+        """Tell the node to drop its cache now and wait for its answer.
+
+        Unlike the reset pushed after each change, this one is asked for: it goes to the node
+        whatever its health says, enabled or not, and reports how it went.
+
+        Args:
+            node_id (int): The public-web node ID
+
+        Returns:
+            (dict, HTTPStatus): ``{"reset": True}``, or the error and the node's status.
+        """
+        try:
+            node = db.session.get(public_web_node.PublicWebNode, node_id)
+            if node is None:
+                return {"error": "Public-web node not found"}, HTTPStatus.NOT_FOUND
+            if not node.api_url:
+                return {"error": "Public-web node API URL is not configured"}, HTTPStatus.BAD_REQUEST
+
+            from remote.public_web_api import PublicWebApi  # noqa: PLC0415
+
+            _, status = PublicWebApi(node.api_url, node.api_key).reset_cache()
+            if status == HTTPStatus.SERVICE_UNAVAILABLE:
+                return {"error": f"Public-web node '{node.name}' could not be reached"}, HTTPStatus.SERVICE_UNAVAILABLE
+            if status == HTTPStatus.UNAUTHORIZED:
+                return {"error": f"Public-web node '{node.name}' rejected the API key"}, HTTPStatus.BAD_GATEWAY
+            if status != HTTPStatus.OK:
+                return {"error": f"Public-web node '{node.name}' answered with HTTP {status.value}"}, HTTPStatus.BAD_GATEWAY
+            # It answered, so it is up.
+            node.update_last_seen()
+            log_manager.store_user_activity(get_user_from_jwt(), "PUBLIC_WEB_CACHE_RESET", f"Cache of public-web node '{node.name}' cleared")
+            return {"reset": True}, HTTPStatus.OK
+        except Exception as ex:
+            msg = "Could not clear the public-web node cache"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
 class TraefikCertificatesResource(Resource):
     """What Traefik actually serves, per hostname."""
 
@@ -3551,6 +3593,7 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(PublicWebTemplateResource, "/api/v1/config/public-web-templates/<int:template_id>")
     api.add_resource(PublicWebNodesResource, "/api/v1/config/public-web-nodes")
     api.add_resource(PublicWebNodeResource, "/api/v1/config/public-web-nodes/<int:node_id>")
+    api.add_resource(PublicWebNodeCacheResource, "/api/v1/config/public-web-nodes/<int:node_id>/reset-cache")
     api.add_resource(PublicWebsResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs")
     api.add_resource(PublicWebResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs/<int:web_id>")
     api.add_resource(PublicWebEmailTestResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs/test-email")

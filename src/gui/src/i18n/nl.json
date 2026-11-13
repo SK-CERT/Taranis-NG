@@ -2178,7 +2178,10 @@
             "total_count": "{count} public-web-knooppunt | {count} public-web-knooppunten",
             "enabled": "Ingeschakeld",
             "enabled_hint": "Uit: Taranis controleert en ververst dit knooppunt niet meer, publiceert geen van zijn websites en stuurt het geen rapporten. Zijn websites en instellingen blijven bewaard voor als het weer wordt ingeschakeld.",
-            "disabled_notice": "Dit knooppunt is uitgeschakeld: geen van zijn websites wordt gepubliceerd."
+            "disabled_notice": "Dit knooppunt is uitgeschakeld: geen van zijn websites wordt gepubliceerd.",
+            "clear_cache": "Cache legen",
+            "cache_cleared": "Cache van {name} geleegd",
+            "cache_clear_failed": "Kan de cache van {name} niet legen"
         },
         "webs": {
             "total_count": "{count} website | {count} websites",

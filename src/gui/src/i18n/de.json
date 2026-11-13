@@ -2178,7 +2178,10 @@
             "total_count": "{count} Public-Web-Knoten | {count} Public-Web-Knoten",
             "enabled": "Aktiviert",
             "enabled_hint": "Aus: Taranis prüft und aktualisiert diesen Knoten nicht mehr, veröffentlicht keine seiner Websites und sendet ihm keine Berichte. Seine Websites und Einstellungen bleiben erhalten, bis er wieder eingeschaltet wird.",
-            "disabled_notice": "Dieser Knoten ist ausgeschaltet: Keine seiner Websites wird veröffentlicht."
+            "disabled_notice": "Dieser Knoten ist ausgeschaltet: Keine seiner Websites wird veröffentlicht.",
+            "clear_cache": "Cache leeren",
+            "cache_cleared": "Cache von {name} geleert",
+            "cache_clear_failed": "Cache von {name} konnte nicht geleert werden"
         },
         "webs": {
             "total_count": "{count} Website | {count} Websites",

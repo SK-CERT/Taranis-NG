@@ -107,7 +107,13 @@ class Product(db.Model):
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
     state = db.relationship(StateDefinition, lazy="select")  # must be "select" to avoid join issues in get()
 
-    report_items = db.relationship("ReportItem", secondary="product_report_item")
+    # In the order the product lists them: the public web, presenters and the citation numbers
+    # follow it. The rows only learn their position from store_report_order.
+    report_items = db.relationship(
+        "ReportItem",
+        secondary="product_report_item",
+        order_by=lambda: [ProductReportItem.position, ProductReportItem.report_item_id],
+    )
 
     # Off, it stays off the public web, whatever its product preset says.
     public_web_enabled = db.Column(db.Boolean(), nullable=False, default=True, server_default=sqlalchemy.true())
@@ -710,6 +716,25 @@ class Product(db.Model):
         except Exception as error:
             logger.exception(f"Failed to auto-complete newly-added reports on product update: {error}")
 
+    def store_report_order(self) -> None:
+        """Give the product's link rows the positions its ``report_items`` list has them in.
+
+        The relationship writes the rows but knows nothing of their position, so the rows are
+        flushed first and their positions set afterwards, all of them: a report kept in the
+        product keeps its row, and may have moved.
+        """
+        report_item_ids = list(dict.fromkeys(report_item.id for report_item in self.report_items if report_item is not None))
+        if not report_item_ids:
+            return
+        db.session.flush()
+        db.session.execute(
+            sqlalchemy.update(ProductReportItem),
+            [
+                {"product_id": self.id, "report_item_id": report_item_id, "position": position}
+                for position, report_item_id in enumerate(report_item_ids)
+            ],
+        )
+
     @classmethod
     def add_product(cls, product_data: dict, user: User) -> Product:
         """Add a product.
@@ -733,6 +758,7 @@ class Product(db.Model):
             product.language = cls._author_language(user)
         product.apply_translations(product.submitted_translations, user.id)
         db.session.add(product)
+        product.store_report_order()
         if tag_ids:
             db.session.flush()
             set_item_tags(StateEntityTypeEnum.PRODUCT.value, product.id, tag_ids, user.id)
@@ -783,6 +809,8 @@ class Product(db.Model):
         original_product.state_id = product.state_id
         original_product.report_items = []
         original_product.report_items.extend(product.report_items)
+        # Reports kept keep their link rows, so a new order is only in the positions.
+        original_product.store_report_order()
         if product.public_web_enabled_given:
             original_product.public_web_enabled = product.public_web_enabled
         if product.public_webs_given:
@@ -838,10 +866,12 @@ class ProductReportItem(db.Model):
     Attributes:
         product_id: Product id
         report_item_id: Report item id
+        position: Where the product lists the report, from 0 (see Product.store_report_order)
     """
 
     product_id = db.Column(db.Integer, db.ForeignKey("product.id"), primary_key=True)
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), primary_key=True)
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
 
 
 class ProductPublicWeb(db.Model):

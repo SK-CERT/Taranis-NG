@@ -56,11 +56,13 @@ def test_normalize_links_trims_drops_empty_and_repairs_keys() -> None:
     assert normalize_links(None) == []
 
 
-def test_render_numbers_tokens_and_leaves_plain_numbers_alone() -> None:
+def test_render_numbers_links_as_first_cited_and_leaves_plain_numbers_alone() -> None:
     index = ReferenceIndex()
     local = {"aaaaaa": index.add("aaaaaa", VENDOR), "bbbbbb": index.add("bbbbbb", NVD)}
 
-    assert index.render("See [#bbbbbb] and [#aaaaaa]; [1] is plain text.", local) == "See [2] and [1]; [1] is plain text."
+    assert index.render("See [#bbbbbb] and [#aaaaaa]; [1] is plain text.", local) == "See [1] and [2]; [1] is plain text."
+    assert index.render("Again [#aaaaaa].", local) == "Again [2]."
+    assert index.urls == [NVD, VENDOR]
     assert index.render(None) is None
     assert index.render("") == ""
 
@@ -72,8 +74,8 @@ def test_a_citation_of_a_removed_link_is_dropped_with_its_space() -> None:
     assert index.render("Fixed [#gone00] upstream [#aaaaaa].") == "Fixed upstream [1]."
 
 
-def test_product_links_come_first_and_equal_urls_share_a_number() -> None:
-    index, local_numbers = build_index(
+def test_links_are_numbered_as_the_text_cites_them_and_equal_urls_share_a_number() -> None:
+    index, local_links = build_index(
         [{"key": "prod01", "url": BLOG}],
         [
             [("rep1aa", VENDOR), ("rep1bb", NVD)],
@@ -81,11 +83,40 @@ def test_product_links_come_first_and_equal_urls_share_a_number() -> None:
         ],
     )
 
-    assert index.urls == [BLOG, VENDOR, NVD, COMMIT]
-    assert local_numbers == [{"rep1aa": 2, "rep1bb": 3}, {"rep2aa": 3, "rep2bb": 4}]
-    # A report resolves its own keys; the product description resolves any key in the product.
-    assert index.render("[#rep2aa][#rep2bb]", local_numbers[1]) == "[3][4]"
-    assert index.render("Intro [#prod01], details [#rep1bb].") == "Intro [1], details [3]."
+    assert local_links == [{"rep1aa": VENDOR, "rep1bb": NVD}, {"rep2aa": NVD, "rep2bb": COMMIT}]
+    # Read in order: the product description resolves any key in the product, a report its own first.
+    assert index.render("Intro [#prod01], details [#rep1bb].") == "Intro [1], details [2]."
+    assert index.render("Commit [#rep2bb], NVD [#rep2aa].", local_links[1]) == "Commit [3], NVD [2]."
+    # The vendor advisory, cited nowhere, comes last.
+    assert index.urls == [BLOG, NVD, COMMIT, VENDOR]
+
+
+def test_links_no_text_cites_follow_in_list_order() -> None:
+    index, local_links = build_index(
+        [{"key": "prod01", "url": BLOG}, {"key": "prod02", "url": COMMIT}],
+        [[("rep1aa", VENDOR), ("rep1bb", NVD)]],
+    )
+
+    # The report cites its second link first; nothing else is cited.
+    assert index.render("Fixed [#rep1bb].", local_links[0]) == "Fixed [1]."
+    # Then the product's own links, then the report's, as listed.
+    assert index.urls == [NVD, BLOG, COMMIT, VENDOR]
+    # Once listed, the numbers stand.
+    assert index.urls == [NVD, BLOG, COMMIT, VENDOR]
+    assert index.render("Vendor [#rep1aa].", local_links[0]) == "Vendor [4]."
+
+
+def test_reordering_the_reports_renumbers_their_links() -> None:
+    vendor_report = ([("rep1aa", VENDOR)], "Vendor [#rep1aa].")
+    nvd_report = ([("rep2aa", NVD), ("rep2bb", COMMIT)], "NVD [#rep2aa], commit [#rep2bb].")
+
+    def rendered(reports: list) -> tuple[list, list]:
+        index, local_links = build_index([], [links for links, _text in reports])
+        texts = [index.render(text, local) for (_links, text), local in zip(reports, local_links, strict=True)]
+        return texts, index.urls
+
+    assert rendered([vendor_report, nvd_report]) == (["Vendor [1].", "NVD [2], commit [3]."], [VENDOR, NVD, COMMIT])
+    assert rendered([nvd_report, vendor_report]) == (["NVD [1], commit [2].", "Vendor [3]."], [NVD, COMMIT, VENDOR])
 
 
 def _presenter_payload() -> dict:
@@ -144,19 +175,35 @@ def _presenter_payload() -> dict:
 def test_render_presenter_input_numbers_every_report_and_the_product() -> None:
     payload = render_presenter_input(_presenter_payload(), [{"key": "prod01", "url": COMMIT}])
 
-    # Product links first, then links in form order (by value id within a group item): 103 before 104.
-    assert payload["product"]["links"] == [COMMIT, VENDOR, NVD, BLOG]
-    assert payload["product"]["description"] == "Read [1] and [3]."
+    # Numbered as first cited: the description, then each report in form order.
+    assert payload["product"]["links"] == [COMMIT, NVD, VENDOR, BLOG]
+    assert payload["product"]["description"] == "Read [1] and [2]."
 
     vulnerability, osint = payload["reports"]
     values = {attribute["id"]: attribute["value"] for attribute in vulnerability["attributes"]}
-    assert values[101] == "Patch [3], see [2]."
-    assert values[102] == "Comment [2]"
+    assert values[101] == "Patch [2], see [3]."
+    assert values[102] == "Comment [3]"
     # Only citing types are rendered, links are trimmed and an empty one is left out.
     assert values[106] == "CVE-2026-0001 [#vulnaa]"
     assert values[103] == VENDOR
     assert 105 not in values
-    assert osint["attributes"][0]["value"] == "<p>Blog [4], vendor [2]</p>"
+    assert osint["attributes"][0]["value"] == "<p>Blog [4], vendor [3]</p>"
+
+
+def test_render_presenter_input_reads_a_report_in_form_order() -> None:
+    payload = _presenter_payload()
+    payload["product"]["description"] = ""
+    vulnerability = payload["reports"][0]
+    # The comment, second in the form, comes first in the list.
+    vulnerability["attributes"].insert(0, vulnerability["attributes"].pop(1))
+
+    payload = render_presenter_input(payload, [])
+
+    values = {attribute["id"]: attribute["value"] for attribute in vulnerability["attributes"]}
+    assert (values[101], values[102]) == ("Patch [1], see [2].", "Comment [2]")
+    assert payload["product"]["links"] == [NVD, VENDOR, BLOG]
+    # The list keeps its order.
+    assert [attribute["id"] for attribute in vulnerability["attributes"][:2]] == [102, 101]
 
 
 def test_render_presenter_input_leaves_its_input_objects_alone() -> None:
@@ -210,8 +257,9 @@ def test_public_web_feed_carries_numbers_and_urls_but_no_keys() -> None:
     )
     feed = public_web._serialize_product(product)
 
-    assert feed["links"] == [BLOG, VENDOR, NVD]
-    assert feed["description"] == "Our note [1], NVD [3]."
+    # The description is read first, then the report; the vendor advisory nobody cites comes last.
+    assert feed["links"] == [BLOG, NVD, VENDOR]
+    assert feed["description"] == "Our note [1], NVD [2]."
     assert feed["product_preset"] == {"id": 4, "title": "Vulnerability bulletin"}
     assert feed["report_items"][0]["type_id"] == 2
     entries = feed["report_items"][0]["attributes"]
@@ -223,13 +271,49 @@ def test_public_web_feed_carries_numbers_and_urls_but_no_keys() -> None:
             "label": "Description",
             "multiple": False,
             "order": [0, 0],
-            "value": "Fixed upstream [3].",
+            "value": "Fixed upstream [2].",
             **layout,
         },
         {"key": "links", "attribute_type": "LINK", "label": "Links", "multiple": True, "order": [0, 1], "value": VENDOR, **layout},
         {"key": "links", "attribute_type": "LINK", "label": "Links", "multiple": True, "order": [0, 1], "value": NVD, **layout},
     ]
     assert "rep1" not in str(feed)
+
+
+def test_public_web_feed_reads_a_report_in_form_order() -> None:
+    attributes = [
+        _attribute(1, "Notes", AttributeType.STRING, "Vendor [#rep1aa]."),
+        _attribute(2, "Description", AttributeType.TEXT, "NVD [#rep1bb], vendor [#rep1aa]."),
+    ]
+    report_item = types.SimpleNamespace(
+        title="Vuln",
+        title_prefix="",
+        uuid="u-1",
+        created=None,
+        last_updated=None,
+        report_item_type=None,
+        attributes=attributes,
+        links=[{"key": "rep1aa", "url": VENDOR}, {"key": "rep1bb", "url": NVD}],
+    )
+    product = types.SimpleNamespace(
+        id=7,
+        title="Bulletin",
+        description="",
+        links=[],
+        created=None,
+        user=None,
+        product_preset=None,
+        report_items=[report_item],
+    )
+
+    feed = public_web._serialize_product(product)
+
+    # The description sits above the notes in the form, so it is read, numbered and listed first.
+    assert [(entry["key"], entry["value"]) for entry in feed["report_items"][0]["attributes"]] == [
+        ("description", "NVD [1], vendor [2]."),
+        ("notes", "Vendor [2]."),
+    ]
+    assert feed["links"] == [NVD, VENDOR]
 
 
 def test_report_item_links_and_keys() -> None:

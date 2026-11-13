@@ -2178,7 +2178,10 @@
             "total_count": "Brak węzłów public-web | {count} węzeł public-web | {count} węzły public-web | {count} węzłów public-web",
             "enabled": "Włączono",
             "enabled_hint": "Wyłączony: Taranis przestaje sprawdzać i odświeżać ten węzeł, nie publikuje żadnej z jego witryn i nie wysyła mu raportów. Jego witryny i ustawienia zostają zachowane na czas ponownego włączenia.",
-            "disabled_notice": "Ten węzeł jest wyłączony: żadna z jego witryn nie jest publikowana."
+            "disabled_notice": "Ten węzeł jest wyłączony: żadna z jego witryn nie jest publikowana.",
+            "clear_cache": "Wyczyść pamięć podręczną",
+            "cache_cleared": "Pamięć podręczna węzła {name} wyczyszczona",
+            "cache_clear_failed": "Nie udało się wyczyścić pamięci podręcznej węzła {name}"
         },
         "webs": {
             "total_count": "Brak witryn | {count} witryna | {count} witryny | {count} witryn",

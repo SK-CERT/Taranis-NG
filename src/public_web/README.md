@@ -35,7 +35,10 @@ between. It says which language the product and each report item are shown in
 a constant arriving as its translation (`value`) with the constant itself in
 `source_value`.
 Results and templates are cached (`lib/web/cache.py`) with a TTL; core pushes a
-cache reset when a web, a template or a published product changes. The node is
+cache reset when a web, a template or a published product changes, and an administrator
+can clear it on demand with the cache button on the node in Configuration -> Public web
+(`POST /api/v1/config/public-web-nodes/<id>/reset-cache`, which waits for the node's
+answer). The node is
 managed under core's Configuration (seeded automatically from `api_key.txt` by
 `prestart_core.sh`).
 
