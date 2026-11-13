@@ -56,6 +56,19 @@
                             @saved="handleWebSaved(node.id)"
                         />
                     </template>
+                    <template
+                        v-if="canUpdate && node.api_url"
+                        #actions
+                    >
+                        <ActionButton
+                            :icon="ICONS.CACHED"
+                            :title="t('public_web.nodes.clear_cache')"
+                            :loading="clearingCache === node.id"
+                            :disabled="clearingCache !== null"
+                            data-test="node-clear-cache"
+                            @click="clearCache(node)"
+                        />
+                    </template>
                 </NodePanelTitle>
 
                 <v-expansion-panel-text>
@@ -165,7 +178,16 @@
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
-    import { getPublicWebs, deletePublicWebNode, deletePublicWeb, updatePublicWeb, updatePublicWebNode } from '@/api/config'
+    import {
+        getPublicWebs,
+        deletePublicWebNode,
+        deletePublicWeb,
+        updatePublicWeb,
+        updatePublicWebNode,
+        resetPublicWebNodeCache
+    } from '@/api/config'
+    import { ICONS } from '@/config/ui-constants'
+    import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import NewPublicWebNode from '@/components/config/public-web/NewPublicWebNode.vue'
     import NodePanelTitle from '@/components/common/nodes/NodePanelTitle.vue'
@@ -180,6 +202,8 @@
         status?: string
         last_seen?: string
         enabled?: boolean
+        /** Where core reaches the node's management API; empty when it cannot. */
+        api_url?: string
         [key: string]: unknown
     }
     type WebItem = {
@@ -277,6 +301,31 @@
                 window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: 'common.error_updating' } }))
             }
         })
+    }
+
+    // Clear a node's cache on demand: it drops what it has and reads products, templates and webs
+    // again, so whatever changed shows now rather than when the cache would expire.
+    const clearingCache = ref<number | null>(null)
+
+    async function clearCache(node: NodeItem): Promise<void> {
+        if (clearingCache.value !== null) return
+        clearingCache.value = node.id
+        const params = { name: node.name }
+        try {
+            await resetPublicWebNodeCache(node.id)
+            window.dispatchEvent(
+                new CustomEvent('notification', { detail: { type: 'success', loc: 'public_web.nodes.cache_cleared', params } })
+            )
+            // It answered, so its health dot can turn green.
+            await configStore.loadPublicWebNodes(filter.value)
+        } catch (error) {
+            console.error('Error clearing the public-web node cache:', error)
+            window.dispatchEvent(
+                new CustomEvent('notification', { detail: { type: 'error', loc: 'public_web.nodes.cache_clear_failed', params } })
+            )
+        } finally {
+            clearingCache.value = null
+        }
     }
 
     function handleWebSaved(nodeId: number): void {

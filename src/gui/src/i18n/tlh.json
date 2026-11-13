@@ -2178,7 +2178,10 @@
             "total_count": "pagh HochvaD Daq Qu' Daq | {count} HochvaD Daq Qu' Daq | {count} HochvaD Daq Qu' Daq",
             "enabled": "chu'lu'pu'",
             "enabled_hint": "chu'Ha'lu': Taranis Qu'vam nuDbe' 'ej chu'qa'moHbe', Daqmeyvetlh lalDanbe' 'ej ja'mey ngeHbe'. Daqmey, SeHlaw je pollu' chu'qa'lu'DI'.",
-            "disabled_notice": "Qu'vam chu'Ha'lu'pu': Daqmeyvetlh lalDanlu'be'."
+            "disabled_notice": "Qu'vam chu'Ha'lu'pu': Daqmeyvetlh lalDanlu'be'.",
+            "clear_cache": "De' pollu'bogh Say'moH",
+            "cache_cleared": "{name} De' pollu'bogh Say'moHlu'pu'",
+            "cache_clear_failed": "{name} De' pollu'bogh Say'moHlaHbe'lu'"
         },
         "webs": {
             "total_count": "pagh Daq | {count} Daq | {count} Daq",

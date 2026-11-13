@@ -2178,7 +2178,10 @@
             "total_count": "{count} nœud public-web | {count} nœuds public-web",
             "enabled": "Activé",
             "enabled_hint": "Désactivé : Taranis cesse de vérifier et de rafraîchir ce nœud, ne publie aucun de ses sites et ne lui envoie aucun rapport. Ses sites et ses réglages sont conservés pour sa réactivation.",
-            "disabled_notice": "Ce nœud est désactivé : aucun de ses sites n'est publié."
+            "disabled_notice": "Ce nœud est désactivé : aucun de ses sites n'est publié.",
+            "clear_cache": "Vider le cache",
+            "cache_cleared": "Cache de {name} vidé",
+            "cache_clear_failed": "Impossible de vider le cache de {name}"
         },
         "webs": {
             "total_count": "{count} site | {count} sites",

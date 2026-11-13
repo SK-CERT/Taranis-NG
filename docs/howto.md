@@ -380,8 +380,11 @@ changes what a citation points at.
   offers the links of the product's reports; citing one copies it into the product's links.
 
 When core hands a product to a presenter or to a public-web node, it renders every citation to a
-plain number, `[1]`, `[2]`..., which indexes one list of sources: the product's own links first,
-then the links of each report in report order. Equal URLs share one number. Templates get that
+plain number, `[1]`, `[2]`..., which indexes one list of sources. A link is numbered when the
+text first cites it, reading the product description and then each report in the product's order
+(its attributes in form order), so the text reads `[1]`, `[2]`, `[3]`...; the links no text cites
+follow, the product's own links first, then those of each report. Equal URLs share one number,
+and a translation is numbered by its own text. Templates get that
 list as `data.product.links` (URL strings, `[1]` being the first); the texts in
 `report_item.attrs` already contain the numbers. A citation of a link that no longer exists is
 left out.
@@ -520,8 +523,10 @@ nodes reject. Core and public-web nodes can be upgraded in either order.
 
 # <a id="_toc9"></a>Products: what is published, in which languages, formats and channels
 
-A **product** is the content: its title and description and the reports it collects. Three
-things decide how it is published:
+A **product** is the content: its title and description and the reports it collects. It keeps
+its reports in the order its form lists them, which the drag handle or the arrows beside each
+report change; presenters, the public web (its `?items=` numbers) and the citation numbers follow
+that order. Three things decide how it is published:
 
 - a **product format** is a presenter and its template: an e-mail, a JSON file, a PDF, a
   Mastodon post (Configuration -> Presenters -> Product Formats);

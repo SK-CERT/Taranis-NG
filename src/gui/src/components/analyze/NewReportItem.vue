@@ -794,13 +794,19 @@
             : t('report_item.translation.source_not_set')
     )
 
-    // Link citations: the text attributes can cite the report's LINK values, numbered in form order.
+    // Link citations: the text attributes can cite the report's LINK values, numbered as the texts,
+    // read in form order, first cite them.
     const attributeItemsOf = (types: readonly string[]) =>
         attribute_groups.value.flatMap((group) =>
             (group.attribute_group_items || []).filter((item) => types.includes(item.attribute_group_item?.attribute?.type))
         )
-    const reportLinks = computed(() => numberLinks(attributeItemsOf(['LINK']).flatMap((item) => item.values || [])))
     const citingTexts = computed(() => attributeItemsOf(CITING_TYPES).flatMap((item) => (item.values || []).map((value) => value.value)))
+    const reportLinks = computed(() =>
+        numberLinks(
+            attributeItemsOf(['LINK']).flatMap((item) => item.values || []),
+            citingTexts.value
+        )
+    )
     const newsItemLinks = computed(() => {
         const links = news_item_aggregates.value.flatMap((aggregate) =>
             (aggregate?.news_items || []).map((newsItem) => String(newsItem?.news_item_data?.link ?? '').trim())

@@ -2178,7 +2178,10 @@
             "total_count": "{count} public-web node | {count} public-web nodes",
             "enabled": "Enabled",
             "enabled_hint": "Off: Taranis stops checking and refreshing this node, publishes none of its webs and sends it no reports. Its webs and settings are kept for when it is switched on again.",
-            "disabled_notice": "This node is switched off: none of its webs are published."
+            "disabled_notice": "This node is switched off: none of its webs are published.",
+            "clear_cache": "Clear cache",
+            "cache_cleared": "Cache of {name} cleared",
+            "cache_clear_failed": "Could not clear the cache of {name}"
         },
         "webs": {
             "total_count": "{count} web | {count} webs",

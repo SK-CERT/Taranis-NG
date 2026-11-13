@@ -2178,7 +2178,10 @@
             "total_count": "public-web ノード {count} 件 | public-web ノード {count} 件",
             "enabled": "有効",
             "enabled_hint": "無効: Taranis はこのノードの確認と更新をやめ、そのサイトを公開せず、レポートも送りません。サイトと設定は、再び有効にするときのために保持されます。",
-            "disabled_notice": "このノードは無効です。どのサイトも公開されていません。"
+            "disabled_notice": "このノードは無効です。どのサイトも公開されていません。",
+            "clear_cache": "キャッシュをクリア",
+            "cache_cleared": "{name} のキャッシュをクリアしました",
+            "cache_clear_failed": "{name} のキャッシュをクリアできませんでした"
         },
         "webs": {
             "total_count": "サイト {count} 件 | サイト {count} 件",

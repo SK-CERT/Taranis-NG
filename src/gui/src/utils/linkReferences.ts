@@ -5,7 +5,8 @@
  * travels with its link - for a report it is kept in the LINK value's `value_description`, for a
  * product in the link's `key` - so inserting, moving or deleting links never changes what a
  * citation points at. Core renders the tokens to `[n]` numbers for presenters and public web; the
- * numbers shown in the editor are those of the links being edited.
+ * numbers shown in the editor are those of the links being edited. Either way a link is numbered
+ * when the text first cites it, so the text reads [1], [2], [3]...; the links no text cites follow.
  */
 
 export const LINK_KEY_LENGTH = 6
@@ -77,25 +78,41 @@ export const isHttpUrl = (value: unknown): value is string => {
 const urlOf = (link: LinkValue): string => (typeof link.value === 'string' ? link.value.trim() : '')
 
 /**
- * Number links the way core numbers them: links without URL are skipped, and a URL that is
- * already listed keeps its earlier number.
+ * Number links the way core numbers them: in the order `texts` (read in order) first cite them,
+ * then the links no text cites in list order. Links without URL are skipped, and equal URLs
+ * share a number. The links come back in list order.
  */
-export const numberLinks = (links: Iterable<LinkValue>): CitableLink[] => {
-    const numberByUrl = new Map<string, number>()
-    const result: CitableLink[] = []
+export const numberLinks = (links: Iterable<LinkValue>, texts: Iterable<unknown> = []): CitableLink[] => {
+    const listed: Array<{ key: string; url: string }> = []
+    const urlByKey = new Map<string, string>()
     for (const link of links) {
         const url = urlOf(link)
         if (!url || !isLinkKey(link.value_description)) {
             continue
         }
+        listed.push({ key: link.value_description, url })
+        if (!urlByKey.has(link.value_description)) {
+            urlByKey.set(link.value_description, url)
+        }
+    }
+    const numberByUrl = new Map<string, number>()
+    const numberOf = (url: string): number => {
         let number = numberByUrl.get(url)
         if (number === undefined) {
             number = numberByUrl.size + 1
             numberByUrl.set(url, number)
         }
-        result.push({ key: link.value_description, url, number })
+        return number
     }
-    return result
+    for (const text of texts) {
+        for (const key of citedKeys(text)) {
+            const url = urlByKey.get(key)
+            if (url !== undefined) {
+                numberOf(url)
+            }
+        }
+    }
+    return listed.map(({ key, url }) => ({ key, url, number: numberOf(url) }))
 }
 
 /** The keys cited in `text`, in order, repeats included. */

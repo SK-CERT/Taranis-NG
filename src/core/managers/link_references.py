@@ -6,8 +6,10 @@ attribute value, or as ``key`` of a product link - so inserting, moving or delet
 changes what a citation points at.
 
 Tokens never leave core. Everything handed to presenters or public-web nodes is rendered to plain
-``[n]`` numbers, which index one merged, de-duplicated list of URLs: the product's own links
-first, then the links of each report in report order. Equal URLs share one number.
+``[n]`` numbers, which index one merged, de-duplicated list of URLs. A link is numbered when the
+text first cites it, reading the product description and then each report in report order, so
+the text reads [1], [2], [3]... Links no text cites follow: the product's own links first, then
+those of each report in report order. Equal URLs share one number.
 """
 
 from __future__ import annotations
@@ -67,76 +69,100 @@ def normalize_links(links: Iterable[Mapping[str, Any]] | None) -> list[dict[str,
 class ReferenceIndex:
     """The merged, numbered list of sources of one product.
 
-    Attributes:
-        urls: The de-duplicated URLs in citation-number order (``urls[0]`` is ``[1]``).
+    The links are registered first (:meth:`add`): the product's own, then each report's. A link
+    gets its number when text first cites it (:meth:`render`), so the texts are to be rendered in
+    the order they are read. :attr:`urls` then numbers the links no text cited.
     """
 
     def __init__(self) -> None:
         """Create an empty index."""
-        self.urls: list[str] = []
+        # The de-duplicated URLs in the order they were registered.
+        self._listed: dict[str, None] = {}
+        self._url_by_key: dict[str, str] = {}
+        self._numbered: list[str] = []
         self._number_by_url: dict[str, int] = {}
-        self._number_by_key: dict[str, int] = {}
 
-    def add(self, key: str | None, url: str | None) -> int | None:
-        """Register a link and return its number, or None for a link without URL.
+    def add(self, key: str | None, url: str | None) -> str | None:
+        """Register a link and return its trimmed URL, or None for a link without URL.
 
-        A URL that is already listed keeps its number. The first link registering a key owns it
-        product-wide, which is how the product description resolves the keys of report links.
+        The first link registering a key owns it product-wide, which is how the product
+        description resolves the keys of report links.
         """
         url = (url or "").strip()
         if not url:
             return None
+        self._listed.setdefault(url)
+        if key:
+            self._url_by_key.setdefault(key, url)
+        return url
+
+    def _number(self, url: str) -> int:
+        """The number of ``url``: the next one when it has none yet. Equal URLs share it."""
         number = self._number_by_url.get(url)
         if number is None:
-            self.urls.append(url)
-            number = len(self.urls)
+            self._numbered.append(url)
+            number = len(self._numbered)
             self._number_by_url[url] = number
-        if key:
-            self._number_by_key.setdefault(key, number)
         return number
 
-    def render(self, text: str | None, local: Mapping[str, int] | None = None) -> str | None:
+    def render(self, text: str | None, local: Mapping[str, str] | None = None) -> str | None:
         """Replace the citation tokens in ``text`` with their ``[n]`` numbers.
 
-        A key is looked up in ``local`` (the citing report's own links) first and product-wide
-        second. A token whose link no longer exists is dropped.
+        A key is looked up in ``local`` (the citing report's own links, key -> URL) first and
+        product-wide second. A link cited for the first time gets the next number. A token whose
+        link no longer exists is dropped.
         """
         if not text:
             return text
 
         def replace(match: re.Match) -> str:
             space, key = match.groups()
-            number = (local or {}).get(key) or self._number_by_key.get(key)
-            if number is None:
+            url = (local or {}).get(key) or self._url_by_key.get(key)
+            if url is None:
                 logger.warning(f"Dropping a citation of the unknown link key '{key}'")
                 return ""
-            return f"{space}[{number}]"
+            return f"{space}[{self._number(url)}]"
 
         return LINK_TOKEN_RE.sub(replace, text)
 
+    @property
+    def urls(self) -> list[str]:
+        """Every URL in number order (``urls[0]`` is ``[1]``).
 
-def build_index(product_links: Iterable[Mapping[str, Any]] | None, reports: Iterable[Iterable[tuple]]) -> tuple[ReferenceIndex, list[dict]]:
-    """Number the product links, then the links of each report.
+        The links no text cited get their numbers here, after the cited ones, in the order they
+        were registered; so read it once every text is rendered.
+        """
+        for url in self._listed:
+            self._number(url)
+        return list(self._numbered)
+
+
+def build_index(
+    product_links: Iterable[Mapping[str, Any]] | None,
+    reports: Iterable[Iterable[tuple]],
+) -> tuple[ReferenceIndex, list[dict[str, str]]]:
+    """Register the product links, then the links of each report.
 
     Args:
         product_links: The product's own links as ``{"key", "url"}`` mappings.
         reports: For every report, its ``(key, url)`` link pairs in display order.
 
     Returns:
-        The index, and for every report a mapping of its own link keys to their numbers.
+        The index, and for every report a mapping of its own link keys to their URLs, which
+        :meth:`ReferenceIndex.render` takes as ``local``.
     """
     index = ReferenceIndex()
     for link in product_links or []:
         index.add(link.get("key"), link.get("url"))
-    local_numbers = []
+    local_links = []
     for links in reports:
-        local: dict[str, int] = {}
+        local: dict[str, str] = {}
         for key, url in links:
-            number = index.add(key, url)
-            if key and number is not None:
-                local.setdefault(key, number)
-        local_numbers.append(local)
-    return index, local_numbers
+            listed = index.add(key, url)
+            if key and listed is not None:
+                local.setdefault(key, listed)
+        local_links.append(local)
+    return index, local_links
 
 
 def render_presenter_input(payload: dict, product_links: Iterable[Mapping[str, Any]] | None) -> dict:
@@ -148,7 +174,8 @@ def render_presenter_input(payload: dict, product_links: Iterable[Mapping[str, A
     ``product.links`` becomes the merged list of URLs that those numbers index.
     """
     attribute_types = {}
-    # Where a group item sits in the report form; links are numbered in the order shown there.
+    # Where a group item sits in the report form: the order a report's links are listed and its
+    # texts read in.
     form_positions = {}
     for report_type in payload.get("report_types") or []:
         for group in report_type.get("attribute_groups") or []:
@@ -178,15 +205,16 @@ def render_presenter_input(payload: dict, product_links: Iterable[Mapping[str, A
         link_attributes.sort(key=form_position)
         report_links.append([(attribute.get("value_description"), attribute["value"]) for attribute in link_attributes])
 
-    index, local_numbers = build_index(product_links, report_links)
+    index, local_links = build_index(product_links, report_links)
 
-    for report, local in zip(reports, local_numbers, strict=True):
-        for attribute in report["attributes"]:
-            if attribute_type(attribute) in CITING_TYPES:
-                attribute["value"] = index.render(attribute.get("value"), local)
-
+    # In reading order, which numbers the links: the description, then each report in form order.
     product = payload.get("product")
     if product is not None:
-        product["links"] = list(index.urls)
         product["description"] = index.render(product.get("description"))
+    for report, local in zip(reports, local_links, strict=True):
+        for attribute in sorted(report["attributes"], key=form_position):
+            if attribute_type(attribute) in CITING_TYPES:
+                attribute["value"] = index.render(attribute.get("value"), local)
+    if product is not None:
+        product["links"] = index.urls
     return payload

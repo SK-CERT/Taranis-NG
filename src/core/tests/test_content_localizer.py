@@ -323,6 +323,23 @@ def test_the_public_web_shows_a_language_and_keeps_what_it_compares(published: S
     assert "source_value" not in cve
 
 
+def test_the_public_web_numbers_links_as_the_shown_text_cites_them(published: SimpleNamespace) -> None:
+    """A translation may cite in another order; the numbers follow the text the page shows."""
+    patch = "https://example.test/patch"
+    published.links = [{"key": "ab12cd", "url": ADVISORY}, {"key": "ef34gh", "url": patch}]
+    published.description = "Souhrn [#ab12cd], oprava [#ef34gh]"
+    published.translation_rows[1].write("Oprava [#ef34gh], súhrn [#ab12cd]", published.description, ORIGIN_AI, 1)
+
+    original = public_web._serialize_product(published)
+    slovak = public_web._serialize_product(published, "sk")
+
+    assert (original["description"], original["links"]) == ("Souhrn [1], oprava [2]", [ADVISORY, patch])
+    assert (slovak["description"], slovak["links"]) == ("Oprava [1], súhrn [2]", [patch, ADVISORY])
+    # The report cites the advisory: [1] as written, [2] in Slovak.
+    assert original["report_items"][0]["attributes"][0]["value"] == "Útočník může [1]"
+    assert slovak["report_items"][0]["attributes"][0]["value"] == "Útočník môže [2]"
+
+
 def test_the_public_web_passes_over_outdated_translations(published: SimpleNamespace) -> None:
     report_item = published.report_items[0]
     report_item.title = "Kritická chyba v jádře"

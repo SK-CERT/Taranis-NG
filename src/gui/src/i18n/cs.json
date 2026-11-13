@@ -2178,7 +2178,10 @@
             "total_count": "Žádné uzly public-web | {count} uzel public-web | {count} uzly public-web | {count} uzlů public-web",
             "enabled": "Povoleno",
             "enabled_hint": "Vypnuto: Taranis přestane uzel kontrolovat a obnovovat, nezveřejní žádný z jeho webů a nepošle mu žádné reporty. Jeho weby a nastavení zůstanou zachovány pro opětovné zapnutí.",
-            "disabled_notice": "Tento uzel je vypnutý: žádný z jeho webů není zveřejněn."
+            "disabled_notice": "Tento uzel je vypnutý: žádný z jeho webů není zveřejněn.",
+            "clear_cache": "Vymazat mezipaměť",
+            "cache_cleared": "Mezipaměť uzlu {name} byla vymazána",
+            "cache_clear_failed": "Mezipaměť uzlu {name} se nepodařilo vymazat"
         },
         "webs": {
             "total_count": "Žádné weby | {count} web | {count} weby | {count} webů",

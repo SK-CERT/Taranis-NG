@@ -445,6 +445,11 @@ export function deletePublicWebNode(node) {
     return ApiService.delete('/config/public-web-nodes/' + node.id)
 }
 
+/** Ask the node to drop its cache now; resolves once it has, rejects with the node's error. */
+export function resetPublicWebNodeCache(nodeId: number) {
+    return ApiService.post('/config/public-web-nodes/' + nodeId + '/reset-cache', {})
+}
+
 export function getPublicWebs(nodeId, filter: { search?: string } = {}) {
     return ApiService.get('/config/public-web-nodes/' + nodeId + '/webs?search=' + (filter.search || ''))
 }

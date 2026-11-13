@@ -2178,7 +2178,10 @@
             "total_count": "{count} nodo public-web | {count} nodos public-web",
             "enabled": "Activado",
             "enabled_hint": "Desactivado: Taranis deja de comprobar y actualizar este nodo, no publica ninguno de sus sitios y no le envía informes. Sus sitios y ajustes se conservan para cuando se vuelva a activar.",
-            "disabled_notice": "Este nodo está desactivado: no se publica ninguno de sus sitios."
+            "disabled_notice": "Este nodo está desactivado: no se publica ninguno de sus sitios.",
+            "clear_cache": "Vaciar caché",
+            "cache_cleared": "Caché de {name} vaciada",
+            "cache_clear_failed": "No se pudo vaciar la caché de {name}"
         },
         "webs": {
             "total_count": "{count} sitio | {count} sitios",

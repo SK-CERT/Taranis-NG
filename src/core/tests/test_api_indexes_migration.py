@@ -28,11 +28,12 @@ def _children(revision: str) -> list[str]:
     return [path.name for path in VERSIONS.glob("*.py") if revises.search(path.read_text(encoding="utf-8"))]
 
 
-def test_the_migration_extends_the_manual_entry_head_and_is_the_head() -> None:
+def test_the_migration_extends_the_manual_entry_head() -> None:
     module = _load()
     assert (module.revision, module.down_revision) == ("4b8e6d2a9c71", "9c4e2a7b5d13")
     assert _children("9c4e2a7b5d13") == [MIGRATION.name]
-    assert _children("4b8e6d2a9c71") == []
+    # The product report order came next.
+    assert _children("4b8e6d2a9c71") == ["5e5fd7e294ca_product_report_order.py"]
 
 
 def test_each_index_is_the_one_its_model_declares() -> None:

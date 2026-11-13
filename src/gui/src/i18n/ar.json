@@ -2178,7 +2178,10 @@
             "total_count": "لا توجد عقد public-web ({count}) | عقدة public-web واحدة ({count}) | عقدتا public-web ({count}) | {count} عقد public-web | {count} عقدة public-web | {count} عقدة public-web",
             "enabled": "مفعّل",
             "enabled_hint": "معطّل: يتوقف Taranis عن فحص هذه العقدة وتحديثها، ولا ينشر أيًا من مواقعها، ولا يرسل إليها تقارير. تُحفظ مواقعها وإعداداتها لحين إعادة تفعيلها.",
-            "disabled_notice": "هذه العقدة معطّلة: لا يُنشر أي من مواقعها."
+            "disabled_notice": "هذه العقدة معطّلة: لا يُنشر أي من مواقعها.",
+            "clear_cache": "مسح ذاكرة التخزين المؤقت",
+            "cache_cleared": "تم مسح ذاكرة التخزين المؤقت لـ {name}",
+            "cache_clear_failed": "تعذّر مسح ذاكرة التخزين المؤقت لـ {name}"
         },
         "webs": {
             "total_count": "لا توجد مواقع ({count}) | موقع واحد ({count}) | موقعان ({count}) | {count} مواقع | {count} موقعًا | {count} موقع",

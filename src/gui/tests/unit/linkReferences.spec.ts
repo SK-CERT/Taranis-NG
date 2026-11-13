@@ -48,6 +48,32 @@ describe('numberLinks', () => {
             { key: 'cccccc', url: 'https://a.example', number: 1 }
         ])
     })
+
+    it('numbers the links the texts cite first, in the order they cite them, then the others', () => {
+        const links = [link('https://a.example', 'aaaaaa'), link('https://b.example', 'bbbbbb'), link('https://c.example', 'cccccc')]
+
+        const numbered = numberLinks(links, ['Fixed [#cccccc], see [#aaaaaa].', null, '<p>Again [#cccccc] [#gone00]</p>'])
+
+        // In list order, numbered as cited: c first, then a; b, cited nowhere, last.
+        expect(numbered).toEqual([
+            { key: 'aaaaaa', url: 'https://a.example', number: 2 },
+            { key: 'bbbbbb', url: 'https://b.example', number: 3 },
+            { key: 'cccccc', url: 'https://c.example', number: 1 }
+        ])
+    })
+
+    it('gives a cited URL its number for every key it has', () => {
+        const numbered = numberLinks(
+            [link('https://a.example', 'aaaaaa'), link('https://b.example', 'bbbbbb'), link('https://b.example', 'cccccc')],
+            ['See [#cccccc].']
+        )
+
+        expect(numbered.map(({ key, number }) => [key, number])).toEqual([
+            ['aaaaaa', 2],
+            ['bbbbbb', 1],
+            ['cccccc', 1]
+        ])
+    })
 })
 
 describe('insertAtCaret', () => {
@@ -78,6 +104,15 @@ describe('splitReferences', () => {
             { text: '.' }
         ])
         expect(splitReferences('', resolve)).toEqual([])
+    })
+
+    it('shows a report text that cites its second link first as citing [1]', () => {
+        const text = 'Fixed [#bbbbbb], see [#aaaaaa].'
+        const numbered = numberLinks([link('https://a.example', 'aaaaaa'), link('https://b.example', 'bbbbbb')], [text])
+        const resolve = (key: string) => numbered.find((entry) => entry.key === key)
+
+        const numbers = splitReferences(text, resolve).flatMap((segment) => ('link' in segment && segment.link ? [segment.link.number] : []))
+        expect(numbers).toEqual([1, 2])
     })
 })
 

@@ -122,19 +122,69 @@
             </v-card>
         </v-dialog>
 
-        <!-- Selected Items Display -->
+        <!-- Selected Items Display: in the product's order, which the controls change -->
         <div
             v-if="!selectorOpen"
             class="pt-2"
         >
-            <CardAnalyze
-                v-for="item in displayItems"
+            <div
+                v-for="(item, index) in displayItems"
                 :key="item.id"
-                :card="item"
-                :show-remove-action="true"
-                @show-detail="showReportItemDetail"
-                @remove-report-item-from-selector="removeReportItem"
-            />
+                class="report-order__row"
+                :class="{ 'drag-over': dragOverIndex === index, 'dragging': dragIndex === index }"
+                data-test="report-order-row"
+                @dragover="onDragOver(index, $event)"
+                @drop="onDrop(index)"
+                @dragleave="onDragLeave(index)"
+            >
+                <div
+                    v-if="canReorder"
+                    class="report-order__controls"
+                >
+                    <v-icon
+                        class="drag-handle"
+                        size="small"
+                        draggable="true"
+                        :title="t('report_item.tooltip.drag_to_reorder')"
+                        :icon="ICONS.DRAG_HANDLE"
+                        data-test="report-drag-handle"
+                        @dragstart="onDragStart(index, $event)"
+                        @dragend="onDragEnd"
+                    />
+                    <div class="d-flex flex-column ms-1">
+                        <v-btn
+                            variant="text"
+                            density="compact"
+                            size="x-small"
+                            :icon="ICONS.ARROW_UP"
+                            :disabled="index === 0"
+                            :title="t('report_item.tooltip.move_up')"
+                            :aria-label="t('report_item.tooltip.move_up')"
+                            data-test="report-move-up"
+                            @click="moveReportItem(index, index - 1)"
+                        />
+                        <v-btn
+                            variant="text"
+                            density="compact"
+                            size="x-small"
+                            :icon="ICONS.ARROW_DOWN"
+                            :disabled="index === displayItems.length - 1"
+                            :title="t('report_item.tooltip.move_down')"
+                            :aria-label="t('report_item.tooltip.move_down')"
+                            data-test="report-move-down"
+                            @click="moveReportItem(index, index + 1)"
+                        />
+                    </div>
+                </div>
+                <div class="report-order__card">
+                    <CardAnalyze
+                        :card="item"
+                        :show-remove-action="true"
+                        @show-detail="showReportItemDetail"
+                        @remove-report-item-from-selector="removeReportItem"
+                    />
+                </div>
+            </div>
         </div>
     </v-container>
 </template>
@@ -372,6 +422,59 @@
         reportItemDialog.value.showDetail(reportItem)
     }
 
+    // The product lists its reports in this order: the public web, the presenters and the
+    // citation numbers follow it. A change is handed on like any other.
+    const canReorder = computed<boolean>(() => props.modify && value.value.length > 1)
+
+    const moveReportItem = (from: number, to: number): void => {
+        const items = value.value
+        if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return
+        items.splice(to, 0, ...items.splice(from, 1))
+        emit('items-changed', items)
+    }
+
+    // Drag-and-drop reordering, as in the link list editor: the dragged report takes the place
+    // of the one it is dropped on.
+    const dragIndex = ref<number | null>(null)
+    const dragOverIndex = ref<number | null>(null)
+
+    const onDragStart = (index: number, event: DragEvent): void => {
+        dragIndex.value = index
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move'
+            // Some browsers require data to be set for the drag to initiate.
+            event.dataTransfer.setData('text/plain', String(index))
+        }
+    }
+
+    const onDragOver = (index: number, event: DragEvent): void => {
+        if (dragIndex.value === null) return
+        event.preventDefault()
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move'
+        }
+        dragOverIndex.value = index
+    }
+
+    const onDragLeave = (index: number): void => {
+        if (dragOverIndex.value === index) {
+            dragOverIndex.value = null
+        }
+    }
+
+    const onDrop = (index: number): void => {
+        if (dragIndex.value !== null && canReorder.value) {
+            moveReportItem(dragIndex.value, index)
+        }
+        dragIndex.value = null
+        dragOverIndex.value = null
+    }
+
+    const onDragEnd = (): void => {
+        dragIndex.value = null
+        dragOverIndex.value = null
+    }
+
     const removeReportItem = (reportItem: ReportItem): void => {
         const index = value.value.findIndex((item) => item.id === reportItem.id)
         if (index > -1) {
@@ -416,6 +519,40 @@
     .selector-results {
         min-height: 0;
         overflow-y: auto;
+    }
+
+    .report-order__row {
+        display: flex;
+        align-items: center;
+        border-top: 2px solid transparent;
+    }
+
+    .report-order__row.drag-over {
+        border-top-color: rgb(var(--v-theme-primary));
+    }
+
+    .report-order__row.dragging {
+        opacity: 0.5;
+    }
+
+    .report-order__controls {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        margin-inline-end: 4px;
+    }
+
+    .report-order__card {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .drag-handle {
+        cursor: grab;
+    }
+
+    .drag-handle:active {
+        cursor: grabbing;
     }
 
     :deep(.v-dialog .v-card) {

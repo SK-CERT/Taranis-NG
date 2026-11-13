@@ -2178,7 +2178,10 @@
             "total_count": "public-web düğümü yok | {count} public-web düğümü | {count} public-web düğümü",
             "enabled": "Etkin",
             "enabled_hint": "Kapalı: Taranis bu düğümü denetlemeyi ve yenilemeyi bırakır, sitelerinden hiçbirini yayımlamaz ve ona rapor göndermez. Siteleri ve ayarları yeniden açıldığında kullanılmak üzere saklanır.",
-            "disabled_notice": "Bu düğüm kapalı: sitelerinden hiçbiri yayımlanmıyor."
+            "disabled_notice": "Bu düğüm kapalı: sitelerinden hiçbiri yayımlanmıyor.",
+            "clear_cache": "Önbelleği temizle",
+            "cache_cleared": "{name} önbelleği temizlendi",
+            "cache_clear_failed": "{name} önbelleği temizlenemedi"
         },
         "webs": {
             "total_count": "Site yok | {count} site | {count} site",

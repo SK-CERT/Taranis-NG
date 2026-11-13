@@ -2178,7 +2178,10 @@
             "total_count": "public-web 노드 {count}개 | public-web 노드 {count}개",
             "enabled": "활성화됨",
             "enabled_hint": "꺼짐: Taranis가 이 노드의 확인과 새로 고침을 멈추고, 노드의 사이트를 게시하지 않으며, 보고서도 보내지 않습니다. 사이트와 설정은 다시 켤 때를 위해 유지됩니다.",
-            "disabled_notice": "이 노드는 꺼져 있습니다. 노드의 사이트가 하나도 게시되지 않습니다."
+            "disabled_notice": "이 노드는 꺼져 있습니다. 노드의 사이트가 하나도 게시되지 않습니다.",
+            "clear_cache": "캐시 지우기",
+            "cache_cleared": "{name}의 캐시를 지웠습니다",
+            "cache_clear_failed": "{name}의 캐시를 지울 수 없습니다"
         },
         "webs": {
             "total_count": "사이트 {count}개 | 사이트 {count}개",
