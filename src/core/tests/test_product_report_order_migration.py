@@ -52,11 +52,12 @@ def migration(monkeypatch: pytest.MonkeyPatch) -> tuple[ModuleType, _Op]:
     return module, op
 
 
-def test_the_migration_extends_the_api_indexes_and_is_the_head() -> None:
+def test_the_migration_extends_the_api_indexes() -> None:
     module = _load()
     assert (module.revision, module.down_revision) == ("5e5fd7e294ca", "4b8e6d2a9c71")
     assert _children("4b8e6d2a9c71") == [MIGRATION.name]
-    assert _children("5e5fd7e294ca") == []
+    # The publication time came next.
+    assert _children("5e5fd7e294ca") == ["5c915192b607_product_published_at.py"]
 
 
 def test_the_column_is_the_one_the_model_declares(migration: tuple[ModuleType, _Op], monkeypatch: pytest.MonkeyPatch) -> None:

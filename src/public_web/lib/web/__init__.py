@@ -2,7 +2,7 @@
 
 from urllib.parse import urlencode
 
-from flask import g, request
+from flask import g, request, url_for
 from lib import config
 
 
@@ -40,22 +40,51 @@ def language_choices() -> list[dict[str, str | bool]]:
     languages = site.languages if site is not None else []
     if len(languages) < 2:  # noqa: PLR2004 - one language is nothing to choose from
         return []
-    with_catalog = config.get_translations(current_language()).get("languages", {})
     query = [(key, value) for key, value in request.args.items(multi=True) if key != "lang"]
-    choices: list[dict[str, str | bool]] = []
+    return [
+        {
+            "code": code,
+            "name": _own_name(code),
+            "url": f"{request.script_root}{request.path}?{urlencode([*query, ('lang', code)])}",
+            "current": code == current_language(),
+        }
+        for code in languages
+    ]
+
+
+def feed_links() -> list[dict[str, str | bool]]:
+    """The feeds a visitor can subscribe to: RSS and Atom in each of the web's languages.
+
+    Each language is named in itself, as in the language picker, and the one shown comes first.
+    With several languages a feed's address names its language (``?lang=``), so a feed reader
+    keeps getting that one whatever its own Accept-Language says; a web with a single language
+    keeps the plain ``/rss`` and ``/atom``.
+    """
+    site = getattr(g, "site", None)
+    languages = site.languages if site is not None else [current_language()]
+    several = len(languages) > 1
+    links: list[dict[str, str | bool]] = []
     for code in languages:
-        # Named in its own catalog; every catalog names the languages that have one.
-        name = config.get_translations(code)["languages"].get(code) if code in with_catalog else None
-        name = name or language_name(code)
-        choices.append(
+        language = {"lang": code} if several else {}
+        links.append(
             {
                 "code": code,
-                "name": name[:1].upper() + name[1:],
-                "url": f"{request.script_root}{request.path}?{urlencode([*query, ('lang', code)])}",
+                "name": _own_name(code),
                 "current": code == current_language(),
+                "rss": url_for("reports.rss", **language),
+                "atom": url_for("reports.atom", **language),
             },
         )
-    return choices
+    return sorted(links, key=lambda link: not link["current"])
+
+
+def _own_name(code: str) -> str:
+    """A language named in itself, capitalized; in the page's language when it has no catalog."""
+    # Every catalog names the languages that have one.
+    with_catalog = config.get_translations(current_language()).get("languages", {})
+    name = config.get_translations(code)["languages"].get(code) if code in with_catalog else None
+    name = name or language_name(code)
+    return name[:1].upper() + name[1:]
 
 
 def translate_report(key: str, language: str | None = None) -> str | None:
