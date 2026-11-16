@@ -16,7 +16,7 @@ from urllib.parse import urlsplit
 
 from jinja2 import is_undefined
 from lib.report import capitalize, fix_spaces, format_iso_date, get_cvss_severity
-from lib.report.vulnerability import affected_system, cvss_score, ymd_date
+from lib.report.vulnerability import affected_system, cvss_calculator_url, cvss_score, ymd_date
 from markupsafe import Markup
 from shared.jinja_filters import filter_regex_replace, filter_strfdate, filter_tlp_color, filter_truncate_on_symbol
 
@@ -137,6 +137,7 @@ FILTERS = {
     "capitalize_first": capitalize_first,
     "clean": clean,
     "clean_rich": clean_rich,
+    "cvss_calculator_url": lambda value: cvss_calculator_url(single(value)),
     "cvss_score": lambda value: cvss_score(single(value)),
     "cvss_severity": cvss_severity,
     "fix_spaces": fix_spaces_filter,

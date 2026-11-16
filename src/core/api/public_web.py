@@ -20,6 +20,7 @@ type's title, the raw value of a choice constant (``source_value``) - stays as w
 
 import io
 from dataclasses import dataclass
+from datetime import datetime
 from http import HTTPStatus
 
 from flask import request, send_file
@@ -32,7 +33,25 @@ from model.product import Product
 from model.public_web import PublicWeb
 from model.public_web_template import PublicWebBuiltinTemplate, PublicWebTemplate
 from model.state import StateDefinition, StateEnum
+from shared.common import TZ
 from shared.schema.attribute import AttributeType
+
+
+def _iso(value: datetime | None) -> str | None:
+    """A moment as ISO 8601 with its offset; core stores local time (``TZ``) without one."""
+    if value is None:
+        return None
+    return (value if value.tzinfo else value.replace(tzinfo=TZ)).isoformat()
+
+
+def _dates(product: Product) -> dict:
+    """When a product was published and last changed, for the page and the feeds.
+
+    ``published`` is its first publication; a product published before that was recorded has
+    its creation instead. ``updated`` is its last save, or its publication when it has none.
+    """
+    published = getattr(product, "published_at", None) or product.created
+    return {"published": _iso(published), "updated": _iso(getattr(product, "updated_at", None) or published)}
 
 
 def _node_disabled() -> tuple[dict, HTTPStatus]:
@@ -224,7 +243,8 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
         language (str | None): The language to show it in; None shows it as written.
 
     Returns:
-        dict: The product. In a language, it also says which language it is shown in
+        dict: The product, with ``published`` and ``updated`` (ISO 8601 with offset, see
+            ``_dates``) beside ``created``. In a language, it also says which language it is shown in
             (``language``, None when no language of the content is known), which it can be read
             in (``available_languages``), whether any of it is read from an AI translation and if a
             person reviewed them all (``ai_translation``: "unreviewed", "reviewed" or None), and what
@@ -264,6 +284,7 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
         "description": description,
         "links": index.urls,
         "created": product.created.isoformat() if product.created else None,
+        **_dates(product),
         "user": {"name": user.name, "username": user.username} if user else None,
         "report_items": report_items,
     }
@@ -317,7 +338,7 @@ class PublicWebProducts(Resource):
 
         Returns:
             dict: ``{"total_count": int, "items": [...]}``: how many products are published in
-                all, and this page of them, ``{"id", "title", "created"}`` each unless ``full``.
+                all, and this page of them, ``{"id", "title", "created", "published", "updated"}`` each unless ``full``.
                 403 for a disabled node.
         """
         public_web_node.touch()
@@ -345,7 +366,7 @@ class PublicWebProducts(Resource):
         if full:
             items = [_serialize_product(product, language) for product in products]
         else:
-            items = [{"id": p.id, "title": p.title, "created": p.created.isoformat() if p.created else None} for p in products]
+            items = [{"id": p.id, "title": p.title, "created": p.created.isoformat() if p.created else None, **_dates(p)} for p in products]
         logger.debug(f"Public-web '{public_web_node.name}': listed {len(items)} of {total} published products from {offset}")
         return {"total_count": total, "items": items}, HTTPStatus.OK
 

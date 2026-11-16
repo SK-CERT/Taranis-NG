@@ -176,6 +176,60 @@ def test_the_builtin_vulnerability_template_fits_the_type_taranis_creates() -> N
     assert "Internal" not in page
 
 
+V30 = "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+V31 = "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:N"
+V40 = "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+V20 = "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+
+
+@pytest.mark.parametrize(
+    ("value", "url"),
+    [
+        (V30, f"https://www.first.org/cvss/calculator/3.0#{V30}"),
+        (V31, f"https://www.first.org/cvss/calculator/3.1#{V31}"),
+        (V40, f"https://www.first.org/cvss/calculator/4.0#{V40}"),
+        # Surrounding space goes, and the metrics come in the order the specification lists them.
+        (" CVSS:3.1/C:H/I:L/A:N/AV:N/AC:L/PR:N/UI:R/S:U ", f"https://www.first.org/cvss/calculator/3.1#{V31}"),
+        # Temporal and environmental metrics are kept.
+        (f"{V31}/E:P/CR:H", f"https://www.first.org/cvss/calculator/3.1#{V31}/E:P/CR:H"),
+        # FIRST has no CVSS 2.0 calculator.
+        (V20, None),
+        (f"CVSS:2.0/{V20}", None),
+        # The calculator needs every base metric; anything else is no vector.
+        ("CVSS:3.1/AV:N/AC:L", None),
+        ("CVSS:4.0/AV:N/AC:L/AT:N", None),
+        ("CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:N/AV:L", None),
+        ("javascript:alert(1)//CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:N", None),
+        ("9.8", None),
+        ("", None),
+        (None, None),
+    ],
+)
+def test_a_cvss_3_or_4_vector_links_to_firsts_calculator(value: str | None, url: str | None) -> None:
+    assert FILTERS["cvss_calculator_url"](value) == url
+
+
+def test_the_filter_takes_the_first_of_several_values() -> None:
+    assert FILTERS["cvss_calculator_url"]([V40, V31]) == f"https://www.first.org/cvss/calculator/4.0#{V40}"
+
+
+@pytest.mark.parametrize("vector", [V30, V31, V40])
+def test_the_vulnerability_template_links_the_vector_to_the_calculator(vector: str) -> None:
+    page = " ".join(_page(ReportRenderer([]), _product(_stock_vulnerability(_attribute("cvss", "CVSS", vector)))).split())
+
+    version = vector[5:8]
+    # Rendered without a catalog, a phrase reads as its key; the golden pages show it translated.
+    link = f'<a href="https://www.first.org/cvss/calculator/{version}#{vector}" title="cvss_calculator">{vector}</a>'
+    assert f"<b>CVSS:</b> {link}" in page
+
+
+def test_a_cvss_2_vector_is_shown_without_a_link() -> None:
+    page = " ".join(_page(ReportRenderer([]), _product(_stock_vulnerability(_attribute("cvss", "CVSS", V20)))).split())
+
+    assert f"<b>CVSS:</b> {V20}" in page
+    assert "first.org" not in page
+
+
 def test_without_a_vector_the_score_comes_from_the_cvss_number() -> None:
     page = _page(ReportRenderer([]), _product(_stock_vulnerability(_attribute("cvss_number", "STRING", "9.8"))))
 

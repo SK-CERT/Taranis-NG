@@ -50,6 +50,7 @@ FILTER_NAMES = (
     "capitalize_first",
     "clean",
     "clean_rich",
+    "cvss_calculator_url",
     "cvss_score",
     "cvss_severity",
     "fix_spaces",

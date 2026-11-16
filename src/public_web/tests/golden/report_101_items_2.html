@@ -9,8 +9,24 @@
               href="/static/favicon.ico">
         <link rel="alternate"
               type="application/rss+xml"
-              title="Example feed RSS"
-              href="https://localhost/feed">
+              hreflang="en"
+              title="Example feed RSS (English)"
+              href="https://localhost/rss?lang=en">
+        <link rel="alternate"
+              type="application/atom+xml"
+              hreflang="en"
+              title="Example feed Atom (English)"
+              href="https://localhost/atom?lang=en">
+        <link rel="alternate"
+              type="application/rss+xml"
+              hreflang="cs"
+              title="Example feed RSS (Čeština)"
+              href="https://localhost/rss?lang=cs">
+        <link rel="alternate"
+              type="application/atom+xml"
+              hreflang="cs"
+              title="Example feed Atom (Čeština)"
+              href="https://localhost/atom?lang=cs">
 
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -91,6 +107,69 @@
             window.parent.postMessage({ taranisPublicWebTheme: choice }, "*");
         }
         apply();
+    });
+
+    function copied(button) {
+        var icon = button.querySelector(".mdi");
+        var status = document.querySelector("[data-copy-status]");
+        var label = button.getAttribute("data-label-copied");
+        if (icon) {
+            icon.classList.replace("mdi-content-copy", "mdi-check");
+        }
+        button.setAttribute("title", label);
+        if (status) {
+            status.textContent = label;
+        }
+        window.setTimeout(function () {
+            if (icon) {
+                icon.classList.replace("mdi-check", "mdi-content-copy");
+            }
+            button.setAttribute("title", button.getAttribute("data-label-copy"));
+            if (status) {
+                status.textContent = "";
+            }
+        }, 1500);
+    }
+
+    function copyThroughField(text) {
+        var field = document.createElement("textarea");
+        field.value = text;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.appendChild(field);
+        field.select();
+        var done = false;
+        try {
+            done = document.execCommand("copy");
+        } catch (error) {
+            done = false;
+        }
+        document.body.removeChild(field);
+        return done;
+    }
+
+    document.addEventListener("click", function (event) {
+        var button = event.target.closest ? event.target.closest("[data-copy-link]") : null;
+        if (!button) {
+            return;
+        }
+        event.preventDefault();
+        var link = button.getAttribute("data-copy-link");
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(link).then(
+                function () {
+                    copied(button);
+                },
+                function () {
+                    if (copyThroughField(link)) {
+                        copied(button);
+                    }
+                }
+            );
+        } else if (copyThroughField(link)) {
+            copied(button);
+        }
     });
 
     if (document.documentElement.hasAttribute("data-taranis-preview")) {

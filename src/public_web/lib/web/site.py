@@ -27,6 +27,9 @@ _FEEDBACK_KEYS = ["question1", "question2", "question3", "comment"]
 
 IMAGE_KINDS = ("logo", "favicon", "preview")
 
+# How many reports a feed page carries unless the web says otherwise (``feed_page_size``).
+FEED_PAGE_SIZE = 50
+
 # What ``?lang=`` may hold: a language tag ("cs", "pt-BR"). It names a catalog file and is carried
 # into links, so nothing else is taken from the URL.
 _LANGUAGE_TAG = re.compile(r"[a-z]{2,3}(-[A-Za-z0-9]{2,8})*")
@@ -200,6 +203,22 @@ class SiteContext:
     def max_reports_homepage(self) -> int:
         """Max reports shown on the homepage, falling back to the global default."""
         return int(self.cfg.get("max_reports_homepage") or config.max_reports_homepage())
+
+    @property
+    def feed_page_size(self) -> int:
+        """How many of the newest reports a feed page carries; the older ones are on further pages."""
+        try:
+            size = int(self.cfg.get("feed_page_size") or 0)
+        except (TypeError, ValueError):
+            size = 0
+        return size if size > 0 else FEED_PAGE_SIZE
+
+    @property
+    def websub_hub(self) -> str | None:
+        """The WebSub hub the feeds announce and the node notifies of changes; None for none."""
+        hub = self.cfg.get("websub_hub")
+        hub = hub.strip() if isinstance(hub, str) else ""
+        return hub if hub.startswith(("https://", "http://")) else None
 
     # -- images ------------------------------------------------------------
 

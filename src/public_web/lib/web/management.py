@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 from flask import Blueprint, jsonify, request
 from lib import config, send_mail
 from lib.logger import get_logger
+from lib.web import websub
 from lib.web.cache import WebCache
 from lib.web.preview import PreviewError, render_preview
 from shared.auth import make_api_key_required
@@ -60,9 +61,13 @@ def preview() -> tuple:
 @management_bp.route("/management/reset-cache", methods=["POST"], endpoint="reset_cache")
 @api_key_required
 def reset_cache() -> tuple:
-    """Clear the cache so a config change made in the GUI takes effect now."""
+    """Clear the cache so a config change made in the GUI takes effect now.
+
+    Then the webs' WebSub hubs are told their feeds changed, in the background (see websub.py).
+    """
     cache.clear()
     logger.info("Cache reset requested by core.")
+    websub.notify_in_background(cache.get_webs)
     return jsonify({"reset": True}), HTTPStatus.OK
 
 

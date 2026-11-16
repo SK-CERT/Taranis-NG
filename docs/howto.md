@@ -566,6 +566,15 @@ a template of their own can be switched off, so that only your own templates are
 off the vulnerability report template hides the products of every preset without a template; a
 report item left with no template is not shown, and neither is a product left
 with no item.
+The public web lists products newest published first and dates each one by the day it was first
+published. Its RSS (`/rss`) and Atom (`/atom`) feeds give feed readers the same moment (RSS
+`pubDate`, Atom `published`), and Atom also gives when a product last changed. Taranis records
+that moment when a product first enters the *published* state; products published before it
+did so keep their creation date. Each feed page carries the newest reports
+(a web's *Reports per feed page*, 50 by default) with their whole text, links the older pages,
+and answers a reader that already has it with an empty *304 Not Modified*. A web with a *WebSub
+hub* (for example `https://pubsubhubbub.appspot.com/`) names it in its feeds, and its node tells
+the hub whenever something on the web changes, so subscribers hear of new reports at once.
 Who may see, edit and publish products is set by ACLs on their preset (item type *Product*).
 
 A format or a channel that a preset uses, a web that one is restricted to, and a preset that

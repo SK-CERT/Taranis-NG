@@ -210,7 +210,12 @@ def build_product(data: dict, shown: Callable[[dict], bool] | None = None) -> di
         # The same as description, under the name templates written before used.
         "lead": description,
         "created": data.get("created"),
-        "published": _published(data.get("created")),
+        # When it was first published and last changed, ISO 8601 with an offset; a core from
+        # before it recorded them gives only when the product was created.
+        "published_at": data.get("published") or data.get("created"),
+        "updated_at": data.get("updated") or data.get("published") or data.get("created"),
+        # The day it was published, as the page shows it.
+        "published": _published(data.get("published") or data.get("created")),
         "author": user.get("name"),
         "author_username": user.get("username"),
         # What the product is published as; its report template is the product preset's.
