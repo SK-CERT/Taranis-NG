@@ -48,6 +48,62 @@
     {%- endif %}
 {%- endmacro %}
 
+{#- The feeds: RSS and Atom in each of the web's languages. A feed's name downloads it, the icons
+beside it copy its address (for a feed reader) and open it in a new tab. The menu stays open while
+they are used (data-bs-auto-close), so that "copied" can be seen; the page script copies. -#}
+{%- macro feed_menu() -%}
+    {%- set feeds = feed_links() -%}
+    {%- set several = feeds | length > 1 -%}
+    <div class="dropdown" data-test="feed-menu">
+        <button type="button"
+                class="btn btn-link p-0 text-primary d-flex align-items-center text-decoration-none"
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside"
+                aria-expanded="false"
+                title="{{ translate_ui('feed_menu') }}"
+                aria-label="{{ translate_ui('feed_menu') }}">
+            <span class="mdi mdi-rss-box fs-4" aria-hidden="true"></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            {%- for feed in feeds %}
+                {%- if several %}
+                    <li>
+                        <h6 class="dropdown-header" lang="{{ feed.code }}">{{ feed.name }}</h6>
+                    </li>
+                {%- endif %}
+                {%- for format, label in (("rss", "RSS"), ("atom", "Atom")) %}
+                    {%- set name = label ~ (" (" ~ feed.name ~ ")" if several else "") %}
+                    <li class="d-flex align-items-center">
+                        <a class="dropdown-item flex-grow-1"
+                           href="{{ feed[format] }}"
+                           download="{{ format }}{{ '-' ~ feed.code if several else '' }}.xml"
+                           title="{{ translate_ui('feed_download') }}"
+                           data-test="feed-download">{{ label }}</a>
+                        <button type="button"
+                                class="btn btn-link p-0 px-2 text-primary"
+                                data-copy-link="{{ hostname }}{{ feed[format] }}"
+                                data-label-copy="{{ translate_ui('feed_copy') }}"
+                                data-label-copied="{{ translate_ui('feed_copied') }}"
+                                title="{{ translate_ui('feed_copy') }}"
+                                aria-label="{{ name }}: {{ translate_ui('feed_copy') }}"
+                                data-test="feed-copy">
+                            <span class="mdi mdi-content-copy" aria-hidden="true"></span>
+                        </button>
+                        <a class="pe-3 ps-2 text-primary"
+                           href="{{ feed[format] }}"
+                           target="_blank"
+                           rel="noopener"
+                           title="{{ translate_ui('feed_open') }}"
+                           aria-label="{{ name }}: {{ translate_ui('feed_open') }}"
+                           data-test="feed-open"><span class="mdi mdi-open-in-new" aria-hidden="true"></span></a>
+                    </li>
+                {%- endfor %}
+            {%- endfor %}
+        </ul>
+        <span class="visually-hidden" role="status" data-copy-status></span>
+    </div>
+{%- endmacro %}
+
 {#- The colour mode: automatic (as the browser is set, the default), light or dark. One button
 goes through them; the script in main.html applies the mode, keeps it, and shows its icon and
 label here. It works in the GUI's template preview too, where no other script runs. -#}

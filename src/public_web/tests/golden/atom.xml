@@ -1,0 +1,276 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><id>https://localhost/atom</id><title>Vulnerability Reports</title><updated>2025-09-16T09:30:00+02:00</updated><author><name>Example CERT</name><uri>https://cert.example.org</uri></author><link href="https://localhost/atom" rel="self"/><link href="https://localhost" rel="alternate"/><generator uri="https://github.com/SK-CERT/Taranis-NG">Taranis-NG</generator><icon>https://localhost/static/favicon.ico</icon><logo>https://localhost/static/logo.svg</logo><rights>© 2026 Example CERT</rights><subtitle>Public feed of vulnerability reports.</subtitle><entry><id>https://localhost/reports/101</id><title>Critical vulnerabilities in Apache products</title><updated>2025-09-16T09:30:00+02:00</updated><author><name>Jan Novak</name></author><content type="html">&lt;div class="d-flex flex-column flex-md-row mb-1"&gt;
+                &lt;h4 class="text-body me-3"&gt;
+                    [TLP:CLEAR] Critical vulnerabilities in Apache products
+                &lt;/h4&gt;
+            &lt;/div&gt;&lt;p class="mb-3 fw-normal h5 pre-wrap"&gt;Several vulnerabilities were published, see &lt;a href="https://httpd.apache.org/security/" style="text-decoration: none;"&gt;[1]&lt;/a&gt;.&lt;/p&gt;&lt;!-- CVEs and their description --&gt;
+    &lt;div class="accordion my-3"&gt;
+                &lt;div class="accordion-item" id="accordionCVE-1"&gt;
+    &lt;div class="accordion-header" id="heading1"&gt;
+        &lt;div class="accordion-button"
+             role="button"
+             data-bs-toggle="collapse"
+             data-bs-target="#collapse1"
+             aria-expanded="true"
+             aria-controls="collapse1"&gt;
+            &lt;h5 class="m-0 text-body"&gt;
+
+                &lt;b class="fw-bolder me-4"&gt;Apache HTTP Server: request smuggling (CVE-2025-1111)&lt;/b&gt;
+
+        &lt;h5 class="m-0 fw-normal"&gt;
+            &lt;span class="badge"
+                  title="Common Vulnerability Scoring System Base Score"
+                  style="background-color: #b02a37; color: white;"&gt;CVSS 9.8 (Critical)
+            &lt;/span&gt;
+        &lt;/h5&gt;
+
+            &lt;/h5&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div id="collapse1"
+         class="accordion-collapse collapse show"
+         aria-labelledby="heading1"&gt;
+        &lt;div class="accordion-body"&gt;
+                &lt;p class="mt-1 mb-0 pre-wrap"&gt;An attacker can smuggle requests &lt;a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1111" style="text-decoration: none;"&gt;[2]&lt;/a&gt; and bypass ACLs &lt;a href="https://httpd.apache.org/security/" style="text-decoration: none;"&gt;[1]&lt;/a&gt;.&lt;/p&gt;
+                    &lt;p class="mt-1 mb-0"&gt;
+                        The vulnerability is present in products:
+                    &lt;/p&gt;
+                    &lt;ul class="m-0"&gt;&lt;li&gt;
+                                    &lt;span class="fw-light"&gt;Apache HTTP Server (linux)&lt;/span&gt;
+
+        in versions
+        &lt;span class="fw-light"
+              data-bs-toggle="popover"
+              data-bs-container="body"
+              data-bs-placement="top"
+              title="Original version format"
+              data-bs-content="linux:Apache HTTP Server; &amp;gt;=2.4.0, &amp;lt;2.4.65"&gt;
+            &amp;gt;=2.4.0 AND  &amp;lt;2.4.65&lt;/span&gt;
+
+                                &lt;/li&gt;&lt;li&gt;
+                                    &lt;span class="fw-light"&gt;Apache mod_proxy&lt;/span&gt;
+
+        in versions
+        &lt;span class="fw-light"
+              data-bs-toggle="popover"
+              data-bs-container="body"
+              data-bs-placement="top"
+              title="Original version format"
+              data-bs-content="Apache mod_proxy; &amp;lt;2.4.65; 3.0.0-beta"&gt;
+            (&amp;lt;2.4.65) OR (3.0.0-beta)&lt;/span&gt;
+
+                                &lt;/li&gt;&lt;li&gt;
+                                    &lt;span class="fw-light"&gt;Apache Traffic Server&lt;/span&gt;
+                                &lt;/li&gt;
+                    &lt;/ul&gt;
+                &lt;p class="mt-1 mb-0 pre-wrap"&gt;Update to version 2.4.65 or later &lt;a href="https://httpd.apache.org/security/" style="text-decoration: none;"&gt;[1]&lt;/a&gt;.&lt;/p&gt;
+                &lt;p class="mt-1 mb-0 text-break"&gt;
+                    &lt;b&gt;CVSS:&lt;/b&gt;
+                    CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+                &lt;/p&gt;
+                &lt;p class="mt-1 mb-0"&gt;
+                    &lt;b data-bs-toggle="tooltip"
+                       title="Indicator of Compromise"&gt;
+                        IOC:
+                    &lt;/b&gt; 198.51.100.7, evil.example.net
+                &lt;/p&gt;
+            &lt;p class="mt-1 mb-0"&gt;
+                &lt;b&gt;More information:&lt;/b&gt;
+            &lt;/p&gt;
+            &lt;ul class="m-0"&gt;
+                    &lt;li&gt;
+                        CVE-2025-1111 at
+                        &lt;a href="https://cve.org/CVERecord?id=CVE-2025-1111"&gt;cve.org&lt;/a&gt;,
+                        &lt;a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1111"&gt;NVD&lt;/a&gt;,
+                        &lt;a href="https://github.com/advisories?query=CVE-2025-1111"&gt;GitHub&lt;/a&gt;,
+                        &lt;a href="https://cve.circl.lu/cve/CVE-2025-1111"&gt;CIRCL.LU&lt;/a&gt;,
+                        &lt;a href="https://security-tracker.debian.org/tracker/CVE-2025-1111"&gt;Debian&lt;/a&gt;,
+                        &lt;a href="https://ubuntu.com/security/CVE-2025-1111"&gt;Ubuntu&lt;/a&gt;,
+                        &lt;a href="https://access.redhat.com/security/cve/CVE-2025-1111"&gt;Red Hat&lt;/a&gt;,
+                        &lt;a href="https://suse.com/security/cve/CVE-2025-1111"&gt;SUSE&lt;/a&gt;
+                    &lt;/li&gt;
+                    &lt;li&gt;
+                        CVE-2025-1112 at
+                        &lt;a href="https://cve.org/CVERecord?id=CVE-2025-1112"&gt;cve.org&lt;/a&gt;,
+                        &lt;a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1112"&gt;NVD&lt;/a&gt;,
+                        &lt;a href="https://github.com/advisories?query=CVE-2025-1112"&gt;GitHub&lt;/a&gt;,
+                        &lt;a href="https://cve.circl.lu/cve/CVE-2025-1112"&gt;CIRCL.LU&lt;/a&gt;,
+                        &lt;a href="https://security-tracker.debian.org/tracker/CVE-2025-1112"&gt;Debian&lt;/a&gt;,
+                        &lt;a href="https://ubuntu.com/security/CVE-2025-1112"&gt;Ubuntu&lt;/a&gt;,
+                        &lt;a href="https://access.redhat.com/security/cve/CVE-2025-1112"&gt;Red Hat&lt;/a&gt;,
+                        &lt;a href="https://suse.com/security/cve/CVE-2025-1112"&gt;SUSE&lt;/a&gt;
+                    &lt;/li&gt;&lt;li&gt;
+                            &lt;span&gt;
+                                CWE-444: Inconsistent Interpretation of HTTP Requests
+                            &lt;/span&gt; at
+                            &lt;a href="https://cwe.mitre.org/data/definitions/444"&gt;
+                                cwe.mitre.org
+                            &lt;/a&gt;
+                        &lt;/li&gt;&lt;li&gt;
+                            &lt;span&gt;
+                                CWE-20
+                            &lt;/span&gt; at
+                            &lt;a href="https://cwe.mitre.org/data/definitions/20"&gt;
+                                cwe.mitre.org
+                            &lt;/a&gt;
+                        &lt;/li&gt;
+            &lt;/ul&gt;
+                &lt;p class="mt-3 mb-1 text-secondary"&gt;
+                        The vulnerability was publicly disclosed
+                        10. 9. 2025.
+                        This report was last updated
+                        12. 9. 2025.
+                &lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+                &lt;div class="accordion-item" id="accordionCVE-2"&gt;
+    &lt;div class="accordion-header" id="heading2"&gt;
+        &lt;div class="accordion-button"
+             role="button"
+             data-bs-toggle="collapse"
+             data-bs-target="#collapse2"
+             aria-expanded="true"
+             aria-controls="collapse2"&gt;
+            &lt;h5 class="m-0 text-body"&gt;
+
+                &lt;b class="fw-bolder me-4"&gt;Apache Tomcat information disclosure&lt;/b&gt;
+
+        &lt;h5 class="m-0 fw-normal"&gt;
+            &lt;span class="badge"
+                  title="Common Vulnerability Scoring System Base Score"
+                  style="background-color: #fd7e14; color: white;"&gt;CVSS 5.3 (Medium)
+            &lt;/span&gt;
+        &lt;/h5&gt;
+
+            &lt;/h5&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div id="collapse2"
+         class="accordion-collapse collapse show"
+         aria-labelledby="heading2"&gt;
+        &lt;div class="accordion-body"&gt;
+                &lt;p class="mt-1 mb-0 pre-wrap"&gt;Sensitive files may be read, see &lt;a href="https://tomcat.apache.org/security-10.html" style="text-decoration: none;"&gt;[3]&lt;/a&gt;.&lt;/p&gt;&lt;p class="mt-1 mb-0"&gt;
+                            The vulnerability is present in product
+                            &lt;span class="fw-light"&gt;Apache Tomcat (windows)&lt;/span&gt;
+
+        in versions
+        &lt;span class="fw-light"
+              data-bs-toggle="popover"
+              data-bs-container="body"
+              data-bs-placement="top"
+              title="Original version format"
+              data-bs-content="windows:Apache Tomcat; &amp;lt;10.1.40"&gt;
+            &amp;lt;10.1.40&lt;/span&gt;.
+
+                        &lt;/p&gt;
+            &lt;p class="mt-1 mb-0"&gt;
+                &lt;b&gt;More information:&lt;/b&gt;
+            &lt;/p&gt;
+            &lt;ul class="m-0"&gt;
+            &lt;/ul&gt;
+                &lt;p class="mt-3 mb-1 text-secondary"&gt;
+                        The vulnerability was publicly disclosed
+                        11. 9. 2025.
+                &lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+    &lt;/div&gt;
+                &lt;div class="my-4" id="links"&gt;
+                    &lt;h5&gt;
+                        Links
+                    &lt;/h5&gt;
+                    &lt;ul&gt;&lt;li&gt;
+                                    [1]
+                                    &lt;a href="https://httpd.apache.org/security/" class="text-break"&gt;https://httpd.apache.org/security/&lt;/a&gt;
+                                &lt;/li&gt;&lt;li&gt;
+                                    [2]
+                                    &lt;a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1111" class="text-break"&gt;https://nvd.nist.gov/vuln/detail/CVE-2025-1111&lt;/a&gt;
+                                &lt;/li&gt;&lt;li&gt;
+                                    [3]
+                                    &lt;a href="https://tomcat.apache.org/security-10.html" class="text-break"&gt;https://tomcat.apache.org/security-10.html&lt;/a&gt;
+                                &lt;/li&gt;
+                    &lt;/ul&gt;
+                &lt;/div&gt;</content><link href="https://localhost/reports/101"/><summary>Several vulnerabilities were published, see.
+
+Vulnerabilities:
+Apache HTTP Server: request smuggling (CVE-2025-1111, CVSS 9.8),
+Apache Tomcat information disclosure (CVSS 5.3)</summary><published>2025-09-15T12:00:00+02:00</published></entry><entry><id>https://localhost/reports/102</id><title>OpenSSL denial of service</title><updated>2025-09-13T09:00:00+02:00</updated><author><name>Eva Svobodova</name></author><content type="html">&lt;div class="d-flex flex-column flex-md-row mb-1"&gt;
+                &lt;h4 class="text-body me-3"&gt;
+                    [TLP:CLEAR] OpenSSL denial of service
+                &lt;/h4&gt;
+            &lt;/div&gt;&lt;p class="mb-3 fw-normal h5 pre-wrap"&gt;A single issue in OpenSSL.&lt;/p&gt;&lt;!-- CVEs and their description --&gt;
+    &lt;div class="accordion my-3"&gt;
+                &lt;div class="accordion-item" id="accordionCVE-1"&gt;
+    &lt;div class="accordion-header" id="heading1"&gt;
+        &lt;div class="accordion-button"
+             role="button"
+             data-bs-toggle="collapse"
+             data-bs-target="#collapse1"
+             aria-expanded="true"
+             aria-controls="collapse1"&gt;
+            &lt;h5 class="m-0 text-body"&gt;
+
+                &lt;b class="fw-bolder me-4"&gt;OpenSSL: crash on crafted certificate&lt;/b&gt;
+
+        &lt;h5 class="m-0 fw-normal"&gt;
+            &lt;span class="badge"
+                  title="Common Vulnerability Scoring System Base Score"
+                  style="background-color: #dc3545; color: white;"&gt;CVSS 7.5 (High)
+            &lt;/span&gt;
+        &lt;/h5&gt;
+
+            &lt;/h5&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div id="collapse1"
+         class="accordion-collapse collapse show"
+         aria-labelledby="heading1"&gt;
+        &lt;div class="accordion-body"&gt;
+                &lt;p class="mt-1 mb-0 pre-wrap"&gt;A crafted certificate crashes the parser.&lt;/p&gt;&lt;p class="mt-1 mb-0"&gt;
+                            The vulnerability is present in product
+                            &lt;span class="fw-light"&gt;OpenSSL&lt;/span&gt;
+
+        in versions
+        &lt;span class="fw-light"
+              data-bs-toggle="popover"
+              data-bs-container="body"
+              data-bs-placement="top"
+              title="Original version format"
+              data-bs-content="OpenSSL; &amp;gt;=3.0.0, &amp;lt;3.0.17"&gt;
+            &amp;gt;=3.0.0 AND  &amp;lt;3.0.17&lt;/span&gt;.
+
+                        &lt;/p&gt;
+                &lt;p class="mt-1 mb-0 pre-wrap"&gt;Apply the vendor patch.&lt;/p&gt;
+                &lt;p class="mt-1 mb-0 text-break"&gt;
+                    &lt;b&gt;CVSS:&lt;/b&gt;
+                    CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+                &lt;/p&gt;
+            &lt;p class="mt-1 mb-0"&gt;
+                &lt;b&gt;More information:&lt;/b&gt;
+            &lt;/p&gt;
+            &lt;ul class="m-0"&gt;
+                    &lt;li&gt;
+                        CVE-2025-2222 at
+                        &lt;a href="https://cve.org/CVERecord?id=CVE-2025-2222"&gt;cve.org&lt;/a&gt;,
+                        &lt;a href="https://nvd.nist.gov/vuln/detail/CVE-2025-2222"&gt;NVD&lt;/a&gt;,
+                        &lt;a href="https://github.com/advisories?query=CVE-2025-2222"&gt;GitHub&lt;/a&gt;,
+                        &lt;a href="https://cve.circl.lu/cve/CVE-2025-2222"&gt;CIRCL.LU&lt;/a&gt;,
+                        &lt;a href="https://security-tracker.debian.org/tracker/CVE-2025-2222"&gt;Debian&lt;/a&gt;,
+                        &lt;a href="https://ubuntu.com/security/CVE-2025-2222"&gt;Ubuntu&lt;/a&gt;,
+                        &lt;a href="https://access.redhat.com/security/cve/CVE-2025-2222"&gt;Red Hat&lt;/a&gt;,
+                        &lt;a href="https://suse.com/security/cve/CVE-2025-2222"&gt;SUSE&lt;/a&gt;
+                    &lt;/li&gt;
+            &lt;/ul&gt;
+                &lt;p class="mt-3 mb-1 text-secondary"&gt;
+                        The vulnerability was publicly disclosed
+                        12. 9. 2025.
+                &lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+    &lt;/div&gt;</content><link href="https://localhost/reports/102"/><summary>A single issue in OpenSSL.
+
+Vulnerabilities:
+OpenSSL: crash on crafted certificate (CVSS 7.5)</summary><published>2025-09-13T09:00:00+02:00</published></entry></feed>

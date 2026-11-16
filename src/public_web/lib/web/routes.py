@@ -1,4 +1,4 @@
-"""Public view routes: homepage, report detail, RSS feed, branding images, and feedback.
+"""Public view routes: homepage, report detail, RSS and Atom feeds, branding images, and feedback.
 
 All endpoints run per-request site resolution by Host header (see site.py) and
 serve branded content for the resolved web and language. The report content itself
@@ -6,10 +6,10 @@ serve branded content for the resolved web and language. The report content itse
 ``lib.report.renderer``.
 """
 
+import hashlib
 import json
 import math
 
-from feedgen.feed import FeedGenerator
 from flask import (
     Blueprint,
     Response,
@@ -22,7 +22,7 @@ from flask import (
 from lib import send_mail
 from lib.logger import get_logger
 from lib.report.product import matches_keyword, remove_link_references
-from lib.web import translate, translate_ui
+from lib.web import feeds, translate, translate_ui
 from lib.web.cache import WebCache
 from lib.web.site import IMAGE_KINDS, current_site, load_site
 
@@ -111,32 +111,101 @@ def homepage() -> str:
     )
 
 
+def _feed_page() -> int:
+    """The feed page asked for (``?page=``, from 1); 400 for anything but a positive number."""
+    asked = request.args.get("page")
+    if asked is None:
+        return 1
+    if not asked.isdigit() or int(asked) < 1:
+        abort(400)
+    return int(asked)
+
+
+def _feed_response(kind: str) -> Response:
+    """A page of the web's feed, ``rss`` or ``atom``, answering "not modified" when nothing changed.
+
+    The feed is made once for what it shows (the web, its language, the reports on the page) and
+    kept: its ETag is a digest of the feed itself and ``Last-Modified`` its latest change, so a feed
+    reader asking again with them gets an empty 304 until something changes. With a WebSub hub,
+    the response also names the hub and the feed (``Link``), as WebSub asks.
+    """
+    site = current_site()
+    reports = cache.get_all_reports(site.id, site.language)
+    size = site.feed_page_size
+    pages = max(1, math.ceil(len(reports) / size))
+    page = _feed_page()
+    if page > pages:
+        abort(404)
+    shown = reports[(page - 1) * size : page * size]
+
+    def page_url(number: int) -> str:
+        return site.hostname + (url_for(request.endpoint, page=number) if number > 1 else url_for(request.endpoint))
+
+    # Everything the feed shows; the copyright line names the year.
+    asked = [kind, request.endpoint, site.id, site.language, site.chosen, page, pages, feeds.this_year(), site.web, shown]
+    key = hashlib.sha256(json.dumps(asked, sort_keys=True, default=str).encode()).hexdigest()
+    made = cache.get_feed(key)
+    if made is None:
+        options = _render_options()
+        renderer = cache.renderer(site.id)
+        fg, changed = feeds.build(
+            site,
+            shown,
+            page_url=page_url,
+            page=page,
+            pages=pages,
+            report_url=lambda report: site.hostname + url_for("reports.show", report_id=report["id"]),
+            summary=_get_rss_description,
+            content=lambda report: str(renderer.render(report, "detail", **options)),
+        )
+        body = fg.rss_str() if kind == "rss" else fg.atom_str()
+        made = {"body": body, "etag": hashlib.sha256(body).hexdigest()[:32], "changed": changed}
+        cache.set_feed(key, made)
+
+    response = make_response(made["body"])
+    response.headers.set("Content-Type", feeds.FEED_TYPE)
+    # Kept, but asked again every time: a 304 costs next to nothing.
+    response.headers.set("Cache-Control", "public, no-cache")
+    response.set_etag(made["etag"])
+    if made["changed"]:
+        response.last_modified = made["changed"]
+    if site.websub_hub:
+        response.headers.add("Link", f'<{site.websub_hub}>; rel="hub"')
+        response.headers.add("Link", f'<{page_url(page)}>; rel="self"')
+    return response.make_conditional(request)
+
+
 @reports_bp.route("/rss", endpoint="rss")
 @reports_bp.route("/feed", endpoint="feed")
 def rss() -> Response:
-    """Endpoint for rendering an RSS feed (per web + language)."""
-    site = current_site()
-    fg = FeedGenerator()
-    fg.title(site.metadata.get("rss_title", ""))
-    fg.description(site.metadata.get("rss_description", ""))
-    fg.link(href=site.hostname)
+    """The web's RSS 2.0 feed, in its language (see ``feeds.py``)."""
+    return _feed_response("rss")
 
-    # Every published report: a feed reader can then catch up on all of them.
-    reports = cache.get_all_reports(site.id, site.language)
 
-    # add_entry() adds items in a reverse order (the first added item will be
-    # the last in the feed), that's why reversed() is needed.
-    for report in reversed(reports):
-        report_link = site.hostname + url_for("reports.show", report_id=report["id"])
-        fe = fg.add_entry()
-        fe.title(report["title"])
-        fe.link(href=report_link)
-        fe.description(_get_rss_description(report))
-        fe.guid(report_link, permalink=True)
+@reports_bp.route("/atom", endpoint="atom")
+def atom() -> Response:
+    """The web's Atom feed (RFC 4287), in its language (see ``feeds.py``)."""
+    return _feed_response("atom")
 
-    response = make_response(fg.rss_str())
-    response.headers.set("Content-Type", "application/xml")
-    return response
+
+@reports_bp.after_request
+def _answer_not_modified(response: Response) -> Response:
+    """A page or image the visitor already has gets an empty 304 instead of all of it again.
+
+    Its ETag digests what was made, so anything that changes what the visitor sees - a report,
+    the language, a cookie the page reads - changes it too; the page is still made each time,
+    only not sent again. A page may differ per visitor, so only the browser keeps it, and asks
+    every time. The feeds set their own ETag (and ``Last-Modified``) and are left as they are, and
+    so is anything but a plain successful GET.
+    """
+    if request.method not in {"GET", "HEAD"} or response.status_code != 200:  # noqa: PLR2004 - HTTP OK
+        return response
+    if response.direct_passthrough or response.is_streamed or "ETag" in response.headers:
+        return response
+    response.add_etag()
+    if response.mimetype == "text/html" and "Cache-Control" not in response.headers:
+        response.headers["Cache-Control"] = "private, no-cache"
+    return response.make_conditional(request)
 
 
 @reports_bp.route("/branding/<kind>", endpoint="branding")

@@ -9,8 +9,24 @@
               href="/static/favicon.ico">
         <link rel="alternate"
               type="application/rss+xml"
-              title="Example feed RSS"
-              href="https://localhost/feed">
+              hreflang="en"
+              title="Example feed RSS (English)"
+              href="https://localhost/rss?lang=en">
+        <link rel="alternate"
+              type="application/atom+xml"
+              hreflang="en"
+              title="Example feed Atom (English)"
+              href="https://localhost/atom?lang=en">
+        <link rel="alternate"
+              type="application/rss+xml"
+              hreflang="cs"
+              title="Example feed RSS (Čeština)"
+              href="https://localhost/rss?lang=cs">
+        <link rel="alternate"
+              type="application/atom+xml"
+              hreflang="cs"
+              title="Example feed Atom (Čeština)"
+              href="https://localhost/atom?lang=cs">
 
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -91,6 +107,69 @@
             window.parent.postMessage({ taranisPublicWebTheme: choice }, "*");
         }
         apply();
+    });
+
+    function copied(button) {
+        var icon = button.querySelector(".mdi");
+        var status = document.querySelector("[data-copy-status]");
+        var label = button.getAttribute("data-label-copied");
+        if (icon) {
+            icon.classList.replace("mdi-content-copy", "mdi-check");
+        }
+        button.setAttribute("title", label);
+        if (status) {
+            status.textContent = label;
+        }
+        window.setTimeout(function () {
+            if (icon) {
+                icon.classList.replace("mdi-check", "mdi-content-copy");
+            }
+            button.setAttribute("title", button.getAttribute("data-label-copy"));
+            if (status) {
+                status.textContent = "";
+            }
+        }, 1500);
+    }
+
+    function copyThroughField(text) {
+        var field = document.createElement("textarea");
+        field.value = text;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.appendChild(field);
+        field.select();
+        var done = false;
+        try {
+            done = document.execCommand("copy");
+        } catch (error) {
+            done = false;
+        }
+        document.body.removeChild(field);
+        return done;
+    }
+
+    document.addEventListener("click", function (event) {
+        var button = event.target.closest ? event.target.closest("[data-copy-link]") : null;
+        if (!button) {
+            return;
+        }
+        event.preventDefault();
+        var link = button.getAttribute("data-copy-link");
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(link).then(
+                function () {
+                    copied(button);
+                },
+                function () {
+                    if (copyThroughField(link)) {
+                        copied(button);
+                    }
+                }
+            );
+        } else if (copyThroughField(link)) {
+            copied(button);
+        }
     });
 
     if (document.documentElement.hasAttribute("data-taranis-preview")) {
@@ -181,13 +260,122 @@
                         </li>
                     </ul>
                 </div>
-                <a href="/feed"
-                   class="d-flex align-items-center text-primary fw-normal h5 m-0 text-decoration-none">
-                    <span class="mdi mdi-rss-box fs-4" aria-hidden="true"></span>
-                    <p class="m-0 ms-1">
-                        RSS
-                    </p>
-                </a>
+                <div class="dropdown" data-test="feed-menu">
+                <button type="button"
+                      class="btn btn-link p-0 text-primary d-flex align-items-center text-decoration-none"
+                      data-bs-toggle="dropdown"
+                      data-bs-auto-close="outside"
+                      aria-expanded="false"
+                      title="Subscribe (RSS, Atom)"
+                      aria-label="Subscribe (RSS, Atom)">
+                <span class="mdi mdi-rss-box fs-4" aria-hidden="true"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                <h6 class="dropdown-header" lang="en">English</h6>
+                </li>
+                <li class="d-flex align-items-center">
+                <a class="dropdown-item flex-grow-1"
+                      href="/rss?lang=en"
+                      download="rss-en.xml"
+                      title="Download"
+                      data-test="feed-download">RSS</a>
+                <button type="button"
+                      class="btn btn-link p-0 px-2 text-primary"
+                      data-copy-link="https://localhost/rss?lang=en"
+                      data-label-copy="Copy the link"
+                      data-label-copied="Link copied"
+                      title="Copy the link"
+                      aria-label="RSS (English): Copy the link"
+                      data-test="feed-copy">
+                <span class="mdi mdi-content-copy" aria-hidden="true"></span>
+                </button>
+                <a class="pe-3 ps-2 text-primary"
+                      href="/rss?lang=en"
+                      target="_blank"
+                      rel="noopener"
+                      title="Open in a new tab"
+                      aria-label="RSS (English): Open in a new tab"
+                      data-test="feed-open"><span class="mdi mdi-open-in-new" aria-hidden="true"></span></a>
+                </li>
+                <li class="d-flex align-items-center">
+                <a class="dropdown-item flex-grow-1"
+                      href="/atom?lang=en"
+                      download="atom-en.xml"
+                      title="Download"
+                      data-test="feed-download">Atom</a>
+                <button type="button"
+                      class="btn btn-link p-0 px-2 text-primary"
+                      data-copy-link="https://localhost/atom?lang=en"
+                      data-label-copy="Copy the link"
+                      data-label-copied="Link copied"
+                      title="Copy the link"
+                      aria-label="Atom (English): Copy the link"
+                      data-test="feed-copy">
+                <span class="mdi mdi-content-copy" aria-hidden="true"></span>
+                </button>
+                <a class="pe-3 ps-2 text-primary"
+                      href="/atom?lang=en"
+                      target="_blank"
+                      rel="noopener"
+                      title="Open in a new tab"
+                      aria-label="Atom (English): Open in a new tab"
+                      data-test="feed-open"><span class="mdi mdi-open-in-new" aria-hidden="true"></span></a>
+                </li>
+                <li>
+                <h6 class="dropdown-header" lang="cs">Čeština</h6>
+                </li>
+                <li class="d-flex align-items-center">
+                <a class="dropdown-item flex-grow-1"
+                      href="/rss?lang=cs"
+                      download="rss-cs.xml"
+                      title="Download"
+                      data-test="feed-download">RSS</a>
+                <button type="button"
+                      class="btn btn-link p-0 px-2 text-primary"
+                      data-copy-link="https://localhost/rss?lang=cs"
+                      data-label-copy="Copy the link"
+                      data-label-copied="Link copied"
+                      title="Copy the link"
+                      aria-label="RSS (Čeština): Copy the link"
+                      data-test="feed-copy">
+                <span class="mdi mdi-content-copy" aria-hidden="true"></span>
+                </button>
+                <a class="pe-3 ps-2 text-primary"
+                      href="/rss?lang=cs"
+                      target="_blank"
+                      rel="noopener"
+                      title="Open in a new tab"
+                      aria-label="RSS (Čeština): Open in a new tab"
+                      data-test="feed-open"><span class="mdi mdi-open-in-new" aria-hidden="true"></span></a>
+                </li>
+                <li class="d-flex align-items-center">
+                <a class="dropdown-item flex-grow-1"
+                      href="/atom?lang=cs"
+                      download="atom-cs.xml"
+                      title="Download"
+                      data-test="feed-download">Atom</a>
+                <button type="button"
+                      class="btn btn-link p-0 px-2 text-primary"
+                      data-copy-link="https://localhost/atom?lang=cs"
+                      data-label-copy="Copy the link"
+                      data-label-copied="Link copied"
+                      title="Copy the link"
+                      aria-label="Atom (Čeština): Copy the link"
+                      data-test="feed-copy">
+                <span class="mdi mdi-content-copy" aria-hidden="true"></span>
+                </button>
+                <a class="pe-3 ps-2 text-primary"
+                      href="/atom?lang=cs"
+                      target="_blank"
+                      rel="noopener"
+                      title="Open in a new tab"
+                      aria-label="Atom (Čeština): Open in a new tab"
+                      data-test="feed-open"><span class="mdi mdi-open-in-new" aria-hidden="true"></span></a>
+                </li>
+                </ul>
+                <span class="visually-hidden" role="status" data-copy-status></span>
+                </div>
             </div>
         </div><div class="alert alert-warning alert-dismissible fade show d-flex" role="alert">
             <div class="d-flex align-items-center">

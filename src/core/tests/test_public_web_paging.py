@@ -41,7 +41,10 @@ def test_a_page_says_how_many_products_are_published_in_all(listed) -> None:  # 
 
     assert body == {
         "total_count": 812,
-        "items": [{"id": 9, "title": "Bulletin 9", "created": None}, {"id": 8, "title": "Bulletin 8", "created": None}],
+        "items": [
+            {"id": 9, "title": "Bulletin 9", "created": None, "published": None, "updated": None},
+            {"id": 8, "title": "Bulletin 8", "created": None, "published": None, "updated": None},
+        ],
     }
     assert asked == {"limit": 2, "web_id": 1, "offset": 40, "with_content": False}
 
