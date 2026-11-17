@@ -69,7 +69,7 @@ test = [
 # `docker` is the Docker SDK for Python, which taranis-ng-image-transfer needs
 # on the CONTROL host only — worker hosts are driven through the compose CLI.
 ansible = [
-    "ansible-core==2.21.3",
+    "ansible-core==2.22.0",
     "ansible-lint==26.11.0",
     "docker>=7.1.0",
 ]
