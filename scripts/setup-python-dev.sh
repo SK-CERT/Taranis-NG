@@ -10,7 +10,7 @@
 #   ./scripts/setup-python-dev.sh --recreate  # delete .venv and start fresh
 #
 # Requirements:
-#   - Python 3.12+ ( python3 --version )
+#   - Python 3.14+ ( python3 --version )
 #   - uv  ( pip install uv  or  curl -LsSf https://astral.sh/uv/install.sh | sh )
 
 set -euo pipefail
@@ -36,7 +36,7 @@ error() { echo -e "${RED}✗${NC}  $*" >&2; }
 info "Checking prerequisites…"
 
 if ! command -v python3 &>/dev/null; then
-    error "python3 is not installed. Install Python 3.12+ and try again."
+    error "python3 is not installed. Install Python 3.14+ and try again."
     exit 1
 fi
 

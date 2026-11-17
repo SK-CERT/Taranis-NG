@@ -2,7 +2,7 @@
 name = "taranis-ng-core"
 version = "26.10.1"
 description = "Taranis-NG Core service."
-requires-python = ">=3.11"
+requires-python = "==3.14.*"
 dependencies = [
     "alembic==1.20.1",
     "Authlib==1.7.2",
@@ -24,7 +24,7 @@ dependencies = [
     "marshmallow==4.4.0",
     "psycopg[binary]==3.3.8",
     "pycryptodomex==3.24.1",
-    "PyJWT==2.13.0",
+    "PyJWT==2.15.1",
     "pyotp==2.10.0",
     "python-dotenv==1.2.4",
     "webauthn==3.0.1",
