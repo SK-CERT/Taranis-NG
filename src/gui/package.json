@@ -33,7 +33,7 @@
         "@tiptap/extensions": "^3.33.1",
         "@tiptap/pm": "^3.33.1",
         "@tiptap/starter-kit": "^3.33.1",
-        "@tiptap/vue-3": "^3.33.1",
+        "@tiptap/vue-3": "^3.34.0",
         "ae-cvss-calculator": "^1.0.13",
         "axios": "^1.21.0",
         "d3-cloud": "^2.0.0",
