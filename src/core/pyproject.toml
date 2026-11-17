@@ -23,7 +23,7 @@ dependencies = [
     "minisaml==26.1",
     "marshmallow==4.4.0",
     "psycopg[binary]==3.3.8",
-    "pycryptodomex==3.24.1",
+    "pycryptodomex==3.24.2",
     "PyJWT==2.15.1",
     "pyotp==2.10.0",
     "python-dotenv==1.2.4",
