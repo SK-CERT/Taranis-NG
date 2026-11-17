@@ -48,7 +48,7 @@ classifiers = [
 [dependency-groups]
 dev = [
     "djlint==1.49.10",
-    "ruff==0.17.4",
+    "ruff==0.17.5",
     "ty==0.0.99",
     # Keep in lockstep with [tool.uv] required-version below. Declared here so
     # `uv sync` reinstalls it into .venv instead of pruning it — an undeclared
