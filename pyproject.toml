@@ -109,7 +109,7 @@ testpaths = [
 pythonpath = ["src/core", "src/shared"]
 
 [tool.ruff]
-required-version = "0.17.4"
+required-version = "0.17.5"
 line-length = 142
 target-version = "py313"
 fix = true
