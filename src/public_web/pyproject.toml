@@ -2,7 +2,7 @@
 name = "TARANIS-NG-public-web"
 version = "26.10.1"
 description = "Taranis-NG Public Web service."
-requires-python = ">=3.10"
+requires-python = "==3.14.*"
 dependencies = [
     "bleach[css]==6.4.0",
     "cachelib==0.14.0",
@@ -28,3 +28,6 @@ testpaths = ["tests"]
 # `lib` and `run` are the service's own top-level modules; the project is never
 # pip-installed for a test run, so put its root on sys.path.
 pythonpath = ["."]
+
+[tool.uv.sources]
+taranis-ng-shared = { path = "../shared" }

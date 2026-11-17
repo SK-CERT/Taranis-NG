@@ -2,7 +2,7 @@
 name = "taranis-ng-publishers"
 version = "26.10.1"
 description = "Taranis-NG Publishers service."
-requires-python = ">=3.11"
+requires-python = "==3.14.*"
 dependencies = [
     "beautifulsoup4==4.15.0",
     # Never 2.4.0: it reports a delivered e-mail as failed (CZ-NIC/envelope#57, fixed

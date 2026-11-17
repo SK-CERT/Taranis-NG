@@ -3,7 +3,7 @@ name = "TARANIS-NG"
 version = "26.10.1"
 description = "OSINT gathering and analysis tool for CSIRT teams and organisations."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = "==3.14.*"
 license = { text = "EUPL-1.2" }
 authors = [
     { name = "Ján Polonský", email = "jan.polonsky@nbu.gov.sk" },
@@ -26,9 +26,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: EUPL-1.2",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "Topic :: Security",
 ]
@@ -78,12 +76,6 @@ ansible = [
 
 [tool.uv]
 required-version = ">=0.11.19"
-
-# The `ansible` group needs a newer Python than the project as a whole
-# (ansible-core 2.21 is 3.12+, while the services still support 3.11). Scoping
-# it here keeps `requires-python` for the application untouched.
-[tool.uv.dependency-groups]
-ansible = { requires-python = ">=3.12" }
 
 # uv workspace: each backend service is an independent member with its own uv.lock.
 # The `shared` package is consumed as a path source by all services via their
@@ -228,20 +220,6 @@ invalid-type-arguments = "warn"  # `dict[int]` missing value type arg
 invalid-type-form = "warn"      # lowercase `any` (user meant Any) in annotations
 unknown-argument = "warn"       # langchain kwarg drift (model_name vs model)
 too-many-positional-arguments = "warn"  # legacy collector call sites passing extra args
-
-# Files excluded from ty's type-checking scope. ty still parses these for
-# import resolution when other modules import them, but does not emit
-# diagnostics for them. Use sparingly — prefer fixing the code or downgrading
-# the rule to "warn" instead.
-[tool.ty.src]
-exclude = [
-    # Contains a backslash inside an f-string expression (line 89), which is
-    # invalid syntax on Python 3.10 (added in 3.12). `invalid-syntax` is a hard
-    # parse failure that CANNOT be downgraded to a warning via [tool.ty.rules].
-    # Excluded from scope until the file is fixed; revisiting this on every
-    # cleanup pass is a TODO.
-    "src/collectors/collectors/slack_collector.py",
-]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 40

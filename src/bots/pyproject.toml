@@ -2,7 +2,7 @@
 name = "taranis-ng-bots"
 version = "26.10.1"
 description = "Taranis-NG Bots service."
-requires-python = ">=3.11"
+requires-python = "==3.14.*"
 dependencies = [
     "beautifulsoup4==4.15.0",
     "Flask==3.1.3",
