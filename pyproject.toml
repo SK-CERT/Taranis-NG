@@ -47,9 +47,9 @@ classifiers = [
 # Lockstep is enforced by scripts/check_tool_versions.py (run as a pre-commit hook).
 [dependency-groups]
 dev = [
-    "djlint==1.49.10",
+    "djlint==1.50.1",
     "ruff==0.17.5",
-    "ty==0.0.99",
+    "ty==0.0.104",
     # Keep in lockstep with [tool.uv] required-version below. Declared here so
     # `uv sync` reinstalls it into .venv instead of pruning it — an undeclared
     # .venv/bin/uv gets removed by the first sync, after which no uv on the
@@ -69,7 +69,7 @@ test = [
 # `docker` is the Docker SDK for Python, which taranis-ng-image-transfer needs
 # on the CONTROL host only — worker hosts are driven through the compose CLI.
 ansible = [
-    "ansible-core==2.21.3",
+    "ansible-core==2.22.0",
     "ansible-lint==26.11.0",
     "docker>=7.1.0",
 ]
