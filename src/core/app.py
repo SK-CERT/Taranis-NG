@@ -88,9 +88,15 @@ def _install_security_headers(app: Flask) -> None:
     * HTML previews run the presenter's own template, which owns its styling
       *and* its scripting - template_osint.html, for one, inlines Chart.js and
       draws its charts in the browser. Blocking inline script would ship a
-      report with no charts. These templates are server-side code authored by
-      administrators, not user content, and the policy still denies loading
-      anything over the network, framing, and form submission.
+      report with no charts. The templates are written by administrators, but
+      the values they print are typed in by analysts, and one value printed
+      unescaped into a script once ran in the browser of whoever previewed the
+      product. So the policy also sandboxes the document: it gets an opaque
+      origin of its own, cannot read the GUI's storage (the session token) and
+      cannot call the API as the viewer, whatever a template lets through.
+      Scripts still run (the charts), links may open a new tab, and the policy
+      still denies loading anything over the network, framing, and form
+      submission.
     * Non-HTML previews (PDF above all) are handed to a browser's built-in
       viewer. ``default-src 'none'`` also zeroes ``object-src``, which has
       historically kept those viewers from rendering, so previews that are not
@@ -115,7 +121,8 @@ def _install_security_headers(app: Flask) -> None:
                 response.headers.setdefault(
                     "Content-Security-Policy",
                     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' 'self'; "
-                    "img-src data: 'self'; font-src data: 'self'; frame-ancestors 'none'; form-action 'none'",
+                    "img-src data: 'self'; font-src data: 'self'; frame-ancestors 'none'; form-action 'none'; "
+                    "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox",
                 )
             return response
 

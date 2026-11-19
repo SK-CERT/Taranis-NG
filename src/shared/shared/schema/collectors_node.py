@@ -23,6 +23,7 @@ class CollectorsNode:
         description: str,
         api_url: str,
         api_key: str,
+        allowed_private_targets: str | None = "",
     ) -> None:
         """Initialize a CollectorsNode.
 
@@ -32,12 +33,15 @@ class CollectorsNode:
             description (str): Short description or notes about the node.
             api_url (str): Base URL for the node's API endpoint.
             api_key (str): API key or token used to authenticate requests to the node.
+            allowed_private_targets (str | None): Internal hosts and networks this node's sources
+                may be fetched from (see ``shared.url_guard``); none by default.
         """
         self.id = id
         self.name = name
         self.description = description
         self.api_url = api_url
         self.api_key = api_key
+        self.allowed_private_targets = allowed_private_targets or ""
 
     @classmethod
     def create(cls, data: dict) -> CollectorsNode:
@@ -61,6 +65,9 @@ class CollectorsNodeSchema(Schema):
     description = fields.Str()
     api_url = fields.Str()
     api_key = fields.Str(required=True, validate=validate.Regexp(r".*\S"))
+    # Internal hosts and networks the node's sources may be fetched from; everything else
+    # internal is refused by shared.url_guard. Checked by core before it is stored.
+    allowed_private_targets = fields.Str(load_default="", allow_none=True)
     collectors = fields.List(fields.Nested(CollectorSchema))
     status = fields.Str(dump_only=True)
     created = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)

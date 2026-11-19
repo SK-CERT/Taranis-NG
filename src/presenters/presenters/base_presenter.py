@@ -412,6 +412,7 @@ class BasePresenter:
         env.filters["tlp_color"] = jinja_filters.filter_tlp_color
         env.filters["collect_attrs"] = jinja_filters.filter_collect_attrs
         env.filters["header_value"] = jinja_filters.filter_header_value
+        env.filters["safe_url"] = jinja_filters.filter_safe_url
 
     @classmethod
     def resolve_template_path(cls, template_path: str) -> tuple[str, str]:

@@ -1413,6 +1413,8 @@
             "description": "Popis",
             "api_url": "API URL",
             "api_key": "API kľúč",
+            "allowed_private_targets": "Povolené interné ciele",
+            "allowed_private_targets_hint": "Zdroje sa zbierajú len z verejných adries. Uveďte interných hostiteľov, domény (.example.org), adresy alebo siete (10.20.0.0/16), z ktorých smie tento uzol zbierať tiež, jeden na riadok.",
             "successful": "Nová inštancia kolektora bola úspešne pridaná",
             "successful_edit": "Inštancia kolektora bola úspešne upravená",
             "removed": "Inštancia kolektora bola úspešne odstránená",

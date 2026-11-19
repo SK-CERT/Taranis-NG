@@ -1413,6 +1413,8 @@
             "description": "설명",
             "api_url": "API URL",
             "api_key": "API 키",
+            "allowed_private_targets": "허용된 내부 대상",
+            "allowed_private_targets_hint": "소스는 공용 주소에서만 수집됩니다. 이 노드가 추가로 수집할 수 있는 내부 호스트, 도메인(.example.org), 주소 또는 네트워크(10.20.0.0/16)를 한 줄에 하나씩 입력하세요.",
             "successful": "새 수집기 노드을(를) 추가했습니다",
             "successful_edit": "수집기 노드을(를) 업데이트했습니다",
             "removed": "수집기 노드을(를) 삭제했습니다",

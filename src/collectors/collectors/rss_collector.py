@@ -1,18 +1,29 @@
 """RSS collector module."""
 
-import datetime
+from __future__ import annotations
+
+import datetime as dt
+import gzip
 import hashlib
 import urllib.request
 import uuid
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import feedparser
 from bs4 import BeautifulSoup
 from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, text_to_simple_html
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
+from shared.url_guard import BlockedUrlError, assert_collector_url, build_guarded_opener
 
-from .base_collector import BaseCollector, not_modified
+from .base_collector import BaseCollector, allowed_targets, not_modified
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from http.client import HTTPResponse
+
+# Seconds to wait for a feed; the request used to have no limit at all.
+FEED_TIMEOUT = 60
 
 
 class RSSCollector(BaseCollector):
@@ -78,31 +89,53 @@ class RSSCollector(BaseCollector):
                 else:
                     self.source.logger.exception()
 
+            except BlockedUrlError as blocked:
+                self.source.logger.warning(f"{blocked}. Skipping getting article content.")
+
             except Exception:
                 self.source.logger.exception("Fetch web content failed")
         return ""
 
-    def __get_opener(self) -> urllib.request.OpenerDirector:
-        """Get the opener function for URL requests.
+    def __get_opener(self) -> Callable[..., HTTPResponse]:
+        """Get the function this source fetches URLs with.
 
-        Arguments:
-            proxy_handler (SocksiPyHandler): The proxy handler to use for the request (default: None).
+        Every URL it is given, and every redirect it follows, is checked by ``shared.url_guard``
+        first: http(s) only, and no internal address unless the collectors node allows it.
 
         Returns:
-            function: The opener function to use for URL requests.
+            Callable: Used like ``urllib.request.urlopen``.
         """
+        allowed = allowed_targets(self.source)
         if self.source.proxy_handler:
-            return urllib.request.build_opener(self.source.proxy_handler).open
-        return urllib.request.urlopen
+            return build_guarded_opener(self.source.proxy_handler, via_proxy=True, allowed=allowed)
+        return build_guarded_opener(allowed=allowed)
 
     def __fetch_feed(self) -> dict | None:
-        """Fetch the feed using feedparser with optional handler."""
-        if self.source.user_agent:
-            feedparser.USER_AGENT = self.source.user_agent
+        """Download the feed through the guarded opener and parse what came back.
+
+        feedparser is handed the body, never the URL: given a string it would also open a local
+        file of that name, and it follows redirects on its own.
+        """
         try:
-            if self.source.proxy_handler:
-                return feedparser.parse(self.source.url, handlers=[self.source.proxy_handler])
-            return feedparser.parse(self.source.url)
+            # Asked here too, so that something that is not a URL at all is refused the same way.
+            assert_collector_url(self.source.url, via_proxy=bool(self.source.proxy_handler), allowed=allowed_targets(self.source))
+            request = urllib.request.Request(self.source.url)  # noqa: S310 - http(s) only, checked above
+            # The header feedparser itself would send, so servers keep answering with a feed.
+            request.add_header("Accept", feedparser.http.ACCEPT_HEADER)
+            # Without one configured, feedparser's own, as before (some sites refuse urllib's).
+            request.add_header("User-Agent", self.source.user_agent or feedparser.USER_AGENT)
+            with self.source.opener(request, timeout=FEED_TIMEOUT) as response:
+                body = response.read()
+                headers = {name.lower(): value for name, value in response.headers.items()}
+            # Not asked for, but some servers compress anyway.
+            if headers.pop("content-encoding", "").lower() == "gzip":
+                body = gzip.decompress(body)
+            # The URL after redirects is what relative links in the feed are resolved against.
+            headers.setdefault("content-location", response.geturl())
+            return feedparser.parse(body, response_headers=headers)
+        except BlockedUrlError as blocked:
+            self.source.logger.error(f"{blocked}. Skipping collection.")  # noqa: TRY400 - the reason is the message
+            return None
         except Exception:
             self.source.logger.exception("Fetch feed failed")
             return None
@@ -197,7 +230,7 @@ class RSSCollector(BaseCollector):
             link_for_article,
             date,
             author,
-            datetime.datetime.now(TZ),
+            dt.datetime.now(TZ),
             content,
             self.source.id,
             [],
@@ -222,10 +255,10 @@ class RSSCollector(BaseCollector):
     def _resolve_date(self, published_parsed: tuple, updated_parsed: tuple, published: str, updated: str) -> str:
         if published_parsed:
             self.source.logger.debug("Using parsed 'published' date")
-            return datetime.datetime(*published_parsed[:6], tzinfo=TZ).strftime("%d.%m.%Y - %H:%M")
+            return dt.datetime(*published_parsed[:6], tzinfo=TZ).strftime("%d.%m.%Y - %H:%M")
         if updated_parsed:
             self.source.logger.debug("Using parsed 'updated' date")
-            return datetime.datetime(*updated_parsed[:6], tzinfo=TZ).strftime("%d.%m.%Y - %H:%M")
+            return dt.datetime(*updated_parsed[:6], tzinfo=TZ).strftime("%d.%m.%Y - %H:%M")
         if published:
             self.source.logger.debug("Using 'published' date")
             return published

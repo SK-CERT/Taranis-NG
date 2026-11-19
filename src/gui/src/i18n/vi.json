@@ -1413,6 +1413,8 @@
             "description": "Mô tả",
             "api_url": "URL API",
             "api_key": "Khóa API",
+            "allowed_private_targets": "Đích nội bộ được phép",
+            "allowed_private_targets_hint": "Nguồn chỉ được thu thập từ các địa chỉ công cộng. Hãy liệt kê các máy chủ nội bộ, tên miền (.example.org), địa chỉ hoặc mạng (10.20.0.0/16) mà nút này cũng được phép thu thập, mỗi dòng một mục.",
             "successful": "Đã thêm nút Collector mới thành công",
             "successful_edit": "Đã cập nhật nút Collector thành công",
             "removed": "Đã xóa nút Collector thành công",

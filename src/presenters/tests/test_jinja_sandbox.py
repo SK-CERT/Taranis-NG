@@ -13,6 +13,7 @@ properties that prevent it:
 from __future__ import annotations
 
 import base64
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -88,10 +89,11 @@ def test_html_output_escapes_attacker_markup() -> None:
 
 def test_no_shipped_template_disables_escaping() -> None:
     # a single `| safe` in a template would reopen SK-CERT#724 for that report
+    # (`| safe_url` is another filter: it drops links that are not web links, and escapes nothing less)
     templates = Path(__file__).resolve().parents[1] / "templates"
     offenders = [
         path.relative_to(templates)
         for path in templates.rglob("*.html")
-        if "|safe" in path.read_text(encoding="utf-8", errors="replace").replace(" ", "")
+        if re.search(r"\|\s*safe(?![_\w])", path.read_text(encoding="utf-8", errors="replace"))
     ]
     assert not offenders, f"templates bypassing autoescape: {offenders}"

@@ -958,7 +958,7 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                                 <ul class="list-unstyled">
                                     {% if report_item.attrs.links %}
                                         {% for link in report_item.attrs.links %}
-                                        <li><a href="{{ link }}">{{ link | e }}</a></li>
+                                        <li><a href="{{ link | safe_url | e }}">{{ link | e }}</a></li>
                                         {% endfor %}
                                     {% endif %}
                                 </ul>

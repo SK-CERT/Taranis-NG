@@ -9,6 +9,7 @@ The module also defines several schemas for creating and validating report items
 from __future__ import annotations
 
 import base64
+import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -48,6 +49,38 @@ from shared.schema.report_item import (
 )
 from sqlalchemy import and_, func, or_, orm, text
 from sqlalchemy.sql.expression import cast
+
+# What a Number field may hold: a plain integer or decimal (the GUI's number input sends nothing else).
+NUMBER_VALUE = re.compile(r"[+-]?\d+(?:[.,]\d+)?")
+
+
+def number_value_problem(attribute_type: object, title: str | None, value: object) -> str | None:
+    """Why a value cannot be stored in a field of this attribute type; None when it can.
+
+    Only Number fields are checked. The form already limits them to numbers, but the API took
+    any text, and templates print these values where a number is expected - a chart's data
+    inside a script, for one.
+
+    Args:
+        attribute_type: The ``AttributeType`` of the field's attribute (None when unknown).
+        title: The field's title, to name it in the reason.
+        value: The submitted value; an empty one (a row just added, a cleared field) is fine.
+
+    Returns:
+        str | None: The reason, or None.
+    """
+    if attribute_type != AttributeType.NUMBER or value is None or value == "":
+        return None
+    if isinstance(value, str) and NUMBER_VALUE.fullmatch(value.strip()):
+        return None
+    return f"{title or 'The field'}: the value must be a number"
+
+
+def _group_item_number_problem(group_item: AttributeGroupItem | None, value: object) -> str | None:
+    """`number_value_problem` for a value of a field of a report type."""
+    if group_item is None or group_item.attribute is None:
+        return None
+    return number_value_problem(group_item.attribute.type, group_item.title, value)
 
 
 class ReportItemAttribute(db.Model):
@@ -980,6 +1013,11 @@ class ReportItem(db.Model):
         tag_ids = Tag.assignable(StateEntityTypeEnum.REPORT_ITEM.value, report_item_data.get("tag_ids"))
         report_item_schema = NewReportItemSchema()
         report_item = report_item_schema.load(report_item_data)
+        for attribute in report_item.attributes:
+            reason = _group_item_number_problem(AttributeGroupItem.find(attribute.attribute_group_item_id), attribute.value)
+            if reason is not None:
+                # Nothing is stored; the API answers 400 with the reason.
+                raise ValueError(reason)
 
         if not ReportItemType.allowed_with_acl(report_item.report_item_type_id, user, see=False, access=False, modify=True):
             return "Unauthorized access to report item type", HTTPStatus.UNAUTHORIZED
@@ -1386,6 +1424,14 @@ class ReportItem(db.Model):
                 if conflict is not None:
                     data["conflict"] = conflict
                     return False, data
+
+                if "attribute_id" in data and "attribute_value" in data:
+                    attribute = cls._find_attribute(report_item, data["attribute_id"])
+                    reason = _group_item_number_problem(getattr(attribute, "attribute_group_item", None), data["attribute_value"])
+                    if reason is not None:
+                        # Checked before anything is changed, so a refused value writes nothing.
+                        data["error"] = reason
+                        return False, data
 
                 if "title" in data and report_item.title != data["title"]:
                     modified = True

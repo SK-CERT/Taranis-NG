@@ -71,6 +71,21 @@
                         :disabled="saving"
                         @click:append-inner="showApiKey = !showApiKey"
                     />
+
+                    <v-textarea
+                        v-if="config.allowedPrivateTargets"
+                        v-model="localItem.allowed_private_targets"
+                        :label="t(`${config.i18nPrefix}.allowed_private_targets`)"
+                        :hint="t(`${config.i18nPrefix}.allowed_private_targets_hint`)"
+                        persistent-hint
+                        variant="outlined"
+                        density="comfortable"
+                        rows="3"
+                        auto-grow
+                        class="mt-3"
+                        data-test="node-allowed-private-targets"
+                        :disabled="saving"
+                    />
                 </v-form>
 
                 <v-alert
@@ -92,7 +107,7 @@
                     closable
                     @click:close="showError = false"
                 >
-                    {{ t(`${config.i18nPrefix}.error`) }}
+                    {{ errorDetail || t(`${config.i18nPrefix}.error`) }}
                 </v-alert>
             </v-card-text>
         </v-card>
@@ -123,6 +138,8 @@
         description: string
         api_url: string
         api_key: string
+        /** Collectors nodes only: internal hosts and networks its sources may be fetched from, one per line. */
+        allowed_private_targets?: string
         [key: string]: unknown
     }
 
@@ -152,6 +169,8 @@
     const formRef = ref<any>(null)
     const showValidationError = ref(false)
     const showError = ref(false)
+    // Why core refused the node, when it said so (e.g. an entry of the allowed targets it cannot read).
+    const errorDetail = ref('')
     const saving = ref(false)
     const dialog = ref(false)
     const showApiKey = ref(false)
@@ -163,7 +182,8 @@
         name: '',
         description: '',
         api_url: '',
-        api_key: ''
+        api_key: '',
+        allowed_private_targets: ''
     }
 
     const localItem = ref<NodeItem>({ ...defaultItem })
@@ -180,6 +200,7 @@
         if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
+        errorDetail.value = ''
 
         const { valid } = (await formRef.value?.validate()) as FormValidationResult
         if (!valid) {
@@ -203,6 +224,7 @@
             return true
         } catch (error) {
             console.error(`Error saving ${props.type} node:`, error)
+            errorDetail.value = (error as { response?: { data?: { error?: string } } })?.response?.data?.error ?? ''
             window.dispatchEvent(
                 new CustomEvent('notification', {
                     detail: { type: 'error', loc: 'common.error_saving' }

@@ -11,10 +11,14 @@ public-web does not install.
 import datetime as dt
 import os
 import re
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 # The same zone as shared.common.TZ (see the module docstring for why it is not imported).
 TZ = ZoneInfo(os.getenv("TZ", "UTC"))
+
+# The schemes a link written by a report author may carry into an ``href``.
+SAFE_URL_SCHEMES = frozenset({"http", "https", "mailto"})
 
 
 def filter_strfdate(date: str, fmtin: str | None = None, fmtout: str | None = None) -> str:
@@ -83,3 +87,32 @@ def filter_tlp_color(tlp: str) -> str:
     """Return color code for TLP value."""
     mapping = {"CLEAR": "white", "WHITE": "white", "GREEN": "#33ff00", "AMBER": "#ffc000", "AMBER+STRICT": "#ffc000", "RED": "#ff2b2b"}
     return mapping.get(tlp, "white")
+
+
+def filter_safe_url(value: object) -> str:
+    """Return the URL when it is safe to put in an ``href``, an empty string otherwise.
+
+    Escaping keeps a value inside its attribute, but it does not stop the browser from
+    running a ``javascript:`` (or ``data:``) URL when the link is clicked. Report links are
+    typed in by analysts, so a template that links to them filters the scheme first.
+
+    Args:
+        value: The link as stored in the report.
+
+    Returns:
+        str: The URL if it is http(s), mailto or has no scheme; ``""`` for anything else.
+    """
+    if value is None:
+        return ""
+    # Browsers drop tabs and newlines inside a scheme ("java\tscript:") and ignore leading
+    # control characters and spaces, so they are removed before the scheme is read.
+    url = re.sub(r"[\t\r\n]", "", str(value)).lstrip("".join(map(chr, range(33))))
+    try:
+        scheme = urlsplit(url).scheme.lower()
+    except ValueError:
+        return ""
+    if scheme:
+        return url if scheme in SAFE_URL_SCHEMES else ""
+    # No scheme urlsplit recognises: anything with a colon before the first "/", "?" or "#"
+    # could still be read as one by a browser, so only plainly relative links pass.
+    return "" if ":" in re.split(r"[/?#]", url, maxsplit=1)[0] else url
