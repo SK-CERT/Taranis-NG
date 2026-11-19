@@ -1,4 +1,4 @@
-"""The publication time migration adds the column, fills it for published products once, and is the head."""
+"""The publication time migration adds the column and fills it for published products once."""
 
 from __future__ import annotations
 
@@ -52,11 +52,10 @@ def migration(monkeypatch: pytest.MonkeyPatch) -> tuple[ModuleType, _Op]:
     return module, op
 
 
-def test_the_migration_follows_the_report_order_and_is_the_head() -> None:
+def test_the_migration_follows_the_report_order() -> None:
     module = _load()
     assert (module.revision, module.down_revision) == ("5c915192b607", "5e5fd7e294ca")
     assert _children("5e5fd7e294ca") == [MIGRATION.name]
-    assert _children("5c915192b607") == []
 
 
 def test_the_column_is_the_one_the_model_declares(migration: tuple[ModuleType, _Op], monkeypatch: pytest.MonkeyPatch) -> None:

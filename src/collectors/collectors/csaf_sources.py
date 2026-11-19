@@ -25,6 +25,7 @@ from http import HTTPStatus
 import feedparser
 import requests
 from dateutil.parser import parse as date_parse
+from shared.url_guard import BlockedUrlError, assert_collector_url
 
 TIMEOUT = 30
 MAX_DOCUMENT_BYTES = 32 * 1024 * 1024
@@ -67,15 +68,26 @@ class Response:
         return HTTPStatus.OK <= self.status < HTTPStatus.MULTIPLE_CHOICES and not self.too_large
 
 
+class BlockedRedirectError(requests.RequestException):
+    """A redirect to a URL the collector must not fetch."""
+
+
 class Fetcher:
     """HTTP GET through the source's proxy, with its User-Agent.
 
     Built on a requests session: one host usually serves a document, its hash and its
     signature, so the connection is reused, and large listings come compressed. Only http and
-    https are fetched.
+    https are fetched, and only from addresses `shared.url_guard` lets a collector reach - the
+    URL asked for and every redirect on the way.
     """
 
-    def __init__(self, user_agent: str | None = None, proxies: dict[str, str] | None = None, session: requests.Session | None = None) -> None:
+    def __init__(
+        self,
+        user_agent: str | None = None,
+        proxies: dict[str, str] | None = None,
+        session: requests.Session | None = None,
+        allowed: str | None = None,
+    ) -> None:
         """Set up the session.
 
         Args:
@@ -84,12 +96,28 @@ class Fetcher:
                 or browser-like ones (Schneider Electric).
             proxies (dict | None): requests proxy mapping, from the source's proxy setting.
             session (requests.Session | None): A session to use instead of a new one.
+            allowed (str | None): Internal targets the source's collectors node may fetch.
         """
         self.session = session or requests.Session()
         if user_agent:
             self.session.headers["User-Agent"] = user_agent
         if proxies:
             self.session.proxies.update(proxies)
+        self.via_proxy = bool(proxies)
+        self.allowed = allowed
+        self.session.hooks["response"].append(self._check_redirect)
+
+    def _check_redirect(self, response: requests.Response, **_kwargs: object) -> None:
+        """Stop before following a redirect to a URL that must not be fetched.
+
+        requests calls this for every response, the redirects it is about to follow included.
+        """
+        if response.is_redirect:
+            target = urllib.parse.urljoin(response.url, response.headers.get("location", ""))
+            try:
+                assert_collector_url(target, via_proxy=self.via_proxy, allowed=self.allowed)
+            except BlockedUrlError as blocked:
+                raise BlockedRedirectError(str(blocked)) from blocked
 
     def get(self, url: str, *, headers: dict[str, str] | None = None, max_bytes: int = MAX_DOCUMENT_BYTES) -> Response:
         """Fetch a URL.
@@ -104,6 +132,10 @@ class Fetcher:
         """
         if urllib.parse.urlsplit(url).scheme not in {"http", "https"}:
             return Response(0, url=url, error="only http and https URLs are fetched")
+        try:
+            assert_collector_url(url, via_proxy=self.via_proxy, allowed=self.allowed)
+        except BlockedUrlError as blocked:
+            return Response(0, url=url, error=str(blocked))
         try:
             with self.session.get(url, headers=headers or {}, timeout=TIMEOUT, stream=True) as response:
                 response_headers = {name.lower(): value for name, value in response.headers.items()}

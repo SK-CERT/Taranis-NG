@@ -79,6 +79,7 @@ from shared.schema.role import PermissionSchema
 from shared.schema.security_settings import SecuritySettingsSchema
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
 from shared.schema.traefik_settings import TraefikSettingsSchema
+from shared.url_guard import allowed_targets_problem
 from sqlalchemy.exc import IntegrityError
 
 # Fetching an admin-supplied metadata URL is a server-side request: keep it tight.
@@ -1810,6 +1811,9 @@ class CollectorsNodesResource(Resource):
         Returns:
             (str, int): The result of the create
         """
+        reason = allowed_targets_problem((request.json or {}).get("allowed_private_targets"))
+        if reason is not None:
+            return {"error": f"Allowed internal targets: {reason}"}, HTTPStatus.BAD_REQUEST
         try:
             return "", collectors_manager.add_collectors_node(request.json)
         except Exception as ex:
@@ -1830,6 +1834,9 @@ class CollectorsNodeResource(Resource):
         Returns:
             (str, int): The result of the update
         """
+        reason = allowed_targets_problem((request.json or {}).get("allowed_private_targets"))
+        if reason is not None:
+            return {"error": f"Allowed internal targets: {reason}"}, HTTPStatus.BAD_REQUEST
         try:
             collectors_manager.update_collectors_node(node_id, request.json)
         except Exception as ex:

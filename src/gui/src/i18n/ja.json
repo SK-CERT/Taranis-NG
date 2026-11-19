@@ -1413,6 +1413,8 @@
             "description": "説明",
             "api_url": "API URL",
             "api_key": "APIキー",
+            "allowed_private_targets": "許可する内部の宛先",
+            "allowed_private_targets_hint": "ソースは公開アドレスからのみ収集されます。このノードが追加で収集してよい内部のホスト、ドメイン (.example.org)、アドレス、ネットワーク (10.20.0.0/16) を 1 行に 1 つずつ入力してください。",
             "successful": "新規コレクターノードを追加しました",
             "successful_edit": "コレクターノードを更新しました",
             "removed": "コレクターノードを削除しました",

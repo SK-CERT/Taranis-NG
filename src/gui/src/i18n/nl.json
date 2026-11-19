@@ -1413,6 +1413,8 @@
             "description": "Beschrijving",
             "api_url": "API URL",
             "api_key": "API Key",
+            "allowed_private_targets": "Toegestane interne doelen",
+            "allowed_private_targets_hint": "Bronnen worden alleen van openbare adressen verzameld. Geef de interne hosts, domeinen (.example.org), adressen of netwerken (10.20.0.0/16) op waarvan dit knooppunt ook mag verzamelen, één per regel.",
             "successful": "Nieuwe collectorknooppunt is toegevoegd",
             "successful_edit": "Collectorknooppunt is bijgewerkt",
             "removed": "Collectorknooppunt is verwijderd",

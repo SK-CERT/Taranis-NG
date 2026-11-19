@@ -1,6 +1,6 @@
 """Module for Base collector."""
 
-import datetime
+import datetime as dt
 import hashlib
 import threading
 import time
@@ -18,6 +18,7 @@ from shared.common import TZ, sanitize_content_html, smart_truncate, strip_html
 from shared.log_manager import create_logger, logger
 from shared.schema import collector, news_item, osint_source
 from shared.time_manager import SchedulerManager
+from shared.url_guard import BlockedUrlError
 from sockshandler import SocksiPyHandler
 
 
@@ -147,7 +148,7 @@ class BaseCollector:
             )
 
     @staticmethod
-    def history(interval: str | int) -> datetime.datetime:
+    def history(interval: str | int) -> dt.datetime:
         """Calculate the limit for retrieving historical data based on the given interval.
 
         Args:
@@ -159,15 +160,15 @@ class BaseCollector:
         """
         minute = 60
         if interval[0].isdigit() and ":" in interval:
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=1)
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=1)
         elif interval[0].isalpha():
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(weeks=1)
+            limit = dt.datetime.now(TZ) - dt.timedelta(weeks=1)
         elif int(interval) > minute:
             hours = int(interval) // minute
             minutes = int(interval) - hours * minute
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=0, hours=hours, minutes=minutes)
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=0, hours=hours, minutes=minutes)
         else:
-            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=0, hours=0, minutes=int(interval))
+            limit = dt.datetime.now(TZ) - dt.timedelta(days=0, hours=0, minutes=int(interval))
 
         return limit
 
@@ -224,8 +225,8 @@ class BaseCollector:
             "link": "",
             "author": "",
             "content": "",
-            "published": datetime.datetime.now(TZ),
-            "collected": datetime.datetime.now(TZ),
+            "published": dt.datetime.now(TZ),
+            "collected": dt.datetime.now(TZ),
             "osint_source_id": source.id,
             "attributes": [],
         }
@@ -375,8 +376,7 @@ class BaseCollector:
                 # must not tear down a working collector.
                 return
 
-            source_schema = osint_source.OSINTSourceSchema(many=True)
-            self.osint_sources = source_schema.load(response)
+            self.osint_sources = load_sources(response)
             logger.debug(f"{self.name}: {len(self.osint_sources)} sources loaded")
 
             # Drop the jobs registered by the previous refresh before registering new ones.
@@ -591,11 +591,37 @@ class BaseCollector:
         if code != HTTPStatus.OK or response is None:
             logger.error(f"{self.name}: OSINT sources not received, Code: {code}")
             return
-        self.osint_sources = osint_source.OSINTSourceSchema(many=True).load(response)
+        self.osint_sources = load_sources(response)
 
     def initialize(self) -> None:
         """Initialize the collector."""
         self.refresh()
+
+
+def load_sources(response: list[dict]) -> list:
+    """Build the source objects from what core sent, each with what its node may fetch internally.
+
+    Core sends ``allowed_private_targets`` (the collectors node's setting, see
+    ``shared.url_guard``) with every source. It is taken from the answer as it came, not through
+    the source schema, which the source form shares. An older core does not send it: nothing
+    internal is fetched then.
+
+    Args:
+        response (list[dict]): The sources as core answered.
+
+    Returns:
+        (list): The source objects, in the same order.
+    """
+    sources = osint_source.OSINTSourceSchema(many=True).load(response)
+    for source, raw in zip(sources, response, strict=True):
+        allowed = raw.get("allowed_private_targets") if isinstance(raw, dict) else None
+        source.allowed_private_targets = allowed if isinstance(allowed, str) else ""
+    return sources
+
+
+def allowed_targets(source: object) -> str:
+    """Return the internal targets the source's node may fetch ("" when core named none)."""
+    return getattr(source, "allowed_private_targets", "") or ""
 
 
 def not_modified(source: object) -> bool:
@@ -614,6 +640,9 @@ def not_modified(source: object) -> bool:
             return _not_modified_response(source, response, log_prefix, last_collected_str_fmt)
     except urllib.error.HTTPError as http_error:
         return _not_modified_http_error(source, http_error, log_prefix, last_collected_str_fmt)
+    except BlockedUrlError:
+        # Not asked; the collection that follows refuses the URL and says why.
+        return False
     except TimeoutError:
         source.logger.debug(f"{log_prefix} Request timed out for {request.full_url}")
         return False

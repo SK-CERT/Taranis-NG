@@ -391,8 +391,12 @@ class ProductGetPreview(Resource):
         err_msg = None
 
         # Chrome does not process the Content-Disposition filename on POST requests -> therefore, GET is used.
-        # No need to re-check JWT here — it was already validated during preview generation.
-        # The token is temporary, will expire, and may be redeemed PREVIEW_TICKET_MAX_REDEMPTIONS times.
+        # This is the one document the API serves without a JWT: the preview opens in a browser tab,
+        # and a navigation cannot carry the Authorization header. The JWT and PUBLISH_ACCESS were
+        # checked when the ticket was issued; the ticket is an unguessable uuid4 that expires and may
+        # be redeemed PREVIEW_TICKET_MAX_REDEMPTIONS times. Because whoever holds the URL gets the
+        # document, the response is kept out of caches and out of Referer headers, and an HTML preview
+        # is sandboxed by its CSP (see app.py), so it never runs with the viewer's session.
 
         cache_key = f"preview:{token}"
         try:
@@ -430,6 +434,8 @@ class ProductGetPreview(Resource):
             # RFC 5987 encoding for non-ASCII filenames
             encoded_filename = quote(preview_filename, safe="")
             response.headers["Content-Disposition"] = f"{disposition}; filename*=UTF-8''{encoded_filename}"
+            response.headers["Cache-Control"] = "no-store"
+            response.headers["Referrer-Policy"] = "no-referrer"
             return response
 
         except Exception as ex:

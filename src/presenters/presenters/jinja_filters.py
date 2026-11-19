@@ -7,13 +7,14 @@ their old names. What stays here is specific to presenter output, such as mail h
 
 from collections.abc import Iterable
 
-from shared.jinja_filters import filter_regex_replace, filter_strfdate, filter_tlp_color, filter_truncate_on_symbol
+from shared.jinja_filters import filter_regex_replace, filter_safe_url, filter_strfdate, filter_tlp_color, filter_truncate_on_symbol
 from shared.mail_headers import scrub_header_text
 
 __all__ = [
     "filter_collect_attrs",
     "filter_header_value",
     "filter_regex_replace",
+    "filter_safe_url",
     "filter_strfdate",
     "filter_tlp_color",
     "filter_truncate_on_symbol",

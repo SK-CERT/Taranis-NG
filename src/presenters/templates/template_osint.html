@@ -1589,17 +1589,17 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
             var data1 = {
                 labels: ['Energy', 'Transport', 'Banking', 'Financial market infrastructures', 'Health', 'Drinking water', 'Waste water', 'Digital infrastructure', 'ICT service management', 'Public administration', 'Space'],
                 datasets: [{
-                    data: [{{ item.attrs.incidents[0] | e }},
-                           {{ item.attrs.incidents[1] | e }},
-                           {{ item.attrs.incidents[2] | e }},
-                           {{ item.attrs.incidents[3] | e }},
-                           {{ item.attrs.incidents[4] | e }},
-                           {{ item.attrs.incidents[5] | e }},
-                           {{ item.attrs.incidents[6] | e }},
-                           {{ item.attrs.incidents[7] | e }},
-                           {{ item.attrs.incidents[8] | e }},
-                           {{ item.attrs.incidents[9] | e }},
-                           {{ item.attrs.incidents[10] | e }}
+                    data: [{{ item.attrs.incidents[0] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[1] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[2] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[3] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[4] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[5] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[6] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[7] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[8] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[9] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[10] | default(0) | int(0) }}
                     ],
                     backgroundColor: {{ col_list | tojson }}
                 }]
@@ -1610,11 +1610,11 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
             var data2 = {
                 labels: ['Ransomware', 'Data Breach', 'DoS/DDoS', 'Destruction', 'APT'],
                 datasets: [{
-                    data: [{{ item.attrs.incidents[0] | e }},
-                           {{ item.attrs.incidents[1] | e }},
-                           {{ item.attrs.incidents[2] | e }},
-                           {{ item.attrs.incidents[3] | e }},
-                           {{ item.attrs.incidents[4] | e }}
+                    data: [{{ item.attrs.incidents[0] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[1] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[2] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[3] | default(0) | int(0) }},
+                           {{ item.attrs.incidents[4] | default(0) | int(0) }}
                     ],
                     backgroundColor: {{ col_list | tojson }}
                 }]

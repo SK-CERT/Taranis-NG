@@ -1413,6 +1413,8 @@
             "description": "描述",
             "api_url": "API URL",
             "api_key": "API 密钥",
+            "allowed_private_targets": "允许的内部目标",
+            "allowed_private_targets_hint": "信息源仅从公共地址采集。请列出此节点还可以采集的内部主机、域名 (.example.org)、地址或网络 (10.20.0.0/16)，每行一个。",
             "successful": "已成功添加新采集器节点",
             "successful_edit": "已成功更新采集器节点",
             "removed": "已成功删除采集器节点",

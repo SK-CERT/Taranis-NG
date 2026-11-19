@@ -1413,6 +1413,8 @@
             "description": "Description",
             "api_url": "URL de l’API",
             "api_key": "Clé API",
+            "allowed_private_targets": "Cibles internes autorisées",
+            "allowed_private_targets_hint": "Les sources ne sont collectées que depuis des adresses publiques. Indiquez les hôtes internes, domaines (.example.org), adresses ou réseaux (10.20.0.0/16) depuis lesquels ce nœud peut aussi collecter, un par ligne.",
             "successful": "Le nouveau nœud Collector a été ajouté",
             "successful_edit": "Le nœud Collector a été mis à jour",
             "removed": "Le nœud Collector a été supprimé",

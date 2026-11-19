@@ -30,6 +30,7 @@ class CollectorsNode(db.Model):
         description (str): The description of the node
         api_url (str): The API URL of the node
         api_key (str): The API key of the node
+        allowed_private_targets (str): Internal hosts and networks its sources may be fetched from
         created (datetime): The creation date of the node
         last_seen (datetime): The last seen date of the node
         collectors (list): The collectors associated with the node
@@ -41,6 +42,8 @@ class CollectorsNode(db.Model):
 
     api_url = db.Column(db.String(), nullable=False)
     api_key = db.Column(db.String(), nullable=False)
+    # The node's exceptions to "sources are fetched from public addresses only"; see shared.url_guard.
+    allowed_private_targets = db.Column(db.String(), nullable=False, default="", server_default="")
 
     created = db.Column(db.DateTime, default=datetime.now)
     last_seen = db.Column(db.DateTime)
@@ -54,6 +57,7 @@ class CollectorsNode(db.Model):
         description: str,
         api_url: str,
         api_key: str,
+        allowed_private_targets: str | None = "",
     ) -> None:
         """Initialize CollectorsNode object."""
         self.id = str(uuid.uuid4())
@@ -61,6 +65,7 @@ class CollectorsNode(db.Model):
         self.description = description
         self.api_url = api_url
         self.api_key = api_key
+        self.allowed_private_targets = allowed_private_targets or ""
         self.tag = ""
 
     @orm.reconstructor
@@ -217,6 +222,7 @@ class CollectorsNode(db.Model):
         node.description = updated_node.description
         node.api_url = updated_node.api_url
         node.api_key = updated_node.api_key
+        node.allowed_private_targets = updated_node.allowed_private_targets
         for collector in collectors:
             found = False
             for existing_collector in node.collectors:

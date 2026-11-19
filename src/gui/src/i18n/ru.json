@@ -1413,6 +1413,8 @@
             "description": "Описание",
             "api_url": "URL API",
             "api_key": "Ключ API",
+            "allowed_private_targets": "Разрешённые внутренние адресаты",
+            "allowed_private_targets_hint": "Источники собираются только с публичных адресов. Укажите внутренние хосты, домены (.example.org), адреса или сети (10.20.0.0/16), с которых этот узел также может собирать данные, по одному в строке.",
             "successful": "Узел Collector успешно добавлен",
             "successful_edit": "Узел Collector успешно обновлен",
             "removed": "Узел Collector успешно удален",

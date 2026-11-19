@@ -47,6 +47,19 @@ def test_html_preview_may_run_its_own_inline_script(client: Flask) -> None:
     assert "default-src 'none'" in csp  # network loads stay blocked
 
 
+def test_html_preview_is_sandboxed_away_from_the_gui(client: Flask) -> None:
+    # The preview is served from the GUI's origin, and the GUI keeps the session token in
+    # localStorage. A value printed unescaped into a template's script ran as the viewer.
+    # Sandboxed without allow-same-origin, the document gets an origin of its own: no storage
+    # of the GUI, no API calls as the viewer.
+    csp = client.get("/api/v1/publish/products/preview/html").headers["Content-Security-Policy"]
+    sandbox = next(directive.split() for directive in csp.split(";") if directive.strip().startswith("sandbox"))
+    assert "allow-scripts" in sandbox  # the charts still draw
+    assert "allow-same-origin" not in sandbox
+    assert "allow-top-navigation" not in sandbox
+    assert "allow-forms" not in sandbox
+
+
 def test_non_html_preview_gets_no_csp(client: Flask) -> None:
     # default-src 'none' also zeroes object-src, which can stop a browser's
     # built-in PDF viewer from rendering the response at all.

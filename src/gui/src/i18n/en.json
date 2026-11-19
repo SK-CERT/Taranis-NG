@@ -1413,6 +1413,8 @@
             "description": "Description",
             "api_url": "API URL",
             "api_key": "API Key",
+            "allowed_private_targets": "Allowed internal targets",
+            "allowed_private_targets_hint": "Sources are collected from public addresses only. List the internal hosts, domains (.example.org), addresses or networks (10.20.0.0/16) this node may also collect from, one per line.",
             "successful": "New collectors node was successfully added",
             "successful_edit": "Collectors node was successfully updated",
             "removed": "Collectors node was successfully deleted",

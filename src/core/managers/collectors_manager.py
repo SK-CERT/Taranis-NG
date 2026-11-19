@@ -57,9 +57,32 @@ def update_collectors_node(node_id: str, data: dict) -> HTTPStatus:
     collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
     if status_code == HTTPStatus.OK:
         collectors = Collector.create_all(collectors_info)
+        stored = _stored_allowed_targets(node_id)
         CollectorsNode.update(node_id, data, collectors)
+        if stored != _stored_allowed_targets(node_id):
+            _reload_node_sources(node_id)
 
     return status_code
+
+
+def _stored_allowed_targets(node_id: str) -> str:
+    """Return the allowed internal targets stored for a collectors node ("" for none or no node)."""
+    stored_node = CollectorsNode.get_by_id(node_id)
+    return (stored_node.allowed_private_targets or "") if stored_node is not None else ""
+
+
+def _reload_node_sources(node_id: str) -> None:
+    """Have a node read its sources again, without collecting them.
+
+    The node learns what it may fetch from an internal network together with its sources, so a
+    changed list applies now rather than at the node's next refresh. The list is saved either
+    way: a node that cannot be told reads it when it next starts or refreshes.
+    """
+    for collector in CollectorsNode.get_by_id(node_id).collectors:
+        try:
+            refresh_collector(collector, collect_now=False)
+        except requests.RequestException as ex:
+            logger.warning(f"Saved collectors node {node_id}, but could not have it re-read its {collector.type} sources: {ex}")
 
 
 def add_osint_source(data: dict) -> None:

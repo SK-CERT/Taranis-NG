@@ -1413,6 +1413,8 @@
             "description": "Descripción",
             "api_url": "URL de la API",
             "api_key": "Clave de API",
+            "allowed_private_targets": "Destinos internos permitidos",
+            "allowed_private_targets_hint": "Las fuentes solo se recopilan desde direcciones públicas. Indique los hosts internos, dominios (.example.org), direcciones o redes (10.20.0.0/16) desde los que este nodo también puede recopilar, uno por línea.",
             "successful": "El nodo Collector se añadió correctamente",
             "successful_edit": "El nodo Collector se actualizó correctamente",
             "removed": "El nodo Collector se eliminó correctamente",
