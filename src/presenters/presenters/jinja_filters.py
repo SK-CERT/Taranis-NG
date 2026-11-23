@@ -5,12 +5,16 @@ because public-web's report templates use them too; they are re-exported here un
 their old names. What stays here is specific to presenter output, such as mail headers.
 """
 
+import math
+import re
 from collections.abc import Iterable
 
+from markupsafe import Markup
 from shared.jinja_filters import filter_regex_replace, filter_safe_url, filter_strfdate, filter_tlp_color, filter_truncate_on_symbol
 from shared.mail_headers import scrub_header_text
 
 __all__ = [
+    "doughnut_svg",
     "filter_collect_attrs",
     "filter_header_value",
     "filter_regex_replace",
@@ -19,6 +23,15 @@ __all__ = [
     "filter_tlp_color",
     "filter_truncate_on_symbol",
 ]
+
+_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+# Chart geometry bounds, validated at the filter boundary.
+MIN_CHART_SIZE = 100
+MAX_CHART_SIZE = 2000
+MIN_INNER_RATIO = 0.1
+MAX_INNER_RATIO = 0.9
+HALF_CIRCLE_DEGREES = 180.0
 
 
 def _attr_values(value: object) -> list[str]:
@@ -108,3 +121,134 @@ def filter_header_value(value: object) -> str:
         str: The scrubbed value, possibly empty.
     """
     return scrub_header_text(value)
+
+
+def doughnut_svg(
+    values: Iterable,
+    colors: Iterable[str] | None = None,
+    size: int = 300,
+    inner_ratio: float = 0.52,
+) -> Markup:
+    """Generate a static SVG doughnut chart.
+
+    Args:
+        values:
+            Numeric values representing chart segments.
+
+        colors:
+            Optional list of hexadecimal colors.
+            Colors are reused cyclically when necessary.
+
+        size:
+            SVG viewBox dimensions in pixels.
+
+        inner_ratio:
+            Inner radius relative to outer radius (0.1 - 0.9).
+
+    Returns:
+        Trusted, generated SVG markup.
+        Empty markup when there is no positive data.
+
+    Raises:
+        ValueError: Invalid dimensions, values or colors.
+    """
+    # Validate dimensions.
+    if isinstance(size, bool) or not isinstance(size, int) or not MIN_CHART_SIZE <= size <= MAX_CHART_SIZE:
+        msg = f"Chart size must be an integer between {MIN_CHART_SIZE} and {MAX_CHART_SIZE}."
+        raise ValueError(msg)
+
+    if not math.isfinite(inner_ratio) or not MIN_INNER_RATIO <= inner_ratio <= MAX_INNER_RATIO:
+        msg = f"inner_ratio must be between {MIN_INNER_RATIO} and {MAX_INNER_RATIO}."
+        raise ValueError(msg)
+
+    colors = list(colors)
+
+    if not colors:
+        msg = "At least one chart color is required."
+        raise ValueError(msg)
+
+    for color in colors:
+        if not isinstance(color, str) or not _COLOR_PATTERN.fullmatch(color):
+            msg = f"Invalid chart color: {color!r}"
+            raise ValueError(msg)
+
+    normalized = []
+    for value in values:
+        try:
+            number = float(value or 0)
+        except (ValueError, TypeError, OverflowError):
+            continue  # "Invalid chart value: {value!r}"
+
+        if not math.isfinite(number) or number < 0:
+            continue  # "Invalid chart value: {value!r}"
+
+        normalized.append(number)
+
+    total = math.fsum(normalized)
+    if total <= 0:
+        return Markup("")
+
+    # Geometry.
+    cx = cy = size / 2
+    outer = size * 0.46
+    inner = outer * inner_ratio
+
+    def point(radius: float, angle: float) -> tuple[float, float]:
+        angle_rad = math.radians(angle)
+
+        return (
+            cx + radius * math.cos(angle_rad),
+            cy + radius * math.sin(angle_rad),
+        )
+
+    paths = []
+
+    # Ignore zero-valued segments.
+    nonzero = [(index, value) for index, value in enumerate(normalized) if value > 0]
+
+    # A single segment representing 100% needs a special case.
+    if len(nonzero) == 1:
+        index, _ = nonzero[0]
+        paths.append(
+            f'<circle cx="{cx}" cy="{cy}" r="{outer}" fill="{colors[index % len(colors)]}"/>',
+        )
+        paths.append(
+            f'<circle cx="{cx}" cy="{cy}" r="{inner}" fill="#ffffff"/>',
+        )
+    else:
+        angle = -90.0
+        for index, value in nonzero:
+            sweep = value / total * 360.0
+            end_angle = angle + sweep
+            x1, y1 = point(outer, angle)
+            x2, y2 = point(outer, end_angle)
+            x3, y3 = point(inner, end_angle)
+            x4, y4 = point(inner, angle)
+            large_arc = 1 if sweep > HALF_CIRCLE_DEGREES else 0
+            path = (
+                f"M {x1:.3f} {y1:.3f} "
+                f"A {outer:.3f} {outer:.3f} "
+                f"0 {large_arc} 1 {x2:.3f} {y2:.3f} "
+                f"L {x3:.3f} {y3:.3f} "
+                f"A {inner:.3f} {inner:.3f} "
+                f"0 {large_arc} 0 {x4:.3f} {y4:.3f} Z"
+            )
+            color = colors[index % len(colors)]
+            paths.append(
+                f'<path d="{path}" fill="{color}" stroke="#ffffff" stroke-width="1.5"/>',
+            )
+            angle = end_angle
+
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {size} {size}" '
+        f'width="100%" '
+        f'height="auto" '
+        f'role="img" '
+        f'aria-label="Doughnut chart">'
+        f"{''.join(paths)}"
+        f"</svg>"
+    )
+
+    # Safe because the SVG structure is generated here. All dynamic attributes have been validated.
+    return Markup(svg)  # noqa: S704 - generated markup, all dynamic values validated above

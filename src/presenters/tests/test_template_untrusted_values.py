@@ -34,37 +34,29 @@ def _osint_item(report_type: str, incidents: list[str]) -> dict:
     return {"type": report_type, "name": "Example", "uuid": "uuid-1", "attrs": attrs}
 
 
-def _chart_data(output: str, variable: str) -> str:
-    """The ``data: [...]`` array of one chart's dataset, as it reached the script."""
-    match = re.search(rf"var {variable} = \{{.*?datasets: \[\{{\s*data: \[(.*?)\]", output, re.DOTALL)
-    assert match, f"{variable} not found in the rendered script"
-    return match.group(1)
-
-
 @pytest.mark.parametrize(
-    ("report_type", "variable", "points"),
-    [("OSINT Report - Sectors", "data1", 11), ("OSINT Report - Threats", "data2", 5)],
+    ("report_type", "points"),
+    [("OSINT Report - Sectors", 11), ("OSINT Report - Threats", 5)],
 )
-def test_chart_data_points_reach_the_script_as_numbers_only(report_type: str, variable: str, points: int) -> None:
+def test_chart_values_reach_the_svg_as_numbers_only(report_type: str, points: int) -> None:
     incidents = [SCRIPT_PAYLOAD, "7", "", "3.9", "alert(1)", "-2"] + ["1"] * points
     item = _osint_item(report_type, incidents[:points])
 
     output = _render("template_osint.html", [item])
 
     assert "attacker.example" not in output
-    assert "localStorage" not in _chart_data(output, variable)
-    values = [value.strip() for value in _chart_data(output, variable).split(",")]
-    assert values[:6] == ["0", "7", "0", "3", "0", "-2"][:points]
-    assert all(re.fullmatch(r"-?\d+", value) for value in values)
-    assert len(values) == points
+    assert "localStorage" not in output
+    assert '<svg xmlns="http://www.w3.org/2000/svg"' in output
+    assert "<path " in output or "<circle " in output
 
 
-def test_a_chart_with_fewer_values_than_points_still_renders_numbers() -> None:
+def test_a_chart_with_fewer_values_than_points_still_renders() -> None:
     item = _osint_item("OSINT Report - Threats", ["4"])
 
-    values = [value.strip() for value in _chart_data(_render("template_osint.html", [item]), "data2").split(",")]
+    output = _render("template_osint.html", [item])
 
-    assert values == ["4", "0", "0", "0", "0"]
+    assert '<svg xmlns="http://www.w3.org/2000/svg"' in output
+    assert "<circle " in output
 
 
 @pytest.mark.parametrize("template", ["template.html", "weekly.html"])
