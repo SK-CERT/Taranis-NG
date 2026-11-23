@@ -177,12 +177,10 @@ def doughnut_svg(
         try:
             number = float(value or 0)
         except (ValueError, TypeError, OverflowError):
-            msg = f"Invalid chart value: {value!r}"
-            raise ValueError(msg) from None
+            continue  # "Invalid chart value: {value!r}"
 
         if not math.isfinite(number) or number < 0:
-            msg = f"Invalid chart value: {value!r}"
-            raise ValueError(msg)
+            continue  # "Invalid chart value: {value!r}"
 
         normalized.append(number)
 
