@@ -247,7 +247,12 @@ class ConfigCollector(ConfigBase):
         mod.parameters = self.add_default()
         mod.parameters.extend(
             [
-                ParamType("WEB_URL", "Web URL", "Full url for web page or folder of html file", ParameterType.STRING),
+                ParamType(
+                    "WEB_URL",
+                    "Web URL",
+                    "Full URL of the web page (http or https; https is assumed when the scheme is left out)",
+                    ParameterType.STRING,
+                ),
                 # TODO (Ján): implement ENUM for the keys?
                 ParamType("WEBDRIVER", "Name of Webdriver", "Name of webdriver for Selenium (chrome | firefox)", ParameterType.STRING),
                 ParamType("TOR", "Route traffic through Tor", "Using Tor service (true | false)", ParameterType.BOOLEAN, "false"),

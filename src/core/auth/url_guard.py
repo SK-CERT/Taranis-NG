@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import requests
+from shared.url_guard import is_non_public_address
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -86,7 +87,7 @@ def assert_public_url(url: str, *, require_https: bool = False) -> None:
 
     for *_head, sockaddr in addresses:
         ip = ipaddress.ip_address(sockaddr[0])
-        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast or ip.is_unspecified:
+        if is_non_public_address(ip):
             msg = f"Refusing to fetch '{url}': the host resolves to the non-public address {ip}"
             raise ValueError(msg)
 

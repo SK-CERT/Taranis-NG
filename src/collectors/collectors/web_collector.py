@@ -2,15 +2,13 @@
 
 import contextlib
 import copy
-import datetime
+import datetime as dt
 import hashlib
 import os
 import re
 import subprocess
 import time
-import urllib.request
 import uuid
-from pathlib import Path
 from typing import ClassVar
 from urllib.parse import urlparse
 
@@ -33,8 +31,9 @@ from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_p
 from shared.config_collector import ConfigCollector
 from shared.log_manager import logger
 from shared.schema.news_item import NewsItemAttribute, NewsItemData
+from shared.url_guard import build_guarded_opener, collector_url_problem
 
-from .base_collector import BaseCollector, not_modified
+from .base_collector import BaseCollector, allowed_targets, not_modified
 
 
 class WebCollector(BaseCollector):
@@ -48,7 +47,6 @@ class WebCollector(BaseCollector):
         auth_username (str): The username for web page authentication.
         auth_password (str): The password for web page authentication.
         web_url (str): The URL of the web page.
-        interpret_as (str): The type of the URL (uri or directory).
         user_agent (str): The user agent for the web page.
         tor_service (bool): The Tor service status.
         check_if_modified (bool): Whether to skip collection when the server reports the content is unchanged.
@@ -336,32 +334,14 @@ class WebCollector(BaseCollector):
             self.source.logger.error("Web URL is not set. Skipping collection.")
             return False
 
-        if web_url.lower().startswith("file://"):
-            file_part = web_url[7:]
-            if Path(file_part).is_file():
-                self.interpret_as = "uri"
-                self.source.url = "file://" + file_part
-            elif Path(file_part).is_dir():
-                self.interpret_as = "directory"
-                self.source.url = file_part
-            else:
-                self.source.logger.error(f"Missing file {web_url}")
-                return False
+        # Web pages only. A local file or directory, or any other scheme a browser understands
+        # (file:, view-source:, chrome:), is refused when the URL is checked below.
+        web_url = web_url.strip()
+        self.source.url = web_url if re.search(r"^[a-z][a-z0-9+.-]*://", web_url.lower()) else f"https://{web_url}"
+        # Checked before credentials are put in the URL, so they never reach a log line.
+        bare_url = self.source.url
 
-        elif re.search(r"^[a-z0-9]+://", web_url.lower()):
-            self.interpret_as = "uri"
-            self.source.url = web_url
-        elif Path(web_url).is_file():
-            self.interpret_as = "uri"
-            self.source.url = f"file://{web_url}"
-        elif Path(web_url).is_dir():
-            self.interpret_as = "directory"
-            self.source.url = web_url
-        else:
-            self.interpret_as = "uri"
-            self.source.url = f"https://{web_url}"
-
-        if self.interpret_as == "uri" and self.auth_username and self.auth_password:
+        if self.auth_username and self.auth_password:
             parsed_url = urlparse(self.source.url)
             self.source.url = f"{parsed_url.scheme}://{self.auth_username}:{self.auth_password}@{parsed_url.netloc}{parsed_url.path}"
 
@@ -394,8 +374,29 @@ class WebCollector(BaseCollector):
         # Use get_proxy_handler from BaseCollector
         self.source.proxy = self.source.param_key_values["PROXY_SERVER"]
         self.source.parsed_proxy = self.get_parsed_proxy()
+        self.via_proxy = bool(self.tor_service or self.source.parsed_proxy)
+
+        problem = self.__url_problem(bare_url)
+        if problem:
+            self.source.logger.error(f"{problem}. Skipping collection.")
+            return False
 
         return True
+
+    def __url_problem(self, url: str) -> str | None:
+        """Why the browser must not open (or have ended up on) a URL; None when it may.
+
+        See ``shared.url_guard``: http(s) only, and no internal address unless the
+        collectors node allows it. Asked for the source's URL, for every article link before it is
+        opened, and for the address the browser landed on, since it follows redirects itself.
+
+        Parameters:
+            url (str): The URL.
+
+        Returns:
+            (str | None): The reason, or None.
+        """
+        return collector_url_problem(url, via_proxy=self.via_proxy, allowed=allowed_targets(self.source))
 
     def __get_headless_driver_chrome(self) -> WebDriver:
         """Initialize and return Chrome driver.
@@ -526,7 +527,10 @@ class WebCollector(BaseCollector):
             self.__run_tor()
 
         proxy_handler = self.get_proxy_handler() if self.source.parsed_proxy else None
-        self.source.opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
+        allowed = allowed_targets(self.source)
+        self.source.opener = (
+            build_guarded_opener(proxy_handler, via_proxy=True, allowed=allowed) if proxy_handler else build_guarded_opener(allowed=allowed)
+        )
         url_not_modified = False
         if self.source.last_collected and self.check_if_modified:
             url_not_modified = not_modified(self.source)
@@ -535,16 +539,7 @@ class WebCollector(BaseCollector):
                 return
 
         if not url_not_modified:
-            if self.interpret_as == "uri":
-                total_failed_articles = self.__browse_title_page(self.source.url)
-
-            elif self.interpret_as == "directory":
-                self.source.logger.info(f"Searching for html files in {self.source.url}")
-                p = Path(self.source.url)
-                for file_name in p.iterdir():
-                    if file_name.lower().endswith(".html"):
-                        html_file = f"file://{self.source.url}/{file_name}"
-                        total_failed_articles = self.__browse_title_page(html_file)
+            total_failed_articles = self.__browse_title_page(self.source.url)
 
             if total_failed_articles > 0:
                 self.source.logger.debug(f"{total_failed_articles} article(s) failed")
@@ -566,6 +561,13 @@ class WebCollector(BaseCollector):
             browser.get(index_url)
         except Exception as error:
             self.source.logger.exception(f"Obtaining title page failed: {error}")
+            self.__dispose_of_headless_driver(browser)
+            return 0
+
+        # The browser follows redirects on its own; where it ended up is checked before it is read.
+        problem = self.__url_problem(browser.current_url)
+        if problem:
+            self.source.logger.error(f"{problem}. The title page redirected there; skipping collection.")
             self.__dispose_of_headless_driver(browser)
             return 0
 
@@ -674,6 +676,11 @@ class WebCollector(BaseCollector):
             # if first item works but next items have problems - it's because this:
             # https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/#stale-element-reference-exception
             link = item.get_attribute("href")
+            problem = self.__url_problem(link) if link else None
+            if problem:
+                failed_articles += 1
+                self.source.logger.warning(f"{problem}. Skipping article {count}/{len(article_items)}.")
+                continue
             try:
                 if link:
                     scope = browser
@@ -704,11 +711,16 @@ class WebCollector(BaseCollector):
                 continue
 
             try:
-                news_item = self.__process_article_page(browser, scope)
+                # A link may redirect; the page the browser landed on is checked before it is read.
+                problem = self.__url_problem(browser.current_url) if link else None
+                news_item = None if problem else self.__process_article_page(browser, scope)
                 if news_item:
                     self.sanitize_news_item(news_item, self.source)
                     news_item.print_news_item(self.source.logger)
                     self.news_items.append(news_item)
+                elif problem:
+                    failed_articles += 1
+                    self.source.logger.warning(f"{problem}. The article link redirected there; skipping it.")
                 else:
                     failed_articles += 1
                     self.source.logger.warning("Parsing an article failed")
@@ -774,7 +786,7 @@ class WebCollector(BaseCollector):
         published_str = self.__find_element_text_by(scope, self.selectors["published"])
         if published_str:
             extracted_date = parse(published_str, fuzzy=True)
-        now = datetime.datetime.now(TZ)
+        now = dt.datetime.now(TZ)
         published_str = extracted_date.strftime("%d.%m.%Y - %H:%M") if extracted_date else now.strftime("%d.%m.%Y - %H:%M")
 
         link = current_url

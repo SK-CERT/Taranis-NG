@@ -1413,6 +1413,8 @@
             "description": "Опис",
             "api_url": "URL API",
             "api_key": "Ключ API",
+            "allowed_private_targets": "Дозволені внутрішні адресати",
+            "allowed_private_targets_hint": "Джерела збираються лише з публічних адрес. Вкажіть внутрішні хости, домени (.example.org), адреси або мережі (10.20.0.0/16), з яких цей вузол також може збирати дані, по одному в рядку.",
             "successful": "Вузол Collector успішно додано",
             "successful_edit": "Вузол Collector успішно оновлено",
             "removed": "Вузол Collector успішно видалено",

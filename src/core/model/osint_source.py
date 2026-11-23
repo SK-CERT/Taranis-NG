@@ -228,7 +228,13 @@ class OSINTSource(db.Model):
         for collector in collector_node.collectors:
             if collector.type == collector_type:
                 sources_schema = OSINTSourceSchema(many=True)
-                return sources_schema.dump(collector.sources)
+                sources = sources_schema.dump(collector.sources)
+                # What this node may fetch from an internal network (see shared.url_guard). It is
+                # the node's setting, written here and nowhere else: a source cannot carry its own.
+                allowed = getattr(collector_node, "allowed_private_targets", None) or ""
+                for source in sources:
+                    source["allowed_private_targets"] = allowed
+                return sources
         return None
 
     @classmethod

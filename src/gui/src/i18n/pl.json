@@ -1413,6 +1413,8 @@
             "description": "Opis",
             "api_url": "API URL",
             "api_key": "API Key",
+            "allowed_private_targets": "Dozwolone cele wewnętrzne",
+            "allowed_private_targets_hint": "Źródła są zbierane wyłącznie z adresów publicznych. Podaj wewnętrzne hosty, domeny (.example.org), adresy lub sieci (10.20.0.0/16), z których ten węzeł może również zbierać, po jednym w wierszu.",
             "successful": "Dodano węzeł kolektora",
             "successful_edit": "Zaktualizowano węzeł kolektora",
             "removed": "Usunięto węzeł kolektora",

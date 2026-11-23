@@ -39,6 +39,11 @@ export type NodeTypeConfig = {
     deleteFn: (node: unknown) => Promise<unknown>
     /** Whether the API key is mandatory. All service-node APIs authenticate with it. */
     apiKeyRequired: boolean
+    /**
+     * Whether the node has a list of internal targets its sources may be fetched from.
+     * Collectors only: they fetch from public addresses unless the node allows more.
+     */
+    allowedPrivateTargets?: boolean
 }
 
 export const NODE_TYPES: Record<NodeType, NodeTypeConfig> = {
@@ -50,7 +55,8 @@ export const NODE_TYPES: Record<NodeType, NodeTypeConfig> = {
         createFn: createNewCollectorsNode,
         updateFn: updateCollectorsNode,
         deleteFn: deleteCollectorsNode,
-        apiKeyRequired: true
+        apiKeyRequired: true,
+        allowedPrivateTargets: true
     },
     presenters: {
         i18nPrefix: 'presenters.nodes',
