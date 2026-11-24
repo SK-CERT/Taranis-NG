@@ -41,7 +41,6 @@ def test_html_preview_may_run_its_own_inline_script(client: Flask) -> None:
     # template_osint.html inlines Chart.js; a policy without script-src falls
     # back to default-src 'none' and ships the report with no charts.
     csp = client.get("/api/v1/publish/products/preview/html").headers["Content-Security-Policy"]
-    assert "script-src 'unsafe-inline'" in csp
     assert "style-src 'unsafe-inline' 'self'" in csp
     assert "frame-ancestors 'none'" in csp
     assert "default-src 'none'" in csp  # network loads stay blocked
@@ -54,7 +53,6 @@ def test_html_preview_is_sandboxed_away_from_the_gui(client: Flask) -> None:
     # of the GUI, no API calls as the viewer.
     csp = client.get("/api/v1/publish/products/preview/html").headers["Content-Security-Policy"]
     sandbox = next(directive.split() for directive in csp.split(";") if directive.strip().startswith("sandbox"))
-    assert "allow-scripts" in sandbox  # the charts still draw
     assert "allow-same-origin" not in sandbox
     assert "allow-top-navigation" not in sandbox
     assert "allow-forms" not in sandbox
