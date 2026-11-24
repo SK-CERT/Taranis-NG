@@ -51,8 +51,9 @@ Two caveats worth knowing:
   environment match the declared groups exactly, so it removes the service dependencies
   `dev_setup.py` added. Re-running `dev_setup.py` puts them back.
 - A lone `uv sync --group test` (or `--group ansible`) **prunes `.venv/bin/uv`**, and no
-  other uv exists on a typical machine to run the command that would restore it. Always
-  pass `--group dev` alongside; `dev_setup.py` already does.
+  other uv exists on a typical machine to run the command that would restore it. On
+  Windows, the corresponding path is `.venv\Scripts\uv.exe`. Always pass `--group dev`
+  alongside; `dev_setup.py` already does.
 
 ## Editor setup (VS Code)
 
@@ -67,6 +68,9 @@ Install these extensions:
 - **Playwright Test for VSCode** (`ms-playwright.playwright`) — e2e discovery
 
 Then, in your workspace settings:
+
+On Windows, use `${workspaceFolder}\.venv\Scripts\python.exe` for
+`python.defaultInterpreterPath` instead of the Unix-style path shown below.
 
 ```jsonc
 {

@@ -202,23 +202,26 @@ error-on-warning = false  # exit 0 even when warning diagnostics are emitted
 [tool.ty.rules]
 # Marshmallow schemas redefine the nested `class Meta` of the schema they extend: Meta only
 # holds options, it is not meant to subclass the parent's. ty reports each as
-# invalid-attribute-override; those lines carry `# ty: ignore[invalid-attribute-override]`.
+# incompatible-attribute-override; those lines carry `# ty: ignore[incompatible-attribute-override]`.
 # Re-tighten to "error" once the legacy service owning these patterns is fixed.
-unresolved-attribute = "warn"     # self.preset / None-union attrs (bots, collectors)
-unresolved-import = "warn"        # .app relative imports (bots, collectors, publishers)
-unresolved-reference = "warn"     # module-level name resolution (bots)
-invalid-argument-type = "warn"    # HTTPStatus vs int, SchedulerManager interval
-invalid-return-type = "warn"     # response.status_code (int) vs HTTPStatus signature
-unsupported-operator = "warn"     # str + None / int concatenation in legacy APIs
-not-subscriptable = "warn"       # subscripting int/HTTPStatus in legacy code
-missing-argument = "warn"        # missing positional args in legacy call sites
-invalid-assignment = "warn"      # SSL context assignment (stdlib typing gap)
-no-matching-overload = "warn"    # re.search() dynamic pattern typing
-not-iterable = "warn"            # SQLAlchemy relationship() -> RelationshipProperty typing gap
-invalid-parameter-default = "warn"  # `Node = None` defaults in Flask-RESTful routes
-invalid-type-arguments = "warn"  # `dict[int]` missing value type arg
-invalid-type-form = "warn"      # lowercase `any` (user meant Any) in annotations
-unknown-argument = "warn"       # langchain kwarg drift (model_name vs model)
+missing-attribute = "warn"              # self.preset attrs (bots, collectors)
+missing-union-attribute = "warn"        # None-union attrs (bots, collectors)
+import-not-found = "warn"               # .app relative imports (bots, collectors, publishers)
+unresolved-reference = "warn"           # module-level name resolution (bots)
+invalid-argument-type = "warn"          # HTTPStatus vs int, SchedulerManager interval
+invalid-explicit-return = "warn"        # response.status_code (int) vs HTTPStatus signature
+invalid-generator-return-type = "warn"  # generator function return annotations
+lost-keyword-for-regular-parameter = "warn"
+unsupported-operator = "warn"           # str + None / int concatenation in legacy APIs
+not-subscriptable = "warn"              # subscripting int/HTTPStatus in legacy code
+missing-argument = "warn"               # missing positional args in legacy call sites
+invalid-assignment = "warn"             # SSL context assignment (stdlib typing gap)
+no-matching-overload = "warn"           # re.search() dynamic pattern typing
+not-iterable = "warn"                   # SQLAlchemy relationship() -> RelationshipProperty typing gap
+invalid-parameter-default = "warn"      # `Node = None` defaults in Flask-RESTful routes
+invalid-type-arguments = "warn"         # `dict[int]` missing value type arg
+invalid-type-form = "warn"              # lowercase `any` (user meant Any) in annotations
+unknown-argument = "warn"               # langchain kwarg drift (model_name vs model)
 too-many-positional-arguments = "warn"  # legacy collector call sites passing extra args
 
 [tool.ruff.lint.mccabe]

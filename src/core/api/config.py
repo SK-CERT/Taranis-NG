@@ -119,7 +119,7 @@ class DictionariesReloadResource(Resource):
         Args:
             dictionary_type (str): The dictionary type
         Returns:
-            (str, int): The result of the reload
+            (dict, HTTPStatus): The result of the reload
         """
         attribute.Attribute.load_dictionaries(dictionary_type)
         return "success", HTTPStatus.OK
@@ -139,11 +139,11 @@ class AttributesResource(Resource):
         return attribute.Attribute.get_all_json(search)
 
     @auth_required("CONFIG_ATTRIBUTE_CREATE")
-    def post(self) -> tuple[dict, int] | None:
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create an attribute.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             attribute.Attribute.add_attribute(request.json)
@@ -157,13 +157,13 @@ class AttributeResource(Resource):
     """Attribute API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
-    def put(self, attribute_id: int) -> tuple[dict, int]:
+    def put(self, attribute_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an attribute.
 
         Args:
             attribute_id (int): The attribute ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             attribute.Attribute.update(attribute_id, request.json)
@@ -179,7 +179,7 @@ class AttributeResource(Resource):
         Args:
             attribute_id (int): The attribute ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return attribute.Attribute.delete_attribute(attribute_id)
@@ -217,7 +217,7 @@ class AttributeEnumsResource(Resource):
         Args:
             attribute_id (int): The attribute ID
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             attribute.AttributeEnum.add(attribute_id, request.json)
@@ -238,7 +238,7 @@ class AttributeEnumResource(Resource):
             attribute_id (int): The attribute ID
             enum_id (int): The enum ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             attribute.AttributeEnum.update(enum_id, request.json)
@@ -255,7 +255,7 @@ class AttributeEnumResource(Resource):
             attribute_id (int): The attribute ID
             enum_id (int): The enum ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return attribute.AttributeEnum.delete(enum_id)
@@ -363,7 +363,7 @@ class AiProvidersResource(Resource):
         """Create an local AI model.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             user = auth_manager.get_user_from_jwt()
@@ -425,7 +425,7 @@ class AttributeExtractionRulesResource(Resource):
         """Create an attribute extraction rule.
 
         Returns:
-            (dict, int): The created rule, or the reason it was rejected
+            (dict, HTTPStatus): The created rule, or the reason it was rejected
         """
         if rejection := _attribute_extraction_rule_rejection(request.json):
             return rejection
@@ -449,7 +449,7 @@ class AttributeExtractionRuleResource(Resource):
         Args:
             rule_id (int): The rule ID
         Returns:
-            (dict, int): The updated rule, or the reason it was rejected
+            (dict, HTTPStatus): The updated rule, or the reason it was rejected
         """
         if attribute_extraction_rule.AttributeExtractionRule.find(rule_id) is None:
             return {"error": "Attribute extraction rule not found"}, HTTPStatus.NOT_FOUND
@@ -471,7 +471,7 @@ class AttributeExtractionRuleResource(Resource):
         Args:
             rule_id (int): The rule ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         if attribute_extraction_rule.AttributeExtractionRule.find(rule_id) is None:
             return {"error": "Attribute extraction rule not found"}, HTTPStatus.NOT_FOUND
@@ -492,7 +492,7 @@ class AiProviderResource(Resource):
         Args:
             ai_provider_id (int): The AI model ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             user = auth_manager.get_user_from_jwt()
@@ -513,7 +513,7 @@ class AiProviderResource(Resource):
         Args:
             ai_provider_id (int): The AI model ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return ai_provider.AiProvider.delete(ai_provider_id)
@@ -539,7 +539,7 @@ class AuthProvidersResource(Resource):
         """Create an authentication provider.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             user_object = auth_manager.get_user_from_jwt()
@@ -562,7 +562,7 @@ class AuthProviderResource(Resource):
         Args:
             auth_provider_id (int): The authentication provider ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             user_object = auth_manager.get_user_from_jwt()
@@ -581,7 +581,7 @@ class AuthProviderResource(Resource):
         Args:
             auth_provider_id (int): The authentication provider ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return auth_provider.AuthProvider.delete(auth_provider_id)
@@ -635,7 +635,7 @@ class SamlMetadataImportResource(Resource):
         review and save.
 
         Returns:
-            (dict, int): The extracted provider settings, or an error.
+            (dict, HTTPStatus): The extracted provider settings, or an error.
         """
         try:
             xml = _read_idp_metadata_xml(request.json or {})
@@ -663,7 +663,7 @@ class SamlKeypairResource(Resource):
         federation's "encryption certificate" field wants.
 
         Returns:
-            (dict, int): The generated private_key and certificate (PEM).
+            (dict, HTTPStatus): The generated private_key and certificate (PEM).
         """
         entity_id = (request.json or {}).get("sp_entity_id") or "taranis-ng"
         return saml_authenticator.generate_sp_keypair(entity_id), HTTPStatus.OK
@@ -683,7 +683,7 @@ class SamlFederationVerifyResource(Resource):
         anchor before saving.
 
         Returns:
-            (dict, int): ``entity_count`` and ``valid_until``, or an error.
+            (dict, HTTPStatus): ``entity_count`` and ``valid_until``, or an error.
         """
         data = request.json or {}
         try:
@@ -717,7 +717,7 @@ class OAuthVerifyResource(Resource):
         rule the update endpoint follows.
 
         Returns:
-            (dict, int): The resolved endpoints and the client credential verdict,
+            (dict, HTTPStatus): The resolved endpoints and the client credential verdict,
                 or an error.
         """
         data = request.json or {}
@@ -765,7 +765,7 @@ class SecuritySettingsResource(Resource):
         """Update the security settings.
 
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             user_object = auth_manager.get_user_from_jwt()
@@ -781,13 +781,13 @@ class DataProviderResource(Resource):
     """Data provider API endpoint."""
 
     @auth_required("CONFIG_DATA_PROVIDER_UPDATE")
-    def put(self, data_provider_id: int) -> tuple[dict, int]:
+    def put(self, data_provider_id: int) -> tuple[dict, HTTPStatus]:
         """Update a data provider.
 
         Args:
             data_provider_id (int): The data provider ID
         Returns:
-            (dict, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             user = auth_manager.get_user_from_jwt()
@@ -800,13 +800,13 @@ class DataProviderResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_DATA_PROVIDER_DELETE")
-    def delete(self, data_provider_id: int) -> tuple[dict, int] | None:
+    def delete(self, data_provider_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a data provider.
 
         Args:
             data_provider_id (int): The data provider ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return data_provider.DataProvider.delete(data_provider_id)
@@ -828,11 +828,11 @@ class DataProvidersResource(Resource):
         return data_provider.DataProvider.get_all_json(search)
 
     @auth_required("CONFIG_DATA_PROVIDER_CREATE")
-    def post(self) -> tuple[dict, int] | None:
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a data provider.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             user = auth_manager.get_user_from_jwt()
@@ -863,7 +863,7 @@ class ReportItemTypesConfigResource(Resource):
         """Create a report item type.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             report_item_type.ReportItemType.add_report_item_type(request.json)
@@ -886,7 +886,7 @@ class ReportItemTypeResource(Resource):
         Args:
             type_id (int): The report item type ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             report_item_type.ReportItemType.update(type_id, request.json)
@@ -912,7 +912,7 @@ class ReportItemTypeResource(Resource):
         Args:
             type_id (int): The report item type ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return report_item_type.ReportItemType.delete_report_item_type(type_id)
@@ -983,7 +983,7 @@ class ProductFormatsResource(Resource):
         """Create a product format.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             product_format.ProductFormat.add_new(request.json)
@@ -1007,7 +1007,7 @@ class ProductFormatResource(Resource):
         Args:
             format_id (int): The product format ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             product_format.ProductFormat.update(format_id, request.json)
@@ -1027,7 +1027,7 @@ class ProductFormatResource(Resource):
         Args:
             format_id (int): The product format ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return product_format.ProductFormat.delete(format_id)
@@ -1064,7 +1064,7 @@ class ProductPresetsResource(Resource):
         """Create a product preset.
 
         Returns:
-            (dict, int): The id of the created product preset
+            (dict, HTTPStatus): The id of the created product preset
         """
         try:
             created = product_preset.ProductPreset.add(request.json or {}, get_user_from_jwt().name)
@@ -1088,7 +1088,7 @@ class ProductPresetResource(Resource):
         Args:
             product_preset_id (int): The product preset ID
         Returns:
-            (dict, int): The id of the updated product preset
+            (dict, HTTPStatus): The id of the updated product preset
         """
         try:
             updated = product_preset.ProductPreset.update(product_preset_id, request.json or {}, get_user_from_jwt().name)
@@ -1110,7 +1110,7 @@ class ProductPresetResource(Resource):
         Args:
             product_preset_id (int): The product preset ID
         Returns:
-            (dict, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             result = product_preset.ProductPreset.delete(product_preset_id)
@@ -1192,7 +1192,7 @@ class RolesResource(Resource):
         """Create a role.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             role.Role.add_new(request.json)
@@ -1212,7 +1212,7 @@ class RoleResource(Resource):
         Args:
             role_id (int): The role ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             role.Role.update(role_id, request.json)
@@ -1228,7 +1228,7 @@ class RoleResource(Resource):
         Args:
             role_id (int): The role ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return role.Role.delete(role_id)
@@ -1254,7 +1254,7 @@ class ACLEntriesResource(Resource):
         """Create an ACL entry.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             acl_entry.ACLEntry.add_new(request.json)
@@ -1274,7 +1274,7 @@ class ACLEntryResource(Resource):
         Args:
             acl_id (int): The ACL entry ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             acl_entry.ACLEntry.update(acl_id, request.json)
@@ -1290,7 +1290,7 @@ class ACLEntryResource(Resource):
         Args:
             acl_id (int): The ACL entry ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return acl_entry.ACLEntry.delete(acl_id)
@@ -1316,7 +1316,7 @@ class OrganizationsResource(Resource):
         """Create an organization.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             organization.Organization.add_new(request.json)
@@ -1336,7 +1336,7 @@ class OrganizationResource(Resource):
         Args:
             organization_id (int): The organization ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             organization.Organization.update(organization_id, request.json)
@@ -1352,7 +1352,7 @@ class OrganizationResource(Resource):
         Args:
             organization_id (int): The organization ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return organization.Organization.delete(organization_id)
@@ -1378,7 +1378,7 @@ class UsersResource(Resource):
         """Create a user.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             user.User.add_new(request.json)
@@ -1407,7 +1407,7 @@ class UserResource(Resource):
         Args:
             user_id (int): The user ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         target = user.User.find_by_id(user_id)
         if target is None:
@@ -1428,7 +1428,7 @@ class UserResource(Resource):
         Args:
             user_id (int): The user ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         if user.User.find_by_id(user_id) is None:
             return {"error": "User not found"}, HTTPStatus.NOT_FOUND
@@ -1446,7 +1446,7 @@ class UserStatusResource(Resource):
         Args:
             user_id (int): The user ID
         Returns:
-            (str, int): The result of the status change
+            (dict, HTTPStatus): The result of the status change
         """
         try:
             updated_user = user.User.set_status(user_id, (request.json or {}).get("status", ""))
@@ -1468,7 +1468,7 @@ class UserMfaResetResource(Resource):
         Args:
             user_id (int): The user ID
         Returns:
-            (str, int): The result of the reset
+            (dict, HTTPStatus): The result of the reset
         """
         try:
             data = request.json or {}
@@ -1515,7 +1515,7 @@ class ApiKeysResource(Resource):
         """List API keys, optionally of one owner (``user_id``) and matching ``search``.
 
         Returns:
-            (dict): The keys, the policy, the caller's address and the users (with their status).
+            (dict, HTTPStatus): The keys, the policy, the caller's address and the users (with their status).
         """
         user_id = request.args.get("user_id", type=int)
         keys = apikey.ApiKey.get_filtered(request.args.get("search"), user_id)
@@ -1528,7 +1528,7 @@ class ApiKeysResource(Resource):
         """Create an API key for a user.
 
         Returns:
-            (dict): The new key and, this once, its plaintext under ``key``.
+            (dict, HTTPStatus): The new key and, this once, its plaintext under ``key``.
         """
         data = request.json or {}
         owner = user.User.find_by_id(data.get("user_id")) if isinstance(data.get("user_id"), int) else None
@@ -1551,7 +1551,7 @@ class ApiKeyResource(Resource):
         Args:
             api_key_id (int): The API key ID
         Returns:
-            (dict): The changed key
+            (dict, HTTPStatus): The changed key
         """
         record = apikey.ApiKey.find(api_key_id)
         if record is None:
@@ -1568,7 +1568,7 @@ class ApiKeyResource(Resource):
         Args:
             api_key_id (int): The API key ID
         Returns:
-            (dict): Empty on success
+            (dict, HTTPStatus): Empty on success
         """
         record = apikey.ApiKey.find(api_key_id)
         if record is None:
@@ -1589,7 +1589,7 @@ class ApiKeyPermissionsResource(Resource):
         """List the permissions of the user given by ``user_id``.
 
         Returns:
-            (dict): The permissions, by id
+            (dict, HTTPStatus): The permissions, by id
         """
         user_id = request.args.get("user_id", type=int)
         owner = user.User.find_by_id(user_id) if user_id is not None else None
@@ -1617,7 +1617,7 @@ class ExternalUsersResource(Resource):
         """Create an external user.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             permissions = auth_manager.get_external_permissions_ids()
@@ -1638,7 +1638,7 @@ class ExternalUserResource(Resource):
         Args:
             user_id (int): The user ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         target = user.User.find_by_id(user_id)
         password_before = target.password if target else None
@@ -1659,7 +1659,7 @@ class ExternalUserResource(Resource):
         Args:
             user_id (int): The user ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id)
@@ -1692,7 +1692,7 @@ class SettingResource(Resource):
         Parameters:
             setting_id (int): The setting ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             user = auth_manager.get_user_from_jwt()
@@ -1715,7 +1715,7 @@ class UserSettingResource(Resource):
         Parameters:
             user_setting_id (int): The user setting ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         msg = "Could not update user setting"
         try:
@@ -1747,7 +1747,7 @@ class WordListsResource(Resource):
         """Create a word list.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             word_list.WordList.add_new(request.json)
@@ -1767,7 +1767,7 @@ class WordListResource(Resource):
         Args:
             word_list_id (int): The word list ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return word_list.WordList.delete(word_list_id)
@@ -1781,7 +1781,7 @@ class WordListResource(Resource):
         Args:
             word_list_id (int): The word list ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             word_list.WordList.update(word_list_id, request.json)
@@ -1809,7 +1809,7 @@ class CollectorsNodesResource(Resource):
         """Create a collectors node.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         reason = allowed_targets_problem((request.json or {}).get("allowed_private_targets"))
         if reason is not None:
@@ -1832,7 +1832,7 @@ class CollectorsNodeResource(Resource):
         Args:
             node_id (int): The collectors node ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         reason = allowed_targets_problem((request.json or {}).get("allowed_private_targets"))
         if reason is not None:
@@ -1851,7 +1851,7 @@ class CollectorsNodeResource(Resource):
         Args:
             node_id (int): The collectors node ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return collectors_node.CollectorsNode.delete(node_id)
@@ -1877,7 +1877,7 @@ class OSINTSourcesResource(Resource):
         """Create an OSINT source.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             collectors_manager.add_osint_source(request.json)
@@ -1897,7 +1897,7 @@ class OSINTSourceResource(Resource):
         Args:
             source_id (int): The OSINT source ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             updated_osint_source, default_group = collectors_manager.update_osint_source(source_id, request.json)
@@ -1915,7 +1915,7 @@ class OSINTSourceResource(Resource):
         Args:
             source_id (int): The OSINT source ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             collectors_manager.delete_osint_source(source_id)
@@ -1977,7 +1977,7 @@ class OSINTSourcesExportResource(Resource):
         """Export OSINT sources.
 
         Returns:
-            (str, int): The result of the export
+            (dict, HTTPStatus): The result of the export
         """
         try:
             data = collectors_manager.export_osint_sources(request.json)
@@ -1996,7 +1996,7 @@ class OSINTSourcesImportResource(Resource):
         """Import OSINT sources.
 
         Returns:
-            (str, int): The result of the import
+            (dict, HTTPStatus): The result of the import
         """
         try:
             file = request.files.get("file")
@@ -2027,7 +2027,7 @@ class OSINTSourceGroupsResource(Resource):
         """Create an OSINT source group.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             osint_source.OSINTSourceGroup.add(request.json)
@@ -2047,7 +2047,7 @@ class OSINTSourceGroupResource(Resource):
         Args:
             group_id (int): The OSINT source group ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             sources_in_default_group, message, code = osint_source.OSINTSourceGroup.update(group_id, request.json)
@@ -2068,7 +2068,7 @@ class OSINTSourceGroupResource(Resource):
         Args:
             group_id (int): The OSINT source group ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return osint_source.OSINTSourceGroup.delete(group_id)
@@ -2094,7 +2094,7 @@ class RemoteAccessesResource(Resource):
         """Create a remote access.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             remote.RemoteAccess.add(request.json)
@@ -2114,7 +2114,7 @@ class RemoteAccessResource(Resource):
         Args:
             remote_access_id (int): The remote access ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             # The GUI never receives the key: saved empty, it stays as stored.
@@ -2134,7 +2134,7 @@ class RemoteAccessResource(Resource):
         Args:
             remote_access_id (int): The remote access ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return remote.RemoteAccess.delete(remote_access_id)
@@ -2164,7 +2164,7 @@ class PublicWebNodesResource(Resource):
         as a node that can never work.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             from managers import public_web_manager  # noqa: PLC0415 (avoid import cycle at load)
@@ -2200,7 +2200,7 @@ class PublicWebNodeResource(Resource):
         Args:
             node_id (int): The public-web node ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             from managers import public_web_manager  # noqa: PLC0415 (avoid import cycle at load)
@@ -2239,7 +2239,7 @@ class PublicWebNodeResource(Resource):
         Args:
             node_id (int): The public-web node ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return public_web_node.PublicWebNode.delete(node_id)
@@ -2318,7 +2318,7 @@ class PublicWebsResource(Resource):
         Args:
             node_id (int): The public-web node ID
         Returns:
-            (dict, int): The id of the created web
+            (dict, HTTPStatus): The id of the created web
         """
         try:
             data = request.json or {}
@@ -2455,7 +2455,7 @@ class PublicWebTemplatesResource(Resource):
         """Create a report template.
 
         Returns:
-            (dict, int): The id of the created template, or the reason it was refused
+            (dict, HTTPStatus): The id of the created template, or the reason it was refused
         """
         try:
             template = public_web_template.PublicWebTemplate.add(request.json or {}, get_user_from_jwt().name)
@@ -2479,7 +2479,7 @@ class PublicWebTemplateResource(Resource):
         Args:
             template_id (int): The template ID
         Returns:
-            (dict, int): The result, or the reason it was refused
+            (dict, HTTPStatus): The result, or the reason it was refused
         """
         try:
             template = public_web_template.PublicWebTemplate.update(template_id, request.json or {}, get_user_from_jwt().name)
@@ -2542,7 +2542,7 @@ class PublicWebTemplatePreviewResource(Resource):
         """Render the template of the dialog, or a built-in one (``{"template" | "builtin", "web_id", "language", "product_id", "view"}``).
 
         Returns:
-            (dict, int): The page (``html``) or the feed item (``rss``, ``xml``) with ``errors`` and
+            (dict, HTTPStatus): The page (``html``) or the feed item (``rss``, ``xml``) with ``errors`` and
                 ``warnings``; or why there is none (invalid source 400, no node 409, node down 502).
         """
         return template_preview.preview(request.json if isinstance(request.json, dict) else {})
@@ -2590,7 +2590,7 @@ class PublicWebTemplateBuiltinResource(Resource):
         """Switch a built-in template on or off: ``{"name": "builtin/<file>", "enabled": bool}``.
 
         Returns:
-            (dict, int): The built-in's name and state, or the reason it was refused
+            (dict, HTTPStatus): The built-in's name and state, or the reason it was refused
         """
         data = request.json or {}
         name, enabled = data.get("name"), data.get("enabled")
@@ -2746,7 +2746,7 @@ class RemoteNodesResource(Resource):
         """Create a remote node.
 
         Returns:
-            (str, int): The result of the create
+            (str, HTTPStatus): The result of the create
         """
         try:
             remote.RemoteNode.add(request.json)
@@ -2766,7 +2766,7 @@ class RemoteNodeResource(Resource):
         Args:
             remote_node_id (int): The remote node ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             data = keep_stored_api_key(request.json, remote.RemoteNode, remote_node_id)
@@ -2784,7 +2784,7 @@ class RemoteNodeResource(Resource):
         Args:
             remote_node_id (int): The remote node ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             remote_manager.disconnect_from_node(remote_node_id)
@@ -2803,7 +2803,7 @@ class RemoteNodeConnectResource(Resource):
         Args:
             remote_node_id (int): The remote node ID
         Returns:
-            (str, int): The result of the connect
+            (dict, HTTPStatus): The result of the connect
         """
         try:
             return remote_manager.connect_to_node(remote_node_id)
@@ -2831,7 +2831,7 @@ class PresentersNodesResource(Resource):
         """Create a presenters node.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             return "", presenters_manager.add_presenters_node(request.json)
@@ -2851,7 +2851,7 @@ class PresentersNodeResource(Resource):
         Args:
             node_id (int): The presenters node ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             presenters_manager.update_presenters_node(node_id, request.json)
@@ -2867,7 +2867,7 @@ class PresentersNodeResource(Resource):
         Args:
             node_id (int): The presenters node ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return presenters_node.PresentersNode.delete(node_id)
@@ -2893,7 +2893,7 @@ class PublisherNodesResource(Resource):
         """Create a publisher node.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             return "", publishers_manager.add_publishers_node(request.json)
@@ -2913,7 +2913,7 @@ class PublishersNodeResource(Resource):
         Args:
             node_id (int): The publisher node ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             publishers_manager.update_publishers_node(node_id, request.json)
@@ -2929,7 +2929,7 @@ class PublishersNodeResource(Resource):
         Args:
             node_id (int): The publisher node ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return publishers_node.PublishersNode.delete(node_id)
@@ -2955,7 +2955,7 @@ class PublishingChannelsResource(Resource):
         """Create a publishing channel.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             publishers_manager.add_publishing_channel(request.json)
@@ -2975,7 +2975,7 @@ class PublishingChannelResource(Resource):
         Args:
             channel_id (int): The publishing channel ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             publishing_channel.PublishingChannel.update(channel_id, request.json)
@@ -2991,7 +2991,7 @@ class PublishingChannelResource(Resource):
         Args:
             channel_id (int): The publishing channel ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return publishing_channel.PublishingChannel.delete(channel_id)
@@ -3017,7 +3017,7 @@ class BotNodesResource(Resource):
         """Create a bot node.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             return "", bots_manager.add_bots_node(request.json)
@@ -3037,7 +3037,7 @@ class BotsNodeResource(Resource):
         Args:
             node_id (str): The bot node ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             bots_manager.update_bots_node(node_id, request.json)
@@ -3053,7 +3053,7 @@ class BotsNodeResource(Resource):
         Args:
             node_id (str): The bot node ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return bots_node.BotsNode.delete(node_id)
@@ -3079,7 +3079,7 @@ class BotPresetsResource(Resource):
         """Create a bot preset.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             bots_manager.add_bot_preset(request.json)
@@ -3099,7 +3099,7 @@ class BotPresetResource(Resource):
         Args:
             preset_id (int): The bot preset ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             bot_preset.BotPreset.update(preset_id, request.json)
@@ -3115,7 +3115,7 @@ class BotPresetResource(Resource):
         Args:
             preset_id (int): The bot preset ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             return bot_preset.BotPreset.delete(preset_id)
@@ -3146,7 +3146,7 @@ class StatesResource(Resource):
         """Create a state definition.
 
         Returns:
-            (str, int): The result of the create
+            (dict, HTTPStatus): The result of the create
         """
         try:
             user = auth_manager.get_user_from_jwt()
@@ -3170,7 +3170,7 @@ class StateResource(Resource):
         Args:
             state_id (int): The state ID
         Returns:
-            (str, int): The result of the update
+            (dict, HTTPStatus): The result of the update
         """
         try:
             state_def = db.session.get(StateDefinition, state_id)
@@ -3208,7 +3208,7 @@ class StateResource(Resource):
         Args:
             state_id (int): The state definition ID
         Returns:
-            (str, int): The result of the delete
+            (dict, HTTPStatus): The result of the delete
         """
         try:
             state_def = db.session.get(StateDefinition, state_id)
@@ -3230,7 +3230,7 @@ class StateEntityTypesResource(Resource):
         """Get all state-entity type associations.
 
         Returns:
-            (dict, int): The state-entity type associations
+            (dict, HTTPStatus): The state-entity type associations
         """
         try:
             entity_type = request.args.get("entity_type")
@@ -3246,7 +3246,7 @@ class StateEntityTypesResource(Resource):
         """Create a state-entity type association.
 
         Returns:
-            (dict, int): The created association
+            (dict, HTTPStatus): The created association
         """
         try:
             user = auth_manager.get_user_from_jwt()
@@ -3271,7 +3271,7 @@ class StateEntityTypeResource(Resource):
         Args:
             state_entity_type_id (int): The association ID
         Returns:
-            (dict, int): The updated association
+            (dict, HTTPStatus): The updated association
         """
         try:
             state_type = db.session.get(StateEntityType, state_entity_type_id)
@@ -3299,7 +3299,7 @@ class StateEntityTypeResource(Resource):
         Args:
             state_entity_type_id (int): The association ID
         Returns:
-            (dict, int): The result
+            (dict, HTTPStatus): The result
         """
         try:
             state_type = db.session.get(StateEntityType, state_entity_type_id)
@@ -3326,7 +3326,7 @@ class GlossaryEntriesResource(Resource):
         """Get the entries of the report type ``report_item_type_id`` names, or of the instance.
 
         Returns:
-            (dict, int): ``{"total_count", "items"}``
+            (dict, HTTPStatus): ``{"total_count", "items"}``
         """
         type_id = request.args.get("report_item_type_id", type=int)
         return GlossaryEntry.get_json(type_id), HTTPStatus.OK
@@ -3336,7 +3336,7 @@ class GlossaryEntriesResource(Resource):
         """Add an entry to the instance glossary, or to the report type it names.
 
         Returns:
-            (dict, int): The entry, or why it was refused
+            (dict, HTTPStatus): The entry, or why it was refused
         """
         try:
             return GlossaryEntry.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
@@ -3358,7 +3358,7 @@ class GlossaryEntryResource(Resource):
         Args:
             entry_id (int): The entry ID
         Returns:
-            (dict, int): The entry, or why it was refused
+            (dict, HTTPStatus): The entry, or why it was refused
         """
         entry = db.session.get(GlossaryEntry, entry_id)
         if entry is None:
@@ -3376,7 +3376,7 @@ class GlossaryEntryResource(Resource):
         Args:
             entry_id (int): The entry ID
         Returns:
-            (dict, int): The result
+            (dict, HTTPStatus): The result
         """
         entry = db.session.get(GlossaryEntry, entry_id)
         if entry is None:
@@ -3392,7 +3392,7 @@ class TagsResource(Resource):
         """Get every tag, the built-in ones last.
 
         Returns:
-            (dict, int): ``{"total_count", "items"}``
+            (dict, HTTPStatus): ``{"total_count", "items"}``
         """
         return Tag.get_all_json(request.args.get("search")), HTTPStatus.OK
 
@@ -3401,7 +3401,7 @@ class TagsResource(Resource):
         """Create an admin tag.
 
         Returns:
-            (dict, int): The tag, or why it was refused
+            (dict, HTTPStatus): The tag, or why it was refused
         """
         try:
             return Tag.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
@@ -3420,7 +3420,7 @@ class TagResource(Resource):
         Args:
             tag_id (int): The tag ID
         Returns:
-            (dict, int): The tag, or why it was refused
+            (dict, HTTPStatus): The tag, or why it was refused
         """
         tag = db.session.get(Tag, tag_id)
         if tag is None:
@@ -3438,7 +3438,7 @@ class TagResource(Resource):
         Args:
             tag_id (int): The tag ID
         Returns:
-            (dict, int): The result; 403 for a built-in tag, 409 with the count for a tag in use
+            (dict, HTTPStatus): The result; 403 for a built-in tag, 409 with the count for a tag in use
         """
         tag = db.session.get(Tag, tag_id)
         if tag is None:
@@ -3457,7 +3457,7 @@ class TagEntityTypesResource(Resource):
         """Get every tag link, of one entity type when ``entity_type`` is given.
 
         Returns:
-            (dict, int): ``{"total_count", "items"}``, each with its tag
+            (dict, HTTPStatus): ``{"total_count", "items"}``, each with its tag
         """
         return TagEntityType.get_all_json(request.args.get("entity_type")), HTTPStatus.OK
 
@@ -3466,7 +3466,7 @@ class TagEntityTypesResource(Resource):
         """Link a tag to reports or products.
 
         Returns:
-            (dict, int): The link, or why it was refused
+            (dict, HTTPStatus): The link, or why it was refused
         """
         try:
             return TagEntityType.add_new(request.json, get_user_from_jwt().name).to_dict(), HTTPStatus.CREATED
@@ -3488,7 +3488,7 @@ class TagEntityTypeResource(Resource):
         Args:
             tag_entity_type_id (int): The link ID
         Returns:
-            (dict, int): The link, or why it was refused
+            (dict, HTTPStatus): The link, or why it was refused
         """
         link = db.session.get(TagEntityType, tag_entity_type_id)
         if link is None:
@@ -3506,7 +3506,7 @@ class TagEntityTypeResource(Resource):
         Args:
             tag_entity_type_id (int): The link ID
         Returns:
-            (dict, int): The result
+            (dict, HTTPStatus): The result
         """
         link = db.session.get(TagEntityType, tag_entity_type_id)
         if link is None:

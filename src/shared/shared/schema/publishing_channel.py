@@ -17,7 +17,7 @@ class PublishingChannelSchemaBase(Schema):
         parameter_values (list): List of parameter values associated with the publishing channel.
     """
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

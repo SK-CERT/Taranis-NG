@@ -49,7 +49,7 @@ class SettingUser(db.Model):
         self.updated_at = None
 
     @classmethod
-    def add_new(cls, setting_id: int, user_id: int, value: str) -> SettingUser:
+    def add_new(cls, setting_id: int, user_id: int, value: str) -> None:
         """Add a new user setting to the database.
 
         Args:

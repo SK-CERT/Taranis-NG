@@ -883,7 +883,7 @@ class UserWordList(db.Model):
 class NewUserWordListSchema(Schema):
     """Represents a schema for creating a new UserWordList."""
 
-    class Meta(Schema.Meta):  # ty: ignore[invalid-attribute-override]  # astral-sh/ty#4711
+    class Meta(Schema.Meta):  # ty: ignore[incompatible-attribute-override]  # astral-sh/ty#4711
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

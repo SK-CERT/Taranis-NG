@@ -26,6 +26,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -37,7 +38,7 @@ from typing import NoReturn
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VENV = REPO_ROOT / ".venv"
-VENV_BIN = VENV / "bin"
+VENV_BIN = VENV / ("Scripts" if os.name == "nt" else "bin")
 GUI_DIR = REPO_ROOT / "src" / "gui"
 
 # Backend services with their own pyproject + uv.lock. Their runtime dependencies are
@@ -78,6 +79,11 @@ def die(msg: str, code: int = 1) -> NoReturn:
     sys.exit(code)
 
 
+def venv_executable(name: str) -> Path:
+    """Return the path to an executable in the root virtual environment."""
+    return VENV_BIN / (f"{name}.exe" if os.name == "nt" else name)
+
+
 def run(command: list[str], *, cwd: Path | None = None, quiet: bool = False) -> None:
     """Run a command, exiting with its output on failure."""
     result = subprocess.run(command, cwd=cwd, check=False, capture_output=quiet, text=True)
@@ -91,7 +97,7 @@ def run(command: list[str], *, cwd: Path | None = None, quiet: bool = False) -> 
 
 def find_uv() -> str:
     """Return the uv executable, preferring the repo-local one."""
-    candidate = VENV_BIN / "uv"
+    candidate = venv_executable("uv")
     if candidate.is_file():
         return str(candidate)
     binary = shutil.which("uv")
@@ -230,7 +236,7 @@ def setup_python(uv: str, verbose: bool, *, with_ansible: bool) -> None:
     environment, it would redefine it: uv makes the venv match exactly the groups named,
     so syncing `ansible` afterwards would remove pytest and every service dependency
     installed below. For the same reason `dev` is always present — dropping it prunes
-    ``.venv/bin/uv``, and no other uv exists to run the command that would restore it.
+    root venv's uv executable, and no other uv exists to run the command that would restore it.
     """
     groups = ["--group", "dev", "--group", "test"]
     if with_ansible:
@@ -241,13 +247,13 @@ def setup_python(uv: str, verbose: bool, *, with_ansible: bool) -> None:
     print("dev_setup: installing service runtime dependencies...")
     requirements = merge_service_requirements(uv, verbose)
     try:
-        run([uv, "pip", "install", "--python", str(VENV_BIN / "python"), "-r", str(requirements)], cwd=REPO_ROOT)
+        run([uv, "pip", "install", "--python", str(venv_executable("python")), "-r", str(requirements)], cwd=REPO_ROOT)
     finally:
         requirements.unlink(missing_ok=True)
 
     # Editable so edits in src/shared are picked up by tests without a reinstall.
     print("dev_setup: installing src/shared (editable)...")
-    run([uv, "pip", "install", "--python", str(VENV_BIN / "python"), "-e", "src/shared"], cwd=REPO_ROOT)
+    run([uv, "pip", "install", "--python", str(venv_executable("python")), "-e", "src/shared"], cwd=REPO_ROOT)
 
 
 def setup_gui() -> None:
@@ -267,11 +273,11 @@ def setup_playwright() -> None:
 def report_check() -> int:
     """Report which pieces are present, installing nothing."""
     checks: list[tuple[str, bool, str]] = [
-        ("root .venv", (VENV_BIN / "python").is_file(), "python3 scripts/dev_setup.py"),
+        ("root .venv", venv_executable("python").is_file(), "python3 scripts/dev_setup.py"),
         ("pytest", _venv_has("pytest"), "python3 scripts/dev_setup.py"),
-        ("ruff", (VENV_BIN / "ruff").is_file(), "python3 scripts/dev_setup.py"),
+        ("ruff", venv_executable("ruff").is_file(), "python3 scripts/dev_setup.py"),
         ("gui node_modules", (GUI_DIR / "node_modules").is_dir(), "python3 scripts/dev_setup.py"),
-        ("ansible-playbook", (VENV_BIN / "ansible-playbook").is_file(), "python3 scripts/dev_setup.py --all"),
+        ("ansible-playbook", venv_executable("ansible-playbook").is_file(), "python3 scripts/dev_setup.py --all"),
     ]
     missing = 0
     for label, present, remedy in checks:
@@ -282,7 +288,7 @@ def report_check() -> int:
 
 def _venv_has(module: str) -> bool:
     """Whether the root .venv interpreter can import ``module``."""
-    python = VENV_BIN / "python"
+    python = venv_executable("python")
     if not python.is_file():
         return False
     probe = subprocess.run([str(python), "-c", f"import {module}"], capture_output=True, check=False)

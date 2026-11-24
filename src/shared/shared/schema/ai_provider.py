@@ -43,7 +43,7 @@ class AiProvider:
 class AiProviderSchema(Schema):
     """Marshmallow schema for serializing and deserializing AiProvider objects."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

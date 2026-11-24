@@ -37,7 +37,7 @@ class StateDefinition:
 class StateDefinitionSchema(Schema):
     """Marshmallow schema for serializing and deserializing State objects."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE
@@ -102,7 +102,7 @@ class StateEntityType:
 class StateEntityTypeSchema(Schema):
     """Marshmallow schema for serializing and deserializing State Type objects."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

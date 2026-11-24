@@ -8,7 +8,7 @@ from shared.schema.presentation import PresentationSchema
 class EmailRecipientSchema(Schema):
     """Schema for an email recipient of a notification template."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -21,7 +21,7 @@ class EmailRecipientSchema(Schema):
 class NotificationTemplateSchema(Schema):
     """Schema for Notification template."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -42,7 +42,7 @@ class NotificationTemplatePresentationSchema(NotificationTemplateSchema, Present
 class NotificationTemplateIdSchema(Schema):
     """Schema for a notification template id."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE

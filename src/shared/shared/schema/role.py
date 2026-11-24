@@ -16,7 +16,7 @@ class PermissionSchema(Schema):
 class PermissionIdSchema(Schema):
     """Schema for a permission id."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -40,7 +40,7 @@ class PermissionId:
 class RoleSchemaBase(Schema):
     """Base schema for Role."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -63,7 +63,7 @@ class RolePresentationSchema(RoleSchema, PresentationSchema):
 class RoleIdSchema(Schema):
     """Schema for a role id."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
