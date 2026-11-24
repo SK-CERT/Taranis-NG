@@ -17,7 +17,7 @@ dependencies = [
     "python-dotenv==1.2.4",
     "requests==2.34.2",
     "schedule==1.2.2",
-    "sseclient-py==1.9.0",
+    "sseclient-py==2.1.0",
     "taranis-ng-shared==26.10.1",
 ]
 
