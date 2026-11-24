@@ -30,7 +30,7 @@
         "@mdi/font": "^7.4.47",
         "@simplewebauthn/browser": "^14.0.0",
         "@tanstack/vue-virtual": "^3.13.52",
-        "@tiptap/extensions": "^3.34.0",
+        "@tiptap/extensions": "^3.35.0",
         "@tiptap/pm": "^3.34.0",
         "@tiptap/starter-kit": "^3.34.0",
         "@tiptap/vue-3": "^3.34.0",
