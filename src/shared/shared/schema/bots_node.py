@@ -61,7 +61,7 @@ class BotsNode:
 class BotsNodeSchema(Schema):
     """Schema for (de)serializing a Bots node."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class."""
 
         unknown = EXCLUDE

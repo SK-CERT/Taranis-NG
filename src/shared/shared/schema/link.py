@@ -11,7 +11,7 @@ class LinkRefSchema(Schema):
         url: The link itself.
     """
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class."""
 
         unknown = EXCLUDE

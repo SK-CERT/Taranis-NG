@@ -12,7 +12,7 @@ from shared.schema.state import StateDefinitionSchema
 class ProductSchemaBase(Schema):
     """Base product schema."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class."""
 
         unknown = EXCLUDE

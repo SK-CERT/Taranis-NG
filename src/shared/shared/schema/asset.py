@@ -12,7 +12,7 @@ from shared.schema.user import UserSchemaBase
 class AssetCpeSchema(Schema):
     """Schema for a CPE of an asset."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -23,7 +23,7 @@ class AssetCpeSchema(Schema):
 class AssetSchema(Schema):
     """Schema for Asset."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -60,7 +60,7 @@ class AssetPresentationSchema(AssetSchema, PresentationSchema):
 class AssetGroupSchema(Schema):
     """Schema for Asset group."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE

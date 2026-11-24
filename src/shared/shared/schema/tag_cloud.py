@@ -8,7 +8,7 @@ from marshmallow import EXCLUDE, Schema, fields, post_load
 class TagCloudBaseSchema(Schema):
     """Base schema for a word of the tag cloud."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE

@@ -207,7 +207,7 @@ class CollectorsNode(db.Model):
         return node
 
     @classmethod
-    def update(cls, node_id: str, node_data: dict, collectors: list) -> CollectorsNode:
+    def update(cls, node_id: str, node_data: dict, collectors: list) -> None:
         """Update a node.
 
         Args:

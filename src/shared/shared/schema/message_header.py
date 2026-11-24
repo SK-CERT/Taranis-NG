@@ -14,7 +14,7 @@ class MessageHeaderSchema(Schema):
     ``shared.mail_headers``; the publisher re-validates rather than trusting the wire.
     """
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

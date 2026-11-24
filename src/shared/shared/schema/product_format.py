@@ -19,7 +19,7 @@ class ProductFormatSchema(Schema):
         language_templates (dict): Template paths per language, ``{language: {PARAM_TEMPLATE_PATH: path}}``.
     """
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class to define schema behavior."""
 
         unknown = EXCLUDE

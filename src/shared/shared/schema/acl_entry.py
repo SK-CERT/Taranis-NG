@@ -57,7 +57,7 @@ class ACLEntrySchema(ACLEntryStatusSchema):
         everyone (fields.Bool): A boolean field indicating if the ACL entry applies to everyone.
     """
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring schema behavior.
 
         Attributes:

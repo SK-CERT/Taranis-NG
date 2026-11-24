@@ -53,7 +53,7 @@ class NewsItemAttribute:
 class NewsItemDataBaseSchema(Schema):
     """Base schema for news item data."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for defining options for the NewsItemData schema."""
 
         unknown = EXCLUDE
@@ -289,7 +289,7 @@ class NewsItemAggregateId:
 class NewsItemAggregateIdSchema(Schema):
     """Schema for news item aggregate ID."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for defining options for the NewsItemAggregateId schema."""
 
         unknown = EXCLUDE

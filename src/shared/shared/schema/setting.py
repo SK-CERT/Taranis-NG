@@ -46,7 +46,7 @@ class SettingValueSchema(Schema):
         is_global (bool): Indicates if the setting is global.
     """
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for the schema.
 
         Attributes:
@@ -137,7 +137,7 @@ class SettingSchema(Schema):
         updated_by (str): The user who last updated the setting.
     """
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for the schema.
 
         Attributes:

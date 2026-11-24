@@ -34,7 +34,7 @@ class WordListCategorySchema(Schema):
 class WordListSchema(Schema):
     """Schema for Word list, with its categories."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
@@ -97,7 +97,7 @@ class WordListEntry:
 class WordListIdSchema(Schema):
     """Schema for a word list id."""
 
-    class Meta:  # ty: ignore[invalid-attribute-override]
+    class Meta:  # ty: ignore[incompatible-attribute-override]
         """Meta class for configuring the behavior of the schema."""
 
         unknown = EXCLUDE
