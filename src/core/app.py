@@ -120,9 +120,13 @@ def _install_security_headers(app: Flask) -> None:
             if response.mimetype == "text/html":
                 response.headers.setdefault(
                     "Content-Security-Policy",
-                    "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' 'self'; "
-                    "img-src data: 'self'; font-src data: 'self'; frame-ancestors 'none'; form-action 'none'; "
-                    "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox",
+                    "default-src 'none'; "
+                    "style-src 'unsafe-inline' 'self'; "
+                    "img-src data: 'self'; "
+                    "font-src data: 'self'; "
+                    "frame-ancestors 'none'; "
+                    "form-action 'none'; "
+                    "sandbox",
                 )
             return response
 
