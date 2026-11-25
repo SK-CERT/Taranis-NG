@@ -348,6 +348,9 @@ class WebCollector(BaseCollector):
         self.source.user_agent = self.source.param_key_values["USER_AGENT"]
         self.tor_service = read_bool_parameter("TOR", default_value=False, object_dict=self.source)
         self.check_if_modified = read_bool_parameter("CHECK_IF_MODIFIED", default_value=True, object_dict=self.source)
+        # Certificates are checked unless the source opts out. A parameter the node has not
+        # been told about yet (no migration since it was added) reads as false.
+        self.ignore_tls_errors = read_bool_parameter("IGNORE_TLS_ERRORS", default_value=False, object_dict=self.source)
         self.pagination_limit = read_int_parameter("PAGINATION_LIMIT", 1, self.source)
         self.links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
         self.word_limit = read_int_parameter("WORD_LIMIT", 0, self.source)
@@ -451,8 +454,10 @@ class WebCollector(BaseCollector):
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_argument("--incognito")
+        chrome_options.accept_insecure_certs = self.ignore_tls_errors
+        if self.ignore_tls_errors:
+            chrome_options.add_argument("--ignore-certificate-errors")
         if self.source.user_agent:
             chrome_options.add_argument("user-agent=" + self.source.user_agent)
         if self.tor_service:
@@ -482,8 +487,9 @@ class WebCollector(BaseCollector):
         firefox_options = FirefoxOptions()
         firefox_options.page_load_strategy = "normal"  # .get() returns on document ready
         firefox_options.add_argument("--headless")
-        firefox_options.add_argument("--ignore-certificate-errors")
         firefox_options.add_argument("--incognito")
+        # Firefox has no --ignore-certificate-errors switch; the capability is what counts.
+        firefox_options.accept_insecure_certs = self.ignore_tls_errors
 
         if self.source.user_agent:
             # Firefox has no user-agent switch; passing one as an argument is silently ignored,

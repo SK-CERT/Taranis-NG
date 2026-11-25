@@ -273,6 +273,17 @@ class ConfigCollector(ConfigBase):
                     "String sent in the request header to identify itself to the web server (e.g. browser type, version, OS...)",
                     ParameterType.STRING,
                 ),
+                ParamType(
+                    "IGNORE_TLS_ERRORS",
+                    "Ignore TLS certificate errors",
+                    (
+                        "OPTIONAL: Open the site even when its certificate is invalid (self-signed, expired, wrong name). "
+                        "Anyone on the network path can then change what is collected and read the page credentials. "
+                        "Default: false"
+                    ),
+                    ParameterType.BOOLEAN,
+                    "false",
+                ),
                 # authentication options
                 ParamType(
                     "AUTH_USERNAME",
