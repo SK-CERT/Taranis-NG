@@ -71,10 +71,10 @@ from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.state import StateDefinition, StateEntityType
 from model.tag import Tag, TagEntityType
-from shared.schema.ai_provider import AiProviderSchema
+from shared.schema.ai_provider import AiProviderPresentationSchema
 from shared.schema.attribute_extraction_rule import AttributeExtractionRuleSchema
 from shared.schema.auth_provider import AuthProviderSchema
-from shared.schema.data_provider import DataProviderSchema
+from shared.schema.data_provider import DataProviderPresentationSchema
 from shared.schema.role import PermissionSchema
 from shared.schema.security_settings import SecuritySettingsSchema
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
@@ -368,7 +368,8 @@ class AiProvidersResource(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             record = ai_provider.AiProvider.add_new(request.json, user.name)
-            schema = AiProviderSchema()
+            # The key is write-only here as in the list: never sent back, even to who saved it.
+            schema = AiProviderPresentationSchema()
             return schema.dump(record), HTTPStatus.OK
         except ValueError as ex:
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
@@ -497,7 +498,8 @@ class AiProviderResource(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             record = ai_provider.AiProvider.update(ai_provider_id, request.json, user.name)
-            schema = AiProviderSchema()
+            # The key is write-only here as in the list: never sent back, even to who saved it.
+            schema = AiProviderPresentationSchema()
             return schema.dump(record), HTTPStatus.OK
         except ValueError as ex:
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
@@ -806,7 +808,8 @@ class DataProviderResource(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             record = data_provider.DataProvider.update(data_provider_id, request.json, user.name)
-            schema = DataProviderSchema()
+            # The key is write-only here as in the list: never sent back, even to who saved it.
+            schema = DataProviderPresentationSchema()
             return schema.dump(record), HTTPStatus.OK
         except StoredSecretError as ex:
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
@@ -853,7 +856,8 @@ class DataProvidersResource(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             record = data_provider.DataProvider.add_new(request.json, user.name)
-            schema = DataProviderSchema()
+            # The key is write-only here as in the list: never sent back, even to who saved it.
+            schema = DataProviderPresentationSchema()
             return schema.dump(record), HTTPStatus.OK
         except Exception as ex:
             msg = "Could not create data provider"
