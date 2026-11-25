@@ -5,7 +5,7 @@ import uuid
 from http import HTTPStatus
 
 from auth import saml_authenticator, saml_federation
-from auth.base_authenticator import ProviderConfigurationError
+from auth.base_authenticator import AUTH_TIME_CLAIM, ProviderConfigurationError
 from config import Config
 from flask import Response, make_response, redirect
 from flask_jwt_extended import get_jwt
@@ -53,7 +53,7 @@ class Refresh(Resource):
         Returns:
             dict: A dictionary containing the refreshed authentication token.
         """
-        return auth_manager.refresh(auth_manager.get_user_from_jwt())
+        return auth_manager.refresh(auth_manager.get_user_from_jwt(), get_jwt().get(AUTH_TIME_CLAIM))
 
 
 class Logout(Resource):

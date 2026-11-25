@@ -221,9 +221,9 @@
         navVisible.value = !navVisible.value
     }
 
-    const navigateToLogin = (): void => {
+    const navigateToLogin = (loginError?: string): void => {
         if (route.value.path !== '/login') {
-            void router.replace('/login')
+            void router.replace(loginError ? { path: '/login', query: { login_error: loginError } } : '/login')
         }
     }
 
@@ -259,7 +259,9 @@
                         })
                         .catch((error) => {
                             console.error('[App] Token refresh failed:', error)
-                            navigateToLogin()
+                            // A session that ran its maximum length says so on the login page.
+                            const expired = error?.response?.data?.code === 'SESSION_EXPIRED'
+                            navigateToLogin(expired ? 'session_expired' : undefined)
                         })
                 }
             } else if (authStore.jwt) {

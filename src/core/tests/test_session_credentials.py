@@ -112,17 +112,22 @@ def test_decoding_a_token_for_sse_or_previews_checks_it_too(app: Flask, account:
 
 
 def test_changing_one_s_own_password_hands_back_a_new_token(account: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        base_authenticator.BaseAuthenticator,
-        "generate_jwt",
-        staticmethod(lambda user, **_kwargs: ({"access_token": f"new-{user.username}"}, HTTPStatus.OK)),
-    )
+    issued: list = []
+
+    def generate_jwt(user: SimpleNamespace, **kwargs: object) -> tuple[dict, HTTPStatus]:
+        issued.append(kwargs)
+        return {"access_token": f"new-{user.username}"}, HTTPStatus.OK
+
+    monkeypatch.setattr(base_authenticator.BaseAuthenticator, "generate_jwt", staticmethod(generate_jwt))
+    monkeypatch.setattr(config_api, "get_jwt", lambda: {"auth_time": 1700000000})
     before = session_credential(account)
 
     monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: account)
     assert config_api._own_session_renewed(account, before) is None  # nothing changed
     account.password = "hash-2"
     assert config_api._own_session_renewed(account, before) == ({"access_token": "new-alice"}, HTTPStatus.OK)
+    # The same session goes on, with its sign-in time and so its maximum length.
+    assert issued == [{"record_login": False, "auth_time": 1700000000}]
 
     # An administrator changing someone else's password gets nothing: that user's sessions end.
     monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: SimpleNamespace(id=1))

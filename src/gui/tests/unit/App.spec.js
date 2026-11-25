@@ -227,6 +227,26 @@ describe('App SSE boot flow', () => {
         expect(mockReconnect).not.toHaveBeenCalled()
     })
 
+    it('says on the login page that a session ran its maximum length', async () => {
+        mockNeedTokenRefresh.mockReturnValue(true)
+        mockAuthStore.refreshToken.mockRejectedValue({ response: { status: 401, data: { code: 'SESSION_EXPIRED' } } })
+
+        wrapper = mountWithPlugins(App, {
+            global: {
+                stubs: {
+                    MainMenu: true,
+                    NotificationSnackbar: true
+                }
+            }
+        })
+
+        await flushPromises()
+        vi.advanceTimersByTime(5000)
+        await flushPromises()
+
+        expect(mockRouterReplace).toHaveBeenCalledWith({ path: '/login', query: { login_error: 'session_expired' } })
+    })
+
     it('should leave protected content immediately when the stored token expires', async () => {
         mockIsAuthenticated.mockReturnValue(false)
         mockAuthStore.logout.mockResolvedValue(undefined)

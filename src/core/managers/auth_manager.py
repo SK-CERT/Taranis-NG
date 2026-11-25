@@ -22,7 +22,7 @@ from functools import wraps
 from http import HTTPStatus
 
 import jwt
-from auth.base_authenticator import CREDENTIAL_CLAIM, BaseAuthenticator, session_credential
+from auth.base_authenticator import CREDENTIAL_CLAIM, SESSION_EXPIRED, BaseAuthenticator, session_credential
 from auth.ldap_authenticator import LDAPAuthenticator
 from auth.oauth2_authenticator import OAuth2Authenticator
 from auth.password_authenticator import PasswordAuthenticator
@@ -187,16 +187,20 @@ def authenticate(credentials: dict) -> tuple[dict, HTTPStatus]:
     return authenticate_with_provider((credentials or {}).get("provider_id"), credentials)
 
 
-def refresh(user: User) -> tuple[dict, HTTPStatus]:
-    """Refresh the authentication token for the given user.
+def refresh(user: User, auth_time: object) -> tuple[dict, HTTPStatus]:
+    """Refresh the authentication token for the given user, within the session's maximum length.
 
     Args:
         user: The user object for which the authentication token needs to be refreshed.
+        auth_time: The sign-in time the current token carries; a token without one (issued
+            before sessions had a maximum length) is not refreshed.
 
     Returns:
-        The refreshed authentication token.
+        The refreshed authentication token, or SESSION_EXPIRED.
     """
-    return BaseAuthenticator.generate_jwt(user, record_login=False)
+    if isinstance(auth_time, bool) or not isinstance(auth_time, int):
+        return SESSION_EXPIRED
+    return BaseAuthenticator.generate_jwt(user, record_login=False, auth_time=auth_time)
 
 
 def logout(jwt_id: str) -> None:

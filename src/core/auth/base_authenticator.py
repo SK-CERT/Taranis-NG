@@ -9,10 +9,13 @@ if TYPE_CHECKING:
 
 import hashlib
 import hmac
+import time
 from dataclasses import dataclass
+from datetime import timedelta
 from http import HTTPStatus
 
 from config import Config
+from flask import current_app
 from flask_jwt_extended import create_access_token
 from managers import log_manager
 from model.security_settings import SecuritySettings
@@ -20,6 +23,30 @@ from model.token_blacklist import TokenBlacklist
 
 # The claim tying a session to the account's credentials as they were when it was issued.
 CREDENTIAL_CLAIM = "cred"
+# When the sign-in behind a token happened (epoch seconds); a refresh carries it over.
+AUTH_TIME_CLAIM = "auth_time"
+# A refresh that would leave less than this before the session's maximum length is refused. The
+# GUI refreshes five minutes before a token runs out; with a token capped to the last minutes of
+# the session, it would otherwise refresh every few seconds until the end.
+MIN_SESSION_LEFT_SECONDS = 600
+SESSION_EXPIRED = (
+    {"error": "Your session has reached its maximum length; sign in again", "code": "SESSION_EXPIRED"},
+    HTTPStatus.UNAUTHORIZED,
+)
+
+
+def session_seconds_left(auth_time: int, now: int) -> int | None:
+    """Seconds until a session started at ``auth_time`` reaches its maximum length; None: no limit."""
+    hours = SecuritySettings.get_session_max_hours()
+    if not hours:
+        return None
+    return auth_time + hours * 3600 - now
+
+
+def _default_token_seconds() -> int:
+    """The configured access token lifetime, in seconds."""
+    configured = current_app.config.get("JWT_ACCESS_TOKEN_EXPIRES", 900)
+    return int(configured.total_seconds()) if isinstance(configured, timedelta) else int(configured)
 
 
 def session_credential(user: User) -> str:
@@ -123,22 +150,35 @@ class BaseAuthenticator:
         return None
 
     @staticmethod
-    def generate_jwt(user: User, *, record_login: bool = True) -> tuple[dict, HTTPStatus]:
+    def generate_jwt(user: User, *, record_login: bool = True, auth_time: int | None = None) -> tuple[dict, HTTPStatus]:
         """Generate a JSON Web Token (JWT) for a given user.
+
+        A session lasts at most ``security_settings.session_max_hours`` from its sign-in: the
+        token records the sign-in (``auth_time``), a refresh carries it over, the token expires
+        no later than the session does, and a refresh close to that end is refused
+        (SESSION_EXPIRED). The GUI used to keep a session alive for as long as a tab was open.
 
         Args:
             user (User): The user for whom the JWT is to be generated.
             record_login (bool): Whether this counts as a sign-in. Refreshing a token
                 converges here too, and stamping it would turn the account's last login
                 into the time of the GUI's last background refresh.
+            auth_time (int | None): When the session's sign-in happened (epoch seconds), for a
+                refresh; None: now, a new sign-in.
 
         Returns:
             tuple: A tuple containing a dictionary with the access token and an HTTP status code.
-                   If the user is not active, returns an error response.
+                   If the user is not active, or the session has run its course, an error response.
         """
         status_error = BaseAuthenticator.check_user_status(user)
         if status_error:
             return status_error
+        now = int(time.time())
+        auth_time = now if auth_time is None else int(auth_time)
+        seconds_left = session_seconds_left(auth_time, now)
+        if seconds_left is not None and seconds_left < MIN_SESSION_LEFT_SECONDS:
+            return SESSION_EXPIRED
+        expires = None if seconds_left is None else timedelta(seconds=min(seconds_left, _default_token_seconds()))
         log_manager.store_user_activity(user, "LOGIN", "Successful")
         if record_login:
             user.touch_login()
@@ -147,6 +187,7 @@ class BaseAuthenticator:
             additional_claims={
                 "auth_generation": SecuritySettings.get_auth_generation(),
                 CREDENTIAL_CLAIM: session_credential(user),
+                AUTH_TIME_CLAIM: auth_time,
                 "user_claims": {
                     "id": user.id,
                     "name": user.name,
@@ -154,6 +195,7 @@ class BaseAuthenticator:
                     "permissions": user.get_permissions(),
                 },
             },
+            expires_delta=expires,
         )
 
         return {"access_token": access_token}, HTTPStatus.OK

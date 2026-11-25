@@ -14,8 +14,9 @@ from http import HTTPStatus
 import requests
 from auth import oauth2_authenticator, saml_authenticator, saml_federation, saml_metadata
 from auth import url_guard as saml_url_guard
-from auth.base_authenticator import BaseAuthenticator, session_credential
+from auth.base_authenticator import AUTH_TIME_CLAIM, BaseAuthenticator, session_credential
 from flask import Response, request, send_file
+from flask_jwt_extended import get_jwt
 from flask_restful import Resource
 from managers import (
     api_key_manager,
@@ -1405,7 +1406,8 @@ def _own_session_renewed(target: user.User | None, credential_before: str | None
     actor = get_user_from_jwt()
     if target is None or actor is None or actor.id != target.id or session_credential(target) == credential_before:
         return None
-    return BaseAuthenticator.generate_jwt(target, record_login=False)
+    # The same session goes on: it keeps its sign-in time, and so its maximum length.
+    return BaseAuthenticator.generate_jwt(target, record_login=False, auth_time=get_jwt().get(AUTH_TIME_CLAIM))
 
 
 def _notify_password_change(target: user.User | None, password_before: str | None) -> None:
