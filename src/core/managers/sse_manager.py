@@ -77,6 +77,49 @@ return 0
 """
 
 
+# What a report-item-updated event may carry: ids and flags that tell a client what to read again
+# through the API, where the report's ACL applies. Every client of the stream gets every event -
+# users of any permission, bots nodes - so the field values a request carried must not ride along.
+REPORT_ITEM_EVENT_KEYS = frozenset(
+    {
+        "report_item_id",
+        "user_id",
+        "update",
+        "add",
+        "delete",
+        "attribute_id",
+        "attribute_version",
+        "aggregate_id",
+        "aggregate_ids",
+        "remote_report_item_id",
+        "remote_report_item_ids",
+        "completed",
+        "language",
+        "languages",
+        "source_language",
+        "translated",
+        "results",
+        "tags",
+    },
+)
+# Fields a client is told changed and must read again: sent empty, whatever the request held.
+REPORT_ITEM_EVENT_MARKERS = frozenset({"title", "title_prefix", "state_id"})
+
+
+def report_item_event(data: dict) -> dict:
+    """The part of a report item update that may be broadcast (see REPORT_ITEM_EVENT_KEYS).
+
+    Args:
+        data (dict): The update as the request and the model left it.
+
+    Returns:
+        dict: The allowed keys as they are, the changed-field markers as "", nothing else.
+    """
+    event = {key: value for key, value in data.items() if key in REPORT_ITEM_EVENT_KEYS}
+    event.update({key: "" for key in data if key in REPORT_ITEM_EVENT_MARKERS})
+    return event
+
+
 class SSEManager:
     """Manages Server-Sent Events (SSE) for various application events.
 
@@ -102,10 +145,13 @@ class SSEManager:
     def report_item_updated(self, data: dict) -> None:
         """Publish an event for a specific report item update.
 
+        Only ids and change flags are published (see :func:`report_item_event`): the new
+        attribute value, its description and anything else the request carried stay out.
+
         Args:
             data (dict): Data related to the updated report item.
         """
-        self.sse.publish(data, event="report-item-updated")
+        self.sse.publish(report_item_event(data), event="report-item-updated")
 
     def report_item_translation_progress(self, data: dict) -> None:
         """Publish how far an AI translation of a report item has got.
