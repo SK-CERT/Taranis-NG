@@ -25,7 +25,7 @@ from http import HTTPStatus
 
 from flask import request, send_file
 from flask_restful import Api, Resource
-from managers import content_language, content_localizer
+from managers import content_language, content_localizer, template_preview
 from managers.auth_manager import api_key_required
 from managers.link_references import CITING_TYPES, ReferenceIndex, build_index
 from managers.log_manager import logger
@@ -77,6 +77,79 @@ def _serialize_web(web: PublicWeb) -> dict:
 def _attribute_type(attribute) -> AttributeType | None:  # noqa: ANN001
     """Return the type of a report item attribute, if its definition is known."""
     return getattr(getattr(attribute.attribute_group_item, "attribute", None), "type", None)
+
+
+# TLP:WHITE is TLP 1.0's name for what TLP 2.0 calls CLEAR: unlimited disclosure.
+PUBLIC_TLPS = ("CLEAR", "WHITE")
+
+
+def _product_tlps(product: Product) -> list[str]:
+    """Every TLP its report items carry, as written (raw constant, stripped, upper case).
+
+    The same attributes the public-web node reads: of type TLP, or keyed "tlp".
+    """
+    tlps = []
+    for report_item in product.report_items:
+        for attribute in report_item.attributes:
+            group_item = attribute.attribute_group_item
+            key = group_item.title.lower().replace(" ", "_") if group_item and group_item.title else ""
+            if (_attribute_type(attribute) == AttributeType.TLP or key == "tlp") and attribute.value:
+                tlps.append(str(attribute.value).strip().upper())
+    return tlps
+
+
+def _preset_templates(product_preset_id: int | None) -> list[PublicWebTemplate]:
+    """The public-web templates of a product preset."""
+    return PublicWebTemplate.query.filter(PublicWebTemplate.product_preset_id == product_preset_id).all()
+
+
+def _requires_tlp_clear(product_preset_id: int | None, web_id: int | None) -> bool:
+    """Whether the web shows the preset's products only with a public TLP.
+
+    The preset's template for the web (one listing it, else one listing no web) says; without a
+    template the built-in one applies, which always requires TLP:CLEAR.
+    """
+    templates = _preset_templates(product_preset_id)
+    chosen = next((template for template in templates if web_id in template.public_web_ids), None)
+    chosen = chosen or next((template for template in templates if not template.public_web_ids), None)
+    return True if chosen is None else bool(chosen.require_tlp_clear)
+
+
+def public_on_web(product: Product, web_id: int | None) -> bool:
+    """Whether a published product's TLP lets the web show it.
+
+    Decided here, not only on the node: the node is internet-facing, and its API key must not
+    be a key to TLP:AMBER and TLP:RED products. Every TLP must be public; a value that is not a
+    TLP at all counts as the most restrictive one. A product without any TLP is public only where
+    its preset's template says so.
+
+    Args:
+        product (Product): A published product.
+        web_id (int | None): The web asking.
+
+    Returns:
+        bool: True when the web may receive it.
+    """
+    tlps = _product_tlps(product)
+    if tlps:
+        return all(tlp in PUBLIC_TLPS for tlp in tlps)
+    return not _requires_tlp_clear(product.product_preset_id, web_id)
+
+
+def _node_web_ids(public_web_node) -> set[int]:  # noqa: ANN001
+    """The ids of the webs a node serves."""
+    return {web.id for web in public_web_node.webs}
+
+
+def _shown_to_node(product: Product, public_web_node, web_id: int | None) -> bool:  # noqa: ANN001
+    """Whether the node may receive the product for the web it asks for (any of its own when None)."""
+    webs = [web_id] if web_id is not None else [own for own in sorted(_node_web_ids(public_web_node)) if product.shown_on_web(own)]
+    return any(public_on_web(product, web) for web in webs)
+
+
+def _withheld(product: Product) -> dict:
+    """What a listing says of a product the node may not have: its id, so paging stays in step."""
+    return {"id": product.id, "withheld": True, "report_items": []}
 
 
 @dataclass(frozen=True)
@@ -285,7 +358,8 @@ def _serialize_product(product: Product, language: str | None = None) -> dict:
         "links": index.urls,
         "created": product.created.isoformat() if product.created else None,
         **_dates(product),
-        "user": {"name": user.name, "username": user.username} if user else None,
+        # The author's name only: a login name is of no use to a reader and of some to an attacker.
+        "user": {"name": user.name} if user else None,
         "report_items": report_items,
     }
     if language:
@@ -339,7 +413,9 @@ class PublicWebProducts(Resource):
         Returns:
             dict: ``{"total_count": int, "items": [...]}``: how many products are published in
                 all, and this page of them, ``{"id", "title", "created", "published", "updated"}`` each unless ``full``.
-                403 for a disabled node.
+                A product the web may not show (its TLP, see :func:`public_on_web`) is listed as
+                ``{"id", "withheld": True, "report_items": []}`` only, so the node's paging stays in
+                step. 403 for a disabled node, 404 for a web the node does not serve.
         """
         public_web_node.touch()
         if not public_web_node.enabled:
@@ -362,11 +438,26 @@ class PublicWebProducts(Resource):
         if not content_language.is_language(language):
             language = None
 
+        if web_id is not None and web_id not in _node_web_ids(public_web_node):
+            logger.warning(f"Public-web '{public_web_node.name}' asked for web {web_id}, which it does not serve")
+            return {"error": "This node does not serve that web"}, HTTPStatus.NOT_FOUND
+
         products, total = Product.get_published(limit, web_id=web_id, offset=offset, with_content=full)
-        if full:
-            items = [_serialize_product(product, language) for product in products]
-        else:
-            items = [{"id": p.id, "title": p.title, "created": p.created.isoformat() if p.created else None, **_dates(p)} for p in products]
+        items = []
+        for product in products:
+            if not _shown_to_node(product, public_web_node, web_id):
+                items.append(_withheld(product))
+            elif full:
+                items.append(_serialize_product(product, language))
+            else:
+                items.append(
+                    {
+                        "id": product.id,
+                        "title": product.title,
+                        "created": product.created.isoformat() if product.created else None,
+                        **_dates(product),
+                    },
+                )
         logger.debug(f"Public-web '{public_web_node.name}': listed {len(items)} of {total} published products from {offset}")
         return {"total_count": total, "items": items}, HTTPStatus.OK
 
@@ -402,9 +493,15 @@ class PublicWebProduct(Resource):
         if not content_language.is_language(language):
             language = None
 
+        if web_id is not None and web_id not in _node_web_ids(public_web_node):
+            logger.warning(f"Public-web '{public_web_node.name}' asked for web {web_id}, which it does not serve")
+            return {"error": "Product not found or not published"}, HTTPStatus.NOT_FOUND
         product = _find_published(product_id, web_id=web_id)
-        if product is None:
-            logger.debug(f"Public-web '{public_web_node.name}': product {product_id} not found or not published")
+        # A template preview renders the product it was asked for, whatever its TLP: the dialog
+        # warns that the web would not show it. Only core can issue the pass for that.
+        previewing = template_preview.product_pass_valid(request.args.get("preview_ticket"), product_id, web_id)
+        if product is None or not (previewing or _shown_to_node(product, public_web_node, web_id)):
+            logger.debug(f"Public-web '{public_web_node.name}': product {product_id} not found, not published, or not public")
             return {"error": "Product not found or not published"}, HTTPStatus.NOT_FOUND
         logger.info(f"Public-web '{public_web_node.name}': serving product {product.id} '{product.title}'")
         return _serialize_product(product, language), HTTPStatus.OK

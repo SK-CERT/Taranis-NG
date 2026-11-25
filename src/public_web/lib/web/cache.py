@@ -116,6 +116,10 @@ class WebCache:
         vulnerability report template is on. Report items with no template to show them (their
         built-ins are off) are left out, and a product left with none is not shown.
         """
+        if data.get("withheld"):
+            # Core lists it, without its content, so that paging stays in step: the web may not show it.
+            logger.debug("Skipping product %s: core withholds it from this web", data.get("id"))
+            return None
         renderer = renderer or self.renderer()
         try:
             product = build_product(data, renderer.has_item_template)

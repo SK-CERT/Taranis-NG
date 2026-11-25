@@ -480,6 +480,32 @@ def test_tlp_gate_and_vulnerability_only_mode() -> None:
     assert displayable(_product(_vulnerability()), vulnerability_only=True)[0] is True
 
 
+def test_every_tlp_of_an_item_counts() -> None:
+    # Only the first TLP field used to be read, so CLEAR then RED was shown as CLEAR.
+    item = _item("Disinformation", DISINFO_ITEM_TYPE, _attribute("tlp", "TLP", "CLEAR"), _attribute("tlp", "TLP", "RED"))
+
+    product = _product(item)
+
+    assert product["max_tlp"] == "RED"
+    assert displayable(product, vulnerability_only=False, require_tlp_clear=False)[0] is False
+
+
+@pytest.mark.parametrize("value", ["AMBER STRICT", "TLP:CLEAR", "unclassified"])
+def test_a_value_that_is_not_a_tlp_is_never_public(value: str) -> None:
+    # It used to rank as CLEAR, so next to a CLEAR item the product's TLP read CLEAR.
+    product = _product(
+        _item("Disinformation", DISINFO_ITEM_TYPE, _attribute("tlp", "TLP", "CLEAR")),
+        _item("Disinformation", DISINFO_ITEM_TYPE, _attribute("tlp", "TLP", value)),
+    )
+
+    assert product["max_tlp"] == value.upper()
+    assert displayable(product, vulnerability_only=False, require_tlp_clear=False)[0] is False
+
+
+def test_the_author_s_login_name_is_not_part_of_the_product() -> None:
+    assert "author_username" not in _product(_disinfo())
+
+
 def test_a_template_can_allow_products_without_tlp() -> None:
     renderer = ReportRenderer([_template('{% extends "builtin/product_base.html" %}', preset=PRESET, require_tlp_clear=False)])
 

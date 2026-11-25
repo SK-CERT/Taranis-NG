@@ -121,7 +121,6 @@ const PRODUCT_FIELDS = [
     'published',
     'created',
     'author',
-    'author_username',
     'product_preset',
     'language',
     'ai_translation',

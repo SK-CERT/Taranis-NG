@@ -184,7 +184,22 @@ def test_the_page_comes_back_as_a_url_of_its_own(world: types.SimpleNamespace) -
     prefix = "/config/public-web-templates/preview/"
     assert body["page_url"].startswith(prefix)
     assert template_preview.take_page(body["page_url"].removeprefix(prefix)) == "<html></html>"
-    assert set(world.redis.ttl.values()) == {template_preview.PAGE_TTL_SECONDS}
+    page_ttls = {ttl for key, ttl in world.redis.ttl.items() if not key.startswith("template-preview-product:")}
+    assert page_ttls == {template_preview.PAGE_TTL_SECONDS}
+
+
+def test_the_node_gets_a_pass_for_the_previewed_product_only(world: types.SimpleNamespace) -> None:
+    # Core withholds a product the web may not show (its TLP) from the node; a preview may
+    # still render it, and the dialog warns. The pass covers this product on this web only.
+    template_preview.preview({"template": {"product_preset_id": 5, "source": SOURCE}})
+
+    (sent,) = world.sent
+    ticket = sent["preview_ticket"]
+    assert template_preview.product_pass_valid(ticket, sent["product_id"], sent["web_id"]) is True
+    assert template_preview.product_pass_valid(ticket, sent["product_id"] + 1, sent["web_id"]) is False
+    assert template_preview.product_pass_valid(ticket, sent["product_id"], sent["web_id"] + 1) is False
+    assert template_preview.product_pass_valid("forged", sent["product_id"], sent["web_id"]) is False
+    assert world.redis.ttl[f"template-preview-product:{ticket}"] == template_preview.PRODUCT_PASS_SECONDS
 
 
 def test_a_page_has_a_few_views_then_it_is_gone(redis: _FakeRedis) -> None:

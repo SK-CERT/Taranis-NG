@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import functools
 import json
+import secrets
 import uuid
 from http import HTTPStatus
 
@@ -93,6 +94,32 @@ def take_page(token: str) -> str | None:
         redis_client.delete(key, f"{key}:views")
         return None
     return json.loads(cached)["html"]
+
+
+# A preview may render a product the web would not show (a TLP:AMBER one, say: the dialog then
+# warns). Core gives the node that product only against a pass it issued for this preview.
+PRODUCT_PASS_SECONDS = 120
+
+
+def _product_pass_key(ticket: str) -> str:
+    return f"template-preview-product:{ticket}"
+
+
+def issue_product_pass(product_id: int, web_id: int) -> str:
+    """Let the web's node fetch one product for a preview, whatever its TLP, for a short while."""
+    ticket = secrets.token_urlsafe(32)
+    redis_client.set(_product_pass_key(ticket), f"{product_id}:{web_id}", ex=PRODUCT_PASS_SECONDS)
+    return ticket
+
+
+def product_pass_valid(ticket: str | None, product_id: int, web_id: int | None) -> bool:
+    """Whether a pass from :func:`issue_product_pass` covers this product on this web."""
+    if not ticket or web_id is None or len(ticket) > 128:  # noqa: PLR2004 - a token_urlsafe(32) is 43 characters
+        return False
+    stored = redis_client.get(_product_pass_key(ticket))
+    if isinstance(stored, bytes):
+        stored = stored.decode()
+    return stored is not None and secrets.compare_digest(stored, f"{product_id}:{web_id}")
 
 
 def _int_or_none(value: object) -> int | None:
@@ -261,6 +288,7 @@ def preview(data: dict) -> tuple[dict, HTTPStatus]:
         "product_id": product_id,
         "language": data.get("language") if isinstance(data.get("language"), str) else None,
         "view": view,
+        "preview_ticket": issue_product_pass(product_id, web.id),
     }
     body, status = PublicWebApi(web.node.api_url, web.node.api_key).preview(payload)
     if status == HTTPStatus.SERVICE_UNAVAILABLE:

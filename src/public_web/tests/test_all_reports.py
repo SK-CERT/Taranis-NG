@@ -109,6 +109,20 @@ def test_every_published_product_is_shown_newest_first() -> None:
     assert core.one_by_one == []
 
 
+def test_a_product_core_withholds_keeps_its_place_in_the_paging() -> None:
+    # Core lists a product the web may not show (its TLP) as its id only, so that the next
+    # page's offset stays right; the node skips it rather than falling back to one by one.
+    core = _Core(250)
+    core.products[0] = {"id": core.products[0]["id"], "withheld": True, "report_items": []}
+    core.products[150] = {"id": core.products[150]["id"], "withheld": True, "report_items": []}
+
+    reports = web_cache.WebCache(core).get_all_reports(1, "en")
+
+    assert _ids(reports) == [product_id for product_id in range(250, 0, -1) if product_id not in (250, 100)]
+    assert core.pages == [(0, 100), (100, 100), (200, 100)]
+    assert core.one_by_one == []
+
+
 def test_the_rss_feed_has_every_published_product(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PUBLIC_WEB_API_KEY", "test-key")
     from lib.web import routes  # noqa: PLC0415 - its cache is made on import, with the key set above
