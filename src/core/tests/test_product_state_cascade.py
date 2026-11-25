@@ -46,6 +46,8 @@ def report_updates(monkeypatch: pytest.MonkeyPatch) -> list:
     final_state = classmethod(lambda _cls, entity_type: types.SimpleNamespace(id=final_states[entity_type]))
     monkeypatch.setattr(StateDefinition, "get_final_state", final_state)
     monkeypatch.setattr(ReportItem, "find", classmethod(lambda _cls, report_item_id: reports.get(report_item_id)))
+    # The analyst may read both reports (test_product_report_acl.py covers one they may not).
+    monkeypatch.setattr(ReportItem, "allowed_with_acl", classmethod(lambda _cls, *_args, **_kwargs: True))
     monkeypatch.setattr(ReportItem, "update_report_item", classmethod(lambda _cls, *args: updates.append(args)))
     return updates
 
