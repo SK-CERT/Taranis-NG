@@ -29,7 +29,7 @@
             />
         </v-col>
         <v-col
-            v-if="useTls"
+            v-if="useTls || isLdapsUrl"
             cols="12"
             class="mb-n4"
         >
@@ -289,6 +289,13 @@
             props.config.use_tls = value
         }
     })
+    /** An ldaps:// URL is always TLS with a checked certificate, so its CA matters even with the switch off. */
+    const isLdapsUrl = computed(() =>
+        String(props.config.server_url ?? '')
+            .trim()
+            .toLowerCase()
+            .startsWith('ldaps://')
+    )
 
     /**
      * The bind mode. A real local ref (not derived from config field presence)

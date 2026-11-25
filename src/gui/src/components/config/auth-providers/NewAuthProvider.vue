@@ -483,7 +483,11 @@
     })
     const insecureConfigurationWarnings = computed(() => {
         const warnings: string[] = []
-        if (localItem.value.kind === 'ldap' && config.value.use_tls !== true) {
+        const ldapsUrl = String(config.value.server_url ?? '')
+            .trim()
+            .toLowerCase()
+            .startsWith('ldaps://')
+        if (localItem.value.kind === 'ldap' && config.value.use_tls !== true && !ldapsUrl) {
             warnings.push(t('auth_provider.insecure_ldap_no_tls'))
         }
         if (['oidc', 'oauth2'].includes(localItem.value.kind)) {

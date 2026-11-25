@@ -17,7 +17,18 @@ user-owned credentials, switched on in *Access Management → Security*.
 | `oauth2`  | browser redirect | generic authorization-code flow + userinfo endpoint |
 | `saml`    | browser redirect | SAML 2.0 web browser SSO (HTTP-Redirect request, HTTP-POST response) |
 
-### LDAP CA certificate
+### LDAP transport and CA certificate
+
+The server URL and the *Use TLS* switch together pick the transport:
+
+| Server URL            | Use TLS on                          | Use TLS off |
+|-----------------------|-------------------------------------|-------------|
+| `ldaps://host`        | LDAPS (port 636)                    | LDAPS (port 636) |
+| `ldap://host`         | StartTLS on port 389 before the bind | plain LDAP |
+| `host` (no scheme)    | LDAPS (port 636)                    | plain LDAP |
+
+Every TLS connection checks the server's certificate. StartTLS is required: when
+the server refuses it, the login fails and no password is sent.
 
 Paste the PEM CA certificate that validates the LDAP server into the LDAP
 provider's *CA certificate* field. When the field is empty, the system trust

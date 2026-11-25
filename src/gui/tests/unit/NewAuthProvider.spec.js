@@ -261,6 +261,18 @@ describe('NewAuthProvider dialog', () => {
         expect(warning.text()).toContain('LDAP traffic is not protected by TLS')
     })
 
+    it('does not warn about LDAP TLS for an ldaps:// URL, which is always TLS', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: { server_url: 'LDAPS://ldap.example.org', use_tls: false, user_dn_template: 'uid={username},dc=x' }
+        })
+
+        expect(wrapper.vm.insecureConfigurationWarnings.join(' ')).not.toContain('LDAP traffic is not protected by TLS')
+    })
+
     it('warns about unencrypted authentication endpoints', async () => {
         const wrapper = await mountDialog()
         await openEdit(wrapper, {
@@ -954,6 +966,13 @@ describe('LDAP provider fields', () => {
         const caField = wrapper.findComponent({ name: 'VTextarea' })
         expect(caField.exists()).toBe(true)
         expect(caField.props('label')).toContain('optional')
+    })
+
+    it('shows the CA input for an ldaps:// URL even with the TLS switch off', () => {
+        const config = { use_tls: false, server_url: 'ldaps://ldap.example.org' }
+        const wrapper = mountWithPlugins(LdapFields, { props: { config, saving: false } })
+
+        expect(wrapper.find('[data-test="ldap-ca-certificate"]').exists()).toBe(true)
     })
 
     it('keeps both bind modes visible and wires Direct bind help to a real tooltip', async () => {

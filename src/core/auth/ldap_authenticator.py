@@ -2,7 +2,9 @@
 
 Provider ``config`` keys:
     server_url (str): LDAP server URL or host (e.g. "ldaps://ldap.example.org").
-    use_tls (bool): Use TLS (LDAPS) for the connection.
+    use_tls (bool): Protect the connection with TLS: LDAPS for an ``ldaps://`` URL or a bare
+        host, StartTLS before the bind for an ``ldap://`` URL. An ``ldaps://`` URL is always
+        TLS, and its certificate is always checked, whatever this says.
     ca_cert (str): PEM CA certificate text; empty uses the system trust store.
     user_dn_template (str): Direct-bind template, e.g. "uid={username},ou=people,dc=example,dc=org".
     bind_dn (str): Service account DN for search+bind mode (password = provider secret).
@@ -42,14 +44,45 @@ class LDAPAuthenticator(BaseAuthenticator):
         self.provider = provider
         self.config = provider.config or {}
 
+    def _transport(self) -> str:
+        """How the connection is protected: "ldaps", "starttls" or "plain".
+
+        The URL scheme and ``use_tls`` used to disagree silently: ldap3 follows the scheme, so
+        ``ldap://`` with "Use TLS" on sent the bind password in clear text, and ``ldaps://`` with
+        it off encrypted the connection but checked no certificate at all.
+        """
+        url = str(self.config.get("server_url") or "").strip().lower()
+        use_tls = bool(self.config.get("use_tls", True))
+        if url.startswith("ldaps://"):
+            return "ldaps"
+        if url.startswith("ldap://"):
+            return "starttls" if use_tls else "plain"
+        return "ldaps" if use_tls else "plain"
+
+    def _tls(self) -> Tls:
+        """TLS settings that check the server's certificate (against ``ca_cert`` when given)."""
+        ca_cert = self.config.get("ca_cert") or None
+        return Tls(ca_certs_data=ca_cert, validate=ssl.CERT_REQUIRED, version=ssl.PROTOCOL_TLSv1_2)
+
     def _build_server(self) -> Server:
         """Build the ldap3 Server from the provider configuration."""
-        use_tls = bool(self.config.get("use_tls", True))
-        tls = None
-        if use_tls:
-            ca_cert = self.config.get("ca_cert") or None
-            tls = Tls(ca_certs_data=ca_cert, validate=ssl.CERT_REQUIRED, version=ssl.PROTOCOL_TLSv1_2)
-        return Server(self.config.get("server_url"), use_ssl=use_tls, tls=tls, get_info=ALL)
+        transport = self._transport()
+        tls = None if transport == "plain" else self._tls()
+        return Server(self.config.get("server_url"), use_ssl=transport == "ldaps", tls=tls, get_info=ALL)
+
+    def _connection(self, server: Server, user: str, password: str) -> Connection:
+        """An unbound connection, already upgraded with StartTLS when the transport asks for it.
+
+        Raises:
+            ConnectionError: When the server does not take StartTLS: nothing is sent in clear.
+        """
+        conn = Connection(server, user=user, password=password, read_only=True)
+        if self._transport() == "starttls":
+            conn.open()
+            if not conn.start_tls():
+                msg = f"LDAP server of provider '{self.provider.name}' refused StartTLS"
+                raise ConnectionError(msg)
+        return conn
 
     def _fetch_entry(self, conn: Connection, dn: str) -> dict:
         """Read the user's entry attributes after a successful bind.
@@ -168,7 +201,7 @@ class LDAPAuthenticator(BaseAuthenticator):
     def _verify_direct_bind(self, server: Server, username: str, password: str) -> ExternalIdentity | None:
         """Authenticate by binding directly with a DN built from the template."""
         dn = self._direct_bind_dn(username)
-        conn = Connection(server, user=dn, password=password, read_only=True)
+        conn = self._connection(server, dn, password)
         if not conn.bind():
             log_manager.store_auth_error_activity(
                 f"LDAP user bind failed for provider '{self.provider.name}', user '{username}' (DN: '{dn}'): "
@@ -181,7 +214,7 @@ class LDAPAuthenticator(BaseAuthenticator):
 
     def _verify_search_bind(self, server: Server, username: str, password: str) -> ExternalIdentity | None:
         """Authenticate by finding the user with a service account, then rebinding."""
-        service_conn = Connection(server, user=self.config["bind_dn"], password=self.provider.get_secret_plaintext(), read_only=True)
+        service_conn = self._connection(server, self.config["bind_dn"], self.provider.get_secret_plaintext())
         if not service_conn.bind():
             log_manager.store_auth_error_activity(
                 f"LDAP service bind failed for provider '{self.provider.name}' (bind_dn: '{self.config['bind_dn']}'): "
@@ -207,7 +240,7 @@ class LDAPAuthenticator(BaseAuthenticator):
         attributes = entry.entry_attributes_as_dict
         service_conn.unbind()
 
-        user_conn = Connection(server, user=dn, password=password, read_only=True)
+        user_conn = self._connection(server, dn, password)
         if not user_conn.bind():
             log_manager.store_auth_error_activity(
                 f"LDAP user bind failed for provider '{self.provider.name}', user '{username}' (DN: '{dn}'): "
