@@ -62,9 +62,9 @@ class _Core:
     def list_published_product_ids(self, limit: int, web_id: int | None = None) -> list[int]:  # noqa: ARG002
         return [product["id"] for product in self.products[:limit]]
 
-    def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict:  # noqa: ARG002
+    def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict | None:  # noqa: ARG002
         self.one_by_one.append(product_id)
-        return next(product for product in self.products if product["id"] == product_id)
+        return next((product for product in self.products if product["id"] == product_id), None)
 
     def get_report_templates(self) -> dict[str, list]:
         """No custom report templates: the products are vulnerability reports, shown with the built-in ones."""
@@ -121,6 +121,20 @@ def test_a_product_core_withholds_keeps_its_place_in_the_paging() -> None:
     assert _ids(reports) == [product_id for product_id in range(250, 0, -1) if product_id not in (250, 100)]
     assert core.pages == [(0, 100), (100, 100), (200, 100)]
     assert core.one_by_one == []
+
+
+def test_a_web_whose_last_products_were_unpublished_shows_none() -> None:
+    # An empty reload used to keep the old list, which never expires, so the products stayed
+    # on the site whenever core's reset push did not reach the node.
+    core = _Core(2)
+    cache = web_cache.WebCache(core)
+    assert _ids(cache.get_all_reports(1, "en")) == [2, 1]
+
+    core.products = []
+    cache._load_reports(1, "en", again=True)
+
+    assert cache.get_all_reports(1, "en") == []
+    assert cache.get_report("2", 1, "en") is None
 
 
 def test_the_rss_feed_has_every_published_product(monkeypatch: pytest.MonkeyPatch) -> None:

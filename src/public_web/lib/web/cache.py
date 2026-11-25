@@ -171,10 +171,12 @@ class WebCache:
             except TaranisClientError as exc:
                 logger.exception("Could not fetch reports from Taranis: %s", exc)
                 return None
-            # Only cache non-empty results: an empty feed usually means nothing is
-            # published yet, and caching [] would hide a report published moments
-            # later. Nor reports loaded before a reset: they may show one unpublished since.
-            if reports and started >= (self.cache.get(CACHE_KEY_RESET_AT) or 0):
+            # An empty result is cached like any other, and reloaded once older than the TTL
+            # like any other. Leaving it out kept the previous list - forever, as entries never
+            # expire - so a web whose last products were unpublished, or had their TLP raised,
+            # went on showing them whenever core's reset push did not arrive. Not cached: reports
+            # loaded before a reset, which may show one unpublished since.
+            if started >= (self.cache.get(CACHE_KEY_RESET_AT) or 0):
                 entry = {"fetched_at": started, "reports": reports}
                 self.cache.set(cache_key, entry, timeout=0)
                 self.cache.set(f"{cache_key}:at", started, timeout=0)
