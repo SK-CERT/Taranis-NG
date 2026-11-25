@@ -157,11 +157,50 @@ def test_web_collector_keeps_page_credentials_out_of_the_log() -> None:
     assert "s3cret-value" not in " ".join(source.logger.messages["error"])
 
 
-def test_web_collector_still_puts_page_credentials_in_the_url() -> None:
-    accepted, source = parse_web_settings(WEB_URL="https://news.example.org/a", AUTH_USERNAME="reader", AUTH_PASSWORD="s3cret-value")
+def parse_web_collector(**parameters: str) -> tuple[bool, WebCollector]:
+    collector = WebCollector()
+    collector.source = make_source(**parameters)
+    return collector._WebCollector__parse_settings(), collector
+
+
+def test_web_collector_hands_page_credentials_to_the_browser_only() -> None:
+    accepted, collector = parse_web_collector(
+        WEB_URL="https://news.example.org/a?page=2",
+        AUTH_USERNAME="reader",
+        AUTH_PASSWORD="s3cret-value",
+    )
 
     assert accepted is True
-    assert source.url == "https://reader:s3cret-value@news.example.org/a"
+    # The source's URL is logged and stored as every news item's source: no credentials there.
+    assert collector.source.url == "https://news.example.org/a?page=2"
+    assert collector.title_page_url == "https://reader:s3cret-value@news.example.org/a?page=2"
+
+
+def test_web_collector_encodes_credentials_so_they_cannot_change_the_host() -> None:
+    accepted, collector = parse_web_collector(
+        WEB_URL="https://news.example.org/a",
+        AUTH_USERNAME="reader",
+        AUTH_PASSWORD="p@ss:word/evil.example",
+    )
+
+    assert accepted is True
+    assert collector.title_page_url == "https://reader:p%40ss%3Aword%2Fevil.example@news.example.org/a"
+
+
+def test_web_collector_without_credentials_opens_the_bare_url() -> None:
+    accepted, collector = parse_web_collector(WEB_URL="https://news.example.org/a", AUTH_USERNAME="reader")
+
+    assert accepted is True
+    assert collector.title_page_url == collector.source.url == "https://news.example.org/a"
+
+
+def test_web_collector_redacts_credentials_in_browser_errors() -> None:
+    _accepted, collector = parse_web_collector(WEB_URL="https://news.example.org/a", AUTH_USERNAME="reader", AUTH_PASSWORD="s3cret-value")
+
+    message = collector._WebCollector__redacted(RuntimeError(f"net::ERR_TIMED_OUT at {collector.title_page_url}"))
+
+    assert "s3cret-value" not in message
+    assert "https://news.example.org/a" in message
 
 
 def test_web_collector_checks_links_and_landing_pages_with_the_source_s_proxy_setting() -> None:

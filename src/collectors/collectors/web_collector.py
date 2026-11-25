@@ -10,7 +10,7 @@ import subprocess
 import time
 import uuid
 from typing import ClassVar
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 import selenium
 from dateutil.parser import parse
@@ -309,13 +309,13 @@ class WebCollector(BaseCollector):
                     break
             browser.switch_to.window(handle_to_keep)
         except Exception as error:
-            self.source.logger.exception(f"Browser tab restoration failed, reloading the title page: {error}")
+            self.source.logger.exception(f"Browser tab restoration failed, reloading the title page: {self.__redacted(error)}")
             try:
                 # last resort - at least try to reopen the original page
                 browser.get(fallback_url)
                 return True
             except Exception as error:
-                self.source.logger.exception(f"Fallback to the original page failed: {error}")
+                self.source.logger.error(f"Fallback to the original page failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
                 return False
         return browser.current_window_handle == handle_to_keep
 
@@ -338,12 +338,11 @@ class WebCollector(BaseCollector):
         # (file:, view-source:, chrome:), is refused when the URL is checked below.
         web_url = web_url.strip()
         self.source.url = web_url if re.search(r"^[a-z][a-z0-9+.-]*://", web_url.lower()) else f"https://{web_url}"
-        # Checked before credentials are put in the URL, so they never reach a log line.
         bare_url = self.source.url
-
-        if self.auth_username and self.auth_password:
-            parsed_url = urlparse(self.source.url)
-            self.source.url = f"{parsed_url.scheme}://{self.auth_username}:{self.auth_password}@{parsed_url.netloc}{parsed_url.path}"
+        # The source's URL stays without credentials: it is logged, checked, and stored as the
+        # source of every news item, where every analyst reads it. Only the browser is handed the
+        # page's basic-auth credentials, in the URL it opens the title page with.
+        self.title_page_url = self.__with_credentials(bare_url)
 
         # parse other arguments
         self.source.user_agent = self.source.param_key_values["USER_AGENT"]
@@ -382,6 +381,41 @@ class WebCollector(BaseCollector):
             return False
 
         return True
+
+    def __with_credentials(self, url: str) -> str:
+        """The URL with the page's basic-auth credentials in it, for the browser only.
+
+        User name and password are percent-encoded, so a ``@``, ``:`` or ``/`` in them cannot
+        change where the browser goes. The query and fragment are kept.
+
+        Parameters:
+            url (str): The source's URL, without credentials.
+
+        Returns:
+            (str): The URL to open, or ``url`` itself when no credentials are set.
+        """
+        if not (self.auth_username and self.auth_password):
+            return url
+        parsed = urlparse(url)
+        userinfo = f"{quote(self.auth_username, safe='')}:{quote(self.auth_password, safe='')}"
+        return parsed._replace(netloc=f"{userinfo}@{parsed.netloc}").geturl()
+
+    def __redacted(self, message: object) -> str:
+        """A log message with the credentialed title-page URL replaced by the bare one.
+
+        Browser errors may quote the URL the browser was asked to open.
+
+        Parameters:
+            message (object): The message, or an exception.
+
+        Returns:
+            (str): The message, safe to log.
+        """
+        text = str(message)
+        title_page_url = getattr(self, "title_page_url", None)
+        if title_page_url and title_page_url != self.source.url:
+            text = text.replace(title_page_url, self.source.url)
+        return text
 
     def __url_problem(self, url: str) -> str | None:
         """Why the browser must not open (or have ended up on) a URL; None when it may.
@@ -539,7 +573,7 @@ class WebCollector(BaseCollector):
                 return
 
         if not url_not_modified:
-            total_failed_articles = self.__browse_title_page(self.source.url)
+            total_failed_articles = self.__browse_title_page(self.title_page_url)
 
             if total_failed_articles > 0:
                 self.source.logger.debug(f"{total_failed_articles} article(s) failed")
@@ -560,7 +594,7 @@ class WebCollector(BaseCollector):
         try:
             browser.get(index_url)
         except Exception as error:
-            self.source.logger.exception(f"Obtaining title page failed: {error}")
+            self.source.logger.error(f"Obtaining title page failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
             self.__dispose_of_headless_driver(browser)
             return 0
 
