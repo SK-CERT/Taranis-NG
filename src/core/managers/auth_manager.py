@@ -1299,6 +1299,33 @@ def decode_user_from_jwt(jwt_token: str) -> User:
     return _find_active_user(decoded["sub"])
 
 
+def decode_user_from_session(claims: dict | None) -> User | None:
+    """Resolve the user of an SSE session opened by ``/sse-init``.
+
+    The session keeps the claims of the access token it was opened with - not the token, which
+    would be a bearer credential lying in Redis for every container that reaches it - so the
+    checks a token gets are made here on those claims: not a scoped token, not expired, not
+    logged out, of the current authentication generation, and an active user.
+
+    Args:
+        claims (dict | None): ``sub``, ``jti``, ``exp`` and the auth generation, as stored.
+
+    Returns:
+        User: The active user, or None.
+    """
+    if not isinstance(claims, dict) or claims.get("scope"):
+        return None
+    expires = claims.get("exp")
+    if not isinstance(expires, int | float) or isinstance(expires, bool) or expires <= time.time():
+        return None
+    if TokenBlacklist.is_blacklisted(claims.get("jti")):
+        log_manager.store_auth_warning_activity("SSE session of a logged-out token refused")
+        return None
+    if not _auth_generation_is_current({}, claims):
+        return None
+    return _find_active_user(claims.get("sub"))
+
+
 def get_external_permissions_ids() -> list[str]:
     """Get the external permissions IDs."""
     return ["MY_ASSETS_ACCESS", "MY_ASSETS_CREATE", "MY_ASSETS_CONFIG", "CONFIG_ACCESS"]
