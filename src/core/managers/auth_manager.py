@@ -1015,33 +1015,6 @@ def get_user_from_jwt_token() -> User | None:
     return _find_active_user(identity)
 
 
-def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set | None:
-    """Get user permissions from JWT token.
-
-    Args:
-        user: The user object.
-        jwt_data: The decoded JWT data containing user claims.
-
-    Returns:
-        A set of user's permissions or None if permissions are missing or an error occurs.
-
-    """
-    try:
-        if not jwt_data or "user_claims" not in jwt_data:
-            log_manager.store_user_auth_error_activity(user, "Missing user data in JWT")
-            return None
-        jwt_data = jwt_data["user_claims"]
-        if "permissions" not in jwt_data:
-            log_manager.store_user_auth_error_activity(user, "Missing user permissions in JWT")
-            return None
-
-        return set(jwt_data["permissions"])
-
-    except Exception as ex:
-        log_manager.store_auth_error_activity("Get permission from JWT error", ex)
-        return None
-
-
 def auth_required(
     required_permissions: str | list,
     *acl_args: ACLCheck,
@@ -1102,9 +1075,10 @@ def auth_required(
                     log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
                     return error
                 # A logged-out token was refused by verify_jwt_in_request (token_in_blocklist_loader).
-                jwt_data = get_jwt()
-
-                active_permissions_set = get_perm_from_jwt_token(user, jwt_data)
+                # The permissions are the account's now, not the ones copied into the token when it
+                # was issued: a role taken away used to keep working until the token expired, and
+                # with the GUI refreshing it, never.
+                active_permissions_set = get_perm_from_user(user)
 
             # is there at least one match with the permissions required by the call?
             if not required_permissions_set.intersection(active_permissions_set or set()):
