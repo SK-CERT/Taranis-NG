@@ -181,7 +181,13 @@ def ingest(monkeypatch: pytest.MonkeyPatch) -> types.SimpleNamespace:
     )
     monkeypatch.setattr(news_item_module, "db", types.SimpleNamespace(session=state.session))
     monkeypatch.setattr(NewsItemData, "hash_known", classmethod(lambda _cls, value: value in state.known_hashes))
-    monkeypatch.setattr(NewsItemData, "find_by_version_key", classmethod(lambda _cls, key: state.by_key.get(key)))
+    state.version_lookups = []
+
+    def find_by_version_key(_cls: type, key: str, source_ids: object = None) -> object:
+        state.version_lookups.append((key, source_ids))
+        return state.by_key.get(key)
+
+    monkeypatch.setattr(NewsItemData, "find_by_version_key", classmethod(find_by_version_key))
     monkeypatch.setattr(NewsItemAggregate, "create_new_for_all_groups", classmethod(lambda _cls, data: state.created.append(data)))
     monkeypatch.setattr(
         NewsItemAggregate,
@@ -516,3 +522,15 @@ def test_a_republished_copy_from_a_remote_node_refreshes_the_item(monkeypatch: p
     assert stored.versions == []
     assert stored.published == "29.09.2026 - 12:58"
     assert (refreshed, resurfaced) == ([stored], [])
+
+
+def test_a_revision_is_looked_up_among_the_sending_node_s_sources(ingest: types.SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Another node must not rewrite an item this one collected: the lookup is scoped to the
+    # sources of the node that sent the revision.
+    item = make_data(version="1.0.0")
+    schema = types.SimpleNamespace(load=lambda _payload: [item])
+    monkeypatch.setattr(news_item_module, "NewNewsItemDataSchema", lambda **_kwargs: schema)
+
+    NewsItemAggregate.add_news_items([{}], source_ids={"source-1"})
+
+    assert ingest.version_lookups == [(item.version_key, {"source-1"})]

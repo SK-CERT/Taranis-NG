@@ -81,6 +81,24 @@ class OSINTSourcesForCollectors(Resource):
         return OSINTSource.get_all_for_collector_json(collectors_node, parameters.collector_type)
 
 
+def _node_source_ids(collectors_node: CollectorsNode) -> set[str]:
+    """The ids of the OSINT sources a collectors node collects.
+
+    A node's API key may report on, and add news items to, these sources only. Any collectors
+    key used to be good for every source: to mark it collecting, set its error, or put items
+    into it - items every analyst who may read that source then saw as its own.
+    """
+    return {str(source.id) for collector in collectors_node.collectors for source in collector.sources}
+
+
+def _foreign_source(collectors_node: CollectorsNode, osint_source_id: str) -> tuple[dict, HTTPStatus] | None:
+    """The 404 for a source that is not the node's, or None when it is."""
+    if str(osint_source_id) in _node_source_ids(collectors_node):
+        return None
+    logger.warning(f"Collectors node '{collectors_node.name}' asked about OSINT source {osint_source_id}, which it does not collect")
+    return {"error": "OSINT source with this ID does not exists"}, HTTPStatus.NOT_FOUND
+
+
 class OSINTSourceLastAttempt(Resource):
     """OSINT source last attempt API endpoint."""
 
@@ -88,7 +106,7 @@ class OSINTSourceLastAttempt(Resource):
     def get(
         self,
         osint_source_id: str,
-        collectors_node: CollectorsNode = None,  # noqa: ARG002
+        collectors_node: CollectorsNode = None,
     ) -> tuple[dict, HTTPStatus]:
         """Get the last attempt for an OSINT source.
 
@@ -99,6 +117,9 @@ class OSINTSourceLastAttempt(Resource):
             (dict): Empty dictionary
             (int): The response code
         """
+        refused = _foreign_source(collectors_node, osint_source_id)
+        if refused:
+            return refused
         source = OSINTSource.find(osint_source_id)
         if not source:
             msg = "OSINT source with this ID does not exists"
@@ -116,7 +137,7 @@ class CollectorSourcesSchedule(Resource):
     def post(
         self,
         collector_id: str,  # noqa: ARG002
-        collectors_node: CollectorsNode = None,  # noqa: ARG002
+        collectors_node: CollectorsNode = None,
     ) -> tuple[dict, HTTPStatus]:
         """Record the next run time of every source the node reports.
 
@@ -130,8 +151,9 @@ class CollectorSourcesSchedule(Resource):
             (dict): Empty dictionary
             (int): The response code
         """
+        own = _node_source_ids(collectors_node)
         for source_id, next_run in (request.json or {}).items():
-            if next_run:
+            if next_run and str(source_id) in own:
                 run_state_cache.set_next_run(source_id, next_run)
         return {}, HTTPStatus.OK
 
@@ -143,7 +165,7 @@ class OSINTSourceLastErrorMessage(Resource):
     def get(
         self,
         osint_source_id: str,
-        collectors_node: CollectorsNode = None,  # noqa: ARG002
+        collectors_node: CollectorsNode = None,
     ) -> tuple[dict, HTTPStatus]:
         """Get the last error message for an OSINT source.
 
@@ -154,6 +176,9 @@ class OSINTSourceLastErrorMessage(Resource):
             (dict): Empty dictionary
             (int): The response code
         """
+        refused = _foreign_source(collectors_node, osint_source_id)
+        if refused:
+            return refused
         source = OSINTSource.find(osint_source_id)
         if not source:
             msg = "OSINT source with this ID does not exists"
@@ -174,17 +199,31 @@ class AddNewsItems(Resource):
     @api_key_required("collectors")
     def post(
         self,
-        collectors_node: CollectorsNode = None,  # noqa: ARG002
-    ) -> None:
+        collectors_node: CollectorsNode = None,
+    ) -> tuple[dict, HTTPStatus] | None:
         """Add news items to the database.
+
+        Every item must belong to one of the node's own sources; a batch naming any other is
+        refused whole (403), and nothing of it is stored.
 
         Args:
             collectors_node (CollectorsNode): The collectors node
         """
-        osint_source_ids = NewsItemAggregate.add_news_items(request.json)
+        own = _node_source_ids(collectors_node)
+        items = request.json if isinstance(request.json, list) else []
+        foreign = sorted(
+            {str(item.get("osint_source_id")) for item in items if isinstance(item, dict) and str(item.get("osint_source_id")) not in own},
+        )
+        if foreign:
+            logger.warning(
+                f"Collectors node '{collectors_node.name}' sent news items for OSINT sources it does not collect: {', '.join(foreign)}",
+            )
+            return {"error": "News items for OSINT sources this node does not collect"}, HTTPStatus.FORBIDDEN
+        osint_source_ids = NewsItemAggregate.add_news_items(request.json, source_ids=own)
         if osint_source_ids:  # we create some news items
             sse_manager.news_items_updated()
             sse_manager.remote_access_news_items_updated(osint_source_ids)
+        return None
 
 
 class CollectorStatusUpdate(Resource):
