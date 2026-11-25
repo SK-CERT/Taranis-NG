@@ -426,6 +426,15 @@ def _resolver_for(settings: SettingsLike) -> str:
     return (settings.cert_resolver or "").strip() or (os.getenv("TRAEFIK_CERT_RESOLVER") or "").strip()
 
 
+# Traefik adds these to every request it routes; its HTTP provider's own poll carries none.
+PROXY_HEADERS = ("X-Forwarded-For", "X-Forwarded-Host", "X-Real-Ip", "Forwarded")
+
+
+def _came_through_a_proxy() -> bool:
+    """Whether the request was routed through a reverse proxy rather than sent to core directly."""
+    return any(request.headers.get(header) for header in PROXY_HEADERS)
+
+
 class PublicWebRouters(Resource):
     """Serve CORE's own Traefik its slice of the configuration.
 
@@ -442,9 +451,19 @@ class PublicWebRouters(Resource):
     def get(self) -> tuple[dict, HTTPStatus]:
         """Return the routers, middleware and TLS settings for Traefik's HTTP provider.
 
+        Only to a caller that reached core directly. The payload inlines private keys, and
+        "nothing routes this path" held only as long as nobody pointed a router at core: a public
+        web whose node URL is core's own (any config admin can set it, and core answers the node
+        check itself) made Traefik serve this path from that web's hostname. Anything Traefik
+        routes carries X-Forwarded-For; its provider poll does not.
+
         Returns:
-            (dict, HTTPStatus): The dynamic configuration.
+            (dict, HTTPStatus): The dynamic configuration, or 404 for a proxied request.
         """
+        if _came_through_a_proxy():
+            forwarded_for = request.headers.get("X-Forwarded-For")
+            logger.warning(f"Refused the Traefik configuration to a proxied request (X-Forwarded-For: {forwarded_for})")
+            return {"error": "Not found"}, HTTPStatus.NOT_FOUND
         settings = TraefikSettings.get()
         config = build_dynamic_config(PublicWeb.get_enabled_fronted_by_core(), _resolver_for(settings), settings)
         return config, HTTPStatus.OK

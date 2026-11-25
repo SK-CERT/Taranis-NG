@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import types
+from http import HTTPStatus
 
 import api.traefik as traefik_api
 import managers.log_manager as core_log_manager
@@ -753,6 +754,20 @@ def _stub_queries(monkeypatch: pytest.MonkeyPatch) -> dict[str, bool]:
     monkeypatch.setattr(traefik_api.PublicWeb, "get_enabled_fronted_by_core", staticmethod(core_fronted))
     monkeypatch.setattr(traefik_api.TraefikSettings, "get", staticmethod(lambda: settings))
     return called
+
+
+@pytest.mark.parametrize("header", ["X-Forwarded-For", "X-Forwarded-Host", "X-Real-Ip", "Forwarded"])
+def test_cores_own_route_is_refused_to_a_request_that_came_through_traefik(monkeypatch: pytest.MonkeyPatch, header: str) -> None:
+    """The private keys must not leave through a router someone pointed at core."""
+    monkeypatch.setattr(core_log_manager, "store_activity", lambda *_a, **_k: None)
+    called = _stub_queries(monkeypatch)
+
+    with Flask(__name__).test_request_context("/traefik/dynamic", headers={header: "203.0.113.9"}):
+        body, status = traefik_api.PublicWebRouters().get()
+
+    assert status == HTTPStatus.NOT_FOUND
+    assert "tls" not in body
+    assert not called["core_fronted"]
 
 
 @pytest.mark.usefixtures("route_context")
