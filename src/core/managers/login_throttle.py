@@ -64,9 +64,19 @@ def _ttl_for(locked_until: int) -> int:
     return max(0, locked_until - _now()) + FAIL_WINDOW
 
 
+def _key(username: str) -> str:
+    """The counter of a username, however it was typed.
+
+    Directories match user names regardless of case and surrounding spaces, so "Alice", "alice"
+    and "alice " are one account at an LDAP server: one counter here too, or every spelling got
+    its own five attempts.
+    """
+    return _KEY.format(username=str(username).strip().casefold())
+
+
 def _read(username: str) -> tuple[int, int, int]:
     try:
-        return _decode(redis_client.get(_KEY.format(username=username)))
+        return _decode(redis_client.get(_key(username)))
     except Exception as ex:  # Redis being down must not break login
         logger.warning(f"Login throttle read failed for '{username}': {ex}")
         return 0, 0, 0
@@ -75,7 +85,7 @@ def _read(username: str) -> tuple[int, int, int]:
 def _write(username: str, fails: int, last_fail: int, locked_until: int) -> None:
     try:
         redis_client.set(
-            _KEY.format(username=username),
+            _key(username),
             _encode(fails, last_fail, locked_until),
             ex=_ttl_for(locked_until),
         )
@@ -123,6 +133,6 @@ def register_failure(username: str) -> None:
 def register_success(username: str) -> None:
     """Forget the failure history of a username that has just logged in."""
     try:
-        redis_client.delete(_KEY.format(username=username))
+        redis_client.delete(_key(username))
     except Exception as ex:  # Redis being down must not break login
         logger.warning(f"Login throttle reset failed for '{username}': {ex}")

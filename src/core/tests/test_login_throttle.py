@@ -138,3 +138,14 @@ def test_redis_outage_never_blocks_login(fake_redis: _FakeRedis, monkeypatch: py
     login_throttle.register_failure("alice")  # must not raise
     monkeypatch.setattr(fake_redis, "delete", broken)
     login_throttle.register_success("alice")  # must not raise
+
+
+@pytest.mark.usefixtures("fake_redis")
+def test_spellings_of_one_name_share_a_counter() -> None:
+    # An LDAP directory matches names regardless of case and surrounding spaces: each
+    # spelling used to get its own five attempts.
+    for spelling in ("Alice", "alice", " ALICE ", "alice\t", "AlIcE"):
+        login_throttle.register_failure(spelling)
+
+    assert login_throttle.is_locked("alice") is True
+    assert login_throttle.check_lock("Alice") is False
