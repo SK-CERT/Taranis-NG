@@ -135,9 +135,10 @@ point CI uses.
   `config` module before any application import — the same pattern `src/core/tests`
   uses. `tests/__init__.py` is deliberately absent (matching core) so pytest imports the
   test modules top-level instead of walking up to the service-root `__init__.py`.
-- **`src/bots` has no tests yet.** Add a `tests/` directory, then list the project in
-  `PYTEST_SUITES` in `scripts/run_tests.py` and in `testpaths` in the root
-  `pyproject.toml`.
+- **`src/bots/tests` covers the word list updater only.** It stubs `config` and
+  `TARANIS_NG_CORE_URL` like collectors, and binds the inner `bots` package first, like
+  publishers, because `src/bots/__init__.py` has the same name clash. The analyst and
+  grouping bots have no coverage.
 - **`src/collectors/tests` covers the email and CSAF collectors, and the scheduling they
   share.** It stubs `config` and `TARANIS_NG_CORE_URL` the way presenters does, since
   `remote/core_api.py` reads both at import time. The CSAF tests answer every request from

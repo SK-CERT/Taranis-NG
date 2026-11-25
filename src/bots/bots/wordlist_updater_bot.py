@@ -7,15 +7,28 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from shared.schema.bot_preset import BotPreset
 
+import os
+import re
+import urllib.request
+from http import HTTPStatus
 from pathlib import Path
 
-import requests
 from remote.core_api import CoreApi
 from shared.common import ignore_exceptions
 from shared.config_bot import ConfigBot
 from shared.schema import word_list
+from shared.url_guard import build_guarded_opener
 
 from .base_bot import BaseBot
+
+# Where a preset may name a local word list file: a directory an operator mounts on purpose.
+# Anything else on the node (its Docker secrets, its code) must never become word list entries
+# that core then shows to whoever can read word lists.
+WORDLIST_DIR = Path(os.getenv("TARANIS_WORDLIST_DIR", "/app/wordlists"))
+# A word list is text; anything bigger is a mistake or an attack on the node's memory.
+MAX_WORDLIST_BYTES = 10 * 1024 * 1024
+FETCH_TIMEOUT = 30
+_URL_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*://", re.IGNORECASE)
 
 
 class WordlistUpdaterBot(BaseBot):
@@ -30,24 +43,54 @@ class WordlistUpdaterBot(BaseBot):
         self.description = self.config.description
         self.parameters = self.config.parameters
 
-    def __load_file(self, source: str, word_list_format: str) -> list[str]:
-        """Load a word list from a given source.
+    @staticmethod
+    def load_words(source: str, word_list_format: str) -> list[str]:
+        """Load a word list from a URL or from a file in the word list directory.
+
+        A URL is fetched only when it is http(s) and its host - and that of every redirect -
+        resolves to public addresses (``shared.url_guard``, as for collectors). A file is read
+        only from ``WORDLIST_DIR``. Either is capped at ``MAX_WORDLIST_BYTES``.
 
         Args:
-            source (str): The path to the file or URL to load the word list from.
-            word_list_format (str): The format of the word list. Currently supports 'txt'.
+            source (str): A URL, or a file name relative to ``WORDLIST_DIR``.
+            word_list_format (str): The format of the word list. Only "txt" (one word per line).
 
         Returns:
-            list: A list of words loaded from the specified source.
-        """
-        if "http" in source and word_list_format == "txt":
-            response = requests.get(source, timeout=30)
-            content = response.text.strip().splitlines()
-        else:
-            with Path(source).open() as file:
-                content = [line.rstrip() for line in file]
+            list: The words, one per line.
 
-        return content
+        Raises:
+            ValueError: For an unsupported format, a refused URL or path, or a list too large.
+        """
+        if (word_list_format or "txt").strip().lower() != "txt":
+            msg = f"Unsupported word list format '{word_list_format}'; only txt is supported"
+            raise ValueError(msg)
+        source = (source or "").strip()
+        if not source:
+            msg = "No word list source is set"
+            raise ValueError(msg)
+        data = WordlistUpdaterBot._download(source) if _URL_SCHEME.match(source) else WordlistUpdaterBot._read_file(source)
+        if len(data) > MAX_WORDLIST_BYTES:
+            msg = f"The word list is larger than {MAX_WORDLIST_BYTES} bytes"
+            raise ValueError(msg)
+        return [line.rstrip() for line in data.decode("utf-8", errors="replace").strip().splitlines()]
+
+    @staticmethod
+    def _download(url: str) -> bytes:
+        """Fetch a word list over http(s) from a public address (raises BlockedUrlError otherwise)."""
+        request = urllib.request.Request(url, headers={"User-Agent": "Taranis-NG wordlist updater"})  # noqa: S310 - checked by the guard
+        with build_guarded_opener()(request, timeout=FETCH_TIMEOUT) as response:
+            return response.read(MAX_WORDLIST_BYTES + 1)
+
+    @staticmethod
+    def _read_file(name: str) -> bytes:
+        """Read a word list file, which must lie inside ``WORDLIST_DIR``."""
+        root = WORDLIST_DIR.resolve()
+        path = (root / name).resolve()
+        if not path.is_relative_to(root) or not path.is_file():
+            msg = f"A word list file must be a file in {root}; '{name}' is not"
+            raise ValueError(msg)
+        with path.open("rb") as file:
+            return file.read(MAX_WORDLIST_BYTES + 1)
 
     @ignore_exceptions
     def execute(self) -> None:
@@ -63,11 +106,14 @@ class WordlistUpdaterBot(BaseBot):
             word_list_category_name = self.preset.param_key_values["WORD_LIST_CATEGORY"]
             delete_word_entries = self.preset.param_key_values["DELETE"].lower()
 
-            source_word_list = self.__load_file(data_url, data_format)
+            source_word_list = self.load_words(data_url, data_format)
 
-            categories = CoreApi.get_categories(word_list_id)
+            categories, status = CoreApi.get_categories(word_list_id)
+            if status != HTTPStatus.OK or not isinstance(categories, list):
+                self.preset.logger.error(f"Word list updater: could not read the categories of word list {word_list_id}")
+                return
 
-            if not any(category["name"] == word_list_category_name for category in categories):
+            if not any(category.get("name") == word_list_category_name for category in categories):
                 name = word_list_category_name
                 description = "Stop word list category created by Updater Bot."
                 entries = []

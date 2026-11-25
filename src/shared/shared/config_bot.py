@@ -58,7 +58,15 @@ class ConfigBot(ConfigBase):
             [
                 ParamType("WORD_LIST_ID", "Word list ID", "ID of word list to update", ParameterType.NUMBER),
                 ParamType("WORD_LIST_CATEGORY", "Word list category name", "Name of category of word entries", ParameterType.STRING),
-                ParamType("DATA_URL", "Data URL or file path", "Source for words", ParameterType.STRING),
+                ParamType(
+                    "DATA_URL",
+                    "Data URL or file path",
+                    (
+                        "Source for words: an http(s) URL on a public address, or the name of a file in the bots "
+                        "node's /app/wordlists directory"
+                    ),
+                    ParameterType.STRING,
+                ),
                 ParamType("FORMAT", "Data format", "Format of words source", ParameterType.STRING),
                 ParamType(
                     "DELETE",
