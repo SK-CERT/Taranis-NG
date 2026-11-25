@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 import pytest
 from envelope import smtp_handler
-from publishers.email_publisher import EMAILPublisher
+from publishers.email_publisher import EMAILPublisher, smtp_security
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -239,6 +239,76 @@ def test_a_channel_without_credentials_does_not_authenticate(
     assert publication.status == HTTPStatus.OK
     assert smtp_server.credentials is None
     assert not smtp_server.starttls_used
+
+
+def test_credentials_never_go_out_unencrypted_on_another_port(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+) -> None:
+    """By itself envelope sends the login in the clear on any port but 587 and 465."""
+    publication = publish(SMTP_SERVER_PORT="25", EMAIL_USERNAME="taranis", EMAIL_PASSWORD="hunter2")
+
+    assert publication.status == HTTPStatus.OK
+    assert smtp_server.starttls_used
+    assert smtp_server.credentials == ("taranis", "hunter2")
+
+
+def test_a_channel_can_ask_for_an_unencrypted_session_explicitly(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+) -> None:
+    publication = publish(SMTP_SERVER_PORT="25", SMTP_SECURITY="none", EMAIL_USERNAME="taranis", EMAIL_PASSWORD="hunter2")
+
+    assert publication.status == HTTPStatus.OK
+    assert not smtp_server.starttls_used
+
+
+def test_port_465_and_explicit_tls_use_an_encrypted_socket(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    opened: list[tuple] = []
+
+    class RecordingSMTPS(smtp_server):
+        def __init__(self, host: str = "", port: int = 0, *args: object, **kwargs: object) -> None:
+            opened.append((host, port))
+            super().__init__(host, port, *args, **kwargs)
+
+    monkeypatch.setattr(smtp_handler, "SMTP_SSL", RecordingSMTPS)
+
+    assert publish(SMTP_SERVER_PORT="465").status == HTTPStatus.OK
+    smtp_handler.SMTPHandler._instances.clear()
+    assert publish(SMTP_SERVER_PORT="2465", SMTP_SECURITY="TLS").status == HTTPStatus.OK
+
+    assert opened == [("smtp.example.org", 465), ("smtp.example.org", 2465)]
+
+
+def test_an_unknown_security_mode_sends_nothing(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+) -> None:
+    publication = publish(SMTP_SECURITY="ssl3")
+
+    assert publication.status == HTTPStatus.BAD_REQUEST
+    assert "SMTP_SECURITY" in publication.response["error"]
+    assert smtp_server.connections == 0
+
+
+@pytest.mark.parametrize(
+    ("mode", "port", "authenticates", "expected"),
+    [
+        (None, "587", False, "starttls"),
+        ("", "465", True, "tls"),
+        ("auto", "25", False, False),
+        ("auto", "25", True, "starttls"),
+        ("auto", "not-a-port", True, "starttls"),
+        ("starttls", "25", False, "starttls"),
+        (" None ", "587", True, False),
+    ],
+)
+def test_smtp_security_decision(mode: str | None, port: str, *, authenticates: bool, expected: str | bool) -> None:
+    assert smtp_security(mode, port, authenticates=authenticates) == expected
 
 
 def test_a_successful_send_closes_the_session(

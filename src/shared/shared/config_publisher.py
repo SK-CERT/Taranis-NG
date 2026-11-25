@@ -16,6 +16,15 @@ class ConfigPublisher(ConfigBase):
         mod.parameters = [
             ParamType("SMTP_SERVER", "SMTP server", "SMTP server for sending emails", ParameterType.STRING),
             ParamType("SMTP_SERVER_PORT", "SMTP server port", "SMTP server port for sending emails", ParameterType.STRING, "587"),
+            ParamType(
+                "SMTP_SECURITY",
+                "SMTP security",
+                "auto | starttls | tls | none. auto: TLS on port 465, STARTTLS on 587 and whenever a username is set "
+                "(credentials never go out in the clear), plain only for an unauthenticated relay on another port. "
+                "none sends everything, credentials included, unencrypted.",
+                ParameterType.STRING,
+                "auto",
+            ),
             ParamType("EMAIL_USERNAME", "Email username", "Username for email account", ParameterType.STRING),
             ParamType("EMAIL_PASSWORD", "Email password", "Password for email account", ParameterType.STRING),
             ParamType("EMAIL_SENDER", "Email sender", "Email address of the sender", ParameterType.STRING),

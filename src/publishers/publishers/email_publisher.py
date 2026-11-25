@@ -43,6 +43,50 @@ def decode_message_text(value: str) -> str:
         return value
 
 
+SMTP_SECURITY_MODES = ("auto", "starttls", "tls", "none")
+SMTPS_PORT = 465
+SUBMISSION_PORT = 587
+
+
+def smtp_security(mode: str | None, port: object, *, authenticates: bool) -> str | bool:
+    """Decide how the SMTP session is protected, as envelope's ``security`` setting.
+
+    envelope's own default is STARTTLS on 587, TLS on 465 and *nothing* on any other port -
+    with the login still sent - so a channel on port 25 or 2525 that has a username handed its
+    password over the network in the clear. ``auto`` keeps envelope's choices but never sends
+    credentials unencrypted: with a username, any other port gets STARTTLS too, and a server
+    that does not offer it fails the publish. Only an unauthenticated relay stays plain.
+
+    Args:
+        mode (str | None): The channel's SMTP_SECURITY; empty or missing is ``auto``.
+        port (object): The channel's SMTP_SERVER_PORT.
+        authenticates (bool): Whether the channel logs in (has a username).
+
+    Returns:
+        str | bool: ``"tls"``, ``"starttls"``, or False for a plain session.
+
+    Raises:
+        ValueError: For a mode that is not one of SMTP_SECURITY_MODES.
+    """
+    mode = (mode or "auto").strip().lower()
+    if mode not in SMTP_SECURITY_MODES:
+        msg = f"SMTP_SECURITY must be one of {', '.join(SMTP_SECURITY_MODES)}, not '{mode}'"
+        raise ValueError(msg)
+    if mode == "none":
+        return False
+    if mode != "auto":
+        return mode
+    try:
+        port_number = int(port)
+    except (TypeError, ValueError):
+        port_number = 0
+    if port_number == SMTPS_PORT:
+        return "tls"
+    if port_number == SUBMISSION_PORT or authenticates:
+        return "starttls"
+    return False
+
+
 class EMAILPublisher(BasePublisher):
     """This class represents a publisher that sends emails using SMTP server.
 
@@ -85,7 +129,14 @@ class EMAILPublisher(BasePublisher):
         sign_password = publisher_input.param_key_values["EMAIL_SIGN_PASSWORD"]
         encrypt = publisher_input.param_key_values["EMAIL_ENCRYPT"]
 
-        smtp = {"host": smtp_server, "port": smtp_server_port, "user": user, "password": password}
+        try:
+            security = smtp_security(publisher_input.param_key_values.get("SMTP_SECURITY"), smtp_server_port, authenticates=bool(user))
+        except ValueError as error:
+            self.logger.exception(f"Error: {error}")
+            return {"error": str(error)}, HTTPStatus.BAD_REQUEST
+        if security is False and user:
+            self.logger.warning("SMTP_SECURITY is 'none': the SMTP credentials and the message go over the network unencrypted")
+        smtp = {"host": smtp_server, "port": smtp_server_port, "user": user, "password": password, "security": security}
 
         def _read_key(key_path: str, description: str) -> str:
             """Read the signing or encryption key the channel points at.
