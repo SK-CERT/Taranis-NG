@@ -36,12 +36,19 @@ class ExternalIdentity:
         external_id (str): Stable subject identifier (OIDC ``sub`` / LDAP DN).
         name (str): Display name reported by the provider.
         email (str): E-mail address reported by the provider.
+        issuer (str): The SAML IdP entityID that vouched for the subject. In
+            federation mode it is one of many IdPs behind the same provider, and
+            an identity link stays bound to the IdP that created it.
+        scoped (bool): The username is a scoped value (``user@domain``) already
+            checked against the federation scopes of ``issuer``.
     """
 
     username: str
     external_id: str | None = None
     name: str | None = None
     email: str | None = None
+    issuer: str | None = None
+    scoped: bool = False
 
 
 class BaseAuthenticator:

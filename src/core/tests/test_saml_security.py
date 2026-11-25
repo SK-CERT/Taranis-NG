@@ -9,7 +9,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from auth import saml_replay
-from auth.saml_authenticator import MAX_SAML_RESPONSE_ENCODED_BYTES, SamlAuthenticator, _enforce_saml_binding
+from auth.saml_authenticator import MAX_SAML_RESPONSE_ENCODED_BYTES, SamlAuthenticator, ScopeMismatchError, _enforce_saml_binding
+from auth.saml_federation import Scope
 from auth.saml_xml import inspect_verified_saml
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -78,6 +79,7 @@ def _response(
     assertion_id: str | None = "_assertion",
     lifetime: timedelta = timedelta(minutes=5),
     additional_confirmation: tuple[str, str] | None = None,
+    name_id: str = "alice",
 ) -> str:
     now = datetime.now(UTC)
     confirmation_attrs = f' NotOnOrAfter="{_timestamp(now + lifetime)}"'
@@ -101,7 +103,7 @@ def _response(
             f'<saml:Assertion xmlns:saml="{SAML}"'
             f'{f" ID={assertion_id!r}" if assertion_id else ""} Version="2.0" IssueInstant="{_timestamp(now)}">'
             f"<saml:Issuer>{IDP_ENTITY_ID}</saml:Issuer>"
-            "<saml:Subject><saml:NameID>alice</saml:NameID>"
+            f"<saml:Subject><saml:NameID>{name_id}</saml:NameID>"
             f"{confirmations}</saml:Subject>"
             f'<saml:Conditions NotBefore="{_timestamp(now - timedelta(minutes=1))}" '
             f'NotOnOrAfter="{_timestamp(now + lifetime)}">'
@@ -141,6 +143,44 @@ def test_valid_signed_response_checks_binding_and_claims_both_ids(
     assert identity is not None
     assert identity.username == "alice"
     assert claimed[0][0:2] == (7, ("_response", "_assertion"))
+
+
+def test_single_idp_mode_records_the_issuer_and_checks_no_scope(
+    authenticator: SamlAuthenticator,
+    idp_keypair: tuple[rsa.RSAPrivateKey, x509.Certificate],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(saml_replay, "claim", lambda *_args: True)
+
+    identity = authenticator.handle_response(_response(*idp_keypair, name_id="alice@anywhere.test"), REQUEST_ID, ACS_URL)
+
+    assert identity is not None
+    assert (identity.username, identity.issuer, identity.scoped) == ("alice@anywhere.test", IDP_ENTITY_ID, False)
+
+
+@pytest.fixture
+def federation_authenticator(
+    authenticator: SamlAuthenticator,
+    idp_keypair: tuple[rsa.RSAPrivateKey, x509.Certificate],
+    monkeypatch: pytest.MonkeyPatch,
+) -> SamlAuthenticator:
+    """The same IdP, resolved out of federation metadata that registers the scope example.org."""
+    pem = idp_keypair[1].public_bytes(serialization.Encoding.PEM).decode()
+    monkeypatch.setattr(authenticator, "_idp_trust_material", lambda _chosen: (pem, IDP_ENTITY_ID, (Scope("example.org"),)))
+    monkeypatch.setattr(saml_replay, "claim", lambda *_args: True)
+    return authenticator
+
+
+def test_federation_idp_logs_in_its_own_scoped_users(federation_authenticator, idp_keypair) -> None:  # noqa: ANN001
+    identity = federation_authenticator.handle_response(_response(*idp_keypair, name_id="alice@example.org"), REQUEST_ID, ACS_URL)
+
+    assert identity is not None
+    assert (identity.username, identity.issuer, identity.scoped) == ("alice@example.org", IDP_ENTITY_ID, True)
+
+
+def test_federation_idp_cannot_assert_another_institutions_user(federation_authenticator, idp_keypair) -> None:  # noqa: ANN001
+    with pytest.raises(ScopeMismatchError):
+        federation_authenticator.handle_response(_response(*idp_keypair, name_id="admin@victim.test"), REQUEST_ID, ACS_URL)
 
 
 def test_binding_selector_accepts_any_signed_bearer_confirmation(

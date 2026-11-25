@@ -190,6 +190,7 @@
         "username_collision": "Un compte portant ce nom d’utilisateur existe déjà. Demandez à votre administrateur d’y associer cette identité.",
         "account_not_linked": "Cette identité n’est associée à aucun compte. Contactez votre administrateur.",
         "domain_not_allowed": "Votre domaine de messagerie n’est pas autorisé à s’inscrire. Contactez votre administrateur.",
+        "idp_not_authoritative": "Le service de connexion de votre organisation ne peut pas être utilisé pour ce compte. Contactez votre administrateur.",
         "auth_cancelled": "La connexion a été annulée. Veuillez réessayer.",
         "provider_misconfigured": "Cette méthode de connexion est mal configurée. Contactez votre administrateur.",
         "totp_invalid": "Code d’authentification non valide.",

@@ -190,6 +190,7 @@
         "username_collision": "An account with this username already exists. Ask your administrator to link this identity to it.",
         "account_not_linked": "This identity is not linked to any account. Contact your administrator.",
         "domain_not_allowed": "Your e-mail domain is not allowed to sign up. Contact your administrator.",
+        "idp_not_authoritative": "Your organization's sign-in service cannot be used for this account. Contact your administrator.",
         "auth_cancelled": "Sign-in was cancelled. Please try again.",
         "provider_misconfigured": "This login method is misconfigured. Contact your administrator.",
         "totp_invalid": "Invalid authentication code.",

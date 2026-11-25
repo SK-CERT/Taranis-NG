@@ -365,7 +365,16 @@ class User(db.Model):
         db.session.commit()
 
     @classmethod
-    def provision_external(cls, provider: AuthProvider, username: str, name: str | None, email: str | None, external_id: str | None) -> User:
+    def provision_external(
+        cls,
+        provider: AuthProvider,
+        username: str,
+        name: str | None,
+        email: str | None,
+        external_id: str | None,
+        *,
+        issuer: str | None = None,
+    ) -> User:
         """Auto-create a user account at first login through an external provider.
 
         The new account gets the provider's organization and default roles. Its
@@ -378,6 +387,7 @@ class User(db.Model):
             name (str): Display name reported by the provider.
             email (str): E-mail address reported by the provider.
             external_id (str): Stable subject identifier at the provider.
+            issuer (str): The SAML IdP that vouched for the subject.
 
         Returns:
             User: The newly created user, or the one a concurrent login created first.
@@ -388,9 +398,9 @@ class User(db.Model):
         """
         user = cls(-1, username, name or username, None, None, None, None)
         cls._apply_provider_defaults(user, provider, name, email)
-        user.auth_identities = [UserAuthIdentity(None, provider.id, username, external_id)]
+        user.auth_identities = [UserAuthIdentity(None, provider.id, username, external_id, issuer)]
         db.session.add(user)
-        return cls._commit_provisioning(user, provider, username, external_id)
+        return cls._commit_provisioning(user, provider, username, external_id, issuer)
 
     @classmethod
     def _apply_provider_defaults(cls, user: User, provider: AuthProvider, name: str | None, email: str | None) -> None:
@@ -425,6 +435,8 @@ class User(db.Model):
         name: str | None,
         email: str | None,
         external_id: str | None,
+        *,
+        issuer: str | None = None,
     ) -> User:
         """Link an existing account that has no way in to an external provider.
 
@@ -455,6 +467,7 @@ class User(db.Model):
             name (str): Display name reported by the provider.
             email (str): E-mail address reported by the provider.
             external_id (str): Stable subject identifier at the provider.
+            issuer (str): The SAML IdP that vouched for the subject.
 
         Returns:
             User: The linked account, or the one a concurrent login resolved to.
@@ -467,11 +480,18 @@ class User(db.Model):
         # must not fire here, because an orphan cannot log in and so was never a
         # reachable administrator to be the last of.
         cls._apply_provider_defaults(user, provider, name, email)
-        user.auth_identities.append(UserAuthIdentity(user.id, provider.id, username, external_id))
-        return cls._commit_provisioning(user, provider, username, external_id)
+        user.auth_identities.append(UserAuthIdentity(user.id, provider.id, username, external_id, issuer))
+        return cls._commit_provisioning(user, provider, username, external_id, issuer)
 
     @classmethod
-    def _commit_provisioning(cls, user: User, provider: AuthProvider, username: str, external_id: str | None) -> User:
+    def _commit_provisioning(
+        cls,
+        user: User,
+        provider: AuthProvider,
+        username: str,
+        external_id: str | None,
+        issuer: str | None = None,
+    ) -> User:
         """Commit a provisioning change, conceding to a concurrent login that won the race.
 
         Two callbacks for the same subject can arrive at once - a double-clicked
@@ -484,6 +504,7 @@ class User(db.Model):
             provider (AuthProvider): The provider being linked.
             username (str): Username reported by the provider.
             external_id (str): Stable subject identifier at the provider.
+            issuer (str): The SAML IdP that vouched for the subject.
 
         Returns:
             User: The user owning the identity after the commit.
@@ -491,12 +512,20 @@ class User(db.Model):
         Raises:
             IntegrityError: When the conflict was not a concurrent provisioning
                 of this same identity.
+            IdentityIssuerMismatchError: When the identity that won the race is bound
+                to another IdP of the federation.
         """
         try:
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            identity = UserAuthIdentity.find_by_external(provider.id, external_id, username)
+            identity = UserAuthIdentity.find_by_external(
+                provider.id,
+                external_id,
+                username,
+                issuer,
+                bind_issuer=UserAuthIdentity.binds_issuer(provider),
+            )
             if not identity:
                 raise
             return identity.user

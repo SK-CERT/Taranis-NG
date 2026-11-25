@@ -327,6 +327,37 @@ filter=eyAgImFsbG93SG9zdGVsIjogdHJ1ZSB9
 This is the only federation-specific setting; the field is an opaque pass-through,
 so another federation's discovery parameters go in exactly the same place.
 
+#### Each IdP speaks only for its own users
+
+Every IdP in a federation can sign a valid assertion, and a federation has
+hundreds of them, so a valid signature alone says nothing about *whose* account
+the assertion may log into. Two checks keep each IdP to its own users:
+
+- **Scopes.** The federation metadata registers the domains each IdP may assert
+  scoped values for (`<shibmd:Scope>`, on the entity or its `IDPSSODescriptor`).
+  A username or stable identifier of the form `user@domain` must fall within one
+  of them: a literal scope covers its domain and subdomains (`example.org` covers
+  `cs.example.org`), a `regexp="true"` scope must match the whole domain. An
+  assertion outside the IdP's scopes is refused (login error `scope_mismatch`,
+  both sides in the audit log). An out-of-scope `mail` is not refused but
+  dropped, so it can neither pass the *allowed e-mail domains* filter nor land in
+  the profile. A scope whose regular expression does not compile is skipped.
+- **Issuer binding.** An identity link records the IdP (entityID) it was created
+  through and works only through that IdP; another IdP asserting the same
+  identifier gets login error `idp_mismatch` and is never provisioned instead.
+  Links from before this check, and links an administrator enters by hand, have
+  no IdP yet: the first login whose *scoped* username equals the link's username
+  binds it. A link is cleared by removing it, saving the user, adding it again and
+  saving again.
+
+Use a scoped username attribute (`eduPersonPrincipalName`, or `subject-id`) in
+federation mode. An unscoped username (`alice`) proves nothing about the
+institution, so in federation mode it never adopts an orphaned account and never
+binds an existing link; new accounts it provisions are bound to their IdP as usual.
+
+A single-IdP provider has one IdP chosen by the administrator: no scopes are
+checked, and the issuer is only recorded on the link.
+
 ## User provisioning and identity linking
 
 Each external identity (an OIDC `sub`, an LDAP DN) is linked to exactly one

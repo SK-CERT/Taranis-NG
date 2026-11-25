@@ -190,6 +190,7 @@
         "username_collision": "Bu kullanıcı adına sahip bir hesap zaten var. Yöneticinizden bu kimliği hesaba bağlamasını isteyin.",
         "account_not_linked": "Bu kimlik hiçbir hesaba bağlı değil. Yöneticinize başvurun.",
         "domain_not_allowed": "E-posta alan adınızla kaydolmaya izin verilmiyor. Yöneticinize başvurun.",
+        "idp_not_authoritative": "Kuruluşunuzun oturum açma hizmeti bu hesap için kullanılamaz. Yöneticinize başvurun.",
         "auth_cancelled": "Giriş iptal edildi. Lütfen yeniden deneyin.",
         "provider_misconfigured": "Bu oturum açma yöntemi hatalı yapılandırılmış. Yöneticinize başvurun.",
         "totp_invalid": "Kimlik doğrulama kodu geçersiz.",

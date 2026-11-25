@@ -190,6 +190,7 @@
         "username_collision": "Ya existe una cuenta con este nombre de usuario. Pida a su administrador que vincule esta identidad con ella.",
         "account_not_linked": "Esta identidad no está vinculada con ninguna cuenta. Póngase en contacto con su administrador.",
         "domain_not_allowed": "Su dominio de correo electrónico no está autorizado para registrarse. Póngase en contacto con su administrador.",
+        "idp_not_authoritative": "El servicio de inicio de sesión de su organización no se puede usar para esta cuenta. Póngase en contacto con su administrador.",
         "auth_cancelled": "Se canceló el inicio de sesión. Inténtelo de nuevo.",
         "provider_misconfigured": "Este método de inicio de sesión está mal configurado. Contacte con su administrador.",
         "totp_invalid": "El código de autenticación no es válido.",

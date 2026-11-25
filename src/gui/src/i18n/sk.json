@@ -190,6 +190,7 @@
         "username_collision": "Účet s týmto používateľským menom už existuje. Požiadajte administrátora o prepojenie identity.",
         "account_not_linked": "Táto identita nie je prepojená so žiadnym účtom. Kontaktujte administrátora.",
         "domain_not_allowed": "Vaša e-mailová doména nie je povolená. Kontaktujte administrátora.",
+        "idp_not_authoritative": "Prihlasovaciu službu vašej organizácie nemožno pre tento účet použiť. Kontaktujte administrátora.",
         "auth_cancelled": "Prihlásenie bolo zrušené. Skúste to prosím znova.",
         "provider_misconfigured": "Táto prihlasovacia metóda je nesprávne nastavená. Kontaktujte správcu.",
         "totp_invalid": "Neplatný overovací kód.",

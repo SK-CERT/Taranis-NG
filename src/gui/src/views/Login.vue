@@ -375,6 +375,9 @@
         'username_collision',
         'account_not_linked',
         'domain_not_allowed',
+        // A federation IdP vouched for an account it is not authoritative for.
+        'scope_mismatch',
+        'idp_mismatch',
         'auth_cancelled',
         // The IdP refused this service's own credentials: nothing the person at the
         // keyboard did wrong, and nothing they can do about it either.
@@ -391,6 +394,8 @@
             username_collision: 'login.username_collision',
             account_not_linked: 'login.account_not_linked',
             domain_not_allowed: 'login.domain_not_allowed',
+            scope_mismatch: 'login.idp_not_authoritative',
+            idp_mismatch: 'login.idp_not_authoritative',
             auth_cancelled: 'login.auth_cancelled',
             provider_misconfigured: 'login.provider_misconfigured',
             totp_invalid: 'login.totp_invalid',

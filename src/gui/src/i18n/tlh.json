@@ -190,6 +190,7 @@
         "username_collision": "lo'wI' pongvam ghajbogh lo'wI' ghItlh tu'lu'pu'. ngu'ghachvam rarmeH pInlI' yIpoQ.",
         "account_not_linked": "lo'wI' ghItlh rarbe' ngu'ghachvam. pInlI' yIjaw.",
         "domain_not_allowed": "De'wI' QIn SeplIj chaw'be'lu'. pInlI' yIjaw.",
+        "idp_not_authoritative": "ghommIj 'elmeH QIn mevyap lo'laHbe'lu'. pInlI' yIjaw.",
         "auth_cancelled": "'elghach mevlu'pu'. yInIDqa'.",
         "provider_misconfigured": "'elmeH mIwvam SeHlaw Qagh. pInlI' yIjaw.",
         "totp_invalid": "'olmeH ngoq lugh be'.",

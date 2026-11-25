@@ -5,6 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 from types import SimpleNamespace
 
+import pytest
 from api import auth
 from flask import Flask
 from managers import auth_manager
@@ -150,3 +151,29 @@ def test_saml_acs_rejects_oversized_form_before_consuming_state(monkeypatch) -> 
 
     assert response == ({"error": "SAML response is too large"}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
     assert values[(AuthTransactionKind.SAML_STATE, state)] == {"provider_id": 23}
+
+
+def test_saml_acs_reports_a_scope_mismatch_and_never_provisions(monkeypatch) -> None:  # noqa: ANN001
+    authenticator = FakeSamlAuthenticator()
+
+    def out_of_scope(*_args: object) -> None:
+        msg = "username outside the scopes"
+        raise auth.saml_authenticator.ScopeMismatchError(msg)
+
+    authenticator.handle_response = out_of_scope  # ty: ignore[invalid-assignment]
+    values, _created = _store(monkeypatch)
+    state = "A" * 43
+    values[(AuthTransactionKind.SAML_STATE, state)] = {"provider_id": 23, "goto_url": "/dashboard", "idp_entity_id": "https://idp.example"}
+    monkeypatch.setattr(auth_manager, "get_saml_authenticator", lambda _slug: authenticator)
+    monkeypatch.setattr(auth_manager, "provision_and_issue_jwt", lambda *_args: pytest.fail("an out-of-scope identity must not log in"))
+
+    with app.test_request_context(
+        "/api/v1/auth/saml/corporate/acs",
+        method="POST",
+        base_url="https://taranis.example",
+        data={"RelayState": state, "SAMLResponse": "signed-response"},
+    ):
+        response = auth.SamlAcs.post.__wrapped__(auth.SamlAcs(), "corporate")
+
+    assert response.status_code == HTTPStatus.FOUND
+    assert response.location == "/dashboard?login_error=scope_mismatch"

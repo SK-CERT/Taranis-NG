@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
@@ -68,6 +69,7 @@ from minisaml.request import get_request_redirect_url
 from minisaml.response import TimeDriftLimits, validate_response
 
 if TYPE_CHECKING:
+    from auth.saml_federation import Scope
     from cryptography.x509 import Certificate
     from model.auth_provider import AuthProvider
 
@@ -79,6 +81,10 @@ CLOCK_SKEW = timedelta(minutes=2)
 # public ACS. The form allowance covers worst-case percent-encoding overhead.
 MAX_SAML_RESPONSE_ENCODED_BYTES = 4 * ((MAX_SAML_XML_BYTES + 2) // 3)
 MAX_SAML_FORM_BYTES = 3 * MAX_SAML_RESPONSE_ENCODED_BYTES + 4096
+
+
+class ScopeMismatchError(Exception):
+    """A federation IdP asserted a scoped identifier outside the scopes registered for it."""
 
 
 def _decode_saml_response(saml_response: str) -> bytes:
@@ -519,26 +525,28 @@ class SamlAuthenticator(BaseAuthenticator):
             encoded = f"{encoded}&{extra}"
         return urlunparse(parsed._replace(query=encoded))
 
-    def _idp_trust_material(self, chosen_entity_id: str | None) -> tuple[str, str]:
-        """Return the (certificate, expected issuer) the IdP response must verify against.
+    def _idp_trust_material(self, chosen_entity_id: str | None) -> tuple[str, str, tuple[Scope, ...] | None]:
+        """Return the (certificate, expected issuer, scopes) the IdP response must verify against.
 
-        In single-IdP mode these are the pinned config values. In federation mode
-        both come from the verified federation metadata for the IdP the user chose
-        at the discovery service, so a chosen entity that is not in the federation
-        raises rather than being trusted.
+        In single-IdP mode these are the pinned config values and there are no
+        scopes to check: the administrator chose that one IdP. In federation mode
+        all three come from the verified federation metadata for the IdP the user
+        chose at the discovery service, so a chosen entity that is not in the
+        federation raises rather than being trusted.
 
         Args:
             chosen_entity_id (str): The IdP entityID from the signed RelayState
                 (federation mode only).
 
         Returns:
-            tuple[str, str]: The IdP signing certificate(s) (PEM) and the issuer.
+            tuple: The IdP signing certificate(s) (PEM), the issuer, and the IdP's
+                scopes (None in single-IdP mode).
 
         Raises:
             ValueError: When the chosen IdP is not in the federation metadata.
         """
         if not self.is_federation():
-            return self.config.get("idp_certificate", ""), self.config.get("idp_entity_id")
+            return self.config.get("idp_certificate", ""), self.config.get("idp_entity_id"), None
 
         from auth import saml_federation  # noqa: PLC0415 - avoid an import cycle at module load
 
@@ -546,7 +554,41 @@ class SamlAuthenticator(BaseAuthenticator):
         if resolved is None:
             msg = f"the response is from '{chosen_entity_id}', not an identity provider in the federation"
             raise ValueError(msg)
-        return resolved.certificates, resolved.entity_id
+        return resolved.certificates, resolved.entity_id, resolved.scopes
+
+    def _within_scopes(self, identity: ExternalIdentity, scopes: tuple[Scope, ...]) -> ExternalIdentity:
+        """Hold a federation IdP to the scopes the federation registered for it.
+
+        A federation IdP is trusted for its own users only. A scoped username or
+        subject identifier (``user@domain``) outside its scopes is refused, since
+        accepting it would let any IdP in the federation claim another
+        institution's accounts. An out-of-scope ``mail`` is not refused but
+        dropped, so it can neither pass the provider's e-mail domain filter nor
+        land in the profile.
+
+        Args:
+            identity (ExternalIdentity): The identity read from the verified response.
+            scopes (tuple): The IdP's ``<shibmd:Scope>`` values.
+
+        Returns:
+            ExternalIdentity: The identity, with ``scoped`` set and ``email`` dropped
+                when outside the scopes.
+
+        Raises:
+            ScopeMismatchError: When the username or external id is out of scope.
+        """
+        from auth.saml_federation import in_scopes  # noqa: PLC0415 - avoid an import cycle at module load
+
+        for label, value in (("username", identity.username), ("external id", identity.external_id)):
+            if value and "@" in value and not in_scopes(value, scopes):
+                log_manager.store_auth_error_activity(
+                    f"SAML provider '{self.provider.name}': identity provider '{identity.issuer}' asserted the {label} "
+                    f"'{value}' outside its scopes {[scope.value for scope in scopes]}",
+                )
+                msg = f"{label} outside the scopes of {identity.issuer}"
+                raise ScopeMismatchError(msg)
+        email = identity.email if identity.email and in_scopes(identity.email, scopes) else None
+        return replace(identity, email=email, scoped="@" in identity.username)
 
     def handle_response(
         self,
@@ -574,10 +616,14 @@ class SamlAuthenticator(BaseAuthenticator):
 
         Returns:
             ExternalIdentity: The authenticated identity, or None on failure.
+
+        Raises:
+            ScopeMismatchError: In federation mode, when the IdP asserted a scoped
+                username or external id outside its own scopes.
         """
         try:
             raw_response = _decode_saml_response(saml_response)
-            idp_certificate, idp_issuer = self._idp_trust_material(chosen_entity_id)
+            idp_certificate, idp_issuer, scopes = self._idp_trust_material(chosen_entity_id)
 
             # every certificate is tried, so an IdP key rollover (metadata
             # carries the old and the new one) keeps working
@@ -633,9 +679,11 @@ class SamlAuthenticator(BaseAuthenticator):
             )
             return None
 
-        return ExternalIdentity(
+        identity = ExternalIdentity(
             username=str(username),
             external_id=str(external_id) if external_id else None,
             name=attributes.get(self.config.get("name_attr") or "displayName"),
             email=attributes.get(self.config.get("email_attr") or "mail"),
+            issuer=idp_issuer,
         )
+        return identity if scopes is None else self._within_scopes(identity, scopes)

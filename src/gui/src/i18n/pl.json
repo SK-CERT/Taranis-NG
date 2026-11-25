@@ -190,6 +190,7 @@
         "username_collision": "Konto o tej nazwie użytkownika już istnieje. Poproś administratora o połączenie z nim tej tożsamości.",
         "account_not_linked": "Ta tożsamość nie jest połączona z żadnym kontem. Skontaktuj się z administratorem.",
         "domain_not_allowed": "Rejestracja z Twojej domeny e-mail jest niedozwolona. Skontaktuj się z administratorem.",
+        "idp_not_authoritative": "Usługi logowania Twojej organizacji nie można użyć dla tego konta. Skontaktuj się z administratorem.",
         "auth_cancelled": "Logowanie anulowano. Spróbuj ponownie.",
         "provider_misconfigured": "Ta metoda logowania jest źle skonfigurowana. Skontaktuj się z administratorem.",
         "totp_invalid": "Nieprawidłowy kod uwierzytelniający.",

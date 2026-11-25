@@ -19,6 +19,11 @@ of a second, so the metadata is simply fetched, verified and cached in process
 with a short TTL - no background refresh machinery. The TTL never outlives the
 document's own ``validUntil``.
 
+Each IdP also brings the ``<shibmd:Scope>`` values the federation registered
+for it: the domains it may assert scoped identifiers (``user@domain``) for.
+Without that check any IdP in the federation could log in as anyone else's
+users by asserting their scoped username.
+
 Only signatures matching ``minisignxml``'s strict profile are accepted:
 exclusive C14N, enveloped-signature + exclusive-C14N transforms, and (by
 default) SHA-256 throughout. Federations that sign with a different transform
@@ -27,8 +32,9 @@ set, an InclusiveNamespaces prefix list, or SHA-1 are out of scope for now.
 
 from __future__ import annotations
 
+import re
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -45,6 +51,7 @@ if TYPE_CHECKING:
 
 MD = "{urn:oasis:names:tc:SAML:2.0:metadata}"
 DS = "{http://www.w3.org/2000/09/xmldsig#}"
+SHIBMD = "{urn:mace:shibboleth:metadata:1.0}"
 HTTP_REDIRECT_BINDING = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
 PEM_LINE_LENGTH = 64
 
@@ -78,6 +85,53 @@ def is_federation_mode(config: dict | None) -> bool:
 
 
 @dataclass(frozen=True)
+class Scope:
+    """A ``<shibmd:Scope>``: a domain an IdP may assert scoped values for.
+
+    Attributes:
+        value (str): The scope as published (a domain, or a regular expression).
+        pattern (re.Pattern): The compiled expression of a ``regexp="true"`` scope.
+    """
+
+    value: str
+    pattern: re.Pattern[str] | None = None
+
+    def matches(self, domain: str) -> bool:
+        """Tell whether a value's domain part is within this scope.
+
+        A literal scope covers its own domain and its subdomains (the organization
+        controls those too); a regexp scope must match the whole domain. Both are
+        case-insensitive, as domains are.
+
+        Args:
+            domain (str): The part after the last "@", lower-cased.
+
+        Returns:
+            bool: True when the IdP may assert values in this domain.
+        """
+        if self.pattern is not None:
+            return self.pattern.fullmatch(domain) is not None
+        scope = self.value.lower()
+        return domain == scope or domain.endswith(f".{scope}")
+
+
+def in_scopes(value: str, scopes: tuple[Scope, ...]) -> bool:
+    """Tell whether a scoped value (``something@domain``) is within one of the IdP's scopes.
+
+    Args:
+        value (str): The scoped value (eduPersonPrincipalName, subject-id, mail, ...).
+        scopes (tuple): The IdP's scopes.
+
+    Returns:
+        bool: False for a value without "@" or an empty domain, or outside every scope.
+    """
+    if "@" not in value:
+        return False
+    domain = value.rsplit("@", 1)[1].strip().lower()
+    return bool(domain) and any(scope.matches(domain) for scope in scopes)
+
+
+@dataclass(frozen=True)
 class ResolvedIdp:
     """An identity provider resolved out of verified federation metadata.
 
@@ -87,11 +141,13 @@ class ResolvedIdp:
         sso_url (str): The IdP HTTP-Redirect single sign-on endpoint.
         certificates (str): The IdP signing certificate(s) as a PEM bundle,
             ready for :func:`auth.saml_authenticator.load_idp_certificates`.
+        scopes (tuple): The ``<shibmd:Scope>`` values registered for the IdP.
     """
 
     entity_id: str
     sso_url: str
     certificates: str
+    scopes: tuple[Scope, ...] = field(default=())
 
 
 @dataclass
@@ -156,6 +212,38 @@ def _fetch(url: str) -> bytes:
     return b"".join(chunks)
 
 
+def _scopes(entity: _Element, idp: _Element) -> tuple[Scope, ...]:
+    """Collect the ``<shibmd:Scope>`` values of an entity and of its IDPSSODescriptor.
+
+    A scope whose ``regexp="true"`` value does not compile is skipped (and logged):
+    it can only ever narrow what the IdP may assert.
+
+    Args:
+        entity (Element): The ``EntityDescriptor``.
+        idp (Element): Its ``IDPSSODescriptor``.
+
+    Returns:
+        tuple: The scopes, in document order.
+    """
+    scopes: list[Scope] = []
+    for holder in (entity, idp):
+        extensions = holder.find(f"{MD}Extensions")
+        if extensions is None:
+            continue
+        for element in extensions.findall(f"{SHIBMD}Scope"):
+            value = (element.text or "").strip()
+            if not value:
+                continue
+            if (element.get("regexp") or "").strip().lower() not in ("true", "1"):
+                scopes.append(Scope(value))
+                continue
+            try:
+                scopes.append(Scope(value, re.compile(value, re.IGNORECASE)))
+            except re.error as ex:
+                log_manager.logger.warning(f"Federation metadata: skipping the invalid scope '{value}' of '{entity.get('entityID')}': {ex}")
+    return tuple(scopes)
+
+
 def _index_idps(verified: _Element) -> dict[str, ResolvedIdp]:
     """Build the entityID -> IdP index from a *verified* metadata element.
 
@@ -198,7 +286,12 @@ def _index_idps(verified: _Element) -> dict[str, ResolvedIdp]:
         if not certificates:
             continue
 
-        entities[entity_id] = ResolvedIdp(entity_id=entity_id, sso_url=sso_url, certificates="".join(certificates))
+        entities[entity_id] = ResolvedIdp(
+            entity_id=entity_id,
+            sso_url=sso_url,
+            certificates="".join(certificates),
+            scopes=_scopes(entity, idp),
+        )
     return entities
 
 
