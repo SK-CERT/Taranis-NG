@@ -73,10 +73,26 @@ def _auth_generation_rejected(_jwt_header: dict, _jwt_payload: dict) -> tuple[di
     return {"error": "Authentication token is no longer valid"}, HTTPStatus.UNAUTHORIZED
 
 
+def _token_revoked(_jwt_header: dict, jwt_payload: dict) -> bool:
+    """Whether a token was logged out (blacklisted); a lookup that fails counts as revoked."""
+    try:
+        return TokenBlacklist.is_blacklisted(jwt_payload.get("jti"))
+    except Exception as ex:
+        log_manager.store_auth_error_activity("Token revocation could not be checked", ex)
+        return True
+
+
 def _configure_auth_generation_verification(jwt_manager: JWTManager) -> None:
-    """Install the central JWT generation callbacks on Flask-JWT-Extended."""
+    """Install the central JWT callbacks on Flask-JWT-Extended: generation and revocation.
+
+    Revocation is checked here, for every endpoint that verifies a JWT, and no longer by hand in
+    two decorators: the endpoints with a bare ``@jwt_required()`` (TOTP and passkey enrollment
+    among them) accepted a token after its logout.
+    """
     jwt_manager.token_verification_loader(_auth_generation_is_current)
     jwt_manager.token_verification_failed_loader(_auth_generation_rejected)
+    jwt_manager.token_in_blocklist_loader(_token_revoked)
+    jwt_manager.revoked_token_loader(_auth_generation_rejected)
 
 
 def cleanup_token_blacklist(app: Flask) -> None:
@@ -1085,11 +1101,8 @@ def auth_required(
                 if not user:
                     log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
                     return error
+                # A logged-out token was refused by verify_jwt_in_request (token_in_blocklist_loader).
                 jwt_data = get_jwt()
-                jwt_id = jwt_data.get("jti")
-                if TokenBlacklist.is_blacklisted(jwt_id):
-                    log_manager.store_auth_error_activity(f"Unauthorized API call acces (blacklisted token: {jwt_id})")
-                    return error
 
                 active_permissions_set = get_perm_from_jwt_token(user, jwt_data)
 
@@ -1215,12 +1228,7 @@ def jwt_token_required(fn: Callable[..., Any]) -> Callable[..., Any]:
             log_manager.store_auth_error_activity("Missing or malformed JWT", ex)
             return {"error": "authorization required"}, HTTPStatus.UNAUTHORIZED
 
-        jwt_data = get_jwt()
-        jwt_id = jwt_data.get("jti")
-        if TokenBlacklist.is_blacklisted(jwt_id):
-            log_manager.store_auth_error_activity(f"Blacklisted token: {jwt_id}")
-            return {"error": "token revoked"}, HTTPStatus.UNAUTHORIZED
-
+        # A logged-out token was refused by verify_jwt_in_request (token_in_blocklist_loader).
         identity = get_jwt_identity()
         if not identity:
             log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
@@ -1300,6 +1308,9 @@ def decode_user_from_jwt(jwt_token: str) -> User:
         return None
     if not _auth_generation_is_current({}, decoded):
         log_manager.store_auth_error_activity("Session JWT rejected because its authentication generation is stale or missing")
+        return None
+    if _token_revoked({}, decoded):
+        log_manager.store_auth_warning_activity("Session JWT rejected because it was logged out")
         return None
     return _find_active_user(decoded["sub"])
 

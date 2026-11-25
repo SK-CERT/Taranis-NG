@@ -15,7 +15,6 @@ import requests
 from auth import oauth2_authenticator, saml_authenticator, saml_federation, saml_metadata
 from auth import url_guard as saml_url_guard
 from flask import Response, request, send_file
-from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from managers import (
     api_key_manager,
@@ -32,7 +31,7 @@ from managers import (
     remote_manager,
     template_preview,
 )
-from managers.auth_manager import auth_required, get_user_from_jwt
+from managers.auth_manager import auth_required, get_user_from_jwt, jwt_token_required
 from managers.db_manager import db
 from managers.sse_manager import sse_manager
 from managers.stored_secrets import hide_secret_parameters, keep_stored_api_key
@@ -1670,7 +1669,7 @@ class ExternalUserResource(Resource):
 class SettingsResource(Resource):
     """Settings API endpoint."""
 
-    @jwt_required()
+    @jwt_token_required
     def get(self) -> tuple[str, dict]:
         """Get all global settings.
 
@@ -1708,7 +1707,7 @@ class SettingResource(Resource):
 class UserSettingResource(Resource):
     """Settings API endpoint."""
 
-    @jwt_required()
+    @jwt_token_required
     def put(self, setting_id: int) -> tuple[dict, HTTPStatus]:
         """Update a user setting.
 

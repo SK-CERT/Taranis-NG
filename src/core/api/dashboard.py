@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Final
 
@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
 from flask import request
-from flask_jwt_extended import jwt_required
 from flask_restful import Resource
+from managers.auth_manager import jwt_token_required
 from managers.log_manager import logger
 from model.news_item import NewsItemData
 from model.product import Product
@@ -56,7 +56,7 @@ def _single_value(arguments: Mapping[str, Sequence[str]], name: str) -> str | No
     return values[0]
 
 
-def _validate_interval(date_from: datetime.date, date_to: datetime.date) -> tuple[datetime.date, datetime.date]:
+def _validate_interval(date_from: dt.date, date_to: dt.date) -> tuple[dt.date, dt.date]:
     """Validate the ordering of an inclusive interval."""
     if date_from > date_to:
         msg = f"'{DATE_FROM_ARGUMENT}' must not be after '{DATE_TO_ARGUMENT}'"
@@ -64,7 +64,7 @@ def _validate_interval(date_from: datetime.date, date_to: datetime.date) -> tupl
     return date_from, date_to
 
 
-def _parse_legacy_day(value: str, today: datetime.date) -> tuple[datetime.date, datetime.date]:
+def _parse_legacy_day(value: str, today: dt.date) -> tuple[dt.date, dt.date]:
     """Parse the backward-compatible relative-day argument."""
     try:
         number_of_days = int(value)
@@ -79,21 +79,21 @@ def _parse_legacy_day(value: str, today: datetime.date) -> tuple[datetime.date, 
     # Preserve the legacy API contract: values above seven are capped, not
     # rejected. Some existing clients rely on Core applying this bound.
     number_of_days = min(number_of_days, LEGACY_TAG_CLOUD_DAY_CAP)
-    return today - datetime.timedelta(days=number_of_days), today
+    return today - dt.timedelta(days=number_of_days), today
 
 
-def _parse_named_range(value: str, today: datetime.date) -> tuple[datetime.date, datetime.date]:
+def _parse_named_range(value: str, today: dt.date) -> tuple[dt.date, dt.date]:
     """Parse a named range using the vocabulary of other Core list APIs."""
     if value == "TODAY":
         return today, today
     if value == "WEEK":
-        return today - datetime.timedelta(days=today.weekday()), today
+        return today - dt.timedelta(days=today.weekday()), today
     if value == "MONTH":
         return today.replace(day=1), today
     if value == "LAST_7_DAYS":
-        return today - datetime.timedelta(days=7), today
+        return today - dt.timedelta(days=7), today
     if value == "LAST_31_DAYS":
-        return today - datetime.timedelta(days=31), today
+        return today - dt.timedelta(days=31), today
 
     allowed = "TODAY, WEEK, MONTH, LAST_7_DAYS, LAST_31_DAYS"
     msg = f"Unsupported '{RANGE_ARGUMENT}' value; expected one of: {allowed}"
@@ -103,15 +103,15 @@ def _parse_named_range(value: str, today: datetime.date) -> tuple[datetime.date,
 def _parse_explicit_interval(
     date_from_value: str | None,
     date_to_value: str | None,
-) -> tuple[datetime.date, datetime.date]:
+) -> tuple[dt.date, dt.date]:
     """Parse a complete pair of inclusive ISO calendar dates."""
     if date_from_value is None or date_to_value is None:
         msg = f"'{DATE_FROM_ARGUMENT}' and '{DATE_TO_ARGUMENT}' must be specified together"
         raise TagCloudQueryError(msg)
 
     try:
-        date_from = datetime.date.fromisoformat(date_from_value)
-        date_to = datetime.date.fromisoformat(date_to_value)
+        date_from = dt.date.fromisoformat(date_from_value)
+        date_to = dt.date.fromisoformat(date_to_value)
     except ValueError as ex:
         msg = f"'{DATE_FROM_ARGUMENT}' and '{DATE_TO_ARGUMENT}' must use YYYY-MM-DD"
         raise TagCloudQueryError(msg) from ex
@@ -121,8 +121,8 @@ def _parse_explicit_interval(
 
 def parse_tag_cloud_interval(
     arguments: Mapping[str, Sequence[str]],
-    today: datetime.date,
-) -> tuple[datetime.date, datetime.date]:
+    today: dt.date,
+) -> tuple[dt.date, dt.date]:
     """Resolve one mutually exclusive tag-cloud interval mode.
 
     Supported modes are the legacy relative ``tag_cloud_day`` argument, one
@@ -154,7 +154,7 @@ def parse_tag_cloud_interval(
 class Dashboard(Resource):
     """Dashboard API class."""
 
-    @jwt_required()
+    @jwt_token_required
     def get(self) -> dict | tuple[dict, HTTPStatus]:
         """Get the dashboard data.
 
@@ -165,7 +165,7 @@ class Dashboard(Resource):
         Returns:
             (dict): The dashboard data.
         """
-        today = datetime.datetime.now(TZ).date()
+        today = dt.datetime.now(TZ).date()
         try:
             tag_cloud_arguments = {name: request.args.getlist(name) for name in TAG_CLOUD_QUERY_ARGUMENTS if name in request.args}
             date_from, date_to = parse_tag_cloud_interval(tag_cloud_arguments, today)

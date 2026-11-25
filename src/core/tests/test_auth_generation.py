@@ -10,6 +10,7 @@ from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, decode_token, jwt_required
 from managers import auth_manager
 from model.security_settings import SecuritySettings
+from model.token_blacklist import TokenBlacklist
 
 
 @pytest.fixture
@@ -17,6 +18,7 @@ def generation_app(monkeypatch: pytest.MonkeyPatch) -> tuple[Flask, dict[str, in
     generation = {"value": 2}
     issued_on_refresh: list[str] = []
     monkeypatch.setattr(SecuritySettings, "get_auth_generation", lambda: generation["value"])
+    monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, _jti: False))
 
     app = Flask(__name__)
     app.config["JWT_SECRET_KEY"] = "auth-generation-test-secret-with-sufficient-length"
@@ -60,6 +62,14 @@ def test_auth_manager_initialize_registers_generation_callbacks(monkeypatch: pyt
         def token_verification_failed_loader(callback):  # noqa: ANN001, ANN205
             registered["rejected"] = callback
 
+        @staticmethod
+        def token_in_blocklist_loader(callback):  # noqa: ANN001, ANN205
+            registered["revoked"] = callback
+
+        @staticmethod
+        def revoked_token_loader(callback):  # noqa: ANN001, ANN205
+            registered["revoked_response"] = callback
+
     app = Flask(__name__)
     monkeypatch.delenv("TARANIS_NG_AUTHENTICATOR", raising=False)
     monkeypatch.setattr(auth_manager, "JWTManager", RecordingJWTManager)
@@ -70,6 +80,8 @@ def test_auth_manager_initialize_registers_generation_callbacks(monkeypatch: pyt
         "app": app,
         "verify": auth_manager._auth_generation_is_current,
         "rejected": auth_manager._auth_generation_rejected,
+        "revoked": auth_manager._token_revoked,
+        "revoked_response": auth_manager._auth_generation_rejected,
     }
 
 

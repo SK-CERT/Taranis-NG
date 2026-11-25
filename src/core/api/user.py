@@ -14,10 +14,9 @@ if TYPE_CHECKING:
 from http import HTTPStatus
 
 from flask import request
-from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from managers import api_key_manager, auth_manager, notification_manager, totp_manager, webauthn_manager
-from managers.auth_manager import auth_required
+from managers.auth_manager import auth_required, jwt_token_required
 from managers.db_manager import db
 from managers.stored_secrets import hide_secret_parameters
 from model.apikey import ApiKey
@@ -36,7 +35,7 @@ class UserHotkeys(Resource):
         Resource: A base class for implementing API resources.
     """
 
-    @jwt_required()
+    @jwt_token_required
     def get(self) -> dict:
         """Retrieve the hotkeys of the authenticated user.
 
@@ -49,7 +48,7 @@ class UserHotkeys(Resource):
         user = auth_manager.get_user_from_jwt()
         return Hotkey.get_json(user)
 
-    @jwt_required()
+    @jwt_token_required
     def put(self) -> dict:
         """Update the hotkeys of the authenticated user.
 
@@ -70,7 +69,7 @@ class UserWordLists(Resource):
         Resource: A base class for implementing API resources.
     """
 
-    @jwt_required()
+    @jwt_token_required
     def get(self) -> dict:
         """Retrieve all word lists in JSON format for the authenticated user.
 
@@ -80,7 +79,7 @@ class UserWordLists(Resource):
         user = auth_manager.get_user_from_jwt()
         return UserWordList.get_json(user)
 
-    @jwt_required()
+    @jwt_token_required
     def put(self) -> dict:
         """Update the word lists of the authenticated user.
 
@@ -101,7 +100,7 @@ class AvailableWordLists(Resource):
         Resource: A base class for implementing API resources.
     """
 
-    @jwt_required()
+    @jwt_token_required
     def get(self) -> dict:
         """Retrieve all available word lists with ACL filtering.
 
@@ -147,7 +146,7 @@ class UserPublishingChannels(Resource):
 class UserTotp(Resource):
     """Self-service TOTP (two-factor) enrollment for the authenticated user."""
 
-    @jwt_required()
+    @jwt_token_required
     def get(self) -> tuple[dict, HTTPStatus]:
         """Return whether TOTP is enabled for the current user.
 
@@ -159,7 +158,7 @@ class UserTotp(Resource):
             return {"error": "not authorized"}, HTTPStatus.UNAUTHORIZED
         return {"enabled": bool(user.totp_secret)}, HTTPStatus.OK
 
-    @jwt_required()
+    @jwt_token_required
     def post(self) -> tuple[dict, HTTPStatus]:
         """Begin (no code) or confirm (with code) TOTP enrollment.
 
@@ -180,7 +179,7 @@ class UserTotp(Resource):
         notification_manager.notify_user(user, notification_manager.TOTP_ENABLED)
         return {"enabled": True}, HTTPStatus.OK
 
-    @jwt_required()
+    @jwt_token_required
     def delete(self) -> tuple[dict, HTTPStatus]:
         """Disable TOTP for the current user (requires a currently valid code).
 
@@ -200,7 +199,7 @@ class UserTotp(Resource):
 class UserPasskeys(Resource):
     """Self-service passkey management for the authenticated user."""
 
-    @jwt_required()
+    @jwt_token_required
     def get(self) -> tuple[dict, HTTPStatus]:
         """List the current user's passkeys.
 
@@ -216,7 +215,7 @@ class UserPasskeys(Resource):
 class UserPasskeyRegisterBegin(Resource):
     """Start a passkey registration ceremony for the authenticated user."""
 
-    @jwt_required()
+    @jwt_token_required
     def post(self) -> tuple[dict, HTTPStatus]:
         """Return WebAuthn creation options and a challenge handle.
 
@@ -235,7 +234,7 @@ class UserPasskeyRegisterBegin(Resource):
 class UserPasskeyRegisterFinish(Resource):
     """Finish a passkey registration ceremony for the authenticated user."""
 
-    @jwt_required()
+    @jwt_token_required
     def post(self) -> tuple[dict, HTTPStatus]:
         """Verify the authenticator response and store the new passkey.
 
@@ -262,7 +261,7 @@ class UserPasskeyRegisterFinish(Resource):
 class UserPasskey(Resource):
     """Rename or remove one of the authenticated user's passkeys."""
 
-    @jwt_required()
+    @jwt_token_required
     def put(self, credential_id: int) -> tuple[dict, HTTPStatus]:
         """Rename a passkey.
 
@@ -280,7 +279,7 @@ class UserPasskey(Resource):
             return {"error": "Passkey not found"}, HTTPStatus.NOT_FOUND
         return {}, HTTPStatus.OK
 
-    @jwt_required()
+    @jwt_token_required
     def delete(self, credential_id: int) -> tuple[dict, HTTPStatus]:
         """Remove a passkey.
 
