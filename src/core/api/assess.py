@@ -10,6 +10,7 @@ from managers import auth_manager, log_manager
 from managers.auth_manager import ACLCheck, auth_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
+from managers.stored_secrets import hide_secret_parameters
 from marshmallow import ValidationError
 from model.news_item import NewsItem, NewsItemAggregate, NewsItemData
 from model.osint_source import OSINTSourceGroup
@@ -42,7 +43,8 @@ class OSINTSourceGroupsAssess(Resource):
     @auth_required("ASSESS_ACCESS")
     def get(self) -> dict:
         """Get all OSINT source groups for Assess."""
-        return OSINTSourceGroup.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
+        # The groups nest their sources whole: never their passwords, tokens or keys.
+        return hide_secret_parameters(OSINTSourceGroup.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True))
 
 
 class UnreadCountsByGroup(Resource):

@@ -2020,7 +2020,7 @@ class OSINTSourceGroupsResource(Resource):
             (dict): The OSINT source groups
         """
         search = request.args.get("search")
-        return osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
+        return hide_secret_parameters(osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False))
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:

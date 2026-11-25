@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import requests
 from managers.log_manager import logger
-from managers.stored_secrets import keep_stored_api_key
+from managers.stored_secrets import is_secret_parameter, keep_stored_api_key
 from model.collector import Collector
 from model.collectors_node import CollectorsNode
 from model.osint_source import OSINTSource
@@ -199,7 +199,11 @@ def collect_osint_source(osint_source_id: str) -> tuple[dict, HTTPStatus]:
 
 
 def export_osint_sources(input_data: dict | None) -> bytes:
-    """Serialize OSINT sources for download, without their proxy settings.
+    """Serialize OSINT sources for download, without their proxy settings or credentials.
+
+    Exporting needs only CONFIG_OSINT_SOURCE_ACCESS, the permission to look at sources, which
+    never shows a password, token or key; the export used to carry them all in plain text.
+    Sources imported from it need their credentials entered again.
 
     Args:
         input_data (dict): Optionally a "selection" of source ids; everything when absent.
@@ -219,7 +223,8 @@ def export_osint_sources(input_data: dict | None) -> bytes:
     for osint_source in export_data["data"]:
         for parameter_value in osint_source["parameter_values"]:
             # A proxy is specific to the installation that exported it, and may carry credentials.
-            if parameter_value["parameter"]["key"] == "PROXY_SERVER":
+            key = parameter_value["parameter"]["key"]
+            if key == "PROXY_SERVER" or is_secret_parameter(key):
                 parameter_value["value"] = ""
 
     return json.dumps(export_data).encode("utf-8")
