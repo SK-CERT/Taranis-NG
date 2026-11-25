@@ -112,8 +112,10 @@ class SFTPPublisher(BasePublisher):
             bytes_data = b64decode(data, validate=True)
             file_object = BytesIO(bytes_data)
 
-            # decide SFTP port
-            port = port or 22
+            # The port is a number from here on. Paramiko looks a pinned host key up under the
+            # bare host name only when the port *equals* 22; the string "22" made it look under
+            # "[host]:22", so a channel with a pinned key and its port typed in always failed.
+            port = int(str(port).strip()) if str(port or "").strip() else 22
 
             # determine SSH key type
             ssh_key = _get_key(ssh_key, ssh_key_password) if ssh_key else None
