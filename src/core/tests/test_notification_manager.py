@@ -360,6 +360,14 @@ def _edit(monkeypatch: pytest.MonkeyPatch, target: EditedUser, new_password: str
     monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: ADMIN)
     monkeypatch.setattr(config_api.auth_manager, "get_user_from_jwt", lambda: ADMIN)
     monkeypatch.setattr(config_api.auth_manager, "get_external_permissions_ids", list)
+    _without_the_permission_ceiling(monkeypatch)
+
+
+def _without_the_permission_ceiling(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests are about the notices; who may edit whom is test_permission_ceiling.py's."""
+    monkeypatch.setattr(config_api.permission_ceiling, "permissions_of", lambda _user: set())
+    monkeypatch.setattr(config_api.permission_ceiling, "refuse_beyond", lambda *_args: None)
+    monkeypatch.setattr(config_api.permission_ceiling, "refuse_losing_the_last_user_administrator", lambda **_change: None)
 
 
 @pytest.mark.parametrize(
@@ -373,7 +381,7 @@ def test_an_administrators_edit_reports_a_changed_or_removed_password(
     new_password: str | None,
     expected: list,
 ) -> None:
-    target = EditedUser(id=3, name="Carol", username="carol", email="carol@example.test", password="old-hash")
+    target = EditedUser(id=3, name="Carol", username="carol", email="carol@example.test", password="old-hash", status="active")
     _edit(monkeypatch, target, new_password, "update")
 
     with app.test_request_context("/", method="PUT", json={}):
@@ -402,6 +410,7 @@ def test_an_administrators_reset_reports_only_the_factors_the_user_had(monkeypat
     monkeypatch.setattr(config_api.user.User, "reset_mfa", classmethod(lambda _cls, _id, **_kwargs: None))
     monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: ADMIN)
     monkeypatch.setattr(config_api.log_manager, "store_user_activity", lambda *_args: None)
+    _without_the_permission_ceiling(monkeypatch)
 
     with app.test_request_context("/", method="POST", json={"reset_totp": True, "reset_passkeys": True}):
         _handler(config_api.UserMfaResetResource(), "post")(3)

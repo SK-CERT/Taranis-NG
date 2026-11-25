@@ -27,6 +27,7 @@ from managers import (
     llm_manager,
     log_manager,
     notification_manager,
+    permission_ceiling,
     presenters_manager,
     publishers_manager,
     remote_manager,
@@ -521,6 +522,12 @@ class AiProviderResource(Resource):
             return _delete_failed("Could not delete AI model", ex)
 
 
+def _default_role_ids(data: object) -> list:
+    """The ids of the default roles a login method record in a request names."""
+    roles = data.get("default_roles") if isinstance(data, dict) else None
+    return [role.get("id") if isinstance(role, dict) else role for role in roles] if isinstance(roles, list) else []
+
+
 class AuthProvidersResource(Resource):
     """Authentication providers API endpoint."""
 
@@ -543,6 +550,12 @@ class AuthProvidersResource(Resource):
         """
         try:
             user_object = auth_manager.get_user_from_jwt()
+            # Every account it provisions gets its default roles.
+            permission_ceiling.refuse_beyond(
+                user_object,
+                permission_ceiling.role_permissions(_default_role_ids(request.json)),
+                "give new accounts these default roles",
+            )
             record = auth_provider.AuthProvider.add_new(request.json, user_object.name)
             schema = AuthProviderSchema()
             return schema.dump(record), HTTPStatus.OK
@@ -566,6 +579,17 @@ class AuthProviderResource(Resource):
         """
         try:
             user_object = auth_manager.get_user_from_jwt()
+            # Whoever controls how a login method trusts its users can sign in as any of them.
+            permission_ceiling.refuse_beyond(
+                user_object,
+                permission_ceiling.linked_users_permissions(auth_provider.AuthProvider.find(auth_provider_id)),
+                "change a login method that users with more permissions sign in with",
+            )
+            permission_ceiling.refuse_beyond(
+                user_object,
+                permission_ceiling.role_permissions(_default_role_ids(request.json)),
+                "give new accounts these default roles",
+            )
             record = auth_provider.AuthProvider.update(auth_provider_id, request.json, user_object.name)
             schema = AuthProviderSchema()
             return schema.dump(record), HTTPStatus.OK
@@ -584,6 +608,11 @@ class AuthProviderResource(Resource):
             (dict, HTTPStatus): The result of the delete
         """
         try:
+            permission_ceiling.refuse_beyond(
+                auth_manager.get_user_from_jwt(),
+                permission_ceiling.linked_users_permissions(auth_provider.AuthProvider.find(auth_provider_id)),
+                "delete a login method that users with more permissions sign in with",
+            )
             return auth_provider.AuthProvider.delete(auth_provider_id)
         except Exception as ex:
             return _delete_failed("Could not delete authentication provider", ex)
@@ -1195,7 +1224,14 @@ class RolesResource(Resource):
             (dict, HTTPStatus): The result of the create
         """
         try:
+            permission_ceiling.refuse_beyond(
+                get_user_from_jwt(),
+                permission_ceiling.requested_role_permissions(request.json),
+                "create a role with these permissions",
+            )
             role.Role.add_new(request.json)
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not create role"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -1215,7 +1251,15 @@ class RoleResource(Resource):
             (dict, HTTPStatus): The result of the update
         """
         try:
+            actor = get_user_from_jwt()
+            stored = role.Role.find(role_id)
+            after = permission_ceiling.requested_role_permissions(request.json)
+            permission_ceiling.refuse_beyond(actor, stored.get_permissions() if stored else set(), "change this role")
+            permission_ceiling.refuse_beyond(actor, after, "give this role these permissions")
+            permission_ceiling.refuse_losing_the_last_user_administrator(role_id=stored.id if stored else None, role_permissions_after=after)
             role.Role.update(role_id, request.json)
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update role"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -1231,7 +1275,13 @@ class RoleResource(Resource):
             (dict, HTTPStatus): The result of the delete
         """
         try:
+            stored = role.Role.find(role_id)
+            if stored is not None:
+                permission_ceiling.refuse_beyond(get_user_from_jwt(), stored.get_permissions(), "delete this role")
+                permission_ceiling.refuse_losing_the_last_user_administrator(role_id=stored.id)
             return role.Role.delete(role_id)
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             return _delete_failed("Could not delete role", ex)
 
@@ -1381,9 +1431,14 @@ class UsersResource(Resource):
             (dict, HTTPStatus): The result of the create
         """
         try:
+            permission_ceiling.refuse_beyond(
+                get_user_from_jwt(),
+                permission_ceiling.requested_user_permissions(request.json),
+                "create a user with these permissions",
+            )
             user.User.add_new(request.json)
         except ValueError as ex:
-            # a rejected identity link or status change: the message names what to fix
+            # a rejected identity link, status change or permission: the message names what to fix
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         return None
 
@@ -1414,9 +1469,16 @@ class UserResource(Resource):
             return {"error": "User not found"}, HTTPStatus.NOT_FOUND
         password_before = target.password
         try:
+            # Before and after: no taking over an account that holds more, and no handing out more.
+            actor = get_user_from_jwt()
+            after = permission_ceiling.requested_user_permissions(request.json)
+            permission_ceiling.refuse_beyond(actor, permission_ceiling.permissions_of(target), "change this user")
+            permission_ceiling.refuse_beyond(actor, after, "give this user these permissions")
+            if target.status == "active":
+                permission_ceiling.refuse_losing_the_last_user_administrator(user_id=target.id, user_permissions_after=after)
             user.User.update(user_id, request.json)
         except ValueError as ex:
-            # a rejected identity link or status change: the message names what to fix
+            # a rejected identity link, status change or permission: the message names what to fix
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         _notify_password_change(target, password_before)
         return None
@@ -1430,8 +1492,15 @@ class UserResource(Resource):
         Returns:
             (dict, HTTPStatus): The result of the delete
         """
-        if user.User.find_by_id(user_id) is None:
+        target = user.User.find_by_id(user_id)
+        if target is None:
             return {"error": "User not found"}, HTTPStatus.NOT_FOUND
+        try:
+            permission_ceiling.refuse_beyond(get_user_from_jwt(), permission_ceiling.permissions_of(target), "delete this user")
+            if target.status == "active":
+                permission_ceiling.refuse_losing_the_last_user_administrator(user_id=target.id)
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         user.User.delete(user_id)
         return None
 
@@ -1449,6 +1518,11 @@ class UserStatusResource(Resource):
             (dict, HTTPStatus): The result of the status change
         """
         try:
+            permission_ceiling.refuse_beyond(
+                get_user_from_jwt(),
+                permission_ceiling.permissions_of(user.User.find_by_id(user_id)),
+                "change the status of this user",
+            )
             updated_user = user.User.set_status(user_id, (request.json or {}).get("status", ""))
             log_manager.store_user_activity(get_user_from_jwt(), "USER_STATUS", f"User {updated_user.username} set to {updated_user.status}")
             return {"status": updated_user.status}, HTTPStatus.OK
@@ -1475,6 +1549,8 @@ class UserMfaResetResource(Resource):
             reset_totp, reset_passkeys = data.get("reset_totp", True), data.get("reset_passkeys", True)
             # What the user actually loses, read before the reset; nothing lost, nothing to tell.
             target = user.User.find_by_id(user_id)
+            # Resetting someone's second factor is the first step of taking their account over.
+            permission_ceiling.refuse_beyond(get_user_from_jwt(), permission_ceiling.permissions_of(target), "reset the MFA of this user")
             factors = []
             if target and reset_totp and target.totp_secret:
                 factors.append("totp")
@@ -1502,6 +1578,17 @@ def _api_key_error(ex: Exception, what: str) -> tuple[dict, HTTPStatus]:
     msg = f"Could not {what} the API key"
     log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
     return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+def _refuse_key_of_a_stronger_owner(owner: user.User | None) -> None:
+    """Refuse managing an API key of a user who holds permissions the caller does not.
+
+    Raises:
+        ValueError: When the owner holds a permission the caller lacks.
+    """
+    actor = get_user_from_jwt()
+    if owner is not None and actor is not None and owner.id != actor.id:
+        permission_ceiling.refuse_beyond(actor, permission_ceiling.permissions_of(owner), "manage API keys of this user")
 
 
 class ApiKeysResource(Resource):
@@ -1535,6 +1622,8 @@ class ApiKeysResource(Resource):
         if owner is None:
             return {"error": "Choose the user the API key acts as"}, HTTPStatus.BAD_REQUEST
         try:
+            # The plaintext is shown to whoever creates it: a key for someone is acting as them.
+            _refuse_key_of_a_stronger_owner(owner)
             item, plaintext = api_key_manager.create(owner, data, get_user_from_jwt())
         except Exception as ex:
             return _api_key_error(ex, "create")
@@ -1557,6 +1646,7 @@ class ApiKeyResource(Resource):
         if record is None:
             return {"error": "API key not found"}, HTTPStatus.NOT_FOUND
         try:
+            _refuse_key_of_a_stronger_owner(record.user)
             return {"item": api_key_manager.update(record, request.json or {}, get_user_from_jwt())}, HTTPStatus.OK
         except Exception as ex:
             return _api_key_error(ex, "update")
@@ -1573,6 +1663,10 @@ class ApiKeyResource(Resource):
         record = apikey.ApiKey.find(api_key_id)
         if record is None:
             return {"error": "API key not found"}, HTTPStatus.NOT_FOUND
+        try:
+            _refuse_key_of_a_stronger_owner(record.user)
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         try:
             api_key_manager.delete(record, get_user_from_jwt())
         except Exception as ex:
