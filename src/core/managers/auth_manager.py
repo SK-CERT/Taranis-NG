@@ -220,7 +220,7 @@ def get_login_methods() -> dict:
     }
 
 
-def make_scoped_token(username: str, scope: str, expires_minutes: int = SCOPED_TOKEN_MINUTES, **claims: str) -> str:
+def make_scoped_token(username: str, scope: str, expires_minutes: int = SCOPED_TOKEN_MINUTES, **claims: object) -> str:
     """Mint a short-lived single-purpose token (MFA step, TOTP enrollment, OAuth state).
 
     These tokens carry a ``scope`` claim and no flask-jwt ``type`` claim, so they
@@ -266,6 +266,21 @@ def decode_scoped_token(token: str, scope: str) -> dict | None:
         log_manager.store_auth_error_activity(f"Scoped token used with wrong scope: expected {scope}")
         return None
     return payload
+
+
+def _mfa_method_offered(payload: dict, method: str) -> bool:
+    """Whether the MFA step a scoped token carries may be completed with ``method``.
+
+    A token from before the step named its methods carries none, and is refused: it lives five
+    minutes, after which the person signs in again.
+    """
+    methods = payload.get("methods")
+    return isinstance(methods, list) and method in methods
+
+
+def _mfa_method_refused() -> tuple[dict, HTTPStatus]:
+    """Refuse a second factor the MFA step did not offer."""
+    return BaseAuthenticator.generate_error_code("This sign-in cannot be completed with that method", "MFA_METHOD_NOT_OFFERED")
 
 
 def _mfa_session_expired() -> tuple[dict, HTTPStatus]:
@@ -351,7 +366,10 @@ def _mfa_gate(provider: AuthProvider | None, user: User, *, passkey_used: bool =
             "Additional authentication required",
             "MFA_REQUIRED",
             methods=methods,
-            mfa_token=make_scoped_token(user.username, "mfa"),
+            # The step token says which factors it may be completed with: after a passkey
+            # sign-in only TOTP is offered, and the passkey endpoints used to accept the same
+            # token anyway - the passkey that started the login counted as its second factor too.
+            mfa_token=make_scoped_token(user.username, "mfa", methods=methods),
         )
     # Nothing enrolled yet: offer every factor this installation accepts, so a user
     # forced to set one up is not pushed into an authenticator app when a passkey
@@ -573,6 +591,8 @@ def complete_mfa_totp(mfa_token: str, code: str) -> tuple[dict, HTTPStatus]:
     user = User.find(payload["sub"]) if payload else None
     if not user:
         return _mfa_session_expired()
+    if not _mfa_method_offered(payload, "totp"):
+        return _mfa_method_refused()
     if not login_throttle.check_lock(user.username):
         return _mfa_session_expired()
     if not totp_manager.verify_code(user, code):
@@ -679,9 +699,12 @@ def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatu
     if mfa_token:
         if not webauthn_manager.passkey_second_factor_enabled():
             return BaseAuthenticator.generate_error_code("Passkeys are not accepted as a second factor", "PASSKEY_NOT_ALLOWED")
-        user = get_user_from_scoped_token(mfa_token, "mfa")
+        payload = decode_scoped_token(mfa_token, "mfa")
+        user = User.find(payload["sub"]) if payload else None
         if not user:
             return _mfa_session_expired()
+        if not _mfa_method_offered(payload, "passkey"):
+            return _mfa_method_refused()
     elif not webauthn_manager.passkey_first_factor_enabled():
         return BaseAuthenticator.generate_error_code("Passkey sign-in is not available", "PASSKEY_LOGIN_DISABLED")
     try:
@@ -731,6 +754,8 @@ def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) ->
     payload = decode_scoped_token(mfa_token, "mfa")
     if not payload:
         return _mfa_session_expired()
+    if not _mfa_method_offered(payload, "passkey"):
+        return _mfa_method_refused()
     try:
         owner = webauthn_manager.finish_authentication(challenge_id, credential)
     except ValueError as ex:
