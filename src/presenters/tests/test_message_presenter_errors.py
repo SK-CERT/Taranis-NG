@@ -114,3 +114,28 @@ def test_a_missing_headers_template_path_is_not_an_error(presenter_input: object
 
     assert output["message_headers"] == []
     assert output["message_body"] is not None
+
+
+@pytest.mark.parametrize(("suffix", "escaped"), [(".html", True), (".htm", True), (".txt", False)])
+def test_an_html_body_escapes_report_values(presenter_input: object, suffix: str, *, escaped: bool) -> None:
+    markup = '<a href="https://phish.example/">Reset your password</a><img src="https://attacker.example/p.png">'
+    presenter_input.reports[0].attributes[0].value = markup
+    body = write_template(f"_test_body{suffix}", "{% for report in data.report_items %}{{ report.attrs.report_category[0] }}{% endfor %}")
+    presenter_input.param_key_values = {
+        "TITLE_TEMPLATE_PATH": str(TEMPLATES_ROOT / "email_subject_template.txt"),
+        "BODY_TEMPLATE_PATH": body,
+    }
+    try:
+        output = MESSAGEPresenter().generate(presenter_input)
+    finally:
+        Path(body).unlink()
+
+    rendered = b64decode(output["message_body"]).decode("UTF-8")
+    if escaped:
+        assert output["message_body_mime_type"] == "text/html"
+        assert "<a " not in rendered
+        assert "<img" not in rendered
+        assert "&lt;a href=" in rendered
+    else:
+        # Plain text is sent as text/plain, where markup is inert.
+        assert rendered == markup
