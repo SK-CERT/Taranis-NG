@@ -15,7 +15,7 @@ import types
 from base64 import b64encode
 from pathlib import Path
 from pprint import pformat
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import jinja2
 from cvss import CVSS2, CVSS3, CVSS4
@@ -27,6 +27,9 @@ from shared.schema.presenter import PresenterSchema
 from weasyprint import HTML
 
 from . import jinja_filters
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class BasePresenter:
@@ -444,6 +447,7 @@ class BasePresenter:
         template_string: str | None = None,
         escape_html: bool = False,
         is_pdf: bool = False,
+        finalize: Callable[[object], object] | None = None,
     ) -> str:
         """Render a Jinja2 template and return base64-encoded bytes.
 
@@ -453,6 +457,7 @@ class BasePresenter:
             template_string: Template source string to use instead of a file.
             escape_html: Enable Jinja2 autoescaping for HTML output.
             is_pdf: If True, render output to PDF and return PDF bytes.
+            finalize: Jinja's ``finalize``: applied to every value a template prints.
 
         Returns:
             Base64-encoded UTF-8 string of rendered bytes.
@@ -461,12 +466,12 @@ class BasePresenter:
             ValueError: If a template path is outside allowed templates root.
         """
         if template_string:
-            env = SandboxedEnvironment(autoescape=False)  # safe for plaintext
+            env = SandboxedEnvironment(autoescape=False, finalize=finalize)  # safe for plaintext
             cls.load_filters(env)
             template = env.from_string(template_string)
         else:
             head, tail = cls.resolve_template_path(template_path)
-            env = SandboxedEnvironment(loader=jinja2.FileSystemLoader(head), autoescape=escape_html)
+            env = SandboxedEnvironment(loader=jinja2.FileSystemLoader(head), autoescape=escape_html, finalize=finalize)
             cls.load_filters(env)
             template = env.get_template(tail)
 
