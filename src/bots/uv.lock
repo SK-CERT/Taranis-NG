@@ -416,10 +416,11 @@ wheels = [
 
 [[package]]
 name = "sseclient-py"
-version = "1.9.0"
+version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/54/28751655aeb6a43c19b496ea3065b6957ef1f70066a37c4d50f1f1ad5abb/sseclient_py-2.1.0.tar.gz", hash = "sha256:aa133479a27ab6f83054674acd716a0e822c612a7764c5c89360fbbcf0297447", size = 79373, upload-time = "2026-11-15T21:03:01.773Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/2e/59920f7d66b7f9932a3d83dd0ec53fab001be1e058bf582606fe414a5198/sseclient_py-1.9.0-py3-none-any.whl", hash = "sha256:340062b1587fc2880892811e2ab5b176d98ef3eee98b3672ff3a3ba1e8ed0f6f", size = 8351, upload-time = "2026-01-02T23:39:30.995Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/55/339b70e9872559540689078b575abcedb897b9b186fdb9bc48cadc391e17/sseclient_py-2.1.0-py3-none-any.whl", hash = "sha256:32a76b209f9fde6a7f01d5e993a5a3db8cc0fe22b700b9246898d6e3af9d159e", size = 9147, upload-time = "2026-11-15T21:03:00.489Z" },
 ]
 
 [[package]]
@@ -459,7 +460,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = "==1.2.4" },
     { name = "requests", specifier = "==2.34.2" },
     { name = "schedule", specifier = "==1.2.2" },
-    { name = "sseclient-py", specifier = "==1.9.0" },
+    { name = "sseclient-py", specifier = "==2.1.0" },
     { name = "taranis-ng-shared", directory = "../shared" },
 ]
 
