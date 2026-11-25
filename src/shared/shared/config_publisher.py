@@ -36,6 +36,13 @@ class ConfigPublisher(ConfigBase):
         mod.parameters = [
             ParamType("MISP_URL", "MISP url", "MISP server https url", ParameterType.STRING),
             ParamType("MISP_API_KEY", "MISP API key", "User MISP API key", ParameterType.STRING),
+            ParamType(
+                "MISP_CA_BUNDLE",
+                "CA bundle",
+                "OPTIONAL: Path, on the publishers node, to the PEM CA certificate(s) that issued the MISP server's certificate, "
+                "when it is not signed by a public CA. The certificate is always checked.",
+                ParameterType.STRING,
+            ),
         ]
         self.modules.append(mod)
 
