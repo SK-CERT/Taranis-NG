@@ -91,15 +91,15 @@ def homepage() -> str:
     site = current_site()
     limit = site.max_reports_homepage
     reports = cache.get_all_reports(site.id, site.language)
+    renderer = cache.renderer(site.id)
+    options = _render_options()
     if search_arg:
-        # Filter per keyword search from arguments.
-        reports = [report for report in reports if matches_keyword(report, search_arg)]
+        # Filter per keyword search from arguments: what the reports' pages show.
+        reports = [report for report in reports if matches_keyword(report, search_arg, lambda r: renderer.page_text(r, **options))]
 
     pages = math.ceil(len(reports) / limit)
     upper_report_index = limit * page
     lower_report_index = upper_report_index - limit
-    renderer = cache.renderer(site.id)
-    options = _render_options()
     entries = [(report, renderer.render(report, "summary", **options)) for report in reports[lower_report_index:upper_report_index]]
     return render_template(
         "homepage.html",

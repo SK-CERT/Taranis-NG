@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 from lib.report.filters import FILTERS
-from lib.report.product import build_product, displayable, visible_links
+from lib.report.product import build_product, displayable, matches_keyword, visible_links
 from lib.report.renderer import ReportRenderer, get_renderer, templates_for_web
 from lib.web.taranis_client import TaranisClient
 from shared.public_web_templates import FILTER_NAMES
@@ -504,6 +504,44 @@ def test_a_value_that_is_not_a_tlp_is_never_public(value: str) -> None:
 
 def test_the_author_s_login_name_is_not_part_of_the_product() -> None:
     assert "author_username" not in _product(_disinfo())
+
+
+def _search(product: dict, keyword: str) -> bool:
+    renderer = ReportRenderer([])
+    return matches_keyword(product, keyword, renderer.page_text)
+
+
+def test_search_finds_what_the_page_shows() -> None:
+    product = _product(_vulnerability())
+
+    assert _search(product, "a flaw")
+    assert _search(product, "bulletin")
+    assert _search(product, "weekly overview")
+
+
+def test_search_does_not_find_what_the_template_leaves_out() -> None:
+    # The vulnerability template prints the fields it names; the generic one leaves attachments
+    # out. Both used to be searched as raw values, so whether a search matched told a visitor
+    # what an internal note or a file name said.
+    item = _item(
+        "Vulnerability Report",
+        2,
+        _attribute("description", "TEXT", "A flaw."),
+        _attribute("internal_note", "STRING", "INC-4471 reported by the pentest team"),
+        _attribute("tlp", "TLP", "CLEAR"),
+    )
+    attachment = _item(
+        "Weekly note",
+        NOTE_ITEM_TYPE,
+        _attribute("description", "TEXT", "Note."),
+        _attribute("evidence", "ATTACHMENT", "pentest-acme.pdf"),
+    )
+
+    product = _product(item, attachment)
+
+    assert not _search(product, "inc-4471")
+    assert not _search(product, "pentest")
+    assert _search(product, "a flaw")
 
 
 def test_a_template_can_allow_products_without_tlp() -> None:

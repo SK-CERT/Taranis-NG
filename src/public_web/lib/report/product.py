@@ -312,8 +312,8 @@ def visible_links(product: dict, selected_items: list[int] | None) -> list[str |
     return [link if link in shown else None for link in links]
 
 
-def _keyword_texts(product: dict) -> list[str]:
-    """What a search looks through, lowercased."""
+def _keyword_texts(product: dict, page_text: str) -> list[str]:
+    """What a search looks through, lowercased: the product's own fields and its page's text."""
     texts: list[object] = [
         product["title"],
         product["description"],
@@ -323,25 +323,35 @@ def _keyword_texts(product: dict) -> list[str]:
         product["published"],
         product["max_cvss"],
         get_cvss_severity(product["max_cvss"]),
+        page_text,
     ]
-    for item in product["report_items"]:
-        texts.append(item["name"])
-        for attribute in item["attributes"]:
-            texts.append(attribute["value"])
-            if attribute["key"].startswith("cwe") and attribute["value"]:
-                texts.append(f"CWE-{attribute['value']}")
     return [str(text).lower() for text in texts if text is not None]
 
 
-def matches_keyword(product: dict, keyword: str) -> bool:
-    """Whether the keyword occurs anywhere a reader would look for it.
+def matches_keyword(product: dict, keyword: str, page_text: Callable[[dict], str]) -> bool:
+    """Whether the keyword occurs anywhere a reader would look for it - on the page, never beyond.
+
+    The report items are searched as their template shows them (``page_text``), not through
+    their raw attribute values: those include what the template leaves out.
 
     The texts are gathered once per product and kept with it: a search goes through every
     published product.
+
+    Args:
+        product (dict): As built by :func:`build_product`.
+        keyword (str): What the visitor searches for.
+        page_text (Callable): The text of the product's page (``ReportRenderer.page_text``).
+
+    Returns:
+        bool: Whether the product matches.
     """
     texts = product.get("_keyword_texts")
     if texts is None:
-        texts = product["_keyword_texts"] = _keyword_texts(product)
+        try:
+            shown = page_text(product)
+        except Exception:  # a broken template must not take the search down; the page logs it
+            shown = ""
+        texts = product["_keyword_texts"] = _keyword_texts(product, shown)
     needle = keyword.lower().strip()
     return any(needle in text for text in texts)
 

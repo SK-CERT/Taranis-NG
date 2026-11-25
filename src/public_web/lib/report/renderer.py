@@ -201,6 +201,15 @@ class ReportRenderer:
         names = list(dict.fromkeys([self.product_template(product), self._builtin_product(product)]))
         return Markup(self._render(names, context, f"product {product['id']}"))  # noqa: S704 (autoescaped template output)
 
+    def page_text(self, product: dict, **kwargs: Any) -> str:  # noqa: ANN401
+        """The text a reader sees on a product's page, tags stripped: what a search may find.
+
+        A product template decides what its page shows; a search through the raw attribute
+        values found what it leaves out (an internal note, an attachment's file name) and told
+        anonymous visitors, one guessed letter at a time, by matching or not.
+        """
+        return html.unescape(_TAG.sub(" ", str(self.render(product, "detail", **kwargs))))
+
     def render_text(self, product: dict, **kwargs: Any) -> str:  # noqa: ANN401
         """Render a product's RSS text: tags stripped, entities decoded, lines trimmed."""
         rendered = html.unescape(_TAG.sub("", str(self.render(product, "rss", **kwargs))))
