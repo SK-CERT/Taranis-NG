@@ -78,6 +78,7 @@ def test_issued_access_token_keeps_user_claims(monkeypatch: pytest.MonkeyPatch) 
         username="alice",
         id=7,
         name="Alice Example",
+        password="hash",
         status="active",
         get_current_organization_name=lambda: "Example Org",
         get_permissions=lambda: ["ANALYZE_ACCESS"],
@@ -100,6 +101,7 @@ def test_issued_access_token_keeps_user_claims(monkeypatch: pytest.MonkeyPatch) 
         "identity": "alice",
         "additional_claims": {
             "auth_generation": 3,
+            "cred": base_authenticator.session_credential(user),
             "user_claims": {
                 "id": 7,
                 "name": "Alice Example",

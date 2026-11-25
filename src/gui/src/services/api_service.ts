@@ -2,10 +2,20 @@ import axios, { type AxiosRequestConfig } from 'axios'
 
 const abortControllers = {}
 
+/** Dispatched when core says the session no longer holds (password changed, logged out elsewhere). */
+export const SESSION_INVALID_EVENT = 'session-invalid'
+
 const ApiService = {
     init(baseURL) {
         axios.defaults.baseURL = baseURL
         ApiService.setHeader()
+        // Only this code ends the session here: a plain 401 can also mean a missing permission.
+        axios.interceptors.response.use(undefined, (error) => {
+            if (error?.response?.status === 401 && error.response.data?.code === 'SESSION_INVALID') {
+                window.dispatchEvent(new Event(SESSION_INVALID_EVENT))
+            }
+            return Promise.reject(error)
+        })
     },
 
     setHeader() {

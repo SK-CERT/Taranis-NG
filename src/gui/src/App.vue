@@ -35,6 +35,7 @@
     import { useI18n } from 'vue-i18n'
     import { useLocale, useTheme } from 'vuetify'
     import { useRouter } from 'vue-router'
+    import { SESSION_INVALID_EVENT } from '@/services/api_service'
     import { useAuthStore } from '@/stores/auth'
     import { useUserStore } from '@/stores/user'
     import { useSettingsStore } from '@/stores/settings'
@@ -227,6 +228,16 @@
     }
 
     /**
+     * Core refused the session (its password changed, or it was logged out elsewhere):
+     * end it here too instead of leaving a page where every call fails.
+     */
+    const handleSessionInvalid = (): void => {
+        if (!authStore.jwt) return
+        authStore.clearSession()
+        navigateToLogin()
+    }
+
+    /**
      * Token refresh interval
      */
     let refreshInterval: ReturnType<typeof setInterval> | null = null
@@ -289,6 +300,7 @@
         window.addEventListener('logged-in', handleLoggedIn)
         window.addEventListener('logged-out', handleLoggedOut)
         window.addEventListener('nav-clicked', handleNavClicked)
+        window.addEventListener(SESSION_INVALID_EVENT, handleSessionInvalid)
     })
 
     /**
@@ -306,6 +318,7 @@
         window.removeEventListener('logged-in', handleLoggedIn)
         window.removeEventListener('logged-out', handleLoggedOut)
         window.removeEventListener('nav-clicked', handleNavClicked)
+        window.removeEventListener(SESSION_INVALID_EVENT, handleSessionInvalid)
     })
 </script>
 

@@ -32,6 +32,7 @@ def revoked(monkeypatch: pytest.MonkeyPatch) -> set[str]:
     jtis: set[str] = set()
     monkeypatch.setattr(SecuritySettings, "get_auth_generation", classmethod(lambda _cls: 1))
     monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, jti: jti in jtis))
+    monkeypatch.setattr(auth_manager, "_credential_is_current", lambda _payload: True)
     for name in ("store_auth_error_activity", "store_auth_warning_activity", "store_user_activity"):
         monkeypatch.setattr(auth_manager.log_manager, name, lambda *_args, **_kwargs: None)
     return jtis

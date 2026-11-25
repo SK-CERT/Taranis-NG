@@ -20,7 +20,8 @@ const mockAuthStore = {
     getUserData: null,
     refreshToken: vi.fn(),
     logout: vi.fn(),
-    setToken: vi.fn()
+    setToken: vi.fn(),
+    clearSession: vi.fn()
 }
 
 const mockUserStore = {
@@ -267,6 +268,25 @@ describe('App SSE boot flow', () => {
             expect(mockConnect).toHaveBeenCalledTimes(1)
             expect(mockSubscribe).toHaveBeenCalledTimes(6)
         })
+    })
+
+    it('ends the session and shows the login page when core says the session is no longer valid', async () => {
+        wrapper = mountWithPlugins(App, {
+            global: {
+                stubs: {
+                    MainMenu: true,
+                    NotificationSnackbar: true
+                }
+            }
+        })
+        await flushPromises()
+        mockAuthStore.clearSession.mockClear()
+        mockRouterReplace.mockClear()
+
+        window.dispatchEvent(new Event('session-invalid'))
+
+        expect(mockAuthStore.clearSession).toHaveBeenCalledTimes(1)
+        expect(mockRouterReplace).toHaveBeenCalledWith('/login')
     })
 
     it('synchronizes runtime locale changes with document metadata and Vuetify direction', async () => {

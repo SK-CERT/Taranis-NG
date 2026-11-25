@@ -7,13 +7,38 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.user import User
 
+import hashlib
+import hmac
 from dataclasses import dataclass
 from http import HTTPStatus
 
+from config import Config
 from flask_jwt_extended import create_access_token
 from managers import log_manager
 from model.security_settings import SecuritySettings
 from model.token_blacklist import TokenBlacklist
+
+# The claim tying a session to the account's credentials as they were when it was issued.
+CREDENTIAL_CLAIM = "cred"
+
+
+def session_credential(user: User) -> str:
+    """A fingerprint of what a session was opened with: the account and its password.
+
+    It goes into every token, and a token whose fingerprint no longer matches is refused. So a
+    password change - or a username change, or the password being removed - ends every other
+    session of the account at once, instead of leaving a stolen token valid until it expires
+    (and, refreshed, forever). It is an HMAC under the JWT key: a token reveals nothing about the
+    password hash, and nobody without the key can compute it.
+
+    Args:
+        user (User): The account.
+
+    Returns:
+        str: 32 hex characters.
+    """
+    message = f"{user.id}:{user.username}:{user.password or ''}".encode()
+    return hmac.new(str(Config.JWT_SECRET_KEY).encode(), message, hashlib.sha256).hexdigest()[:32]
 
 
 class ProviderConfigurationError(Exception):
@@ -121,6 +146,7 @@ class BaseAuthenticator:
             identity=user.username,
             additional_claims={
                 "auth_generation": SecuritySettings.get_auth_generation(),
+                CREDENTIAL_CLAIM: session_credential(user),
                 "user_claims": {
                     "id": user.id,
                     "name": user.name,

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     import Flask
     from shared.time_manager import SchedulerManager
 
+import hmac
 import os
 import random
 import time
@@ -21,7 +22,7 @@ from functools import wraps
 from http import HTTPStatus
 
 import jwt
-from auth.base_authenticator import BaseAuthenticator
+from auth.base_authenticator import CREDENTIAL_CLAIM, BaseAuthenticator, session_credential
 from auth.ldap_authenticator import LDAPAuthenticator
 from auth.oauth2_authenticator import OAuth2Authenticator
 from auth.password_authenticator import PasswordAuthenticator
@@ -29,7 +30,7 @@ from auth.saml_authenticator import SamlAuthenticator
 from config import Config
 from flask import g, has_request_context, request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
-from flask_jwt_extended.exceptions import JWTExtendedException
+from flask_jwt_extended.exceptions import JWTExtendedException, RevokedTokenError, UserClaimsVerificationError
 from jwt.exceptions import InvalidTokenError
 from managers import ip_allowlist, log_manager, login_throttle, notification_manager, totp_manager, webauthn_manager
 from managers.db_manager import db
@@ -68,9 +69,37 @@ def _auth_generation_is_current(_jwt_header: dict, jwt_payload: dict) -> bool:
         return False
 
 
+SESSION_INVALID = ({"error": "Authentication token is no longer valid", "code": "SESSION_INVALID"}, HTTPStatus.UNAUTHORIZED)
+
+
 def _auth_generation_rejected(_jwt_header: dict, _jwt_payload: dict) -> tuple[dict, HTTPStatus]:
-    """Return the uniform response for a missing, malformed, or stale generation."""
-    return {"error": "Authentication token is no longer valid"}, HTTPStatus.UNAUTHORIZED
+    """Return the uniform response for a token that no longer holds (generation, credential, logout).
+
+    ``SESSION_INVALID`` tells the GUI to end the session and show the login page, rather than sit
+    in a page where every call fails.
+    """
+    return SESSION_INVALID
+
+
+def _credential_is_current(jwt_payload: dict) -> bool:
+    """Whether a token was issued for the account's present username and password.
+
+    A token issued before the claim existed has none, and is refused: the next login issues one.
+    """
+    claimed = jwt_payload.get(CREDENTIAL_CLAIM)
+    if not isinstance(claimed, str) or not claimed:
+        return False
+    try:
+        user = User.find(jwt_payload.get("sub"))
+    except Exception as ex:
+        log_manager.store_auth_error_activity("Session credential could not be verified", ex)
+        return False
+    return user is not None and hmac.compare_digest(claimed, session_credential(user))
+
+
+def _session_token_valid(jwt_header: dict, jwt_payload: dict) -> bool:
+    """Whether a token still opens its session: current generation, current credential."""
+    return _auth_generation_is_current(jwt_header, jwt_payload) and _credential_is_current(jwt_payload)
 
 
 def _token_revoked(_jwt_header: dict, jwt_payload: dict) -> bool:
@@ -89,7 +118,7 @@ def _configure_auth_generation_verification(jwt_manager: JWTManager) -> None:
     two decorators: the endpoints with a bare ``@jwt_required()`` (TOTP and passkey enrollment
     among them) accepted a token after its logout.
     """
-    jwt_manager.token_verification_loader(_auth_generation_is_current)
+    jwt_manager.token_verification_loader(_session_token_valid)
     jwt_manager.token_verification_failed_loader(_auth_generation_rejected)
     jwt_manager.token_in_blocklist_loader(_token_revoked)
     jwt_manager.revoked_token_loader(_auth_generation_rejected)
@@ -1028,6 +1057,8 @@ def get_user_from_jwt_token() -> User | None:
     try:
         verify_jwt_in_request()
     except JWTExtendedException as ex:
+        if isinstance(ex, (UserClaimsVerificationError, RevokedTokenError)) and has_request_context():
+            g.session_invalid = True
         log_manager.store_auth_error_activity("Missing JWT", ex)
         return None
 
@@ -1098,7 +1129,7 @@ def auth_required(
                 user = get_user_from_jwt_token()
                 if not user:
                     log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
-                    return error
+                    return SESSION_INVALID if g.get("session_invalid") else error
                 # A logged-out token was refused by verify_jwt_in_request (token_in_blocklist_loader).
                 # The permissions are the account's now, not the ones copied into the token when it
                 # was issued: a role taken away used to keep working until the token expired, and
@@ -1225,6 +1256,8 @@ def jwt_token_required(fn: Callable[..., Any]) -> Callable[..., Any]:
             verify_jwt_in_request()
         except (JWTExtendedException, InvalidTokenError) as ex:
             log_manager.store_auth_error_activity("Missing or malformed JWT", ex)
+            if isinstance(ex, (UserClaimsVerificationError, RevokedTokenError)):
+                return SESSION_INVALID
             return {"error": "authorization required"}, HTTPStatus.UNAUTHORIZED
 
         # A logged-out token was refused by verify_jwt_in_request (token_in_blocklist_loader).
@@ -1307,6 +1340,9 @@ def decode_user_from_jwt(jwt_token: str) -> User:
         return None
     if not _auth_generation_is_current({}, decoded):
         log_manager.store_auth_error_activity("Session JWT rejected because its authentication generation is stale or missing")
+        return None
+    if not _credential_is_current(decoded):
+        log_manager.store_auth_warning_activity("Session JWT rejected: the account's password or username changed since it was issued")
         return None
     if _token_revoked({}, decoded):
         log_manager.store_auth_warning_activity("Session JWT rejected because it was logged out")

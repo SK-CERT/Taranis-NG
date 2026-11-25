@@ -320,6 +320,7 @@
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useSpellcheck } from '@/composables/useSpellcheck'
+    import { useAuthStore } from '@/stores/auth'
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
@@ -702,7 +703,9 @@
             }
 
             if (isEdit.value) {
-                await updateUser(payload)
+                const response = await updateUser(payload)
+                // Changing one's own password or username ends one's sessions; core sends a new token.
+                if (response?.data?.access_token) useAuthStore().setToken(response.data.access_token)
                 window.dispatchEvent(
                     new CustomEvent('notification', {
                         detail: { type: 'success', loc: 'common.updated_successfully' }

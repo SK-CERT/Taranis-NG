@@ -19,6 +19,8 @@ def generation_app(monkeypatch: pytest.MonkeyPatch) -> tuple[Flask, dict[str, in
     issued_on_refresh: list[str] = []
     monkeypatch.setattr(SecuritySettings, "get_auth_generation", lambda: generation["value"])
     monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, _jti: False))
+    # The credential claim is test_session_credentials.py's; these tokens are about the generation.
+    monkeypatch.setattr(auth_manager, "_credential_is_current", lambda _payload: True)
 
     app = Flask(__name__)
     app.config["JWT_SECRET_KEY"] = "auth-generation-test-secret-with-sufficient-length"
@@ -78,7 +80,7 @@ def test_auth_manager_initialize_registers_generation_callbacks(monkeypatch: pyt
 
     assert registered == {
         "app": app,
-        "verify": auth_manager._auth_generation_is_current,
+        "verify": auth_manager._session_token_valid,
         "rejected": auth_manager._auth_generation_rejected,
         "revoked": auth_manager._token_revoked,
         "revoked_response": auth_manager._auth_generation_rejected,
@@ -116,7 +118,7 @@ def test_missing_old_or_malformed_generation_is_rejected(
     response = app.test_client().get("/protected", headers=_authorization(token))
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.get_json() == {"error": "Authentication token is no longer valid"}
+    assert response.get_json() == {"error": "Authentication token is no longer valid", "code": "SESSION_INVALID"}
 
 
 def test_current_generation_is_accepted(generation_app: tuple[Flask, dict[str, int], list[str]]) -> None:

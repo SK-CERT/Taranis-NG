@@ -14,6 +14,7 @@ from http import HTTPStatus
 import requests
 from auth import oauth2_authenticator, saml_authenticator, saml_federation, saml_metadata
 from auth import url_guard as saml_url_guard
+from auth.base_authenticator import BaseAuthenticator, session_credential
 from flask import Response, request, send_file
 from flask_restful import Resource
 from managers import (
@@ -1387,6 +1388,26 @@ class UsersResource(Resource):
         return None
 
 
+def _own_session_renewed(target: user.User | None, credential_before: str | None) -> tuple[dict, HTTPStatus] | None:
+    """A fresh token when someone changed their own password or username.
+
+    Such a change ends every session of the account (the token's credential no longer matches),
+    the one making it included: it gets a new token back instead of being signed out.
+
+    Args:
+        target (User | None): The account that was edited.
+        credential_before (str | None): Its session credential before the edit.
+
+    Returns:
+        (dict, HTTPStatus) | None: ``{"access_token": ...}`` for the editor's own changed
+            account, None otherwise.
+    """
+    actor = get_user_from_jwt()
+    if target is None or actor is None or actor.id != target.id or session_credential(target) == credential_before:
+        return None
+    return BaseAuthenticator.generate_jwt(target, record_login=False)
+
+
 def _notify_password_change(target: user.User | None, password_before: str | None) -> None:
     """Tell a user that an edit of their account changed or removed their password."""
     if target is None:
@@ -1412,13 +1433,14 @@ class UserResource(Resource):
         if target is None:
             return {"error": "User not found"}, HTTPStatus.NOT_FOUND
         password_before = target.password
+        credential_before = session_credential(target)
         try:
             user.User.update(user_id, request.json)
         except ValueError as ex:
             # a rejected identity link or status change: the message names what to fix
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         _notify_password_change(target, password_before)
-        return None
+        return _own_session_renewed(target, credential_before)
 
     @auth_required("CONFIG_USER_DELETE")
     def delete(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
@@ -1641,6 +1663,7 @@ class ExternalUserResource(Resource):
         """
         target = user.User.find_by_id(user_id)
         password_before = target.password if target else None
+        credential_before = session_credential(target) if target else None
         try:
             permissions = auth_manager.get_external_permissions_ids()
             user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
@@ -1649,7 +1672,7 @@ class ExternalUserResource(Resource):
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
         _notify_password_change(target, password_before)
-        return None
+        return _own_session_renewed(target, credential_before)
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
