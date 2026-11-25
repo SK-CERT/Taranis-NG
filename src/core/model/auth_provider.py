@@ -36,6 +36,7 @@ from datetime import datetime
 
 from managers import crypto_manager
 from managers.db_manager import db
+from managers.stored_secrets import changed_destination, refuse_moved_secret
 from marshmallow import fields, post_load
 from model.organization import Organization
 from model.role import Role
@@ -57,6 +58,36 @@ def slugify(value: str) -> str:
 
 
 SINGLETON_KINDS = ("local",)
+# The config keys that say where a provider's secret goes: an OIDC/OAuth 2.0 client secret to the
+# issuer's or the configured endpoints, an LDAP bind password to the server, over TLS or not.
+SECRET_DESTINATION_KEYS = (
+    "issuer_url",
+    "internal_issuer_url",
+    "allow_insecure_internal_transport",
+    "authorize_url",
+    "token_url",
+    "userinfo_url",
+    "server_url",
+    "use_tls",
+    "ca_cert",
+)
+
+
+def secret_destination(kind: str | None, config: dict | None) -> dict:
+    """Where a provider's secret goes, from its config: SECRET_DESTINATION_KEYS with their defaults.
+
+    A key left out means its default, so that saving a dialog that now sends it does not read as
+    a change: LDAP uses TLS unless told otherwise, and the internal hop is HTTPS unless opted out.
+    """
+    config = config if isinstance(config, dict) else {}
+    view = {key: config.get(key) for key in SECRET_DESTINATION_KEYS}
+    if kind == "ldap" and view["use_tls"] is None:
+        view["use_tls"] = True
+    if view["allow_insecure_internal_transport"] is None:
+        view["allow_insecure_internal_transport"] = False
+    return view
+
+
 FORM_KINDS = ("local", "ldap")
 # kinds that log in via a browser redirect to the IdP; oidc/oauth2 use the
 # /auth/oauth/... endpoints, saml uses the /auth/saml/... endpoints
@@ -460,6 +491,11 @@ class AuthProvider(db.Model):
         new.kind = old.kind  # kind is immutable after creation
         new.slug = (new.slug or "").strip() or cls._unique_slug(new.name, provider_id)
         cls._validate(new, provider_id, keeps_stored_secret=not clear_secret)
+        if not new.secret and old.secret and not clear_secret:
+            # The stored secret is kept only for the server it was saved for: a client secret or
+            # bind password must not follow a changed issuer, endpoint or LDAP server unseen.
+            submitted, stored = secret_destination(old.kind, new.config), secret_destination(old.kind, old.config)
+            refuse_moved_secret(changed_destination(submitted, stored, SECRET_DESTINATION_KEYS), "secret")
         old.name = new.name
         old.slug = new.slug
         old.enabled = new.enabled

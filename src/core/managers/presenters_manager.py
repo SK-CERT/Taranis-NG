@@ -38,7 +38,7 @@ def update_presenters_node(node_id: str, data: dict) -> HTTPStatus:
         HTTPStatus: status code returned by the remote presenters API.
     """
     # The GUI never receives the key: saved empty, it stays as stored.
-    data = keep_stored_api_key(data, PresentersNode, node_id)
+    data = keep_stored_api_key(data, PresentersNode, node_id, destination=("api_url",))
     node = PresentersNodeSchema.create(data)
     presenters_info, status_code = PresentersApi(node.api_url, node.api_key).get_presenters_info()
     if status_code == HTTPStatus.OK:

@@ -35,7 +35,7 @@ from managers import (
 from managers.auth_manager import auth_required, get_user_from_jwt
 from managers.db_manager import db
 from managers.sse_manager import sse_manager
-from managers.stored_secrets import hide_secret_parameters, keep_stored_api_key
+from managers.stored_secrets import StoredSecretError, changed_destination, hide_secret_parameters, keep_stored_api_key, refuse_moved_secret
 from model import (
     acl_entry,
     ai_provider,
@@ -725,6 +725,20 @@ class OAuthVerifyResource(Resource):
             secret = data.get("secret") or None
             if not secret and data.get("id"):
                 stored = auth_provider.AuthProvider.find(data["id"])
+                if stored and stored.secret:
+                    # Only for the identity provider it was saved for: the test sends it to the
+                    # token endpoint of the configuration it is given.
+                    if stored.kind != data.get("kind"):
+                        refuse_moved_secret(["kind"], "client secret")
+                    submitted = auth_provider.secret_destination(stored.kind, data.get("config"))
+                    refuse_moved_secret(
+                        changed_destination(
+                            submitted,
+                            auth_provider.secret_destination(stored.kind, stored.config),
+                            auth_provider.SECRET_DESTINATION_KEYS,
+                        ),
+                        "client secret",
+                    )
                 secret = stored.get_secret_plaintext() if stored else None
                 if stored and stored.secret and secret is None:
                     msg = (
@@ -794,6 +808,8 @@ class DataProviderResource(Resource):
             record = data_provider.DataProvider.update(data_provider_id, request.json, user.name)
             schema = DataProviderSchema()
             return schema.dump(record), HTTPStatus.OK
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update data provider"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -1839,6 +1855,8 @@ class CollectorsNodeResource(Resource):
             return {"error": f"Allowed internal targets: {reason}"}, HTTPStatus.BAD_REQUEST
         try:
             collectors_manager.update_collectors_node(node_id, request.json)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update collectors node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2211,7 +2229,10 @@ class PublicWebNodeResource(Resource):
                 return {"error": "Public-web node not found"}, HTTPStatus.NOT_FOUND
 
             api_url = (data.get("api_url") or "").strip()
-            # An empty api_key means "keep the stored one" (see PublicWebNode.update).
+            # An empty api_key means "keep the stored one" (see PublicWebNode.update) - but only
+            # for the URL it was stored for: verify_node sends it to whatever api_url says.
+            if not data.get("api_key") and node.api_key:
+                refuse_moved_secret(changed_destination({"api_url": api_url}, node, ("api_url",)))
             api_key = data.get("api_key") or node.api_key
             connection_changed = api_url != (node.api_url or "") or api_key != node.api_key
             if api_url and connection_changed:
@@ -2227,6 +2248,8 @@ class PublicWebNodeResource(Resource):
                 # Switched off, the node stops serving its webs now rather than when its
                 # cache expires; switched on, it reads them again.
                 public_web_manager.reset_node(node)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update public-web node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2769,9 +2792,11 @@ class RemoteNodeResource(Resource):
             (dict, HTTPStatus): The result of the update
         """
         try:
-            data = keep_stored_api_key(request.json, remote.RemoteNode, remote_node_id)
+            data = keep_stored_api_key(request.json, remote.RemoteNode, remote_node_id, destination=("remote_url", "events_url"))
             if remote.RemoteNode.update(remote_node_id, data) is False:
                 remote_manager.disconnect_from_node(remote_node_id)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update remote node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2855,6 +2880,8 @@ class PresentersNodeResource(Resource):
         """
         try:
             presenters_manager.update_presenters_node(node_id, request.json)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update presenters node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2917,6 +2944,8 @@ class PublishersNodeResource(Resource):
         """
         try:
             publishers_manager.update_publishers_node(node_id, request.json)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update publishers node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -3041,6 +3070,8 @@ class BotsNodeResource(Resource):
         """
         try:
             bots_manager.update_bots_node(node_id, request.json)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update bots node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)

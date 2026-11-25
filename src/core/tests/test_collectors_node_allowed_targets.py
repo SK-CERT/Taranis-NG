@@ -123,7 +123,7 @@ def node_update(monkeypatch: pytest.MonkeyPatch) -> types.SimpleNamespace:
     def update(_node_id: str, data: dict, _collectors: list) -> None:
         stored.allowed_private_targets = data.get("allowed_private_targets") or ""
 
-    monkeypatch.setattr(collectors_manager, "keep_stored_api_key", lambda data, *_args: data)
+    monkeypatch.setattr(collectors_manager, "keep_stored_api_key", lambda data, *_args, **_kwargs: data)
     monkeypatch.setattr(collectors_manager, "CollectorsApi", NodeApi)
     monkeypatch.setattr(collectors_manager.Collector, "create_all", lambda _info: [])
     monkeypatch.setattr(collectors_manager.CollectorsNode, "get_by_id", lambda _node_id: stored)

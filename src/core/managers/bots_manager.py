@@ -39,7 +39,7 @@ def update_bots_node(node_id: str, data: dict) -> int:
         int: The status code of the operation.
     """
     # The GUI never receives the key: saved empty, it stays as stored.
-    data = keep_stored_api_key(data, BotsNode, node_id)
+    data = keep_stored_api_key(data, BotsNode, node_id, destination=("api_url",))
     node = BotsNodeSchema.create(data)
     bots_info, status_code = BotsApi(node.api_url, node.api_key).get_bots_info()
     if status_code == HTTPStatus.OK:

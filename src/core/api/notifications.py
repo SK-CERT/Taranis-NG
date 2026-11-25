@@ -15,6 +15,7 @@ from flask_restful import Resource
 from managers import log_manager, notification_manager
 from managers.auth_manager import auth_required, get_user_from_jwt
 from managers.notifications.channels import CHANNELS, ChannelError, is_email_address
+from managers.stored_secrets import StoredSecretError, changed_destination, refuse_moved_secret
 from model.notification import NotificationChannel, NotificationEvent, NotificationOutbox
 from model.user import User
 from sqlalchemy import func, or_
@@ -81,6 +82,22 @@ class NotificationEventsResource(Resource):
         return {"events": NotificationEvent.states(notification_manager.EVENTS)}, HTTPStatus.OK
 
 
+def _moved_secret(channel_class: type, kind: str, config: dict) -> tuple[dict, HTTPStatus] | None:
+    """The 400 for keeping the stored secret while the settings that say where it goes changed.
+
+    "An empty secret keeps the stored one" otherwise sent the stored SMTP password to whatever
+    server the form named - with the test endpoint, at once.
+    """
+    stored = NotificationChannel.find(kind)
+    if stored is None or not stored.secret:
+        return None
+    try:
+        refuse_moved_secret(changed_destination(config, stored.config or {}, channel_class.secret_destination), "password")
+    except StoredSecretError as error:
+        return {"error": str(error)}, HTTPStatus.BAD_REQUEST
+    return None
+
+
 class NotificationChannelResource(Resource):
     """One channel's settings."""
 
@@ -103,6 +120,10 @@ class NotificationChannelResource(Resource):
         except ValueError as error:
             return {"error": str(error)}, HTTPStatus.BAD_REQUEST
         user = get_user_from_jwt()
+        if not data.get("secret") and not data.get("clear_secret"):
+            refused = _moved_secret(channel_class, kind, config)
+            if refused:
+                return refused
         try:
             channel = NotificationChannel.save(
                 kind,
@@ -151,6 +172,9 @@ class NotificationChannelTestResource(Resource):
             return {"error": str(error)}, HTTPStatus.BAD_REQUEST
         secret = data.get("secret") or None
         if secret is None and data.get("clear_secret") is not True:
+            refused = _moved_secret(channel_class, kind, config)
+            if refused:
+                return refused
             stored = NotificationChannel.find(kind)
             secret = stored.get_secret_plaintext() if stored else None
         user = get_user_from_jwt()

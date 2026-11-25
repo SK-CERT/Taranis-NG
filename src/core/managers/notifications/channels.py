@@ -37,6 +37,9 @@ class Channel:
     """A kind of notification channel."""
 
     kind: ClassVar[str] = ""
+    # The settings that say where the stored secret is sent; a change to any of them needs the
+    # secret typed in again (see managers.stored_secrets.refuse_moved_secret).
+    secret_destination: ClassVar[tuple[str, ...]] = ()
 
     @classmethod
     def validate(cls, config: dict) -> dict:
@@ -82,6 +85,7 @@ class EmailChannel(Channel):
     """E-mail through an SMTP server."""
 
     kind = "email"
+    secret_destination = ("host", "port", "security", "verify_tls", "username")
 
     @classmethod
     def validate(cls, config: dict) -> dict:
