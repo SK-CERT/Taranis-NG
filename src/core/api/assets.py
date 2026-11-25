@@ -11,8 +11,39 @@ from flask_restful import Api, Resource
 from managers import auth_manager
 from managers.auth_manager import auth_required
 from model import asset, attribute, notification_template
+from model.organization import Organization
 from model.permission import Permission
+from shared.schema.asset import AssetGroupPresentationSchema
 from shared.schema.attribute import AttributeType
+from sqlalchemy import or_
+
+
+def _asset_groups_json(user: object, search: str | None) -> dict:
+    """The asset groups of the user's organizations, as the asset portal lists them.
+
+    ``AssetGroup.get`` joined the groups' organizations without a condition on them, so a user
+    of one organization listed every organization's groups, with their members' names and
+    e-mail addresses and their notification templates. Without MY_ASSETS_CONFIG, a group that
+    names its users is listed only to them, as before.
+
+    Args:
+        user (User): Who asks.
+        search (str | None): Text the name or description contains.
+
+    Returns:
+        dict: ``{"total_count", "items"}``.
+    """
+    organization_ids = [organization.id for organization in user.organizations]
+    if not organization_ids:
+        return {"total_count": 0, "items": []}
+    query = asset.AssetGroup.query.filter(asset.AssetGroup.organizations.any(Organization.id.in_(organization_ids)))
+    if search:
+        pattern = f"%{search}%"
+        query = query.filter(or_(asset.AssetGroup.name.ilike(pattern), asset.AssetGroup.description.ilike(pattern)))
+    groups = query.order_by(asset.AssetGroup.name).all()
+    if "MY_ASSETS_CONFIG" not in user.get_permissions():
+        groups = [group for group in groups if not group.users or any(member.id == user.id for member in group.users)]
+    return {"total_count": len(groups), "items": AssetGroupPresentationSchema(many=True).dump(groups)}
 
 
 class AssetGroups(Resource):
@@ -31,7 +62,7 @@ class AssetGroups(Resource):
         search = None
         if request.args.get("search"):
             search = request.args["search"]
-        return asset.AssetGroup.get_all_json(auth_manager.get_user_from_jwt(), search)
+        return _asset_groups_json(auth_manager.get_user_from_jwt(), search)
 
     @auth_required("MY_ASSETS_CONFIG")
     def post(self) -> tuple[str, None]:

@@ -164,10 +164,12 @@ class NotificationTemplate(db.Model):
         query = cls.query
 
         if organization is not None:
+            # The join alone, with no condition on the organization, listed every organization's
+            # templates - their recipients' addresses included.
             query = query.join(
                 NotificationTemplateOrganization,
                 NotificationTemplate.id == NotificationTemplateOrganization.notification_template_id,
-            )
+            ).filter(NotificationTemplateOrganization.organization_id == organization.id)
 
         if search is not None:
             search_string = f"%{search}%"

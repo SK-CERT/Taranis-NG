@@ -1610,7 +1610,7 @@ class ExternalUsersResource(Resource):
             (dict): The external users
         """
         search = request.args.get("search")
-        return user.User.get_all_external_json(auth_manager.get_user_from_jwt(), search)
+        return user.User.get_all_external_json(auth_manager.get_user_from_jwt(), search, auth_manager.get_external_permissions_ids())
 
     @auth_required("MY_ASSETS_CONFIG")
     def post(self) -> tuple[dict, HTTPStatus] | None:
@@ -1645,6 +1645,8 @@ class ExternalUserResource(Resource):
         try:
             permissions = auth_manager.get_external_permissions_ids()
             user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update external user"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -1662,7 +1664,7 @@ class ExternalUserResource(Resource):
             (dict, HTTPStatus): The result of the delete
         """
         try:
-            return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id)
+            return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id, auth_manager.get_external_permissions_ids())
         except Exception as ex:
             return _delete_failed("Could not delete external user", ex)
 
