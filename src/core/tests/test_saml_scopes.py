@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import re
+import time
 from types import SimpleNamespace
 
 import pytest
+import regex
 from auth import saml_federation
 from auth.base_authenticator import ExternalIdentity
 from auth.saml_authenticator import SamlAuthenticator, ScopeMismatchError
@@ -91,12 +92,46 @@ def test_a_literal_scope_covers_its_domain_and_subdomains(value: str, expected: 
 
 
 def test_a_regexp_scope_must_match_the_whole_domain() -> None:
-    scopes = (Scope("x", re.compile(r"(dept\.)?example\.org", re.IGNORECASE)),)
+    scopes = (Scope("x", regex.compile(r"(dept\.)?example\.org", regex.IGNORECASE)),)
 
     assert in_scopes("alice@DEPT.example.org", scopes)
     assert in_scopes("alice@example.org", scopes)
     assert not in_scopes("alice@example.org.evil.test", scopes)
     assert not in_scopes("alice@xdept.example.org", scopes)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "alice@example.org.",
+        "alice@exa mple.org",
+        "alice@example.org/x",
+        "alice@-example.org",
+        "alice@" + "a" * 250 + ".example.org",
+        "alice@exa\u200bmple.org",
+    ],
+)
+def test_a_domain_that_is_not_a_host_name_is_in_no_scope(value: str) -> None:
+    scopes = (Scope("example.org"), Scope("x", regex.compile(r".*", regex.IGNORECASE)))
+
+    assert not in_scopes(value, scopes)
+
+
+def test_a_regexp_scope_that_backtracks_gives_up_instead_of_pinning_a_worker() -> None:
+    scopes = (Scope("x", regex.compile(r"^(([a-z0-9-]+)+\.)+example\.org$", regex.IGNORECASE)),)
+
+    start = time.perf_counter()
+    assert not in_scopes("alice@" + "a" * 60, scopes)
+    assert time.perf_counter() - start < 2
+    assert in_scopes("alice@dept.example.org", scopes)
+
+
+def test_metadata_regexp_scopes_get_the_time_budget() -> None:
+    (scope,) = _scopes(idp_scopes='<shibmd:Scope regexp="true">^(([a-z0-9-]+)+\\.)+example\\.org$</shibmd:Scope>')
+
+    start = time.perf_counter()
+    assert not scope.matches("a" * 60)
+    assert time.perf_counter() - start < 2
 
 
 def test_nothing_is_in_scope_of_an_idp_without_scopes() -> None:

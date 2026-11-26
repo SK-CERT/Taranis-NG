@@ -38,6 +38,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
+import regex
 import requests
 from auth.saml_authenticator import PEM_FOOTER, PEM_HEADER, load_idp_certificates
 from auth.url_guard import assert_no_redirect, assert_public_url
@@ -84,17 +85,25 @@ def is_federation_mode(config: dict | None) -> bool:
     return bool((config or {}).get("discovery_url"))
 
 
+# A scoped value's domain must be a DNS host name (at most 253 characters, labels of letters,
+# digits and hyphens): anything else is outside every scope, and the input a regexp scope is
+# matched against stays short and plain.
+_HOST_NAME = re.compile(r"(?=.{1,253}\Z)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*")
+# How long one regexp scope may take to match one domain.
+SCOPE_MATCH_SECONDS = 0.1
+
+
 @dataclass(frozen=True)
 class Scope:
     """A ``<shibmd:Scope>``: a domain an IdP may assert scoped values for.
 
     Attributes:
         value (str): The scope as published (a domain, or a regular expression).
-        pattern (re.Pattern): The compiled expression of a ``regexp="true"`` scope.
+        pattern (regex.Pattern): The compiled expression of a ``regexp="true"`` scope.
     """
 
     value: str
-    pattern: re.Pattern[str] | None = None
+    pattern: regex.Pattern[str] | None = None
 
     def matches(self, domain: str) -> bool:
         """Tell whether a value's domain part is within this scope.
@@ -110,7 +119,13 @@ class Scope:
             bool: True when the IdP may assert values in this domain.
         """
         if self.pattern is not None:
-            return self.pattern.fullmatch(domain) is not None
+            # The expression comes from the federation, the domain from the assertion: a
+            # backtracking pattern must not let an IdP pin a worker, so the match has a budget.
+            try:
+                return self.pattern.fullmatch(domain, timeout=SCOPE_MATCH_SECONDS) is not None
+            except TimeoutError:
+                log_manager.logger.warning(f"Federation scope '{self.value}' took too long to match '{domain}': treated as no match")
+                return False
         scope = self.value.lower()
         return domain == scope or domain.endswith(f".{scope}")
 
@@ -123,12 +138,13 @@ def in_scopes(value: str, scopes: tuple[Scope, ...]) -> bool:
         scopes (tuple): The IdP's scopes.
 
     Returns:
-        bool: False for a value without "@" or an empty domain, or outside every scope.
+        bool: False for a value without "@", a domain that is not a host name, or one outside
+            every scope.
     """
     if "@" not in value:
         return False
     domain = value.rsplit("@", 1)[1].strip().lower()
-    return bool(domain) and any(scope.matches(domain) for scope in scopes)
+    return _HOST_NAME.fullmatch(domain) is not None and any(scope.matches(domain) for scope in scopes)
 
 
 @dataclass(frozen=True)
@@ -238,8 +254,8 @@ def _scopes(entity: _Element, idp: _Element) -> tuple[Scope, ...]:
                 scopes.append(Scope(value))
                 continue
             try:
-                scopes.append(Scope(value, re.compile(value, re.IGNORECASE)))
-            except re.error as ex:
+                scopes.append(Scope(value, regex.compile(value, regex.IGNORECASE)))
+            except regex.error as ex:
                 log_manager.logger.warning(f"Federation metadata: skipping the invalid scope '{value}' of '{entity.get('entityID')}': {ex}")
     return tuple(scopes)
 
