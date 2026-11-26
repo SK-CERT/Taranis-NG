@@ -451,7 +451,8 @@ class AuthProvider(db.Model):
             AuthProvider: Updated provider object.
         """
         data = dict(data or {})
-        clear_secret = bool(data.pop("clear_secret", False))
+        # JSON true only: "false", or any other non-empty value, must not remove the secret.
+        clear_secret = data.pop("clear_secret", False) is True
         schema = NewAuthProviderSchema()
         new = schema.load(data)
         clear_secret = clear_secret and not new.secret

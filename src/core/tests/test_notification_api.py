@@ -95,7 +95,15 @@ def test_a_test_message_needs_an_address_to_go_to(app: Flask) -> None:
     assert "e-mail address" in payload["error"]
 
 
-@pytest.mark.parametrize(("body", "sent"), [({}, "stored-password"), ({"clear_secret": True}, None), ({"secret": "typed"}, "typed")])
+@pytest.mark.parametrize(
+    ("body", "sent"),
+    [
+        ({}, "stored-password"),
+        ({"clear_secret": True}, None),
+        ({"secret": "typed"}, "typed"),
+        ({"clear_secret": "false"}, "stored-password"),
+    ],
+)
 def test_a_test_message_uses_the_stored_password_unless_the_form_removes_it(
     app: Flask,
     monkeypatch: pytest.MonkeyPatch,
@@ -157,5 +165,12 @@ def test_removing_the_password_and_changing_the_server_is_one_commit(app: Flask,
 
 def test_saving_without_a_password_keeps_it(app: Flask, stored_channel: list) -> None:
     assert _save_channel(app, "smtp.example.test") == HTTPStatus.OK
+
+    assert stored_channel == [("smtp.example.test", "encrypted-old")]
+
+
+@pytest.mark.parametrize("flag", ["false", "true", 1])
+def test_only_json_true_removes_the_password(app: Flask, stored_channel: list, flag: object) -> None:
+    assert _save_channel(app, "smtp.example.test", clear_secret=flag) == HTTPStatus.OK
 
     assert stored_channel == [("smtp.example.test", "encrypted-old")]

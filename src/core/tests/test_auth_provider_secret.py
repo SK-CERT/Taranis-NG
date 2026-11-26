@@ -43,6 +43,10 @@ def stored(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         ({"clear_secret": False}, "encrypted-secret", True),
         ({"clear_secret": True}, None, False),
         ({"clear_secret": True, "secret": "new-encrypted"}, "new-encrypted", True),
+        # Only JSON true removes it.
+        ({"clear_secret": "false"}, "encrypted-secret", True),
+        ({"clear_secret": "true"}, "encrypted-secret", True),
+        ({"clear_secret": 1}, "encrypted-secret", True),
     ],
 )
 def test_the_stored_secret_is_removed_only_on_request(stored: SimpleNamespace, data: dict, secret: str | None, keeps: bool) -> None:

@@ -110,7 +110,8 @@ class NotificationChannelResource(Resource):
                 config,
                 data.get("secret") or None,
                 user.name,
-                clear_secret=bool(data.get("clear_secret")),
+                # JSON true only: "false", or any other non-empty value, must not remove it.
+                clear_secret=data.get("clear_secret") is True,
             )
         except Exception as ex:
             msg = "Could not save the notification channel"
@@ -149,7 +150,7 @@ class NotificationChannelTestResource(Resource):
         except ValueError as error:
             return {"error": str(error)}, HTTPStatus.BAD_REQUEST
         secret = data.get("secret") or None
-        if secret is None and not data.get("clear_secret"):
+        if secret is None and data.get("clear_secret") is not True:
             stored = NotificationChannel.find(kind)
             secret = stored.get_secret_plaintext() if stored else None
         user = get_user_from_jwt()

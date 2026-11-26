@@ -144,3 +144,10 @@ def test_an_optional_api_key_can_be_removed_on_request(monkeypatch: pytest.Monke
     assert removed == {"name": "VulnCheck", "api_key": ""}
     assert replaced == {"api_key": "new-key"}
     assert kept == {"api_key": "stored-key"}
+
+
+@pytest.mark.parametrize("flag", ["false", "true", 1, "yes", None])
+def test_only_json_true_removes_an_api_key(monkeypatch: pytest.MonkeyPatch, flag: object) -> None:
+    monkeypatch.setattr(stored_secrets.db.session, "get", lambda _model, _record_id: types.SimpleNamespace(api_key="stored-key"))
+
+    assert stored_secrets.keep_stored_api_key({"api_key": "", "clear_api_key": flag}, object, 3) == {"api_key": "stored-key"}

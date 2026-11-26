@@ -33,7 +33,8 @@ def keep_stored_api_key(data: object, model: type, record_id: object) -> object:
         The data to update with.
     """
     if isinstance(data, dict) and "clear_api_key" in data:
-        clear = bool(data.get("clear_api_key"))
+        # JSON true only: "false", or any other non-empty value, must not remove the key.
+        clear = data.get("clear_api_key") is True
         data = {field: value for field, value in data.items() if field != "clear_api_key"}
         if clear and not (data.get("api_key") or "").strip():
             return {**data, "api_key": ""}
