@@ -87,6 +87,11 @@ class ScopeMismatchError(Exception):
     """A federation IdP asserted a scoped identifier outside the scopes registered for it."""
 
 
+def _text(value: object) -> str:
+    """An asserted value as text without surrounding whitespace; nothing is ``""``."""
+    return "" if value is None else str(value).strip()
+
+
 def _decode_saml_response(saml_response: str) -> bytes:
     """Strictly decode one bounded HTTP-POST SAMLResponse value."""
     if not isinstance(saml_response, str) or not saml_response or len(saml_response) > MAX_SAML_RESPONSE_ENCODED_BYTES:
@@ -657,7 +662,9 @@ class SamlAuthenticator(BaseAuthenticator):
 
         attributes = response.attrs
         username_attr = self.config.get("username_attr")
-        username = attributes.get(username_attr) if username_attr else response.name_id
+        # Blank is missing: an IdP that pretty-prints a nested value (eduPersonTargetedID holds a
+        # NameID element) yields the same whitespace for every user, which would match them all.
+        username = _text(attributes.get(username_attr) if username_attr else response.name_id)
         if not username:
             source = username_attr or "NameID"
             log_manager.store_auth_error_activity(
@@ -671,7 +678,7 @@ class SamlAuthenticator(BaseAuthenticator):
         # rather than a silent downgrade - the fallback would strand the user
         # with a new identity on every login.
         external_id_attr = self.config.get("external_id_attr")
-        external_id = attributes.get(external_id_attr) if external_id_attr else response.name_id
+        external_id = _text(attributes.get(external_id_attr) if external_id_attr else response.name_id)
         if external_id_attr and not external_id:
             log_manager.store_auth_error_activity(
                 f"SAML provider '{self.provider.name}' returned no '{external_id_attr}' value to identify the user by; "
@@ -680,8 +687,8 @@ class SamlAuthenticator(BaseAuthenticator):
             return None
 
         identity = ExternalIdentity(
-            username=str(username),
-            external_id=str(external_id) if external_id else None,
+            username=username,
+            external_id=external_id or None,
             name=attributes.get(self.config.get("name_attr") or "displayName"),
             email=attributes.get(self.config.get("email_attr") or "mail"),
             issuer=idp_issuer,

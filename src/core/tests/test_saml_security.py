@@ -145,6 +145,30 @@ def test_valid_signed_response_checks_binding_and_claims_both_ids(
     assert claimed[0][0:2] == (7, ("_response", "_assertion"))
 
 
+def test_asserted_identifiers_lose_surrounding_whitespace(
+    authenticator: SamlAuthenticator,
+    idp_keypair: tuple[rsa.RSAPrivateKey, x509.Certificate],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(saml_replay, "claim", lambda *_args: True)
+
+    identity = authenticator.handle_response(_response(*idp_keypair, name_id="\n    alice\n  "), REQUEST_ID, ACS_URL)
+
+    assert identity is not None
+    assert (identity.username, identity.external_id) == ("alice", "alice")
+
+
+def test_a_blank_identifier_is_no_identifier(
+    authenticator: SamlAuthenticator,
+    idp_keypair: tuple[rsa.RSAPrivateKey, x509.Certificate],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Whitespace is the same for every user: taken as an identifier it would match them all.
+    monkeypatch.setattr(saml_replay, "claim", lambda *_args: True)
+
+    assert authenticator.handle_response(_response(*idp_keypair, name_id="\n        "), REQUEST_ID, ACS_URL) is None
+
+
 def test_single_idp_mode_records_the_issuer_and_checks_no_scope(
     authenticator: SamlAuthenticator,
     idp_keypair: tuple[rsa.RSAPrivateKey, x509.Certificate],
