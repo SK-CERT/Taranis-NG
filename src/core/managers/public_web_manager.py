@@ -12,7 +12,8 @@ status shown in the Configuration UI (mirroring the other nodes).
 
 That same ``last_seen`` gates the cache-reset pushes sent when a web's
 configuration or a product changes: only nodes seen recently are contacted, and
-the push runs off the request thread. See :func:`notify_nodes`.
+the push runs off the request thread. See :func:`notify_nodes`. A change to a report that
+a published product carries resets them too, coalesced: see :func:`report_item_changed`.
 
 :func:`verify_node` is the third use of the channel — the up-front check run when
 an administrator registers or re-points a node, so a URL that leads nowhere is
@@ -38,6 +39,13 @@ from model.public_web_node import PublicWebNode
 from remote.public_web_api import PublicWebApi
 
 _ALLOWED_SCHEMES = ("http", "https")
+
+# Reports are edited a field at a time, each field saved on its own. Their resets are gathered
+# for this long and sent once: the webs load again at most this often while someone edits, and
+# always after the last edit.
+REPORT_RESET_DELAY_SECONDS = 5
+_pending_lock = threading.Lock()
+_pending_targets: dict[str, tuple[str, str, str]] | None = None
 
 
 def public_web_enabled() -> bool:
@@ -195,6 +203,57 @@ def _push(nodes: Iterable[PublicWebNode]) -> None:
     if not targets:
         return
     threading.Thread(target=_push_reset_cache, args=(targets,), daemon=True).start()
+
+
+def _flush_pending() -> None:
+    """Send the gathered report-change resets (on the timer's thread)."""
+    global _pending_targets  # noqa: PLW0603 - the one batch this process is gathering
+    with _pending_lock:
+        targets = list((_pending_targets or {}).values())
+        _pending_targets = None
+    _push_reset_cache(targets)
+
+
+def notify_nodes_soon(nodes: Iterable[PublicWebNode]) -> None:
+    """Like :func:`notify_nodes`, but gathered: one reset ``REPORT_RESET_DELAY_SECONDS`` after the first.
+
+    Every change gathered is committed before the reset goes out, so the webs load all of them;
+    a change after the reset starts a new batch.
+    """
+    global _pending_targets  # noqa: PLW0603 - the one batch this process is gathering
+    if not public_web_enabled():
+        return
+    targets = [(node.name, node.api_url, node.api_key) for node in nodes if node.enabled and node.api_url and node.is_reachable()]
+    if not targets:
+        return
+    with _pending_lock:
+        start = _pending_targets is None
+        _pending_targets = (_pending_targets or {}) | {target[0]: target for target in targets}
+    if start:
+        timer = threading.Timer(REPORT_RESET_DELAY_SECONDS, _flush_pending)
+        timer.daemon = True
+        timer.start()
+
+
+def report_item_changed(report_item_id: int) -> None:
+    """A report changed (its fields, attachments, tags, translations, or it was deleted).
+
+    The public webs keep what they loaded for their cache lifetime (90 minutes by default), and
+    core decides from the reports - their TLP above all - which products they may have. When a
+    published product carries the report, they are told to load again, gathered as above.
+    Called before a deletion too: the reset goes out after it. Best-effort, like every push: a
+    failure here never fails the change itself.
+
+    Args:
+        report_item_id (int): The report item.
+    """
+    from model.product import Product  # noqa: PLC0415 - model.product reaches this module at import
+
+    try:
+        if public_web_enabled() and Product.published_with_report_item(report_item_id):
+            notify_nodes_soon(PublicWebNode.get_all())
+    except Exception as ex:  # best-effort: the change is stored either way, and shows when the cache expires
+        logger.debug(f"Could not tell the public-web nodes about report item {report_item_id}: {ex}")
 
 
 def initialize(app: Flask) -> None:
