@@ -35,8 +35,12 @@ from shared.url_guard import build_guarded_opener, collector_url_problem
 
 from .base_collector import BaseCollector, allowed_targets, not_modified
 
-# "scheme://user:password@" inside any text, e.g. an error message quoting a URL
-_URL_USERINFO = re.compile(r"(?<=://)[^/?#@\s]*@")
+# "scheme://user:password@" inside any text, e.g. an error message quoting a URL; also with the
+# slashes JSON-escaped (":\/\/"), as some browser errors quote it
+_URL_USERINFO = re.compile(r"(?:(?<=://)|(?<=:\\/\\/))[^/?#@\s\"'<>\\]*@")
+# A user name or password shorter than this is redacted only where it ends the user:password@ part
+# of a URL: replaced everywhere, a value like "ab" would mangle every message it happens to occur in.
+_MIN_REDACTED_EVERYWHERE = 4
 
 
 def without_credentials(url: str | None) -> str | None:
@@ -370,7 +374,7 @@ class WebCollector(BaseCollector):
                     break
             browser.switch_to.window(handle_to_keep)
         except Exception as error:
-            self.source.logger.exception(f"Browser tab restoration failed, reloading the title page: {self.__redacted(error)}")
+            self.source.logger.error(f"Browser tab restoration failed, reloading the title page: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
             try:
                 # last resort - at least try to reopen the original page
                 browser.get(fallback_url)
@@ -481,7 +485,10 @@ class WebCollector(BaseCollector):
     def __redacted(self, message: object) -> str:
         """A log message with the credentialed title-page URL replaced by the bare one.
 
-        Browser errors may quote the URL the browser was asked to open.
+        Browser errors may quote the URL the browser was asked to open, and not always as it is:
+        Firefox's error page carries it percent-encoded (``u=https%3A//user%3Apass%40host``),
+        other messages JSON-escaped. So the page's user name and password are also replaced
+        wherever they occur, raw or percent-encoded once or twice.
 
         Parameters:
             message (object): The message, or an exception.
@@ -494,7 +501,37 @@ class WebCollector(BaseCollector):
         if title_page_url and title_page_url != self.source.url:
             text = text.replace(title_page_url, self.source.url)
         # any other URL the browser built from the title page carries the credentials too
-        return _URL_USERINFO.sub("", text)
+        text = _URL_USERINFO.sub("", text)
+        secrets = self.__credentials_pattern()
+        return secrets.sub("***", text) if secrets else text
+
+    def __credentials_pattern(self) -> re.Pattern[str] | None:
+        """What the page's user name and password may look like in a message; None when none is set.
+
+        Each alone and as the ``user:password`` of a URL, raw and percent-encoded (``quote`` with
+        and without ``/`` kept) once and twice. A form shorter than ``_MIN_REDACTED_EVERYWHERE``
+        matches only right before ``@`` (or ``@`` encoded once or twice).
+
+        Returns:
+            (re.Pattern | None): The pattern, longest forms first.
+        """
+        username = getattr(self, "auth_username", "") or ""
+        password = getattr(self, "auth_password", "") or ""
+        values = {username, password} - {""}
+        if username and password:
+            values |= {f"{username}:{password}", f"{quote(username, safe='')}:{quote(password, safe='')}"}
+        forms = set()
+        for value in values:
+            for once in (quote(value, safe=""), quote(value)):
+                forms |= {value, once, quote(once, safe=""), quote(once)}
+        if not forms:
+            return None
+        return re.compile(
+            "|".join(
+                re.escape(form) if len(form) >= _MIN_REDACTED_EVERYWHERE else f"{re.escape(form)}(?=@|%40|%2540)"
+                for form in sorted(forms, key=len, reverse=True)
+            ),
+        )
 
     def __url_problem(self, url: str) -> str | None:
         """Why the browser must not open (or have ended up on) a URL; None when it may.
@@ -624,7 +661,7 @@ class WebCollector(BaseCollector):
         try:
             driver.quit()
         except Exception as error:
-            self.source.logger.exception(f"Could not quit the headless browser driver: {error}")
+            self.source.logger.error(f"Could not quit the headless browser driver: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
 
     def __run_tor(self) -> None:
         """Run The Onion Router service in a subprocess."""
@@ -701,12 +738,12 @@ class WebCollector(BaseCollector):
                     ec.presence_of_element_located(self.__get_element_locator(self.selectors["popup_close"])),
                 )
             except Exception as error:
-                self.source.logger.exception(f"Popup find failed: {error}")
+                self.source.logger.error(f"Popup find failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
             if popup is not None:
                 try:
                     popup.click()
                 except Exception as error:
-                    self.source.logger.exception(f"Popup click failed: {error}")
+                    self.source.logger.error(f"Popup click failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
 
         # if there is a "load more" selector, click on it!
         page = 1
@@ -728,7 +765,7 @@ class WebCollector(BaseCollector):
                 try:
                     WebDriverWait(browser, 5).until(ec.staleness_of(load_more))
                 except Exception as error:
-                    self.source.logger.exception(f"WebDriverWait failed: {error}")
+                    self.source.logger.error(f"WebDriverWait failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
 
             except Exception:
                 break
@@ -746,7 +783,7 @@ class WebCollector(BaseCollector):
                     self.source.logger.error("Page crawl failed (after-crawl clean up)")
                     break
             except Exception as error:
-                self.source.logger.exception(f"Page crawl failed: {error}")
+                self.source.logger.error(f"Page crawl failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
                 break
 
             if page >= self.pagination_limit or not self.selectors["next_page"]:
@@ -800,7 +837,15 @@ class WebCollector(BaseCollector):
             # The browser opens the link as it is: resolved against the title page, it may carry the
             # page's credentials, which the article page needs too. Logs and checks see it without.
             link = item.get_attribute("href")
-            shown_link = without_credentials(link)
+            try:
+                shown_link = without_credentials(link)
+            except ValueError as error:  # only this link: the URL check could not read it either
+                failed_articles += 1
+                self.source.logger.warning(
+                    f"Refusing to open '{self.__redacted(link)}': not a valid URL ({self.__redacted(error)}). "
+                    f"Skipping article {count}/{len(article_items)}.",
+                )
+                continue
             problem = self.__url_problem(shown_link) if link else None
             if problem:
                 failed_articles += 1
@@ -832,7 +877,7 @@ class WebCollector(BaseCollector):
 
             except Exception as error:
                 failed_articles += 1
-                self.source.logger.exception(f"Failed to get link for article {count}/{len(article_items)}: {self.__redacted(error)}")
+                self.source.logger.error(f"Failed to get link for article {count}/{len(article_items)}: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
                 continue
 
             try:
@@ -855,7 +900,7 @@ class WebCollector(BaseCollector):
                     self.source.logger.warning("Parsing an article failed")
             except Exception as error:
                 failed_articles += 1
-                self.source.logger.exception(f"Parsing an article failed: {self.__redacted(error)}")
+                self.source.logger.error(f"Parsing an article failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
 
             if len(browser.window_handles) == 1:
                 back_clicks = 1
