@@ -347,13 +347,29 @@ the assertion may log into. Two checks keep each IdP to its own users:
   identifier gets login error `idp_mismatch` and is never provisioned instead.
   Links from before this check, and links an administrator enters by hand, have
   no IdP yet: the first login whose *scoped* username equals the link's username
-  binds it. A link is cleared by removing it, saving the user, adding it again and
-  saving again.
+  binds it. A link's IdP is cleared by removing the link, saving the user, adding
+  it again and saving again; the next login with that scoped username binds it
+  anew (to whichever IdP that login comes through, so do it only when you know
+  which institution the user now signs in with).
 
 Use a scoped username attribute (`eduPersonPrincipalName`, or `subject-id`) in
 federation mode. An unscoped username (`alice`) proves nothing about the
 institution, so in federation mode it never adopts an orphaned account and never
 binds an existing link; new accounts it provisions are bound to their IdP as usual.
+Removing a link therefore does not help an unscoped username: the account is left
+without the link, the next login is refused as `USERNAME_COLLISION`, and adding
+the link back gives one without an IdP that this username can never bind. Two ways
+out: switch the provider's username attribute to a scoped one (existing links then
+bind at each user's next login, as above), or delete the account so that the next
+login provisions a new one with the provider's default roles.
+
+The stable identifier is checked like the username when it has the form
+`user@domain`. The default stable identifier is the NameID, which some IdPs set to
+the user's e-mail address: when that address is outside the IdP's scopes, every
+login through it is refused as `scope_mismatch`. Map the stable identifier to a
+scoped attribute instead (`pairwise-id`, `subject-id`, `eduPersonUniqueId`).
+An IdP that changes its entityID is a different IdP to its existing links: its
+users get `idp_mismatch` until each link's IdP is cleared as described above.
 
 A single-IdP provider has one IdP chosen by the administrator: no scopes are
 checked, and the issuer is only recorded on the link.
