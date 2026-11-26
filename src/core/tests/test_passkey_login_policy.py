@@ -20,7 +20,7 @@ from types import SimpleNamespace
 
 import pytest
 from auth.base_authenticator import BaseAuthenticator
-from managers import auth_manager, webauthn_manager
+from managers import auth_manager, login_throttle, webauthn_manager
 from model.security_settings import SecuritySettings
 
 
@@ -36,8 +36,13 @@ def login(monkeypatch) -> SimpleNamespace:  # noqa: ANN001
         "generate_jwt",
         staticmethod(lambda user: ({"access_token": f"jwt-for-{user.username}"}, HTTPStatus.OK)),
     )
-    # The activity log writes to the database; these tests never reach one.
+    # The activity log writes to the database, the login throttle to Redis; these tests reach neither.
     monkeypatch.setattr(auth_manager.log_manager, "store_auth_error_activity", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        login_throttle,
+        "redis_client",
+        SimpleNamespace(get=lambda _key: None, set=lambda *_a, **_k: None, delete=lambda _key: None),
+    )
     monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, _username: None))
     return switches
 

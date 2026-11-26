@@ -468,7 +468,28 @@ def _finalize_login(provider: AuthProvider | None, user: User, *, passkey_used: 
     mfa_challenge = _mfa_gate(provider, user, passkey_used=passkey_used)
     if mfa_challenge:
         return mfa_challenge
-    return BaseAuthenticator.generate_jwt(user)
+    return _signed_in(BaseAuthenticator.generate_jwt(user), user.username)
+
+
+def _signed_in(response: tuple[dict, HTTPStatus], *usernames: str) -> tuple[dict, HTTPStatus]:
+    """Forget the failed attempts of a sign-in once it has issued its session token - only then.
+
+    A right password used to clear the counter before the MFA step, and the TOTP step counts its
+    wrong codes on the same counter: whoever knew the password could alternate a sign-in and
+    four wrong codes for ever, and so try every code.
+
+    Args:
+        response (tuple): The response that may carry the session token.
+        *usernames (str): The counters to clear: the account's, and the name typed at the form.
+
+    Returns:
+        tuple: ``response``, unchanged.
+    """
+    body, status = response
+    if status == HTTPStatus.OK and "access_token" in body:
+        for username in usernames:
+            login_throttle.register_success(username)
+    return response
 
 
 def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[dict, HTTPStatus]:
@@ -616,17 +637,17 @@ def authenticate_with_provider(provider_id: object, credentials: dict) -> tuple[
     else:
         providers = AuthProvider.get_enabled_by_kind(("local",))
 
+    # A right password is not yet a sign-in: the failures are forgotten only once the session token
+    # is issued - here, or at the end of the MFA step, which counts its wrong codes on this counter.
     for provider in providers:
         if provider.kind == "local":
             user = PasswordAuthenticator.verify(credentials)
             if user:
-                login_throttle.register_success(username)
-                return _finalize_login(provider, user)
+                return _signed_in(_finalize_login(provider, user), username)
         elif provider.kind == "ldap":
             identity = LDAPAuthenticator(provider).verify(credentials)
             if identity:
-                login_throttle.register_success(username)
-                return provision_and_issue_jwt(provider, identity)
+                return _signed_in(provision_and_issue_jwt(provider, identity), username)
 
     login_throttle.register_failure(username)
     data = request.get_json(silent=True) or {}
@@ -660,8 +681,7 @@ def complete_mfa_totp(mfa_token: str, code: str) -> tuple[dict, HTTPStatus]:
         log_manager.store_auth_error_activity(f"Invalid TOTP code for user: {user.username}")
         time.sleep(random.uniform(1, 3))  # noqa: S311 - timing jitter, not cryptographic
         return BaseAuthenticator.generate_error_code("Invalid authentication code", "TOTP_INVALID")
-    login_throttle.register_success(user.username)
-    return BaseAuthenticator.generate_jwt(user)
+    return _signed_in(BaseAuthenticator.generate_jwt(user), user.username)
 
 
 def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict, HTTPStatus]:
@@ -685,10 +705,12 @@ def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict,
         return _mfa_method_refused()
     if not code:
         return {"otpauth_uri": totp_manager.begin_enrollment(user.username)}, HTTPStatus.OK
+    # Not counted as a failure: the code is checked against the new secret this client was just
+    # shown, not against anything it does not know.
     if not totp_manager.confirm_enrollment(user, code):
         return BaseAuthenticator.generate_error_code("Invalid authentication code", "TOTP_INVALID")
     notification_manager.notify_user(user, notification_manager.TOTP_ENABLED)
-    return BaseAuthenticator.generate_jwt(user)
+    return _signed_in(BaseAuthenticator.generate_jwt(user), user.username)
 
 
 def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, credential: dict | None, name: str) -> tuple[dict, HTTPStatus]:
@@ -731,7 +753,7 @@ def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, cre
         log_manager.store_auth_error_activity(f"Passkey enrollment failed for user: {user.username}", ex)
         return BaseAuthenticator.generate_error_code(f"Passkey registration failed: {ex}", "PASSKEY_INVALID")
     notification_manager.notify_user(user, notification_manager.PASSKEY_ADDED, **notification_manager.passkey_details(record))
-    return BaseAuthenticator.generate_jwt(user)
+    return _signed_in(BaseAuthenticator.generate_jwt(user), user.username)
 
 
 def get_user_from_scoped_token(token: str, scope: str) -> User | None:
@@ -822,13 +844,17 @@ def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) ->
         return _mfa_session_expired()
     if not _mfa_method_offered(payload, "passkey"):
         return _mfa_method_refused()
+    # The same counter as the TOTP step: a locked account finishes no MFA step, whichever factor.
+    if not login_throttle.check_lock(payload["sub"]):
+        return _mfa_session_expired()
     try:
         owner = webauthn_manager.finish_authentication(challenge_id, credential)
-    except ValueError as ex:
+    except ValueError as ex:  # the site's passkey settings, not the person's assertion
         return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
     if not owner or owner.username != payload["sub"]:
+        login_throttle.register_failure(payload["sub"])
         return BaseAuthenticator.generate_error()
-    return BaseAuthenticator.generate_jwt(owner)
+    return _signed_in(BaseAuthenticator.generate_jwt(owner), owner.username)
 
 
 def get_oauth_authenticator(slug: str) -> OAuth2Authenticator | None:

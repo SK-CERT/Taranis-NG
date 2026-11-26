@@ -6,7 +6,13 @@ attempts for that username are refused before any credential check happens, for
 a lockout that doubles with each additional failure (5, 10, 20 ... minutes, up
 to LOCKOUT_MAX_SECONDS). Successful logins reset the counter, and so does a
 FAIL_WINDOW of quiet measured from the later of the last failure and the end of
-the last lockout.
+the last lockout. A sign-in counts as successful once it issues its session token:
+a right password alone clears nothing while a second factor is still to come.
+
+A wrong code from a user who is already signed in (removing their TOTP) is
+counted the same way under a namespace of its own (SIGNED_IN), so a typo spree in
+the profile dialog does not lock the person's sign-in, and a stolen session still
+gets no more guesses than a login form.
 
 The counters are process-wide singletons reached through Redis, so every
 gunicorn worker shares the same view of a username's failures. Redis being
@@ -32,7 +38,10 @@ LOCKOUT_SECONDS = 300
 LOCKOUT_MULTIPLIER = 2  # each failure beyond the threshold doubles the lockout
 LOCKOUT_MAX_SECONDS = 86400  # a day; without a cap the doubling runs away to months
 
-_KEY = "login_fail:{username}"
+# Counter namespaces: failed sign-ins, and wrong codes given by a signed-in user.
+LOGIN = "login_fail"
+SIGNED_IN = "signed_in_code_fail"
+_KEY = "{namespace}:{username}"
 
 
 def _now() -> int:
@@ -64,28 +73,28 @@ def _ttl_for(locked_until: int) -> int:
     return max(0, locked_until - _now()) + FAIL_WINDOW
 
 
-def _key(username: str) -> str:
+def _key(username: str, namespace: str = LOGIN) -> str:
     """The counter of a username, however it was typed.
 
     Directories match user names regardless of case and surrounding spaces, so "Alice", "alice"
     and "alice " are one account at an LDAP server: one counter here too, or every spelling got
     its own five attempts.
     """
-    return _KEY.format(username=str(username).strip().casefold())
+    return _KEY.format(namespace=namespace, username=str(username).strip().casefold())
 
 
-def _read(username: str) -> tuple[int, int, int]:
+def _read(username: str, namespace: str = LOGIN) -> tuple[int, int, int]:
     try:
-        return _decode(redis_client.get(_key(username)))
+        return _decode(redis_client.get(_key(username, namespace)))
     except Exception as ex:  # Redis being down must not break login
         logger.warning(f"Login throttle read failed for '{username}': {ex}")
         return 0, 0, 0
 
 
-def _write(username: str, fails: int, last_fail: int, locked_until: int) -> None:
+def _write(username: str, fails: int, last_fail: int, locked_until: int, namespace: str = LOGIN) -> None:
     try:
         redis_client.set(
-            _key(username),
+            _key(username, namespace),
             _encode(fails, last_fail, locked_until),
             ex=_ttl_for(locked_until),
         )
@@ -93,23 +102,23 @@ def _write(username: str, fails: int, last_fail: int, locked_until: int) -> None
         logger.warning(f"Login throttle write failed for '{username}': {ex}")
 
 
-def is_locked(username: str) -> bool:
+def is_locked(username: str, *, namespace: str = LOGIN) -> bool:
     """Tell whether this username is currently locked out."""
-    _, _, locked_until = _read(username)
+    _, _, locked_until = _read(username, namespace)
     return locked_until > _now()
 
 
-def check_lock(username: str) -> bool:
+def check_lock(username: str, *, namespace: str = LOGIN) -> bool:
     """Pass-through gate returning True when the attempt may proceed."""
-    if is_locked(username):
-        logger.warning(f"Login attempt on locked account: {username}")
+    if is_locked(username, namespace=namespace):
+        logger.warning(f"Login attempt on locked account: {username} ({namespace})")
         return False
     return True
 
 
-def register_failure(username: str) -> None:
+def register_failure(username: str, *, namespace: str = LOGIN) -> None:
     """Count one failed attempt, locking the account once past the threshold."""
-    fails, last_fail, locked_until = _read(username)
+    fails, last_fail, locked_until = _read(username, namespace)
     now = _now()
     # The quiet period is measured from whichever came later: the last failure,
     # or the end of a lockout. Measuring it from the last failure alone would
@@ -126,13 +135,13 @@ def register_failure(username: str) -> None:
         overkill = min(fails - FAIL_THRESHOLD, 32)
         lockout = min(LOCKOUT_SECONDS * (LOCKOUT_MULTIPLIER**overkill), LOCKOUT_MAX_SECONDS)
         locked_until = now + lockout
-        logger.warning(f"Account locked for {lockout}s after {fails} failed login attempts: {username}")
-    _write(username, fails, now, locked_until)
+        logger.warning(f"Account locked for {lockout}s after {fails} failed login attempts: {username} ({namespace})")
+    _write(username, fails, now, locked_until, namespace)
 
 
-def register_success(username: str) -> None:
-    """Forget the failure history of a username that has just logged in."""
+def register_success(username: str, *, namespace: str = LOGIN) -> None:
+    """Forget the failure history of a username that has just signed in (or given a right code)."""
     try:
-        redis_client.delete(_key(username))
+        redis_client.delete(_key(username, namespace))
     except Exception as ex:  # Redis being down must not break login
         logger.warning(f"Login throttle reset failed for '{username}': {ex}")

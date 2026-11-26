@@ -149,3 +149,17 @@ def test_spellings_of_one_name_share_a_counter() -> None:
 
     assert login_throttle.is_locked("alice") is True
     assert login_throttle.check_lock("Alice") is False
+
+
+@pytest.mark.usefixtures("fake_redis")
+def test_codes_given_while_signed_in_have_a_counter_of_their_own() -> None:
+    # A typo spree in the profile dialog must not lock the person's sign-in, nor the reverse.
+    for _ in range(login_throttle.FAIL_THRESHOLD):
+        login_throttle.register_failure("alice", namespace=login_throttle.SIGNED_IN)
+
+    assert login_throttle.check_lock("alice", namespace=login_throttle.SIGNED_IN) is False
+    assert login_throttle.check_lock("alice") is True
+    login_throttle.register_success("alice")
+    assert login_throttle.is_locked("alice", namespace=login_throttle.SIGNED_IN) is True
+    login_throttle.register_success("alice", namespace=login_throttle.SIGNED_IN)
+    assert login_throttle.is_locked("alice", namespace=login_throttle.SIGNED_IN) is False
