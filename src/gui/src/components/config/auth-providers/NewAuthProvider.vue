@@ -211,6 +211,7 @@
                         />
                         <OauthSharedFields
                             v-model="secretInput"
+                            v-model:remove-secret="removeSecret"
                             :config="config"
                             :saving="saving"
                             :has-secret="hasSecret"
@@ -232,6 +233,7 @@
                         />
                         <OauthSharedFields
                             v-model="secretInput"
+                            v-model:remove-secret="removeSecret"
                             :config="config"
                             :saving="saving"
                             :has-secret="hasSecret"
@@ -249,6 +251,7 @@
                             v-model:federation="samlUseFederation"
                             v-model:metadata="metadataInput"
                             v-model:secret="secretInput"
+                            v-model:remove-secret="removeSecret"
                             :config="config"
                             :saving="saving"
                             :has-secret="hasSecret"
@@ -275,6 +278,7 @@
                         <v-divider class="mb-4" />
                         <LdapFields
                             v-model="secretInput"
+                            v-model:remove-secret="removeSecret"
                             :config="config"
                             :saving="saving"
                             :has-secret="hasSecret"
@@ -456,6 +460,8 @@
     const organizationId = ref<number | null>(null)
     const selectedRoles = ref<Array<string | number>>([])
     const secretInput = ref('')
+    // The secret fields' remove button: drop the stored secret on save (clear_secret).
+    const removeSecret = ref(false)
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_AUTH_PROVIDER_CREATE'))
@@ -753,6 +759,7 @@
                 organizationId.value = incoming.organization?.id ?? null
                 selectedRoles.value = (incoming.default_roles || []).map((role) => role.id)
                 secretInput.value = ''
+                removeSecret.value = false
                 dialog.value = true
             }
         },
@@ -782,6 +789,7 @@
         organizationId.value = null
         selectedRoles.value = []
         secretInput.value = ''
+        removeSecret.value = false
         showValidationError.value = false
         showError.value = false
         if (formRef.value) {
@@ -934,7 +942,8 @@
                 organization: isAutoCreate.value && organizationId.value ? { id: organizationId.value } : null,
                 default_roles: isAutoCreate.value ? selectedRoles.value.map((id) => ({ id })) : [],
                 config: buildConfig(),
-                secret: secretInput.value || null
+                secret: secretInput.value || null,
+                ...(isEdit.value && removeSecret.value && !secretInput.value ? { clear_secret: true } : {})
             }
             if (isEdit.value) {
                 await updateAuthProvider(payload)
@@ -983,7 +992,8 @@
             config: config.value,
             org: organizationId.value,
             roles: selectedRoles.value,
-            secretChanged: !!secretInput.value
+            secretChanged: !!secretInput.value,
+            secretRemoved: removeSecret.value
         }),
         save: persist,
         close: closeDialog

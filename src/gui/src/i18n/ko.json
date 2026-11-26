@@ -1321,7 +1321,10 @@
             "last_seen": "마지막 확인",
             "disabled": "비활성화됨"
         },
-        "stored_secret": "저장됨 – 유지하려면 비워 두세요"
+        "stored_secret": "저장됨 – 유지하려면 비워 두세요",
+        "remove_stored_secret": "저장할 때 저장된 값 제거",
+        "keep_stored_secret": "저장된 값 유지",
+        "stored_secret_removed": "저장하면 제거됩니다"
     },
     "collectors": {
         "groups": {

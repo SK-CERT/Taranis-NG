@@ -205,6 +205,26 @@ describe('NewAuthProvider dialog', () => {
         expect(wrapper.vm.dialog).toBe(false)
     })
 
+    it('removes the stored client secret only when its remove button was pressed', async () => {
+        const open = async () => {
+            const wrapper = await mountDialog({}, { stubs: { VDialog: { template: '<div><slot /></div>' } } })
+            await openEdit(wrapper, OIDC_PROVIDER)
+            wrapper.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+            return wrapper
+        }
+
+        const kept = await open()
+        expect(await kept.vm.persist()).toBe(true)
+        expect(updateAuthProvider.mock.calls.at(-1)[0]).not.toHaveProperty('clear_secret')
+
+        const removed = await open()
+        await removed.get('[data-test="stored-secret-toggle"]').trigger('click')
+        expect(removed.text()).toContain('Removed when you save')
+        removed.vm.formRef = { validate: () => Promise.resolve({ valid: true }) }
+        expect(await removed.vm.persist()).toBe(true)
+        expect(updateAuthProvider.mock.calls.at(-1)[0]).toMatchObject({ secret: null, clear_secret: true })
+    })
+
     it('defaults a new OAuth provider to S256 without an insecure warning', async () => {
         const wrapper = await mountDialog()
         wrapper.vm.dialog = true

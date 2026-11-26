@@ -217,7 +217,12 @@ class PublishingChannel(db.Model):
             for updated_value in updated_channel.parameter_values:
                 if value.parameter_id == updated_value.parameter_id:
                     # A secret saved empty keeps its value: the GUI never receives it.
-                    value.value = keep_secret_parameter(value.parameter.key, value.value, updated_value.value)
+                    value.value = keep_secret_parameter(
+                        value.parameter.key,
+                        value.value,
+                        updated_value.value,
+                        clear=getattr(updated_value, "clear_stored", False),
+                    )
         # create missing parameters (re-save old version, re-assigning no new type)
         id_param_lookup = {param.parameter.id: param for param in channel.parameter_values}
         for par in updated_channel.parameter_values:

@@ -169,6 +169,20 @@ describe('NotificationsTab', () => {
         expect(saveNotificationChannel).toHaveBeenCalledWith('email', { enabled: true, config: { ...CHANNEL.config, port: 587 } })
     })
 
+    it('removes the stored password only when its remove button was pressed', async () => {
+        saveNotificationChannel.mockResolvedValue({ data: { ...CHANNEL, has_secret: false } })
+        const wrapper = await mountTab()
+
+        await wrapper.get('[data-test="stored-secret-toggle"]').trigger('click')
+        expect(wrapper.text()).toContain('Removed when you save')
+        await wrapper.vm.save()
+        await flushPromises()
+
+        expect(saveNotificationChannel.mock.calls[0][1]).toMatchObject({ clear_secret: true })
+        expect(saveNotificationChannel.mock.calls[0][1]).not.toHaveProperty('secret')
+        expect(wrapper.find('[data-test="stored-secret-toggle"]').exists()).toBe(false)
+    })
+
     it('sends a typed password once and then forgets it', async () => {
         saveNotificationChannel.mockResolvedValue({ data: CHANNEL })
         const wrapper = await mountTab()

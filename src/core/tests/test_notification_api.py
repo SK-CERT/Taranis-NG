@@ -92,3 +92,28 @@ def test_a_test_message_needs_an_address_to_go_to(app: Flask) -> None:
 
     assert status == HTTPStatus.BAD_REQUEST
     assert "e-mail address" in payload["error"]
+
+
+@pytest.mark.parametrize(("body", "sent"), [({}, "stored-password"), ({"clear_secret": True}, None), ({"secret": "typed"}, "typed")])
+def test_a_test_message_uses_the_stored_password_unless_the_form_removes_it(
+    app: Flask,
+    monkeypatch: pytest.MonkeyPatch,
+    body: dict,
+    sent: str | None,
+) -> None:
+    secrets: list = []
+    stored = SimpleNamespace(get_secret_plaintext=lambda: "stored-password")
+    monkeypatch.setattr(notifications_api.NotificationChannel, "find", classmethod(lambda _cls, _kind: stored))
+    monkeypatch.setattr(notifications_api.notification_manager, "send_test", lambda _kind, _config, secret, *_args: secrets.append(secret))
+    monkeypatch.setattr(notifications_api.CHANNELS["email"], "validate", staticmethod(lambda config: config))
+
+    _payload, status = _call(
+        app,
+        notifications_api.NotificationChannelTestResource(),
+        "post",
+        {"recipient": "analyst@example.test", "config": {"host": "smtp.example.test"}, **body},
+        "email",
+    )
+
+    assert status == HTTPStatus.OK
+    assert secrets == [sent]

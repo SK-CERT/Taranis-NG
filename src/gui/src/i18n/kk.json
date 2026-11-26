@@ -1321,7 +1321,10 @@
             "last_seen": "соңғы рет көрінген",
             "disabled": "Өшірулі"
         },
-        "stored_secret": "Сақталған – сақтау үшін бос қалдырыңыз"
+        "stored_secret": "Сақталған – сақтау үшін бос қалдырыңыз",
+        "remove_stored_secret": "Сақтаған кезде сақталған мәнді жою",
+        "keep_stored_secret": "Сақталған мәнді қалдыру",
+        "stored_secret_removed": "Сақтаған кезде жойылады"
     },
     "collectors": {
         "groups": {

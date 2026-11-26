@@ -130,13 +130,29 @@
                                 v-model="password"
                                 type="password"
                                 :label="t('notification_channels.smtp_password')"
-                                :hint="email.has_secret ? t('notification_channels.password_stored') : ''"
+                                :hint="
+                                    removePassword
+                                        ? t('common.stored_secret_removed')
+                                        : email.has_secret
+                                          ? t('notification_channels.password_stored')
+                                          : ''
+                                "
                                 persistent-hint
                                 variant="outlined"
                                 density="comfortable"
                                 autocomplete="new-password"
                                 data-test="smtp-password"
-                            />
+                            >
+                                <template
+                                    v-if="email.has_secret"
+                                    #append-inner
+                                >
+                                    <StoredSecretToggle
+                                        :removing="removePassword"
+                                        @toggle="toggleRemovePassword"
+                                    />
+                                </template>
+                            </v-text-field>
                         </v-col>
                         <v-col
                             cols="12"
@@ -328,6 +344,7 @@
 
 <script setup lang="ts">
     import { ref, computed, onMounted, watch } from 'vue'
+    import StoredSecretToggle from '@/components/common/StoredSecretToggle.vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
@@ -411,8 +428,13 @@
 
     const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
     const email = ref<EmailChannel>(defaultEmail())
-    // Write-only: the stored password never comes back; empty keeps it.
+    // Write-only: the stored password never comes back; empty keeps it, the remove button drops it.
     const password = ref('')
+    const removePassword = ref(false)
+    const toggleRemovePassword = (): void => {
+        removePassword.value = !removePassword.value
+        if (removePassword.value) password.value = ''
+    }
     const usersWithoutEmail = ref(0)
     const saving = ref(false)
     const errorMessage = ref('')
@@ -503,7 +525,8 @@
     const payload = (): Record<string, unknown> => ({
         enabled: email.value.enabled,
         config: { ...email.value.config, port: Number(email.value.config.port) },
-        ...(password.value ? { secret: password.value } : {})
+        ...(password.value ? { secret: password.value } : {}),
+        ...(removePassword.value && !password.value ? { clear_secret: true } : {})
     })
 
     const save = async (): Promise<void> => {
@@ -515,6 +538,7 @@
             const response = (await saveNotificationChannel('email', payload())) as { data: EmailChannel }
             applyChannel(response.data)
             password.value = ''
+            removePassword.value = false
             window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'common.updated_successfully' } }))
         } catch (error) {
             errorMessage.value = errorOf(error, t('notification_channels.error'))

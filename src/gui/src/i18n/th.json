@@ -1321,7 +1321,10 @@
             "last_seen": "พบล่าสุด",
             "disabled": "ปิดใช้งาน"
         },
-        "stored_secret": "บันทึกแล้ว – เว้นว่างไว้เพื่อคงค่าเดิม"
+        "stored_secret": "บันทึกแล้ว – เว้นว่างไว้เพื่อคงค่าเดิม",
+        "remove_stored_secret": "ลบค่าที่บันทึกไว้เมื่อบันทึก",
+        "keep_stored_secret": "คงค่าที่บันทึกไว้",
+        "stored_secret_removed": "จะถูกลบเมื่อบันทึก"
     },
     "collectors": {
         "groups": {

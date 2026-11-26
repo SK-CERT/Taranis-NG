@@ -1321,7 +1321,10 @@
             "last_seen": "naposledy videný",
             "disabled": "Vypnuté"
         },
-        "stored_secret": "Uložené – ponechajte prázdne, ak to chcete zachovať"
+        "stored_secret": "Uložené – ponechajte prázdne, ak to chcete zachovať",
+        "remove_stored_secret": "Pri uložení odstrániť uloženú hodnotu",
+        "keep_stored_secret": "Ponechať uloženú hodnotu",
+        "stored_secret_removed": "Pri uložení bude odstránené"
     },
     "collectors": {
         "groups": {

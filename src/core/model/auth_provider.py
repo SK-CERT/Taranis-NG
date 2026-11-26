@@ -262,8 +262,11 @@ class AuthProvider(db.Model):
         return {"total_count": count, "items": items}
 
     @classmethod
-    def _validate(cls, provider: AuthProvider, provider_id: int | None = None) -> None:
+    def _validate(cls, provider: AuthProvider, provider_id: int | None = None, *, keeps_stored_secret: bool = True) -> None:
         """Validate provider constraints (kind values, singleton kinds, certificates, OIDC config).
+
+        ``keeps_stored_secret`` is False when the update removes the stored secret, so an empty
+        secret is not checked as the stored one.
 
         Raises:
             ValueError: When the kind is unknown, a singleton kind already
@@ -318,7 +321,7 @@ class AuthProvider(db.Model):
             # secret means "keep the stored key", so fall back to the saved one.
             certificate = (config.get("sp_certificate") or "").strip()
             private_key = provider.get_secret_plaintext() or ""
-            if not private_key and provider_id:
+            if not private_key and provider_id and keeps_stored_secret:
                 existing = db.session.get(cls, provider_id)
                 private_key = (existing.get_secret_plaintext() or "") if existing else ""
 
@@ -435,7 +438,9 @@ class AuthProvider(db.Model):
     def update(cls, provider_id: int, data: dict, user_name: str) -> AuthProvider:
         """Update an existing authentication provider.
 
-        An empty/absent secret keeps the currently stored one.
+        An empty/absent secret keeps the currently stored one; with ``clear_secret: true`` it is
+        removed instead (an OIDC client turned public, LDAP moved to direct bind, a SAML service
+        provider that no longer decrypts assertions).
 
         Args:
             provider_id (int): ID of the provider to update.
@@ -445,12 +450,15 @@ class AuthProvider(db.Model):
         Returns:
             AuthProvider: Updated provider object.
         """
+        data = dict(data or {})
+        clear_secret = bool(data.pop("clear_secret", False))
         schema = NewAuthProviderSchema()
         new = schema.load(data)
+        clear_secret = clear_secret and not new.secret
         old = db.session.get(cls, provider_id)
         new.kind = old.kind  # kind is immutable after creation
         new.slug = (new.slug or "").strip() or cls._unique_slug(new.name, provider_id)
-        cls._validate(new, provider_id)
+        cls._validate(new, provider_id, keeps_stored_secret=not clear_secret)
         old.name = new.name
         old.slug = new.slug
         old.enabled = new.enabled
@@ -462,6 +470,8 @@ class AuthProvider(db.Model):
         old.config = new.config
         if new.secret:
             old.secret = new.secret
+        elif clear_secret:
+            old.secret = None
         old.updated_by = user_name
         old.updated_at = datetime.now(TZ)
         db.session.commit()

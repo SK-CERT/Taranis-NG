@@ -67,15 +67,24 @@
                                 v-model="localItem.api_key"
                                 :spellcheck="false"
                                 :label="t('settings.api_key')"
-                                :placeholder="keyStored ? t('common.stored_secret') : undefined"
+                                :placeholder="
+                                    removeKey ? t('common.stored_secret_removed') : keyStored ? t('common.stored_secret') : undefined
+                                "
                                 :persistent-placeholder="keyStored"
                                 variant="outlined"
                                 density="comfortable"
                                 :type="showApiKey ? 'text' : 'password'"
-                                :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
                                 :disabled="saving"
-                                @click:append-inner="showApiKey = !showApiKey"
-                            />
+                            >
+                                <template #append-inner>
+                                    <StoredSecretToggle
+                                        v-if="keyStored"
+                                        :removing="removeKey"
+                                        @toggle="toggleRemoveKey"
+                                    />
+                                    <v-icon @click="showApiKey = !showApiKey">{{ showApiKey ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
+                                </template>
+                            </v-text-field>
                         </v-col>
                         <v-col cols="6">
                             <v-text-field
@@ -135,6 +144,7 @@
 
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
+    import StoredSecretToggle from '@/components/common/StoredSecretToggle.vue'
     import { useI18n } from 'vue-i18n'
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
@@ -197,6 +207,12 @@
     const isEdit = computed(() => !!localItem.value.id)
     // Core never sends a stored key back (only api_key_set); saved empty, it keeps the stored one.
     const keyStored = computed(() => isEdit.value && (localItem.value as { api_key_set?: boolean }).api_key_set === true)
+    // The key is optional: the remove button asks core to drop the stored one on save.
+    const removeKey = ref(false)
+    const toggleRemoveKey = (): void => {
+        removeKey.value = !removeKey.value
+        if (removeKey.value) localItem.value.api_key = ''
+    }
     const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_DATA_PROVIDER_UPDATE' : 'CONFIG_DATA_PROVIDER_CREATE'))
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
@@ -214,7 +230,8 @@
         saving.value = true
         try {
             if (isEdit.value) {
-                await updateDataProvider(localItem.value)
+                const removing = removeKey.value && !String(localItem.value.api_key ?? '').trim()
+                await updateDataProvider({ ...localItem.value, ...(removing ? { clear_api_key: true } : {}) })
             } else {
                 // Backend create schema has no id field for the constructor; omit it (null fails validation).
                 const payload: Record<string, unknown> = { ...localItem.value }
@@ -246,7 +263,7 @@
     }
 
     const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
-        getState: () => localItem.value,
+        getState: () => ({ item: localItem.value, removeKey: removeKey.value }),
         save: persist,
         close: closeDialog
     })
@@ -254,6 +271,7 @@
     watch(
         () => props.editItem,
         (newItem) => {
+            removeKey.value = false
             if (newItem && Object.keys(newItem).length > 0) {
                 localItem.value = { ...defaultItem, ...newItem }
                 // Opening the dialog automatically when an item to edit is provided.

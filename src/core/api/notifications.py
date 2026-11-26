@@ -126,7 +126,8 @@ class NotificationChannelTestResource(Resource):
     def post(self, kind: str) -> tuple[dict, HTTPStatus]:
         """Send a test message right away with the settings in the form, saved or not.
 
-        The body is ``{"recipient", "config", "secret"?}``; an empty secret uses the stored one.
+        The body is ``{"recipient", "config", "secret"?, "clear_secret"?}``; an empty secret uses
+        the stored one, unless the form is about to remove it.
 
         Returns:
             (dict, HTTPStatus): ``{"ok": true}``, or the reason it was not delivered.
@@ -143,7 +144,7 @@ class NotificationChannelTestResource(Resource):
         except ValueError as error:
             return {"error": str(error)}, HTTPStatus.BAD_REQUEST
         secret = data.get("secret") or None
-        if secret is None:
+        if secret is None and not data.get("clear_secret"):
             stored = NotificationChannel.find(kind)
             secret = stored.get_secret_plaintext() if stored else None
         user = get_user_from_jwt()

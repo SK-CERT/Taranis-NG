@@ -225,6 +225,39 @@ describe('NewOSINTSource — payload sanitization on save', () => {
             parameter: { id: 'param-1' }
         })
     })
+    it('removes a stored password only when asked, and a typed one still wins', async () => {
+        const node = makeNodeWithCollector()
+        node.collectors[0].parameters.push({ id: 'param-2', key: 'AUTH_PASSWORD', name: 'Password', description: '' })
+        vi.mocked(configApi.getAllCollectorsNodes).mockResolvedValue({ items: [node] })
+        const record = makeEditSourceRecord()
+        // core sends a stored credential empty, saying only that one is stored
+        record.parameter_values.push({ value: '', value_set: true, parameter: { id: 'param-2', key: 'AUTH_PASSWORD' } })
+        const wrapper = await mountForEdit(record)
+        const save = async () => {
+            await wrapper.findComponent({ name: 'DialogToolbar' }).vm.$emit('save')
+            await flushPromises()
+            return configApi.updateOSINTSource.mock.calls.at(-1)[0].parameter_values[1]
+        }
+
+        // left empty: kept
+        expect(await save()).not.toHaveProperty('clear_stored')
+
+        // the remove button: removed on save
+        await wrapper.get('[data-test="stored-secret-toggle"]').trigger('click')
+        expect(wrapper.text()).not.toContain('Removed when you save') // a placeholder, not text
+        expect(wrapper.find('input[type="password"]').attributes('placeholder')).toBe('Removed when you save')
+        expect(await save()).toMatchObject({ value: '', clear_stored: true })
+
+        // a new value typed in replaces it instead
+        await wrapper.find('input[type="password"]').setValue('new-secret')
+        expect(await save()).toEqual(expect.objectContaining({ value: 'new-secret' }))
+        expect(await save()).not.toHaveProperty('clear_stored')
+
+        // and pressed again, the stored value is kept after all
+        await wrapper.find('input[type="password"]').setValue('')
+        await wrapper.get('[data-test="stored-secret-toggle"]').trigger('click')
+        expect(await save()).not.toHaveProperty('clear_stored')
+    })
 })
 
 describe('NewOSINTSource — edit-mode collector sync', () => {
