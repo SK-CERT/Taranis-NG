@@ -88,8 +88,11 @@ int setup_server_socket(int port) {
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
+    // Loopback only: core's own workers publish and subscribe on localhost. On every address,
+    // any container on the compose network could read every event or inject its own.
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     addr.sin_port = htons(port);
 
     if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {

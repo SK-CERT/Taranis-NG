@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from flask_restful import Api
 
 import json
+import re
 import socket
 import time
 from http import HTTPStatus
@@ -23,14 +24,31 @@ from model.bots_node import BotsNode
 from model.remote import RemoteAccess
 
 SSE_HEARTBEAT_INTERVAL = 15
+# The cookie names the session by the token's jti, which flask-jwt-extended makes a UUID.
+SESSION_ID = re.compile(r"^[0-9a-fA-F-]{36}$")
+
+
+def session_key(jwt_id: str) -> str:
+    """The Redis key of an SSE session (see SseInitResource)."""
+    return f"sse:{jwt_id}"
+
+
+def session_open(key: str | None) -> bool:
+    """Whether an SSE session still exists: logout deletes it, and it lapses with its token."""
+    return key is None or bool(redis_client.exists(key))
 
 
 class SseResource(Resource):
     """SSE API endpoint."""
 
     @stream_with_context
-    def stream(self):  # noqa: ANN201
-        """Stream data."""
+    def stream(self, session: str | None = None):  # noqa: ANN201
+        """Stream data until the client leaves or, for a user's stream, the session ends.
+
+        Args:
+            session (str | None): The Redis key of the user's SSE session, checked at every
+                heartbeat; None for a node's stream (API key).
+        """
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(60)
@@ -64,6 +82,9 @@ class SseResource(Resource):
 
                 now = time.monotonic()
                 if now - last_heartbeat >= SSE_HEARTBEAT_INTERVAL:
+                    if not session_open(session):
+                        logger.info("SSE: the session ended (logout or expiry); closing the stream")
+                        break
                     yield "event: heartbeat\ndata: {}\n\n"
                     last_heartbeat = now
 
@@ -104,14 +125,20 @@ class SseResource(Resource):
 
             auth_type = ""
             msg = ""
+            session = None
             if jwt_id is not None:
-                auth_type = "JWT token"
-                jwt_token = redis_client.get(f"jwt:{jwt_id}")
-                if jwt_token:
-                    if auth_manager.decode_user_from_jwt(jwt_token) is None:
-                        msg = "SSE: decoding user from jwt failed."
-                else:
+                auth_type = "JWT session"
+                stored = redis_client.get(session_key(jwt_id)) if SESSION_ID.fullmatch(jwt_id) else None
+                try:
+                    claims = json.loads(stored) if stored else None
+                except (TypeError, ValueError):
+                    claims = None
+                if claims is None:
                     msg = "SSE: invalid or expired jwt_id."
+                elif auth_manager.decode_user_from_session(claims) is None:
+                    msg = "SSE: the session's token is no longer valid."
+                else:
+                    session = session_key(jwt_id)
 
             elif api_key != "":
                 auth_type = "API key"
@@ -135,7 +162,7 @@ class SseResource(Resource):
                 return msg, HTTPStatus.FORBIDDEN
 
             logger.info(f"SSE: streaming response {request.remote_addr} ({auth_type})")
-            return Response(self.stream(), mimetype="text/event-stream")
+            return Response(self.stream(session), mimetype="text/event-stream")
 
         except Exception as ex:
             msg = "SSE: Error in streaming response"
@@ -154,9 +181,14 @@ class SseInitResource(Resource):
         try:
             jwt_data = get_jwt()
             jwt_id = jwt_data.get("jti")
-            jwt_token = request.headers.get("Authorization", "").replace("Bearer ", "")
-            if jwt_token:
-                redis_client.set(f"jwt:{jwt_id}", jwt_token, ex=SseInitResource.SSE_TOKEN_TTL)
+            if jwt_id:
+                # The token's claims, not the token: a bearer credential must not lie in Redis,
+                # which every container on the compose network can reach. The session lapses
+                # with the token; logout deletes it.
+                claims = {key: jwt_data.get(key) for key in ("sub", "jti", "exp", auth_manager.AUTH_GENERATION_CLAIM)}
+                lifetime = int(claims["exp"] - time.time()) if isinstance(claims["exp"], int | float) else SseInitResource.SSE_TOKEN_TTL
+                lifetime = max(1, min(lifetime, SseInitResource.SSE_TOKEN_TTL))
+                redis_client.set(session_key(jwt_id), json.dumps(claims), ex=lifetime)
                 resp = make_response("", HTTPStatus.OK)
                 resp.set_cookie(
                     "jwt_id",
@@ -165,9 +197,9 @@ class SseInitResource(Resource):
                     secure=True,  # HTTPS only
                     samesite="None",  # cross-origin support
                     path="/sse",
-                    max_age=SseInitResource.SSE_TOKEN_TTL,
+                    max_age=lifetime,
                 )
-                logger.debug("JWT token created in Redis, cookie set")
+                logger.debug("SSE session stored in Redis, cookie set")
                 return resp
 
             msg = "SSE: missing Authorization"

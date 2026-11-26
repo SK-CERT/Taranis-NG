@@ -72,11 +72,12 @@ class Logout(Resource):
             jwt_data = get_jwt()
             jwt_id = jwt_data.get("jti")
             if jwt_id:
-                deleted_count = redis_client.delete(f"jwt:{jwt_id}")
+                # The SSE session (and a token stored by a version before sessions kept claims only).
+                deleted_count = redis_client.delete(f"sse:{jwt_id}", f"jwt:{jwt_id}")
                 if deleted_count:
-                    logger.debug("JWT token deleted from Redis")
+                    logger.debug("SSE session deleted from Redis")
                 else:
-                    logger.warning(f"JWT token {jwt_id} not found in Redis")
+                    logger.debug(f"No SSE session for token {jwt_id} in Redis")
 
             auth_manager.logout(jwt_id)
 
