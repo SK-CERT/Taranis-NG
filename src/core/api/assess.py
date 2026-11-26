@@ -10,7 +10,6 @@ from managers import auth_manager, log_manager
 from managers.auth_manager import ACLCheck, auth_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
-from managers.stored_secrets import hide_secret_parameters
 from marshmallow import ValidationError
 from model.news_item import NewsItem, NewsItemAggregate, NewsItemData
 from model.osint_source import OSINTSourceGroup
@@ -37,18 +36,34 @@ MAX_PAGE = 200
 MAX_IDS = 500
 
 
-def _without_source_parameters(groups: dict) -> dict:
-    """Drop the parameter values of every source nested in a group listing.
+# What the GUI reads of a group (the Assess sidebar, its keyboard shortcuts, the news item
+# selector of a report), and of the sources it holds what an Assess news item shows anyway.
+ASSESS_GROUP_FIELDS = ("id", "name", "default")
+ASSESS_SOURCE_FIELDS = ("id", "name")
 
-    Assess needs the groups and which sources they hold, never how a source is collected: its
-    parameters hold host names, user names, feed URLs (with tokens in the query, at times) and
-    proxy URLs with credentials, besides the secrets ``hide_secret_parameters`` blanks.
+
+def _assess_groups(groups: dict) -> dict:
+    """A group listing cut down to ``ASSESS_GROUP_FIELDS`` and, per source, ``ASSESS_SOURCE_FIELDS``.
+
+    Assess needs the groups and which sources they hold, never how a source is collected. A
+    nested source carries its parameters (host names, user names, feed URLs with tokens in the
+    query at times, proxy URLs with credentials), its word lists, its collector and the text of
+    its last collection error, which can quote any of those. An allow-list, so that a field
+    added to the source schema later is not handed to every analyst unseen.
     """
-    for group in groups.get("items") or []:
-        for source in (group or {}).get("osint_sources") or []:
-            if isinstance(source, dict):
-                source.pop("parameter_values", None)
-    return groups
+    items = [
+        {
+            **{field: group[field] for field in ASSESS_GROUP_FIELDS if field in group},
+            "osint_sources": [
+                {field: source[field] for field in ASSESS_SOURCE_FIELDS if field in source}
+                for source in group.get("osint_sources") or []
+                if isinstance(source, dict)
+            ],
+        }
+        for group in groups.get("items") or []
+        if isinstance(group, dict)
+    ]
+    return {"total_count": groups.get("total_count", len(items)), "items": items}
 
 
 class OSINTSourceGroupsAssess(Resource):
@@ -58,8 +73,7 @@ class OSINTSourceGroupsAssess(Resource):
     def get(self) -> dict:
         """Get all OSINT source groups for Assess."""
         # Every analyst (and every user API key) reads this: the groups, not how sources are collected.
-        groups = OSINTSourceGroup.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
-        return _without_source_parameters(hide_secret_parameters(groups))
+        return _assess_groups(OSINTSourceGroup.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True))
 
 
 class UnreadCountsByGroup(Resource):

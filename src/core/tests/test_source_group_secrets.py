@@ -31,8 +31,36 @@ def _source() -> dict:
     }
 
 
+def _collected_source() -> dict:
+    """A source as the group schema dumps it, with what a collector run and its node leave behind."""
+    return {
+        **_source(),
+        "description": "Team mailbox on imap.corp.example",
+        "word_lists": [{"id": 4, "name": "Internal projects", "entries": [{"value": "project-codename"}]}],
+        "collector_id": "collector-email",
+        "collector": {"id": "collector-email", "type": "EMAIL_COLLECTOR", "node": {"api_url": "https://collectors.corp.example"}},
+        "last_attempted": "01.11.2026 - 10:00:00",
+        "last_collected": "01.11.2026 - 09:00:00",
+        "last_error_message": "Proxy http://proxyuser:proxypass@proxy.corp.example:3128 refused the connection",
+        "enabled": True,
+        "collecting": False,
+        "next_run": "2026-11-01T11:00:00+00:00",
+        "status": "red",
+    }
+
+
 def _groups() -> dict:
-    return {"total_count": 1, "items": [{"id": "group-1", "name": "Default", "default": True, "osint_sources": [_source()]}]}
+    group = {
+        "id": "group-1",
+        "name": "Default",
+        "description": "Sources of the CERT",
+        "default": True,
+        "title": "Default",
+        "subtitle": "Sources of the CERT",
+        "tag": "mdi-folder",
+        "osint_sources": [_collected_source()],
+    }
+    return {"total_count": 1, "items": [group]}
 
 
 @pytest.fixture
@@ -64,6 +92,20 @@ def test_the_assess_listing_carries_no_source_parameters() -> None:
     assert "parameter_values" not in source
     assert "imap.corp.example" not in json.dumps(body)
     assert "Sup3rS3cret" not in json.dumps(body)
+
+
+@pytest.mark.usefixtures("groups")
+def test_the_assess_listing_carries_only_what_assess_reads() -> None:
+    """The group's id, name and default flag; of a source its id and name, which its news items show."""
+    with APP.test_request_context("/"):
+        body = assess.OSINTSourceGroupsAssess.get.__wrapped__(assess.OSINTSourceGroupsAssess())
+
+    assert body == {
+        "total_count": 1,
+        "items": [{"id": "group-1", "name": "Default", "default": True, "osint_sources": [{"id": "source-1", "name": "Shared mailbox"}]}],
+    }
+    for leaked in ("proxypass", "corp.example", "project-codename", "EMAIL_COLLECTOR"):
+        assert leaked not in json.dumps(body)
 
 
 def test_the_export_carries_no_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
