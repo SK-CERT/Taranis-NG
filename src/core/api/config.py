@@ -1403,11 +1403,17 @@ def _own_session_renewed(target: user.User | None, credential_before: str | None
         (dict, HTTPStatus) | None: ``{"access_token": ...}`` for the editor's own changed
             account, None otherwise.
     """
+    # An API key has no session to renew; it keeps working (it is not tied to the password).
+    if auth_manager.uses_api_key():
+        return None
     actor = get_user_from_jwt()
     if target is None or actor is None or actor.id != target.id or session_credential(target) == credential_before:
         return None
     # The same session goes on: it keeps its sign-in time, and so its maximum length.
-    return BaseAuthenticator.generate_jwt(target, record_login=False, auth_time=get_jwt().get(AUTH_TIME_CLAIM))
+    renewed = BaseAuthenticator.generate_jwt(target, record_login=False, auth_time=get_jwt().get(AUTH_TIME_CLAIM))
+    # The change is saved either way. A session too close to its maximum length gets no new
+    # token: the save still answers as a success, and the next request signs the person out.
+    return renewed if renewed[1] == HTTPStatus.OK else None
 
 
 def _notify_password_change(target: user.User | None, password_before: str | None) -> None:

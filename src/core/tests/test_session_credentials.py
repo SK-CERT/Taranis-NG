@@ -132,3 +132,29 @@ def test_changing_one_s_own_password_hands_back_a_new_token(account: SimpleNames
     # An administrator changing someone else's password gets nothing: that user's sessions end.
     monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: SimpleNamespace(id=1))
     assert config_api._own_session_renewed(account, before) is None
+
+
+def test_an_api_key_changing_its_owner_s_password_gets_no_token(account: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
+    """There is no session to renew, and get_jwt() would fail after the change was saved."""
+    monkeypatch.setattr(config_api.auth_manager, "uses_api_key", lambda: True)
+    monkeypatch.setattr(config_api, "get_jwt", lambda: pytest.fail("an API key request has no JWT"))
+    monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: account)
+    before = session_credential(account)
+    account.password = "hash-3"
+
+    assert config_api._own_session_renewed(account, before) is None
+
+
+def test_a_session_at_its_end_saves_the_change_without_a_new_token(account: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(config_api.auth_manager, "uses_api_key", lambda: False)
+    monkeypatch.setattr(
+        base_authenticator.BaseAuthenticator,
+        "generate_jwt",
+        staticmethod(lambda _user, **_kwargs: ({"error": "Session expired", "code": "SESSION_EXPIRED"}, HTTPStatus.UNAUTHORIZED)),
+    )
+    monkeypatch.setattr(config_api, "get_jwt", lambda: {"auth_time": 1700000000})
+    monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: account)
+    before = session_credential(account)
+    account.password = "hash-4"
+
+    assert config_api._own_session_renewed(account, before) is None
