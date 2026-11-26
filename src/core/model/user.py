@@ -329,7 +329,8 @@ class User(db.Model):
             search (str): The search query.
             external_permissions (Collection[str]): The permissions an external user may hold.
             members (bool): List every user of the asker's organizations instead, for an asset
-                group's allowed users (read-only: they are not managed here).
+                group's allowed users (read-only: they are not managed here), with their id,
+                username and name only.
 
         Returns:
             dict: The external users (or all members) of the asker's organizations (see :meth:`is_external`).
@@ -337,7 +338,12 @@ class User(db.Model):
         if not user.organizations:
             return {"total_count": 0, "items": []}
         users, _count = cls.get(search, list(user.organizations))
-        listed = users if members else [one for one in users if is_external_user(one, external_permissions)]
+        if members:
+            # The group's user picker shows a username and a name. Administrators are among the
+            # members, and their e-mail, roles, permissions, identity links and MFA state are not
+            # an asset administrator's to read.
+            return {"total_count": len(users), "items": UserSchemaBase(many=True, only=("id", "username", "name")).dump(users)}
+        listed = [one for one in users if is_external_user(one, external_permissions)]
         user_schema = UserPresentationSchema(many=True)
         return {"total_count": len(listed), "items": user_schema.dump(listed)}
 

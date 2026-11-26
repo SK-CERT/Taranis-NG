@@ -117,17 +117,51 @@ def test_the_list_shows_external_users_of_one_s_organizations_only(monkeypatch: 
     assert listing == {"total_count": 1, "items": [11]}
 
 
+def _with_account_details(account: types.SimpleNamespace) -> types.SimpleNamespace:
+    """What a stored account carries beyond its name: none of it is the member picker's."""
+    account.email = f"{account.username}@example.org"
+    account.status = "active"
+    account.require_mfa = True
+    account.last_login_at = None
+    account.has_password = True
+    account.mfa = {"totp": True, "passkeys": 1}
+    return account
+
+
 def test_an_asset_group_may_list_every_member_of_one_s_organizations(monkeypatch: pytest.MonkeyPatch) -> None:
     everyone = [_user(11, [CUSTOMER_A]), _user(13, [CUSTOMER_A], roles=[types.SimpleNamespace(name="Admin")], permissions=())]
     monkeypatch.setattr(User, "get", classmethod(lambda _cls, _search, _organizations: (everyone, 2)))
-    monkeypatch.setattr(
-        user_module,
-        "UserPresentationSchema",
-        lambda **_kwargs: types.SimpleNamespace(dump=lambda users: [u.id for u in users]),
-    )
 
-    assert User.get_all_external_json(ORG_ADMIN, None, EXTERNAL, members=True) == {"total_count": 2, "items": [11, 13]}
+    assert User.get_all_external_json(ORG_ADMIN, None, EXTERNAL, members=True) == {
+        "total_count": 2,
+        "items": [{"id": 11, "username": "user11", "name": "User 11"}, {"id": 13, "username": "user13", "name": "User 13"}],
+    }
     assert User.get_all_external_json(_user(20, []), None, EXTERNAL, members=True) == {"total_count": 0, "items": []}
+
+
+def test_the_member_picker_gets_names_not_account_details(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every member is listed, administrators included: the picker gets what it shows and nothing else."""
+    administrator = _with_account_details(
+        _user(13, [CUSTOMER_A], roles=[types.SimpleNamespace(id=1, name="Admin")], permissions=("CONFIG_USER_UPDATE",)),
+    )
+    administrator.auth_identities = [types.SimpleNamespace(id=5, auth_provider_id=1, external_username="admin13", external_id="x-13")]
+    monkeypatch.setattr(User, "get", classmethod(lambda _cls, _search, _organizations: ([administrator], 1)))
+
+    listing = User.get_all_external_json(ORG_ADMIN, None, EXTERNAL, members=True)
+
+    assert [set(item) for item in listing["items"]] == [{"id", "username", "name"}]
+
+
+def test_the_external_user_listing_keeps_its_full_schema(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The users the asset administrator manages are listed as before, with what the edit dialog needs."""
+    managed = _with_account_details(_user(11, [CUSTOMER_A]))
+    monkeypatch.setattr(User, "get", classmethod(lambda _cls, _search, _organizations: ([managed], 1)))
+
+    (item,) = User.get_all_external_json(ORG_ADMIN, None, EXTERNAL)["items"]
+
+    assert item["email"] == "user11@example.org"
+    assert item["permissions"] == [{"id": "MY_ASSETS_ACCESS"}]
+    assert {"organizations", "roles", "status", "has_password", "mfa"} <= set(item)
 
 
 def test_a_new_external_user_gets_no_identity_status_or_mfa_from_the_request(
