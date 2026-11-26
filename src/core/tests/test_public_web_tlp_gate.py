@@ -144,12 +144,8 @@ def test_a_template_preview_pass_lets_the_node_render_a_withheld_product(
     published: list,  # noqa: ARG001
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    store: dict = {}
-
-    def remember(key: str, value: str, **_options: object) -> None:
-        store[key] = value
-
-    monkeypatch.setattr(template_preview, "redis_client", types.SimpleNamespace(set=remember, get=store.get))
+    # Signed by core, not kept in Redis, where a node could have written a pass of its own.
+    monkeypatch.setattr(template_preview, "redis_client", None)
 
     ticket = template_preview.issue_product_pass(2, 1)
 

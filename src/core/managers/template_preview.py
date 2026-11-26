@@ -15,11 +15,14 @@ an API URL.
 from __future__ import annotations
 
 import functools
+import hashlib
+import hmac
 import json
-import secrets
+import time
 import uuid
 from http import HTTPStatus
 
+from config import Config
 from managers.cache_manager import redis_client
 from managers.db_manager import db
 from model.product import Product
@@ -99,27 +102,41 @@ def take_page(token: str) -> str | None:
 # A preview may render a product the web would not show (a TLP:AMBER one, say: the dialog then
 # warns). Core gives the node that product only against a pass it issued for this preview.
 PRODUCT_PASS_SECONDS = 120
+# The pass is signed, not stored: Redis has no password, and a public-web node that can reach it
+# could have stored a pass of its own. It is keyed with core's JWT secret, which no public-web node
+# has (a node shares only its API key with core) - through a key derived for this purpose alone.
+_PRODUCT_PASS_LABEL = b"taranis-ng/template-preview/product-pass/v1"
+_PRODUCT_PASS_MAX_LENGTH = 128
 
 
-def _product_pass_key(ticket: str) -> str:
-    return f"template-preview-product:{ticket}"
+def _product_pass_signature(product_id: int, web_id: int, expires: int) -> str:
+    key = hmac.new(Config.JWT_SECRET_KEY.encode(), _PRODUCT_PASS_LABEL, hashlib.sha256).digest()
+    return hmac.new(key, f"{product_id}:{web_id}:{expires}".encode(), hashlib.sha256).hexdigest()
 
 
 def issue_product_pass(product_id: int, web_id: int) -> str:
-    """Let the web's node fetch one product for a preview, whatever its TLP, for a short while."""
-    ticket = secrets.token_urlsafe(32)
-    redis_client.set(_product_pass_key(ticket), f"{product_id}:{web_id}", ex=PRODUCT_PASS_SECONDS)
-    return ticket
+    """Let the web's node fetch one product for a preview, whatever its TLP, for a short while.
+
+    Returns:
+        str: ``<expiry>.<signature>``: when the pass ends (Unix time) and core's HMAC-SHA256 over
+            the product, the web and that time.
+    """
+    expires = int(time.time()) + PRODUCT_PASS_SECONDS
+    return f"{expires}.{_product_pass_signature(product_id, web_id, expires)}"
 
 
 def product_pass_valid(ticket: str | None, product_id: int, web_id: int | None) -> bool:
-    """Whether a pass from :func:`issue_product_pass` covers this product on this web."""
-    if not ticket or web_id is None or len(ticket) > 128:  # noqa: PLR2004 - a token_urlsafe(32) is 43 characters
+    """Whether a pass from :func:`issue_product_pass` covers this product on this web, and has not ended.
+
+    Anything else the node sends - another product's or web's pass, an ended or altered one, or
+    no pass at all - is simply not valid.
+    """
+    if not isinstance(ticket, str) or web_id is None or len(ticket) > _PRODUCT_PASS_MAX_LENGTH or not ticket.isascii():
         return False
-    stored = redis_client.get(_product_pass_key(ticket))
-    if isinstance(stored, bytes):
-        stored = stored.decode()
-    return stored is not None and secrets.compare_digest(stored, f"{product_id}:{web_id}")
+    expires, _, signature = ticket.partition(".")
+    if not expires.isdigit() or int(expires) < time.time():
+        return False
+    return hmac.compare_digest(signature, _product_pass_signature(product_id, web_id, int(expires)))
 
 
 def _int_or_none(value: object) -> int | None:
