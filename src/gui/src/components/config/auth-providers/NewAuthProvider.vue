@@ -487,7 +487,7 @@
             .trim()
             .toLowerCase()
             .startsWith('ldaps://')
-        if (localItem.value.kind === 'ldap' && config.value.use_tls !== true && !ldapsUrl) {
+        if (localItem.value.kind === 'ldap' && config.value.use_tls === false && !ldapsUrl) {
             warnings.push(t('auth_provider.insecure_ldap_no_tls'))
         }
         if (['oidc', 'oauth2'].includes(localItem.value.kind)) {
@@ -870,13 +870,15 @@
                 'username_attr',
                 'name_attr'
             ])
-            ldapConfig.use_tls = !!source.use_tls
+            // A stored config without use_tls is TLS to the login (core reads a missing key as true);
+            // re-saving the dialog must not turn that into plain LDAP.
+            ldapConfig.use_tls = source.use_tls !== false
             // An ldaps:// URL is always TLS with a checked certificate, whatever the switch says.
             const ldapsUrl = String(source.server_url ?? '')
                 .trim()
                 .toLowerCase()
                 .startsWith('ldaps://')
-            if ((source.use_tls || ldapsUrl) && source.ca_cert) {
+            if ((ldapConfig.use_tls || ldapsUrl) && source.ca_cert) {
                 ldapConfig.ca_cert = source.ca_cert
             }
             return ldapConfig

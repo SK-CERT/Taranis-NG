@@ -284,7 +284,8 @@
     }
     const { t } = useI18n()
     const useTls = computed({
-        get: () => props.config.use_tls ?? false,
+        // Left out of a stored config means TLS, as the login reads it: showing it off would save plain LDAP.
+        get: () => props.config.use_tls ?? true,
         set: (value: boolean) => {
             props.config.use_tls = value
         }

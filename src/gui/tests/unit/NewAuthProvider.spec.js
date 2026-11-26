@@ -610,6 +610,22 @@ describe('NewAuthProvider dialog', () => {
         expect(config.server_url).toBe('ldaps://ldap.example.org')
     })
 
+    it('keeps TLS for a stored LDAP config without use_tls, as the login reads it', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: { server_url: 'ldap://ldap.example.org', user_dn_template: 'uid={username},dc=x', ca_cert: 'PEM' }
+        })
+
+        const config = wrapper.vm.buildConfig()
+
+        expect(config.use_tls).toBe(true)
+        expect(config.ca_cert).toBe('PEM')
+        expect(wrapper.vm.insecureConfigurationWarnings).toEqual([])
+    })
+
     it('keeps the CA certificate of an ldaps:// URL with the TLS switch off', async () => {
         const wrapper = await mountDialog()
         await openEdit(wrapper, {
@@ -983,6 +999,13 @@ describe('LDAP provider fields', () => {
         const caField = wrapper.findComponent({ name: 'VTextarea' })
         expect(caField.exists()).toBe(true)
         expect(caField.props('label')).toContain('optional')
+    })
+
+    it('shows TLS on for a config that does not say', () => {
+        const wrapper = mountWithPlugins(LdapFields, { props: { config: { server_url: 'ldap://ldap.example.org' }, saving: false } })
+
+        expect(wrapper.vm.useTls).toBe(true)
+        expect(wrapper.find('[data-test="ldap-ca-certificate"]').exists()).toBe(true)
     })
 
     it('shows the CA input for an ldaps:// URL even with the TLS switch off', () => {
