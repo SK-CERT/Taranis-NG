@@ -10,6 +10,7 @@ from base64 import b64encode
 from shared.config_presenter import ConfigPresenter
 
 from .base_presenter import BasePresenter
+from .rich_text import as_html
 
 
 class JSONPresenter(BasePresenter):
@@ -43,7 +44,8 @@ class JSONPresenter(BasePresenter):
             indent = 4
 
         try:
-            input_data = BasePresenter.generate_input_data(presenter_input)
+            # A Rich Text value goes out as its sanitized HTML, as the stored value did.
+            input_data = as_html(BasePresenter.generate_input_data(presenter_input))
             json_object = json.dumps(input_data, sort_keys=True, indent=indent)
             base64_bytes = b64encode(json_object.encode())
             data = base64_bytes.decode("UTF-8")

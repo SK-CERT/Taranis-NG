@@ -23,7 +23,7 @@ def json_string_content(value: object) -> object:
     deployments keep in the presenters' templates volume.
 
     Markup - what ``| tojson`` and ``| safe`` return - is printed as it is: the template chose
-    to emit JSON there itself.
+    to emit JSON there itself. A Rich Text value is not Markup: its plain text is printed.
 
     Args:
         value (object): A value the template prints.

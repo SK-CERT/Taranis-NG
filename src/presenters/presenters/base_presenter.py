@@ -27,6 +27,7 @@ from shared.schema.presenter import PresenterSchema
 from weasyprint import HTML
 
 from . import jinja_filters
+from .rich_text import rich_text
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -75,6 +76,8 @@ class BasePresenter:
     @staticmethod
     def to_template_data(value: any) -> any:
         """Convert presenter objects to plain template data without a JSON round trip."""
+        if isinstance(value, str):
+            return value  # a RichText keeps both of its forms
         if isinstance(value, dt.date):
             return {"year": value.year, "month": value.month, "day": value.day}
         if isinstance(value, types.MappingProxyType):
@@ -202,6 +205,11 @@ class BasePresenter:
 
             if attr_key.startswith("cwe"):
                 return {attribute.value: attribute.value_description for attribute in attribute_group_item}
+            if getattr(attr_definition, "type", None) == AttributeType.RICH_TEXT:
+                # Stored as the editor's HTML: sanitized, then the formatting in HTML output and
+                # plain text in any other (see presenters.rich_text).
+                values = [rich_text(text(attribute)) for attribute in attribute_group_item]
+                return values[0] if attr_type.max_occurrence == 1 and values else values
             if getattr(attr_definition, "type", None) == AttributeType.MULTI_CHOICE:
                 # A multiple choice field keeps its ticked values newline-joined in one value,
                 # so templates get the list regardless of how max_occurrence is configured.
