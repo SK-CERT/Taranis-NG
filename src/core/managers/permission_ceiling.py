@@ -21,8 +21,10 @@ user holding CONFIG_USER_UPDATE is refused, as disabling the last one already wa
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
+from flask import g, has_request_context
 from model.auth_provider import UserAuthIdentity
 from model.role import Role
 from model.user import User
@@ -35,9 +37,30 @@ if TYPE_CHECKING:
 USER_ADMINISTRATION = "CONFIG_USER_UPDATE"
 
 
+# A role id as the model resolves it: digits only. Anything else ("0x1", "1e0") is refused rather
+# than skipped, so the ceiling never adds up fewer roles than the database would assign.
+_ROLE_ID = re.compile(r"\s*\d+\s*")
+
+
 def permissions_of(user: User | None) -> set[str]:
     """Everything a user may do: direct permissions and those of their roles."""
     return set(user.get_permissions()) if user is not None else set()
+
+
+def _acting_permissions(actor: User) -> set[str]:
+    """What the actor may do in this request.
+
+    A restricted API key acts with only part of its owner's permissions (``auth_required`` keeps
+    the request's set in ``g.active_permissions``), so the ceiling is that part. It is never more
+    than the owner holds now.
+    """
+    held = permissions_of(actor)
+    if has_request_context():
+        authenticated = g.get("authenticated_user")
+        active = g.get("active_permissions")
+        if active is not None and authenticated is not None and authenticated.id == actor.id:
+            return held & set(active)
+    return held
 
 
 def _ids(items: object) -> list[object]:
@@ -48,13 +71,19 @@ def _ids(items: object) -> list[object]:
 
 
 def role_permissions(role_ids: Iterable[object]) -> set[str]:
-    """The permissions of the roles with these ids (unknown ids add nothing)."""
+    """The permissions of the roles with these ids (unknown ids add nothing).
+
+    Raises:
+        ValueError: For an id that is not a plain number.
+    """
     granted: set[str] = set()
     for role_id in role_ids:
-        try:
-            role = Role.find(int(role_id))
-        except (TypeError, ValueError):
+        if role_id is None:
             continue
+        if isinstance(role_id, bool) or not (isinstance(role_id, int) or (isinstance(role_id, str) and _ROLE_ID.fullmatch(role_id))):
+            msg = f"Unknown role id: {role_id!r}"
+            raise ValueError(msg)
+        role = Role.find(int(role_id))
         if role is not None:
             granted.update(role.get_permissions())
     return granted
@@ -88,7 +117,7 @@ def refuse_beyond(actor: User | None, permissions: Iterable[str], what: str) -> 
     """
     if actor is None:
         return
-    missing = sorted(set(permissions) - permissions_of(actor))
+    missing = sorted(set(permissions) - _acting_permissions(actor))
     if missing:
         msg = f"You cannot {what}: it involves permissions you do not hold ({', '.join(missing)})"
         raise ValueError(msg)

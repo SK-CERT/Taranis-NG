@@ -206,3 +206,36 @@ def test_a_login_method_cannot_hand_out_or_take_over_more(acting: Callable, monk
     assert _call(config.AuthProvidersResource, "post", json={"name": "SSO", "default_roles": [{"id": 1}]})[1] == HTTPStatus.BAD_REQUEST
     # An administrator signs in through it: whoever repoints it can sign in as them.
     assert _call(config.AuthProviderResource, "put", 7, json={"name": "SSO", "default_roles": []})[1] == HTTPStatus.BAD_REQUEST
+
+
+def test_a_restricted_api_key_grants_nothing_beyond_its_own_scope(acting: Callable) -> None:
+    """The ceiling is what the request may do, not everything the key's owner holds."""
+    acting(ADMIN)
+    with APP.test_request_context("/"):
+        permission_ceiling.g.authenticated_user = ADMIN
+        permission_ceiling.g.active_permissions = {"CONFIG_USER_UPDATE"}
+
+        with pytest.raises(ValueError, match="PUBLISH_ACCESS"):
+            permission_ceiling.refuse_beyond(ADMIN, {"PUBLISH_ACCESS"}, "give this user these permissions")
+        permission_ceiling.refuse_beyond(ADMIN, {"CONFIG_USER_UPDATE"}, "give this user these permissions")
+
+
+def test_stale_request_permissions_never_widen_the_ceiling(acting: Callable) -> None:
+    acting(ANALYST)
+    with APP.test_request_context("/"):
+        permission_ceiling.g.authenticated_user = ANALYST
+        permission_ceiling.g.active_permissions = {"ASSESS_ACCESS", "PUBLISH_ACCESS"}
+
+        with pytest.raises(ValueError, match="PUBLISH_ACCESS"):
+            permission_ceiling.refuse_beyond(ANALYST, {"PUBLISH_ACCESS"}, "do it")
+
+
+@pytest.mark.parametrize("role_id", ["0x1", "1e0", "one", "1.0", True, 1.0])
+def test_a_role_id_the_database_might_read_differently_is_refused(role_id: object) -> None:
+    with pytest.raises(ValueError, match="Unknown role id"):
+        permission_ceiling.requested_user_permissions({"roles": [{"id": role_id}]})
+
+
+@pytest.mark.parametrize("role_id", [1, "1", " 1 "])
+def test_plain_role_ids_count(role_id: object) -> None:
+    assert permission_ceiling.requested_user_permissions({"roles": [{"id": role_id}]}) == ROLES[1]
