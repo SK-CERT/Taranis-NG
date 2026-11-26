@@ -199,6 +199,25 @@ def test_a_link_of_another_idp_is_refused_and_never_provisioned(monkeypatch: pyt
     assert IDP_B in login.errors[0]
 
 
+def test_losing_the_provisioning_race_to_another_idp_reports_the_mismatch(monkeypatch: pytest.MonkeyPatch, login: SimpleNamespace) -> None:
+    rollbacks: list[bool] = []
+    monkeypatch.setattr(auth_manager, "db", SimpleNamespace(session=SimpleNamespace(rollback=lambda: rollbacks.append(True))))
+    monkeypatch.setattr(UserAuthIdentity, "find_by_external", classmethod(lambda _cls, *_args, **_kwargs: None))
+
+    def lost_race(_cls: type, *_args: object, **_kwargs: object) -> None:
+        msg = f"identity link 5 is bound to '{IDP_A}', not to '{IDP_B}'"
+        raise IdentityIssuerMismatchError(msg)
+
+    monkeypatch.setattr(auth_manager.User, "provision_external", classmethod(lost_race))
+
+    response, status = auth_manager.provision_and_issue_jwt(_federation(), _identity())
+
+    assert status == HTTPStatus.FORBIDDEN
+    assert response["code"] == "IDP_MISMATCH"
+    assert rollbacks == [True]
+    assert IDP_A in login.errors[0]
+
+
 def test_a_new_federation_user_is_provisioned_bound_to_its_idp(monkeypatch: pytest.MonkeyPatch, login: SimpleNamespace) -> None:
     monkeypatch.setattr(UserAuthIdentity, "find_by_external", classmethod(lambda _cls, *_args, **_kwargs: None))
 

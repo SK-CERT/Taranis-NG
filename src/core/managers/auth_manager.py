@@ -401,6 +401,10 @@ def provision_and_issue_jwt(provider: AuthProvider, identity: ExternalIdentity) 
     """
     try:
         return _provision_and_issue_jwt(provider, identity)
+    except IdentityIssuerMismatchError as ex:
+        # a concurrent login through another IdP of the federation won the race for this identity
+        db.session.rollback()
+        return _identity_of_another_idp(provider, identity, ex)
     except Exception as ex:
         db.session.rollback()
         log_manager.store_auth_error_activity(f"Provisioning of '{identity.username}' via provider '{provider.name}' failed", ex)
