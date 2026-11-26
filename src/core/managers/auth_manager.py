@@ -412,7 +412,8 @@ def _mfa_gate(provider: AuthProvider | None, user: User, *, passkey_used: bool =
         "Two-factor authentication enrollment is required",
         "MFA_ENROLLMENT_REQUIRED",
         methods=enrollable,
-        enroll_token=make_scoped_token(user.username, "mfa_enroll"),
+        # as with the MFA step: the enrollment may only be finished with a factor it offered
+        enroll_token=make_scoped_token(user.username, "mfa_enroll", methods=enrollable),
     )
 
 
@@ -654,6 +655,8 @@ def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict,
     user = User.find(payload["sub"]) if payload else None
     if not user:
         return _mfa_session_expired()
+    if not _mfa_method_offered(payload, "totp"):
+        return _mfa_method_refused()
     if not code:
         return {"otpauth_uri": totp_manager.begin_enrollment(user.username)}, HTTPStatus.OK
     if not totp_manager.confirm_enrollment(user, code):
@@ -688,6 +691,10 @@ def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, cre
     user = User.find(payload["sub"]) if payload else None
     if not user:
         return _mfa_session_expired()
+    # After a passkey sign-in only TOTP is offered: registering another passkey (perhaps on the
+    # same authenticator) must not finish the step that passkey started.
+    if not _mfa_method_offered(payload, "passkey"):
+        return _mfa_method_refused()
 
     try:
         if not credential:

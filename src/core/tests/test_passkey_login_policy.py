@@ -235,3 +235,36 @@ def test_a_step_that_offered_only_passkeys_takes_no_totp_code(monkeypatch, login
     totp_response, totp_status = auth_manager.complete_mfa_totp(response["mfa_token"], "123456")
 
     assert (totp_status, totp_response["code"]) == (HTTPStatus.FORBIDDEN, "MFA_METHOD_NOT_OFFERED")
+
+
+def test_the_passkey_that_started_the_login_cannot_finish_its_enrollment_step(monkeypatch, login: SimpleNamespace) -> None:  # noqa: ANN001
+    """MFA is required and the user has nothing but passkeys: the step after a passkey sign-in offers TOTP only."""
+    login.site_requires_mfa = True
+    user = _user()
+    _assert_asserts(monkeypatch, user)
+    monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, username: user if username == "alice" else None))
+    monkeypatch.setattr(webauthn_manager, "begin_registration", lambda _user: pytest.fail("no passkey may be registered"))
+    monkeypatch.setattr(webauthn_manager, "finish_registration", lambda *_args: pytest.fail("no passkey may be registered"))
+
+    response, _status = _sign_in()
+    assert response["code"] == "MFA_ENROLLMENT_REQUIRED"
+    assert response["methods"] == ["totp"]
+
+    begin_response, begin_status = auth_manager.complete_passkey_enrollment(response["enroll_token"], None, None, "Key")
+    finish_response, finish_status = auth_manager.complete_passkey_enrollment(response["enroll_token"], "c", {"id": "new"}, "Key")
+
+    assert (begin_status, begin_response["code"]) == (HTTPStatus.FORBIDDEN, "MFA_METHOD_NOT_OFFERED")
+    assert (finish_status, finish_response["code"]) == (HTTPStatus.FORBIDDEN, "MFA_METHOD_NOT_OFFERED")
+
+
+def test_a_password_login_may_enroll_a_passkey_as_its_second_factor(monkeypatch, login: SimpleNamespace) -> None:  # noqa: ANN001
+    login.site_requires_mfa = True
+    user = _user(webauthn_credentials=[])
+    monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, username: user if username == "alice" else None))
+    monkeypatch.setattr(webauthn_manager, "begin_registration", lambda _user: {"challenge": "c"})
+
+    response, _status = auth_manager._mfa_gate(SimpleNamespace(require_mfa=True), user)
+    begin_response, begin_status = auth_manager.complete_passkey_enrollment(response["enroll_token"], None, None, "Key")
+
+    assert response["methods"] == ["totp", "passkey"]
+    assert (begin_status, begin_response) == (HTTPStatus.OK, {"challenge": "c"})
