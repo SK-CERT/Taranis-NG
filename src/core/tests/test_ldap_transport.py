@@ -73,8 +73,10 @@ class _FakeConnection:
     calls: list[str]
     starttls_result = True
 
-    def __init__(self, _server: object, *, user: str, password: str, read_only: bool) -> None:
+    def __init__(self, _server: object, *, user: str, password: str, read_only: bool, auto_referrals: bool) -> None:
         assert read_only is True
+        # a referral would carry the password to another host, outside our TLS settings
+        assert auto_referrals is False
         self.user = user
         self.password = password
         self.entries: list = []

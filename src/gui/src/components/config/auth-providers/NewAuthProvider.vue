@@ -871,7 +871,12 @@
                 'name_attr'
             ])
             ldapConfig.use_tls = !!source.use_tls
-            if (source.use_tls && source.ca_cert) {
+            // An ldaps:// URL is always TLS with a checked certificate, whatever the switch says.
+            const ldapsUrl = String(source.server_url ?? '')
+                .trim()
+                .toLowerCase()
+                .startsWith('ldaps://')
+            if ((source.use_tls || ldapsUrl) && source.ca_cert) {
                 ldapConfig.ca_cert = source.ca_cert
             }
             return ldapConfig

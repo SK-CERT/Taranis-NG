@@ -73,10 +73,13 @@ class LDAPAuthenticator(BaseAuthenticator):
     def _connection(self, server: Server, user: str, password: str) -> Connection:
         """An unbound connection, already upgraded with StartTLS when the transport asks for it.
 
+        Referrals are not followed: ldap3 would bind to whichever host a referral names with the
+        same DN and password, over whatever transport the referral URL says and without our CA.
+
         Raises:
             ConnectionError: When the server does not take StartTLS: nothing is sent in clear.
         """
-        conn = Connection(server, user=user, password=password, read_only=True)
+        conn = Connection(server, user=user, password=password, read_only=True, auto_referrals=False)
         if self._transport() == "starttls":
             conn.open()
             if not conn.start_tls():

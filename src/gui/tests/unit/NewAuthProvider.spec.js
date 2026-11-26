@@ -610,6 +610,23 @@ describe('NewAuthProvider dialog', () => {
         expect(config.server_url).toBe('ldaps://ldap.example.org')
     })
 
+    it('keeps the CA certificate of an ldaps:// URL with the TLS switch off', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: {
+                server_url: 'ldaps://ldap.example.org',
+                use_tls: false,
+                ca_cert: '-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----',
+                user_dn_template: 'uid={username},dc=x'
+            }
+        })
+
+        expect(wrapper.vm.buildConfig().ca_cert).toContain('BEGIN CERTIFICATE')
+    })
+
     it('does not send a hidden CA certificate when TLS is disabled', async () => {
         const wrapper = await mountDialog()
         await openEdit(wrapper, {
