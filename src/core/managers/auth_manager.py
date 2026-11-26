@@ -1119,10 +1119,13 @@ def get_user_from_jwt_token() -> User | None:
     """
     try:
         verify_jwt_in_request()
-    except JWTExtendedException as ex:
+    # PyJWT's own errors (an expired, malformed or foreign-signed token) are not flask-jwt-extended's
+    # and escaped auth_required as a 500. They answer a plain 401 now, as from jwt_token_required:
+    # not SESSION_INVALID, since an expired token is no sign of a session ended on the server.
+    except (JWTExtendedException, InvalidTokenError) as ex:
         if isinstance(ex, (UserClaimsVerificationError, RevokedTokenError)) and has_request_context():
             g.session_invalid = True
-        log_manager.store_auth_error_activity("Missing JWT", ex)
+        log_manager.store_auth_error_activity("Missing or malformed JWT", ex)
         return None
 
     # does it encode an identity?

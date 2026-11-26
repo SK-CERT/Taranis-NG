@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from http import HTTPStatus
 from types import SimpleNamespace
 
+import jwt
 import pytest
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, decode_token, jwt_required
+from flask_restful import Resource
 from managers import auth_manager
+from managers.api_manager import SafeErrorApi
 from model.security_settings import SecuritySettings
 from model.token_blacklist import TokenBlacklist
 
@@ -154,6 +158,42 @@ def test_malformed_jwt_is_returned_as_unauthorized(monkeypatch: pytest.MonkeyPat
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.get_json() == {"error": "authorization required"}
+
+
+@pytest.mark.parametrize("kind", ["expired", "garbage", "signed with another key"])
+def test_a_bad_token_on_an_auth_required_resource_is_unauthorized_not_a_server_error(
+    generation_app: tuple[Flask, dict[str, int], list[str]],
+    monkeypatch: pytest.MonkeyPatch,
+    kind: str,
+) -> None:
+    """PyJWT's errors escaped auth_required, and flask-restful answered them with a 500."""
+    app, generation, _issued = generation_app
+
+    class Thing(Resource):
+        @auth_manager.auth_required("ASSESS_ACCESS")
+        def get(self) -> dict:
+            return {"ok": True}
+
+    SafeErrorApi(app).add_resource(Thing, "/thing")
+    monkeypatch.setattr(auth_manager.log_manager, "store_auth_error_activity", lambda *_args, **_kwargs: None)
+    claims = {auth_manager.AUTH_GENERATION_CLAIM: generation["value"], **SESSION}
+    with app.app_context():
+        token = {
+            "expired": lambda: create_access_token(identity="alice", additional_claims=claims, expires_delta=timedelta(seconds=-10)),
+            "garbage": lambda: "garbage",
+            "signed with another key": lambda: jwt.encode(
+                {"sub": "alice", "type": "access", **claims},
+                "another-key-" * 4,
+                algorithm="HS256",
+            ),
+        }[kind]()
+
+    response = app.test_client().get("/thing", headers=_authorization(token))
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    # A plain refusal, as from every other auth_required check: no SESSION_INVALID for the GUI to
+    # end the session over - it watches its token's expiry itself.
+    assert response.get_json() == {"error": "not authorized"}
 
 
 def test_refresh_cannot_resurrect_a_stale_token(
