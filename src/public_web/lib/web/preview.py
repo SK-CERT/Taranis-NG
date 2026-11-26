@@ -208,7 +208,8 @@ def render_preview(payload: dict, cache: WebCache) -> dict:
     site = SiteContext(web, language, chosen=language != probe.default_language)
     g.site = site
 
-    data = cache.client.get_product(product_id, web_id, language)
+    ticket = payload.get("preview_ticket") if isinstance(payload.get("preview_ticket"), str) else None
+    data = cache.client.get_product(product_id, web_id, language, preview_ticket=ticket)
     if data is None:
         msg = f"Product {product_id} is not published to this web"
         raise PreviewError(msg, HTTPStatus.NOT_FOUND)

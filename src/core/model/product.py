@@ -543,6 +543,19 @@ class Product(db.Model):
         return {"total_count": count, "items": products_schema.dump(products)}
 
     @classmethod
+    def published_with_report_item(cls, report_item_id: int) -> bool:
+        """Whether a published product carries the report item (so public webs may show it)."""
+        published = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
+        if published is None:
+            return False
+        query = (
+            db.session.query(cls.id)
+            .join(ProductReportItem, ProductReportItem.product_id == cls.id)
+            .filter(ProductReportItem.report_item_id == report_item_id, cls.state_id == published.id)
+        )
+        return query.first() is not None
+
+    @classmethod
     def get_published(
         cls,
         limit: int,

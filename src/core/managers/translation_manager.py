@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from flask import current_app
-from managers import content_language, llm_manager
+from managers import content_language, llm_manager, public_web_manager
 from managers.cache_manager import redis_client
 from managers.db_manager import db
 from managers.sse_manager import sse_manager
@@ -365,6 +365,7 @@ def _run_job(app: Flask, report_item_id: int, languages: list[str], user_id: int
             user = User.find_by_id(user_id)
             if user is not None:
                 results = translate_report(report_item_id, languages, user, None, overwrite_manual)
+                public_web_manager.report_item_changed(report_item_id)
         except Exception as error:
             logger.exception(f"Translating report item {report_item_id} failed: {error}")
         finally:

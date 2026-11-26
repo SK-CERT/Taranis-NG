@@ -12,7 +12,7 @@ import pytest
 from api import public_web
 from flask import Flask
 
-NODE = types.SimpleNamespace(name="node", enabled=True, touch=lambda: None)
+NODE = types.SimpleNamespace(name="node", enabled=True, touch=lambda: None, webs=[types.SimpleNamespace(id=1)])
 
 
 @pytest.fixture
@@ -27,6 +27,8 @@ def listed(monkeypatch: pytest.MonkeyPatch):  # noqa: ANN201
 
     monkeypatch.setattr(public_web.Product, "get_published", classmethod(get_published))
     monkeypatch.setattr(public_web, "_serialize_product", lambda product, language: {"id": product.id, "language": language})
+    # Paging only: which products a web may have is test_public_web_tlp_gate.py's.
+    monkeypatch.setattr(public_web, "_shown_to_node", lambda *_args: True)
 
     def _listed(query: str) -> tuple[dict, dict]:
         with Flask(__name__).test_request_context(f"/api/v1/public-web/products{query}"):

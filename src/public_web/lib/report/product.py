@@ -159,12 +159,21 @@ def _build_item(data: dict) -> dict:
     }
 
 
-def _tlp(item: dict) -> str | None:
-    """The item's TLP as written, never as shown in a language."""
-    for attribute in item["attributes"]:
-        if (attribute["type"] == "TLP" or attribute["key"] == "tlp") and attribute["source_value"]:
-            return str(attribute["source_value"]).strip().upper()
-    return None
+def _tlps(item: dict) -> list[str]:
+    """Every TLP the item carries, as written, never as shown in a language.
+
+    All of them count: an item with a TLP:CLEAR field and a TLP:RED one is TLP:RED.
+    """
+    return [
+        str(attribute["source_value"]).strip().upper()
+        for attribute in item["attributes"]
+        if (attribute["type"] == "TLP" or attribute["key"] == "tlp") and attribute["source_value"]
+    ]
+
+
+def _tlp_rank(tlp: str) -> int:
+    """How restrictive a TLP is; a value that is not a TLP ranks above RED, so it is never public."""
+    return TLP_ORDER.get(tlp, len(TLP_ORDER))
 
 
 def build_product(data: dict, shown: Callable[[dict], bool] | None = None) -> dict:
@@ -198,7 +207,7 @@ def build_product(data: dict, shown: Callable[[dict], bool] | None = None) -> di
     hidden_links = [link for link in dict.fromkeys(link for item in left_out for link in _links(item)) if link not in cited]
 
     # Every item's TLP decides whether the product may be shown, those left out too.
-    tlps = [tlp for item in every_item if (tlp := _tlp(item))]
+    tlps = [tlp for item in every_item for tlp in _tlps(item)]
     scores = [score for item in items if (score := cvss_score(_first(item, "cvss"))) is not None]
     user = data.get("user") or {}
     preset = data.get("product_preset") or {}
@@ -217,7 +226,6 @@ def build_product(data: dict, shown: Callable[[dict], bool] | None = None) -> di
         # The day it was published, as the page shows it.
         "published": _published(data.get("published") or data.get("created")),
         "author": user.get("name"),
-        "author_username": user.get("username"),
         # What the product is published as; its report template is the product preset's.
         "product_preset": {"id": preset.get("id"), "title": preset.get("title") or ""},
         # The language it is shown in; None when core knows none (or was asked for none).
@@ -234,7 +242,7 @@ def build_product(data: dict, shown: Callable[[dict], bool] | None = None) -> di
         # How many report items were left out for want of a template, and the links only they cite.
         "items_left_out": len(left_out),
         "hidden_links": hidden_links,
-        "max_tlp": max(tlps, key=lambda tlp: TLP_ORDER.get(tlp, 1)) if tlps else None,
+        "max_tlp": max(tlps, key=_tlp_rank) if tlps else None,
         "max_cvss": max(scores) if scores else None,
         # What the product is, whichever of its items are shown.
         "is_vulnerability": any(item["type"].startswith(VULNERABILITY_TYPE_PREFIX) for item in every_item),
@@ -304,8 +312,8 @@ def visible_links(product: dict, selected_items: list[int] | None) -> list[str |
     return [link if link in shown else None for link in links]
 
 
-def _keyword_texts(product: dict) -> list[str]:
-    """What a search looks through, lowercased."""
+def _keyword_texts(product: dict, page_text: str) -> list[str]:
+    """What a search looks through, lowercased: the product's own fields and its page's text."""
     texts: list[object] = [
         product["title"],
         product["description"],
@@ -315,25 +323,35 @@ def _keyword_texts(product: dict) -> list[str]:
         product["published"],
         product["max_cvss"],
         get_cvss_severity(product["max_cvss"]),
+        page_text,
     ]
-    for item in product["report_items"]:
-        texts.append(item["name"])
-        for attribute in item["attributes"]:
-            texts.append(attribute["value"])
-            if attribute["key"].startswith("cwe") and attribute["value"]:
-                texts.append(f"CWE-{attribute['value']}")
     return [str(text).lower() for text in texts if text is not None]
 
 
-def matches_keyword(product: dict, keyword: str) -> bool:
-    """Whether the keyword occurs anywhere a reader would look for it.
+def matches_keyword(product: dict, keyword: str, page_text: Callable[[dict], str]) -> bool:
+    """Whether the keyword occurs anywhere a reader would look for it - on the page, never beyond.
+
+    The report items are searched as their template shows them (``page_text``), not through
+    their raw attribute values: those include what the template leaves out.
 
     The texts are gathered once per product and kept with it: a search goes through every
     published product.
+
+    Args:
+        product (dict): As built by :func:`build_product`.
+        keyword (str): What the visitor searches for.
+        page_text (Callable): The text of the product's page (``ReportRenderer.page_text``).
+
+    Returns:
+        bool: Whether the product matches.
     """
     texts = product.get("_keyword_texts")
     if texts is None:
-        texts = product["_keyword_texts"] = _keyword_texts(product)
+        try:
+            shown = page_text(product)
+        except Exception:  # a broken template must not take the search down; the page logs it
+            shown = ""
+        texts = product["_keyword_texts"] = _keyword_texts(product, shown)
     needle = keyword.lower().strip()
     return any(needle in text for text in texts)
 

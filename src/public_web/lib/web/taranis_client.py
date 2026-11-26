@@ -104,8 +104,17 @@ class TaranisClient:
         items = body.get("items", [])
         return items, int(body.get("total_count", len(items)))
 
-    def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict[str, object] | None:
+    def get_product(
+        self,
+        product_id: int,
+        web_id: int | None = None,
+        language: str | None = None,
+        preview_ticket: str | None = None,
+    ) -> dict[str, object] | None:
         """Return one published product (with report items and attributes).
+
+        ``preview_ticket`` is the pass core sent with a template preview: with it, core serves the
+        product even when its TLP keeps it off the web.
 
         With ``language``, core shows the product in it as far as it is translated (then English,
         then as written) and says which language that is (``language``) and which the product can
@@ -119,6 +128,8 @@ class TaranisClient:
             params["web_id"] = web_id
         if language:
             params["lang"] = language
+        if preview_ticket:
+            params["preview_ticket"] = preview_ticket
         resp = self._get(f"/api/v1/public-web/products/{product_id}", params=params or None)
         if resp.status_code == HTTP_NOT_FOUND:
             logger.info("Skipping product %s: not found or not published.", product_id)

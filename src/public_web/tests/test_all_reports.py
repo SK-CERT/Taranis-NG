@@ -62,9 +62,9 @@ class _Core:
     def list_published_product_ids(self, limit: int, web_id: int | None = None) -> list[int]:  # noqa: ARG002
         return [product["id"] for product in self.products[:limit]]
 
-    def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict:  # noqa: ARG002
+    def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict | None:  # noqa: ARG002
         self.one_by_one.append(product_id)
-        return next(product for product in self.products if product["id"] == product_id)
+        return next((product for product in self.products if product["id"] == product_id), None)
 
     def get_report_templates(self) -> dict[str, list]:
         """No custom report templates: the products are vulnerability reports, shown with the built-in ones."""
@@ -109,6 +109,34 @@ def test_every_published_product_is_shown_newest_first() -> None:
     assert core.one_by_one == []
 
 
+def test_a_product_core_withholds_keeps_its_place_in_the_paging() -> None:
+    # Core lists a product the web may not show (its TLP) as its id only, so that the next
+    # page's offset stays right; the node skips it rather than falling back to one by one.
+    core = _Core(250)
+    core.products[0] = {"id": core.products[0]["id"], "withheld": True, "report_items": []}
+    core.products[150] = {"id": core.products[150]["id"], "withheld": True, "report_items": []}
+
+    reports = web_cache.WebCache(core).get_all_reports(1, "en")
+
+    assert _ids(reports) == [product_id for product_id in range(250, 0, -1) if product_id not in (250, 100)]
+    assert core.pages == [(0, 100), (100, 100), (200, 100)]
+    assert core.one_by_one == []
+
+
+def test_a_web_whose_last_products_were_unpublished_shows_none() -> None:
+    # An empty reload used to keep the old list, which never expires, so the products stayed
+    # on the site whenever core's reset push did not reach the node.
+    core = _Core(2)
+    cache = web_cache.WebCache(core)
+    assert _ids(cache.get_all_reports(1, "en")) == [2, 1]
+
+    core.products = []
+    cache._load_reports(1, "en", again=True)
+
+    assert cache.get_all_reports(1, "en") == []
+    assert cache.get_report("2", 1, "en") is None
+
+
 def test_the_rss_feed_has_every_published_product(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PUBLIC_WEB_API_KEY", "test-key")
     from lib.web import routes  # noqa: PLC0415 - its cache is made on import, with the key set above
@@ -150,6 +178,24 @@ def test_reports_are_loaded_once_and_then_read_from_the_cache() -> None:
     assert _ids(cache.get_all_reports(1, "en")) == [3, 2, 1]
     assert cache.get_report("2", 1, "en")["title"] == "Bulletin 2"
     assert len(core.pages) == 1
+
+
+def test_reports_loaded_without_the_report_templates_are_not_kept(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without the custom templates some products are dropped: the next request loads again."""
+    core = _Core(3)
+    cache = web_cache.WebCache(core)
+    monkeypatch.setattr(web_cache.logger, "exception", lambda *_args: None)
+
+    def unavailable() -> dict:
+        msg = "core is restarting"
+        raise web_cache.TaranisClientError(msg)
+
+    monkeypatch.setattr(core, "get_report_templates", unavailable)
+    cache.get_all_reports(1, "en")
+    monkeypatch.undo()
+
+    assert _ids(cache.get_all_reports(1, "en")) == [3, 2, 1]
+    assert len(core.pages) == 2
 
 
 def test_out_of_date_reports_are_shown_while_they_load_again(monkeypatch: pytest.MonkeyPatch) -> None:

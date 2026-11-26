@@ -8,7 +8,7 @@ from flask import jsonify, request, send_file
 from flask_restful import Api, Resource
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
-from managers import asset_manager, auth_manager, llm_manager, tlp, translation_manager
+from managers import asset_manager, auth_manager, llm_manager, public_web_manager, tlp, translation_manager
 from managers.auth_manager import ACLCheck, auth_required
 from managers.db_manager import db
 from managers.log_manager import logger
@@ -138,6 +138,7 @@ class ReportItemResource(Resource):
         if modified is True:
             updated_report_item = ReportItem.find(report_item_id)
             asset_manager.report_item_changed(updated_report_item)
+            public_web_manager.report_item_changed(report_item_id)
             sse_manager.report_item_updated(data)
             sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
 
@@ -153,6 +154,8 @@ class ReportItemResource(Resource):
             result (bool): True if the report item was deleted successfully
             code (int): status code
         """
+        # Asked while a product still carries it; the gathered reset goes out after the deletion.
+        public_web_manager.report_item_changed(report_item_id)
         result, code = ReportItem.delete_report_item(report_item_id)
         if code == HTTPStatus.OK:
             sse_manager.report_items_updated()
@@ -302,6 +305,7 @@ class ReportItemAddAttachment(Resource):
             data = ReportItem.add_attachment(report_item_id, attribute_group_item_id, user, file, description)
             updated_report_item = ReportItem.find(report_item_id)
             asset_manager.report_item_changed(updated_report_item)
+            public_web_manager.report_item_changed(report_item_id)
             sse_manager.report_item_updated(data)
             sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
 
@@ -326,6 +330,7 @@ class ReportItemRemoveAttachment(Resource):
         data = ReportItem.remove_attachment(report_item_id, attribute_id, user)
         updated_report_item = ReportItem.find(report_item_id)
         asset_manager.report_item_changed(updated_report_item)
+        public_web_manager.report_item_changed(report_item_id)
         sse_manager.report_item_updated(data)
         sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
 
@@ -344,6 +349,7 @@ class ReportItemRemoveAttachment(Resource):
 
         updated_report_item = ReportItem.find(report_item_id)
         asset_manager.report_item_changed(updated_report_item)
+        public_web_manager.report_item_changed(report_item_id)
         sse_manager.report_item_updated(data)
         sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
         return data
@@ -426,6 +432,7 @@ class ReportItemTags(Resource):
             db.session.rollback()
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         sse_manager.report_item_updated({"report_item_id": report_item_id, "user_id": user.id, "tags": tag_ids})
+        public_web_manager.report_item_changed(report_item_id)
         sse_manager.report_items_updated()
         return {"tags": tag_ids}, HTTPStatus.OK
 
@@ -461,6 +468,7 @@ class ReportItemTranslationReview(Resource):
                 {"report_item_id": report_item_id, "translated": True, "languages": [language], "user_id": user.id},
             )
             sse_manager.report_items_updated()
+            public_web_manager.report_item_changed(report_item_id)
         translations = ReportItem.find(report_item_id).translations_json()
         return {"reviewed": reviewed, "skipped_locked": skipped_locked, "translations": translations}, HTTPStatus.OK
 
@@ -508,6 +516,7 @@ class ReportItemTranslate(Resource):
             sse_manager.report_item_updated(
                 {"report_item_id": report_item_id, "translated": True, "languages": languages, "user_id": user.id},
             )
+            public_web_manager.report_item_changed(report_item_id)
             return {"results": [result.to_dict()], "translations": ReportItem.find(report_item_id).translations_json()}, HTTPStatus.OK
 
         if not translation_manager.start_job(report_item_id, languages, user, overwrite_manual):

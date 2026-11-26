@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import time
 import types
 from http import HTTPStatus
 from typing import TYPE_CHECKING
@@ -185,6 +188,114 @@ def test_the_page_comes_back_as_a_url_of_its_own(world: types.SimpleNamespace) -
     assert body["page_url"].startswith(prefix)
     assert template_preview.take_page(body["page_url"].removeprefix(prefix)) == "<html></html>"
     assert set(world.redis.ttl.values()) == {template_preview.PAGE_TTL_SECONDS}
+
+
+def test_the_node_gets_a_pass_for_the_previewed_product_only(world: types.SimpleNamespace) -> None:
+    # Core withholds a product the web may not show (its TLP) from the node; a preview may
+    # still render it, and the dialog warns. The pass covers this product on this web only.
+    template_preview.preview({"template": {"product_preset_id": 5, "source": SOURCE}})
+
+    (sent,) = world.sent
+    ticket = sent["preview_ticket"]
+    assert template_preview.product_pass_valid(ticket, sent["product_id"], sent["web_id"]) is True
+    assert template_preview.product_pass_valid(ticket, sent["product_id"] + 1, sent["web_id"]) is False
+    assert template_preview.product_pass_valid(ticket, sent["product_id"], sent["web_id"] + 1) is False
+    assert template_preview.product_pass_valid(ticket, sent["product_id"], None) is False
+    # Signed, not stored: Redis has no password, and a node could have stored a pass itself.
+    assert not any(key.startswith("template-preview-product:") for key in world.redis.values)
+
+
+class _NoRedis:
+    def __getattr__(self, name: str) -> None:
+        pytest.fail(f"a product pass must not use Redis ({name})")
+
+
+@pytest.fixture
+def no_redis(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(template_preview, "redis_client", _NoRedis())
+
+
+@pytest.fixture
+def clock(monkeypatch: pytest.MonkeyPatch) -> types.SimpleNamespace:
+    now = types.SimpleNamespace(value=1_800_000_000.0)
+    monkeypatch.setattr(template_preview, "time", types.SimpleNamespace(time=lambda: now.value))
+    return now
+
+
+def test_a_pass_a_node_writes_into_redis_itself_is_no_pass(redis: _FakeRedis) -> None:
+    # Redis has no password, and on a single host the internet-facing node can reach it.
+    redis.set("template-preview-product:made-by-the-node", "42:2", ex=120)
+    assert template_preview.product_pass_valid("made-by-the-node", 42, 2) is False
+
+
+@pytest.mark.usefixtures("no_redis")
+def test_a_pass_covers_its_product_on_its_web() -> None:
+    ticket = template_preview.issue_product_pass(42, 2)
+
+    assert template_preview.product_pass_valid(ticket, 42, 2) is True
+    assert template_preview.product_pass_valid(ticket, 41, 2) is False
+    assert template_preview.product_pass_valid(ticket, 42, 3) is False
+    assert template_preview.product_pass_valid(template_preview.issue_product_pass(41, 2), 42, 2) is False
+
+
+@pytest.mark.usefixtures("no_redis")
+def test_a_pass_ends_after_two_minutes(clock: types.SimpleNamespace) -> None:
+    ticket = template_preview.issue_product_pass(42, 2)
+
+    clock.value += template_preview.PRODUCT_PASS_SECONDS
+    assert template_preview.product_pass_valid(ticket, 42, 2) is True
+    clock.value += 1
+    assert template_preview.product_pass_valid(ticket, 42, 2) is False
+
+
+@pytest.mark.usefixtures("no_redis")
+def test_an_altered_pass_is_refused(clock: types.SimpleNamespace) -> None:
+    expires, signature = template_preview.issue_product_pass(42, 2).split(".")
+    flipped = signature[:-1] + ("0" if signature[-1] != "0" else "1")
+
+    assert template_preview.product_pass_valid(f"{expires}.{flipped}", 42, 2) is False
+    # The signature of an ending pass does not carry a later end.
+    assert template_preview.product_pass_valid(f"{int(expires) + 3600}.{signature}", 42, 2) is False
+    clock.value += template_preview.PRODUCT_PASS_SECONDS + 1
+    assert template_preview.product_pass_valid(f"{expires}.{signature}", 42, 2) is False
+
+
+@pytest.mark.usefixtures("no_redis")
+def test_only_core_s_own_secret_makes_a_pass(monkeypatch: pytest.MonkeyPatch) -> None:
+    ticket = template_preview.issue_product_pass(42, 2)
+    monkeypatch.setattr(template_preview, "Config", types.SimpleNamespace(JWT_SECRET_KEY="another core's secret"))
+    assert template_preview.product_pass_valid(ticket, 42, 2) is False
+
+    # Signed with the JWT secret as it is, rather than with the key derived from it, neither.
+    expires = int(time.time()) + 60
+    raw = hmac.new(b"another core's secret", f"42:2:{expires}".encode(), hashlib.sha256).hexdigest()
+    assert template_preview.product_pass_valid(f"{expires}.{raw}", 42, 2) is False
+    assert template_preview.product_pass_valid(template_preview.issue_product_pass(42, 2), 42, 2) is True
+
+
+@pytest.mark.usefixtures("no_redis")
+@pytest.mark.parametrize(
+    "ticket",
+    [
+        None,
+        "",
+        "forged",
+        ".",
+        "1.",
+        ".00",
+        "abc.def",
+        "-1.00",
+        "1e10.00",
+        "99999999999.00",
+        "\u0663\u0663\u0663.00",
+        "\udcff",
+        "9" * 200,
+        42,
+        b"1.00",
+    ],
+)
+def test_anything_else_is_no_pass(ticket: object) -> None:
+    assert template_preview.product_pass_valid(ticket, 42, 2) is False  # type: ignore[arg-type]
 
 
 def test_a_page_has_a_few_views_then_it_is_gone(redis: _FakeRedis) -> None:

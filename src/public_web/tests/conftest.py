@@ -86,7 +86,13 @@ class FakeTaranisClient:
         """Ids of the products, newest first."""
         return [product["id"] for product in self._newest_first()[:limit]]
 
-    def get_product(self, product_id: int, web_id: int | None = None, language: str | None = None) -> dict | None:  # noqa: ARG002
+    def get_product(
+        self,
+        product_id: int,
+        web_id: int | None = None,  # noqa: ARG002
+        language: str | None = None,  # noqa: ARG002
+        preview_ticket: str | None = None,  # noqa: ARG002
+    ) -> dict | None:
         """One product, or None when it does not exist; the fixtures have no translations."""
         product = self.products.get(product_id)
         return copy.deepcopy(product) if product is not None else None
