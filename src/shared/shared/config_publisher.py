@@ -16,6 +16,15 @@ class ConfigPublisher(ConfigBase):
         mod.parameters = [
             ParamType("SMTP_SERVER", "SMTP server", "SMTP server for sending emails", ParameterType.STRING),
             ParamType("SMTP_SERVER_PORT", "SMTP server port", "SMTP server port for sending emails", ParameterType.STRING, "587"),
+            ParamType(
+                "SMTP_SECURITY",
+                "SMTP security",
+                "auto | starttls | tls | none. auto: TLS on port 465, STARTTLS on 587 and whenever a username is set "
+                "(credentials never go out in the clear), plain only for an unauthenticated relay on another port. "
+                "none sends everything, credentials included, unencrypted.",
+                ParameterType.STRING,
+                "auto",
+            ),
             ParamType("EMAIL_USERNAME", "Email username", "Username for email account", ParameterType.STRING),
             ParamType("EMAIL_PASSWORD", "Email password", "Password for email account", ParameterType.STRING),
             ParamType("EMAIL_SENDER", "Email sender", "Email address of the sender", ParameterType.STRING),
@@ -36,6 +45,13 @@ class ConfigPublisher(ConfigBase):
         mod.parameters = [
             ParamType("MISP_URL", "MISP url", "MISP server https url", ParameterType.STRING),
             ParamType("MISP_API_KEY", "MISP API key", "User MISP API key", ParameterType.STRING),
+            ParamType(
+                "MISP_CA_BUNDLE",
+                "CA bundle",
+                "OPTIONAL: Path, on the publishers node, to the PEM CA certificate(s) that issued the MISP server's certificate, "
+                "when it is not signed by a public CA. The certificate is always checked.",
+                ParameterType.STRING,
+            ),
         ]
         self.modules.append(mod)
 

@@ -4,7 +4,6 @@ import json
 from base64 import b64decode
 from http import HTTPStatus
 
-import urllib3
 from pymisp import MISPEvent, PyMISP
 from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
@@ -43,16 +42,16 @@ class MISPPublisher(BasePublisher):
         try:
             misp_url = publisher_input.param_key_values["MISP_URL"]
             misp_key = publisher_input.param_key_values["MISP_API_KEY"]
-            misp_verifycert = False
+            # The server's certificate is always checked: the API key travels with every
+            # request, and so does the event. A MISP with a private CA names its bundle.
+            ca_bundle = (publisher_input.param_key_values.get("MISP_CA_BUNDLE") or "").strip()
 
             data = publisher_input.data[:]
             bytes_data = b64decode(data, validate=True)
 
             event_json = json.loads(bytes_data)
 
-            urllib3.disable_warnings()
-
-            misp = PyMISP(misp_url, misp_key, misp_verifycert)
+            misp = PyMISP(misp_url, misp_key, ca_bundle or True)
 
             event = MISPEvent()
             event.load(event_json)

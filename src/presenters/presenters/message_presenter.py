@@ -50,9 +50,10 @@ class MESSAGEPresenter(BasePresenter):
         # sniff the body, and content-sniffing misreads plain text that merely contains a "<p"-like
         # placeholder (e.g. "port <port_numbers>") as HTML, collapsing every newline in the client.
         body_suffix = Path(message_body_template_path).suffix.lower()
+        html_body = body_suffix in (".html", ".htm")
         presenter_output = {
             "mime_type": "text/plain",
-            "message_body_mime_type": "text/html" if body_suffix in (".html", ".htm") else "text/plain",
+            "message_body_mime_type": "text/html" if html_body else "text/plain",
             "message_title": None,
             "message_body": None,
             "data": None,
@@ -70,7 +71,10 @@ class MESSAGEPresenter(BasePresenter):
             rendering = f"title template '{message_title_template_path}'"
             presenter_output["message_title"] = BasePresenter.render_jinja(input_data, message_title_template_path)
             rendering = f"body template '{message_body_template_path}'"
-            presenter_output["message_body"] = BasePresenter.render_jinja(input_data, message_body_template_path)
+            # An HTML body is rendered the way the HTML presenter renders it: autoescaped. Without
+            # that, markup in a report value (links, images, styles) reached the mail as markup,
+            # sent under the organisation's name and inside its signature.
+            presenter_output["message_body"] = BasePresenter.render_jinja(input_data, message_body_template_path, escape_html=html_body)
             if headers_template_path:
                 rendering = f"headers template '{headers_template_path}'"
                 # render_jinja base64-encodes every render, so decode our own output back to the

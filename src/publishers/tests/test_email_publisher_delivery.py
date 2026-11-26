@@ -29,8 +29,8 @@ from smtplib import SMTPHeloError, SMTPServerDisconnected
 from typing import TYPE_CHECKING, ClassVar
 
 import pytest
-from envelope import smtp_handler
-from publishers.email_publisher import EMAILPublisher
+from envelope import Envelope, smtp_handler
+from publishers.email_publisher import EMAILPublisher, smtp_security
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -241,6 +241,76 @@ def test_a_channel_without_credentials_does_not_authenticate(
     assert not smtp_server.starttls_used
 
 
+def test_credentials_never_go_out_unencrypted_on_another_port(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+) -> None:
+    """By itself envelope sends the login in the clear on any port but 587 and 465."""
+    publication = publish(SMTP_SERVER_PORT="25", EMAIL_USERNAME="taranis", EMAIL_PASSWORD="hunter2")
+
+    assert publication.status == HTTPStatus.OK
+    assert smtp_server.starttls_used
+    assert smtp_server.credentials == ("taranis", "hunter2")
+
+
+def test_a_channel_can_ask_for_an_unencrypted_session_explicitly(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+) -> None:
+    publication = publish(SMTP_SERVER_PORT="25", SMTP_SECURITY="none", EMAIL_USERNAME="taranis", EMAIL_PASSWORD="hunter2")
+
+    assert publication.status == HTTPStatus.OK
+    assert not smtp_server.starttls_used
+
+
+def test_port_465_and_explicit_tls_use_an_encrypted_socket(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    opened: list[tuple] = []
+
+    class RecordingSMTPS(smtp_server):
+        def __init__(self, host: str = "", port: int = 0, *args: object, **kwargs: object) -> None:
+            opened.append((host, port))
+            super().__init__(host, port, *args, **kwargs)
+
+    monkeypatch.setattr(smtp_handler, "SMTP_SSL", RecordingSMTPS)
+
+    assert publish(SMTP_SERVER_PORT="465").status == HTTPStatus.OK
+    smtp_handler.SMTPHandler._instances.clear()
+    assert publish(SMTP_SERVER_PORT="2465", SMTP_SECURITY="TLS").status == HTTPStatus.OK
+
+    assert opened == [("smtp.example.org", 465), ("smtp.example.org", 2465)]
+
+
+def test_an_unknown_security_mode_sends_nothing(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+) -> None:
+    publication = publish(SMTP_SECURITY="ssl3")
+
+    assert publication.status == HTTPStatus.BAD_REQUEST
+    assert "SMTP_SECURITY" in publication.response["error"]
+    assert smtp_server.connections == 0
+
+
+@pytest.mark.parametrize(
+    ("mode", "port", "authenticates", "expected"),
+    [
+        (None, "587", False, "starttls"),
+        ("", "465", True, "tls"),
+        ("auto", "25", False, False),
+        ("auto", "25", True, "starttls"),
+        ("auto", "not-a-port", True, "starttls"),
+        ("starttls", "25", False, "starttls"),
+        (" None ", "587", True, False),
+    ],
+)
+def test_smtp_security_decision(mode: str | None, port: str, *, authenticates: bool, expected: str | bool) -> None:
+    assert smtp_security(mode, port, authenticates=authenticates) == expected
+
+
 def test_a_successful_send_closes_the_session(
     publish: Callable[..., Publication],
     smtp_server: type[RecordingSMTP],
@@ -423,6 +493,52 @@ def test_a_notification_template_keeps_its_plain_text_subject(publish: Callable[
     assert publication.status == HTTPStatus.OK
     assert publication.message["Subject"] == "Vulnerability found in your asset"
     assert body_of(publication.message) == "A report item was completed for one of your assets."
+
+
+@pytest.mark.parametrize(
+    ("title", "subject"),
+    [
+        # A title template printing a Rich Text value of two paragraphs.
+        ("Patch now\n\nVendor advisory", "Patch now Vendor advisory"),
+        # U+2028 is a line break to the header folder, and pastes in from word processors.
+        ("Patch now\u2028Vendor advisory", "Patch now Vendor advisory"),
+        ("Patch\r\nnow\tplease", "Patch now please"),
+    ],
+)
+def test_a_title_with_line_breaks_is_sent_as_one_subject_line(publish: Callable[..., Publication], title: str, subject: str) -> None:
+    """The standard library refused the whole message, and the error escaped publish() as a bare 500."""
+    publication = publish(message_title=encoded(title))
+
+    assert publication.status == HTTPStatus.OK, publication.response
+    assert publication.message["Subject"] == subject
+
+
+def test_an_attachment_name_with_a_line_break_is_one_line(publish: Callable[..., Publication]) -> None:
+    """The file name template can print report data too, and it ends up in a header."""
+    publication = publish(att_file_name=encoded("Weekly\nreport"))
+
+    assert publication.status == HTTPStatus.OK, publication.response
+    assert only_attachment(publication.message).get_filename() == "Weekly report.json"
+
+
+@pytest.mark.parametrize("step", ["__str__", "smtp"])
+def test_a_message_that_cannot_be_composed_is_reported_not_raised(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+    monkeypatch: pytest.MonkeyPatch,
+    step: str,
+) -> None:
+    def refuse(*_args: object, **_kwargs: object) -> None:
+        msg = "Header values may not contain linefeed or carriage return characters"
+        raise ValueError(msg)
+
+    monkeypatch.setattr(Envelope, step, refuse)
+
+    publication = publish()
+
+    assert publication.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert publication.response == {"error": "Header values may not contain linefeed or carriage return characters"}
+    assert smtp_server.sent == []
 
 
 def test_a_plain_word_that_looks_like_base64_is_left_alone(publish: Callable[..., Publication]) -> None:

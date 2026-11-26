@@ -239,3 +239,66 @@ def test_an_unreadable_key_explains_the_unprivileged_user(
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "Permission denied" in body["error"]
     assert f"chown {os.getuid()}" in body["error"]
+
+
+class PinnedHostSSHClient:
+    """Keeps host keys in a real paramiko store and checks them the way paramiko's client does."""
+
+    last: PinnedHostSSHClient | None = None
+
+    def __init__(self) -> None:
+        """Start with an empty, real host key store."""
+        self.host_keys = paramiko.HostKeys()
+        self.sftp = FakeSFTP()
+        PinnedHostSSHClient.last = self
+
+    def set_missing_host_key_policy(self, policy: object) -> None:
+        """Accept whatever policy the publisher installs."""
+
+    def get_host_keys(self) -> paramiko.HostKeys:
+        """Return the real store the publisher pins its key in."""
+        return self.host_keys
+
+    def connect(self, **kwargs: object) -> None:
+        """Look the pinned key up under the name paramiko derives from the port, and fail like it."""
+        hostname, port = kwargs["hostname"], kwargs["port"]
+        name = hostname if port == paramiko.config.SSH_PORT else f"[{hostname}]:{port}"
+        if self.host_keys.lookup(name) is None:
+            msg = f"Server {name!r} not found in known_hosts"
+            raise paramiko.SSHException(msg)
+
+    def open_sftp(self) -> FakeSFTP:
+        """Return the recording channel."""
+        return self.sftp
+
+    def close(self) -> None:
+        """Close the connection."""
+
+
+@pytest.mark.parametrize(
+    ("port", "name"),
+    [("22", "sftp.example.org"), (" 22 ", "sftp.example.org"), ("", "sftp.example.org"), ("2222", "[sftp.example.org]:2222")],
+)
+def test_a_pinned_host_key_is_found_whatever_way_the_port_was_typed(
+    sftp_channel: Callable[..., object],
+    monkeypatch: pytest.MonkeyPatch,
+    port: str,
+    name: str,
+) -> None:
+    host_key = paramiko.RSAKey.generate(2048)
+    monkeypatch.setattr(paramiko, "SSHClient", PinnedHostSSHClient)
+
+    response, status = SFTPPublisher().publish(
+        sftp_channel(PORT=port, PASSWORD="secret", HOST_KEY=f"{host_key.get_name()} {host_key.get_base64()}"),
+    )
+
+    assert status == HTTPStatus.OK, response
+    assert PinnedHostSSHClient.last.get_host_keys().lookup(name) is not None
+
+
+def test_a_port_that_is_not_a_number_fails_before_connecting(sftp_channel: Callable[..., object], ssh_client: type[FakeSSHClient]) -> None:
+    response, status = SFTPPublisher().publish(sftp_channel(PORT="ssh", PASSWORD="secret"))
+
+    assert status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert "ssh" in response["error"]
+    assert ssh_client.last is None
