@@ -65,13 +65,16 @@ def test_refresh_keeps_access_token_response_shape(monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(
         auth_manager,
         "refresh",
-        lambda refreshed_user, auth_time: ({"access_token": f"refreshed-token-for-{refreshed_user.username}-{auth_time}"}, HTTPStatus.OK),
+        lambda refreshed_user, auth_time, session_id: (
+            {"access_token": f"refreshed-token-for-{refreshed_user.username}-{auth_time}-{session_id}"},
+            HTTPStatus.OK,
+        ),
     )
-    monkeypatch.setattr(auth, "get_jwt", lambda: {"auth_time": 1700000000})
+    monkeypatch.setattr(auth, "get_jwt", lambda: {"auth_time": 1700000000, "sid": "session-1"})
 
     response = auth.Refresh.get.__wrapped__(auth.Refresh())
 
-    assert response == ({"access_token": "refreshed-token-for-alice-1700000000"}, HTTPStatus.OK)
+    assert response == ({"access_token": "refreshed-token-for-alice-1700000000-session-1"}, HTTPStatus.OK)
 
 
 def test_issued_access_token_keeps_user_claims(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -100,6 +103,9 @@ def test_issued_access_token_keeps_user_claims(monkeypatch: pytest.MonkeyPatch) 
     response = BaseAuthenticator.generate_jwt(user)
 
     assert response == ({"access_token": "encoded-jwt"}, HTTPStatus.OK)
+    session_id = captured["additional_claims"].pop("sid")  # a new sign-in: a new, random session id
+    assert isinstance(session_id, str)
+    assert len(session_id) == 32
     assert captured == {
         "identity": "alice",
         "additional_claims": {

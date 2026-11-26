@@ -24,6 +24,7 @@ from model import security_settings
 from model.security_settings import SecuritySettings
 
 NOW = 1_800_000_000
+SESSION_ID = "session-1"
 HOUR = 3600
 MIGRATION = Path(__file__).resolve().parents[1] / "migrations" / "versions" / "b3e8d1f5a2c7_session_max_hours.py"
 
@@ -79,7 +80,7 @@ def test_a_sign_in_records_its_time(issued: list[dict], alice: SimpleNamespace) 
 def test_a_refresh_keeps_the_sign_in_time_and_never_outlives_the_session(issued: list[dict], alice: SimpleNamespace) -> None:
     signed_in = NOW - 22 * HOUR
 
-    assert auth_manager.refresh(alice, signed_in)[1] == HTTPStatus.OK
+    assert auth_manager.refresh(alice, signed_in, SESSION_ID)[1] == HTTPStatus.OK
 
     assert issued[0]["auth_time"] == signed_in
     assert issued[0]["expires_delta"] == timedelta(hours=2)
@@ -88,7 +89,7 @@ def test_a_refresh_keeps_the_sign_in_time_and_never_outlives_the_session(issued:
 @pytest.mark.usefixtures("app")
 @pytest.mark.parametrize("signed_in", [NOW - 24 * HOUR + 599, NOW - 30 * HOUR])
 def test_a_refresh_at_the_end_of_the_session_is_refused(issued: list[dict], alice: SimpleNamespace, signed_in: int) -> None:
-    body, status = auth_manager.refresh(alice, signed_in)
+    body, status = auth_manager.refresh(alice, signed_in, SESSION_ID)
 
     assert status == HTTPStatus.UNAUTHORIZED
     assert body["code"] == "SESSION_EXPIRED"
@@ -97,7 +98,7 @@ def test_a_refresh_at_the_end_of_the_session_is_refused(issued: list[dict], alic
 
 @pytest.mark.parametrize("auth_time", [None, "1800000000", True, 1.5])
 def test_a_token_without_a_sign_in_time_is_not_refreshed(issued: list[dict], alice: SimpleNamespace, auth_time: object) -> None:
-    assert auth_manager.refresh(alice, auth_time)[1] == HTTPStatus.UNAUTHORIZED
+    assert auth_manager.refresh(alice, auth_time, SESSION_ID)[1] == HTTPStatus.UNAUTHORIZED
     assert issued == []
 
 
@@ -105,7 +106,7 @@ def test_a_token_without_a_sign_in_time_is_not_refreshed(issued: list[dict], ali
 def test_zero_hours_means_no_limit(issued: list[dict], alice: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(SecuritySettings, "get_session_max_hours", classmethod(lambda _cls: 0))
 
-    assert auth_manager.refresh(alice, NOW - 1000 * HOUR)[1] == HTTPStatus.OK
+    assert auth_manager.refresh(alice, NOW - 1000 * HOUR, SESSION_ID)[1] == HTTPStatus.OK
     assert issued[0]["expires_delta"] is None
 
 

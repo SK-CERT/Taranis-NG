@@ -12,13 +12,16 @@ from managers import auth_manager
 from model.security_settings import SecuritySettings
 from model.token_blacklist import TokenBlacklist
 
+# The session id is test_session_logout.py's; these tokens only need one to be session tokens.
+SESSION = {"sid": "session-1"}
+
 
 @pytest.fixture
 def generation_app(monkeypatch: pytest.MonkeyPatch) -> tuple[Flask, dict[str, int], list[str]]:
     generation = {"value": 2}
     issued_on_refresh: list[str] = []
     monkeypatch.setattr(SecuritySettings, "get_auth_generation", lambda: generation["value"])
-    monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, _jti: False))
+    monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, _jti, _session_id=None: False))
     # The credential claim is test_session_credentials.py's; these tokens are about the generation.
     monkeypatch.setattr(auth_manager, "_credential_is_current", lambda _payload: True)
 
@@ -37,7 +40,7 @@ def generation_app(monkeypatch: pytest.MonkeyPatch) -> tuple[Flask, dict[str, in
     def refresh():  # noqa: ANN202
         token = create_access_token(
             identity="alice",
-            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: generation["value"]},
+            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: generation["value"], **SESSION},
         )
         issued_on_refresh.append(token)
         return jsonify(access_token=token)
@@ -112,7 +115,7 @@ def test_missing_old_or_malformed_generation_is_rejected(
 ) -> None:
     app, _generation, _issued = generation_app
     with app.app_context():
-        claims = {} if claim is None else {auth_manager.AUTH_GENERATION_CLAIM: claim}
+        claims = SESSION if claim is None else {auth_manager.AUTH_GENERATION_CLAIM: claim, **SESSION}
         token = create_access_token(identity="alice", additional_claims=claims)
 
     response = app.test_client().get("/protected", headers=_authorization(token))
@@ -126,7 +129,7 @@ def test_current_generation_is_accepted(generation_app: tuple[Flask, dict[str, i
     with app.app_context():
         token = create_access_token(
             identity="alice",
-            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: generation["value"]},
+            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: generation["value"], **SESSION},
         )
 
     response = app.test_client().get("/protected", headers=_authorization(token))
@@ -160,7 +163,7 @@ def test_refresh_cannot_resurrect_a_stale_token(
     with app.app_context():
         generation_two_token = create_access_token(
             identity="alice",
-            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 2},
+            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 2, **SESSION},
         )
 
     generation["value"] = 3
@@ -172,7 +175,7 @@ def test_refresh_cannot_resurrect_a_stale_token(
     with app.app_context():
         current_token = create_access_token(
             identity="alice",
-            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 3},
+            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 3, **SESSION},
         )
     current_response = app.test_client().get("/refresh", headers=_authorization(current_token))
 

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 import hashlib
 import hmac
 import time
+import uuid
 from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
@@ -25,6 +26,9 @@ from model.token_blacklist import TokenBlacklist
 CREDENTIAL_CLAIM = "cred"
 # When the sign-in behind a token happened (epoch seconds); a refresh carries it over.
 AUTH_TIME_CLAIM = "auth_time"
+# Which sign-in a token belongs to, minted with it and carried over like auth_time: logging out
+# blacklists it, so every token of that sign-in ends, not only the one that asked.
+SESSION_ID_CLAIM = "sid"
 # A refresh that would leave less than this before the session's maximum length is refused. The
 # GUI refreshes five minutes before a token runs out; with a token capped to the last minutes of
 # the session, it would otherwise refresh every few seconds until the end.
@@ -100,13 +104,14 @@ class BaseAuthenticator:
     """BaseAuthenticator class provides methods for handling authentication processes."""
 
     @staticmethod
-    def logout(jwt_id: str) -> None:
-        """Log out a user by adding their token to the blacklist.
+    def logout(jwt_id: str, session_id: str | None = None) -> None:
+        """Log out a user by adding their token, and its sign-in, to the blacklist.
 
         Args:
             jwt_id (str): The token to be blacklisted.
+            session_id (str | None): The token's session id: the sign-in's other tokens end too.
         """
-        TokenBlacklist.add(jwt_id)
+        TokenBlacklist.add(jwt_id, session_id)
 
     @staticmethod
     def generate_error() -> tuple[dict, HTTPStatus]:
@@ -150,13 +155,22 @@ class BaseAuthenticator:
         return None
 
     @staticmethod
-    def generate_jwt(user: User, *, record_login: bool = True, auth_time: int | None = None) -> tuple[dict, HTTPStatus]:
+    def generate_jwt(
+        user: User,
+        *,
+        record_login: bool = True,
+        auth_time: int | None = None,
+        session_id: str | None = None,
+    ) -> tuple[dict, HTTPStatus]:
         """Generate a JSON Web Token (JWT) for a given user.
 
         A session lasts at most ``security_settings.session_max_hours`` from its sign-in: the
         token records the sign-in (``auth_time``), a refresh carries it over, the token expires
         no later than the session does, and a refresh close to that end is refused
         (SESSION_EXPIRED). The GUI used to keep a session alive for as long as a tab was open.
+
+        A new sign-in also gets a session id (``sid``) that its later tokens carry: logging out
+        blacklists it, and with it every token of the sign-in.
 
         Args:
             user (User): The user for whom the JWT is to be generated.
@@ -165,6 +179,8 @@ class BaseAuthenticator:
                 into the time of the GUI's last background refresh.
             auth_time (int | None): When the session's sign-in happened (epoch seconds), for a
                 refresh; None: now, a new sign-in.
+            session_id (str | None): The session id of the token being continued, with
+                ``auth_time``; a new sign-in mints its own.
 
         Returns:
             tuple: A tuple containing a dictionary with the access token and an HTTP status code.
@@ -174,7 +190,12 @@ class BaseAuthenticator:
         if status_error:
             return status_error
         now = int(time.time())
-        auth_time = now if auth_time is None else int(auth_time)
+        if auth_time is None:
+            auth_time, session_id = now, uuid.uuid4().hex
+        elif not session_id:
+            # A continued session needs its id: a new one would escape the sign-in's logout.
+            return SESSION_EXPIRED
+        auth_time = int(auth_time)
         seconds_left = session_seconds_left(auth_time, now)
         if seconds_left is not None and seconds_left < MIN_SESSION_LEFT_SECONDS:
             return SESSION_EXPIRED
@@ -188,6 +209,7 @@ class BaseAuthenticator:
                 "auth_generation": SecuritySettings.get_auth_generation(),
                 CREDENTIAL_CLAIM: session_credential(user),
                 AUTH_TIME_CLAIM: auth_time,
+                SESSION_ID_CLAIM: session_id,
                 "user_claims": {
                     "id": user.id,
                     "name": user.name,

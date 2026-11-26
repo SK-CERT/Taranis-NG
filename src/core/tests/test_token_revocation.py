@@ -31,7 +31,7 @@ def revoked(monkeypatch: pytest.MonkeyPatch) -> set[str]:
     """The jtis that were logged out."""
     jtis: set[str] = set()
     monkeypatch.setattr(SecuritySettings, "get_auth_generation", classmethod(lambda _cls: 1))
-    monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, jti: jti in jtis))
+    monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, jti, _session_id=None: jti in jtis))
     monkeypatch.setattr(auth_manager, "_credential_is_current", lambda _payload: True)
     for name in ("store_auth_error_activity", "store_auth_warning_activity", "store_user_activity"):
         monkeypatch.setattr(auth_manager.log_manager, name, lambda *_args, **_kwargs: None)
@@ -53,7 +53,7 @@ def _app() -> Flask:
 
 def _token(app: Flask, jti_holder: dict) -> str:
     with app.app_context():
-        token = create_access_token(identity="alice", additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 1})
+        token = create_access_token(identity="alice", additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 1, "sid": "session-1"})
         from flask_jwt_extended import decode_token  # noqa: PLC0415 - needs the app context
 
         jti_holder["jti"] = decode_token(token)["jti"]
@@ -72,7 +72,7 @@ def test_every_jwt_check_refuses_a_logged_out_token(revoked: set[str]) -> None:
 
 
 def test_a_revocation_that_cannot_be_checked_refuses(monkeypatch: pytest.MonkeyPatch, revoked: set[str]) -> None:  # noqa: ARG001
-    def broken(_cls: type, _jti: str) -> bool:
+    def broken(_cls: type, _jti: str, _session_id: str | None = None) -> bool:
         message = "database down"
         raise RuntimeError(message)
 

@@ -22,7 +22,7 @@ from functools import wraps
 from http import HTTPStatus
 
 import jwt
-from auth.base_authenticator import CREDENTIAL_CLAIM, SESSION_EXPIRED, BaseAuthenticator, session_credential
+from auth.base_authenticator import CREDENTIAL_CLAIM, SESSION_EXPIRED, SESSION_ID_CLAIM, BaseAuthenticator, session_credential
 from auth.ldap_authenticator import LDAPAuthenticator
 from auth.oauth2_authenticator import OAuth2Authenticator
 from auth.password_authenticator import PasswordAuthenticator
@@ -97,15 +97,30 @@ def _credential_is_current(jwt_payload: dict) -> bool:
     return user is not None and hmac.compare_digest(claimed, session_credential(user))
 
 
+def _session_id(jwt_payload: dict) -> str | None:
+    """The sign-in a token belongs to; None for a token without one (issued before the claim).
+
+    Such a token is refused like one without a credential: its logout could not end the sign-in.
+    """
+    session_id = jwt_payload.get(SESSION_ID_CLAIM)
+    return session_id if isinstance(session_id, str) and session_id else None
+
+
 def _session_token_valid(jwt_header: dict, jwt_payload: dict) -> bool:
-    """Whether a token still opens its session: current generation, current credential."""
+    """Whether a token still opens its session: a session id, current generation, current credential."""
+    if _session_id(jwt_payload) is None:
+        return False
     return _auth_generation_is_current(jwt_header, jwt_payload) and _credential_is_current(jwt_payload)
 
 
 def _token_revoked(_jwt_header: dict, jwt_payload: dict) -> bool:
-    """Whether a token was logged out (blacklisted); a lookup that fails counts as revoked."""
+    """Whether a token, or the sign-in it belongs to, was logged out; a lookup that fails counts as revoked.
+
+    Logging out blacklisted only the jti it was called with: a token refreshed from the same
+    sign-in - a thief's, another tab's - stayed valid until the session's maximum length.
+    """
     try:
-        return TokenBlacklist.is_blacklisted(jwt_payload.get("jti"))
+        return TokenBlacklist.is_blacklisted(jwt_payload.get("jti"), _session_id(jwt_payload))
     except Exception as ex:
         log_manager.store_auth_error_activity("Token revocation could not be checked", ex)
         return True
@@ -126,6 +141,11 @@ def _configure_auth_generation_verification(jwt_manager: JWTManager) -> None:
 
 def cleanup_token_blacklist(app: Flask) -> None:
     """Clean up the token blacklist by deleting tokens older than one day.
+
+    A day outlasts every token an entry stands for, a whole sign-in's too: once its session id is
+    blacklisted no token of it passes verification, so none can be refreshed, and the last one
+    issued expires within a token's lifetime (``JWT_ACCESS_TOKEN_EXPIRES``, four hours) of the
+    logout - however long ``session_max_hours`` would have let the session run.
 
     Args:
         app: The Flask application object.
@@ -187,35 +207,41 @@ def authenticate(credentials: dict) -> tuple[dict, HTTPStatus]:
     return authenticate_with_provider((credentials or {}).get("provider_id"), credentials)
 
 
-def refresh(user: User, auth_time: object) -> tuple[dict, HTTPStatus]:
+def refresh(user: User, auth_time: object, session_id: object) -> tuple[dict, HTTPStatus]:
     """Refresh the authentication token for the given user, within the session's maximum length.
 
     Args:
         user: The user object for which the authentication token needs to be refreshed.
         auth_time: The sign-in time the current token carries; a token without one (issued
             before sessions had a maximum length) is not refreshed.
+        session_id: The session id the current token carries; the new token keeps it, so the
+            sign-in's logout ends it too.
 
     Returns:
-        The refreshed authentication token, or SESSION_EXPIRED.
+        The refreshed authentication token, SESSION_EXPIRED or SESSION_INVALID.
     """
     if isinstance(auth_time, bool) or not isinstance(auth_time, int):
         return SESSION_EXPIRED
-    return BaseAuthenticator.generate_jwt(user, record_login=False, auth_time=auth_time)
+    if not isinstance(session_id, str) or not session_id:
+        return SESSION_INVALID
+    return BaseAuthenticator.generate_jwt(user, record_login=False, auth_time=auth_time, session_id=session_id)
 
 
-def logout(jwt_id: str) -> None:
+def logout(jwt_id: str, session_id: str | None = None) -> None:
     """Logout the user.
 
-    This function logs out the user by blacklisting their token.
+    This function logs out the user by blacklisting their token and the sign-in it belongs to:
+    the sign-in's other tokens (earlier or refreshed ones, another tab's) end with it.
 
     Args:
         jwt_id (str): The authentication token of the user.
+        session_id (str | None): The token's session id.
 
     Returns:
         None: This function does not return any value.
     """
-    if jwt_id is not None:
-        BaseAuthenticator.logout(jwt_id)
+    if jwt_id is not None or session_id:
+        BaseAuthenticator.logout(jwt_id, session_id)
 
 
 def get_login_methods() -> dict:
@@ -1354,6 +1380,9 @@ def decode_user_from_jwt(jwt_token: str) -> User:
         return None
     if not _credential_is_current(decoded):
         log_manager.store_auth_warning_activity("Session JWT rejected: the account's password or username changed since it was issued")
+        return None
+    if _session_id(decoded) is None:
+        log_manager.store_auth_warning_activity("Session JWT rejected because it names no session")
         return None
     if _token_revoked({}, decoded):
         log_manager.store_auth_warning_activity("Session JWT rejected because it was logged out")

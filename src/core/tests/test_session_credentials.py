@@ -29,7 +29,7 @@ def account(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     alice = SimpleNamespace(id=7, username="alice", password="hash-1", status="active", permissions=[], roles=[])
     monkeypatch.setattr(User, "find", classmethod(lambda _cls, username: alice if username == alice.username else None))
     monkeypatch.setattr(SecuritySettings, "get_auth_generation", classmethod(lambda _cls: 1))
-    monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, _jti: False))
+    monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, _jti, _session_id=None: False))
     monkeypatch.setattr(auth_manager, "_find_active_user", lambda username: alice if username == alice.username else None)
     for name in ("store_auth_error_activity", "store_auth_warning_activity", "store_user_activity", "store_user_auth_error_activity"):
         monkeypatch.setattr(auth_manager.log_manager, name, lambda *_args, **_kwargs: None)
@@ -57,7 +57,7 @@ def app() -> Flask:
 
 def _token(app: Flask, account: SimpleNamespace, **claims: object) -> str:
     with app.app_context():
-        defaults = {auth_manager.AUTH_GENERATION_CLAIM: 1, "cred": session_credential(account)}
+        defaults = {auth_manager.AUTH_GENERATION_CLAIM: 1, "cred": session_credential(account), "sid": "session-1"}
         return create_access_token(identity=account.username, additional_claims={**defaults, **claims})
 
 
@@ -119,15 +119,15 @@ def test_changing_one_s_own_password_hands_back_a_new_token(account: SimpleNames
         return {"access_token": f"new-{user.username}"}, HTTPStatus.OK
 
     monkeypatch.setattr(base_authenticator.BaseAuthenticator, "generate_jwt", staticmethod(generate_jwt))
-    monkeypatch.setattr(config_api, "get_jwt", lambda: {"auth_time": 1700000000})
+    monkeypatch.setattr(config_api, "get_jwt", lambda: {"auth_time": 1700000000, "sid": "session-1"})
     before = session_credential(account)
 
     monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: account)
     assert config_api._own_session_renewed(account, before) is None  # nothing changed
     account.password = "hash-2"
     assert config_api._own_session_renewed(account, before) == ({"access_token": "new-alice"}, HTTPStatus.OK)
-    # The same session goes on, with its sign-in time and so its maximum length.
-    assert issued == [{"record_login": False, "auth_time": 1700000000}]
+    # The same session goes on, with its sign-in time and so its maximum length, and its id.
+    assert issued == [{"record_login": False, "auth_time": 1700000000, "session_id": "session-1"}]
 
     # An administrator changing someone else's password gets nothing: that user's sessions end.
     monkeypatch.setattr(config_api, "get_user_from_jwt", lambda: SimpleNamespace(id=1))

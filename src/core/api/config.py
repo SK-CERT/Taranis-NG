@@ -14,7 +14,7 @@ from http import HTTPStatus
 import requests
 from auth import oauth2_authenticator, saml_authenticator, saml_federation, saml_metadata
 from auth import url_guard as saml_url_guard
-from auth.base_authenticator import AUTH_TIME_CLAIM, BaseAuthenticator, session_credential
+from auth.base_authenticator import AUTH_TIME_CLAIM, SESSION_ID_CLAIM, BaseAuthenticator, session_credential
 from flask import Response, request, send_file
 from flask_jwt_extended import get_jwt
 from flask_restful import Resource
@@ -1409,8 +1409,15 @@ def _own_session_renewed(target: user.User | None, credential_before: str | None
     actor = get_user_from_jwt()
     if target is None or actor is None or actor.id != target.id or session_credential(target) == credential_before:
         return None
-    # The same session goes on: it keeps its sign-in time, and so its maximum length.
-    renewed = BaseAuthenticator.generate_jwt(target, record_login=False, auth_time=get_jwt().get(AUTH_TIME_CLAIM))
+    # The same session goes on: it keeps its sign-in time, and so its maximum length, and its id,
+    # so that logging out of it ends the new token too.
+    claims = get_jwt()
+    renewed = BaseAuthenticator.generate_jwt(
+        target,
+        record_login=False,
+        auth_time=claims.get(AUTH_TIME_CLAIM),
+        session_id=claims.get(SESSION_ID_CLAIM),
+    )
     # The change is saved either way. A session too close to its maximum length gets no new
     # token: the save still answers as a success, and the next request signs the person out.
     return renewed if renewed[1] == HTTPStatus.OK else None
