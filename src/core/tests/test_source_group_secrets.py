@@ -46,12 +46,23 @@ def _values(body: dict) -> dict:
 
 
 @pytest.mark.usefixtures("groups")
-@pytest.mark.parametrize("resource", [assess.OSINTSourceGroupsAssess, config.OSINTSourceGroupsResource])
-def test_group_listings_mask_source_credentials(resource: type) -> None:
+def test_the_configuration_listing_masks_source_credentials() -> None:
     with APP.test_request_context("/"):
-        body = resource.get.__wrapped__(resource())
+        body = config.OSINTSourceGroupsResource.get.__wrapped__(config.OSINTSourceGroupsResource())
 
     assert _values(body) == {"EMAIL_SERVER_HOSTNAME": "imap.corp.example", "EMAIL_PASSWORD": "", "SLACK_API_TOKEN": ""}
+    assert "Sup3rS3cret" not in json.dumps(body)
+
+
+@pytest.mark.usefixtures("groups")
+def test_the_assess_listing_carries_no_source_parameters() -> None:
+    """Every analyst reads it: no host names, user names, feed or proxy URLs either."""
+    with APP.test_request_context("/"):
+        body = assess.OSINTSourceGroupsAssess.get.__wrapped__(assess.OSINTSourceGroupsAssess())
+
+    source = body["items"][0]["osint_sources"][0]
+    assert "parameter_values" not in source
+    assert "imap.corp.example" not in json.dumps(body)
     assert "Sup3rS3cret" not in json.dumps(body)
 
 

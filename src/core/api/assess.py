@@ -37,14 +37,29 @@ MAX_PAGE = 200
 MAX_IDS = 500
 
 
+def _without_source_parameters(groups: dict) -> dict:
+    """Drop the parameter values of every source nested in a group listing.
+
+    Assess needs the groups and which sources they hold, never how a source is collected: its
+    parameters hold host names, user names, feed URLs (with tokens in the query, at times) and
+    proxy URLs with credentials, besides the secrets ``hide_secret_parameters`` blanks.
+    """
+    for group in groups.get("items") or []:
+        for source in (group or {}).get("osint_sources") or []:
+            if isinstance(source, dict):
+                source.pop("parameter_values", None)
+    return groups
+
+
 class OSINTSourceGroupsAssess(Resource):
     """OSINT source groups for Assess API endpoint."""
 
     @auth_required("ASSESS_ACCESS")
     def get(self) -> dict:
         """Get all OSINT source groups for Assess."""
-        # The groups nest their sources whole: never their passwords, tokens or keys.
-        return hide_secret_parameters(OSINTSourceGroup.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True))
+        # Every analyst (and every user API key) reads this: the groups, not how sources are collected.
+        groups = OSINTSourceGroup.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
+        return _without_source_parameters(hide_secret_parameters(groups))
 
 
 class UnreadCountsByGroup(Resource):
