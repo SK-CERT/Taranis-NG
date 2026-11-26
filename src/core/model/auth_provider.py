@@ -78,11 +78,14 @@ def secret_destination(kind: str | None, config: dict | None) -> dict:
 
     A key left out means its default, so that saving a dialog that now sends it does not read as
     a change: LDAP uses TLS unless told otherwise, and the internal hop is HTTPS unless opted out.
+    ``use_tls`` is read exactly as :class:`auth.ldap_authenticator.LDAPAuthenticator` reads it
+    (absent is TLS, a stored ``null`` is plain), or this check and the login could disagree on
+    whether the bind password travels in clear text.
     """
     config = config if isinstance(config, dict) else {}
     view = {key: config.get(key) for key in SECRET_DESTINATION_KEYS}
-    if kind == "ldap" and view["use_tls"] is None:
-        view["use_tls"] = True
+    if kind == "ldap":
+        view["use_tls"] = bool(config.get("use_tls", True))
     if view["allow_insecure_internal_transport"] is None:
         view["allow_insecure_internal_transport"] = False
     return view
@@ -363,6 +366,23 @@ class AuthProvider(db.Model):
                 validate_sp_keypair(private_key, certificate)
         if provider.kind in OAUTH_KINDS:
             cls._validate_oidc_config(provider.config or {})
+        if provider.kind == "ldap":
+            cls._validate_ldap_config(provider.config or {})
+
+    @classmethod
+    def _validate_ldap_config(cls, config: dict) -> None:
+        """Validate the LDAP ``config`` dict at save time.
+
+        ``use_tls`` may be left out (TLS) or be a real boolean. Anything else is read by the
+        login by its truthiness - a ``null`` as plain LDAP - while it looks like the default
+        to a reader, so it is refused rather than stored.
+
+        Raises:
+            ValueError: When ``use_tls`` is present and not a boolean.
+        """
+        if "use_tls" in config and not isinstance(config["use_tls"], bool):
+            msg = "use_tls must be true or false"
+            raise ValueError(msg)
 
     @classmethod
     def _validate_oidc_config(cls, config: dict) -> None:

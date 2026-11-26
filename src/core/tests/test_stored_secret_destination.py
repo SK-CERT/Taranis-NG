@@ -14,6 +14,7 @@ from http import HTTPStatus
 import pytest
 from api import config as config_api
 from api import notifications as notifications_api
+from auth.ldap_authenticator import LDAPAuthenticator
 from flask import Flask
 from managers import stored_secrets
 from managers.stored_secrets import StoredSecretError
@@ -67,6 +68,105 @@ def test_a_new_ldap_server_or_plain_ldap_is_a_change() -> None:
 
     assert stored_secrets.changed_destination(moved, stored, auth_provider.SECRET_DESTINATION_KEYS) == ["server_url"]
     assert stored_secrets.changed_destination(plain, stored, auth_provider.SECRET_DESTINATION_KEYS) == ["use_tls"]
+
+
+_ABSENT = object()
+
+
+def _ldap_config(use_tls: object) -> dict:
+    config = {"server_url": "ldap.example.org", "bind_dn": "cn=reader,dc=example,dc=org", "search_base": "dc=example,dc=org"}
+    if use_tls is not _ABSENT:
+        config["use_tls"] = use_tls
+    return config
+
+
+@pytest.mark.parametrize("use_tls", [_ABSENT, None, True, False, "false", 0])
+def test_ldap_use_tls_reads_as_the_login_reads_it(use_tls: object) -> None:
+    # The check and the login must agree on whether the bind password goes in clear text.
+    config = _ldap_config(use_tls)
+    login_uses_tls = LDAPAuthenticator(types.SimpleNamespace(config=config))._build_server().ssl
+
+    assert auth_provider.secret_destination("ldap", config)["use_tls"] is login_uses_tls
+
+
+@pytest.mark.parametrize(
+    ("stored_tls", "submitted_tls", "changed"),
+    [
+        (True, None, ["use_tls"]),
+        (_ABSENT, None, ["use_tls"]),
+        (_ABSENT, _ABSENT, []),
+        (True, False, ["use_tls"]),
+        (False, False, []),
+        (_ABSENT, True, []),
+    ],
+)
+def test_ldap_use_tls_changes(stored_tls: object, submitted_tls: object, changed: list) -> None:
+    stored = auth_provider.secret_destination("ldap", _ldap_config(stored_tls))
+    submitted = auth_provider.secret_destination("ldap", _ldap_config(submitted_tls))
+
+    assert stored_secrets.changed_destination(submitted, stored, auth_provider.SECRET_DESTINATION_KEYS) == changed
+
+
+def _update_ldap(monkeypatch: pytest.MonkeyPatch, stored_config: dict, submitted_config: dict) -> types.SimpleNamespace:
+    old = types.SimpleNamespace(kind="ldap", secret="encrypted", config=dict(stored_config))
+    new = types.SimpleNamespace(
+        kind="ldap",
+        slug="ldap",
+        name="LDAP",
+        secret=None,
+        config=submitted_config,
+        enabled=True,
+        organization=None,
+        default_roles=[],
+        provisioning_mode="manual",
+        allowed_domains="",
+        require_mfa=False,
+    )
+    monkeypatch.setattr(auth_provider, "NewAuthProviderSchema", lambda: types.SimpleNamespace(load=lambda _data: new))
+    monkeypatch.setattr(auth_provider.db, "session", types.SimpleNamespace(get=lambda _model, _provider_id: old, commit=lambda: None))
+    # The destination check on its own; _validate refuses a null use_tls before it (tested below).
+    monkeypatch.setattr(AuthProvider, "_validate", classmethod(lambda _cls, *_args, **_kwargs: None))
+    AuthProvider.update(3, {}, "Admin")
+    return old
+
+
+def test_saving_ldap_with_use_tls_null_and_no_secret_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    with pytest.raises(StoredSecretError, match="Enter the secret again: use_tls changed"):
+        _update_ldap(monkeypatch, _ldap_config(use_tls=True), _ldap_config(None))
+
+
+@pytest.mark.parametrize(("stored_tls", "submitted_tls"), [(_ABSENT, _ABSENT), (False, False), (True, True)])
+def test_saving_ldap_with_the_same_tls_keeps_the_secret(monkeypatch: pytest.MonkeyPatch, stored_tls: object, submitted_tls: object) -> None:
+    old = _update_ldap(monkeypatch, _ldap_config(stored_tls), _ldap_config(submitted_tls))
+
+    assert old.secret == "encrypted"
+
+
+def test_saving_ldap_with_tls_switched_off_and_no_secret_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    with pytest.raises(StoredSecretError, match="use_tls changed"):
+        _update_ldap(monkeypatch, _ldap_config(use_tls=True), _ldap_config(use_tls=False))
+
+
+@pytest.mark.parametrize("use_tls", [None, "true", "false", 1, 0])
+def test_ldap_use_tls_must_be_a_boolean(use_tls: object) -> None:
+    with pytest.raises(ValueError, match="use_tls must be true or false"):
+        AuthProvider._validate_ldap_config(_ldap_config(use_tls))
+
+
+@pytest.mark.parametrize("use_tls", [_ABSENT, True, False])
+def test_ldap_use_tls_may_be_left_out_or_a_boolean(use_tls: object) -> None:
+    AuthProvider._validate_ldap_config(_ldap_config(use_tls))
+
+
+def test_saving_ldap_with_use_tls_null_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A session that builds a query without an application, so that ``query`` can be replaced.
+    monkeypatch.setattr(auth_provider.db, "session", types.SimpleNamespace)
+    no_rows = types.SimpleNamespace(filter_by=lambda **_kwargs: types.SimpleNamespace(first=lambda: None))
+    monkeypatch.setattr(AuthProvider, "query", no_rows)
+    provider = types.SimpleNamespace(kind="ldap", slug="ldap", config=_ldap_config(None))
+
+    with pytest.raises(ValueError, match="use_tls must be true or false"):
+        AuthProvider._validate(provider, 3)
 
 
 @pytest.fixture
