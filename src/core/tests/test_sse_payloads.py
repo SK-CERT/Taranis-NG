@@ -44,6 +44,9 @@ def test_what_the_gui_reads_survives() -> None:
     update = {
         "report_item_id": 5,
         "add": True,
+        # useAttributes adds the new row only to the attribute group the event names
+        "attribute_group_item_id": 12,
+        "attribute_id": 40,
         "aggregate_ids": [1, 2],
         "remote_report_item_ids": [3],
         "translated": True,

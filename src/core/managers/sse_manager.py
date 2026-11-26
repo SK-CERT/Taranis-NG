@@ -88,6 +88,7 @@ REPORT_ITEM_EVENT_KEYS = frozenset(
         "add",
         "delete",
         "attribute_id",
+        "attribute_group_item_id",
         "attribute_version",
         "aggregate_id",
         "aggregate_ids",
