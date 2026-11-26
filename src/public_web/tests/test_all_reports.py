@@ -180,6 +180,24 @@ def test_reports_are_loaded_once_and_then_read_from_the_cache() -> None:
     assert len(core.pages) == 1
 
 
+def test_reports_loaded_without_the_report_templates_are_not_kept(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without the custom templates some products are dropped: the next request loads again."""
+    core = _Core(3)
+    cache = web_cache.WebCache(core)
+    monkeypatch.setattr(web_cache.logger, "exception", lambda *_args: None)
+
+    def unavailable() -> dict:
+        msg = "core is restarting"
+        raise web_cache.TaranisClientError(msg)
+
+    monkeypatch.setattr(core, "get_report_templates", unavailable)
+    cache.get_all_reports(1, "en")
+    monkeypatch.undo()
+
+    assert _ids(cache.get_all_reports(1, "en")) == [3, 2, 1]
+    assert len(core.pages) == 2
+
+
 def test_out_of_date_reports_are_shown_while_they_load_again(monkeypatch: pytest.MonkeyPatch) -> None:
     core = _Core(3)
     cache = web_cache.WebCache(core)

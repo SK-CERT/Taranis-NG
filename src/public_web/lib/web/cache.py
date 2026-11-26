@@ -98,6 +98,9 @@ class WebCache:
             templates = self.client.get_report_templates()
         except TaranisClientError as exc:
             logger.exception("Could not fetch report templates from Taranis: %s", exc)
+            # Reports loaded meanwhile are not cached (see get_all_reports): without the custom
+            # templates, products of a custom-template preset are dropped.
+            self.templates_failed_at = time.time()
             return {"items": [], "disabled_builtins": []}
         self.cache.set(CACHE_KEY_TEMPLATES, templates)
         return templates
@@ -176,6 +179,10 @@ class WebCache:
             # expire - so a web whose last products were unpublished, or had their TLP raised,
             # went on showing them whenever core's reset push did not arrive. Not cached: reports
             # loaded before a reset, which may show one unpublished since.
+            # Nor reports loaded while the report templates could not be fetched: every product
+            # of a custom-template preset was dropped from them, and the next request retries.
+            if getattr(self, "templates_failed_at", 0) >= started:
+                return reports
             if started >= (self.cache.get(CACHE_KEY_RESET_AT) or 0):
                 entry = {"fetched_at": started, "reports": reports}
                 self.cache.set(cache_key, entry, timeout=0)
