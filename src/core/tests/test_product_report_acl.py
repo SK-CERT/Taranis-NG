@@ -71,35 +71,94 @@ def test_an_unsaved_product_does_not_render_an_unreadable_report(monkeypatch: py
     assert "2" in body["error"]
 
 
-def test_the_form_of_a_saved_product_may_check_the_reports_it_already_holds(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The language check sends the form unsaved; a colleague's unreadable report already in the product stays usable."""
+@pytest.fixture
+def saved_product(monkeypatch: pytest.MonkeyPatch) -> types.SimpleNamespace:
+    """Saved product 7 in product preset 9, holding report 2 a colleague put there; the user may use presets 9 and 10."""
     stored = types.SimpleNamespace(id=7, product_preset_id=9, report_items=_items(1, 2))
-    monkeypatch.setattr(publish.ProductPreset, "find", classmethod(lambda _cls, _id: types.SimpleNamespace(id=9)))
-    monkeypatch.setattr(publish.ProductPreset, "allowed_with_acl", classmethod(lambda _cls, preset_id, *_args, **_kwargs: preset_id == 9))
+
+    def find_preset(_cls: type, preset_id: object) -> types.SimpleNamespace | None:
+        # Like the database, which casts the id it is given: " 9" finds preset 9 too.
+        try:
+            return types.SimpleNamespace(id=int(str(preset_id).strip()))
+        except ValueError:
+            return None
+
+    def preset_allowed(_cls: type, preset_id: int, _user: object, **_kwargs: bool) -> bool:
+        assert isinstance(preset_id, int)
+        return preset_id in {9, 10}
+
+    monkeypatch.setattr(publish.ProductPreset, "find", classmethod(find_preset))
+    monkeypatch.setattr(publish.ProductPreset, "allowed_with_acl", classmethod(preset_allowed))
     monkeypatch.setattr(publish.Product, "find", classmethod(lambda _cls, product_id: stored if product_id == 7 else None))
     monkeypatch.setattr(publish.ReportItem, "find", classmethod(lambda _cls, report_item_id: types.SimpleNamespace(id=report_item_id)))
     monkeypatch.setattr(publish.log_manager, "store_user_auth_error_activity", lambda *_args: None)
+    return stored
 
-    def load(stored_id: object, *ids: int) -> HTTPStatus:
-        payload = {"id": -1, "stored_id": stored_id, "product_preset_id": 9, "report_items": [{"id": item} for item in ids]}
-        return publish.load_product(payload, ANALYST, "token")[1]
 
-    assert load(7, 1, 2) == HTTPStatus.OK
-    assert load(7, 1, 2, 4) == HTTPStatus.FORBIDDEN  # one it does not hold yet
-    assert load(8, 1, 2) == HTTPStatus.FORBIDDEN  # no such saved product
-    assert load("7", 1, 2) == HTTPStatus.FORBIDDEN
+def _load(stored_id: object, *ids: int, product_preset_id: object = 9) -> HTTPStatus:
+    payload = {"id": -1, "stored_id": stored_id, "product_preset_id": product_preset_id, "report_items": [{"id": item} for item in ids]}
+    return publish.load_product(payload, ANALYST, "token")[1]
 
-    stored.product_preset_id = 10  # a product the user may not use exempts nothing
-    assert load(7, 1, 2) == HTTPStatus.FORBIDDEN
+
+def test_the_form_of_a_saved_product_may_check_the_reports_it_already_holds(saved_product: types.SimpleNamespace) -> None:
+    """The language check sends the form unsaved; a colleague's unreadable report already in the product stays usable."""
+    assert _load(7, 1, 2) == HTTPStatus.OK
+    assert _load(7, 1, 2, 4) == HTTPStatus.FORBIDDEN  # one it does not hold yet
+    assert _load(8, 1, 2) == HTTPStatus.FORBIDDEN  # no such saved product
+    assert _load("7", 1, 2) == HTTPStatus.FORBIDDEN
+
+    saved_product.product_preset_id = 11  # a product the user may not use exempts nothing
+    assert _load(7, 1, 2, product_preset_id=11) == HTTPStatus.FORBIDDEN
+
+
+@pytest.mark.usefixtures("saved_product")
+@pytest.mark.parametrize("product_preset_id", [9, "9"])
+def test_the_kept_reports_go_out_through_the_saved_product_s_own_preset(product_preset_id: object) -> None:
+    assert _load(7, 1, 2, product_preset_id=product_preset_id) == HTTPStatus.OK
+
+
+@pytest.mark.usefixtures("saved_product")
+@pytest.mark.parametrize("product_preset_id", [10, "10", " 9", "9 ", "09", "+9"])
+def test_the_kept_reports_do_not_go_out_through_another_preset(product_preset_id: object) -> None:
+    """Preset 10 is one the user may use: naming product 7 must not render its report 2 with 10's templates or channels.
+
+    An id written otherwise than as preset 9's own is not taken for it, even where it would find it.
+    """
+    assert _load(7, 1, 2, product_preset_id=product_preset_id) == HTTPStatus.FORBIDDEN
+    # The reports the user may read are fine in any preset they may use.
+    assert _load(7, 1, product_preset_id=product_preset_id) == HTTPStatus.OK
+
+
+@pytest.mark.usefixtures("saved_product")
+@pytest.mark.parametrize("product_preset_id", [None, "", "nine", 9.0, True, [9], {"id": 9}])
+def test_a_missing_or_garbage_preset_exempts_nothing(product_preset_id: object) -> None:
+    assert publish._kept_report_items(7, product_preset_id, ANALYST) == set()
+    assert publish._kept_report_items(7, 9, ANALYST) == {1, 2}
+    # Such a form never gets as far as rendering the report.
+    assert _load(7, 1, 2, product_preset_id=product_preset_id) in {HTTPStatus.FORBIDDEN, HTTPStatus.NOT_FOUND}
+
+
+def _update(monkeypatch: pytest.MonkeyPatch, original: types.SimpleNamespace, product_preset_id: int, *ids: int) -> None:
+    monkeypatch.setattr(Product, "find", classmethod(lambda _cls, _id: original))
+    submitted = types.SimpleNamespace(product_preset_id=product_preset_id, report_items=_items(*ids))
+    monkeypatch.setattr(product_module, "NewProductSchema", lambda: types.SimpleNamespace(load=lambda _data: submitted))
+    Product.update_product(7, {"product_preset_id": product_preset_id, "report_items": [{"id": item} for item in ids]}, ANALYST)
 
 
 def test_an_update_may_keep_an_unreadable_report_but_not_add_one(monkeypatch: pytest.MonkeyPatch) -> None:
-    original = types.SimpleNamespace(state_id=1, report_items=_items(2))
-    monkeypatch.setattr(Product, "find", classmethod(lambda _cls, _id: original))
-    submitted = types.SimpleNamespace(report_items=_items(2, 4))
-    monkeypatch.setattr(product_module, "NewProductSchema", lambda: types.SimpleNamespace(load=lambda _data: submitted))
+    original = types.SimpleNamespace(state_id=1, product_preset_id=9, report_items=_items(2))
 
     with pytest.raises(ValueError, match="report item\\(s\\) 4 "):
-        Product.update_product(7, {"report_items": [{"id": 2}, {"id": 4}]}, ANALYST)
+        _update(monkeypatch, original, 9, 2, 4)
 
     assert original.report_items == _items(2)
+
+
+def test_an_update_keeps_an_unreadable_report_only_in_the_product_s_preset(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Moved to another preset, the kept report would be rendered by its templates and sent to its channels."""
+    original = types.SimpleNamespace(state_id=1, product_preset_id=9, report_items=_items(2))
+
+    with pytest.raises(ValueError, match="report item\\(s\\) 2 "):
+        _update(monkeypatch, original, 10, 1, 2)
+
+    assert (original.product_preset_id, original.report_items) == (9, _items(2))

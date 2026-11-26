@@ -849,7 +849,10 @@ class Product(db.Model):
         # can target only newly-added reports (Option B: a report added to an
         # already-published product should be auto-completed too).
         existing_report_item_ids = {ri.id for ri in original_product.report_items} if original_product.report_items else set()
-        refused = refused_report_items(product.report_items, user, kept=existing_report_item_ids)
+        # Reports kept are not asked about only while the product stays in its product preset:
+        # moved to another, they would be rendered by its templates and sent to its channels.
+        same_preset = product.product_preset_id == original_product.product_preset_id
+        refused = refused_report_items(product.report_items, user, kept=existing_report_item_ids if same_preset else set())
         if refused:
             raise ValueError(refused_report_items_message(refused))
         original_product.title = product.title
