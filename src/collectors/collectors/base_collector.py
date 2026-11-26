@@ -2,8 +2,10 @@
 
 import datetime as dt
 import hashlib
+import ssl
 import threading
 import time
+import urllib.error
 import urllib.request
 import uuid
 from http import HTTPStatus
@@ -645,6 +647,14 @@ def not_modified(source: object) -> bool:
         return False
     except TimeoutError:
         source.logger.debug(f"{log_prefix} Request timed out for {request.full_url}")
+        return False
+    except urllib.error.URLError as url_error:
+        if isinstance(url_error.reason, ssl.SSLError):
+            # Only a shortcut: the collection that follows checks the certificate as the source
+            # says (a web source may ignore TLS errors) and reports it there if it must.
+            source.logger.debug(f"{log_prefix} Not checked, TLS error: {url_error.reason}")
+            return False
+        source.logger.exception(f"{log_prefix} An error occurred")
         return False
     except Exception:
         source.logger.exception(f"{log_prefix} An error occurred")

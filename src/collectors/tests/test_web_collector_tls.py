@@ -7,7 +7,10 @@ could change what a source collected, and read the basic-auth credentials it sen
 from __future__ import annotations
 
 import collections
+import datetime as dt
+import ssl
 import types
+import urllib.error
 
 import pytest
 from collectors.web_collector import WebCollector
@@ -111,3 +114,29 @@ def test_a_browser_that_cannot_answer_is_no_error_page() -> None:
             raise RuntimeError(msg)
 
     assert web_collector.browser_error_page(Gone()) is None
+
+
+def test_the_if_modified_check_leaves_a_certificate_error_to_the_collection() -> None:
+    """A source that ignores TLS errors must not get an error from the pre-check on every run."""
+    from collectors import base_collector  # noqa: PLC0415 - the module under test, imported where used
+
+    logged: dict[str, list[str]] = collections.defaultdict(list)
+
+    def opener(_request: object, timeout: int) -> None:  # noqa: ARG001
+        reason = ssl.SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] self-signed certificate")
+        raise urllib.error.URLError(reason)
+
+    source = types.SimpleNamespace(
+        url="https://self-signed.example.org/",
+        user_agent=None,
+        last_collected=dt.datetime(2026, 11, 25, tzinfo=dt.UTC),
+        opener=opener,
+        logger=types.SimpleNamespace(
+            debug=logged["debug"].append,
+            exception=logged["exception"].append,
+        ),
+    )
+
+    assert base_collector.not_modified(source) is False
+    assert logged["exception"] == []
+    assert "TLS error" in logged["debug"][0]
