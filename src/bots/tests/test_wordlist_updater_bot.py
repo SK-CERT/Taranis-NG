@@ -94,6 +94,47 @@ def test_only_txt_is_supported(wordlist_dir: object) -> None:  # noqa: ARG001
         WordlistUpdaterBot.load_words("stop.txt", "csv")
 
 
+def test_a_list_with_too_many_entries_is_refused_whole(wordlist_dir: object) -> None:
+    """Well within the byte cap: two-character lines, every one a request row and a database row in core."""
+    entries = wordlist_updater_bot.MAX_WORDLIST_ENTRIES
+    (wordlist_dir / "full.txt").write_text("a\n" * entries)
+    (wordlist_dir / "over.txt").write_text("a\n" * (entries + 1))
+
+    assert len(WordlistUpdaterBot.load_words("full.txt", "txt")) == entries
+    with pytest.raises(ValueError, match=f"more than {entries} entries"):
+        WordlistUpdaterBot.load_words("over.txt", "txt")
+
+
+def test_a_list_with_a_too_long_entry_is_refused_whole(wordlist_dir: object) -> None:
+    length = wordlist_updater_bot.MAX_WORD_LENGTH
+    (wordlist_dir / "long.txt").write_text(f"alpha\n{'b' * length}\n")
+    (wordlist_dir / "over.txt").write_text(f"alpha\n{'b' * (length + 1)}\ngamma\n")
+
+    assert WordlistUpdaterBot.load_words("long.txt", "txt") == ["alpha", "b" * length]
+    with pytest.raises(ValueError, match=f"Entry 2 of the word list is longer than {length} characters"):
+        WordlistUpdaterBot.load_words("over.txt", "txt")
+
+
+def test_execute_sends_nothing_to_core_for_a_list_over_a_cap(wordlist_dir: object, monkeypatch: pytest.MonkeyPatch) -> None:
+    (wordlist_dir / "over.txt").write_text("a\n" * (wordlist_updater_bot.MAX_WORDLIST_ENTRIES + 1))
+    core = wordlist_updater_bot.CoreApi
+    for call in ("get_categories", "add_word_list_category", "delete_word_list_category_entries", "update_word_list_category_entries"):
+        monkeypatch.setattr(core, call, classmethod(lambda _cls, *_args: pytest.fail("nothing may reach core")))
+    failures: list[str] = []
+
+    bot = WordlistUpdaterBot()
+    bot.preset = types.SimpleNamespace(
+        param_key_values=collections.defaultdict(
+            str,
+            {"DATA_URL": "over.txt", "FORMAT": "txt", "WORD_LIST_ID": "3", "WORD_LIST_CATEGORY": "Stop words", "DELETE": "yes"},
+        ),
+        logger=types.SimpleNamespace(error=failures.append, exception=failures.append),
+    )
+    bot.execute()
+
+    assert failures == [f"Word list updater failed: The word list has more than {wordlist_updater_bot.MAX_WORDLIST_ENTRIES} entries"]
+
+
 def test_execute_reads_the_categories_out_of_the_core_answer(wordlist_dir: object, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: ARG001
     calls: list[tuple] = []
     core = wordlist_updater_bot.CoreApi

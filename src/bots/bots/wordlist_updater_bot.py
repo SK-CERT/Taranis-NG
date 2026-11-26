@@ -27,6 +27,11 @@ from .base_bot import BaseBot
 WORDLIST_DIR = Path(os.getenv("TARANIS_WORDLIST_DIR", "/app/wordlists"))
 # A word list is text; anything bigger is a mistake or an attack on the node's memory.
 MAX_WORDLIST_BYTES = 10 * 1024 * 1024
+# The bytes alone do not bound the work: every entry goes to core in one request and becomes a row
+# there, and 10 MiB of two-character lines are some 3.5 million of them. The list's host is a
+# third party, so the number of entries and the length of each are capped too.
+MAX_WORDLIST_ENTRIES = 200_000
+MAX_WORD_LENGTH = 500
 FETCH_TIMEOUT = 30
 _URL_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*://", re.IGNORECASE)
 
@@ -49,7 +54,9 @@ class WordlistUpdaterBot(BaseBot):
 
         A URL is fetched only when it is http(s) and its host - and that of every redirect -
         resolves to public addresses (``shared.url_guard``, as for collectors). A file is read
-        only from ``WORDLIST_DIR``. Either is capped at ``MAX_WORDLIST_BYTES``.
+        only from ``WORDLIST_DIR``. Either is capped at ``MAX_WORDLIST_BYTES``, at
+        ``MAX_WORDLIST_ENTRIES`` lines and at ``MAX_WORD_LENGTH`` characters a line; a list
+        over any cap is refused, not cut short.
 
         Args:
             source (str): A URL, or a file name relative to ``WORDLIST_DIR``.
@@ -59,7 +66,7 @@ class WordlistUpdaterBot(BaseBot):
             list: The words, one per line.
 
         Raises:
-            ValueError: For an unsupported format, a refused URL or path, or a list too large.
+            ValueError: For an unsupported format, a refused URL or path, or a list over a cap.
         """
         if (word_list_format or "txt").strip().lower() != "txt":
             msg = f"Unsupported word list format '{word_list_format}'; only txt is supported"
@@ -72,7 +79,15 @@ class WordlistUpdaterBot(BaseBot):
         if len(data) > MAX_WORDLIST_BYTES:
             msg = f"The word list is larger than {MAX_WORDLIST_BYTES} bytes"
             raise ValueError(msg)
-        return [line.rstrip() for line in data.decode("utf-8", errors="replace").strip().splitlines()]
+        words = [line.rstrip() for line in data.decode("utf-8", errors="replace").strip().splitlines()]
+        if len(words) > MAX_WORDLIST_ENTRIES:
+            msg = f"The word list has more than {MAX_WORDLIST_ENTRIES} entries"
+            raise ValueError(msg)
+        too_long = next((number for number, word in enumerate(words, 1) if len(word) > MAX_WORD_LENGTH), None)
+        if too_long:
+            msg = f"Entry {too_long} of the word list is longer than {MAX_WORD_LENGTH} characters"
+            raise ValueError(msg)
+        return words
 
     @staticmethod
     def _download(url: str) -> bytes:
