@@ -120,7 +120,9 @@ class NotificationChannelResource(Resource):
         except ValueError as error:
             return {"error": str(error)}, HTTPStatus.BAD_REQUEST
         user = get_user_from_jwt()
-        if not data.get("secret") and not data.get("clear_secret"):
+        # Only a JSON true request to remove the password skips the check: "false", or any other
+        # value, may leave the stored password in place for the new settings.
+        if not data.get("secret") and data.get("clear_secret") is not True:
             refused = _moved_secret(channel_class, kind, config)
             if refused:
                 return refused

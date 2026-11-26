@@ -263,6 +263,20 @@ def test_a_test_mail_does_not_log_in_to_another_server_with_the_stored_password(
     assert smtp_channel == []
 
 
+@pytest.mark.usefixtures("smtp_channel")
+@pytest.mark.parametrize("flag", ["false", "true", 1])
+def test_only_a_real_removal_saves_the_channel_for_another_server_without_the_password(monkeypatch: pytest.MonkeyPatch, flag: object) -> None:
+    saved: list = []
+    monkeypatch.setattr(notifications_api.NotificationChannel, "save", classmethod(lambda _cls, *args, **_kwargs: saved.append(args)))
+    config = {"host": "attacker.example", "port": 587, "security": "starttls", "username": "taranis", "from_address": "taranis@example.org"}
+    with APP.test_request_context("/", method="PUT", json={"enabled": True, "clear_secret": flag, "config": config}):
+        body, status = notifications_api.NotificationChannelResource.put.__wrapped__(notifications_api.NotificationChannelResource(), "email")
+
+    assert status == HTTPStatus.BAD_REQUEST
+    assert "host changed" in body["error"]
+    assert saved == []
+
+
 def test_saving_a_provider_with_a_new_server_and_no_secret_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     old = types.SimpleNamespace(kind="ldap", secret="encrypted", config={"server_url": "ldaps://ldap.example.org"})
     new = types.SimpleNamespace(kind="ldap", slug="ldap", secret=None, config={"server_url": "ldaps://attacker.example"})
