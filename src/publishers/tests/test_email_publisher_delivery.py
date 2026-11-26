@@ -29,7 +29,7 @@ from smtplib import SMTPHeloError, SMTPServerDisconnected
 from typing import TYPE_CHECKING, ClassVar
 
 import pytest
-from envelope import smtp_handler
+from envelope import Envelope, smtp_handler
 from publishers.email_publisher import EMAILPublisher, smtp_security
 
 if TYPE_CHECKING:
@@ -493,6 +493,52 @@ def test_a_notification_template_keeps_its_plain_text_subject(publish: Callable[
     assert publication.status == HTTPStatus.OK
     assert publication.message["Subject"] == "Vulnerability found in your asset"
     assert body_of(publication.message) == "A report item was completed for one of your assets."
+
+
+@pytest.mark.parametrize(
+    ("title", "subject"),
+    [
+        # A title template printing a Rich Text value of two paragraphs.
+        ("Patch now\n\nVendor advisory", "Patch now Vendor advisory"),
+        # U+2028 is a line break to the header folder, and pastes in from word processors.
+        ("Patch now\u2028Vendor advisory", "Patch now Vendor advisory"),
+        ("Patch\r\nnow\tplease", "Patch now please"),
+    ],
+)
+def test_a_title_with_line_breaks_is_sent_as_one_subject_line(publish: Callable[..., Publication], title: str, subject: str) -> None:
+    """The standard library refused the whole message, and the error escaped publish() as a bare 500."""
+    publication = publish(message_title=encoded(title))
+
+    assert publication.status == HTTPStatus.OK, publication.response
+    assert publication.message["Subject"] == subject
+
+
+def test_an_attachment_name_with_a_line_break_is_one_line(publish: Callable[..., Publication]) -> None:
+    """The file name template can print report data too, and it ends up in a header."""
+    publication = publish(att_file_name=encoded("Weekly\nreport"))
+
+    assert publication.status == HTTPStatus.OK, publication.response
+    assert only_attachment(publication.message).get_filename() == "Weekly report.json"
+
+
+@pytest.mark.parametrize("step", ["__str__", "smtp"])
+def test_a_message_that_cannot_be_composed_is_reported_not_raised(
+    publish: Callable[..., Publication],
+    smtp_server: type[RecordingSMTP],
+    monkeypatch: pytest.MonkeyPatch,
+    step: str,
+) -> None:
+    def refuse(*_args: object, **_kwargs: object) -> None:
+        msg = "Header values may not contain linefeed or carriage return characters"
+        raise ValueError(msg)
+
+    monkeypatch.setattr(Envelope, step, refuse)
+
+    publication = publish()
+
+    assert publication.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert publication.response == {"error": "Header values may not contain linefeed or carriage return characters"}
+    assert smtp_server.sent == []
 
 
 def test_a_plain_word_that_looks_like_base64_is_left_alone(publish: Callable[..., Publication]) -> None:

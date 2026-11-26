@@ -165,7 +165,8 @@ class EMAILPublisher(BasePublisher):
             attachment_data = publisher_input.data[:]
             file_name = ""
             if publisher_input.att_file_name:
-                file_name = b64decode(publisher_input.att_file_name).decode("UTF-8").strip()
+                # It goes into the Content-Disposition header: one line, like the subject below.
+                file_name = mail_headers.scrub_header_text(b64decode(publisher_input.att_file_name).decode("UTF-8"))
             if file_name == "":
                 now = datetime.now(TZ).strftime("%Y%m%d%H%M%S")
                 file_name = f"file_{now}"
@@ -195,10 +196,10 @@ class EMAILPublisher(BasePublisher):
 
         body_mime = publisher_input.message_body_mime_type or "text/plain"
         envelope.mime("html" if body_mime == "text/html" else "plain")
-        if not subject:
-            envelope.subject(" ")
-        else:
-            envelope.subject(subject)
+        # The subject is one header line. A title can hold line breaks - a template printing a
+        # Rich Text value of several paragraphs, a pasted U+2028 - and the standard library
+        # refuses the whole message over one, so they and other control characters become spaces.
+        envelope.subject(mail_headers.scrub_header_text(subject) or " ")
         envelope.from_(sender)
         envelope.to(recipients)
 
@@ -229,14 +230,16 @@ class EMAILPublisher(BasePublisher):
             self.logger.exception(f"Error: {error}")
             return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR
 
-        email_string = str(envelope)
-        max_length = 3000
-        if len(email_string) > max_length:
-            email_string = f"{email_string[:max_length]}\n..."
-        self.logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{email_string}")
-
-        envelope.smtp(smtp)
         try:
+            # Composing the message raises for what the standard library refuses in it: here
+            # that is reported like any other failed publish instead of escaping publish().
+            email_string = str(envelope)
+            max_length = 3000
+            if len(email_string) > max_length:
+                email_string = f"{email_string[:max_length]}\n..."
+            self.logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{email_string}")
+
+            envelope.smtp(smtp)
             sent = envelope.send()
             success = bool(sent)
             if success:
