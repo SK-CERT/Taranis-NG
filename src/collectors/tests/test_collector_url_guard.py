@@ -194,6 +194,53 @@ def test_web_collector_without_credentials_opens_the_bare_url() -> None:
     assert collector.title_page_url == collector.source.url == "https://news.example.org/a"
 
 
+@pytest.mark.parametrize(
+    ("web_url", "title_page_url"),
+    [
+        ("https://reader:s3cret-value@news.example.org/a?page=2", "https://reader:s3cret-value@news.example.org/a?page=2"),
+        ("reader:s3cret-value@news.example.org/a?page=2", "https://reader:s3cret-value@news.example.org/a?page=2"),
+        # typed encoded or not, the browser gets them encoded once
+        ("https://reader:p%40ss%3Aword@news.example.org/a?page=2", "https://reader:p%40ss%3Aword@news.example.org/a?page=2"),
+        ("https://reader:p@ss:word@news.example.org/a?page=2", "https://reader:p%40ss%3Aword@news.example.org/a?page=2"),
+    ],
+)
+def test_credentials_typed_into_the_web_url_are_the_page_s_credentials(web_url: str, title_page_url: str) -> None:
+    accepted, collector = parse_web_collector(WEB_URL=web_url)
+
+    assert accepted is True
+    # logged, checked, and stored as every news item's source: no credentials there
+    assert collector.source.url == "https://news.example.org/a?page=2"
+    assert collector.title_page_url == title_page_url
+
+
+def test_the_auth_parameters_win_over_credentials_in_the_web_url() -> None:
+    accepted, collector = parse_web_collector(
+        WEB_URL="https://reader:s3cret-value@news.example.org/a",
+        AUTH_USERNAME="analyst",
+        AUTH_PASSWORD="other-value",
+    )
+
+    assert accepted is True
+    assert collector.source.url == "https://news.example.org/a"
+    assert collector.title_page_url == "https://analyst:other-value@news.example.org/a"
+    assert "s3cret-value" not in repr(collector.source.logger.messages)
+
+
+def test_a_refused_web_url_is_reported_without_the_credentials_typed_into_it() -> None:
+    accepted, source = parse_web_settings(WEB_URL="https://reader:s3cret-value@intranet.example.org/a")
+
+    assert accepted is False
+    assert "https://intranet.example.org/a" in source.logger.messages["error"][0]
+    assert "s3cret-value" not in repr(source.logger.messages)
+
+
+def test_an_unreadable_web_url_with_credentials_is_refused_without_quoting_it() -> None:
+    accepted, source = parse_web_settings(WEB_URL="https://reader:s3cret-value@[news.example.org/a")
+
+    assert accepted is False
+    assert source.logger.messages["error"] == ["Web URL is not a valid URL. Skipping collection."]
+
+
 def test_web_collector_redacts_credentials_in_browser_errors() -> None:
     _accepted, collector = parse_web_collector(WEB_URL="https://news.example.org/a", AUTH_USERNAME="reader", AUTH_PASSWORD="s3cret-value")
 

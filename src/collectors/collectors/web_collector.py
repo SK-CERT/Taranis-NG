@@ -10,7 +10,7 @@ import subprocess
 import time
 import uuid
 from typing import ClassVar
-from urllib.parse import quote, urlparse, urlsplit, urlunsplit
+from urllib.parse import quote, unquote, urlparse, urlsplit, urlunsplit
 
 import selenium
 from dateutil.parser import parse
@@ -52,6 +52,9 @@ def without_credentials(url: str | None) -> str | None:
 
     Returns:
         (str | None): The same URL without credentials; ``url`` itself when it has none or is empty.
+
+    Raises:
+        ValueError: When the URL cannot be read (``urlsplit``).
     """
     if not url or "@" not in url:
         return url
@@ -395,11 +398,25 @@ class WebCollector(BaseCollector):
         # Web pages only. A local file or directory, or any other scheme a browser understands
         # (file:, view-source:, chrome:), is refused when the URL is checked below.
         web_url = web_url.strip()
-        self.source.url = web_url if re.search(r"^[a-z][a-z0-9+.-]*://", web_url.lower()) else f"https://{web_url}"
-        bare_url = self.source.url
+        web_url = web_url if re.search(r"^[a-z][a-z0-9+.-]*://", web_url.lower()) else f"https://{web_url}"
         # The source's URL stays without credentials: it is logged, checked, and stored as the
         # source of every news item, where every analyst reads it. Only the browser is handed the
         # page's basic-auth credentials, in the URL it opens the title page with.
+        try:
+            bare_url = without_credentials(web_url)
+        except ValueError:
+            # not quoted, and no traceback: the URL may hold credentials
+            self.source.logger.error("Web URL is not a valid URL. Skipping collection.")  # noqa: TRY400
+            return False
+        if bare_url != web_url:
+            # Credentials typed into the URL itself are the page's credentials, like the AUTH_*
+            # parameters, which win when both are set.
+            if self.auth_username and self.auth_password:
+                self.source.logger.info("Web URL has credentials of its own; the AUTH_USERNAME and AUTH_PASSWORD parameters are used")
+            else:
+                typed = urlsplit(web_url)
+                self.auth_username, self.auth_password = unquote(typed.username or ""), unquote(typed.password or "")
+        self.source.url = bare_url
         self.title_page_url = self.__with_credentials(bare_url)
 
         # parse other arguments
