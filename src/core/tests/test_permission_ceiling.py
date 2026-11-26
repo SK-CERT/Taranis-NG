@@ -35,6 +35,7 @@ def _user(user_id: int, permissions: set[str], *, roles: tuple[int, ...] = (), s
     held = set(permissions).union(*(ROLES[role_id] for role_id in roles))
     return types.SimpleNamespace(
         id=user_id,
+        username=f"user{user_id}",
         status=status,
         password="hash",
         permissions=direct,
