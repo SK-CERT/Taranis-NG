@@ -207,14 +207,39 @@ def test_users_are_listed_for_the_organizations_asked_for_only(monkeypatch: pyte
 
 
 @pytest.mark.usefixtures("sql")
-def test_notification_templates_are_listed_for_the_organization_only(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    ("organizations", "condition"),
+    [
+        # Only the first organization's templates were listed, while update and delete accept
+        # a template of any of the user's organizations.
+        ([CUSTOMER_A, CSIRT], "notification_template_organization.organization_id IN (1, 3)"),
+        ([CUSTOMER_B], "notification_template_organization.organization_id IN (2)"),
+    ],
+)
+def test_notification_templates_are_listed_for_every_organization_of_the_user(
+    monkeypatch: pytest.MonkeyPatch,
+    organizations: list,
+    condition: str,
+) -> None:
     queries: list = []
     monkeypatch.setattr(type(NotificationTemplate.query), "all", lambda query: queries.append(query) or [])
     monkeypatch.setattr(type(NotificationTemplate.query), "count", lambda _query: 0)
 
-    NotificationTemplate.get(None, types.SimpleNamespace(id=1))
+    listing = NotificationTemplate.get_all_json(types.SimpleNamespace(organizations=organizations), "vpn")
 
-    assert "notification_template_organization.organization_id = 1" in _compiled(queries[0])
+    assert listing == {"total_count": 0, "items": []}
+    (query,) = queries
+    sql = _compiled(query)
+    # A subquery, not a join: a template of two of the organizations is listed once.
+    assert "notification_template.id IN (SELECT notification_template_organization.notification_template_id" in sql
+    assert condition in sql
+    assert "notification_template.name ILIKE '%%vpn%%'" in sql
+
+
+def test_a_user_without_an_organization_lists_no_notification_template(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(NotificationTemplate, "get", classmethod(lambda *_args: pytest.fail("every template was queried")))
+
+    assert NotificationTemplate.get_all_json(types.SimpleNamespace(organizations=[]), None) == {"total_count": 0, "items": []}
 
 
 @pytest.mark.usefixtures("sql")
