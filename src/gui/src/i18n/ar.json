@@ -1321,7 +1321,10 @@
             "last_seen": "آخر ظهور",
             "disabled": "معطّل"
         },
-        "stored_secret": "محفوظ – اتركه فارغًا للإبقاء عليه"
+        "stored_secret": "محفوظ – اتركه فارغًا للإبقاء عليه",
+        "remove_stored_secret": "إزالة القيمة المحفوظة عند الحفظ",
+        "keep_stored_secret": "الإبقاء على القيمة المحفوظة",
+        "stored_secret_removed": "ستُزال عند الحفظ"
     },
     "collectors": {
         "groups": {

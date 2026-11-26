@@ -135,10 +135,26 @@
                 density="comfortable"
                 type="password"
                 autocomplete="new-password"
-                :hint="hasSecret ? t('auth_provider.secret_keep_hint') : t('auth_provider.secret_hint')"
+                :hint="
+                    removeSecret
+                        ? t('common.stored_secret_removed')
+                        : hasSecret
+                          ? t('auth_provider.secret_keep_hint')
+                          : t('auth_provider.secret_hint')
+                "
                 persistent-hint
                 :disabled="saving"
-            />
+            >
+                <template
+                    v-if="hasSecret"
+                    #append-inner
+                >
+                    <StoredSecretToggle
+                        :removing="removeSecret"
+                        @toggle="toggleRemoveSecret"
+                    />
+                </template>
+            </v-text-field>
         </v-col>
         <v-col
             cols="12"
@@ -185,6 +201,7 @@
      * parent owns), so no field-by-field events are needed.
      */
     import { computed } from 'vue'
+    import StoredSecretToggle from '@/components/common/StoredSecretToggle.vue'
     import { useI18n } from 'vue-i18n'
     import type { ProviderConfig } from '../types'
 
@@ -213,6 +230,13 @@
     }>()
 
     const secretModel = defineModel<string>({ default: '' })
+
+    // The remove button: drop the stored secret on save (the dialog sends clear_secret).
+    const removeSecret = defineModel<boolean>('removeSecret', { default: false })
+    const toggleRemoveSecret = (): void => {
+        removeSecret.value = !removeSecret.value
+        if (removeSecret.value) secretModel.value = ''
+    }
     const { t } = useI18n()
 
     const pkceMethod = computed({

@@ -2,7 +2,9 @@
 
 Lists and dialogs get an empty value and whether one is stored (``api_key_set``,
 ``value_set``). An update that leaves a secret empty keeps the stored one, so a dialog can
-be saved without retyping it; a new value replaces it.
+be saved without retyping it; a new value replaces it. Removing a stored secret takes an
+explicit request (``clear_api_key``, ``clear_stored`` on a parameter value), sent by the
+dialog's remove button.
 """
 
 from __future__ import annotations
@@ -19,6 +21,9 @@ SECRET_PARAMETER = re.compile(r"(PASSWORD|TOKEN|SECRET|API_KEY|SSH_KEY)$")
 def keep_stored_api_key(data: object, model: type, record_id: object) -> object:
     """``data`` with the stored ``api_key`` of ``model`` ``record_id`` when the update leaves it empty.
 
+    ``clear_api_key: true`` with an empty ``api_key`` removes the stored key instead (for a
+    record whose key is optional); the flag itself never reaches the schema.
+
     Args:
         data: The submitted record.
         model: Its model class.
@@ -27,6 +32,12 @@ def keep_stored_api_key(data: object, model: type, record_id: object) -> object:
     Returns:
         The data to update with.
     """
+    if isinstance(data, dict) and "clear_api_key" in data:
+        # JSON true only: "false", or any other non-empty value, must not remove the key.
+        clear = data.get("clear_api_key") is True
+        data = {field: value for field, value in data.items() if field != "clear_api_key"}
+        if clear and not (data.get("api_key") or "").strip():
+            return {**data, "api_key": ""}
     if not isinstance(data, dict) or (data.get("api_key") or "").strip():
         return data
     stored = db.session.get(model, record_id)
@@ -68,17 +79,21 @@ def hide_secret_parameters(dumped: object) -> object:
     return dumped
 
 
-def keep_secret_parameter(key: str | None, stored: str | None, submitted: str | None) -> str | None:
+def keep_secret_parameter(key: str | None, stored: str | None, submitted: str | None, *, clear: bool = False) -> str | None:
     """The value to store for a parameter: a secret left empty keeps the stored value.
+
+    The GUI never receives a stored secret, so an empty one can only mean "keep it". Removing
+    it takes an explicit ``clear`` (the dialog's remove button); a value typed in still wins.
 
     Args:
         key: The parameter's key.
         stored: The stored value.
         submitted: The value the update sends.
+        clear: The update asks to remove the stored secret.
 
     Returns:
         The value to store.
     """
     if is_secret_parameter(key) and not (submitted or "").strip():
-        return stored
+        return "" if clear else stored
     return submitted

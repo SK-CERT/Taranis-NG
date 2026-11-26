@@ -545,10 +545,26 @@
                         variant="outlined"
                         density="comfortable"
                         rows="5"
-                        :hint="hasSecret ? t('auth_provider.secret_keep_hint') : t('auth_provider.sp_private_key_hint')"
+                        :hint="
+                            removeSecret
+                                ? t('common.stored_secret_removed')
+                                : hasSecret
+                                  ? t('auth_provider.secret_keep_hint')
+                                  : t('auth_provider.sp_private_key_hint')
+                        "
                         persistent-hint
                         :disabled="saving"
-                    />
+                    >
+                        <template
+                            v-if="hasSecret"
+                            #append-inner
+                        >
+                            <StoredSecretToggle
+                                :removing="removeSecret"
+                                @toggle="toggleRemoveSecret"
+                            />
+                        </template>
+                    </v-textarea>
                 </v-col>
                 <v-col cols="12">
                     <v-textarea
@@ -589,6 +605,7 @@
      * directly by the unit tests.
      */
     import { ref } from 'vue'
+    import StoredSecretToggle from '@/components/common/StoredSecretToggle.vue'
     import { useI18n } from 'vue-i18n'
     import SuggestField from '@/components/common/SuggestField.vue'
     import type { ProviderConfig } from '../types'
@@ -640,6 +657,13 @@
     const federationModel = defineModel<boolean>('federation', { default: false })
     const metadataModel = defineModel<string>('metadata', { default: '' })
     const secretModel = defineModel<string>('secret', { default: '' })
+
+    // The remove button: drop the stored secret on save (the dialog sends clear_secret).
+    const removeSecret = defineModel<boolean>('removeSecret', { default: false })
+    const toggleRemoveSecret = (): void => {
+        removeSecret.value = !removeSecret.value
+        if (removeSecret.value) secretModel.value = ''
+    }
 
     /** Active SAML tab. Defaults to "general" (the first tab). */
     const activeTab = ref('general')

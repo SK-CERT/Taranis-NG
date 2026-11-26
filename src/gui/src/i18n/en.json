@@ -1321,7 +1321,10 @@
             "last_seen": "last seen",
             "disabled": "Disabled"
         },
-        "stored_secret": "Stored – leave empty to keep it"
+        "stored_secret": "Stored – leave empty to keep it",
+        "remove_stored_secret": "Remove the stored value when saving",
+        "keep_stored_secret": "Keep the stored value",
+        "stored_secret_removed": "Removed when you save"
     },
     "collectors": {
         "groups": {

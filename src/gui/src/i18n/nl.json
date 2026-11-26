@@ -1321,7 +1321,10 @@
             "last_seen": "laatst gezien",
             "disabled": "Uitgeschakeld"
         },
-        "stored_secret": "Opgeslagen – laat leeg om te behouden"
+        "stored_secret": "Opgeslagen – laat leeg om te behouden",
+        "remove_stored_secret": "Opgeslagen waarde verwijderen bij opslaan",
+        "keep_stored_secret": "Opgeslagen waarde behouden",
+        "stored_secret_removed": "Wordt verwijderd bij opslaan"
     },
     "collectors": {
         "groups": {

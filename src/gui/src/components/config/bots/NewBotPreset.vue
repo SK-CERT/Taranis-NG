@@ -106,15 +106,21 @@
                                 variant="outlined"
                                 density="comfortable"
                                 :disabled="saving"
-                                :placeholder="storedSecrets.has(String(param.key)) ? t('common.stored_secret') : param.default_value"
+                                :placeholder="secretPlaceholder(param.key, param.default_value)"
                                 :persistent-placeholder="storedSecrets.has(String(param.key))"
                                 :rules="dynamicParameterRules(param, t('error.required'))"
                             >
                                 <template
-                                    v-if="param.description"
+                                    v-if="param.description || removable(param)"
                                     #append-inner
                                 >
+                                    <StoredSecretToggle
+                                        v-if="removable(param)"
+                                        :removing="isRemoved(param.key)"
+                                        @toggle="toggleStoredSecret(param.key, index)"
+                                    />
                                     <v-icon
+                                        v-if="param.description"
                                         color="primary"
                                         :title="param.description"
                                         >mdi-help-circle</v-icon
@@ -166,6 +172,8 @@
     import { createNewBotPreset, updateBotPreset, getAllBotsNodes } from '@/api/config'
     import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
     import { isSecretParameter, storedSecretKeys } from '@/utils/secretParameters'
+    import { useStoredSecretRemoval } from '@/composables/useStoredSecretRemoval'
+    import StoredSecretToggle from '@/components/common/StoredSecretToggle.vue'
 
     type PresetParameter = {
         id?: string | number
@@ -254,6 +262,18 @@
     const localItem = ref<BotPresetItem>({ ...defaultItem })
     // Credentials the record has stored: core sends them empty, and saving them empty keeps them.
     const storedSecrets = computed(() => storedSecretKeys(localItem.value.parameter_values as Parameters<typeof storedSecretKeys>[0]))
+
+    // A stored credential can be removed (on save) unless the parameter must have a value.
+    const { removed: removedSecrets, isRemoved, toggleRemoved, removalFlag } = useStoredSecretRemoval(storedSecrets)
+    const removable = (param: { key?: unknown; required?: boolean | null }): boolean =>
+        storedSecrets.value.has(String(param.key)) && param.required !== true
+    const toggleStoredSecret = (key: unknown, index: number): void => {
+        if (toggleRemoved(key)) parameterValues.value[index] = ''
+    }
+    const secretPlaceholder = (key: unknown, fallback: unknown): string => {
+        if (isRemoved(key)) return t('common.stored_secret_removed')
+        return storedSecrets.value.has(String(key)) ? t('common.stored_secret') : String(fallback ?? '')
+    }
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_BOT_PRESET_CREATE'))
@@ -415,10 +435,10 @@
         try {
             // Prepare parameter values
             const paramValues =
-                selectedBot.value.parameters?.map((param, index) => ({
-                    value: String(parameterValues.value[index] ?? param.default_value ?? ''),
-                    parameter: param
-                })) || []
+                selectedBot.value.parameters?.map((param, index) => {
+                    const value = String(parameterValues.value[index] ?? param.default_value ?? '')
+                    return { value, parameter: param, ...removalFlag(param.key, value) }
+                }) || []
 
             const payload: BotPresetItem = {
                 ...localItem.value,
@@ -458,7 +478,12 @@
     }
 
     const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
-        getState: () => ({ item: localItem.value, bot: selectedBot.value?.id ?? null, params: parameterValues.value }),
+        getState: () => ({
+            item: localItem.value,
+            bot: selectedBot.value?.id ?? null,
+            params: parameterValues.value,
+            removedSecrets: [...removedSecrets.value]
+        }),
         save: persist,
         close: closeDialog
     })

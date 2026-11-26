@@ -1321,7 +1321,10 @@
             "last_seen": "ostatnio widziano",
             "disabled": "Wyłączony"
         },
-        "stored_secret": "Zapisano – pozostaw puste, aby zachować"
+        "stored_secret": "Zapisano – pozostaw puste, aby zachować",
+        "remove_stored_secret": "Usuń zapisaną wartość przy zapisie",
+        "keep_stored_secret": "Zachowaj zapisaną wartość",
+        "stored_secret_removed": "Zostanie usunięte przy zapisie"
     },
     "collectors": {
         "groups": {

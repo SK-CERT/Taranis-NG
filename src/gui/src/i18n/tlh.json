@@ -1321,7 +1321,10 @@
             "last_seen": "legh Qav",
             "disabled": "chu'Ha'lu'pu'"
         },
-        "stored_secret": "pol – yIchenmoHQo'"
+        "stored_secret": "pol – yIchenmoHQo'",
+        "remove_stored_secret": "pol mI' yInge' pollu'DI'",
+        "keep_stored_secret": "pol mI' yIpol",
+        "stored_secret_removed": "pollu'DI' nge'lu'"
     },
     "collectors": {
         "groups": {

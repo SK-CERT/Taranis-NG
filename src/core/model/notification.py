@@ -78,7 +78,16 @@ class NotificationChannel(db.Model):
         return crypto_manager.decrypt(self.secret)
 
     @classmethod
-    def save(cls, kind: str, enabled: bool, config: dict, secret: str | None, user_name: str) -> NotificationChannel:
+    def save(
+        cls,
+        kind: str,
+        enabled: bool,
+        config: dict,
+        secret: str | None,
+        user_name: str,
+        *,
+        clear_secret: bool = False,
+    ) -> NotificationChannel:
         """Create or update the channel of a kind.
 
         Args:
@@ -87,6 +96,8 @@ class NotificationChannel(db.Model):
             config (dict): Validated kind-specific settings.
             secret (str | None): A new secret; None or empty keeps the stored one.
             user_name (str): Who is saving.
+            clear_secret (bool): Forget the stored secret instead of keeping it, when no new one
+                is given (e.g. the SMTP server no longer needs a login).
 
         Returns:
             NotificationChannel: The saved channel.
@@ -99,17 +110,14 @@ class NotificationChannel(db.Model):
         channel.config = config
         if secret:
             channel.secret = crypto_manager.encrypt(secret)
+        elif clear_secret:
+            # In the same commit as the config: committed apart, a delivery in between logged
+            # in to the new server with the old password.
+            channel.secret = None
         channel.updated_by = user_name
         channel.updated_at = datetime.now(TZ)
         db.session.commit()
         return channel
-
-    def clear_secret(self, user_name: str) -> None:
-        """Forget the stored secret (e.g. when the SMTP server no longer needs a login)."""
-        self.secret = None
-        self.updated_by = user_name
-        self.updated_at = datetime.now(TZ)
-        db.session.commit()
 
     def to_json(self) -> dict:
         """Return the GUI-facing representation, never the secret itself."""

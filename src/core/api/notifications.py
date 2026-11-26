@@ -89,7 +89,7 @@ class NotificationChannelResource(Resource):
         """Save a channel.
 
         The body is ``{"enabled", "config", "secret"?, "clear_secret"?}``; an empty secret keeps
-        the stored one.
+        the stored one, ``clear_secret`` removes it - with the new settings, in one step.
 
         Returns:
             (dict, HTTPStatus): The saved channel, or why it was rejected.
@@ -104,9 +104,15 @@ class NotificationChannelResource(Resource):
             return {"error": str(error)}, HTTPStatus.BAD_REQUEST
         user = get_user_from_jwt()
         try:
-            channel = NotificationChannel.save(kind, bool(data.get("enabled")), config, data.get("secret") or None, user.name)
-            if data.get("clear_secret") and not data.get("secret"):
-                channel.clear_secret(user.name)
+            channel = NotificationChannel.save(
+                kind,
+                bool(data.get("enabled")),
+                config,
+                data.get("secret") or None,
+                user.name,
+                # JSON true only: "false", or any other non-empty value, must not remove it.
+                clear_secret=data.get("clear_secret") is True,
+            )
         except Exception as ex:
             msg = "Could not save the notification channel"
             log_manager.store_data_error_activity(user, msg, ex)
@@ -126,7 +132,8 @@ class NotificationChannelTestResource(Resource):
     def post(self, kind: str) -> tuple[dict, HTTPStatus]:
         """Send a test message right away with the settings in the form, saved or not.
 
-        The body is ``{"recipient", "config", "secret"?}``; an empty secret uses the stored one.
+        The body is ``{"recipient", "config", "secret"?, "clear_secret"?}``; an empty secret uses
+        the stored one, unless the form is about to remove it.
 
         Returns:
             (dict, HTTPStatus): ``{"ok": true}``, or the reason it was not delivered.
@@ -143,7 +150,7 @@ class NotificationChannelTestResource(Resource):
         except ValueError as error:
             return {"error": str(error)}, HTTPStatus.BAD_REQUEST
         secret = data.get("secret") or None
-        if secret is None:
+        if secret is None and data.get("clear_secret") is not True:
             stored = NotificationChannel.find(kind)
             secret = stored.get_secret_plaintext() if stored else None
         user = get_user_from_jwt()

@@ -12,6 +12,7 @@ import types
 
 import pytest
 from managers import stored_secrets
+from model.parameter_value import NewParameterValueSchema
 from shared.schema.ai_provider import AiProviderPresentationSchema
 from shared.schema.collectors_node import CollectorsNodePresentationSchema
 from shared.schema.public_web_node import PublicWebNodePresentationSchema
@@ -96,6 +97,33 @@ def test_a_secret_saved_empty_keeps_its_value(key: str, stored: str, submitted: 
     assert stored_secrets.keep_secret_parameter(key, stored, submitted) == kept
 
 
+@pytest.mark.parametrize(
+    ("submitted", "kept"),
+    [
+        ("", ""),  # removed
+        (None, ""),
+        ("new-one", "new-one"),  # a value typed in still wins
+    ],
+)
+def test_a_stored_secret_can_be_removed_on_request(submitted: str | None, kept: str) -> None:
+    assert stored_secrets.keep_secret_parameter("AUTH_PASSWORD", "hunter2", submitted, clear=True) == kept
+
+
+def _parameter(parameter_id: int, key: str) -> dict:
+    return {"id": parameter_id, "key": key, "name": key, "description": "", "type": "STRING", "default_value": ""}
+
+
+def test_the_remove_request_reaches_the_submitted_parameter_value() -> None:
+    loaded = NewParameterValueSchema(many=True).load(
+        [
+            {"value": "", "clear_stored": True, "parameter": _parameter(1, "AUTH_PASSWORD")},
+            {"value": "", "parameter": _parameter(2, "EMAIL_PASSWORD")},
+        ],
+    )
+
+    assert [value.clear_stored for value in loaded] == [True, False]
+
+
 def test_a_record_saved_without_a_key_keeps_the_stored_one(monkeypatch: pytest.MonkeyPatch) -> None:
     records = {7: types.SimpleNamespace(api_key="stored-key")}
     monkeypatch.setattr(stored_secrets.db, "session", types.SimpleNamespace(get=lambda _model, record_id: records.get(record_id)))
@@ -104,3 +132,22 @@ def test_a_record_saved_without_a_key_keeps_the_stored_one(monkeypatch: pytest.M
     assert stored_secrets.keep_stored_api_key({"name": "n"}, object, 7)["api_key"] == "stored-key"
     assert stored_secrets.keep_stored_api_key({"name": "n", "api_key": "new"}, object, 7)["api_key"] == "new"
     assert stored_secrets.keep_stored_api_key({"name": "n", "api_key": ""}, object, 8) == {"name": "n", "api_key": ""}
+
+
+def test_an_optional_api_key_can_be_removed_on_request(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(stored_secrets.db.session, "get", lambda _model, _record_id: types.SimpleNamespace(api_key="stored-key"))
+
+    removed = stored_secrets.keep_stored_api_key({"name": "VulnCheck", "api_key": "", "clear_api_key": True}, object, 3)
+    replaced = stored_secrets.keep_stored_api_key({"api_key": "new-key", "clear_api_key": True}, object, 3)
+    kept = stored_secrets.keep_stored_api_key({"api_key": "", "clear_api_key": False}, object, 3)
+
+    assert removed == {"name": "VulnCheck", "api_key": ""}
+    assert replaced == {"api_key": "new-key"}
+    assert kept == {"api_key": "stored-key"}
+
+
+@pytest.mark.parametrize("flag", ["false", "true", 1, "yes", None])
+def test_only_json_true_removes_an_api_key(monkeypatch: pytest.MonkeyPatch, flag: object) -> None:
+    monkeypatch.setattr(stored_secrets.db.session, "get", lambda _model, _record_id: types.SimpleNamespace(api_key="stored-key"))
+
+    assert stored_secrets.keep_stored_api_key({"api_key": "", "clear_api_key": flag}, object, 3) == {"api_key": "stored-key"}

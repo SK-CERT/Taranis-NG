@@ -1321,7 +1321,10 @@
             "last_seen": "अंतिम बार देखा गया",
             "disabled": "अक्षम"
         },
-        "stored_secret": "सहेजा गया – रखने के लिए खाली छोड़ें"
+        "stored_secret": "सहेजा गया – रखने के लिए खाली छोड़ें",
+        "remove_stored_secret": "सहेजते समय सहेजा गया मान हटाएँ",
+        "keep_stored_secret": "सहेजा गया मान रखें",
+        "stored_secret_removed": "सहेजने पर हटा दिया जाएगा"
     },
     "collectors": {
         "groups": {
