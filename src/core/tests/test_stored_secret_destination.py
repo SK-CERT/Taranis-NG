@@ -168,7 +168,7 @@ def test_saving_a_provider_with_a_new_server_and_no_secret_is_refused(monkeypatc
     new = types.SimpleNamespace(kind="ldap", slug="ldap", secret=None, config={"server_url": "ldaps://attacker.example"})
     monkeypatch.setattr(auth_provider, "NewAuthProviderSchema", lambda: types.SimpleNamespace(load=lambda _data: new))
     monkeypatch.setattr(auth_provider.db, "session", types.SimpleNamespace(get=lambda _model, _provider_id: old))
-    monkeypatch.setattr(AuthProvider, "_validate", classmethod(lambda _cls, *_args: None))
+    monkeypatch.setattr(AuthProvider, "_validate", classmethod(lambda _cls, *_args, **_kwargs: None))
 
     with pytest.raises(StoredSecretError, match="server_url changed"):
         AuthProvider.update(3, {}, "Admin")
