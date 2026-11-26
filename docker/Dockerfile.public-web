@@ -6,9 +6,9 @@
 
 # Build the shared package into a wheel, exactly as the other services do.
 # `[tool.uv.sources]` in src/public_web/pyproject.toml maps taranis-ng-shared to
-# ../shared, but that is a uv PROJECT-API feature (uv sync / uv lock) - `uv pip
-# install` ignores it and goes to the registry, where the package does not exist.
-# So the wheel is built here and offered to the resolver via --find-links below.
+# ../shared for local development. In the image that path does not exist (it would be
+# /shared), and current uv honours the table in `uv pip install .` too, so the install
+# below passes --no-sources and takes the wheel built here via --find-links instead.
 FROM python:3.14-alpine3.24 AS build_shared
 
 WORKDIR /build_shared/
@@ -52,7 +52,7 @@ COPY --chmod=644 ./docker/gunicorn_conf.py /app/gunicorn_conf.py
 # public-web has no lockfile, so it does this in one resolve instead.
 COPY --from=build_shared /build_shared/dist/ /tmp/wheels/
 COPY ./src/public_web/pyproject.toml /app/pyproject.toml
-RUN uv pip install --system --no-cache --find-links /tmp/wheels . && \
+RUN uv pip install --system --no-cache --no-sources --find-links /tmp/wheels . && \
     rm -rf /tmp/wheels /root/.cache
 
 # Application source.
