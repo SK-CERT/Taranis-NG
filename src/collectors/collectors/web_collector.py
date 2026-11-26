@@ -10,7 +10,7 @@ import subprocess
 import time
 import uuid
 from typing import ClassVar
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, urlparse, urlsplit, urlunsplit
 
 import selenium
 from dateutil.parser import parse
@@ -34,6 +34,31 @@ from shared.schema.news_item import NewsItemAttribute, NewsItemData
 from shared.url_guard import build_guarded_opener, collector_url_problem
 
 from .base_collector import BaseCollector, allowed_targets, not_modified
+
+# "scheme://user:password@" inside any text, e.g. an error message quoting a URL
+_URL_USERINFO = re.compile(r"(?<=://)[^/?#@\s]*@")
+
+
+def without_credentials(url: str | None) -> str | None:
+    """The URL without the ``user:password@`` part of its host.
+
+    The browser opens the title page with the source's basic-auth credentials in the URL, and a
+    relative link on that page resolves to an absolute URL that inherits them; so does the URL
+    the browser reports for the page it is on. What is logged, checked or stored as a news
+    item's link goes through here first.
+
+    Parameters:
+        url (str | None): A URL, possibly with credentials.
+
+    Returns:
+        (str | None): The same URL without credentials; ``url`` itself when it has none or is empty.
+    """
+    if not url or "@" not in url:
+        return url
+    parts = urlsplit(url)
+    if "@" not in parts.netloc:
+        return url
+    return urlunsplit(parts._replace(netloc=parts.netloc.rsplit("@", 1)[1]))
 
 
 class WebCollector(BaseCollector):
@@ -418,7 +443,8 @@ class WebCollector(BaseCollector):
         title_page_url = getattr(self, "title_page_url", None)
         if title_page_url and title_page_url != self.source.url:
             text = text.replace(title_page_url, self.source.url)
-        return text
+        # any other URL the browser built from the title page carries the credentials too
+        return _URL_USERINFO.sub("", text)
 
     def __url_problem(self, url: str) -> str | None:
         """Why the browser must not open (or have ended up on) a URL; None when it may.
@@ -605,7 +631,7 @@ class WebCollector(BaseCollector):
             return 0
 
         # The browser follows redirects on its own; where it ended up is checked before it is read.
-        problem = self.__url_problem(browser.current_url)
+        problem = self.__url_problem(without_credentials(browser.current_url))
         if problem:
             self.source.logger.error(f"{problem}. The title page redirected there; skipping collection.")
             self.__dispose_of_headless_driver(browser)
@@ -715,8 +741,11 @@ class WebCollector(BaseCollector):
             #     pass
             # if first item works but next items have problems - it's because this:
             # https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/#stale-element-reference-exception
+            # The browser opens the link as it is: resolved against the title page, it may carry the
+            # page's credentials, which the article page needs too. Logs and checks see it without.
             link = item.get_attribute("href")
-            problem = self.__url_problem(link) if link else None
+            shown_link = without_credentials(link)
+            problem = self.__url_problem(shown_link) if link else None
             if problem:
                 failed_articles += 1
                 self.source.logger.warning(f"{problem}. Skipping article {count}/{len(article_items)}.")
@@ -724,7 +753,7 @@ class WebCollector(BaseCollector):
             try:
                 if link:
                     scope = browser
-                    self.source.logger.info(f"Visiting article {count}/{len(article_items)}: {link}")
+                    self.source.logger.info(f"Visiting article {count}/{len(article_items)}: {shown_link}")
                     method_type_1 = 1
                     method_type_2 = 2
                     method_type_3 = 3
@@ -747,12 +776,12 @@ class WebCollector(BaseCollector):
 
             except Exception as error:
                 failed_articles += 1
-                self.source.logger.exception(f"Failed to get link for article {count}/{len(article_items)}: {error}")
+                self.source.logger.exception(f"Failed to get link for article {count}/{len(article_items)}: {self.__redacted(error)}")
                 continue
 
             try:
                 # A link may redirect; the page the browser landed on is checked before it is read.
-                problem = self.__url_problem(browser.current_url) if link else None
+                problem = self.__url_problem(without_credentials(browser.current_url)) if link else None
                 news_item = None if problem else self.__process_article_page(browser, scope)
                 if news_item:
                     self.sanitize_news_item(news_item, self.source)
@@ -766,7 +795,7 @@ class WebCollector(BaseCollector):
                     self.source.logger.warning("Parsing an article failed")
             except Exception as error:
                 failed_articles += 1
-                self.source.logger.exception(f"Parsing an article failed: {error}")
+                self.source.logger.exception(f"Parsing an article failed: {self.__redacted(error)}")
 
             if len(browser.window_handles) == 1:
                 back_clicks = 1
@@ -794,7 +823,8 @@ class WebCollector(BaseCollector):
         Returns:
             news_item (NewsItemData): The parsed news item.
         """
-        current_url = browser.current_url
+        # stored as the news item's link, which every analyst reads
+        current_url = without_credentials(browser.current_url)
 
         # print(browser.page_source, flush=True)
 

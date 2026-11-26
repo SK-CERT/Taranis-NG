@@ -22,7 +22,7 @@ import requests
 from collectors.base_collector import allowed_targets, load_sources
 from collectors.csaf_sources import BlockedRedirectError, Fetcher
 from collectors.rss_collector import RSSCollector
-from collectors.web_collector import WebCollector
+from collectors.web_collector import WebCollector, without_credentials
 
 from collectors import rss_collector
 from shared import url_guard
@@ -201,6 +201,43 @@ def test_web_collector_redacts_credentials_in_browser_errors() -> None:
 
     assert "s3cret-value" not in message
     assert "https://news.example.org/a" in message
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("https://reader:s3cret@news.example.org/article/1?x=1#y", "https://news.example.org/article/1?x=1#y"),
+        ("https://reader:p%40ss@news.example.org:8443/a", "https://news.example.org:8443/a"),
+        ("https://news.example.org/a?mail=x@example.org", "https://news.example.org/a?mail=x@example.org"),
+        ("https://news.example.org/a", "https://news.example.org/a"),
+        ("", ""),
+        (None, None),
+    ],
+)
+def test_links_are_shown_and_stored_without_credentials(url: str | None, expected: str | None) -> None:
+    assert without_credentials(url) == expected
+
+
+def test_an_article_reached_from_a_credentialed_title_page_is_stored_without_credentials() -> None:
+    """A relative link on the title page resolves to a URL that inherits its user name and password."""
+    _accepted, collector = parse_web_collector(WEB_URL="https://news.example.org/a", AUTH_USERNAME="reader", AUTH_PASSWORD="s3cret-value")
+    collector._WebCollector__find_element_text_by = lambda _scope, selector: "Article title" if selector else ""
+    collector._WebCollector__find_element_html_by = lambda _scope, _selector: "<p>Body</p>"
+    browser = types.SimpleNamespace(current_url="https://reader:s3cret-value@news.example.org/article/1")
+
+    news_item = collector._WebCollector__process_article_page(browser, browser)
+
+    assert news_item is not None
+    assert news_item.link == "https://news.example.org/article/1"
+    assert news_item.source == "https://news.example.org/a"
+
+
+def test_web_collector_redacts_credentials_of_any_url_in_errors() -> None:
+    _accepted, collector = parse_web_collector(WEB_URL="https://news.example.org/a", AUTH_USERNAME="reader", AUTH_PASSWORD="s3cret-value")
+
+    message = collector._WebCollector__redacted(RuntimeError("net::ERR_ABORTED at https://reader:s3cret-value@news.example.org/article/7"))
+
+    assert message == "net::ERR_ABORTED at https://news.example.org/article/7"
 
 
 def test_web_collector_checks_links_and_landing_pages_with_the_source_s_proxy_setting() -> None:
