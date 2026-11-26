@@ -104,7 +104,12 @@ class NewHotkeySchema(HotkeySchema):
 
 
 def is_external_user(user: User, external_permissions: Collection[str]) -> bool:
-    """Whether a user is an external (asset portal) user: no role, and only external permissions.
+    """Whether a user is an external (asset portal) user: no role, only external permissions, no login identity.
+
+    An account a login method provisioned holds no role while it waits for approval (or when the
+    method grants none). It is not the asset portal's: an asset administrator who set its password
+    would sign in as it once an administrator approves it and gives it roles. The portal never
+    links identities (``add_new_external`` drops them).
 
     Args:
         user (User): The user.
@@ -113,7 +118,7 @@ def is_external_user(user: User, external_permissions: Collection[str]) -> bool:
     Returns:
         bool: True for an external user.
     """
-    return not user.roles and all(permission.id in external_permissions for permission in user.permissions)
+    return not user.roles and not user.auth_identities and all(permission.id in external_permissions for permission in user.permissions)
 
 
 class User(db.Model):
@@ -315,7 +320,7 @@ class User(db.Model):
         return {"total_count": count, "items": user_schema.dump(users)}
 
     @classmethod
-    def get_all_external_json(cls, user: User, search: str, external_permissions: Collection[str]) -> dict:
+    def get_all_external_json(cls, user: User, search: str, external_permissions: Collection[str], *, members: bool = False) -> dict:
         """List the external users an organization's asset administrator manages.
 
         Args:
@@ -323,16 +328,18 @@ class User(db.Model):
             user (User): Who asks (holds MY_ASSETS_CONFIG).
             search (str): The search query.
             external_permissions (Collection[str]): The permissions an external user may hold.
+            members (bool): List every user of the asker's organizations instead, for an asset
+                group's allowed users (read-only: they are not managed here).
 
         Returns:
-            dict: The external users of the asker's organizations (see :meth:`is_external`).
+            dict: The external users (or all members) of the asker's organizations (see :meth:`is_external`).
         """
         if not user.organizations:
             return {"total_count": 0, "items": []}
         users, _count = cls.get(search, list(user.organizations))
-        external = [listed for listed in users if is_external_user(listed, external_permissions)]
+        listed = users if members else [one for one in users if is_external_user(one, external_permissions)]
         user_schema = UserPresentationSchema(many=True)
-        return {"total_count": len(external), "items": user_schema.dump(external)}
+        return {"total_count": len(listed), "items": user_schema.dump(listed)}
 
     def is_external(self, external_permissions: Collection[str]) -> bool:
         """Whether the user is an external (asset portal) user: no role, and only external permissions."""

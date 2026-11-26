@@ -1704,7 +1704,14 @@ class ExternalUsersResource(Resource):
             (dict): The external users
         """
         search = request.args.get("search")
-        return user.User.get_all_external_json(auth_manager.get_user_from_jwt(), search, auth_manager.get_external_permissions_ids())
+        # ?members=1: everyone of the asker's organizations, for an asset group's allowed users
+        members = request.args.get("members") in ("1", "true")
+        return user.User.get_all_external_json(
+            auth_manager.get_user_from_jwt(),
+            search,
+            auth_manager.get_external_permissions_ids(),
+            members=members,
+        )
 
     @auth_required("MY_ASSETS_CONFIG")
     def post(self) -> tuple[dict, HTTPStatus] | None:

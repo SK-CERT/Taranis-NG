@@ -37,9 +37,11 @@ def _user(
     *,
     roles: list | None = None,
     permissions: tuple[str, ...] = ("MY_ASSETS_ACCESS",),
+    identities: tuple[str, ...] = (),
 ) -> types.SimpleNamespace:
     return types.SimpleNamespace(
         id=user_id,
+        auth_identities=list(identities),
         username=f"user{user_id}",
         name=f"User {user_id}",
         password="old-hash",
@@ -60,6 +62,8 @@ def accounts(monkeypatch: pytest.MonkeyPatch) -> dict[int, types.SimpleNamespace
         13: _user(13, [CUSTOMER_A], roles=[types.SimpleNamespace(name="Admin")], permissions=()),
         14: _user(14, [CUSTOMER_A], permissions=("MY_ASSETS_ACCESS", "CONFIG_USER_UPDATE")),
         15: _user(15, [CUSTOMER_A, CSIRT]),
+        # provisioned by a login method, waiting for approval: no role yet, no permission
+        16: _user(16, [CUSTOMER_A], permissions=(), identities=("sso",)),
     }
     session = types.SimpleNamespace(
         get=lambda _model, user_id: stored.get(user_id),
@@ -84,6 +88,7 @@ def test_an_external_user_of_one_s_organization_can_be_changed(accounts: dict[in
         (13, "an administrator, with a role"),
         (14, "an internal permission"),
         (15, "also in an organization the admin is not"),
+        (16, "an account a login method provisioned"),
     ],
 )
 def test_nobody_else_can_be_changed_or_deleted(accounts: dict[int, types.SimpleNamespace], user_id: int, why: str) -> None:
@@ -110,6 +115,19 @@ def test_the_list_shows_external_users_of_one_s_organizations_only(monkeypatch: 
 
     assert asked == [[CUSTOMER_A]]
     assert listing == {"total_count": 1, "items": [11]}
+
+
+def test_an_asset_group_may_list_every_member_of_one_s_organizations(monkeypatch: pytest.MonkeyPatch) -> None:
+    everyone = [_user(11, [CUSTOMER_A]), _user(13, [CUSTOMER_A], roles=[types.SimpleNamespace(name="Admin")], permissions=())]
+    monkeypatch.setattr(User, "get", classmethod(lambda _cls, _search, _organizations: (everyone, 2)))
+    monkeypatch.setattr(
+        user_module,
+        "UserPresentationSchema",
+        lambda **_kwargs: types.SimpleNamespace(dump=lambda users: [u.id for u in users]),
+    )
+
+    assert User.get_all_external_json(ORG_ADMIN, None, EXTERNAL, members=True) == {"total_count": 2, "items": [11, 13]}
+    assert User.get_all_external_json(_user(20, []), None, EXTERNAL, members=True) == {"total_count": 0, "items": []}
 
 
 def test_a_new_external_user_gets_no_identity_status_or_mfa_from_the_request(

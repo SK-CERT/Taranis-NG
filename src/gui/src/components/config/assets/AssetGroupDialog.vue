@@ -76,7 +76,7 @@
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { createNewAssetGroup, getAllNotificationTemplates, updateAssetGroup } from '@/api/assets'
-    import { getAllExternalUsers } from '@/api/config'
+    import { getOrganizationMembers } from '@/api/config'
     import type { AssetGroup, Id, NotificationTemplate, UserReference } from '@/types/assets'
 
     const props = defineProps<{ modelValue: boolean; group?: AssetGroup | null }>()
@@ -114,10 +114,13 @@
         error.value = false
         try {
             const [usersResponse, templatesResponse] = await Promise.all([
-                getAllExternalUsers({ search: '' }) as Promise<{ data?: { items?: UserReference[] } }>,
+                getOrganizationMembers({ search: '' }) as Promise<{ data?: { items?: UserReference[] } }>,
                 getAllNotificationTemplates({ search: '' }) as Promise<{ data?: { items?: NotificationTemplate[] } }>
             ])
-            users.value = usersResponse.data?.items || []
+            const members = usersResponse.data?.items || []
+            // Members the list does not hold (another organization's, added earlier) stay visible.
+            const listed = new Set(members.map((member) => member.id))
+            users.value = [...members, ...(props.group?.users || []).filter((member) => !listed.has(member.id))]
             templates.value = templatesResponse.data?.items || []
         } catch {
             users.value = []
