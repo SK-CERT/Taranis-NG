@@ -12,7 +12,7 @@ from model.auth_provider import AuthProvider
 @pytest.fixture
 def stored(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     """A stored provider, and an update that touches no database."""
-    record = SimpleNamespace(kind="oidc", secret="encrypted-secret")
+    record = SimpleNamespace(kind="oidc", secret="encrypted-secret", config={})
     validated: list[bool] = []
     monkeypatch.setattr(auth_provider.db.session, "get", lambda _model, _provider_id: record)
     monkeypatch.setattr(auth_provider.db.session, "commit", lambda: None)

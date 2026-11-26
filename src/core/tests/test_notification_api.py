@@ -102,7 +102,7 @@ def test_a_test_message_uses_the_stored_password_unless_the_form_removes_it(
     sent: str | None,
 ) -> None:
     secrets: list = []
-    stored = SimpleNamespace(get_secret_plaintext=lambda: "stored-password")
+    stored = SimpleNamespace(secret="encrypted", config={"host": "smtp.example.test"}, get_secret_plaintext=lambda: "stored-password")
     monkeypatch.setattr(notifications_api.NotificationChannel, "find", classmethod(lambda _cls, _kind: stored))
     monkeypatch.setattr(notifications_api.notification_manager, "send_test", lambda _kind, _config, secret, *_args: secrets.append(secret))
     monkeypatch.setattr(notifications_api.CHANNELS["email"], "validate", staticmethod(lambda config: config))
