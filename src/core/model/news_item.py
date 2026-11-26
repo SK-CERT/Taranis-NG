@@ -420,6 +420,20 @@ class NewsItemData(db.Model):
             return True
         return db.session.query(db.exists().where(NewsItemDataVersion.hash == hash_string)).scalar()
 
+    def holds_revision(self, hash_string: str) -> bool:
+        """Check whether this item holds the revision with this hash, as its current one or in history.
+
+        Reads the history through the relationship, so a revision this batch has just moved there
+        counts too.
+
+        Args:
+            hash_string (str): Hash string
+
+        Returns:
+            True when this item already holds that revision.
+        """
+        return self.hash == hash_string or any(version.hash == hash_string for version in self.versions)
+
     @classmethod
     def lock_identities(cls, news_items_data: list[NewsItemData]) -> None:
         """Make batches that carry the same item wait for each other until they commit.
@@ -1517,7 +1531,8 @@ class NewsItemAggregate(db.Model):
             news_items_data_list (list[dict]): News items data list
             source_ids (Collection[str] | None): The sources of the collectors node that sent them.
                 A newer revision then updates only an item of one of these sources: another node
-                must not be able to rewrite what this one collected. None looks at every source.
+                must not be able to rewrite what this one collected, nor keep it at an old revision
+                by storing the new one first. None looks at every source.
 
         Returns:
             set[int]: OSINT source IDs
@@ -1530,12 +1545,18 @@ class NewsItemAggregate(db.Model):
         NewsItemData.lock_identities(news_items_data)
 
         for news_item_data in news_items_data:
-            if NewsItemData.hash_known(news_item_data.hash):
+            known = NewsItemData.hash_known(news_item_data.hash)
+            if known and (source_ids is None or not news_item_data.version_key):
                 continue
 
             # A newer revision of an item already stored updates that item rather than
             # becoming a second one. Items without a version key never take this path.
             stored = NewsItemData.find_by_version_key(news_item_data.version_key, source_ids) if news_item_data.version_key else None
+            # A known hash may be known only from another node's item: one that delivered this
+            # revision first, or posted its hash to freeze ours. It still updates this node's own
+            # item, unless that holds it already; without an own item nothing new is stored.
+            if known and (stored is None or stored.holds_revision(news_item_data.hash)):
+                continue
             if stored is not None:
                 if cls._add_new_version(stored, news_item_data):
                     osint_source_ids.update(source_id for source_id in (news_item_data.osint_source_id, stored.osint_source_id) if source_id)
