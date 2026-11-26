@@ -150,6 +150,17 @@ class ConfigCollector(ConfigBase):
                     "Limit number of emails to process. Default: all",
                     ParameterType.NUMBER,
                 ),
+                ParamType(
+                    "IGNORE_TLS_ERRORS",
+                    "Ignore TLS certificate errors",
+                    (
+                        "OPTIONAL: Connect even when the mail server's certificate is invalid (self-signed, expired, wrong name). "
+                        "Anyone on the network path can then read the password and the mail, and add mail of their own. "
+                        "Default: false"
+                    ),
+                    ParameterType.BOOLEAN,
+                    "false",
+                ),
             ],
         )
         self.modules.append(mod)

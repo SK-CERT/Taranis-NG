@@ -7,21 +7,26 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from email.message import EmailMessage
 
-import datetime
+import datetime as dt
 import email.header
 import email.utils
 import hashlib
 import imaplib
 import poplib
 import socket
+import ssl
 import uuid
 from email import policy
 
-from shared.common import TZ, ignore_exceptions, read_int_parameter, text_to_simple_html
+from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, text_to_simple_html
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemAttribute, NewsItemData
 
 from .base_collector import BaseCollector
+
+# Seconds to wait for the mail server to connect and to answer each command. Without it, a
+# server that stops answering held the source's run forever.
+MAIL_SERVER_TIMEOUT = 60
 
 
 class EmailCollector(BaseCollector):
@@ -56,13 +61,47 @@ class EmailCollector(BaseCollector):
             s.send(str.encode(con))
             s.recv(4096)
 
+    def __tls_context(self) -> ssl.SSLContext:
+        """The TLS context for the connection to the mail server.
+
+        Left to themselves, imaplib and poplib use an unverified context: no certificate check,
+        no host name check. Anyone on the network path could then read the mailbox password and
+        the mail, and slip in mail of their own, which becomes news items.
+
+        Returns:
+            (ssl.SSLContext): The system's trusted CAs and a host name check, unless the source
+                ignores TLS errors.
+        """
+        context = ssl.create_default_context()
+        if self.ignore_tls_errors:
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+        return context
+
+    def __report_untrusted_certificate(self, error: ssl.SSLCertVerificationError) -> None:
+        """Tell why the mail server was refused, in the source's error message.
+
+        Args:
+            error (ssl.SSLCertVerificationError): The failed certificate check.
+        """
+        reason = getattr(error, "verify_message", None) or str(error)
+        self.source.logger.error(
+            f"The mail server's TLS certificate is not trusted ({reason}). "
+            "Turn on 'Ignore TLS certificate errors' for this source only if that is expected",
+        )
+
     def __fetch_emails_imap(self) -> None:
         self.source.logger.debug("Fetching emails using IMAP")
         try:
             if self.source.parsed_proxy:
                 self.__proxy_tunnel(self.email_server_hostname, self.email_server_port)
 
-            connection = imaplib.IMAP4_SSL(self.email_server_hostname.lower(), self.email_server_port)
+            connection = imaplib.IMAP4_SSL(
+                self.email_server_hostname.lower(),
+                self.email_server_port,
+                ssl_context=self.__tls_context(),
+                timeout=MAIL_SERVER_TIMEOUT,
+            )
             connection.login(self.email_username, self.email_password)
             connection.select("inbox")
 
@@ -91,6 +130,8 @@ class EmailCollector(BaseCollector):
 
             connection.close()
             connection.logout()
+        except ssl.SSLCertVerificationError as error:
+            self.__report_untrusted_certificate(error)
         except Exception as error:
             self.source.logger.exception(f"Failed to fetch emails using IMAP: {error}")
 
@@ -100,7 +141,12 @@ class EmailCollector(BaseCollector):
             if self.source.parsed_proxy:
                 self.__proxy_tunnel(self.email_server_hostname, self.email_server_port)
 
-            connection = poplib.POP3_SSL(self.email_server_hostname.lower(), self.email_server_port)
+            connection = poplib.POP3_SSL(
+                self.email_server_hostname.lower(),
+                self.email_server_port,
+                timeout=MAIL_SERVER_TIMEOUT,
+                context=self.__tls_context(),
+            )
             connection.user(self.email_username)
             connection.pass_(self.email_password)
 
@@ -126,6 +172,8 @@ class EmailCollector(BaseCollector):
                         self.__process_email_safely(email_message)
 
             connection.quit()
+        except ssl.SSLCertVerificationError as error:
+            self.__report_untrusted_certificate(error)
         except Exception as error:
             self.source.logger.exception(f"Failed to fetch emails using POP3: {error}")
 
@@ -208,7 +256,7 @@ class EmailCollector(BaseCollector):
             date = email.utils.parsedate_to_datetime(email_message.get("Date"))
         except (TypeError, ValueError):
             self.source.logger.debug(f"Email '{title}' has no usable 'Date' header, using the time of collection")
-            date = datetime.datetime.now(TZ)
+            date = dt.datetime.now(TZ)
         if date.tzinfo is None:
             date = date.replace(tzinfo=TZ)
         return date.astimezone(TZ).strftime("%d.%m.%Y - %H:%M")
@@ -331,7 +379,7 @@ class EmailCollector(BaseCollector):
             "",  # the link, an email has none
             published,
             author,
-            datetime.datetime.now(TZ),
+            dt.datetime.now(TZ),
             content,
             self.source.id,
             [],
@@ -361,6 +409,9 @@ class EmailCollector(BaseCollector):
         self.source.parsed_proxy = self.get_parsed_proxy()
         self.email_sender_address = self.source.param_key_values["EMAIL_SENDER"]
         self.emails_limit = read_int_parameter("EMAILS_LIMIT", "", self.source)
+        # Certificates are checked unless the source opts out. A parameter the node has not
+        # been told about yet (no migration since it was added) reads as false.
+        self.ignore_tls_errors = read_bool_parameter("IGNORE_TLS_ERRORS", default_value=False, object_dict=self.source)
 
         if self.email_server_type.casefold() == "imap":
             self.__fetch_emails_imap()
