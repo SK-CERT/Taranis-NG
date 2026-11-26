@@ -89,7 +89,7 @@ class NotificationChannelResource(Resource):
         """Save a channel.
 
         The body is ``{"enabled", "config", "secret"?, "clear_secret"?}``; an empty secret keeps
-        the stored one.
+        the stored one, ``clear_secret`` removes it - with the new settings, in one step.
 
         Returns:
             (dict, HTTPStatus): The saved channel, or why it was rejected.
@@ -104,9 +104,14 @@ class NotificationChannelResource(Resource):
             return {"error": str(error)}, HTTPStatus.BAD_REQUEST
         user = get_user_from_jwt()
         try:
-            channel = NotificationChannel.save(kind, bool(data.get("enabled")), config, data.get("secret") or None, user.name)
-            if data.get("clear_secret") and not data.get("secret"):
-                channel.clear_secret(user.name)
+            channel = NotificationChannel.save(
+                kind,
+                bool(data.get("enabled")),
+                config,
+                data.get("secret") or None,
+                user.name,
+                clear_secret=bool(data.get("clear_secret")),
+            )
         except Exception as ex:
             msg = "Could not save the notification channel"
             log_manager.store_data_error_activity(user, msg, ex)

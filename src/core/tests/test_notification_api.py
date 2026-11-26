@@ -13,6 +13,7 @@ from types import SimpleNamespace
 import pytest
 from api import notifications as notifications_api
 from flask import Flask
+from model import notification as notification_model
 
 ADMIN = SimpleNamespace(id=9, name="Bob Admin", username="bob")
 
@@ -117,3 +118,44 @@ def test_a_test_message_uses_the_stored_password_unless_the_form_removes_it(
 
     assert status == HTTPStatus.OK
     assert secrets == [sent]
+
+
+@pytest.fixture
+def stored_channel(monkeypatch: pytest.MonkeyPatch) -> list:
+    """A stored e-mail channel with a password, and the state each commit writes."""
+    commits: list = []
+    stored = notification_model.NotificationChannel(
+        "email",
+        enabled=True,
+        config={"host": "smtp.example.test", "port": 587, "security": "starttls", "username": "taranis"},
+    )
+    stored.secret = "encrypted-old"
+    monkeypatch.setattr(notification_model.NotificationChannel, "find", classmethod(lambda _cls, _kind: stored))
+    monkeypatch.setattr(
+        notification_model.db,
+        "session",
+        SimpleNamespace(commit=lambda: commits.append((stored.config["host"], stored.secret))),
+    )
+    monkeypatch.setattr(notifications_api.CHANNELS["email"], "validate", staticmethod(lambda config: config))
+    return commits
+
+
+def _save_channel(app: Flask, host: str, **body: object) -> HTTPStatus:
+    config = {"host": host, "port": 587, "security": "starttls", "username": "taranis"}
+    body = {"enabled": True, "config": config, **body}
+    _payload, status = _call(app, notifications_api.NotificationChannelResource(), "put", body, "email")
+    return status
+
+
+def test_removing_the_password_and_changing_the_server_is_one_commit(app: Flask, stored_channel: list) -> None:
+    # Committed apart, a delivery run between the two commits logged in to the new server
+    # with the old password - and so did every run after it if the second commit failed.
+    assert _save_channel(app, "relay.example.test", clear_secret=True) == HTTPStatus.OK
+
+    assert stored_channel == [("relay.example.test", None)]
+
+
+def test_saving_without_a_password_keeps_it(app: Flask, stored_channel: list) -> None:
+    assert _save_channel(app, "smtp.example.test") == HTTPStatus.OK
+
+    assert stored_channel == [("smtp.example.test", "encrypted-old")]
