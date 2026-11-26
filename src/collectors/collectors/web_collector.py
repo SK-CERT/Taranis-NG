@@ -61,6 +61,39 @@ def without_credentials(url: str | None) -> str | None:
     return urlunsplit(parts._replace(netloc=parts.netloc.rsplit("@", 1)[1]))
 
 
+# Chrome's own error page: its URL scheme, and the element holding the net:: error code.
+_BROWSER_ERROR_PAGE = "return [location.protocol, ((document.getElementById('error-code') || {}).textContent || '').trim()]"
+
+
+def browser_error_page(browser: WebDriver) -> str | None:
+    """Why the browser shows its own error page instead of the site, or None when it shows the site.
+
+    Chrome does not fail the navigation for a certificate it does not trust: ``get()`` returns,
+    and the tab holds Chrome's warning page under the site's URL, where no selector matches. (A
+    host that does not resolve or refuses the connection does fail the navigation, and Firefox
+    fails it for a certificate too.)
+
+    Parameters:
+        browser (WebDriver): The browser, after a navigation.
+
+    Returns:
+        (str | None): What went wrong, for the log and the source's error message.
+    """
+    try:
+        protocol, code = browser.execute_script(_BROWSER_ERROR_PAGE)
+    except Exception:  # no answer means no error page to report
+        return None
+    if protocol != "chrome-error:":
+        return None
+    code = code or "an unknown error"
+    if "CERT" in code.upper() or "SSL" in code.upper():
+        return (
+            f"The site's TLS certificate is not trusted ({code}). "
+            "Turn on 'Ignore TLS certificate errors' for this source only if that is expected"
+        )
+    return f"The browser could not load the page ({code})"
+
+
 class WebCollector(BaseCollector):
     """Collector for gathering data from web page.
 
@@ -630,6 +663,12 @@ class WebCollector(BaseCollector):
             self.__dispose_of_headless_driver(browser)
             return 0
 
+        error_page = browser_error_page(browser)
+        if error_page:
+            self.source.logger.error(f"{error_page}. Skipping collection.")
+            self.__dispose_of_headless_driver(browser)
+            return 0
+
         # The browser follows redirects on its own; where it ended up is checked before it is read.
         problem = self.__url_problem(without_credentials(browser.current_url))
         if problem:
@@ -781,7 +820,11 @@ class WebCollector(BaseCollector):
 
             try:
                 # A link may redirect; the page the browser landed on is checked before it is read.
-                problem = self.__url_problem(without_credentials(browser.current_url)) if link else None
+                problem = None
+                if link:
+                    problem = browser_error_page(browser)
+                    landed = None if problem else self.__url_problem(without_credentials(browser.current_url))
+                    problem = problem or (f"{landed}. The article link redirected there" if landed else None)
                 news_item = None if problem else self.__process_article_page(browser, scope)
                 if news_item:
                     self.sanitize_news_item(news_item, self.source)
@@ -789,7 +832,7 @@ class WebCollector(BaseCollector):
                     self.news_items.append(news_item)
                 elif problem:
                     failed_articles += 1
-                    self.source.logger.warning(f"{problem}. The article link redirected there; skipping it.")
+                    self.source.logger.warning(f"{problem}; skipping it.")
                 else:
                     failed_articles += 1
                     self.source.logger.warning("Parsing an article failed")

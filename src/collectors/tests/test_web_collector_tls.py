@@ -68,3 +68,46 @@ def test_a_source_can_opt_out(started: dict, webdriver: str) -> None:
     options = browser_options(started, webdriver, IGNORE_TLS_ERRORS="true")
 
     assert options.accept_insecure_certs is True
+
+
+class _Browser:
+    """Answers the error-page probe as Chrome does."""
+
+    def __init__(self, protocol: str, code: str = "") -> None:
+        self.answer = [protocol, code]
+
+    def execute_script(self, _script: str) -> list[str]:
+        return self.answer
+
+
+@pytest.mark.parametrize(
+    "code",
+    ["net::ERR_CERT_AUTHORITY_INVALID", "net::ERR_CERT_DATE_INVALID", "net::ERR_CERT_COMMON_NAME_INVALID", "net::ERR_SSL_PROTOCOL_ERROR"],
+)
+def test_chrome_s_certificate_warning_page_is_reported_as_such(code: str) -> None:
+    """Chrome does not fail get() for an untrusted certificate: it shows its warning page under the site's URL."""
+    reason = web_collector.browser_error_page(_Browser("chrome-error:", code))
+
+    assert reason is not None
+    assert code in reason
+    assert "Ignore TLS certificate errors" in reason
+
+
+def test_another_chrome_error_page_says_what_it_is() -> None:
+    assert web_collector.browser_error_page(_Browser("chrome-error:", "net::ERR_CONNECTION_RESET")) == (
+        "The browser could not load the page (net::ERR_CONNECTION_RESET)"
+    )
+
+
+@pytest.mark.parametrize("protocol", ["https:", "http:"])
+def test_a_loaded_site_is_no_error_page(protocol: str) -> None:
+    assert web_collector.browser_error_page(_Browser(protocol, "net::ERR_CERT_AUTHORITY_INVALID")) is None
+
+
+def test_a_browser_that_cannot_answer_is_no_error_page() -> None:
+    class Gone:
+        def execute_script(self, _script: str) -> list[str]:
+            msg = "no such window"
+            raise RuntimeError(msg)
+
+    assert web_collector.browser_error_page(Gone()) is None
