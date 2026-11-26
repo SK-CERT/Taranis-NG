@@ -65,6 +65,35 @@ def test_sensitive_value_masking_modes(monkeypatch: pytest.MonkeyPatch) -> None:
     assert sensitive_value("secret") == "•••••"
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"enroll_token": "LEAKED-VALUE", "code": "123456"},
+        {"jwt": "LEAKED-VALUE", "product_type_id": 1},
+        {"name": "web", "smtp_password": "LEAKED-VALUE"},
+        {"name": "web", "config": {"smtp_username": "feedback", "smtp_password": "LEAKED-VALUE"}},
+        {"name": "web", "tls_cert": "CERT", "tls_key": "-----BEGIN PRIVATE KEY-----LEAKED-VALUE"},
+        {"default_cert": "CERT", "default_key": "-----BEGIN PRIVATE KEY-----LEAKED-VALUE"},
+        [{"settings": {"Default_Key": "LEAKED-VALUE"}}],
+    ],
+    ids=[
+        "enroll token",
+        "preview jwt",
+        "public web smtp password",
+        "nested smtp password",
+        "web tls key",
+        "default tls key",
+        "nested in a list",
+    ],
+)
+def test_more_credentials_are_redacted(log_app: Flask, body: object) -> None:
+    for logged_body in (body, None):  # the parsed body and the raw bytes fallback
+        with log_app.test_request_context("/", data=json.dumps(body).encode()):
+            logged = generate_escaped_data(logged_body)
+        assert "LEAKED-VALUE" not in logged
+        assert sensitive_value("x") in logged
+
+
 def test_sensitive_key_coverage() -> None:
     for key in ("password", "token", "api_key", "client_secret", "access_token", "totp", "otp", "mfa_token", "credentials"):
         assert key in _SENSITIVE_JSON_KEYS, f"{key} missing from the redaction set"
