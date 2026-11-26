@@ -10,7 +10,7 @@ import subprocess
 import time
 import uuid
 from typing import ClassVar
-from urllib.parse import urlparse
+from urllib.parse import quote, unquote, urlparse, urlsplit, urlunsplit
 
 import selenium
 from dateutil.parser import parse
@@ -34,6 +34,71 @@ from shared.schema.news_item import NewsItemAttribute, NewsItemData
 from shared.url_guard import build_guarded_opener, collector_url_problem
 
 from .base_collector import BaseCollector, allowed_targets, not_modified
+
+# "scheme://user:password@" inside any text, e.g. an error message quoting a URL; also with the
+# slashes JSON-escaped (":\/\/"), as some browser errors quote it
+_URL_USERINFO = re.compile(r"(?:(?<=://)|(?<=:\\/\\/))[^/?#@\s\"'<>\\]*@")
+# A user name or password shorter than this is redacted only where it ends the user:password@ part
+# of a URL: replaced everywhere, a value like "ab" would mangle every message it happens to occur in.
+_MIN_REDACTED_EVERYWHERE = 4
+
+
+def without_credentials(url: str | None) -> str | None:
+    """The URL without the ``user:password@`` part of its host.
+
+    The browser opens the title page with the source's basic-auth credentials in the URL, and a
+    relative link on that page resolves to an absolute URL that inherits them; so does the URL
+    the browser reports for the page it is on. What is logged, checked or stored as a news
+    item's link goes through here first.
+
+    Parameters:
+        url (str | None): A URL, possibly with credentials.
+
+    Returns:
+        (str | None): The same URL without credentials; ``url`` itself when it has none or is empty.
+
+    Raises:
+        ValueError: When the URL cannot be read (``urlsplit``).
+    """
+    if not url or "@" not in url:
+        return url
+    parts = urlsplit(url)
+    if "@" not in parts.netloc:
+        return url
+    return urlunsplit(parts._replace(netloc=parts.netloc.rsplit("@", 1)[1]))
+
+
+# Chrome's own error page: its URL scheme, and the element holding the net:: error code.
+_BROWSER_ERROR_PAGE = "return [location.protocol, ((document.getElementById('error-code') || {}).textContent || '').trim()]"
+
+
+def browser_error_page(browser: WebDriver) -> str | None:
+    """Why the browser shows its own error page instead of the site, or None when it shows the site.
+
+    Chrome does not fail the navigation for a certificate it does not trust: ``get()`` returns,
+    and the tab holds Chrome's warning page under the site's URL, where no selector matches. (A
+    host that does not resolve or refuses the connection does fail the navigation, and Firefox
+    fails it for a certificate too.)
+
+    Parameters:
+        browser (WebDriver): The browser, after a navigation.
+
+    Returns:
+        (str | None): What went wrong, for the log and the source's error message.
+    """
+    try:
+        protocol, code = browser.execute_script(_BROWSER_ERROR_PAGE)
+    except Exception:  # no answer means no error page to report
+        return None
+    if protocol != "chrome-error:":
+        return None
+    code = code or "an unknown error"
+    if "CERT" in code.upper() or "SSL" in code.upper():
+        return (
+            f"The site's TLS certificate is not trusted ({code}). "
+            "Turn on 'Ignore TLS certificate errors' for this source only if that is expected"
+        )
+    return f"The browser could not load the page ({code})"
 
 
 class WebCollector(BaseCollector):
@@ -309,13 +374,13 @@ class WebCollector(BaseCollector):
                     break
             browser.switch_to.window(handle_to_keep)
         except Exception as error:
-            self.source.logger.exception(f"Browser tab restoration failed, reloading the title page: {error}")
+            self.source.logger.error(f"Browser tab restoration failed, reloading the title page: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
             try:
                 # last resort - at least try to reopen the original page
                 browser.get(fallback_url)
                 return True
             except Exception as error:
-                self.source.logger.exception(f"Fallback to the original page failed: {error}")
+                self.source.logger.error(f"Fallback to the original page failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
                 return False
         return browser.current_window_handle == handle_to_keep
 
@@ -337,18 +402,34 @@ class WebCollector(BaseCollector):
         # Web pages only. A local file or directory, or any other scheme a browser understands
         # (file:, view-source:, chrome:), is refused when the URL is checked below.
         web_url = web_url.strip()
-        self.source.url = web_url if re.search(r"^[a-z][a-z0-9+.-]*://", web_url.lower()) else f"https://{web_url}"
-        # Checked before credentials are put in the URL, so they never reach a log line.
-        bare_url = self.source.url
-
-        if self.auth_username and self.auth_password:
-            parsed_url = urlparse(self.source.url)
-            self.source.url = f"{parsed_url.scheme}://{self.auth_username}:{self.auth_password}@{parsed_url.netloc}{parsed_url.path}"
+        web_url = web_url if re.search(r"^[a-z][a-z0-9+.-]*://", web_url.lower()) else f"https://{web_url}"
+        # The source's URL stays without credentials: it is logged, checked, and stored as the
+        # source of every news item, where every analyst reads it. Only the browser is handed the
+        # page's basic-auth credentials, in the URL it opens the title page with.
+        try:
+            bare_url = without_credentials(web_url)
+        except ValueError:
+            # not quoted, and no traceback: the URL may hold credentials
+            self.source.logger.error("Web URL is not a valid URL. Skipping collection.")  # noqa: TRY400
+            return False
+        if bare_url != web_url:
+            # Credentials typed into the URL itself are the page's credentials, like the AUTH_*
+            # parameters, which win when both are set.
+            if self.auth_username and self.auth_password:
+                self.source.logger.info("Web URL has credentials of its own; the AUTH_USERNAME and AUTH_PASSWORD parameters are used")
+            else:
+                typed = urlsplit(web_url)
+                self.auth_username, self.auth_password = unquote(typed.username or ""), unquote(typed.password or "")
+        self.source.url = bare_url
+        self.title_page_url = self.__with_credentials(bare_url)
 
         # parse other arguments
         self.source.user_agent = self.source.param_key_values["USER_AGENT"]
         self.tor_service = read_bool_parameter("TOR", default_value=False, object_dict=self.source)
         self.check_if_modified = read_bool_parameter("CHECK_IF_MODIFIED", default_value=True, object_dict=self.source)
+        # Certificates are checked unless the source opts out. A parameter the node has not
+        # been told about yet (no migration since it was added) reads as false.
+        self.ignore_tls_errors = read_bool_parameter("IGNORE_TLS_ERRORS", default_value=False, object_dict=self.source)
         self.pagination_limit = read_int_parameter("PAGINATION_LIMIT", 1, self.source)
         self.links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
         self.word_limit = read_int_parameter("WORD_LIMIT", 0, self.source)
@@ -382,6 +463,75 @@ class WebCollector(BaseCollector):
             return False
 
         return True
+
+    def __with_credentials(self, url: str) -> str:
+        """The URL with the page's basic-auth credentials in it, for the browser only.
+
+        User name and password are percent-encoded, so a ``@``, ``:`` or ``/`` in them cannot
+        change where the browser goes. The query and fragment are kept.
+
+        Parameters:
+            url (str): The source's URL, without credentials.
+
+        Returns:
+            (str): The URL to open, or ``url`` itself when no credentials are set.
+        """
+        if not (self.auth_username and self.auth_password):
+            return url
+        parsed = urlparse(url)
+        userinfo = f"{quote(self.auth_username, safe='')}:{quote(self.auth_password, safe='')}"
+        return parsed._replace(netloc=f"{userinfo}@{parsed.netloc}").geturl()
+
+    def __redacted(self, message: object) -> str:
+        """A log message with the credentialed title-page URL replaced by the bare one.
+
+        Browser errors may quote the URL the browser was asked to open, and not always as it is:
+        Firefox's error page carries it percent-encoded (``u=https%3A//user%3Apass%40host``),
+        other messages JSON-escaped. So the page's user name and password are also replaced
+        wherever they occur, raw or percent-encoded once or twice.
+
+        Parameters:
+            message (object): The message, or an exception.
+
+        Returns:
+            (str): The message, safe to log.
+        """
+        text = str(message)
+        title_page_url = getattr(self, "title_page_url", None)
+        if title_page_url and title_page_url != self.source.url:
+            text = text.replace(title_page_url, self.source.url)
+        # any other URL the browser built from the title page carries the credentials too
+        text = _URL_USERINFO.sub("", text)
+        secrets = self.__credentials_pattern()
+        return secrets.sub("***", text) if secrets else text
+
+    def __credentials_pattern(self) -> re.Pattern[str] | None:
+        """What the page's user name and password may look like in a message; None when none is set.
+
+        Each alone and as the ``user:password`` of a URL, raw and percent-encoded (``quote`` with
+        and without ``/`` kept) once and twice. A form shorter than ``_MIN_REDACTED_EVERYWHERE``
+        matches only right before ``@`` (or ``@`` encoded once or twice).
+
+        Returns:
+            (re.Pattern | None): The pattern, longest forms first.
+        """
+        username = getattr(self, "auth_username", "") or ""
+        password = getattr(self, "auth_password", "") or ""
+        values = {username, password} - {""}
+        if username and password:
+            values |= {f"{username}:{password}", f"{quote(username, safe='')}:{quote(password, safe='')}"}
+        forms = set()
+        for value in values:
+            for once in (quote(value, safe=""), quote(value)):
+                forms |= {value, once, quote(once, safe=""), quote(once)}
+        if not forms:
+            return None
+        return re.compile(
+            "|".join(
+                re.escape(form) if len(form) >= _MIN_REDACTED_EVERYWHERE else f"{re.escape(form)}(?=@|%40|%2540)"
+                for form in sorted(forms, key=len, reverse=True)
+            ),
+        )
 
     def __url_problem(self, url: str) -> str | None:
         """Why the browser must not open (or have ended up on) a URL; None when it may.
@@ -417,8 +567,10 @@ class WebCollector(BaseCollector):
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_argument("--incognito")
+        chrome_options.accept_insecure_certs = self.ignore_tls_errors
+        if self.ignore_tls_errors:
+            chrome_options.add_argument("--ignore-certificate-errors")
         if self.source.user_agent:
             chrome_options.add_argument("user-agent=" + self.source.user_agent)
         if self.tor_service:
@@ -448,8 +600,9 @@ class WebCollector(BaseCollector):
         firefox_options = FirefoxOptions()
         firefox_options.page_load_strategy = "normal"  # .get() returns on document ready
         firefox_options.add_argument("--headless")
-        firefox_options.add_argument("--ignore-certificate-errors")
         firefox_options.add_argument("--incognito")
+        # Firefox has no --ignore-certificate-errors switch; the capability is what counts.
+        firefox_options.accept_insecure_certs = self.ignore_tls_errors
 
         if self.source.user_agent:
             # Firefox has no user-agent switch; passing one as an argument is silently ignored,
@@ -508,7 +661,7 @@ class WebCollector(BaseCollector):
         try:
             driver.quit()
         except Exception as error:
-            self.source.logger.exception(f"Could not quit the headless browser driver: {error}")
+            self.source.logger.error(f"Could not quit the headless browser driver: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
 
     def __run_tor(self) -> None:
         """Run The Onion Router service in a subprocess."""
@@ -539,7 +692,7 @@ class WebCollector(BaseCollector):
                 return
 
         if not url_not_modified:
-            total_failed_articles = self.__browse_title_page(self.source.url)
+            total_failed_articles = self.__browse_title_page(self.title_page_url)
 
             if total_failed_articles > 0:
                 self.source.logger.debug(f"{total_failed_articles} article(s) failed")
@@ -560,12 +713,18 @@ class WebCollector(BaseCollector):
         try:
             browser.get(index_url)
         except Exception as error:
-            self.source.logger.exception(f"Obtaining title page failed: {error}")
+            self.source.logger.error(f"Obtaining title page failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
+            self.__dispose_of_headless_driver(browser)
+            return 0
+
+        error_page = browser_error_page(browser)
+        if error_page:
+            self.source.logger.error(f"{error_page}. Skipping collection.")
             self.__dispose_of_headless_driver(browser)
             return 0
 
         # The browser follows redirects on its own; where it ended up is checked before it is read.
-        problem = self.__url_problem(browser.current_url)
+        problem = self.__url_problem(without_credentials(browser.current_url))
         if problem:
             self.source.logger.error(f"{problem}. The title page redirected there; skipping collection.")
             self.__dispose_of_headless_driver(browser)
@@ -579,12 +738,12 @@ class WebCollector(BaseCollector):
                     ec.presence_of_element_located(self.__get_element_locator(self.selectors["popup_close"])),
                 )
             except Exception as error:
-                self.source.logger.exception(f"Popup find failed: {error}")
+                self.source.logger.error(f"Popup find failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
             if popup is not None:
                 try:
                     popup.click()
                 except Exception as error:
-                    self.source.logger.exception(f"Popup click failed: {error}")
+                    self.source.logger.error(f"Popup click failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
 
         # if there is a "load more" selector, click on it!
         page = 1
@@ -606,7 +765,7 @@ class WebCollector(BaseCollector):
                 try:
                     WebDriverWait(browser, 5).until(ec.staleness_of(load_more))
                 except Exception as error:
-                    self.source.logger.exception(f"WebDriverWait failed: {error}")
+                    self.source.logger.error(f"WebDriverWait failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
 
             except Exception:
                 break
@@ -624,7 +783,7 @@ class WebCollector(BaseCollector):
                     self.source.logger.error("Page crawl failed (after-crawl clean up)")
                     break
             except Exception as error:
-                self.source.logger.exception(f"Page crawl failed: {error}")
+                self.source.logger.error(f"Page crawl failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
                 break
 
             if page >= self.pagination_limit or not self.selectors["next_page"]:
@@ -675,8 +834,19 @@ class WebCollector(BaseCollector):
             #     pass
             # if first item works but next items have problems - it's because this:
             # https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/#stale-element-reference-exception
+            # The browser opens the link as it is: resolved against the title page, it may carry the
+            # page's credentials, which the article page needs too. Logs and checks see it without.
             link = item.get_attribute("href")
-            problem = self.__url_problem(link) if link else None
+            try:
+                shown_link = without_credentials(link)
+            except ValueError as error:  # only this link: the URL check could not read it either
+                failed_articles += 1
+                self.source.logger.warning(
+                    f"Refusing to open '{self.__redacted(link)}': not a valid URL ({self.__redacted(error)}). "
+                    f"Skipping article {count}/{len(article_items)}.",
+                )
+                continue
+            problem = self.__url_problem(shown_link) if link else None
             if problem:
                 failed_articles += 1
                 self.source.logger.warning(f"{problem}. Skipping article {count}/{len(article_items)}.")
@@ -684,7 +854,7 @@ class WebCollector(BaseCollector):
             try:
                 if link:
                     scope = browser
-                    self.source.logger.info(f"Visiting article {count}/{len(article_items)}: {link}")
+                    self.source.logger.info(f"Visiting article {count}/{len(article_items)}: {shown_link}")
                     method_type_1 = 1
                     method_type_2 = 2
                     method_type_3 = 3
@@ -707,12 +877,16 @@ class WebCollector(BaseCollector):
 
             except Exception as error:
                 failed_articles += 1
-                self.source.logger.exception(f"Failed to get link for article {count}/{len(article_items)}: {error}")
+                self.source.logger.error(f"Failed to get link for article {count}/{len(article_items)}: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
                 continue
 
             try:
                 # A link may redirect; the page the browser landed on is checked before it is read.
-                problem = self.__url_problem(browser.current_url) if link else None
+                problem = None
+                if link:
+                    problem = browser_error_page(browser)
+                    landed = None if problem else self.__url_problem(without_credentials(browser.current_url))
+                    problem = problem or (f"{landed}. The article link redirected there" if landed else None)
                 news_item = None if problem else self.__process_article_page(browser, scope)
                 if news_item:
                     self.sanitize_news_item(news_item, self.source)
@@ -720,13 +894,13 @@ class WebCollector(BaseCollector):
                     self.news_items.append(news_item)
                 elif problem:
                     failed_articles += 1
-                    self.source.logger.warning(f"{problem}. The article link redirected there; skipping it.")
+                    self.source.logger.warning(f"{problem}; skipping it.")
                 else:
                     failed_articles += 1
                     self.source.logger.warning("Parsing an article failed")
             except Exception as error:
                 failed_articles += 1
-                self.source.logger.exception(f"Parsing an article failed: {error}")
+                self.source.logger.error(f"Parsing an article failed: {self.__redacted(error)}")  # noqa: TRY400 - a traceback would quote the URL unredacted
 
             if len(browser.window_handles) == 1:
                 back_clicks = 1
@@ -754,7 +928,8 @@ class WebCollector(BaseCollector):
         Returns:
             news_item (NewsItemData): The parsed news item.
         """
-        current_url = browser.current_url
+        # stored as the news item's link, which every analyst reads
+        current_url = without_credentials(browser.current_url)
 
         # print(browser.page_source, flush=True)
 
