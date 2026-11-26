@@ -687,7 +687,8 @@ describe('NewProduct languages', () => {
         await flushPromises()
 
         expect(checkProductLanguage).toHaveBeenLastCalledWith(
-            expect.objectContaining({ id: -1, product_preset_id: 4, report_items: [{ id: 1 }, { id: 2 }] }),
+            // checked as the form has it, naming the saved product whose report items it may keep
+            expect.objectContaining({ id: -1, stored_id: 12, product_preset_id: 4, report_items: [{ id: 1 }, { id: 2 }] }),
             'sk'
         )
         expect(wrapper.get('[data-test="notice-missing"]').text()).toContain('B')

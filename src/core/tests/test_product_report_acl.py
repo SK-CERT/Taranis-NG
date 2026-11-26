@@ -71,6 +71,28 @@ def test_an_unsaved_product_does_not_render_an_unreadable_report(monkeypatch: py
     assert "2" in body["error"]
 
 
+def test_the_form_of_a_saved_product_may_check_the_reports_it_already_holds(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The language check sends the form unsaved; a colleague's unreadable report already in the product stays usable."""
+    stored = types.SimpleNamespace(id=7, product_preset_id=9, report_items=_items(1, 2))
+    monkeypatch.setattr(publish.ProductPreset, "find", classmethod(lambda _cls, _id: types.SimpleNamespace(id=9)))
+    monkeypatch.setattr(publish.ProductPreset, "allowed_with_acl", classmethod(lambda _cls, preset_id, *_args, **_kwargs: preset_id == 9))
+    monkeypatch.setattr(publish.Product, "find", classmethod(lambda _cls, product_id: stored if product_id == 7 else None))
+    monkeypatch.setattr(publish.ReportItem, "find", classmethod(lambda _cls, report_item_id: types.SimpleNamespace(id=report_item_id)))
+    monkeypatch.setattr(publish.log_manager, "store_user_auth_error_activity", lambda *_args: None)
+
+    def load(stored_id: object, *ids: int) -> HTTPStatus:
+        payload = {"id": -1, "stored_id": stored_id, "product_preset_id": 9, "report_items": [{"id": item} for item in ids]}
+        return publish.load_product(payload, ANALYST, "token")[1]
+
+    assert load(7, 1, 2) == HTTPStatus.OK
+    assert load(7, 1, 2, 4) == HTTPStatus.FORBIDDEN  # one it does not hold yet
+    assert load(8, 1, 2) == HTTPStatus.FORBIDDEN  # no such saved product
+    assert load("7", 1, 2) == HTTPStatus.FORBIDDEN
+
+    stored.product_preset_id = 10  # a product the user may not use exempts nothing
+    assert load(7, 1, 2) == HTTPStatus.FORBIDDEN
+
+
 def test_an_update_may_keep_an_unreadable_report_but_not_add_one(monkeypatch: pytest.MonkeyPatch) -> None:
     original = types.SimpleNamespace(state_id=1, report_items=_items(2))
     monkeypatch.setattr(Product, "find", classmethod(lambda _cls, _id: original))

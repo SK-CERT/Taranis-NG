@@ -1083,6 +1083,8 @@
     const productPayload = () => ({
         ...product.value,
         id: -1,
+        // report items the saved product already holds stay usable, as a save keeps them
+        stored_id: typeof product.value.id === 'number' && product.value.id > 0 ? product.value.id : undefined,
         product_preset_id: selectedProductPreset.value?.id ?? product.value.product_preset_id,
         report_items: reportItems.value.map((item) => ({ id: item.id }))
     })

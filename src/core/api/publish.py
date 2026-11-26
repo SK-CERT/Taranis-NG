@@ -262,6 +262,20 @@ def _submitted_translations(product_data: dict) -> dict[str, dict[str, str]]:
     return texts
 
 
+def _kept_report_items(stored_id: object, user: User) -> set[int]:
+    """The report items of the saved product a form edits, when the user may use that product at all.
+
+    The form checks its product unsaved (``id: -1``), naming the saved one in ``stored_id``. Report
+    items already in it were put there by someone allowed, and an update keeps them.
+    """
+    if not isinstance(stored_id, int) or isinstance(stored_id, bool):
+        return set()
+    stored = Product.find(stored_id)
+    if stored is None or not ProductPreset.allowed_with_acl(stored.product_preset_id, user, see=False, access=True, modify=False):
+        return set()
+    return {report_item.id for report_item in stored.report_items}
+
+
 def load_product(product_data: dict, user: User, token: str) -> tuple[dict, HTTPStatus, Product | None, dict | None]:
     """The product to render: the stored one, or a temporary object for one not saved yet.
 
@@ -288,8 +302,9 @@ def load_product(product_data: dict, user: User, token: str) -> tuple[dict, HTTP
             loaded_item = ReportItem.find(item["id"])
             if loaded_item:
                 report_items_list.append(loaded_item)
-        # Rendered whole into the preview or the publication: only reports the user may read.
-        refused = refused_report_items(report_items_list, user)
+        # Rendered whole into the preview or the publication: only reports the user may read -
+        # besides those the saved product the form edits already holds, which a save keeps too.
+        refused = refused_report_items(report_items_list, user, kept=_kept_report_items(product_data.get("stored_id"), user))
         if refused:
             log_manager.store_user_auth_error_activity(user, f"Unauthorized access attempt to report items {refused} through a product")
             return {"error": refused_report_items_message(refused)}, HTTPStatus.FORBIDDEN, None, None
