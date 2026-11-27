@@ -26,7 +26,7 @@ from managers.link_references import render_presenter_input
 from managers.log_manager import logger
 from model.glossary import GlossaryEntry
 from model.permission import Permission
-from model.product import Product
+from model.product import Product, refused_report_items, refused_report_items_message
 from model.product_preset import ProductPreset
 from model.report_item import ReportItem
 from model.translation import PRODUCT_FIELDS
@@ -262,6 +262,33 @@ def _submitted_translations(product_data: dict) -> dict[str, dict[str, str]]:
     return texts
 
 
+def _same_id(given: object, stored_id: int) -> bool:
+    """Whether an id from a request names ``stored_id``: as that number, or as the string of it."""
+    if isinstance(given, bool):
+        return False
+    if isinstance(given, int):
+        return given == stored_id
+    return isinstance(given, str) and given == str(stored_id)
+
+
+def _kept_report_items(stored_id: object, product_preset_id: object, user: User) -> set[int]:
+    """The report items of the saved product a form edits, while the form keeps that product's preset.
+
+    The form checks its product unsaved (``id: -1``), naming the saved one in ``stored_id``. Report
+    items already in it were put there by someone allowed, and an update keeps them - in that
+    product preset only: under another one they would be rendered by its templates and sent to its
+    channels, so then nothing is exempt. Nor is anything when the user may not use that product.
+    """
+    if not isinstance(stored_id, int) or isinstance(stored_id, bool):
+        return set()
+    stored = Product.find(stored_id)
+    if stored is None or not _same_id(product_preset_id, stored.product_preset_id):
+        return set()
+    if not ProductPreset.allowed_with_acl(stored.product_preset_id, user, see=False, access=True, modify=False):
+        return set()
+    return {report_item.id for report_item in stored.report_items}
+
+
 def load_product(product_data: dict, user: User, token: str) -> tuple[dict, HTTPStatus, Product | None, dict | None]:
     """The product to render: the stored one, or a temporary object for one not saved yet.
 
@@ -288,6 +315,13 @@ def load_product(product_data: dict, user: User, token: str) -> tuple[dict, HTTP
             loaded_item = ReportItem.find(item["id"])
             if loaded_item:
                 report_items_list.append(loaded_item)
+        # Rendered whole into the preview or the publication: only reports the user may read -
+        # besides those the saved product the form edits already holds, which a save keeps too.
+        kept = _kept_report_items(product_data.get("stored_id"), product_data.get("product_preset_id"), user)
+        refused = refused_report_items(report_items_list, user, kept=kept)
+        if refused:
+            log_manager.store_user_auth_error_activity(user, f"Unauthorized access attempt to report items {refused} through a product")
+            return {"error": refused_report_items_message(refused)}, HTTPStatus.FORBIDDEN, None, None
 
         # A temporary product object, never saved to the database.
         product = Product(

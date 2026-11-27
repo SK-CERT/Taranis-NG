@@ -1182,6 +1182,11 @@ def api_key_required(key_type: str | None) -> Callable[[Callable[..., Any]], Cal
                 api_key = log_manager.sensitive_value(api_key)
                 log_manager.store_auth_error_activity(f"Incorrect api key: {api_key} for external access with type '{key_type}'")
                 return error
+            if key_type == "remote" and validated_object.enabled is not True:
+                # Switched off by an administrator: its key authenticates nothing - not the sync
+                # endpoints either, which used to serve it all the same.
+                log_manager.store_auth_warning_activity(f"API key of the disabled Remote Access '{validated_object.name}' refused")
+                return error
 
             kwargs.update({key_type + "_node": validated_object})
 

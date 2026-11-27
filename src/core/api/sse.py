@@ -153,6 +153,8 @@ class SseResource(Resource):
                 if not validated_object:
                     api_key = sensitive_value(api_key)
                     msg = f"SSE: invalid {auth_type}: '{api_key}'"
+                elif master_class is RemoteAccess and validated_object.enabled is not True:
+                    msg = f"SSE: the Remote Access '{validated_object.name}' is disabled"
 
             else:
                 msg = "SSE: missing authentication credentials."

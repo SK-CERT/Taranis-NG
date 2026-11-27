@@ -181,7 +181,13 @@ def ingest(monkeypatch: pytest.MonkeyPatch) -> types.SimpleNamespace:
     )
     monkeypatch.setattr(news_item_module, "db", types.SimpleNamespace(session=state.session))
     monkeypatch.setattr(NewsItemData, "hash_known", classmethod(lambda _cls, value: value in state.known_hashes))
-    monkeypatch.setattr(NewsItemData, "find_by_version_key", classmethod(lambda _cls, key: state.by_key.get(key)))
+    state.version_lookups = []
+
+    def find_by_version_key(_cls: type, key: str, source_ids: object = None) -> object:
+        state.version_lookups.append((key, source_ids))
+        return state.by_key.get(key)
+
+    monkeypatch.setattr(NewsItemData, "find_by_version_key", classmethod(find_by_version_key))
     monkeypatch.setattr(NewsItemAggregate, "create_new_for_all_groups", classmethod(lambda _cls, data: state.created.append(data)))
     monkeypatch.setattr(
         NewsItemAggregate,
@@ -516,3 +522,97 @@ def test_a_republished_copy_from_a_remote_node_refreshes_the_item(monkeypatch: p
     assert stored.versions == []
     assert stored.published == "29.09.2026 - 12:58"
     assert (refreshed, resurfaced) == ([stored], [])
+
+
+def test_a_revision_is_looked_up_among_the_sending_node_s_sources(ingest: types.SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Another node must not rewrite an item this one collected: the lookup is scoped to the
+    # sources of the node that sent the revision.
+    item = make_data(version="1.0.0")
+    schema = types.SimpleNamespace(load=lambda _payload: [item])
+    monkeypatch.setattr(news_item_module, "NewNewsItemDataSchema", lambda **_kwargs: schema)
+
+    NewsItemAggregate.add_news_items([{}], source_ids={"source-1"})
+
+    assert ingest.version_lookups == [(item.version_key, {"source-1"})]
+
+
+# --- two collectors nodes, one versioned document --------------------------------------
+
+REVISION_1 = {"version": "1.0.0", "published": "01.09.2026 - 10:00"}
+REVISION_2 = {"version": "1.1.0", "published": "05.09.2026 - 10:00"}
+
+
+@pytest.fixture
+def nodes(monkeypatch: pytest.MonkeyPatch) -> types.SimpleNamespace:
+    """Run add_news_items for collectors nodes against an in-memory store honouring their source scope."""
+    state = types.SimpleNamespace(store=[], resurfaced=[], refreshed=[], version_lookups=[])
+    monkeypatch.setattr(news_item_module, "db", types.SimpleNamespace(session=FakeSession()))
+    monkeypatch.setattr(
+        NewsItemData,
+        "hash_known",
+        classmethod(lambda _cls, value: any(row.hash == value or any(v.hash == value for v in row.versions) for row in state.store)),
+    )
+
+    def find_by_version_key(_cls: type, key: str, source_ids: object = None) -> object:
+        state.version_lookups.append(key)
+        rows = [row for row in state.store if row.version_key == key and (source_ids is None or row.osint_source_id in source_ids)]
+        return rows[0] if rows else None
+
+    monkeypatch.setattr(NewsItemData, "find_by_version_key", classmethod(find_by_version_key))
+    monkeypatch.setattr(NewsItemAggregate, "create_new_for_all_groups", classmethod(lambda _cls, data: state.store.append(data)))
+    monkeypatch.setattr(NewsItemAggregate, "_resurface", classmethod(lambda _cls, data, _title, _review: state.resurfaced.append(data)))
+    monkeypatch.setattr(NewsItemAggregate, "_refresh", classmethod(lambda _cls, data, _title, _review: state.refreshed.append(data)))
+    monkeypatch.setattr(TagCloud, "add_words", classmethod(lambda _cls, _counts: None))
+    monkeypatch.setattr(OSINTSource, "update_collected", classmethod(lambda _cls, _source_id: None))
+
+    def send(node: str, **fields: str) -> set:
+        """Deliver one copy of the document from a node; every node collects it into a source of its own."""
+        item = make_data(id=f"item-{node}", osint_source_id=f"source-{node}", **fields)
+        schema = types.SimpleNamespace(load=lambda _payload: [item])
+        monkeypatch.setattr(news_item_module, "NewNewsItemDataSchema", lambda **_kwargs: schema)
+        return NewsItemAggregate.add_news_items([{}], source_ids={f"source-{node}"})
+
+    state.send = send
+    state.held = lambda: [(row.osint_source_id, row.version, [v.version for v in row.versions]) for row in state.store]
+    return state
+
+
+def test_a_newer_revision_another_node_delivered_first_still_updates_this_node_s_item(nodes: types.SimpleNamespace) -> None:
+    nodes.send("A", **REVISION_1)
+    # B had no item of its own, so its copy of revision 2 became one.
+    nodes.send("B", **REVISION_2)
+
+    # Revision 2's hash is known now, but only from B's item: A's item still takes it.
+    assert nodes.send("A", **REVISION_2) == {"source-A"}
+
+    assert nodes.held() == [("source-A", "1.1.0", ["1.0.0"]), ("source-B", "1.1.0", [])]
+    assert nodes.resurfaced == [nodes.store[0]]
+
+
+@pytest.mark.parametrize("again", [0, 1], ids=["revision-1", "revision-2"])
+@pytest.mark.parametrize("dated", [True, False], ids=["dated", "undated"])
+def test_a_revision_this_node_s_item_holds_is_not_added_again(nodes: types.SimpleNamespace, again: int, *, dated: bool) -> None:
+    # Undated revisions cannot be ordered: then only the item's history keeps revision 1 out.
+    revisions = [{**revision, "published": revision["published"] if dated else ""} for revision in (REVISION_1, REVISION_2)]
+    nodes.send("A", **revisions[0])
+    nodes.send("B", **revisions[1])
+    nodes.send("A", **revisions[1])
+    nodes.resurfaced.clear()
+
+    assert nodes.send("A", **revisions[again]) == set()
+
+    assert nodes.held() == [("source-A", "1.1.0", ["1.0.0"]), ("source-B", "1.1.0", [])]
+    assert (nodes.resurfaced, nodes.refreshed) == ([], [])
+
+
+def test_a_node_without_an_item_of_its_own_stores_nothing_for_a_known_revision(nodes: types.SimpleNamespace) -> None:
+    nodes.send("A", **REVISION_1)
+    assert nodes.send("B", **REVISION_1) == set()
+    assert nodes.held() == [("source-A", "1.0.0", [])]
+
+
+def test_a_known_hash_of_an_item_without_a_version_key_is_skipped_for_a_node(nodes: types.SimpleNamespace) -> None:
+    nodes.send("A", version_key=None, hash="same-text")
+    assert nodes.send("B", version_key=None, hash="same-text") == set()
+    assert [row.osint_source_id for row in nodes.store] == ["source-A"]
+    assert nodes.version_lookups == []

@@ -41,6 +41,40 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql.expression import cast
 
 
+def refused_report_items(report_items: Collection[ReportItem | None], user: User | None, kept: Collection[int] = ()) -> list[int]:
+    """The ids of report items the user may not put into a product (sorted).
+
+    A product carries its report items whole - into the preview, the presenter's input and the
+    publication - so naming a report item by id must not reach one whose report type's ACL keeps
+    the user out. Items in ``kept`` (already in the product, put there by someone allowed) are
+    not asked about. Without a user (a system update) nothing is refused.
+
+    Args:
+        report_items: The report items asked for; None (an id that does not exist) is skipped.
+        user: Who asks.
+        kept: Ids already linked to the product.
+
+    Returns:
+        list[int]: The refused ids, empty when every item may be used.
+    """
+    if user is None:
+        return []
+    return sorted(
+        {
+            report_item.id
+            for report_item in report_items
+            if report_item is not None
+            and report_item.id not in kept
+            and not ReportItem.allowed_with_acl(report_item.id, user, see=False, access=True, modify=False)
+        },
+    )
+
+
+def refused_report_items_message(refused: list[int]) -> str:
+    """The error for :func:`refused_report_items`."""
+    return f"You may not put report item(s) {', '.join(str(report_item_id) for report_item_id in refused)} into a product"
+
+
 class NewProductSchema(ProductSchemaBase):
     """New product schema.
 
@@ -780,6 +814,9 @@ class Product(db.Model):
         tag_ids = Tag.assignable(StateEntityTypeEnum.PRODUCT.value, product_data.get("tag_ids"))
         product_schema = NewProductSchema()
         product = product_schema.load(product_data)
+        refused = refused_report_items(product.report_items, user)
+        if refused:
+            raise ValueError(refused_report_items_message(refused))
 
         product.user_id = user.id
         product.updated_by = user.name
@@ -825,6 +862,12 @@ class Product(db.Model):
         # can target only newly-added reports (Option B: a report added to an
         # already-published product should be auto-completed too).
         existing_report_item_ids = {ri.id for ri in original_product.report_items} if original_product.report_items else set()
+        # Reports kept are not asked about only while the product stays in its product preset:
+        # moved to another, they would be rendered by its templates and sent to its channels.
+        same_preset = product.product_preset_id == original_product.product_preset_id
+        refused = refused_report_items(product.report_items, user, kept=existing_report_item_ids if same_preset else set())
+        if refused:
+            raise ValueError(refused_report_items_message(refused))
         original_product.title = product.title
         original_product.description = product.description
         if product.language is not None and product.language != original_product.language:
