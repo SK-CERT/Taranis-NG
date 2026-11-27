@@ -54,6 +54,14 @@ class _FakeQuery:
         """The first remaining row, or None."""
         return self.rows[0] if self.rows else None
 
+    def filter(self, expression: object) -> _FakeQuery:
+        # Handle the func.lower(ReportItemType.title) == title.lower()
+        # expression used by _title_exists().
+        return _FakeQuery(
+            self.model,
+            [row for row in self.rows if row.title.casefold() == expression.right.value.casefold()],
+        )
+
 
 class _FakeSession:
     """Records what an import wrote, and answers the queries the models build against it.
@@ -92,6 +100,16 @@ class _FakeSession:
     def get(self, _model: object, _id: object) -> None:
         """No identity lookup is needed by the code under test."""
         return
+
+    def query(self, entity: object) -> _FakeQuery:
+        """Support direct session queries used by the manager."""
+        model = ReportItemType if entity is ReportItemType.id else None
+
+        if model is None:
+            msg = f"Unsupported query entity: {entity!r}"
+            raise NotImplementedError(msg)
+
+        return _FakeQuery(model, list(self.rows_by_model.get(model, [])))
 
 
 def _attribute(
