@@ -20,7 +20,7 @@ from types import SimpleNamespace
 
 import pytest
 from auth.base_authenticator import BaseAuthenticator
-from managers import auth_manager, webauthn_manager
+from managers import auth_manager, login_throttle, webauthn_manager
 from model.security_settings import SecuritySettings
 
 
@@ -36,8 +36,13 @@ def login(monkeypatch) -> SimpleNamespace:  # noqa: ANN001
         "generate_jwt",
         staticmethod(lambda user: ({"access_token": f"jwt-for-{user.username}"}, HTTPStatus.OK)),
     )
-    # The activity log writes to the database; these tests never reach one.
+    # The activity log writes to the database, the login throttle to Redis; these tests reach neither.
     monkeypatch.setattr(auth_manager.log_manager, "store_auth_error_activity", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        login_throttle,
+        "redis_client",
+        SimpleNamespace(get=lambda _key: None, set=lambda *_a, **_k: None, delete=lambda _key: None),
+    )
     monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, _username: None))
     return switches
 
@@ -196,3 +201,75 @@ def test_the_login_page_is_told_whether_a_passkey_may_start_a_login(monkeypatch,
 
     assert methods["passkey_enabled"] is True
     assert methods["passkey_login_enabled"] is False
+
+
+def test_the_passkey_that_started_the_login_cannot_finish_its_mfa_step(monkeypatch, login: SimpleNamespace) -> None:  # noqa: ANN001, ARG001
+    """The step offered TOTP only; its token used to open the passkey ceremony all the same."""
+    user = _user(totp_secret="seed")
+    _assert_asserts(monkeypatch, user)
+    monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, username: user if username == "alice" else None))
+    monkeypatch.setattr(webauthn_manager, "begin_authentication", lambda _user: pytest.fail("no passkey ceremony may start"))
+
+    response, _status = _sign_in()
+    mfa_token = response["mfa_token"]
+
+    begin_response, begin_status = auth_manager.begin_passkey_authentication(mfa_token)
+    finish_response, finish_status = auth_manager.complete_mfa_passkey(mfa_token, "challenge", {"id": "credential"})
+
+    assert (begin_status, begin_response["code"]) == (HTTPStatus.FORBIDDEN, "MFA_METHOD_NOT_OFFERED")
+    assert (finish_status, finish_response["code"]) == (HTTPStatus.FORBIDDEN, "MFA_METHOD_NOT_OFFERED")
+
+
+def test_a_password_login_s_step_can_still_be_finished_with_a_passkey(monkeypatch, login: SimpleNamespace) -> None:  # noqa: ANN001, ARG001
+    user = _user()
+    _assert_asserts(monkeypatch, user)
+
+    response, _status = auth_manager._mfa_gate(SimpleNamespace(require_mfa=False), user)
+    finish_response, finish_status = auth_manager.complete_mfa_passkey(response["mfa_token"], "challenge", {"id": "credential"})
+
+    assert finish_status == HTTPStatus.OK
+    assert finish_response == {"access_token": "jwt-for-alice"}
+
+
+def test_a_step_that_offered_only_passkeys_takes_no_totp_code(monkeypatch, login: SimpleNamespace) -> None:  # noqa: ANN001, ARG001
+    user = _user()
+    monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, username: user if username == "alice" else None))
+    monkeypatch.setattr(auth_manager.totp_manager, "verify_code", lambda *_args: pytest.fail("no code may be checked"))
+
+    response, _status = auth_manager._mfa_gate(SimpleNamespace(require_mfa=False), user)
+    totp_response, totp_status = auth_manager.complete_mfa_totp(response["mfa_token"], "123456")
+
+    assert (totp_status, totp_response["code"]) == (HTTPStatus.FORBIDDEN, "MFA_METHOD_NOT_OFFERED")
+
+
+def test_the_passkey_that_started_the_login_cannot_finish_its_enrollment_step(monkeypatch, login: SimpleNamespace) -> None:  # noqa: ANN001
+    """MFA is required and the user has nothing but passkeys: the step after a passkey sign-in offers TOTP only."""
+    login.site_requires_mfa = True
+    user = _user()
+    _assert_asserts(monkeypatch, user)
+    monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, username: user if username == "alice" else None))
+    monkeypatch.setattr(webauthn_manager, "begin_registration", lambda _user: pytest.fail("no passkey may be registered"))
+    monkeypatch.setattr(webauthn_manager, "finish_registration", lambda *_args: pytest.fail("no passkey may be registered"))
+
+    response, _status = _sign_in()
+    assert response["code"] == "MFA_ENROLLMENT_REQUIRED"
+    assert response["methods"] == ["totp"]
+
+    begin_response, begin_status = auth_manager.complete_passkey_enrollment(response["enroll_token"], None, None, "Key")
+    finish_response, finish_status = auth_manager.complete_passkey_enrollment(response["enroll_token"], "c", {"id": "new"}, "Key")
+
+    assert (begin_status, begin_response["code"]) == (HTTPStatus.FORBIDDEN, "MFA_METHOD_NOT_OFFERED")
+    assert (finish_status, finish_response["code"]) == (HTTPStatus.FORBIDDEN, "MFA_METHOD_NOT_OFFERED")
+
+
+def test_a_password_login_may_enroll_a_passkey_as_its_second_factor(monkeypatch, login: SimpleNamespace) -> None:  # noqa: ANN001
+    login.site_requires_mfa = True
+    user = _user(webauthn_credentials=[])
+    monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, username: user if username == "alice" else None))
+    monkeypatch.setattr(webauthn_manager, "begin_registration", lambda _user: {"challenge": "c"})
+
+    response, _status = auth_manager._mfa_gate(SimpleNamespace(require_mfa=True), user)
+    begin_response, begin_status = auth_manager.complete_passkey_enrollment(response["enroll_token"], None, None, "Key")
+
+    assert response["methods"] == ["totp", "passkey"]
+    assert (begin_status, begin_response) == (HTTPStatus.OK, {"challenge": "c"})

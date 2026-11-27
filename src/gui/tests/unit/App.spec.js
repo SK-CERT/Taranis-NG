@@ -20,7 +20,8 @@ const mockAuthStore = {
     getUserData: null,
     refreshToken: vi.fn(),
     logout: vi.fn(),
-    setToken: vi.fn()
+    setToken: vi.fn(),
+    clearSession: vi.fn()
 }
 
 const mockUserStore = {
@@ -226,6 +227,26 @@ describe('App SSE boot flow', () => {
         expect(mockReconnect).not.toHaveBeenCalled()
     })
 
+    it('says on the login page that a session ran its maximum length', async () => {
+        mockNeedTokenRefresh.mockReturnValue(true)
+        mockAuthStore.refreshToken.mockRejectedValue({ response: { status: 401, data: { code: 'SESSION_EXPIRED' } } })
+
+        wrapper = mountWithPlugins(App, {
+            global: {
+                stubs: {
+                    MainMenu: true,
+                    NotificationSnackbar: true
+                }
+            }
+        })
+
+        await flushPromises()
+        vi.advanceTimersByTime(5000)
+        await flushPromises()
+
+        expect(mockRouterReplace).toHaveBeenCalledWith({ path: '/login', query: { login_error: 'session_expired' } })
+    })
+
     it('should leave protected content immediately when the stored token expires', async () => {
         mockIsAuthenticated.mockReturnValue(false)
         mockAuthStore.logout.mockResolvedValue(undefined)
@@ -267,6 +288,25 @@ describe('App SSE boot flow', () => {
             expect(mockConnect).toHaveBeenCalledTimes(1)
             expect(mockSubscribe).toHaveBeenCalledTimes(6)
         })
+    })
+
+    it('ends the session and shows the login page when core says the session is no longer valid', async () => {
+        wrapper = mountWithPlugins(App, {
+            global: {
+                stubs: {
+                    MainMenu: true,
+                    NotificationSnackbar: true
+                }
+            }
+        })
+        await flushPromises()
+        mockAuthStore.clearSession.mockClear()
+        mockRouterReplace.mockClear()
+
+        window.dispatchEvent(new Event('session-invalid'))
+
+        expect(mockAuthStore.clearSession).toHaveBeenCalledTimes(1)
+        expect(mockRouterReplace).toHaveBeenCalledWith('/login')
     })
 
     it('synchronizes runtime locale changes with document metadata and Vuetify direction', async () => {

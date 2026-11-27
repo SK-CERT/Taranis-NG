@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from http import HTTPStatus
 from types import SimpleNamespace
 
+import jwt
 import pytest
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, decode_token, jwt_required
+from flask_restful import Resource
 from managers import auth_manager
+from managers.api_manager import SafeErrorApi
 from model.security_settings import SecuritySettings
+from model.token_blacklist import TokenBlacklist
+
+# The session id is test_session_logout.py's; these tokens only need one to be session tokens.
+SESSION = {"sid": "session-1"}
 
 
 @pytest.fixture
@@ -17,6 +25,9 @@ def generation_app(monkeypatch: pytest.MonkeyPatch) -> tuple[Flask, dict[str, in
     generation = {"value": 2}
     issued_on_refresh: list[str] = []
     monkeypatch.setattr(SecuritySettings, "get_auth_generation", lambda: generation["value"])
+    monkeypatch.setattr(TokenBlacklist, "is_blacklisted", classmethod(lambda _cls, _jti, _session_id=None: False))
+    # The credential claim is test_session_credentials.py's; these tokens are about the generation.
+    monkeypatch.setattr(auth_manager, "_credential_is_current", lambda _payload: True)
 
     app = Flask(__name__)
     app.config["JWT_SECRET_KEY"] = "auth-generation-test-secret-with-sufficient-length"
@@ -33,7 +44,7 @@ def generation_app(monkeypatch: pytest.MonkeyPatch) -> tuple[Flask, dict[str, in
     def refresh():  # noqa: ANN202
         token = create_access_token(
             identity="alice",
-            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: generation["value"]},
+            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: generation["value"], **SESSION},
         )
         issued_on_refresh.append(token)
         return jsonify(access_token=token)
@@ -60,6 +71,14 @@ def test_auth_manager_initialize_registers_generation_callbacks(monkeypatch: pyt
         def token_verification_failed_loader(callback):  # noqa: ANN001, ANN205
             registered["rejected"] = callback
 
+        @staticmethod
+        def token_in_blocklist_loader(callback):  # noqa: ANN001, ANN205
+            registered["revoked"] = callback
+
+        @staticmethod
+        def revoked_token_loader(callback):  # noqa: ANN001, ANN205
+            registered["revoked_response"] = callback
+
     app = Flask(__name__)
     monkeypatch.delenv("TARANIS_NG_AUTHENTICATOR", raising=False)
     monkeypatch.setattr(auth_manager, "JWTManager", RecordingJWTManager)
@@ -68,8 +87,10 @@ def test_auth_manager_initialize_registers_generation_callbacks(monkeypatch: pyt
 
     assert registered == {
         "app": app,
-        "verify": auth_manager._auth_generation_is_current,
+        "verify": auth_manager._session_token_valid,
         "rejected": auth_manager._auth_generation_rejected,
+        "revoked": auth_manager._token_revoked,
+        "revoked_response": auth_manager._auth_generation_rejected,
     }
 
 
@@ -98,13 +119,13 @@ def test_missing_old_or_malformed_generation_is_rejected(
 ) -> None:
     app, _generation, _issued = generation_app
     with app.app_context():
-        claims = {} if claim is None else {auth_manager.AUTH_GENERATION_CLAIM: claim}
+        claims = SESSION if claim is None else {auth_manager.AUTH_GENERATION_CLAIM: claim, **SESSION}
         token = create_access_token(identity="alice", additional_claims=claims)
 
     response = app.test_client().get("/protected", headers=_authorization(token))
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.get_json() == {"error": "Authentication token is no longer valid"}
+    assert response.get_json() == {"error": "Authentication token is no longer valid", "code": "SESSION_INVALID"}
 
 
 def test_current_generation_is_accepted(generation_app: tuple[Flask, dict[str, int], list[str]]) -> None:
@@ -112,7 +133,7 @@ def test_current_generation_is_accepted(generation_app: tuple[Flask, dict[str, i
     with app.app_context():
         token = create_access_token(
             identity="alice",
-            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: generation["value"]},
+            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: generation["value"], **SESSION},
         )
 
     response = app.test_client().get("/protected", headers=_authorization(token))
@@ -139,6 +160,42 @@ def test_malformed_jwt_is_returned_as_unauthorized(monkeypatch: pytest.MonkeyPat
     assert response.get_json() == {"error": "authorization required"}
 
 
+@pytest.mark.parametrize("kind", ["expired", "garbage", "signed with another key"])
+def test_a_bad_token_on_an_auth_required_resource_is_unauthorized_not_a_server_error(
+    generation_app: tuple[Flask, dict[str, int], list[str]],
+    monkeypatch: pytest.MonkeyPatch,
+    kind: str,
+) -> None:
+    """PyJWT's errors escaped auth_required, and flask-restful answered them with a 500."""
+    app, generation, _issued = generation_app
+
+    class Thing(Resource):
+        @auth_manager.auth_required("ASSESS_ACCESS")
+        def get(self) -> dict:
+            return {"ok": True}
+
+    SafeErrorApi(app).add_resource(Thing, "/thing")
+    monkeypatch.setattr(auth_manager.log_manager, "store_auth_error_activity", lambda *_args, **_kwargs: None)
+    claims = {auth_manager.AUTH_GENERATION_CLAIM: generation["value"], **SESSION}
+    with app.app_context():
+        token = {
+            "expired": lambda: create_access_token(identity="alice", additional_claims=claims, expires_delta=timedelta(seconds=-10)),
+            "garbage": lambda: "garbage",
+            "signed with another key": lambda: jwt.encode(
+                {"sub": "alice", "type": "access", **claims},
+                "another-key-" * 4,
+                algorithm="HS256",
+            ),
+        }[kind]()
+
+    response = app.test_client().get("/thing", headers=_authorization(token))
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    # A plain refusal, as from every other auth_required check: no SESSION_INVALID for the GUI to
+    # end the session over - it watches its token's expiry itself.
+    assert response.get_json() == {"error": "not authorized"}
+
+
 def test_refresh_cannot_resurrect_a_stale_token(
     generation_app: tuple[Flask, dict[str, int], list[str]],
 ) -> None:
@@ -146,7 +203,7 @@ def test_refresh_cannot_resurrect_a_stale_token(
     with app.app_context():
         generation_two_token = create_access_token(
             identity="alice",
-            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 2},
+            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 2, **SESSION},
         )
 
     generation["value"] = 3
@@ -158,7 +215,7 @@ def test_refresh_cannot_resurrect_a_stale_token(
     with app.app_context():
         current_token = create_access_token(
             identity="alice",
-            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 3},
+            additional_claims={auth_manager.AUTH_GENERATION_CLAIM: 3, **SESSION},
         )
     current_response = app.test_client().get("/refresh", headers=_authorization(current_token))
 

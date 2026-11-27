@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import axios from 'axios'
-import ApiService from '@/services/api_service'
+import ApiService, { SESSION_INVALID_EVENT } from '@/services/api_service'
 
 vi.mock('axios', async () => {
     const fn = vi.fn()
@@ -10,6 +10,7 @@ vi.mock('axios', async () => {
     fn.put = vi.fn()
     fn.delete = vi.fn()
     fn.isCancel = vi.fn(() => false)
+    fn.interceptors = { response: { use: vi.fn() } }
     return { default: fn }
 })
 
@@ -31,6 +32,39 @@ describe('ApiService', () => {
             const spy = vi.spyOn(ApiService, 'setHeader')
             ApiService.init('https://api.example.com')
             expect(spy).toHaveBeenCalled()
+        })
+    })
+
+    // ── session-invalid interceptor ───────────────
+    describe('session-invalid interceptor', () => {
+        const rejected = () => {
+            ApiService.init('https://api.example.com')
+            const calls = axios.interceptors.response.use.mock.calls
+            return calls[calls.length - 1][1]
+        }
+
+        it('announces a session core refused, and still rejects the call', async () => {
+            const onRejected = rejected()
+            const listener = vi.fn()
+            window.addEventListener(SESSION_INVALID_EVENT, listener)
+            const error = { response: { status: 401, data: { code: 'SESSION_INVALID' } } }
+
+            await expect(onRejected(error)).rejects.toBe(error)
+
+            expect(listener).toHaveBeenCalledTimes(1)
+            window.removeEventListener(SESSION_INVALID_EVENT, listener)
+        })
+
+        it('leaves any other 401 alone: a missing permission must not log anyone out', async () => {
+            const onRejected = rejected()
+            const listener = vi.fn()
+            window.addEventListener(SESSION_INVALID_EVENT, listener)
+
+            await expect(onRejected({ response: { status: 401, data: { error: 'not authorized' } } })).rejects.toBeTruthy()
+            await expect(onRejected({ message: 'Network Error' })).rejects.toBeTruthy()
+
+            expect(listener).not.toHaveBeenCalled()
+            window.removeEventListener(SESSION_INVALID_EVENT, listener)
         })
     })
 

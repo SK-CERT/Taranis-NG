@@ -92,6 +92,7 @@
     import { useI18n } from 'vue-i18n'
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import { useAuthStore } from '@/stores/auth'
     import { createNewExternalUser, getAllExternalPermissions, updateExternalUser } from '@/api/config'
 
     type Permission = { id: number; name?: string; description?: string }
@@ -151,8 +152,11 @@
             organizations: []
         }
         try {
-            if (editing.value) await updateExternalUser(payload)
-            else await createNewExternalUser(payload)
+            if (editing.value) {
+                const response = await updateExternalUser(payload)
+                // Changing one's own password or username ends one's sessions; core sends a new token.
+                if (response?.data?.access_token) useAuthStore().setToken(response.data.access_token)
+            } else await createNewExternalUser(payload)
             notify('success', editing.value ? 'external_user.successful_edit' : 'external_user.successful')
             emit('saved')
             open.value = false

@@ -23,6 +23,10 @@ from managers.db_manager import db
 from shared.common import TZ
 from shared.schema.security_settings import SecuritySettingsSchema
 
+DEFAULT_SESSION_MAX_HOURS = 24
+# A year; anything longer is no limit in disguise.
+MAX_SESSION_MAX_HOURS = 8760
+
 
 class SecuritySettings(db.Model):
     """Site-wide security settings.
@@ -44,6 +48,8 @@ class SecuritySettings(db.Model):
         api_key_max_days (int | None): How many days ahead a new API key may expire; None is no cap.
         api_key_require_allowlist (bool): Whether new API keys must have an IP allowlist.
         api_key_allowed_ips (str | None): Site-wide IP allowlist for every API key, one network per line.
+        session_max_hours (int): How long a sign-in may last, in hours; 0 is no limit. The token
+            is not refreshed past it (see :func:`auth.base_authenticator.BaseAuthenticator.generate_jwt`).
         updated_by (str): User who last updated the settings.
         updated_at (datetime): Timestamp of the last update.
     """
@@ -63,6 +69,7 @@ class SecuritySettings(db.Model):
     api_key_max_days = db.Column(db.Integer, nullable=True)
     api_key_require_allowlist = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
     api_key_allowed_ips = db.Column(db.Text, nullable=True)
+    session_max_hours = db.Column(db.Integer, nullable=False, default=DEFAULT_SESSION_MAX_HOURS, server_default="24")
     updated_by = db.Column(db.String())
     updated_at = db.Column(db.DateTime)
 
@@ -85,6 +92,7 @@ class SecuritySettings(db.Model):
             record.rp_name = "Taranis NG"
             record.api_key_require_expiry = False
             record.api_key_require_allowlist = False
+            record.session_max_hours = DEFAULT_SESSION_MAX_HOURS
             db.session.add(record)
             db.session.commit()
         return record
@@ -119,6 +127,12 @@ class SecuritySettings(db.Model):
         record.rp_name = (new.get("rp_name") or "").strip() or "Taranis NG"
         record.origins = (new.get("origins") or "").strip()
         cls._update_api_key_policy(record, new)
+        if "session_max_hours" in new:
+            hours = new["session_max_hours"]
+            if not isinstance(hours, int) or isinstance(hours, bool) or not 0 <= hours <= MAX_SESSION_MAX_HOURS:
+                msg = f"The maximum session length must be a whole number of hours from 0 (no limit) to {MAX_SESSION_MAX_HOURS}"
+                raise ValueError(msg)
+            record.session_max_hours = hours
 
         if record.passkey_enabled and not (record.rp_id and record.get_origins()):
             msg = "Passkey sign-in requires a relying-party ID and at least one origin"
@@ -155,6 +169,12 @@ class SecuritySettings(db.Model):
             record.api_key_require_allowlist = bool(new["api_key_require_allowlist"])
         if "api_key_allowed_ips" in new:
             record.api_key_allowed_ips = ip_allowlist.normalize(new["api_key_allowed_ips"])
+
+    @classmethod
+    def get_session_max_hours(cls) -> int:
+        """How long a sign-in may last, in hours; 0 is no limit."""
+        hours = cls.get().session_max_hours
+        return DEFAULT_SESSION_MAX_HOURS if hours is None else int(hours)
 
     @classmethod
     def get_api_key_policy(cls) -> dict:

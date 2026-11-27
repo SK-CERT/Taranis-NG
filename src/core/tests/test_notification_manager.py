@@ -334,7 +334,7 @@ def test_adding_and_removing_a_passkey_is_reported_with_its_name(monkeypatch: py
 
 def test_enrolling_a_second_factor_during_login_is_reported(monkeypatch: pytest.MonkeyPatch, raised: list) -> None:
     record = SimpleNamespace(name="Laptop")
-    monkeypatch.setattr(auth_manager, "decode_scoped_token", lambda _token, _scope: {"sub": "alice"})
+    monkeypatch.setattr(auth_manager, "decode_scoped_token", lambda _token, _scope: {"sub": "alice", "methods": ["totp", "passkey"]})
     monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, _username: ALICE))
     monkeypatch.setattr(auth_manager.totp_manager, "confirm_enrollment", lambda _user, _code: True)
     monkeypatch.setattr(auth_manager.webauthn_manager, "passkey_second_factor_enabled", lambda: True)

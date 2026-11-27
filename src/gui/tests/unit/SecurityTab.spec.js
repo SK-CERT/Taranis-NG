@@ -82,7 +82,7 @@ describe('SecurityTab (passkey relying-party settings)', () => {
     it('uses logical inline-end spacing for every heading icon', async () => {
         const wrapper = await mountTab()
 
-        expect(wrapper.findAll('.me-2')).toHaveLength(3)
+        expect(wrapper.findAll('.me-2')).toHaveLength(4)
         expect(wrapper.find('.mr-2').exists()).toBe(false)
     })
 
@@ -212,6 +212,27 @@ describe('SecurityTab (passkey relying-party settings)', () => {
         await wrapper.vm.save()
 
         expect(updateSecuritySettings).toHaveBeenCalledWith(expect.objectContaining({ require_mfa: true }))
+    })
+
+    it('saves the maximum session length', async () => {
+        const wrapper = await mountTab()
+        updateSecuritySettings.mockResolvedValue({ data: { ...SAVED, session_max_hours: 8 } })
+        stubValidation(wrapper)
+
+        expect(wrapper.vm.settings.session_max_hours).toBe(24)
+        wrapper.vm.settings.session_max_hours = 8
+        await wrapper.vm.save()
+
+        expect(updateSecuritySettings).toHaveBeenCalledWith(expect.objectContaining({ session_max_hours: 8 }))
+        expect(wrapper.vm.settings.session_max_hours).toBe(8)
+    })
+
+    it('accepts whole hours from 0 (no limit) to a year only', async () => {
+        const wrapper = await mountTab()
+        const [rule] = wrapper.vm.sessionMaxHoursRules
+
+        expect([0, 1, 24, 8760].map(rule)).toEqual([true, true, true, true])
+        expect([-1, 8761, 1.5, '', null].map(rule).every((result) => typeof result === 'string')).toBe(true)
     })
 
     it('saves the passkey second-factor switch', async () => {

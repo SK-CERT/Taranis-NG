@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     import Flask
     from shared.time_manager import SchedulerManager
 
+import hmac
 import os
 import random
 import time
@@ -21,7 +22,7 @@ from functools import wraps
 from http import HTTPStatus
 
 import jwt
-from auth.base_authenticator import BaseAuthenticator
+from auth.base_authenticator import CREDENTIAL_CLAIM, SESSION_EXPIRED, SESSION_ID_CLAIM, BaseAuthenticator, session_credential
 from auth.ldap_authenticator import LDAPAuthenticator
 from auth.oauth2_authenticator import OAuth2Authenticator
 from auth.password_authenticator import PasswordAuthenticator
@@ -29,7 +30,7 @@ from auth.saml_authenticator import SamlAuthenticator
 from config import Config
 from flask import g, has_request_context, request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
-from flask_jwt_extended.exceptions import JWTExtendedException
+from flask_jwt_extended.exceptions import JWTExtendedException, RevokedTokenError, UserClaimsVerificationError
 from jwt.exceptions import InvalidTokenError
 from managers import ip_allowlist, log_manager, login_throttle, notification_manager, totp_manager, webauthn_manager
 from managers.db_manager import db
@@ -68,19 +69,83 @@ def _auth_generation_is_current(_jwt_header: dict, jwt_payload: dict) -> bool:
         return False
 
 
+SESSION_INVALID = ({"error": "Authentication token is no longer valid", "code": "SESSION_INVALID"}, HTTPStatus.UNAUTHORIZED)
+
+
 def _auth_generation_rejected(_jwt_header: dict, _jwt_payload: dict) -> tuple[dict, HTTPStatus]:
-    """Return the uniform response for a missing, malformed, or stale generation."""
-    return {"error": "Authentication token is no longer valid"}, HTTPStatus.UNAUTHORIZED
+    """Return the uniform response for a token that no longer holds (generation, credential, logout).
+
+    ``SESSION_INVALID`` tells the GUI to end the session and show the login page, rather than sit
+    in a page where every call fails.
+    """
+    return SESSION_INVALID
+
+
+def _credential_is_current(jwt_payload: dict) -> bool:
+    """Whether a token was issued for the account's present username and password.
+
+    A token issued before the claim existed has none, and is refused: the next login issues one.
+    """
+    claimed = jwt_payload.get(CREDENTIAL_CLAIM)
+    if not isinstance(claimed, str) or not claimed:
+        return False
+    try:
+        user = User.find(jwt_payload.get("sub"))
+    except Exception as ex:
+        log_manager.store_auth_error_activity("Session credential could not be verified", ex)
+        return False
+    return user is not None and hmac.compare_digest(claimed, session_credential(user))
+
+
+def _session_id(jwt_payload: dict) -> str | None:
+    """The sign-in a token belongs to; None for a token without one (issued before the claim).
+
+    Such a token is refused like one without a credential: its logout could not end the sign-in.
+    """
+    session_id = jwt_payload.get(SESSION_ID_CLAIM)
+    return session_id if isinstance(session_id, str) and session_id else None
+
+
+def _session_token_valid(jwt_header: dict, jwt_payload: dict) -> bool:
+    """Whether a token still opens its session: a session id, current generation, current credential."""
+    if _session_id(jwt_payload) is None:
+        return False
+    return _auth_generation_is_current(jwt_header, jwt_payload) and _credential_is_current(jwt_payload)
+
+
+def _token_revoked(_jwt_header: dict, jwt_payload: dict) -> bool:
+    """Whether a token, or the sign-in it belongs to, was logged out; a lookup that fails counts as revoked.
+
+    Logging out blacklisted only the jti it was called with: a token refreshed from the same
+    sign-in - a thief's, another tab's - stayed valid until the session's maximum length.
+    """
+    try:
+        return TokenBlacklist.is_blacklisted(jwt_payload.get("jti"), _session_id(jwt_payload))
+    except Exception as ex:
+        log_manager.store_auth_error_activity("Token revocation could not be checked", ex)
+        return True
 
 
 def _configure_auth_generation_verification(jwt_manager: JWTManager) -> None:
-    """Install the central JWT generation callbacks on Flask-JWT-Extended."""
-    jwt_manager.token_verification_loader(_auth_generation_is_current)
+    """Install the central JWT callbacks on Flask-JWT-Extended: generation and revocation.
+
+    Revocation is checked here, for every endpoint that verifies a JWT, and no longer by hand in
+    two decorators: the endpoints with a bare ``@jwt_required()`` (TOTP and passkey enrollment
+    among them) accepted a token after its logout.
+    """
+    jwt_manager.token_verification_loader(_session_token_valid)
     jwt_manager.token_verification_failed_loader(_auth_generation_rejected)
+    jwt_manager.token_in_blocklist_loader(_token_revoked)
+    jwt_manager.revoked_token_loader(_auth_generation_rejected)
 
 
 def cleanup_token_blacklist(app: Flask) -> None:
     """Clean up the token blacklist by deleting tokens older than one day.
+
+    A day outlasts every token an entry stands for, a whole sign-in's too: once its session id is
+    blacklisted no token of it passes verification, so none can be refreshed, and the last one
+    issued expires within a token's lifetime (``JWT_ACCESS_TOKEN_EXPIRES``, four hours) of the
+    logout - however long ``session_max_hours`` would have let the session run.
 
     Args:
         app: The Flask application object.
@@ -142,31 +207,41 @@ def authenticate(credentials: dict) -> tuple[dict, HTTPStatus]:
     return authenticate_with_provider((credentials or {}).get("provider_id"), credentials)
 
 
-def refresh(user: User) -> tuple[dict, HTTPStatus]:
-    """Refresh the authentication token for the given user.
+def refresh(user: User, auth_time: object, session_id: object) -> tuple[dict, HTTPStatus]:
+    """Refresh the authentication token for the given user, within the session's maximum length.
 
     Args:
         user: The user object for which the authentication token needs to be refreshed.
+        auth_time: The sign-in time the current token carries; a token without one (issued
+            before sessions had a maximum length) is not refreshed.
+        session_id: The session id the current token carries; the new token keeps it, so the
+            sign-in's logout ends it too.
 
     Returns:
-        The refreshed authentication token.
+        The refreshed authentication token, SESSION_EXPIRED or SESSION_INVALID.
     """
-    return BaseAuthenticator.generate_jwt(user, record_login=False)
+    if isinstance(auth_time, bool) or not isinstance(auth_time, int):
+        return SESSION_EXPIRED
+    if not isinstance(session_id, str) or not session_id:
+        return SESSION_INVALID
+    return BaseAuthenticator.generate_jwt(user, record_login=False, auth_time=auth_time, session_id=session_id)
 
 
-def logout(jwt_id: str) -> None:
+def logout(jwt_id: str, session_id: str | None = None) -> None:
     """Logout the user.
 
-    This function logs out the user by blacklisting their token.
+    This function logs out the user by blacklisting their token and the sign-in it belongs to:
+    the sign-in's other tokens (earlier or refreshed ones, another tab's) end with it.
 
     Args:
         jwt_id (str): The authentication token of the user.
+        session_id (str | None): The token's session id.
 
     Returns:
         None: This function does not return any value.
     """
-    if jwt_id is not None:
-        BaseAuthenticator.logout(jwt_id)
+    if jwt_id is not None or session_id:
+        BaseAuthenticator.logout(jwt_id, session_id)
 
 
 def get_login_methods() -> dict:
@@ -204,7 +279,7 @@ def get_login_methods() -> dict:
     }
 
 
-def make_scoped_token(username: str, scope: str, expires_minutes: int = SCOPED_TOKEN_MINUTES, **claims: str) -> str:
+def make_scoped_token(username: str, scope: str, expires_minutes: int = SCOPED_TOKEN_MINUTES, **claims: object) -> str:
     """Mint a short-lived single-purpose token (MFA step, TOTP enrollment, OAuth state).
 
     These tokens carry a ``scope`` claim and no flask-jwt ``type`` claim, so they
@@ -250,6 +325,21 @@ def decode_scoped_token(token: str, scope: str) -> dict | None:
         log_manager.store_auth_error_activity(f"Scoped token used with wrong scope: expected {scope}")
         return None
     return payload
+
+
+def _mfa_method_offered(payload: dict, method: str) -> bool:
+    """Whether the MFA step a scoped token carries may be completed with ``method``.
+
+    A token from before the step named its methods carries none, and is refused: it lives five
+    minutes, after which the person signs in again.
+    """
+    methods = payload.get("methods")
+    return isinstance(methods, list) and method in methods
+
+
+def _mfa_method_refused() -> tuple[dict, HTTPStatus]:
+    """Refuse a second factor the MFA step did not offer."""
+    return BaseAuthenticator.generate_error_code("This sign-in cannot be completed with that method", "MFA_METHOD_NOT_OFFERED")
 
 
 def _mfa_session_expired() -> tuple[dict, HTTPStatus]:
@@ -335,7 +425,10 @@ def _mfa_gate(provider: AuthProvider | None, user: User, *, passkey_used: bool =
             "Additional authentication required",
             "MFA_REQUIRED",
             methods=methods,
-            mfa_token=make_scoped_token(user.username, "mfa"),
+            # The step token says which factors it may be completed with: after a passkey
+            # sign-in only TOTP is offered, and the passkey endpoints used to accept the same
+            # token anyway - the passkey that started the login counted as its second factor too.
+            mfa_token=make_scoped_token(user.username, "mfa", methods=methods),
         )
     # Nothing enrolled yet: offer every factor this installation accepts, so a user
     # forced to set one up is not pushed into an authenticator app when a passkey
@@ -345,7 +438,8 @@ def _mfa_gate(provider: AuthProvider | None, user: User, *, passkey_used: bool =
         "Two-factor authentication enrollment is required",
         "MFA_ENROLLMENT_REQUIRED",
         methods=enrollable,
-        enroll_token=make_scoped_token(user.username, "mfa_enroll"),
+        # as with the MFA step: the enrollment may only be finished with a factor it offered
+        enroll_token=make_scoped_token(user.username, "mfa_enroll", methods=enrollable),
     )
 
 
@@ -374,7 +468,28 @@ def _finalize_login(provider: AuthProvider | None, user: User, *, passkey_used: 
     mfa_challenge = _mfa_gate(provider, user, passkey_used=passkey_used)
     if mfa_challenge:
         return mfa_challenge
-    return BaseAuthenticator.generate_jwt(user)
+    return _signed_in(BaseAuthenticator.generate_jwt(user), user.username)
+
+
+def _signed_in(response: tuple[dict, HTTPStatus], *usernames: str) -> tuple[dict, HTTPStatus]:
+    """Forget the failed attempts of a sign-in once it has issued its session token - only then.
+
+    A right password used to clear the counter before the MFA step, and the TOTP step counts its
+    wrong codes on the same counter: whoever knew the password could alternate a sign-in and
+    four wrong codes for ever, and so try every code.
+
+    Args:
+        response (tuple): The response that may carry the session token.
+        *usernames (str): The counters to clear: the account's, and the name typed at the form.
+
+    Returns:
+        tuple: ``response``, unchanged.
+    """
+    body, status = response
+    if status == HTTPStatus.OK and "access_token" in body:
+        for username in usernames:
+            login_throttle.register_success(username)
+    return response
 
 
 def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[dict, HTTPStatus]:
@@ -522,17 +637,17 @@ def authenticate_with_provider(provider_id: object, credentials: dict) -> tuple[
     else:
         providers = AuthProvider.get_enabled_by_kind(("local",))
 
+    # A right password is not yet a sign-in: the failures are forgotten only once the session token
+    # is issued - here, or at the end of the MFA step, which counts its wrong codes on this counter.
     for provider in providers:
         if provider.kind == "local":
             user = PasswordAuthenticator.verify(credentials)
             if user:
-                login_throttle.register_success(username)
-                return _finalize_login(provider, user)
+                return _signed_in(_finalize_login(provider, user), username)
         elif provider.kind == "ldap":
             identity = LDAPAuthenticator(provider).verify(credentials)
             if identity:
-                login_throttle.register_success(username)
-                return provision_and_issue_jwt(provider, identity)
+                return _signed_in(provision_and_issue_jwt(provider, identity), username)
 
     login_throttle.register_failure(username)
     data = request.get_json(silent=True) or {}
@@ -557,6 +672,8 @@ def complete_mfa_totp(mfa_token: str, code: str) -> tuple[dict, HTTPStatus]:
     user = User.find(payload["sub"]) if payload else None
     if not user:
         return _mfa_session_expired()
+    if not _mfa_method_offered(payload, "totp"):
+        return _mfa_method_refused()
     if not login_throttle.check_lock(user.username):
         return _mfa_session_expired()
     if not totp_manager.verify_code(user, code):
@@ -564,8 +681,7 @@ def complete_mfa_totp(mfa_token: str, code: str) -> tuple[dict, HTTPStatus]:
         log_manager.store_auth_error_activity(f"Invalid TOTP code for user: {user.username}")
         time.sleep(random.uniform(1, 3))  # noqa: S311 - timing jitter, not cryptographic
         return BaseAuthenticator.generate_error_code("Invalid authentication code", "TOTP_INVALID")
-    login_throttle.register_success(user.username)
-    return BaseAuthenticator.generate_jwt(user)
+    return _signed_in(BaseAuthenticator.generate_jwt(user), user.username)
 
 
 def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict, HTTPStatus]:
@@ -585,12 +701,16 @@ def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict,
     user = User.find(payload["sub"]) if payload else None
     if not user:
         return _mfa_session_expired()
+    if not _mfa_method_offered(payload, "totp"):
+        return _mfa_method_refused()
     if not code:
         return {"otpauth_uri": totp_manager.begin_enrollment(user.username)}, HTTPStatus.OK
+    # Not counted as a failure: the code is checked against the new secret this client was just
+    # shown, not against anything it does not know.
     if not totp_manager.confirm_enrollment(user, code):
         return BaseAuthenticator.generate_error_code("Invalid authentication code", "TOTP_INVALID")
     notification_manager.notify_user(user, notification_manager.TOTP_ENABLED)
-    return BaseAuthenticator.generate_jwt(user)
+    return _signed_in(BaseAuthenticator.generate_jwt(user), user.username)
 
 
 def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, credential: dict | None, name: str) -> tuple[dict, HTTPStatus]:
@@ -619,6 +739,10 @@ def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, cre
     user = User.find(payload["sub"]) if payload else None
     if not user:
         return _mfa_session_expired()
+    # After a passkey sign-in only TOTP is offered: registering another passkey (perhaps on the
+    # same authenticator) must not finish the step that passkey started.
+    if not _mfa_method_offered(payload, "passkey"):
+        return _mfa_method_refused()
 
     try:
         if not credential:
@@ -629,7 +753,7 @@ def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, cre
         log_manager.store_auth_error_activity(f"Passkey enrollment failed for user: {user.username}", ex)
         return BaseAuthenticator.generate_error_code(f"Passkey registration failed: {ex}", "PASSKEY_INVALID")
     notification_manager.notify_user(user, notification_manager.PASSKEY_ADDED, **notification_manager.passkey_details(record))
-    return BaseAuthenticator.generate_jwt(user)
+    return _signed_in(BaseAuthenticator.generate_jwt(user), user.username)
 
 
 def get_user_from_scoped_token(token: str, scope: str) -> User | None:
@@ -663,9 +787,12 @@ def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatu
     if mfa_token:
         if not webauthn_manager.passkey_second_factor_enabled():
             return BaseAuthenticator.generate_error_code("Passkeys are not accepted as a second factor", "PASSKEY_NOT_ALLOWED")
-        user = get_user_from_scoped_token(mfa_token, "mfa")
+        payload = decode_scoped_token(mfa_token, "mfa")
+        user = User.find(payload["sub"]) if payload else None
         if not user:
             return _mfa_session_expired()
+        if not _mfa_method_offered(payload, "passkey"):
+            return _mfa_method_refused()
     elif not webauthn_manager.passkey_first_factor_enabled():
         return BaseAuthenticator.generate_error_code("Passkey sign-in is not available", "PASSKEY_LOGIN_DISABLED")
     try:
@@ -715,13 +842,19 @@ def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) ->
     payload = decode_scoped_token(mfa_token, "mfa")
     if not payload:
         return _mfa_session_expired()
+    if not _mfa_method_offered(payload, "passkey"):
+        return _mfa_method_refused()
+    # The same counter as the TOTP step: a locked account finishes no MFA step, whichever factor.
+    if not login_throttle.check_lock(payload["sub"]):
+        return _mfa_session_expired()
     try:
         owner = webauthn_manager.finish_authentication(challenge_id, credential)
-    except ValueError as ex:
+    except ValueError as ex:  # the site's passkey settings, not the person's assertion
         return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
     if not owner or owner.username != payload["sub"]:
+        login_throttle.register_failure(payload["sub"])
         return BaseAuthenticator.generate_error()
-    return BaseAuthenticator.generate_jwt(owner)
+    return _signed_in(BaseAuthenticator.generate_jwt(owner), owner.username)
 
 
 def get_oauth_authenticator(slug: str) -> OAuth2Authenticator | None:
@@ -986,8 +1119,13 @@ def get_user_from_jwt_token() -> User | None:
     """
     try:
         verify_jwt_in_request()
-    except JWTExtendedException as ex:
-        log_manager.store_auth_error_activity("Missing JWT", ex)
+    # PyJWT's own errors (an expired, malformed or foreign-signed token) are not flask-jwt-extended's
+    # and escaped auth_required as a 500. They answer a plain 401 now, as from jwt_token_required:
+    # not SESSION_INVALID, since an expired token is no sign of a session ended on the server.
+    except (JWTExtendedException, InvalidTokenError) as ex:
+        if isinstance(ex, (UserClaimsVerificationError, RevokedTokenError)) and has_request_context():
+            g.session_invalid = True
+        log_manager.store_auth_error_activity("Missing or malformed JWT", ex)
         return None
 
     # does it encode an identity?
@@ -997,33 +1135,6 @@ def get_user_from_jwt_token() -> User | None:
         return None
 
     return _find_active_user(identity)
-
-
-def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set | None:
-    """Get user permissions from JWT token.
-
-    Args:
-        user: The user object.
-        jwt_data: The decoded JWT data containing user claims.
-
-    Returns:
-        A set of user's permissions or None if permissions are missing or an error occurs.
-
-    """
-    try:
-        if not jwt_data or "user_claims" not in jwt_data:
-            log_manager.store_user_auth_error_activity(user, "Missing user data in JWT")
-            return None
-        jwt_data = jwt_data["user_claims"]
-        if "permissions" not in jwt_data:
-            log_manager.store_user_auth_error_activity(user, "Missing user permissions in JWT")
-            return None
-
-        return set(jwt_data["permissions"])
-
-    except Exception as ex:
-        log_manager.store_auth_error_activity("Get permission from JWT error", ex)
-        return None
 
 
 def auth_required(
@@ -1084,14 +1195,12 @@ def auth_required(
                 user = get_user_from_jwt_token()
                 if not user:
                     log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
-                    return error
-                jwt_data = get_jwt()
-                jwt_id = jwt_data.get("jti")
-                if TokenBlacklist.is_blacklisted(jwt_id):
-                    log_manager.store_auth_error_activity(f"Unauthorized API call acces (blacklisted token: {jwt_id})")
-                    return error
-
-                active_permissions_set = get_perm_from_jwt_token(user, jwt_data)
+                    return SESSION_INVALID if g.get("session_invalid") else error
+                # A logged-out token was refused by verify_jwt_in_request (token_in_blocklist_loader).
+                # The permissions are the account's now, not the ones copied into the token when it
+                # was issued: a role taken away used to keep working until the token expired, and
+                # with the GUI refreshing it, never.
+                active_permissions_set = get_perm_from_user(user)
 
             # is there at least one match with the permissions required by the call?
             if not required_permissions_set.intersection(active_permissions_set or set()):
@@ -1213,14 +1322,11 @@ def jwt_token_required(fn: Callable[..., Any]) -> Callable[..., Any]:
             verify_jwt_in_request()
         except (JWTExtendedException, InvalidTokenError) as ex:
             log_manager.store_auth_error_activity("Missing or malformed JWT", ex)
+            if isinstance(ex, (UserClaimsVerificationError, RevokedTokenError)):
+                return SESSION_INVALID
             return {"error": "authorization required"}, HTTPStatus.UNAUTHORIZED
 
-        jwt_data = get_jwt()
-        jwt_id = jwt_data.get("jti")
-        if TokenBlacklist.is_blacklisted(jwt_id):
-            log_manager.store_auth_error_activity(f"Blacklisted token: {jwt_id}")
-            return {"error": "token revoked"}, HTTPStatus.UNAUTHORIZED
-
+        # A logged-out token was refused by verify_jwt_in_request (token_in_blocklist_loader).
         identity = get_jwt_identity()
         if not identity:
             log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
@@ -1301,6 +1407,15 @@ def decode_user_from_jwt(jwt_token: str) -> User:
     if not _auth_generation_is_current({}, decoded):
         log_manager.store_auth_error_activity("Session JWT rejected because its authentication generation is stale or missing")
         return None
+    if not _credential_is_current(decoded):
+        log_manager.store_auth_warning_activity("Session JWT rejected: the account's password or username changed since it was issued")
+        return None
+    if _session_id(decoded) is None:
+        log_manager.store_auth_warning_activity("Session JWT rejected because it names no session")
+        return None
+    if _token_revoked({}, decoded):
+        log_manager.store_auth_warning_activity("Session JWT rejected because it was logged out")
+        return None
     return _find_active_user(decoded["sub"])
 
 
@@ -1309,11 +1424,13 @@ def decode_user_from_session(claims: dict | None) -> User | None:
 
     The session keeps the claims of the access token it was opened with - not the token, which
     would be a bearer credential lying in Redis for every container that reaches it - so the
-    checks a token gets are made here on those claims: not a scoped token, not expired, not
-    logged out, of the current authentication generation, and an active user.
+    checks a token gets are made here on those claims: not a scoped token, not expired, neither
+    it nor its sign-in logged out, of the current authentication generation, issued for the
+    account's present username and password, and an active user.
 
     Args:
-        claims (dict | None): ``sub``, ``jti``, ``exp`` and the auth generation, as stored.
+        claims (dict | None): ``sub``, ``jti``, ``exp``, the auth generation, the session id and
+            the credential, as stored.
 
     Returns:
         User: The active user, or None.
@@ -1323,10 +1440,10 @@ def decode_user_from_session(claims: dict | None) -> User | None:
     expires = claims.get("exp")
     if not isinstance(expires, int | float) or isinstance(expires, bool) or expires <= time.time():
         return None
-    if TokenBlacklist.is_blacklisted(claims.get("jti")):
+    if _token_revoked({}, claims):
         log_manager.store_auth_warning_activity("SSE session of a logged-out token refused")
         return None
-    if not _auth_generation_is_current({}, claims):
+    if not _session_token_valid({}, claims):
         return None
     return _find_active_user(claims.get("sub"))
 

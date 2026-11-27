@@ -36,6 +36,8 @@ class SecuritySettingsSchema(Schema):
     api_key_max_days = fields.Int(allow_none=True)
     api_key_require_allowlist = fields.Bool()
     api_key_allowed_ips = fields.Method("dump_allowed_ips", deserialize="load_allowed_ips", allow_none=True)
+    # No load default either: left out, the stored maximum session length stays.
+    session_max_hours = fields.Int()
     updated_by = fields.Str(dump_only=True)
     updated_at = fields.Str(dump_only=True)
 

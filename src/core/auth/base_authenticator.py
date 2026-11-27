@@ -7,13 +7,69 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.user import User
 
+import hashlib
+import hmac
+import time
+import uuid
 from dataclasses import dataclass
+from datetime import timedelta
 from http import HTTPStatus
 
+from config import Config
+from flask import current_app
 from flask_jwt_extended import create_access_token
 from managers import log_manager
 from model.security_settings import SecuritySettings
 from model.token_blacklist import TokenBlacklist
+
+# The claim tying a session to the account's credentials as they were when it was issued.
+CREDENTIAL_CLAIM = "cred"
+# When the sign-in behind a token happened (epoch seconds); a refresh carries it over.
+AUTH_TIME_CLAIM = "auth_time"
+# Which sign-in a token belongs to, minted with it and carried over like auth_time: logging out
+# blacklists it, so every token of that sign-in ends, not only the one that asked.
+SESSION_ID_CLAIM = "sid"
+# A refresh that would leave less than this before the session's maximum length is refused. The
+# GUI refreshes five minutes before a token runs out; with a token capped to the last minutes of
+# the session, it would otherwise refresh every few seconds until the end.
+MIN_SESSION_LEFT_SECONDS = 600
+SESSION_EXPIRED = (
+    {"error": "Your session has reached its maximum length; sign in again", "code": "SESSION_EXPIRED"},
+    HTTPStatus.UNAUTHORIZED,
+)
+
+
+def session_seconds_left(auth_time: int, now: int) -> int | None:
+    """Seconds until a session started at ``auth_time`` reaches its maximum length; None: no limit."""
+    hours = SecuritySettings.get_session_max_hours()
+    if not hours:
+        return None
+    return auth_time + hours * 3600 - now
+
+
+def _default_token_seconds() -> int:
+    """The configured access token lifetime, in seconds."""
+    configured = current_app.config.get("JWT_ACCESS_TOKEN_EXPIRES", 900)
+    return int(configured.total_seconds()) if isinstance(configured, timedelta) else int(configured)
+
+
+def session_credential(user: User) -> str:
+    """A fingerprint of what a session was opened with: the account and its password.
+
+    It goes into every token, and a token whose fingerprint no longer matches is refused. So a
+    password change - or a username change, or the password being removed - ends every other
+    session of the account at once, instead of leaving a stolen token valid until it expires
+    (and, refreshed, forever). It is an HMAC under the JWT key: a token reveals nothing about the
+    password hash, and nobody without the key can compute it.
+
+    Args:
+        user (User): The account.
+
+    Returns:
+        str: 32 hex characters.
+    """
+    message = f"{user.id}:{user.username}:{user.password or ''}".encode()
+    return hmac.new(str(Config.JWT_SECRET_KEY).encode(), message, hashlib.sha256).hexdigest()[:32]
 
 
 class ProviderConfigurationError(Exception):
@@ -48,13 +104,14 @@ class BaseAuthenticator:
     """BaseAuthenticator class provides methods for handling authentication processes."""
 
     @staticmethod
-    def logout(jwt_id: str) -> None:
-        """Log out a user by adding their token to the blacklist.
+    def logout(jwt_id: str, session_id: str | None = None) -> None:
+        """Log out a user by adding their token, and its sign-in, to the blacklist.
 
         Args:
             jwt_id (str): The token to be blacklisted.
+            session_id (str | None): The token's session id: the sign-in's other tokens end too.
         """
-        TokenBlacklist.add(jwt_id)
+        TokenBlacklist.add(jwt_id, session_id)
 
     @staticmethod
     def generate_error() -> tuple[dict, HTTPStatus]:
@@ -98,22 +155,51 @@ class BaseAuthenticator:
         return None
 
     @staticmethod
-    def generate_jwt(user: User, *, record_login: bool = True) -> tuple[dict, HTTPStatus]:
+    def generate_jwt(
+        user: User,
+        *,
+        record_login: bool = True,
+        auth_time: int | None = None,
+        session_id: str | None = None,
+    ) -> tuple[dict, HTTPStatus]:
         """Generate a JSON Web Token (JWT) for a given user.
+
+        A session lasts at most ``security_settings.session_max_hours`` from its sign-in: the
+        token records the sign-in (``auth_time``), a refresh carries it over, the token expires
+        no later than the session does, and a refresh close to that end is refused
+        (SESSION_EXPIRED). The GUI used to keep a session alive for as long as a tab was open.
+
+        A new sign-in also gets a session id (``sid``) that its later tokens carry: logging out
+        blacklists it, and with it every token of the sign-in.
 
         Args:
             user (User): The user for whom the JWT is to be generated.
             record_login (bool): Whether this counts as a sign-in. Refreshing a token
                 converges here too, and stamping it would turn the account's last login
                 into the time of the GUI's last background refresh.
+            auth_time (int | None): When the session's sign-in happened (epoch seconds), for a
+                refresh; None: now, a new sign-in.
+            session_id (str | None): The session id of the token being continued, with
+                ``auth_time``; a new sign-in mints its own.
 
         Returns:
             tuple: A tuple containing a dictionary with the access token and an HTTP status code.
-                   If the user is not active, returns an error response.
+                   If the user is not active, or the session has run its course, an error response.
         """
         status_error = BaseAuthenticator.check_user_status(user)
         if status_error:
             return status_error
+        now = int(time.time())
+        if auth_time is None:
+            auth_time, session_id = now, uuid.uuid4().hex
+        elif not session_id:
+            # A continued session needs its id: a new one would escape the sign-in's logout.
+            return SESSION_EXPIRED
+        auth_time = int(auth_time)
+        seconds_left = session_seconds_left(auth_time, now)
+        if seconds_left is not None and seconds_left < MIN_SESSION_LEFT_SECONDS:
+            return SESSION_EXPIRED
+        expires = None if seconds_left is None else timedelta(seconds=min(seconds_left, _default_token_seconds()))
         log_manager.store_user_activity(user, "LOGIN", "Successful")
         if record_login:
             user.touch_login()
@@ -121,6 +207,9 @@ class BaseAuthenticator:
             identity=user.username,
             additional_claims={
                 "auth_generation": SecuritySettings.get_auth_generation(),
+                CREDENTIAL_CLAIM: session_credential(user),
+                AUTH_TIME_CLAIM: auth_time,
+                SESSION_ID_CLAIM: session_id,
                 "user_claims": {
                     "id": user.id,
                     "name": user.name,
@@ -128,6 +217,7 @@ class BaseAuthenticator:
                     "permissions": user.get_permissions(),
                 },
             },
+            expires_delta=expires,
         )
 
         return {"access_token": access_token}, HTTPStatus.OK

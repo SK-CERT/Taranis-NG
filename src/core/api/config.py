@@ -14,8 +14,9 @@ from http import HTTPStatus
 import requests
 from auth import oauth2_authenticator, saml_authenticator, saml_federation, saml_metadata
 from auth import url_guard as saml_url_guard
+from auth.base_authenticator import AUTH_TIME_CLAIM, SESSION_ID_CLAIM, BaseAuthenticator, session_credential
 from flask import Response, request, send_file
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt
 from flask_restful import Resource
 from managers import (
     api_key_manager,
@@ -32,7 +33,7 @@ from managers import (
     remote_manager,
     template_preview,
 )
-from managers.auth_manager import auth_required, get_user_from_jwt
+from managers.auth_manager import auth_required, get_user_from_jwt, jwt_token_required
 from managers.db_manager import db
 from managers.sse_manager import sse_manager
 from managers.stored_secrets import hide_secret_parameters, keep_stored_api_key
@@ -1388,6 +1389,40 @@ class UsersResource(Resource):
         return None
 
 
+def _own_session_renewed(target: user.User | None, credential_before: str | None) -> tuple[dict, HTTPStatus] | None:
+    """A fresh token when someone changed their own password or username.
+
+    Such a change ends every session of the account (the token's credential no longer matches),
+    the one making it included: it gets a new token back instead of being signed out.
+
+    Args:
+        target (User | None): The account that was edited.
+        credential_before (str | None): Its session credential before the edit.
+
+    Returns:
+        (dict, HTTPStatus) | None: ``{"access_token": ...}`` for the editor's own changed
+            account, None otherwise.
+    """
+    # An API key has no session to renew; it keeps working (it is not tied to the password).
+    if auth_manager.uses_api_key():
+        return None
+    actor = get_user_from_jwt()
+    if target is None or actor is None or actor.id != target.id or session_credential(target) == credential_before:
+        return None
+    # The same session goes on: it keeps its sign-in time, and so its maximum length, and its id,
+    # so that logging out of it ends the new token too.
+    claims = get_jwt()
+    renewed = BaseAuthenticator.generate_jwt(
+        target,
+        record_login=False,
+        auth_time=claims.get(AUTH_TIME_CLAIM),
+        session_id=claims.get(SESSION_ID_CLAIM),
+    )
+    # The change is saved either way. A session too close to its maximum length gets no new
+    # token: the save still answers as a success, and the next request signs the person out.
+    return renewed if renewed[1] == HTTPStatus.OK else None
+
+
 def _notify_password_change(target: user.User | None, password_before: str | None) -> None:
     """Tell a user that an edit of their account changed or removed their password."""
     if target is None:
@@ -1413,13 +1448,14 @@ class UserResource(Resource):
         if target is None:
             return {"error": "User not found"}, HTTPStatus.NOT_FOUND
         password_before = target.password
+        credential_before = session_credential(target)
         try:
             user.User.update(user_id, request.json)
         except ValueError as ex:
             # a rejected identity link or status change: the message names what to fix
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         _notify_password_change(target, password_before)
-        return None
+        return _own_session_renewed(target, credential_before)
 
     @auth_required("CONFIG_USER_DELETE")
     def delete(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
@@ -1642,6 +1678,7 @@ class ExternalUserResource(Resource):
         """
         target = user.User.find_by_id(user_id)
         password_before = target.password if target else None
+        credential_before = session_credential(target) if target else None
         try:
             permissions = auth_manager.get_external_permissions_ids()
             user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
@@ -1650,7 +1687,7 @@ class ExternalUserResource(Resource):
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
         _notify_password_change(target, password_before)
-        return None
+        return _own_session_renewed(target, credential_before)
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
@@ -1670,7 +1707,7 @@ class ExternalUserResource(Resource):
 class SettingsResource(Resource):
     """Settings API endpoint."""
 
-    @jwt_required()
+    @jwt_token_required
     def get(self) -> tuple[str, dict]:
         """Get all global settings.
 
@@ -1708,7 +1745,7 @@ class SettingResource(Resource):
 class UserSettingResource(Resource):
     """Settings API endpoint."""
 
-    @jwt_required()
+    @jwt_token_required
     def put(self, setting_id: int) -> tuple[dict, HTTPStatus]:
         """Update a user setting.
 

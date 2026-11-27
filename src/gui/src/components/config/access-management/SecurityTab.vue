@@ -27,6 +27,32 @@
                 </v-card-text>
             </v-card>
 
+            <v-card class="mb-4">
+                <v-card-title class="d-flex align-center">
+                    <v-icon class="me-2">mdi-timer-lock-outline</v-icon>
+                    {{ t('access_management.security.sessions_title') }}
+                </v-card-title>
+
+                <v-card-subtitle class="pb-2">
+                    {{ t('access_management.security.sessions_description') }}
+                </v-card-subtitle>
+
+                <v-card-text>
+                    <v-text-field
+                        v-model.number="settings.session_max_hours"
+                        type="number"
+                        min="0"
+                        max="8760"
+                        :label="t('access_management.security.session_max_hours')"
+                        :hint="t('access_management.security.session_max_hours_hint')"
+                        :rules="sessionMaxHoursRules"
+                        persistent-hint
+                        :disabled="!canUpdate || saving"
+                        data-test="security-session-max-hours"
+                    />
+                </v-card-text>
+            </v-card>
+
             <v-card>
                 <v-card-title class="d-flex align-center">
                     <v-icon class="me-2">mdi-fingerprint</v-icon>
@@ -288,6 +314,7 @@
         api_key_max_days: number | null
         api_key_require_allowlist: boolean
         api_key_allowed_ips: string[]
+        session_max_hours: number
         updated_by?: string
         updated_at?: string
     }
@@ -322,7 +349,8 @@
         api_key_require_expiry: false,
         api_key_max_days: null,
         api_key_require_allowlist: false,
-        api_key_allowed_ips: []
+        api_key_allowed_ips: [],
+        session_max_hours: 24
     })
 
     // The site-wide allowlist is edited as text, one network per line; the API speaks lists.
@@ -336,6 +364,12 @@
             settings.value.api_key_max_days = text === '' ? null : Number(text)
         }
     })
+    // Whole hours, 0 (no limit) to a year: the same bounds the API enforces.
+    const sessionMaxHoursRules = [
+        (value: string | number | null) =>
+            (value !== null && value !== '' && Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 8760) ||
+            t('access_management.security.session_max_hours_invalid')
+    ]
     const maxDaysRules = [
         (value: string | number | null) =>
             value === null || value === '' || (Number.isInteger(Number(value)) && Number(value) >= 1) || t('api_keys.policy_max_days_invalid')
@@ -423,7 +457,8 @@
             rp_name: data.rp_name ?? '',
             origins: data.origins ?? '',
             api_key_max_days: data.api_key_max_days ?? null,
-            api_key_allowed_ips: data.api_key_allowed_ips ?? []
+            api_key_allowed_ips: data.api_key_allowed_ips ?? [],
+            session_max_hours: data.session_max_hours ?? 24
         }
         savedAllowlist.value = [...settings.value.api_key_allowed_ips]
         siteAllowlist.value = settings.value.api_key_allowed_ips.join('\n')

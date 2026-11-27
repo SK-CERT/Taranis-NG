@@ -5,7 +5,7 @@ import uuid
 from http import HTTPStatus
 
 from auth import saml_authenticator, saml_federation
-from auth.base_authenticator import ProviderConfigurationError
+from auth.base_authenticator import AUTH_TIME_CLAIM, SESSION_ID_CLAIM, ProviderConfigurationError
 from config import Config
 from flask import Response, make_response, redirect
 from flask_jwt_extended import get_jwt
@@ -53,7 +53,8 @@ class Refresh(Resource):
         Returns:
             dict: A dictionary containing the refreshed authentication token.
         """
-        return auth_manager.refresh(auth_manager.get_user_from_jwt())
+        claims = get_jwt()
+        return auth_manager.refresh(auth_manager.get_user_from_jwt(), claims.get(AUTH_TIME_CLAIM), claims.get(SESSION_ID_CLAIM))
 
 
 class Logout(Resource):
@@ -63,7 +64,7 @@ class Logout(Resource):
     def post(self) -> Response:
         """Handle the POST request for logging out a user.
 
-        Blacklists the current token and clears the SSE cookie.
+        Blacklists the current token and its sign-in, and clears the SSE cookie.
 
         Returns:
             Response: An empty 200 response.
@@ -71,15 +72,17 @@ class Logout(Resource):
         try:
             jwt_data = get_jwt()
             jwt_id = jwt_data.get("jti")
+            # The token and its sign-in first: the SSE session below lives in Redis, and Redis
+            # being down must not leave the token valid after the person logged out.
+            auth_manager.logout(jwt_id, jwt_data.get(SESSION_ID_CLAIM))
             if jwt_id:
                 # The SSE session (and a token stored by a version before sessions kept claims only).
-                deleted_count = redis_client.delete(f"sse:{jwt_id}", f"jwt:{jwt_id}")
-                if deleted_count:
-                    logger.debug("SSE session deleted from Redis")
-                else:
-                    logger.debug(f"No SSE session for token {jwt_id} in Redis")
-
-            auth_manager.logout(jwt_id)
+                # Best effort: one opened with another token of the sign-in is refused by its claims.
+                try:
+                    deleted_count = redis_client.delete(f"sse:{jwt_id}", f"jwt:{jwt_id}")
+                    logger.debug("SSE session deleted from Redis" if deleted_count else f"No SSE session for token {jwt_id} in Redis")
+                except Exception as ex:
+                    logger.warning(f"Could not delete the SSE session of token {jwt_id}: {ex}")
 
             resp = make_response({}, HTTPStatus.OK)
             resp.delete_cookie("jwt_id", path="/sse")

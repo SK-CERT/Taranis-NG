@@ -189,6 +189,7 @@ export const useAuthStore = defineStore('auth', () => {
         logout,
         setJwtToken,
         clearJwtToken,
+        clearSession,
         loadLoginMethods,
         finishLogin
     }

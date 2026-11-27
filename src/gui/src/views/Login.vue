@@ -380,7 +380,9 @@
         // keyboard did wrong, and nothing they can do about it either.
         'provider_misconfigured',
         // The first factor succeeded; only the short-lived token carrying it ran out.
-        'mfa_token_invalid'
+        'mfa_token_invalid',
+        // Nothing went wrong: the session ran its configured maximum length.
+        'session_expired'
     ])
 
     // Maps backend error codes (POST payload code / redirect login_error param) to i18n keys
@@ -394,7 +396,8 @@
             auth_cancelled: 'login.auth_cancelled',
             provider_misconfigured: 'login.provider_misconfigured',
             totp_invalid: 'login.totp_invalid',
-            mfa_token_invalid: 'login.mfa_session_expired'
+            mfa_token_invalid: 'login.mfa_session_expired',
+            session_expired: 'login.session_expired'
         }
         return keys[code.toLowerCase()] || 'login.error'
     }
