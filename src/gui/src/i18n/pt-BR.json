@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Alternar modo de seleção de tipos de relatório",
+                "select_all": "Selecionar todos",
+                "unselect_all": "Desmarcar todos"
+            },
             "fields_in_use": "Não é possível remover campos que os itens de relatório ainda usam: {fields}",
             "in_use": "Não é possível excluir o tipo de relatório: ele é usado por itens de relatório ({count})",
             "tab_description": "Aqui você pode gerenciar tipos de relatório.",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "Escolha primeiro um provedor de IA para tradução",
             "translate_labels_failed": "Alguns rótulos não puderam ser traduzidos ({count})",
             "labels_translated": "Rótulos traduzidos",
-            "copy_original": "Copiar o original"
+            "copy_original": "Copiar o original",
+            "import": "Importar",
+            "dialog_import": "Importar tipos de relatório",
+            "export_selected": "Exportar tipos de relatório selecionados",
+            "file": "Arquivo de importação",
+            "file_required": "Selecione um arquivo de importação",
+            "import_hint": "Os tipos de atributo usados pelos tipos de relatório são criados quando ausentes; os existentes permanecem inalterados. Um tipo de relatório cujo nome já existe é ignorado.",
+            "import_progress": "Importando tipos de relatório...",
+            "import_success": "{count} tipo de relatório importado | {count} tipos de relatório importados",
+            "import_error": "Não foi possível importar os tipos de relatório",
+            "import_skipped": "{count} tipo de relatório já existia e foi ignorado: {names} | {count} tipos de relatório já existiam e foram ignorados: {names}",
+            "import_fields_skipped": "{count} campo foi descartado: seu tipo de atributo não existe em nenhuma instalação: {names} | {count} campos foram descartados: seus tipos de atributo não existem em nenhuma instalação: {names}",
+            "import_nothing": "O arquivo não continha nenhum tipo de relatório para importar",
+            "export_progress": "Exportando tipos de relatório...",
+            "export_success": "Os tipos de relatório foram exportados",
+            "export_error": "Não foi possível exportar os tipos de relatório"
         },
         "attributes": {
             "in_use": "Não é possível excluir o atributo: ele é usado por {types}",

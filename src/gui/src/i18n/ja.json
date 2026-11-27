@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "レポート種別の選択モードを切り替え",
+                "select_all": "すべて選択",
+                "unselect_all": "すべての選択を解除"
+            },
             "fields_in_use": "レポートアイテムがまだ使用しているフィールドは削除できません: {fields}",
             "in_use": "レポートタイプを削除できません: レポートアイテムが使用しています ({count})",
             "tab_description": "ここではレポート種別を管理できます。",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "先に翻訳用の AI プロバイダーを選択してください",
             "translate_labels_failed": "一部のラベルを翻訳できませんでした ({count})",
             "labels_translated": "ラベルを翻訳しました",
-            "copy_original": "原文をコピー"
+            "copy_original": "原文をコピー",
+            "import": "インポート",
+            "dialog_import": "レポート種別をインポート",
+            "export_selected": "選択したレポート種別をエクスポート",
+            "file": "インポートファイル",
+            "file_required": "インポートファイルを選択",
+            "import_hint": "レポート種別が使う属性種別は存在しない場合は作成され、既存のものはそのまま保持されます。名前が既に存在するレポート種別はスキップされます。",
+            "import_progress": "レポート種別をインポートしています...",
+            "import_success": "レポート種別 {count} 件をインポートしました | レポート種別 {count} 件をインポートしました",
+            "import_error": "レポート種別をインポートできませんでした",
+            "import_skipped": "レポート種別 {count} 件は既に存在したためスキップされました: {names} | レポート種別 {count} 件は既に存在したためスキップされました: {names}",
+            "import_fields_skipped": "フィールド {count} 件を削除しました: その属性種別がどちらのインストールにも存在しません: {names} | フィールド {count} 件を削除しました: その属性種別がどちらのインストールにも存在しません: {names}",
+            "import_nothing": "ファイルにインポート対象のレポート種別がありませんでした",
+            "export_progress": "レポート種別をエクスポートしています...",
+            "export_success": "レポート種別をエクスポートしました",
+            "export_error": "レポート種別をエクスポートできませんでした"
         },
         "attributes": {
             "in_use": "属性を削除できません: {types} で使用されています",

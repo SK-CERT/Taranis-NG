@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Mód výběru typů reportů",
+                "select_all": "Vybrat vše",
+                "unselect_all": "Zrušit výběr všeho"
+            },
             "fields_in_use": "Nelze odebrat pole, která stále používají reporty: {fields}",
             "in_use": "Typ reportu nelze smazat: je použitý v reportech ({count})",
             "tab_description": "Zde můžete spravovat typy reportů.",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "Nejprve vyberte poskytovatele AI pro překlad",
             "translate_labels_failed": "Některé popisky se nepodařilo přeložit ({count})",
             "labels_translated": "Popisky přeloženy",
-            "copy_original": "Zkopírovat originál"
+            "copy_original": "Zkopírovat originál",
+            "import": "Importovat",
+            "dialog_import": "Importovat typy reportů",
+            "export_selected": "Exportovat vybrané typy reportů",
+            "file": "Soubor k importu",
+            "file_required": "Vyberte soubor k importu",
+            "import_hint": "Typy atributů, které typy reportů používají, se vytvoří, pokud chybí; existující zůstanou beze změny. Typ reportu, který už existuje pod stejným názvem, se přeskočí.",
+            "import_progress": "Importuji typy reportů...",
+            "import_success": "Žádný typ reportu nebyl importován | Importován {count} typ reportu | Importovány {count} typy reportů | Importováno {count} typů reportů",
+            "import_error": "Nepodařilo se importovat typy reportů",
+            "import_skipped": "Žádný typ reportu nebyl přeskočen | {count} typ reportu už existoval a byl přeskočen: {names} | {count} typy reportů už existovaly a byly přeskočeny: {names} | {count} typů reportů už existovalo a bylo přeskočeno: {names}",
+            "import_fields_skipped": "Nebylo odebráno žádné pole | {count} pole bylo odebráno: jeho typ atributu neexistuje na žádné instalaci: {names} | {count} pole byla odebrána: jejich typy atributů neexistují na žádné instalaci: {names} | {count} polí bylo odebráno: jejich typy atributů neexistují na žádné instalaci: {names}",
+            "import_nothing": "Soubor neobsahoval žádný typ reportu k importu",
+            "export_progress": "Exportuji typy reportů...",
+            "export_success": "Typy reportů byly exportovány",
+            "export_error": "Nepodařilo se exportovat typy reportů"
         },
         "attributes": {
             "in_use": "Atribut nelze smazat: je použitý v {types}",

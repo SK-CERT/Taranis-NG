@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Rapor türü seçim modunu değiştir",
+                "select_all": "Tümünü seç",
+                "unselect_all": "Seçimi kaldır"
+            },
             "fields_in_use": "Rapor öğelerinin hâlâ kullandığı alanlar kaldırılamaz: {fields}",
             "in_use": "Rapor türü silinemiyor: rapor öğeleri tarafından kullanılıyor ({count})",
             "tab_description": "Rapor öğesi türleri buradan yönetilebilir.",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "Önce çeviri için bir YZ sağlayıcısı seçin",
             "translate_labels_failed": "Bazı etiketler çevrilemedi ({count})",
             "labels_translated": "Etiketler çevrildi",
-            "copy_original": "Orijinali kopyala"
+            "copy_original": "Orijinali kopyala",
+            "import": "İçe aktar",
+            "dialog_import": "Rapor türlerini içe aktar",
+            "export_selected": "Seçili rapor türlerini dışa aktar",
+            "file": "İçe aktarma dosyası",
+            "file_required": "Bir içe aktarma dosyası seçin",
+            "import_hint": "Rapor türlerinin kullandığı nitelik türleri eksikse oluşturulur; mevcut olanlar olduğu gibi korunur. Adı zaten var olan bir rapor türü atlanır.",
+            "import_progress": "Rapor türleri içe aktarılıyor...",
+            "import_success": "Rapor türü içe aktarılmadı | {count} rapor türü içe aktarıldı | {count} rapor türü içe aktarıldı",
+            "import_error": "Rapor türleri içe aktarılamadı",
+            "import_skipped": "Atlanan rapor türü yok: {names} | {count} rapor türü zaten vardı ve atlandı: {names} | {count} rapor türü zaten vardı ve atlandı: {names}",
+            "import_fields_skipped": "Alan kaldırılmadı: {names} | {count} alan kaldırıldı: nitelik türü hiçbir kurulumda yok: {names} | {count} alan kaldırıldı: nitelik türleri hiçbir kurulumda yok: {names}",
+            "import_nothing": "Dosya içe aktarılacak rapor türü içermiyordu",
+            "export_progress": "Rapor türleri dışa aktarılıyor...",
+            "export_success": "Rapor türleri dışa aktarıldı",
+            "export_error": "Rapor türleri dışa aktarılamadı"
         },
         "attributes": {
             "in_use": "Öznitelik silinemiyor: {types} tarafından kullanılıyor",

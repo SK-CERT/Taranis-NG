@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Toggle report type selection mode",
+                "select_all": "Select All",
+                "unselect_all": "Unselect All"
+            },
             "fields_in_use": "Cannot remove fields that report items still use: {fields}",
             "in_use": "Report type cannot be deleted: it is used by report items ({count})",
             "tab_description": "Here you can manage report types.",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "Choose an AI provider for translation first",
             "translate_labels_failed": "Some labels could not be translated ({count})",
             "labels_translated": "Labels translated",
-            "copy_original": "Copy the original"
+            "copy_original": "Copy the original",
+            "import": "Import",
+            "dialog_import": "Import Report Types",
+            "export_selected": "Export selected report types",
+            "file": "Import file",
+            "file_required": "Select an import file",
+            "import_hint": "Attribute types the report types use are created when they are missing; existing ones are kept as they are. A report type whose name already exists is skipped.",
+            "import_progress": "Importing report types...",
+            "import_success": "{count} report type imported | {count} report types imported",
+            "import_error": "Could not import report types",
+            "import_skipped": "{count} report type already existed and was skipped: {names} | {count} report types already existed and were skipped: {names}",
+            "import_fields_skipped": "{count} field was dropped: its attribute type exists on neither installation: {names} | {count} fields were dropped: their attribute types exist on neither installation: {names}",
+            "import_nothing": "The file contained no report type to import",
+            "export_progress": "Exporting report types...",
+            "export_success": "Report types were exported successfully",
+            "export_error": "Could not export report types"
         },
         "attributes": {
             "in_use": "Attribute cannot be deleted: it is used by {types}",

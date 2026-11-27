@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Attiva/disattiva modalità di selezione dei tipi di rapporto",
+                "select_all": "Seleziona tutto",
+                "unselect_all": "Deseleziona tutto"
+            },
             "fields_in_use": "Impossibile rimuovere campi ancora usati dagli elementi del report: {fields}",
             "in_use": "Impossibile eliminare il tipo di report: è utilizzato da elementi del report ({count})",
             "tab_description": "Qui è possibile gestire i tipi di rapporto.",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "Scegli prima un fornitore di IA per la traduzione",
             "translate_labels_failed": "Alcune etichette non sono state tradotte ({count})",
             "labels_translated": "Etichette tradotte",
-            "copy_original": "Copia l'originale"
+            "copy_original": "Copia l'originale",
+            "import": "Importa",
+            "dialog_import": "Importa tipi di report",
+            "export_selected": "Esporta i tipi di report selezionati",
+            "file": "File di importazione",
+            "file_required": "Selezionare un file di importazione",
+            "import_hint": "I tipi di attributo usati dai tipi di report vengono creati se mancanti; quelli esistenti restano invariati. Un tipo di report il cui nome esiste già viene ignorato.",
+            "import_progress": "Importazione dei tipi di report...",
+            "import_success": "{count} tipo di report importato | {count} tipi di report importati",
+            "import_error": "Impossibile importare i tipi di report",
+            "import_skipped": "{count} tipo di report esisteva già ed è stato ignorato: {names} | {count} tipi di report esistevano già e sono stati ignorati: {names}",
+            "import_fields_skipped": "{count} campo è stato scartato: il suo tipo di attributo non esiste su nessuna installazione: {names} | {count} campi sono stati scartati: i loro tipi di attributo non esistono su nessuna installazione: {names}",
+            "import_nothing": "Il file non conteneva alcun tipo di report da importare",
+            "export_progress": "Esportazione dei tipi di report...",
+            "export_success": "I tipi di report sono stati esportati",
+            "export_error": "Impossibile esportare i tipi di report"
         },
         "attributes": {
             "in_use": "Impossibile eliminare l'attributo: è utilizzato da {types}",

@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "切换报告类型选择模式",
+                "select_all": "全选",
+                "unselect_all": "取消全选"
+            },
             "fields_in_use": "无法移除报告条目仍在使用的字段：{fields}",
             "in_use": "无法删除报告类型：报告条目正在使用它（{count}）",
             "tab_description": "您可以在此管理报告类型。",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "请先选择用于翻译的 AI 提供商",
             "translate_labels_failed": "部分标签未能翻译（{count}）",
             "labels_translated": "标签已翻译",
-            "copy_original": "复制原文"
+            "copy_original": "复制原文",
+            "import": "导入",
+            "dialog_import": "导入报告类型",
+            "export_selected": "导出选中的报告类型",
+            "file": "导入文件",
+            "file_required": "选择导入文件",
+            "import_hint": "报告类型使用的属性类型缺失时会创建；已存在的保持不变。名称已存在的报告类型会被跳过。",
+            "import_progress": "正在导入报告类型...",
+            "import_success": "已导入 {count} 个报告类型 | 已导入 {count} 个报告类型",
+            "import_error": "无法导入报告类型",
+            "import_skipped": "{count} 个报告类型已存在，已跳过：{names} | {count} 个报告类型已存在，已跳过：{names}",
+            "import_fields_skipped": "已丢弃 {count} 个字段：其属性类型在任一安装中都不存在：{names} | 已丢弃 {count} 个字段：其属性类型在任一安装中都不存在：{names}",
+            "import_nothing": "文件中没有可导入的报告类型",
+            "export_progress": "正在导出报告类型...",
+            "export_success": "报告类型已成功导出",
+            "export_error": "无法导出报告类型"
         },
         "attributes": {
             "in_use": "无法删除属性：{types} 正在使用它",

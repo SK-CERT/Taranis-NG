@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Alternar modo de selección de tipos de informe",
+                "select_all": "Seleccionar todo",
+                "unselect_all": "Anular selección"
+            },
             "fields_in_use": "No se pueden eliminar campos que los elementos de informe siguen usando: {fields}",
             "in_use": "No se puede eliminar el tipo de informe: lo usan elementos de informe ({count})",
             "tab_description": "Aquí puede gestionar los tipos de informe.",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "Elija primero un proveedor de IA para la traducción",
             "translate_labels_failed": "Algunas etiquetas no se pudieron traducir ({count})",
             "labels_translated": "Etiquetas traducidas",
-            "copy_original": "Copiar el original"
+            "copy_original": "Copiar el original",
+            "import": "Importar",
+            "dialog_import": "Importar tipos de informe",
+            "export_selected": "Exportar tipos de informe seleccionados",
+            "file": "Archivo de importación",
+            "file_required": "Seleccione un archivo de importación",
+            "import_hint": "Los tipos de atributo que usan los tipos de informe se crean si faltan; los existentes se conservan tal cual. Se omite cualquier tipo de informe cuyo nombre ya exista.",
+            "import_progress": "Importando tipos de informe...",
+            "import_success": "{count} tipo de informe importado | {count} tipos de informe importados",
+            "import_error": "No se pudieron importar los tipos de informe",
+            "import_skipped": "{count} tipo de informe ya existía y se omitió: {names} | {count} tipos de informe ya existían y se omitieron: {names}",
+            "import_fields_skipped": "{count} campo fue descartado: su tipo de atributo no existe en ninguna instalación: {names} | {count} campos fueron descartados: sus tipos de atributo no existen en ninguna instalación: {names}",
+            "import_nothing": "El archivo no contenía ningún tipo de informe para importar",
+            "export_progress": "Exportando tipos de informe...",
+            "export_success": "Los tipos de informe se exportaron correctamente",
+            "export_error": "No se pudieron exportar los tipos de informe"
         },
         "attributes": {
             "in_use": "No se puede eliminar el atributo: lo utiliza {types}",

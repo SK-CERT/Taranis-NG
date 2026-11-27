@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Przełącz tryb zaznaczania typów raportów",
+                "select_all": "Zaznacz wszystkie",
+                "unselect_all": "Odznacz wszystkie"
+            },
             "fields_in_use": "Nie można usunąć pól, których nadal używają elementy raportu: {fields}",
             "in_use": "Nie można usunąć typu raportu: jest używany przez elementy raportu ({count})",
             "tab_description": "Tutaj możesz zarządzać typami raportów.",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "Najpierw wybierz dostawcę SI do tłumaczenia",
             "translate_labels_failed": "Nie udało się przetłumaczyć niektórych etykiet ({count})",
             "labels_translated": "Etykiety przetłumaczone",
-            "copy_original": "Skopiuj oryginał"
+            "copy_original": "Skopiuj oryginał",
+            "import": "Importuj",
+            "dialog_import": "Importuj typy raportów",
+            "export_selected": "Eksportuj wybrane typy raportów",
+            "file": "Plik importu",
+            "file_required": "Wybierz plik importu",
+            "import_hint": "Typy atrybutów używane przez typy raportów są tworzone, jeśli brakuje; istniejące pozostają bez zmian. Typ raportu o już istniejącej nazwie jest pomijany.",
+            "import_progress": "Importowanie typów raportów...",
+            "import_success": "Nie zaimportowano typów raportów | Zaimportowano {count} typ raportu | Zaimportowano {count} typy raportów | Zaimportowano {count} typów raportów",
+            "import_error": "Nie udało się zaimportować typów raportów",
+            "import_skipped": "Nie pominięto typów raportów | {count} typ raportu już istniał i został pominięty: {names} | {count} typy raportów już istniały i zostały pominięte: {names} | {count} typów raportów już istniało i zostało pominiętych: {names}",
+            "import_fields_skipped": "Nie usunięto pól | Usunięto {count} pole: jego typ atrybutu nie istnieje na żadnej instalacji: {names} | Usunięto {count} pola: ich typy atrybutów nie istnieją na żadnej instalacji: {names} | Usunięto {count} pól: ich typy atrybutów nie istnieją na żadnej instalacji: {names}",
+            "import_nothing": "Plik nie zawierał typu raportu do zaimportowania",
+            "export_progress": "Eksportowanie typów raportów...",
+            "export_success": "Typy raportów zostały wyeksportowane",
+            "export_error": "Nie udało się wyeksportować typów raportów"
         },
         "attributes": {
             "in_use": "Nie można usunąć atrybutu: jest używany przez {types}",

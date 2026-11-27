@@ -29,7 +29,7 @@
         <template v-if="view === 'collectors.sources'">
             <!-- Import -->
             <ActionButton
-                v-if="canImport"
+                v-if="canImportSources"
                 icon="mdi-import"
                 color="primary"
                 :title="t('collectors.sources.import')"
@@ -37,7 +37,7 @@
             />
             <!-- Export -->
             <ActionButton
-                v-if="canExport"
+                v-if="canExportSources"
                 icon="mdi-export"
                 color="primary"
                 :disabled="selectedCount === 0"
@@ -51,6 +51,24 @@
                 :disabled="selectedCount === 0"
                 :title="t('collectors.sources.delete_selected_hint')"
                 @click="handleActionEvent(Action.OSINT_DELETE)"
+            />
+        </template>
+
+        <template v-if="view === 'reports.types'">
+            <ActionButton
+                v-if="canImportReportTypes"
+                icon="mdi-import"
+                color="primary"
+                :title="t('reports.types.import')"
+                @click="emit('report-types-import')"
+            />
+            <ActionButton
+                v-if="canExportReportTypes"
+                icon="mdi-export"
+                color="primary"
+                :disabled="!multiSelectActive || selectedCount === 0"
+                :title="t('reports.types.export_selected')"
+                @click="emit('report-types-export')"
             />
         </template>
 
@@ -214,6 +232,7 @@
     import { useAnalyzeStore } from '@/stores/analyze'
     import { usePublishStore } from '@/stores/publish'
     import { useOSINTSourceStore } from '@/stores/osint_source'
+    import { useReportTypesStore } from '@/stores/report_types'
     import { useAuth } from '@/composables/useAuth'
     import { PERMISSIONS } from '@/services/auth/permissions'
     import { groupAction, selectAllNewsItems } from '@/api/assess'
@@ -223,7 +242,7 @@
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { notifyDeleteError } from '@/utils/deleteError'
 
-    type ViewMode = 'assess' | 'analyze' | 'publish' | 'collectors.sources'
+    type ViewMode = 'assess' | 'analyze' | 'publish' | 'collectors.sources' | 'reports.types'
     type GenericFilter = Record<string, unknown>
     type SelectionItem = {
         type?: string
@@ -268,6 +287,8 @@
         (e: 'osint-import'): void
         (e: 'osint-export'): void
         (e: 'osint-delete'): void
+        (e: 'report-types-import'): void
+        (e: 'report-types-export'): void
     }>()
 
     const route = useRoute()
@@ -285,6 +306,7 @@
     const analyzeStore = useAnalyzeStore()
     const publishStore = usePublishStore()
     const osintSourceStore = useOSINTSourceStore()
+    const reportTypesStore = useReportTypesStore()
 
     const allSelected = ref<boolean>(false)
 
@@ -299,6 +321,8 @@
                 return publishStore.getMultiSelect
             case 'collectors.sources':
                 return osintSourceStore.getOSINTSourcesMultiSelect
+            case 'reports.types':
+                return reportTypesStore.getReportTypesMultiSelect
             default:
                 return false
         }
@@ -314,6 +338,8 @@
                 return publishStore.getSelection.length
             case 'collectors.sources':
                 return osintSourceStore.getOSINTSourcesSelection.length
+            case 'reports.types':
+                return reportTypesStore.getReportTypesSelection.length
             default:
                 return 0
         }
@@ -350,9 +376,11 @@
         return false
     })
 
-    const canImport = computed(() => checkPermission('CONFIG_OSINT_SOURCE_CREATE'))
-    const canExport = computed(() => checkPermission('CONFIG_OSINT_SOURCE_ACCESS'))
+    const canImportSources = computed(() => checkPermission('CONFIG_OSINT_SOURCE_CREATE'))
+    const canExportSources = computed(() => checkPermission('CONFIG_OSINT_SOURCE_ACCESS'))
     const canDeleteSources = computed(() => checkPermission('CONFIG_OSINT_SOURCE_DELETE'))
+    const canExportReportTypes = computed(() => checkPermission('CONFIG_REPORT_TYPE_ACCESS'))
+    const canImportReportTypes = computed(() => checkPermission('CONFIG_REPORT_TYPE_CREATE'))
 
     const normalizeSelectionType = (rawType: unknown): 'AGGREGATE' | 'ITEM' => {
         // console.log('[ToolbarGroup] Normalizing selection type:', rawType)
@@ -408,6 +436,9 @@
             case 'collectors.sources':
                 osintSourceStore.multiSelectOSINTSource(newState)
                 break
+            case 'reports.types':
+                reportTypesStore.multiSelectReportType(newState)
+                break
             default:
                 break
         }
@@ -438,6 +469,7 @@
                 await selectAllPublish()
                 break
             case 'collectors.sources':
+            case 'reports.types':
                 emit('select-all')
                 allSelected.value = true
                 break
@@ -653,6 +685,7 @@
                 window.dispatchEvent(new CustomEvent('sync-publish-selection'))
                 break
             case 'collectors.sources':
+            case 'reports.types':
                 emit('clear-selection')
                 break
             default:

@@ -30,6 +30,7 @@ from managers import (
     presenters_manager,
     publishers_manager,
     remote_manager,
+    report_types_manager,
     template_preview,
 )
 from managers.auth_manager import auth_required, get_user_from_jwt
@@ -872,6 +873,55 @@ class ReportItemTypesConfigResource(Resource):
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not create report type"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class ReportTypesExportResource(Resource):
+    """Report types export API endpoint."""
+
+    @auth_required("CONFIG_REPORT_TYPE_ACCESS")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Export report type definitions.
+
+        Returns:
+            The export document as an attachment, or the error of the export.
+        """
+        try:
+            payload = request.json or {}
+            selection = payload.get("selection")
+            data = report_types_manager.export_report_types(get_user_from_jwt(), selection)
+            return send_file(io.BytesIO(data), download_name="report_types_export.json", mimetype="application/json", as_attachment=True)
+        except Exception as ex:
+            msg = "Could not export report types"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class ReportTypesImportResource(Resource):
+    """Report types import API endpoint."""
+
+    @auth_required("CONFIG_REPORT_TYPE_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Import report type definitions from an export document.
+
+        Returns:
+            (dict, HTTPStatus): What was created and what was skipped, or the error of the import.
+        """
+        file = request.files.get("file")
+        if file is None:
+            return {"error": "No import file was uploaded"}, HTTPStatus.BAD_REQUEST
+        try:
+            result = report_types_manager.import_report_types(file)
+            return result.to_dict(), HTTPStatus.OK
+        except ValueError as ex:
+            # The file itself is the problem - not JSON, an unknown format version, or malformed.
+            # The admin can still act on that, so say what is wrong rather than a generic failure.
+            msg = str(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not import report types"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
@@ -3537,6 +3587,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(ReportItemTypesConfigResource, "/api/v1/config/report-item-types")
     api.add_resource(ReportItemTypeResource, "/api/v1/config/report-item-types/<int:type_id>")
     api.add_resource(ReportItemTypeLabelsTranslateResource, "/api/v1/config/report-item-types/translate-labels")
+    api.add_resource(ReportTypesExportResource, "/api/v1/config/export-report-types")
+    api.add_resource(ReportTypesImportResource, "/api/v1/config/import-report-types")
 
     api.add_resource(ProductFormatsResource, "/api/v1/config/product-formats")
     api.add_resource(ProductFormatResource, "/api/v1/config/product-formats/<int:format_id>")

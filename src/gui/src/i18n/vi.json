@@ -1700,6 +1700,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Chuyển chế độ chọn loại báo cáo",
+                "select_all": "Chọn tất cả",
+                "unselect_all": "Bỏ chọn tất cả"
+            },
             "fields_in_use": "Không thể xóa các trường mà mục báo cáo vẫn đang dùng: {fields}",
             "in_use": "Không thể xóa loại báo cáo: các mục báo cáo đang dùng nó ({count})",
             "tab_description": "Tại đây, bạn có thể quản lý loại báo cáo.",
@@ -1729,7 +1734,22 @@
             "no_ai_provider": "Hãy chọn trước một nhà cung cấp AI để dịch",
             "translate_labels_failed": "Không dịch được một số nhãn ({count})",
             "labels_translated": "Đã dịch nhãn",
-            "copy_original": "Sao chép bản gốc"
+            "copy_original": "Sao chép bản gốc",
+            "import": "Nhập",
+            "dialog_import": "Nhập loại báo cáo",
+            "export_selected": "Xuất các loại báo cáo đã chọn",
+            "file": "Tệp nhập",
+            "file_required": "Chọn tệp nhập",
+            "import_hint": "Các loại thuộc tính mà loại báo cáo sử dụng sẽ được tạo khi thiếu; loại đã có được giữ nguyên. Loại báo cáo đã tồn tại tên sẽ bị bỏ qua.",
+            "import_progress": "Đang nhập loại báo cáo...",
+            "import_success": "Đã nhập {count} loại báo cáo | Đã nhập {count} loại báo cáo",
+            "import_error": "Không thể nhập các loại báo cáo",
+            "import_skipped": "{count} loại báo cáo đã tồn tại và bị bỏ qua: {names} | {count} loại báo cáo đã tồn tại và bị bỏ qua: {names}",
+            "import_fields_skipped": "Đã loại bỏ {count} trường: loại thuộc tính không tồn tại trên bản cài đặt nào: {names} | Đã loại bỏ {count} trường: loại thuộc tính không tồn tại trên bản cài đặt nào: {names}",
+            "import_nothing": "Tệp không chứa loại báo cáo nào để nhập",
+            "export_progress": "Đang xuất loại báo cáo...",
+            "export_success": "Các loại báo cáo đã được xuất",
+            "export_error": "Không thể xuất các loại báo cáo"
         },
         "attributes": {
             "in_use": "Không thể xóa thuộc tính: thuộc tính đang được dùng bởi {types}",
