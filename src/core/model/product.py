@@ -900,6 +900,14 @@ class Product(db.Model):
         product = product_schema.load(product_data)
 
         original_product = Product.find(product_id)
+        # Before anything with side effects (GCVE/CVE publication below): no report the user may not read.
+        # Reports kept are not asked about only while the product stays in its product preset:
+        # moved to another, they would be rendered by its templates and sent to its channels.
+        same_preset = product.product_preset_id == original_product.product_preset_id
+        kept_report_item_ids = {ri.id for ri in original_product.report_items} if original_product.report_items and same_preset else set()
+        refused = refused_report_items(product.report_items, user, kept=kept_report_item_ids)
+        if refused:
+            raise ValueError(refused_report_items_message(refused))
         cls._apply_cvd_product_rules(product)
         # Before anything changes: published GCVE records must stay in the feed, and the reports
         # of a GCVE Advisory being published must make valid records. A CVE Record being published,
@@ -912,12 +920,6 @@ class Product(db.Model):
         # can target only newly-added reports (Option B: a report added to an
         # already-published product should be auto-completed too).
         existing_report_item_ids = {ri.id for ri in original_product.report_items} if original_product.report_items else set()
-        # Reports kept are not asked about only while the product stays in its product preset:
-        # moved to another, they would be rendered by its templates and sent to its channels.
-        same_preset = product.product_preset_id == original_product.product_preset_id
-        refused = refused_report_items(product.report_items, user, kept=existing_report_item_ids if same_preset else set())
-        if refused:
-            raise ValueError(refused_report_items_message(refused))
         original_product.title = product.title
         original_product.description = product.description
         if product.language is not None and product.language != original_product.language:
