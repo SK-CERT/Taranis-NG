@@ -26,9 +26,43 @@
             </p>
         {%- endif -%}
         {{ macros.services_warning(warning_seen) }}
+        {#- A tab per type of reports (their product), beside all of them; only with several types. -#}
+        {%- set tabs = tabs | default([]) %}
+        {%- if tabs %}
+            <ul class="nav nav-tabs mt-2" aria-label="{{ translate_ui('homepage_types') }}" data-test="report-types">
+                <li class="nav-item">
+                    <a class="nav-link{{ ' active' if not report_type }}"
+                       {% if not report_type %}aria-current="page"{% endif %}
+                       href="{{ url_for('reports.home', search=search_arg or None) }}"
+                       data-test="report-type">{{ translate_ui('homepage_all') }}</a>
+                </li>
+                {%- for tab in tabs %}
+                    {%- set active = report_type and report_type.id == tab.id %}
+                    <li class="nav-item">
+                        <a class="nav-link{{ ' active' if active }}"
+                           {% if active %}aria-current="page"{% endif %}
+                           href="{{ url_for('reports.home', type=tab.id, search=search_arg or None) }}"
+                           data-test="report-type"><bdi dir="auto">{{ tab.title }}</bdi></a>
+                    </li>
+                {%- endfor %}
+            </ul>
+        {%- endif %}
+        {#- The GCVE Advisories are also published as GCVE records, for machines (GCVE-BCP-03). -#}
+        {%- if gcve_links %}
+            <p class="small mt-2 mb-0" data-test="gcve-records">
+                {{ translate_ui('gcve_records_intro') }}
+                <a href="{{ gcve_links.publication }}" data-test="gcve-records-publication">{{ translate_ui('gcve_records_api') }}</a>
+                {%- if gcve_links.dump -%}
+                    , <a href="{{ gcve_links.dump }}" data-test="gcve-records-dump">{{ translate_ui('gcve_records_dump') }}</a>
+                {%- endif -%}
+            </p>
+        {%- endif %}
         <form class="input-group search-form my-2">
             {%- if chosen_language() %}
                 <input type="hidden" name="lang" value="{{ chosen_language() }}">
+            {%- endif %}
+            {%- if report_type %}
+                <input type="hidden" name="type" value="{{ report_type.id }}">
             {%- endif %}
             <input type="text"
                    name="search"
@@ -131,5 +165,5 @@
 {%- endmacro %}
 
 {% macro build_url(new_page) -%}
-    {{ url_for('reports.home', search=search_arg or None, page=new_page) }}
+    {{ url_for('reports.home', type=report_type.id if report_type else None, search=search_arg or None, page=new_page) }}
 {%- endmacro %}

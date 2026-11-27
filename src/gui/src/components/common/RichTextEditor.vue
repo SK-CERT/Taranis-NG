@@ -122,7 +122,7 @@
         </div>
         <div
             class="rich-text-editor__content"
-            :style="{ height }"
+            :style="contentStyle"
         >
             <EditorContent
                 v-if="editor"
@@ -134,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, watch } from 'vue'
+    import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { EditorContent, Extension, useEditor } from '@tiptap/vue-3'
     import { Plugin, PluginKey } from '@tiptap/pm/state'
@@ -159,6 +159,9 @@
             readonly?: boolean
             placeholder?: string
             height?: string
+            /** With a minimum height the editor grows with its text instead (up to maxHeight, then scrolls). */
+            minHeight?: string | null
+            maxHeight?: string | null
             /** Links that citations in the text resolve to; null leaves citations unmarked. */
             citations?: Map<string, { url: string }> | null
         }>(),
@@ -167,8 +170,14 @@
             readonly: false,
             placeholder: '',
             height: '250px',
+            minHeight: null,
+            maxHeight: null,
             citations: null
         }
+    )
+
+    const contentStyle = computed(() =>
+        props.minHeight ? { minHeight: props.minHeight, maxHeight: props.maxHeight ?? undefined } : { height: props.height }
     )
 
     const emit = defineEmits<{

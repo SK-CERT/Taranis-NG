@@ -38,6 +38,8 @@ if "config" not in sys.modules:
         # instead of failing. Empty is also the production default: CORS is off
         # unless TARANIS_NG_CORS_ORIGINS names the origins to trust.
         CORS_ORIGINS: ClassVar[list[str]] = []
+        # Empty, as in production: the CVE Services account's own URL is used, not an override.
+        CVE_SERVICES_URL: ClassVar[str] = ""
 
     _module.Config = Config
     sys.modules["config"] = _module

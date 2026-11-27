@@ -31,6 +31,13 @@ class AttributeType(Enum):
     CVSS = auto()
     CWE = auto()
     MULTI_CHOICE = auto()
+    # Structured values (JSON in ``value``), for the CVD Report type (see shared.gcve).
+    AFFECTED = auto()
+    CREDIT = auto()
+    TIMELINE = auto()
+    RELATIONSHIP = auto()
+    REFERENCE = auto()
+    JSON = auto()
 
 
 class AttributeValidator(Enum):

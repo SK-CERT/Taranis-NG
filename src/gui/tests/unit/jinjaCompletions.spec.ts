@@ -25,7 +25,10 @@ describe('jinjaCompletions', () => {
         const fields = jinjaCompletions('{{ product.max_c', product)
         expect(labels(fields)).toEqual(expect.arrayContaining(['max_cvss', 'max_tlp', 'report_items']))
         expect(fields?.from).toBe('{{ product.'.length)
-        expect(labels(jinjaCompletions('{{ product.product_preset.', product))).toEqual(['id', 'title'])
+        expect(labels(jinjaCompletions('{{ product.product_preset.', product))).toEqual(['id', 'title', 'key'])
+        // A GCVE Advisory and its CVD Reports: the shipped preset and type, and the record identifiers.
+        expect(labels(jinjaCompletions('{{ product.is_', product))).toEqual(expect.arrayContaining(['is_vulnerability', 'is_gcve']))
+        expect(labels(jinjaCompletions('{{ item.gc', item))).toEqual(expect.arrayContaining(['gcve_id', 'type_key']))
         expect(labels(jinjaCompletions('{{ item.attrs.', item))).toEqual(['cve', 'cvss', 'affected_systems'])
         expect(labels(jinjaCompletions('{{ item.attrs_display.cv', item))).toEqual(['cve', 'cvss', 'affected_systems'])
         expect(jinjaCompletions('{{ item.attrs.', { kind: 'item' })).toBeNull()
@@ -47,6 +50,7 @@ describe('jinjaCompletions', () => {
         expect(labels(jinjaCompletions('{% extends "builtin/pr', product))).toEqual(expect.arrayContaining(['builtin/product_base.html']))
         expect(jinjaCompletions('{% extends "builtin/pr', product)?.from).toBe('{% extends "'.length)
         expect(labels(jinjaCompletions("{%- import '", item))).toContain('builtin/_macros.html')
+        expect(labels(jinjaCompletions('{% extends "builtin/pr', product))).toContain('builtin/product_gcve.html')
     })
 
     it('stays quiet inside a word or a string within the expression', () => {

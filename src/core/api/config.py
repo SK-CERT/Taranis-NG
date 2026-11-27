@@ -48,6 +48,7 @@ from model import (
     collectors_node,
     data_provider,
     organization,
+    organization_gna,
     osint_source,
     presenters_node,
     product_format,
@@ -125,6 +126,14 @@ class DictionariesReloadResource(Resource):
         return "success", HTTPStatus.OK
 
 
+def _attribute_locked(attribute_id: int) -> tuple[dict, HTTPStatus] | None:
+    """Refuse changing an attribute (or its constants) a shipped report type relies on."""
+    title = attribute.Attribute.shipped_type_using(attribute_id)
+    if title is None:
+        return None
+    return {"error": f"The attribute is part of '{title}', which ships with Taranis, and cannot be changed"}, HTTPStatus.CONFLICT
+
+
 class AttributesResource(Resource):
     """Attributes API endpoint."""
 
@@ -165,6 +174,9 @@ class AttributeResource(Resource):
         Returns:
             (dict, HTTPStatus): The result of the update
         """
+        locked = _attribute_locked(attribute_id)
+        if locked:
+            return locked
         try:
             attribute.Attribute.update(attribute_id, request.json)
         except Exception as ex:
@@ -181,6 +193,9 @@ class AttributeResource(Resource):
         Returns:
             (dict, HTTPStatus): The result of the delete
         """
+        locked = _attribute_locked(attribute_id)
+        if locked:
+            return locked
         try:
             return attribute.Attribute.delete_attribute(attribute_id)
         except attribute.AttributeInUseError as ex:
@@ -219,6 +234,9 @@ class AttributeEnumsResource(Resource):
         Returns:
             (dict, HTTPStatus): The result of the create
         """
+        locked = _attribute_locked(attribute_id)
+        if locked:
+            return locked
         try:
             attribute.AttributeEnum.add(attribute_id, request.json)
         except Exception as ex:
@@ -231,7 +249,7 @@ class AttributeEnumResource(Resource):
     """Attribute enum API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
-    def put(self, attribute_id: int, enum_id: int) -> tuple[dict, HTTPStatus] | None:  # noqa: ARG002
+    def put(self, attribute_id: int, enum_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an attribute enum.
 
         Args:
@@ -240,6 +258,9 @@ class AttributeEnumResource(Resource):
         Returns:
             (dict, HTTPStatus): The result of the update
         """
+        locked = _attribute_locked(attribute_id)
+        if locked:
+            return locked
         try:
             attribute.AttributeEnum.update(enum_id, request.json)
         except Exception as ex:
@@ -248,7 +269,7 @@ class AttributeEnumResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_ATTRIBUTE_DELETE")
-    def delete(self, attribute_id: int, enum_id: int) -> tuple[dict, HTTPStatus] | None:  # noqa: ARG002
+    def delete(self, attribute_id: int, enum_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete an attribute enum.
 
         Args:
@@ -257,6 +278,9 @@ class AttributeEnumResource(Resource):
         Returns:
             (dict, HTTPStatus): The result of the delete
         """
+        locked = _attribute_locked(attribute_id)
+        if locked:
+            return locked
         try:
             return attribute.AttributeEnum.delete(enum_id)
         except Exception as ex:
@@ -916,6 +940,8 @@ class ReportItemTypeResource(Resource):
         """
         try:
             return report_item_type.ReportItemType.delete_report_item_type(type_id)
+        except report_item_type.ReportTypeLockedError as ex:
+            return {"error": str(ex)}, HTTPStatus.CONFLICT
         except report_item_type.ReportTypeInUseError as ex:
             plural = "" if ex.report_item_count == 1 else "s"
             msg = f"Report type is used by {ex.report_item_count} report item{plural}"
@@ -1114,6 +1140,8 @@ class ProductPresetResource(Resource):
         """
         try:
             result = product_preset.ProductPreset.delete(product_preset_id)
+        except product_preset.ProductPresetLockedError as ex:
+            return {"error": str(ex)}, HTTPStatus.CONFLICT
         except Exception as ex:
             db.session.rollback()
             return _delete_failed("Could not delete product preset", ex)
@@ -1354,6 +1382,10 @@ class OrganizationResource(Resource):
         Returns:
             (dict, HTTPStatus): The result of the delete
         """
+        # Its GCVE and CVE publications need it: CVD Reports, allocated identifiers, a web.
+        refused = organization_gna.organization_delete_refused(organization_id)
+        if refused is not None:
+            return {"error": f"The organization cannot be deleted: {refused}"}, HTTPStatus.CONFLICT
         try:
             return organization.Organization.delete(organization_id)
         except Exception as ex:

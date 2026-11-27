@@ -175,6 +175,13 @@ describe('Arabic production catalog contracts', () => {
             'routing.hsts_title',
             // The WebAuthn field name of an authenticator model.
             'security.passkey_aaguid',
+            // GCVE record fields and the file name RFC 9116 gives the security contact page.
+            'gna.field.url',
+            'gna.field.json',
+            'gna.web.url_security_txt',
+            // The name of MITRE's service a CNA publishes CVE records through.
+            'gna.organization.tab',
+            'gna.organization.gna_column',
             // Names of SMTP security protocols.
             'notification_channels.security_starttls',
             'notification_channels.security_ssl',

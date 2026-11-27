@@ -152,9 +152,15 @@ async function tracked<R>(write: () => Promise<R>): Promise<R> {
  * Composable for shared attribute editing logic.
  * Handles add/delete operations, locking, and API synchronization.
  */
-/** Tell the user a value did not reach the server; the field keeps their text, still unsaved. */
-function notifySaveFailed(): void {
-    window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: 'common.error_saving' } }))
+/**
+ * Tell the user a value did not reach the server; the field keeps their text, still unsaved. What
+ * the server said is shown when it said why (a CVD Report field it refused, say).
+ */
+function notifySaveFailed(error?: unknown): void {
+    const reason = (error as { response?: { status?: number; data?: { error?: unknown } } })?.response
+    const message = reason?.status === 400 && typeof reason.data?.error === 'string' ? reason.data.error : ''
+    const detail = message ? { type: 'error', message } : { type: 'error', loc: 'common.error_saving' }
+    window.dispatchEvent(new CustomEvent('notification', { detail }))
 }
 
 // A stable identity per value row, for the v-for keys: the position (index) changes when rows are
@@ -284,7 +290,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 value: toLocalValue(props.attributeGroup?.attribute?.default_value ?? ''),
                 user: null
             }
-            if (props.attributeGroup?.attribute?.type === 'LINK') {
+            if (props.attributeGroup?.attribute?.type === 'LINK' || props.attributeGroup?.attribute?.type === 'REFERENCE') {
                 value.value_description = generateLinkKey(props.values.map((item) => String(item.value_description ?? '')))
             }
             props.values.push(value)
@@ -582,7 +588,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                     return
                 }
                 console.error('Failed to save attribute value:', error)
-                notifySaveFailed()
+                notifySaveFailed(error)
             }
         }
     }

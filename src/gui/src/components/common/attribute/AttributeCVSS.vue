@@ -29,6 +29,11 @@
                         <bdi dir="ltr">{{ value.value }}</bdi>
                     </v-chip>
                     <span class="text-caption text-grey">{{ getCVSSSeverity(value.value) }}</span>
+                    <span
+                        v-if="value.value_description"
+                        class="text-caption ms-2"
+                        ><bdi dir="auto">{{ value.value_description }}</bdi></span
+                    >
                 </div>
 
                 <!-- Editable -->
@@ -42,58 +47,66 @@
                     @del-value="del(index)"
                 >
                     <template #col_middle="{ delVisible, onDelete }">
-                        <v-text-field
-                            v-model="value.value"
-                            :spellcheck="false"
-                            density="compact"
-                            variant="outlined"
-                            hide-details="auto"
-                            :label="t('attribute.cvss_vector_score')"
-                            dir="ltr"
-                            :rules="[vectorRule]"
-                            :class="getLockedStyle(index)"
-                            :disabled="value.locked || !canModify"
-                            @focus="onFocus(index)"
-                            @blur="onBlur(index)"
-                            @keyup="onKeyUp(index)"
-                        >
-                            <template #append-inner>
-                                <CalculatorCVSS
-                                    :model-value="value.value"
-                                    :disabled="value.locked || !canModify"
-                                    @update:model-value="updateFromCalculator(index, $event)"
-                                />
-                                <AttributeFieldDeleteButton
-                                    :visible="delVisible"
-                                    @delete="onDelete"
-                                />
-                            </template>
-                        </v-text-field>
+                        <div class="cvss-fields">
+                            <v-text-field
+                                v-model="value.value"
+                                class="cvss-vector"
+                                :spellcheck="false"
+                                density="compact"
+                                variant="outlined"
+                                hide-details="auto"
+                                :label="t('attribute.cvss_vector_score')"
+                                dir="ltr"
+                                :rules="[vectorRule]"
+                                :class="getLockedStyle(index)"
+                                :disabled="value.locked || !canModify"
+                                @focus="onFocus(index)"
+                                @blur="onBlur(index)"
+                                @keyup="onKeyUp(index)"
+                            >
+                                <template #append-inner>
+                                    <CalculatorCVSS
+                                        :model-value="value.value"
+                                        :disabled="value.locked || !canModify"
+                                        @update:model-value="updateFromCalculator(index, $event)"
+                                    />
+                                    <AttributeFieldDeleteButton
+                                        :visible="delVisible"
+                                        @delete="onDelete"
+                                    />
+                                </template>
+                            </v-text-field>
+                            <!-- The conditions the score applies to (the CVE Record's metric scenario) -->
+                            <v-text-field
+                                v-model="value.value_description"
+                                class="cvss-scenario"
+                                density="compact"
+                                variant="outlined"
+                                hide-details
+                                dir="auto"
+                                :label="t('attribute.cvss_scenario')"
+                                :class="getLockedStyle(index)"
+                                :disabled="value.locked || !canModify"
+                                data-test="cvss-scenario"
+                                @focus="onFocus(index)"
+                                @blur="onBlur(index)"
+                                @keyup="onKeyUp(index)"
+                            />
+                        </div>
 
-                        <!-- Score display — always rendered at fixed height to keep layout stable -->
-                        <v-row class="mb-2 ga-1">
-                            <v-col
+                        <!-- The scores, one line each; always shown, so the layout does not jump -->
+                        <div class="cvss-scores">
+                            <v-sheet
                                 v-for="scoreItem in getVectorScores(value.value) ?? placeholderScores"
                                 :key="scoreItem.name"
+                                :color="scoreItem.color"
+                                rounded
+                                class="cvss-score px-3 text-white"
                             >
-                                <v-sheet
-                                    :color="scoreItem.color"
-                                    rounded
-                                    height="88"
-                                    class="pa-2 text-center text-white d-flex flex-column justify-center"
-                                >
-                                    <div class="text-body-2 text-truncate">
-                                        {{ scoreItem.label }}
-                                    </div>
-                                    <div class="text-body-2 font-weight-bold text-uppercase text-truncate">
-                                        {{ scoreItem.severityLabel }}
-                                    </div>
-                                    <div class="text-subtitle-1 font-weight-medium mt-1">
-                                        {{ scoreItem.score }}
-                                    </div>
-                                </v-sheet>
-                            </v-col>
-                        </v-row>
+                                <span class="text-body-2 text-truncate">{{ scoreItem.label }}</span>
+                                <span class="text-body-2 font-weight-bold text-no-wrap">{{ scoreText(scoreItem) }}</span>
+                            </v-sheet>
+                        </div>
                     </template>
                 </AttributeValueLayout>
             </div>
@@ -117,6 +130,7 @@
     type AttributeValueItem = {
         index?: string | number
         value: string
+        value_description?: string
         remote?: boolean
         locked?: boolean
         [key: string]: unknown
@@ -207,6 +221,9 @@
         await onEdit(index)
     }
 
+    // "9.8 CRITICAL"; "N/A" or "–" alone where there is no score.
+    const scoreText = (item: ScoreItem): string => [item.score, item.severityLabel].filter((part) => part && part !== '–').join(' ') || '–'
+
     function getVectorScores(value: string | null | undefined): ScoreItem[] | null {
         return calculateScoreItems(value ?? '', t, te)
     }
@@ -229,3 +246,34 @@
         return 'None'
     }
 </script>
+
+<style scoped>
+    .cvss-fields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .cvss-vector {
+        flex: 3 1 360px;
+    }
+
+    .cvss-scenario {
+        flex: 2 1 220px;
+    }
+
+    .cvss-scores {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 4px;
+        margin-top: 4px;
+    }
+
+    .cvss-score {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 32px;
+    }
+</style>

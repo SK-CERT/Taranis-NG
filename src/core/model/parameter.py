@@ -2,11 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from model.parameter import Parameter
-
 from managers.db_manager import db
 from managers.log_manager import logger
 from marshmallow import post_load

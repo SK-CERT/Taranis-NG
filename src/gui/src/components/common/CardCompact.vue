@@ -70,6 +70,22 @@
                                             :enabled="highlightWordlist && isReviewCard"
                                         />
                                     </bdi>
+                                    <!-- Shipped with Taranis (locked), and switched off -->
+                                    <v-icon
+                                        v-if="card.locked === true"
+                                        size="small"
+                                        class="ms-2"
+                                        icon="mdi-lock-outline"
+                                        :title="t('gna.shipped')"
+                                        data-test="card-locked"
+                                    />
+                                    <v-chip
+                                        v-if="card.enabled === false"
+                                        size="x-small"
+                                        class="ms-2"
+                                        data-test="card-disabled"
+                                        >{{ t('gna.switched_off') }}</v-chip
+                                    >
                                 </div>
                             </v-col>
 
@@ -273,6 +289,9 @@
 
     type CardData = {
         id?: string | number
+        // A report type or product preset Taranis ships (locked), and whether it is switched on.
+        locked?: boolean
+        enabled?: boolean
         title?: string
         title_prefix?: string
         // A report's tags and its translation status per language (built-in tag keys).
@@ -368,7 +387,9 @@
     // Protected (default) items cannot be deleted — the backend forbids it (e.g. the default
     // "Uncategorized" OSINT source group). The card stays clickable; the dialog opens read-only.
     // Enabled per view via lock-default.
-    const isProtected = computed(() => props.lockDefault && props.card?.default === true)
+    // Shipped items (a report type or product preset Taranis ships, see core's shared.gcve) are
+    // locked: they cannot be deleted either, only switched off.
+    const isProtected = computed(() => (props.lockDefault && props.card?.default === true) || props.card?.locked === true)
 
     // OSINT source cards always carry a collector_id; for them we always render the
     // description and collection-status columns, with an em-dash

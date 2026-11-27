@@ -260,7 +260,7 @@ def test_public_web_feed_carries_numbers_and_urls_but_no_keys() -> None:
     # The description is read first, then the report; the vendor advisory nobody cites comes last.
     assert feed["links"] == [BLOG, NVD, VENDOR]
     assert feed["description"] == "Our note [1], NVD [2]."
-    assert feed["product_preset"] == {"id": 4, "title": "Vulnerability bulletin"}
+    assert feed["product_preset"] == {"id": 4, "title": "Vulnerability bulletin", "key": None}
     assert feed["report_items"][0]["type_id"] == 2
     entries = feed["report_items"][0]["attributes"]
     layout = {"group": "Vulnerability", "description": None}
@@ -336,7 +336,11 @@ def test_report_item_links_and_keys() -> None:
         value(4, 10, "Description", None),
         value(None, 12, "", None),  # just added, no key yet
     ]
-    report_item = types.SimpleNamespace(attributes=values, _is_link_attribute=lambda group_item_id: group_item_id in link_group_items)
+    report_item = types.SimpleNamespace(
+        attributes=values,
+        _is_link_attribute=lambda group_item_id: group_item_id in link_group_items,
+        _link_type=lambda group_item_id: "LINK" if group_item_id in link_group_items else None,
+    )
     report_item._link_attributes = lambda: ReportItem._link_attributes(report_item)
 
     ReportItem.ensure_link_keys(report_item)

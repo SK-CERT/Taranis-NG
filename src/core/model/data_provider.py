@@ -2,11 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from model.data_provider import DataProvider
-
 from datetime import datetime
 
 from managers.db_manager import db
@@ -22,7 +17,7 @@ class DataProvider(db.Model):
     Attributes:
         id (int): Data Provider ID.
         name (str): Data Provider name.
-        api_type (enum): Data Provider type - CVE, CWE, CPE, EUVD.
+        api_type (enum): Data Provider type - CVE, CWE, CPE, EUVD, CVE_SERVICES (where published CVE records are read).
         api_url (str): Data Provider API url.
         api_key (str): Data Provider API key.
         user_agent (str): Data Provider user agent.

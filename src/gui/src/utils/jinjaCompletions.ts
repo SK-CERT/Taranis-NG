@@ -111,6 +111,8 @@ const BUILTIN_TEMPLATES = [
     'builtin/product_vulnerability.html',
     'builtin/item_vulnerability.html',
     'builtin/item_generic.html',
+    'builtin/product_gcve.html',
+    'builtin/item_cvd.html',
     'builtin/_macros.html'
 ]
 
@@ -131,6 +133,7 @@ const PRODUCT_FIELDS = [
     'max_tlp',
     'max_cvss',
     'is_vulnerability',
+    'is_gcve',
     'lead'
 ]
 
@@ -142,6 +145,8 @@ const ITEM_FIELDS = [
     'type_label',
     'type_id',
     'type_description',
+    'type_key',
+    'gcve_id',
     'language',
     'ai_translation',
     'original_language',
@@ -160,7 +165,7 @@ const ITEM_VARIABLES = ['item', 'index', 'macros']
 const NESTED_FIELDS: Record<string, string[]> = {
     'product': PRODUCT_FIELDS,
     'item': ITEM_FIELDS,
-    'product.product_preset': ['id', 'title'],
+    'product.product_preset': ['id', 'title', 'key'],
     'site': ['content', 'metadata', 'hostname', 'language'],
     'data': ['product', 'report_items'],
     'loop': ['index', 'index0', 'first', 'last', 'length'],

@@ -151,6 +151,25 @@ export function testNotificationChannel(kind, payload) {
     return ApiService.post('/config/notifications/channels/' + encodeURIComponent(kind) + '/test', payload)
 }
 
+// An organization's GCVE and CVE publishing: its GNA, its CVE Services account (the API key is
+// write-only) and the webs publishing its records.
+export function getOrganizationGcve(organizationId) {
+    return ApiService.get(`/config/organizations/${organizationId}/gcve`)
+}
+
+export function saveOrganizationGcve(organizationId, settings) {
+    return ApiService.put(`/config/organizations/${organizationId}/gcve`, settings)
+}
+
+// Checks the GNA against the gcve.eu directory, and asks the endpoints of the webs publishing it.
+export function checkOrganizationGcve(organizationId) {
+    return ApiService.post(`/config/organizations/${organizationId}/gcve/check`, {})
+}
+
+export function testOrganizationCveServices(organizationId, account) {
+    return ApiService.post(`/config/organizations/${organizationId}/cve-services/test`, account)
+}
+
 export function getNotificationOutbox(status, limit = 100) {
     const query = new URLSearchParams({ limit: String(limit) })
     if (status) query.set('status', status)

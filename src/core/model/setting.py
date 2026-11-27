@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from model.setting import Setting, SettingUser
     from model.user import User
     from sqlalchemy.orm import Query
 
@@ -117,7 +116,9 @@ class Setting(db.Model):
     __tablename__ = "settings"
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(40), unique=True, nullable=False)
-    type = db.Column(db.String(1), unique=True, nullable=False)
+    # Not unique: many settings share a type. (The constraint was declared here but never created
+    # by the migrations, so create_all() on an empty database refused a second setting of a type.)
+    type = db.Column(db.String(1), nullable=False)
     value = db.Column(db.String(), nullable=False)
     default_val = db.Column(db.String(), nullable=False)
     description = db.Column(db.String(), nullable=False)

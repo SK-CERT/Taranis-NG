@@ -15,7 +15,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
-from lxml import etree
+from lxml.etree import SubElement, fromstring, tostring
 from minisignxml.sign import sign
 
 SAML = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -96,7 +96,7 @@ def _response(
             f'<saml:SubjectConfirmationData InResponseTo="{extra_request}" Recipient="{extra_recipient}" '
             f'NotOnOrAfter="{_timestamp(now + lifetime)}"/></saml:SubjectConfirmation>'
         )
-    assertion = etree.fromstring(
+    assertion = fromstring(
         (
             f'<saml:Assertion xmlns:saml="{SAML}"'
             f'{f" ID={assertion_id!r}" if assertion_id else ""} Version="2.0" IssueInstant="{_timestamp(now)}">'
@@ -112,19 +112,19 @@ def _response(
         ).encode(),
     )
     if signed_root == "assertion":
-        assertion = etree.fromstring(sign(element=assertion, private_key=key, certificate=certificate))
+        assertion = fromstring(sign(element=assertion, private_key=key, certificate=certificate))
 
     response_attrs = f' Version="2.0" IssueInstant="{_timestamp(now)}"'
     if response_id is not None:
         response_attrs += f' ID="{response_id}"'
     if destination is not None:
         response_attrs += f' Destination="{destination}"'
-    response = etree.fromstring(
+    response = fromstring(
         f'<samlp:Response xmlns:samlp="{SAMLP}" xmlns:saml="{SAML}"{response_attrs}/>'.encode(),
     )
-    etree.SubElement(response, f"{{{SAML}}}Issuer").text = IDP_ENTITY_ID
+    SubElement(response, f"{{{SAML}}}Issuer").text = IDP_ENTITY_ID
     response.append(assertion)
-    response_xml = sign(element=response, private_key=key, certificate=certificate) if signed_root == "response" else etree.tostring(response)
+    response_xml = sign(element=response, private_key=key, certificate=certificate) if signed_root == "response" else tostring(response)
     return base64.b64encode(response_xml).decode()
 
 

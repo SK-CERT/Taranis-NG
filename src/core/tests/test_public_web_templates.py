@@ -151,7 +151,10 @@ def test_a_template_may_only_list_webs_that_exist(monkeypatch: pytest.MonkeyPatc
 
 def test_only_the_builtins_public_web_falls_back_on_can_be_switched_off() -> None:
     assert set(DEFAULTS) < set(builtin_sources())
-    assert not set(DEFAULTS) & {*PRODUCT_BASES, "builtin/_macros.html"} - {"builtin/product_vulnerability.html"}
+    # The vulnerability and GCVE product pages are bases a custom template may extend, and
+    # fallbacks too; the plain base and the macros are only bases.
+    fallback_bases = {"builtin/product_vulnerability.html", "builtin/product_gcve.html"}
+    assert not set(DEFAULTS) & {*PRODUCT_BASES, "builtin/_macros.html"} - fallback_bases
 
 
 @pytest.mark.parametrize(

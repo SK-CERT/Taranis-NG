@@ -22,7 +22,12 @@ class OrganizationSchema(Schema):
 
 
 class OrganizationPresentationSchema(OrganizationSchema, PresentationSchema):
-    """Schema for Organization with presentation data."""
+    """Schema for Organization with presentation data.
+
+    ``gna_id`` is its GCVE GNA number (None: it is no GNA); it is set with its GCVE settings.
+    """
+
+    gna_id = fields.Int(dump_only=True, allow_none=True)
 
 
 class OrganizationIdSchema(Schema):

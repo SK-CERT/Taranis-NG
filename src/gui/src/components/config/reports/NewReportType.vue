@@ -23,16 +23,38 @@
             />
 
             <v-card-text>
+                <!-- Shipped with Taranis (the CVD Report): it can only be switched on or off. -->
+                <v-alert
+                    v-if="localItem.locked"
+                    type="info"
+                    variant="tonal"
+                    density="compact"
+                    class="mb-3"
+                    data-test="report-type-locked"
+                >
+                    {{ t('gna.locked_type') }}
+                </v-alert>
+                <v-switch
+                    v-model="localItem.enabled"
+                    :label="t('gna.enabled')"
+                    :hint="t('gna.enabled_type_hint')"
+                    persistent-hint
+                    color="primary"
+                    density="compact"
+                    class="mb-3"
+                    :disabled="saving || !canSave"
+                    data-test="report-type-enabled"
+                />
                 <v-form
                     ref="formRef"
-                    :disabled="!canSave"
+                    :disabled="!editable"
                     @submit.prevent="saveAndClose"
                 >
                     <div class="d-flex align-start ga-3 mb-3">
                         <MdiIconPicker
                             v-model="iconModel"
                             :label="t('reports.types.icon')"
-                            :disabled="saving || !canSave"
+                            :disabled="saving || !editable"
                             hide-label
                             class="name-icon"
                             data-test="report-type-icon"
@@ -44,7 +66,7 @@
                             variant="outlined"
                             density="comfortable"
                             :rules="[(v) => !!v || t('error.required')]"
-                            :disabled="saving"
+                            :disabled="saving || !editable"
                         />
                     </div>
 
@@ -56,7 +78,7 @@
                         density="comfortable"
                         rows="3"
                         class="mb-3"
-                        :disabled="saving"
+                        :disabled="saving || !editable"
                     />
 
                     <!-- Languages: the variants reports of this type are translated into -->
@@ -79,7 +101,7 @@
                                 clear-on-select
                                 variant="outlined"
                                 density="comfortable"
-                                :disabled="saving || !canSave"
+                                :disabled="saving || !editable"
                                 data-test="report-type-languages"
                             />
                         </v-col>
@@ -96,7 +118,7 @@
                                 clearable
                                 variant="outlined"
                                 density="comfortable"
-                                :disabled="saving || !canSave"
+                                :disabled="saving || !editable"
                                 data-test="report-type-translation-provider"
                             />
                         </v-col>
@@ -115,7 +137,7 @@
                                 clearable
                                 variant="outlined"
                                 density="comfortable"
-                                :disabled="saving || !canSave"
+                                :disabled="saving || !editable"
                                 data-test="report-type-label-language"
                             />
                         </v-col>
@@ -158,7 +180,7 @@
                         :language="labelTab"
                         :source-language="localItem.label_language"
                         :ai-provider-id="localItem.translation_ai_provider_id"
-                        :disabled="saving || !canSave"
+                        :disabled="saving || !editable"
                     />
                     <template v-else>
                         <!-- Attribute groups -->
@@ -168,7 +190,7 @@
                             </h3>
                             <v-spacer />
                             <AddNewButton
-                                :disabled="saving || !canSave"
+                                :disabled="saving || !editable"
                                 @click="addGroup"
                             />
                         </div>
@@ -187,19 +209,19 @@
                                 <ActionButton
                                     icon="mdi-arrow-up-bold"
                                     :title="t('common.up')"
-                                    :disabled="saving || !canSave"
+                                    :disabled="saving || !editable"
                                     @click="moveGroup(index, -1)"
                                 />
                                 <ActionButton
                                     icon="mdi-arrow-down-bold"
                                     :title="t('common.down')"
-                                    :disabled="saving || !canSave"
+                                    :disabled="saving || !editable"
                                     @click="moveGroup(index, 1)"
                                 />
                                 <ActionButton
                                     action="delete"
                                     :title="t('common.delete')"
-                                    :disabled="saving || !canSave"
+                                    :disabled="saving || !editable"
                                     @click="deleteGroup(index)"
                                 />
                             </v-toolbar>
@@ -212,7 +234,7 @@
                                     variant="outlined"
                                     density="comfortable"
                                     class="mb-3"
-                                    :disabled="saving || !canSave"
+                                    :disabled="saving || !editable"
                                 />
                                 <v-textarea
                                     v-model="group.description"
@@ -222,7 +244,7 @@
                                     density="comfortable"
                                     rows="2"
                                     class="mb-3"
-                                    :disabled="saving"
+                                    :disabled="saving || !editable"
                                 />
                                 <v-text-field
                                     v-model="group.section_title"
@@ -231,14 +253,14 @@
                                     variant="outlined"
                                     density="comfortable"
                                     class="mb-3"
-                                    :disabled="saving"
+                                    :disabled="saving || !editable"
                                 />
 
                                 <AttributeTable
                                     v-model="group.attribute_group_items"
                                     :attribute-templates="attributeTemplates"
                                     :ai-providers="aiProviders"
-                                    :disabled="saving || !canSave"
+                                    :disabled="saving || !editable"
                                 />
                             </v-card-text>
                         </v-card>
@@ -322,6 +344,9 @@
         // Language the labels are written in; null while not stated.
         label_language: string | null
         translations: Translations
+        // Switched off: not offered for new reports. A shipped type (locked) only switches.
+        enabled: boolean
+        locked: boolean
         [key: string]: unknown
     }
 
@@ -391,7 +416,9 @@
         languages: [],
         translation_ai_provider_id: null,
         label_language: null,
-        translations: {}
+        translations: {},
+        enabled: true,
+        locked: false
     })
 
     const localItem = ref<ReportTypeItem>(defaultItem())
@@ -414,6 +441,9 @@
 
     const canCreate = computed(() => checkPermission('CONFIG_REPORT_TYPE_CREATE'))
     const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_REPORT_TYPE_UPDATE' : 'CONFIG_REPORT_TYPE_CREATE'))
+    // A shipped type (the CVD Report) is only switched on or off: nothing else in it can change.
+    // Every control says so itself - an explicit `disabled` on a field overrides the form's.
+    const editable = computed(() => canSave.value && !localItem.value.locked)
 
     const notify = (type: 'success' | 'error', loc: string, params?: Record<string, unknown>): void => {
         window.dispatchEvent(new CustomEvent('notification', { detail: { type, loc, params } }))
@@ -463,8 +493,12 @@
             translation_ai_provider_id?: number | null
             label_language?: string | null
             translations?: Translations
+            enabled?: boolean
+            locked?: boolean
         }
         return {
+            enabled: src.enabled !== false,
+            locked: src.locked === true,
             id: src.id ?? null,
             title: src.title ?? '',
             description: src.description ?? '',
@@ -519,6 +553,7 @@
         translation_ai_provider_id: localItem.value.translation_ai_provider_id,
         label_language: localItem.value.label_language || null,
         translations: localItem.value.translations,
+        enabled: localItem.value.enabled,
         attribute_groups: localItem.value.attribute_groups.map((group, gi) => ({
             id: group.id,
             title: group.title,

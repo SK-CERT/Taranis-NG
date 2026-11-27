@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model.bot import Bot
-    from model.bots_node import BotsNode
 
 import uuid
 from datetime import datetime

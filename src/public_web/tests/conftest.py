@@ -67,6 +67,8 @@ class FakeTaranisClient:
         self.products = {product["id"]: product for product in data["products"]}
         self.templates: list[dict] = custom_templates()
         self.disabled_builtins: list[str] = []
+        # The GCVE records core serves, per web; a web without an entry publishes none.
+        self.gcve_records: dict[int, dict] = {}
 
     def _newest_first(self) -> list[dict]:
         return sorted(self.products.values(), key=lambda product: product["created"], reverse=True)
@@ -104,6 +106,11 @@ class FakeTaranisClient:
     def get_web_image(self, web_id: int, kind: str) -> None:  # noqa: ARG002
         """No uploaded images: the shipped defaults are used."""
         return
+
+    def list_gcve_records(self, web_id: int) -> dict | None:
+        """The GCVE records a web publishes, or None when it publishes none."""
+        records = self.gcve_records.get(web_id)
+        return copy.deepcopy(records) if records is not None else None
 
     def get_report_templates(self) -> dict[str, list]:
         """The report templates stored in core, and the built-ins switched off."""

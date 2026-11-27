@@ -34,7 +34,22 @@ export function deleteErrorLoc(error: unknown, { inUse = 'error.in_use', failed 
     return failed
 }
 
-/** Show the message for a failed delete in the notification snackbar. */
-export function notifyDeleteError(error: unknown, locs?: DeleteErrorLocs): void {
-    window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: deleteErrorLoc(error, locs) } }))
+/**
+ * Core's own explanation of a 409, where it gives one in words: a CVD Report whose GCVE or CVE
+ * record is published, or whose CVE ID is still reserved, answers with what to do instead (a
+ * plain string). The generic "still in use" answer is an object, and keeps its translated wording.
+ */
+export function conflictExplanation(error: unknown): string {
+    const response = (error as { response?: { status?: number; data?: unknown } } | null)?.response
+    return response?.status === 409 && typeof response.data === 'string' ? response.data.trim() : ''
+}
+
+/**
+ * Show the message for a failed delete in the notification snackbar. With ``explainConflict``,
+ * a 409 that core explains is shown in its words.
+ */
+export function notifyDeleteError(error: unknown, locs?: DeleteErrorLocs, explainConflict = false): void {
+    const explanation = explainConflict ? conflictExplanation(error) : ''
+    const detail = explanation ? { type: 'error', message: explanation } : { type: 'error', loc: deleteErrorLoc(error, locs) }
+    window.dispatchEvent(new CustomEvent('notification', { detail }))
 }

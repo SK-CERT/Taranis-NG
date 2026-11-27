@@ -292,7 +292,9 @@
     // What switching it off does, said while it is off.
     const OFF_EFFECTS: Record<string, string> = {
         product_vulnerability: 'product',
+        product_gcve: 'product_gcve',
         item_vulnerability: 'item_specific',
+        item_cvd: 'item_specific',
         item_generic: 'item_generic'
     }
 

@@ -222,6 +222,20 @@ class PublicWeb(db.Model):
         db.session.commit()
 
     @property
+    def gcve_organization_id(self) -> int | None:
+        """The organization whose GCVE records the web publishes (``config.gcve_organization_id``); None: none."""
+        value = (self.config or {}).get("gcve_organization_id")
+        try:
+            return int(value) if value not in (None, "") else None
+        except (TypeError, ValueError):
+            return None
+
+    @property
+    def gcve_enabled(self) -> bool:
+        """Whether the web publishes the GCVE records of an organization (see shared.gcve)."""
+        return self.gcve_organization_id is not None
+
+    @property
     def has_tls_key(self) -> bool:
         """Whether a private key is stored (the key itself is never exposed)."""
         return bool(self.tls_key)

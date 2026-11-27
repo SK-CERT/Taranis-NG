@@ -27,12 +27,13 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from defusedxml.lxml import fromstring
-from lxml import etree
+from lxml.etree import QName, tostring
 from minisignxml.config import VerifyConfig
 from minisignxml.verify import extract_verified_element_and_certificate
 
 if TYPE_CHECKING:
     from cryptography.x509 import Certificate
+    from lxml.etree import _Element
 
 XENC = "http://www.w3.org/2001/04/xmlenc#"
 XENC11 = "http://www.w3.org/2009/xmlenc11#"
@@ -148,7 +149,7 @@ def inspect_verified_saml(xml: bytes, certificates: list[Certificate]) -> Verifi
     )
 
 
-def _cipher_value(element: etree._Element) -> bytes:
+def _cipher_value(element: _Element) -> bytes:
     """Read and base64-decode a CipherData/CipherValue (it is line-wrapped)."""
     value = element.find(f"./{{{XENC}}}CipherData/{{{XENC}}}CipherValue")
     if value is None or not value.text:
@@ -169,7 +170,7 @@ def _cipher_value(element: etree._Element) -> bytes:
     return decoded
 
 
-def _unwrap_session_key(encrypted_key: etree._Element, private_key: object) -> bytes:
+def _unwrap_session_key(encrypted_key: _Element, private_key: object) -> bytes:
     """RSA-unwrap the AES session key the assertion was encrypted with.
 
     Args:
@@ -208,7 +209,7 @@ def _unwrap_session_key(encrypted_key: etree._Element, private_key: object) -> b
         raise ValueError(msg) from ex
 
 
-def _decrypt_data(encrypted_data: etree._Element, session_key: bytes) -> bytes:
+def _decrypt_data(encrypted_data: _Element, session_key: bytes) -> bytes:
     """Decrypt the AES-encrypted assertion.
 
     Args:
@@ -304,7 +305,7 @@ def decrypt_assertion(saml_response_xml: bytes, private_key: object) -> bytes | 
     # have contained what the envelope claimed
     assertion = fromstring(assertion_xml)
     if assertion.tag != f"{{{SAML}}}Assertion":
-        msg = f"The decrypted element is a '{etree.QName(assertion).localname}', not a SAML Assertion"
+        msg = f"The decrypted element is a '{QName(assertion).localname}', not a SAML Assertion"
         raise ValueError(msg)
     return assertion_xml
 
@@ -344,4 +345,4 @@ def extract_signed_assertion(saml_response_xml: bytes) -> bytes | None:
     if len(assertion.findall(f".//{{{DS}}}Signature")) != SINGLE_SIGNATURE:
         return None
 
-    return etree.tostring(assertion)
+    return tostring(assertion)

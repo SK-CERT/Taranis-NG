@@ -119,6 +119,8 @@
     const headers: HeaderEntry[] = [
         { title: t('access_management.organizations.name'), key: 'name' },
         { title: t('access_management.organizations.description'), key: 'description' },
+        // Its GCVE GNA number, when it is a GNA (set in its GCVE & CVE tab).
+        { title: t('gna.organization.gna_column'), key: 'gna_id' },
         { title: t('settings.actions'), key: 'actions', sortable: false, align: 'end' }
     ]
 

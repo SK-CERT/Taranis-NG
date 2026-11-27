@@ -13,6 +13,7 @@ from api import (
     dashboard,
     isalive,
     notifications,
+    organization_gcve,
     public_web,
     publish,
     remote,
@@ -156,3 +157,4 @@ def initialize(app: object) -> None:
     tag.initialize(api)
     traefik.initialize(api)
     notifications.initialize(api)
+    organization_gcve.initialize(api)

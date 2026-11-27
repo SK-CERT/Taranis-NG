@@ -9,6 +9,17 @@
         :disabled="disabled"
         reorderable
     >
+        <template #item.required="{ item }">
+            <v-icon
+                v-if="isRequired(item)"
+                :icon="ICONS.CHECK_CIRCLE"
+                size="small"
+                color="primary"
+                :aria-label="t('attribute.required')"
+                data-test="attribute-required-mark"
+            />
+        </template>
+
         <template #form="{ item }">
             <v-select
                 :model-value="item.attribute_id >= 0 ? item.attribute_id : null"
@@ -37,6 +48,17 @@
                 variant="outlined"
                 density="comfortable"
                 class="mb-3"
+            />
+            <!-- Required = at least one value (min occurrence 1 or more); report authors see it. -->
+            <v-checkbox
+                :model-value="isRequired(item)"
+                :label="t('attribute.required')"
+                :hint="t('attribute.required_hint')"
+                persistent-hint
+                density="comfortable"
+                class="mb-5"
+                data-test="attribute-required"
+                @update:model-value="(required: boolean | null) => setRequired(item, Boolean(required))"
             />
             <v-row>
                 <v-col cols="6">
@@ -101,6 +123,7 @@
     import { useSpellcheck } from '@/composables/useSpellcheck'
     import { TRANSLATABLE_TYPES } from '@/composables/useContentLanguages'
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
+    import { ICONS } from '@/config/ui-constants'
 
     export type AttributeGroupItem = {
         id: number
@@ -171,10 +194,19 @@
         { title: t('attribute.type'), key: 'attribute_name', sortable: false },
         { title: t('reports.types.name'), key: 'title', sortable: false },
         { title: t('reports.types.description'), key: 'description', sortable: false },
+        { title: t('attribute.required'), key: 'required', sortable: false },
         { title: t('attribute.min_occurrence'), key: 'min_occurrence', sortable: false },
         { title: t('attribute.max_occurrence'), key: 'max_occurrence', sortable: false },
         { title: t('settings.actions'), key: 'actions', align: 'end' as const, sortable: false }
     ]
+
+    // A field is required when it needs at least one value (see utils/requiredFields).
+    const isRequired = (item: Pick<AttributeGroupItem, 'min_occurrence'>): boolean => (Number(item.min_occurrence) || 0) >= 1
+    const setRequired = (item: AttributeGroupItem, required: boolean): void => {
+        item.min_occurrence = required ? Math.max(1, Number(item.min_occurrence) || 0) : 0
+        // Room for the values it needs; 0 would make it a label without values.
+        if (required && (Number(item.max_occurrence) || 0) < item.min_occurrence) item.max_occurrence = item.min_occurrence
+    }
 
     const showAI = computed(() => props.aiProviders.length > 0)
 

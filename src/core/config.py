@@ -99,6 +99,10 @@ class Config:
 
     SECRET_KEY = ""
 
+    # Where core calls MITRE's CVE Services, instead of the production or test URL the CVE Services
+    # account names. Only for development and end-to-end tests against a stand-in service.
+    CVE_SERVICES_URL = (os.getenv("TARANIS_CVE_SERVICES_URL") or "").strip().rstrip("/")
+
     # Origins allowed to drive the GUI cross-origin with credentials. Empty by
     # default: the production deployment serves the GUI and the API from one
     # origin, and a credentials-capable CORS grant must never reflect arbitrary

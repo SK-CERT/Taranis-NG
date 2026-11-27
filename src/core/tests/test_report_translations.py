@@ -556,6 +556,8 @@ def stored(monkeypatch: pytest.MonkeyPatch) -> list[ReportItem]:
     """Reports created without a database, by an author whose default language is Czech."""
     stored: list[ReportItem] = []
     monkeypatch.setattr(ReportItemType, "allowed_with_acl", classmethod(lambda _cls, *_args, **_kwargs: True))
+    # Not a stored type: not switched off, and not a CVD Report.
+    monkeypatch.setattr(ReportItemType, "find", classmethod(lambda _cls, _id: None))
     monkeypatch.setattr(StateDefinition, "get_initial_state", classmethod(lambda _cls, *_args: None))
     monkeypatch.setattr(Setting, "get_setting", classmethod(lambda _cls, *_args: "cs"))
     monkeypatch.setattr(ReportItem, "update_cpes", lambda _self: None)

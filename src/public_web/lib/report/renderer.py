@@ -35,8 +35,9 @@ from jinja2 import ChoiceLoader, DictLoader, FunctionLoader
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from lib.logger import get_logger
 from lib.report.filters import FILTERS
-from lib.report.product import visible_links
+from lib.report.product import displayable, visible_links
 from markupsafe import Markup
+from shared.gcve import CVD_TYPE_KEY
 from shared.public_web_templates import BUILTIN_PREFIX, DEFAULTS, VULNERABILITY_TYPE, builtin_sources
 
 if TYPE_CHECKING:
@@ -48,6 +49,9 @@ PRODUCT_BASE = "builtin/product_base.html"
 PRODUCT_VULNERABILITY = "builtin/product_vulnerability.html"
 ITEM_GENERIC = "builtin/item_generic.html"
 ITEM_VULNERABILITY = "builtin/item_vulnerability.html"
+# The shipped GCVE Advisory preset and CVD Report type (shared.gcve), found by their keys.
+PRODUCT_GCVE = "builtin/product_gcve.html"
+ITEM_CVD = "builtin/item_cvd.html"
 
 _TAG = re.compile(r"<[^>]*>")
 
@@ -100,8 +104,32 @@ class ReportRenderer:
         """Whether products of a preset without a template of its own are shown (with the built-in one)."""
         return PRODUCT_VULNERABILITY not in self._disabled
 
+    def has_template_for(self, product: dict) -> bool:
+        """Whether a product can be shown at all: its preset has a template, or the built-in it falls back on is on."""
+        if self.has_product_template(product["product_preset"]["id"]):
+            return True
+        if product.get("is_gcve"):
+            return PRODUCT_GCVE not in self._disabled
+        return self.has_builtin_product_template()
+
+    def displayable(self, product: dict) -> tuple[bool, str]:
+        """Whether a product may appear on the web, and why not (see ``lib.report.product.displayable``).
+
+        A GCVE Advisory is shown whatever its TLP: publishing it is the decision to disclose.
+        """
+        if product.get("is_gcve"):
+            return True, ""
+        preset_id = product["product_preset"]["id"]
+        return displayable(
+            product,
+            vulnerability_only=not self.has_product_template(preset_id),
+            require_tlp_clear=self.require_tlp_clear(preset_id),
+        )
+
     def _builtin_product(self, product: dict) -> str:
         """The built-in a product falls back on; the base layout cannot be switched off."""
+        if product.get("is_gcve") and PRODUCT_GCVE not in self._disabled:
+            return PRODUCT_GCVE
         if product["is_vulnerability"] and PRODUCT_VULNERABILITY not in self._disabled:
             return PRODUCT_VULNERABILITY
         return PRODUCT_BASE
@@ -113,7 +141,12 @@ class ReportRenderer:
         only a type of that title gets it; others - a renamed or extended copy, a type of one's own - get the
         generic one, unless they have a template of their own.
         """
-        names = [ITEM_VULNERABILITY, ITEM_GENERIC] if item["type"] == VULNERABILITY_TYPE else [ITEM_GENERIC]
+        if item.get("type_key") == CVD_TYPE_KEY:
+            names = [ITEM_CVD, ITEM_GENERIC]
+        elif item["type"] == VULNERABILITY_TYPE:
+            names = [ITEM_VULNERABILITY, ITEM_GENERIC]
+        else:
+            names = [ITEM_GENERIC]
         return [name for name in names if name not in self._disabled]
 
     def product_template(self, product: dict) -> str:

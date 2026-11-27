@@ -25,9 +25,10 @@ ATOM = "{http://www.w3.org/2005/Atom}"
 PRAGUE = ZoneInfo("Europe/Prague")
 
 
-def _report(product_id: int, author: str | None = None, **dates: str) -> dict:
+def _report(product_id: int, author: str | None = None, preset: dict | None = None, **dates: str) -> dict:
     user = {"name": author} if author else None
-    return build_product({"id": product_id, "title": f"Bulletin {product_id}", "links": [], "report_items": [], "user": user, **dates})
+    data = {"id": product_id, "title": f"Bulletin {product_id}", "links": [], "report_items": [], "user": user, **dates}
+    return build_product({**data, "product_preset": preset} if preset else data)
 
 
 class _Cache:
@@ -479,10 +480,74 @@ def test_a_cache_reset_tells_the_hubs(monkeypatch: pytest.MonkeyPatch) -> None:
 
     asked: list = []
     monkeypatch.setattr(management.cache, "clear", lambda: asked.append("clear"))
-    monkeypatch.setattr(websub, "notify_in_background", asked.append)
+    monkeypatch.setattr(websub, "notify_in_background", lambda webs, types_of=None: asked.append((webs, types_of)))
 
     with Flask(__name__).test_request_context("/management/reset-cache", method="POST"):
         _body, status = management.reset_cache.__wrapped__()
 
     assert status == 200
-    assert asked == ["clear", management.cache.get_webs]
+    # The feeds of each type of reports a web shows changed too.
+    assert asked == ["clear", (management.cache.get_webs, management._report_types_of)]
+
+
+def test_the_types_of_a_web_are_read_from_its_reports(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PUBLIC_WEB_API_KEY", "test-key")
+    from lib.web import management  # noqa: PLC0415
+
+    reports = [_report(1, preset={"id": 13, "title": "GCVE Advisory", "key": "gcve"}), _report(2, preset={"id": 3, "title": "Bulletins"})]
+    asked: list = []
+    monkeypatch.setattr(management.cache, "get_all_reports", lambda web_id, language: asked.append((web_id, language)) or reports)
+
+    assert management._report_types_of(_web("feed.example", default_language="cs")) == ["3", "gcve"]
+    assert asked == [(1, "cs")]
+
+
+def test_the_hub_learns_of_the_feeds_of_each_type(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PUBLIC_WEB_API_KEY", "test-key")
+    from lib.web import websub  # noqa: PLC0415
+
+    told: list[str] = []
+    monkeypatch.setattr(websub.requests, "post", lambda _url, data, timeout: told.append(data["hub.url"]) or SimpleNamespace(status_code=204))  # noqa: ARG005
+
+    websub.notify([_web("feed.example", websub_hub=HUB)], types_of=lambda _web: ["gcve"])
+
+    assert told[7:] == [
+        "https://feed.example/rss?type=gcve",
+        "https://feed.example/atom?type=gcve",
+        "https://feed.example/rss?type=gcve&lang=en",
+        "https://feed.example/atom?type=gcve&lang=en",
+        "https://feed.example/rss?type=gcve&lang=cs",
+        "https://feed.example/atom?type=gcve&lang=cs",
+    ]
+
+
+def test_reports_that_cannot_be_read_still_leave_the_main_feeds_told(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PUBLIC_WEB_API_KEY", "test-key")
+    from lib.web import websub  # noqa: PLC0415
+
+    told: list[str] = []
+    monkeypatch.setattr(websub.requests, "post", lambda _url, data, timeout: told.append(data["hub.url"]) or SimpleNamespace(status_code=204))  # noqa: ARG005
+
+    def broken(_web: dict) -> list[str]:
+        message = "core is down"
+        raise RuntimeError(message)
+
+    websub.notify([_web("feed.example", websub_hub=HUB)], types_of=broken)
+
+    assert len(told) == 7
+
+
+@pytest.mark.parametrize("query", ["type=gcve", "type=gcve&lang=cs"])
+def test_the_feed_of_a_type_is_named_as_the_hub_knows_it(respond, query: str) -> None:  # noqa: ANN001
+    from lib.web import websub  # noqa: PLC0415
+
+    advisory = _report(2, preset={"id": 13, "title": "GCVE Advisory", "key": "gcve"}, **NEWER)
+    bulletin = _report(1, preset={"id": 3, "title": "Bulletins"})
+    response = respond("rss", advisory, bulletin, query=query, config={"websub_hub": HUB})
+
+    self_link = response.headers.getlist("Link")[1].split(">")[0].lstrip("<")
+    web = {"id": 1, "hostname": "https://feed.example", "config": {**WEB_CONFIG, "websub_hub": HUB}}
+    assert self_link in websub.topics(web, ["gcve"])
+    root = ET.fromstring(response.get_data())  # noqa: S314 (our own output)
+    assert [item.findtext("title") for item in root.iter("item")] == ["Bulletin 2"]
+    assert root.findtext("channel/title").endswith("GCVE Advisory")

@@ -31,6 +31,11 @@ export type ProductPreset = {
     public_web_enabled: boolean
     public_web_ids: number[]
     public_web_names?: string[]
+    /** Switched off: not offered for new products. */
+    enabled?: boolean
+    /** Shipped with Taranis (the GCVE Advisory): it can only be switched on or off. */
+    locked?: boolean
+    system_key?: string | null
     updated_at?: string
     updated_by?: string | null
 }

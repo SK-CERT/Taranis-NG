@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING, Any
 
 from lib.report import fix_spaces, format_iso_date, get_cvss_severity
 from lib.report.vulnerability import cvss_score
+from shared.gcve import GCVE_PRESET_KEY
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -65,8 +66,14 @@ def _values(item: dict, key: str) -> list[str]:
 
 
 def _links(item: dict) -> list[str]:
-    """The item's links: the values of its LINK attributes."""
-    return [attribute["value"] for attribute in item["attributes"] if attribute["type"] == "LINK" and attribute["value"]]
+    """The item's links: the values of its LINK attributes, and the URLs of a CVD Report's references."""
+    links = []
+    for attribute in item["attributes"]:
+        if attribute["type"] == "LINK" and attribute["value"]:
+            links.append(attribute["value"])
+        elif attribute["type"] == "REFERENCE" and (attribute.get("data") or {}).get("url"):
+            links.append(attribute["data"]["url"])
+    return links
 
 
 def _shape_attrs(attributes: list[dict], field: str = "source_value") -> dict[str, Any]:
@@ -85,6 +92,9 @@ def _shape_attrs(attributes: list[dict], field: str = "source_value") -> dict[st
     attrs: dict[str, Any] = {}
     for key, entries in grouped.items():
         values = [entry[field] for entry in entries if entry[field] is not None]
+        if any(entry.get("data") is not None for entry in entries):
+            # A CVD Report's structured field: the object, which templates read field by field.
+            values = [entry["data"] for entry in entries if entry.get("data") is not None]
         if key.startswith("cwe"):
             attrs[key] = {entry[field]: entry["description"] for entry in entries if entry[field] is not None}
         elif any(entry["type"] == "MULTI_CHOICE" for entry in entries):
@@ -129,6 +139,8 @@ def _build_item(data: dict) -> dict:
                 "value": attribute.get("value"),
                 "source_value": attribute.get("source_value", attribute.get("value")),
                 "description": attribute.get("description"),
+                # A structured value (a CVD Report field) as an object; None for the others.
+                "data": attribute.get("data"),
                 "_order": (tuple(order) if isinstance(order, list) else (), position),
             },
         )
@@ -145,7 +157,11 @@ def _build_item(data: dict) -> dict:
         "type": data.get("type") or "",
         "type_label": data.get("type_label") or data.get("type") or "",
         "type_id": data.get("type_id"),
+        # Set on a type Taranis ships (``cvd``); its built-in template is picked by it.
+        "type_key": data.get("type_key"),
         "type_description": data.get("type_description") or "",
+        # A CVD Report's GCVE identifier.
+        "gcve_id": data.get("gcve_id"),
         # The language the item is shown in, which its labels and constants follow; None when
         # core knows none (or was asked for none).
         "language": data.get("language"),
@@ -227,7 +243,7 @@ def build_product(data: dict, shown: Callable[[dict], bool] | None = None) -> di
         "published": _published(data.get("published") or data.get("created")),
         "author": user.get("name"),
         # What the product is published as; its report template is the product preset's.
-        "product_preset": {"id": preset.get("id"), "title": preset.get("title") or ""},
+        "product_preset": {"id": preset.get("id"), "title": preset.get("title") or "", "key": preset.get("key")},
         # The language it is shown in; None when core knows none (or was asked for none).
         "language": data.get("language"),
         # Read, in part, from an AI translation: "unreviewed" when some of it nobody has
@@ -246,6 +262,8 @@ def build_product(data: dict, shown: Callable[[dict], bool] | None = None) -> di
         "max_cvss": max(scores) if scores else None,
         # What the product is, whichever of its items are shown.
         "is_vulnerability": any(item["type"].startswith(VULNERABILITY_TYPE_PREFIX) for item in every_item),
+        # A GCVE Advisory: its CVD Reports are published as GCVE records.
+        "is_gcve": preset.get("key") == GCVE_PRESET_KEY,
     }
 
 

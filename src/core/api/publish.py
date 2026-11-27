@@ -26,7 +26,7 @@ from managers.link_references import render_presenter_input
 from managers.log_manager import logger
 from model.glossary import GlossaryEntry
 from model.permission import Permission
-from model.product import Product, refused_report_items, refused_report_items_message
+from model.product import GcveRecordsHeldError, Product, refused_report_items, refused_report_items_message
 from model.product_preset import ProductPreset
 from model.report_item import ReportItem
 from model.translation import PRODUCT_FIELDS
@@ -42,11 +42,18 @@ PREVIEW_TICKET_TTL_SECONDS = 600
 PREVIEW_TICKET_MAX_REDEMPTIONS = 3
 
 
-def _product_preset_refused(product_data: dict | None, user: User) -> tuple[dict, HTTPStatus] | None:
-    """Refuse a product whose product preset does not exist, or that the user may not use."""
+def _product_preset_refused(product_data: dict | None, user: User, current_preset_id: int | None = None) -> tuple[dict, HTTPStatus] | None:
+    """Refuse a product whose product preset does not exist, or that the user may not use.
+
+    A product preset that is switched off is refused for a new product, or for a product moved to
+    it; a product already made with it keeps it.
+    """
     product_preset_id = (product_data or {}).get("product_preset_id")
-    if not isinstance(product_preset_id, int) or ProductPreset.find(product_preset_id) is None:
+    product_preset = ProductPreset.find(product_preset_id) if isinstance(product_preset_id, int) else None
+    if product_preset is None:
         return {"error": "Product preset not found"}, HTTPStatus.BAD_REQUEST
+    if not product_preset.enabled and product_preset_id != current_preset_id:
+        return {"error": f"The product preset '{product_preset.name}' is switched off"}, HTTPStatus.BAD_REQUEST
     if not ProductPreset.allowed_with_acl(product_preset_id, user, see=False, access=True, modify=False):
         err_msg = "Unauthorized access attempt to Product preset"
         log_manager.store_auth_error_activity(err_msg)
@@ -147,13 +154,17 @@ class ProductResource(Resource):
             product_id (int): The ID of the product to be updated.
         """
         user = auth_manager.get_user_from_jwt()
-        refused = _product_preset_refused(request.json, user)
+        original_product = Product.find(product_id)
+        refused = _product_preset_refused(request.json, user, original_product.product_preset_id if original_product else None)
         if refused:
             return refused
-        original_product = Product.find(product_id)
         original_state_id = original_product.state_id if original_product else None
         try:
             Product.update_product(product_id, request.json, user)
+        except GcveRecordsHeldError as ex:
+            # Published GCVE records stay in the feed; nothing is stored.
+            db.session.rollback()
+            return {"error": str(ex), "gcve_ids": ex.gcve_ids}, HTTPStatus.CONFLICT
         except ValueError as ex:
             # A language code, translated title or tag that is not valid; nothing is stored.
             db.session.rollback()
@@ -164,13 +175,18 @@ class ProductResource(Resource):
         return None
 
     @auth_required("PUBLISH_DELETE", ACLCheck.PRODUCT_PRESET_MODIFY)
-    def delete(self, product_id: int) -> None:
-        """Delete a product.
+    def delete(self, product_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete a product; refused (409) while it holds published GCVE records.
 
         Args:
             product_id (int): The ID of the product to be deleted.
         """
         product = Product.find(product_id)
+        if product is not None:
+            try:
+                Product.check_gcve_records_kept(product, None, None, [])
+            except GcveRecordsHeldError as ex:
+                return {"error": str(ex), "gcve_ids": ex.gcve_ids}, HTTPStatus.CONFLICT
         was_published = _is_published_state(product.state_id) if product else False
         result = Product.delete(product_id)
         if was_published:

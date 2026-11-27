@@ -49,6 +49,10 @@ class ProductPresetSchema(Schema):
     # The public-web delivery: published products appear on these webs (none listed: every web).
     public_web_enabled = fields.Bool(load_default=False)
     public_web_ids = fields.List(fields.Int(), load_default=list)
+    # Whether new products can be made with it; a shipped one (system_key set) is locked.
+    enabled = fields.Bool(load_default=True)
+    system_key = fields.Str(dump_only=True, allow_none=True)
+    locked = fields.Bool(dump_only=True)
     public_web_names = fields.List(fields.Str(), dump_only=True)
     updated_at = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)
     updated_by = fields.Str(dump_only=True, allow_none=True)

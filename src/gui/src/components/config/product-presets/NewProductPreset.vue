@@ -25,9 +25,32 @@
             />
 
             <v-card-text>
+                <!-- Shipped with Taranis (the GCVE Advisory): it can only be switched on or off. -->
+                <v-alert
+                    v-if="localItem.locked"
+                    type="info"
+                    variant="tonal"
+                    density="compact"
+                    class="mb-3"
+                    data-test="product-preset-locked"
+                >
+                    {{ t('gna.locked_preset') }}
+                </v-alert>
+                <v-switch
+                    :model-value="localItem.enabled !== false"
+                    :label="t('gna.enabled')"
+                    :hint="t('gna.enabled_preset_hint')"
+                    persistent-hint
+                    color="primary"
+                    density="compact"
+                    class="mb-3"
+                    :disabled="saving || !canSave"
+                    data-test="product-preset-enabled"
+                    @update:model-value="localItem.enabled = $event === true"
+                />
                 <v-form
                     ref="formRef"
-                    :disabled="!canSave"
+                    :disabled="!editable"
                     validate-on="submit"
                     @submit.prevent="saveAndClose"
                 >
@@ -35,7 +58,7 @@
                         <MdiIconPicker
                             v-model="iconModel"
                             :label="t('product_presets.icon')"
-                            :disabled="saving || !canSave"
+                            :disabled="saving || !editable"
                             hide-label
                             class="name-icon"
                             data-test="product-preset-icon"
@@ -48,7 +71,7 @@
                             variant="outlined"
                             density="comfortable"
                             :rules="[required]"
-                            :disabled="saving"
+                            :disabled="saving || !editable"
                         />
                     </div>
 
@@ -61,7 +84,7 @@
                         density="comfortable"
                         rows="2"
                         class="mb-3"
-                        :disabled="saving"
+                        :disabled="saving || !editable"
                     />
 
                     <div class="text-title-medium">{{ t('product_presets.deliveries') }}</div>
@@ -86,7 +109,7 @@
                                 density="comfortable"
                                 class="product-preset-row__language"
                                 data-test="delivery-language"
-                                :disabled="saving"
+                                :disabled="saving || !editable"
                             />
                             <v-select
                                 v-model="row.product_format_id"
@@ -99,7 +122,7 @@
                                 density="comfortable"
                                 class="product-preset-row__format"
                                 :rules="[required]"
-                                :disabled="saving"
+                                :disabled="saving || !editable"
                             />
                             <v-select
                                 v-model="row.channel_ids"
@@ -116,7 +139,7 @@
                                 variant="outlined"
                                 density="comfortable"
                                 class="product-preset-row__channels"
-                                :disabled="saving"
+                                :disabled="saving || !editable"
                             />
                         </div>
                         <div class="product-preset-row__actions">
@@ -125,7 +148,7 @@
                                 variant="text"
                                 size="small"
                                 :title="t('product_presets.move_up')"
-                                :disabled="saving || !canSave || index === 0"
+                                :disabled="saving || !editable || index === 0"
                                 @click="moveRow(index, -1)"
                             />
                             <v-btn
@@ -133,7 +156,7 @@
                                 variant="text"
                                 size="small"
                                 :title="t('product_presets.move_down')"
-                                :disabled="saving || !canSave || index === rows.length - 1"
+                                :disabled="saving || !editable || index === rows.length - 1"
                                 @click="moveRow(index, 1)"
                             />
                             <v-btn
@@ -141,7 +164,7 @@
                                 variant="text"
                                 size="small"
                                 :title="t('product_presets.remove_format')"
-                                :disabled="saving || !canSave"
+                                :disabled="saving || !editable"
                                 @click="removeRow(index)"
                             />
                         </div>
@@ -153,7 +176,7 @@
                         variant="tonal"
                         color="primary"
                         class="mb-4"
-                        :disabled="saving || options.formats.length === 0"
+                        :disabled="saving || !editable || options.formats.length === 0"
                         data-test="add-format"
                         @click="addRow"
                     >
@@ -169,7 +192,7 @@
                         color="primary"
                         hide-details
                         class="mb-2"
-                        :disabled="saving"
+                        :disabled="saving || !editable"
                     />
                     <div
                         v-if="localItem.public_web_enabled"
@@ -193,7 +216,7 @@
                         closable-chips
                         variant="outlined"
                         density="comfortable"
-                        :disabled="saving"
+                        :disabled="saving || !editable"
                     />
                 </v-form>
 
@@ -282,7 +305,9 @@
         icon: null,
         deliveries: [],
         public_web_enabled: false,
-        public_web_ids: []
+        public_web_ids: [],
+        enabled: true,
+        locked: false
     })
 
     const dialog = ref(false)
@@ -298,6 +323,9 @@
     const isEdit = computed(() => localItem.value.id !== null && localItem.value.id !== undefined && localItem.value.id !== -1)
     const canCreate = computed(() => checkPermission('CONFIG_PRODUCT_PRESET_CREATE'))
     const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_PRODUCT_PRESET_UPDATE' : 'CONFIG_PRODUCT_PRESET_CREATE'))
+    // A shipped preset (the GCVE Advisory) is only switched on or off: nothing else in it can change.
+    // Every control says so itself - an explicit `disabled` on a field overrides the form's.
+    const editable = computed(() => canSave.value && localItem.value.locked !== true)
 
     // The picker shows the default icon of a product preset without its own; it is stored only once picked.
     const iconModel = computed({
@@ -388,7 +416,7 @@
         if (!valid) return false
 
         const deliveries = rowsToDeliveries(rows.value)
-        if (deliveries.length === 0 && !localItem.value.public_web_enabled) {
+        if (deliveries.length === 0 && !localItem.value.public_web_enabled && !localItem.value.locked) {
             showNeedsDelivery.value = true
             return false
         }

@@ -75,7 +75,19 @@ export const isHttpUrl = (value: unknown): value is string => {
     }
 }
 
-const urlOf = (link: LinkValue): string => (typeof link.value === 'string' ? link.value.trim() : '')
+/** The URL of a link: a LINK value is the URL, a CVD Report's REFERENCE an object holding it. */
+const urlOf = (link: LinkValue): string => {
+    if (typeof link.value !== 'string') return ''
+    const value = link.value.trim()
+    if (!value.startsWith('{')) return value
+    try {
+        const parsed: unknown = JSON.parse(value)
+        const url = parsed && typeof parsed === 'object' ? (parsed as { url?: unknown }).url : undefined
+        return typeof url === 'string' ? url.trim() : ''
+    } catch {
+        return ''
+    }
+}
 
 /**
  * Number links the way core numbers them: in the order `texts` (read in order) first cite them,

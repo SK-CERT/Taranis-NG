@@ -162,3 +162,13 @@ def test_an_update_keeps_an_unreadable_report_only_in_the_product_s_preset(monke
         _update(monkeypatch, original, 10, 1, 2)
 
     assert (original.product_preset_id, original.report_items) == (9, _items(2))
+
+
+def test_a_refused_update_publishes_no_gcve_or_cve_record(monkeypatch: pytest.MonkeyPatch) -> None:
+    """GCVE and CVE publication reach outside Taranis: the report check comes before them."""
+    for name in ("_apply_cvd_product_rules", "check_gcve_records_kept", "publish_gcve_records", "publish_cve_records"):
+        monkeypatch.setattr(Product, name, staticmethod(lambda *_args, name=name: pytest.fail(f"{name} ran before the refusal")))
+    original = types.SimpleNamespace(state_id=1, product_preset_id=9, report_items=_items(2))
+
+    with pytest.raises(ValueError, match="report item\\(s\\) 4 "):
+        _update(monkeypatch, original, 9, 2, 4)

@@ -240,6 +240,7 @@
         [Settings.TAG_CLOUD_RETENTION_DAYS]: 'mdi-calendar-clock',
         [Settings.PASSKEY_AUTHENTICATOR_LOOKUP]: 'mdi-key-variant',
         [Settings.PASSKEY_AUTHENTICATOR_LIST_URL]: 'mdi-link-variant',
+        [Settings.GCVE_GNA_DIRECTORY_URL]: 'mdi-domain',
         [Settings.CONTENT_DEFAULT_LANGUAGE]: 'mdi-file-document-edit-outline',
         [Settings.DARK_THEME]: 'mdi-theme-light-dark',
         [Settings.HOTKEYS]: 'mdi-keyboard-outline',

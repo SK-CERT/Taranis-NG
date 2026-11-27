@@ -171,7 +171,7 @@
                     <ContentLanguageSelect
                         :model-value="report_language"
                         :label="t('report_item.translation.source_language')"
-                        :disabled="!canModify || readOnly"
+                        :disabled="!canModify || readOnly || isCvd"
                         class="me-4"
                         data-test="report-source-language"
                         @update:model-value="changeSourceLanguage"
@@ -298,13 +298,117 @@
                                         v-model="selected_type"
                                         dir="auto"
                                         :disabled="edit"
-                                        :items="report_types"
+                                        :items="edit ? report_types : enabledReportTypes"
                                         item-title="title"
                                         :label="t('report_item.report_type')"
                                         :rules="[(v) => !!v || t('error.required')]"
                                         return-object
                                         @update:model-value="reportSelected"
                                     />
+                                    <!-- A CVD Report is published as a GCVE record (GNA number) or a CVE record (CNA account)
+                                         of its organization: its author's. -->
+                                    <v-alert
+                                        v-if="isCvd && !edit && cvdStatus && !cvdOrganizations.length"
+                                        type="warning"
+                                        variant="tonal"
+                                        density="compact"
+                                        class="mt-1"
+                                        data-test="report-item-cvd-unset"
+                                    >
+                                        {{ t('gna.cvd_unset_report') }}
+                                    </v-alert>
+                                    <v-select
+                                        v-if="isCvd && canPickCvdOrganization"
+                                        v-model="cvd_organization_id"
+                                        :items="cvdOrganizationItems"
+                                        :label="t('gna.organization.report_organization')"
+                                        :hint="t('gna.organization.report_organization_hint')"
+                                        persistent-hint
+                                        :rules="[(v) => v != null || t('error.required')]"
+                                        variant="outlined"
+                                        density="compact"
+                                        class="mt-2"
+                                        data-test="report-item-cvd-organization"
+                                        @update:model-value="cvdOrganizationChanged"
+                                    />
+                                    <v-chip
+                                        v-else-if="isCvd && edit && cvd_organization"
+                                        size="small"
+                                        variant="tonal"
+                                        prepend-icon="mdi-office-building"
+                                        class="mt-1 me-1"
+                                        :title="t('gna.organization.report_organization_hint')"
+                                        data-test="report-item-cvd-organization-chip"
+                                    >
+                                        <bdi dir="auto">{{ cvd_organization.name }}</bdi>
+                                    </v-chip>
+                                    <!-- A CVD Report's GCVE identifier, given when it was created. -->
+                                    <v-chip
+                                        v-if="gcve_id"
+                                        size="small"
+                                        color="primary"
+                                        variant="tonal"
+                                        prepend-icon="mdi-identifier"
+                                        class="mt-1"
+                                        :title="t('gna.copy_gcve_id')"
+                                        data-test="report-item-gcve-id"
+                                        @click="copyGcveId"
+                                    >
+                                        {{ gcve_id }}
+                                    </v-chip>
+                                    <!-- Its CVE ID, reserved through the CVE Services account, and where its record stands. -->
+                                    <div
+                                        v-if="isCvd && edit && (cve_status || canReserveCve)"
+                                        class="d-flex align-center flex-wrap ga-1 mt-1"
+                                        data-test="report-item-cve"
+                                    >
+                                        <v-chip
+                                            v-if="cve_status"
+                                            size="small"
+                                            :color="cveColor"
+                                            variant="tonal"
+                                            prepend-icon="mdi-shield-star-outline"
+                                            :title="cve_status.last_error || cve_status.rejected_reason || ''"
+                                            data-test="report-item-cve-id"
+                                        >
+                                            <bdi dir="ltr">{{ cve_status.cve_id }}</bdi
+                                            >&nbsp;·&nbsp;{{ t('gna.cve.state.' + cveStateKey) }}
+                                        </v-chip>
+                                        <v-btn
+                                            v-if="canReserveCve"
+                                            size="small"
+                                            variant="tonal"
+                                            prepend-icon="mdi-plus"
+                                            :loading="cve_busy"
+                                            data-test="report-item-reserve-cve"
+                                            @click="reserveCve"
+                                        >
+                                            {{ t('gna.cve.reserve') }}
+                                        </v-btn>
+                                        <v-btn
+                                            v-if="canRejectCve"
+                                            size="small"
+                                            variant="text"
+                                            color="error"
+                                            :disabled="cve_busy"
+                                            data-test="report-item-reject-cve"
+                                            @click="openRejectCve"
+                                        >
+                                            {{ t('gna.cve.reject') }}
+                                        </v-btn>
+                                    </div>
+                                    <!-- An existing CVE's published record fills the report's empty fields. -->
+                                    <v-btn
+                                        v-if="canFillFromCve"
+                                        size="small"
+                                        variant="tonal"
+                                        prepend-icon="mdi-database-import-outline"
+                                        class="mt-1"
+                                        data-test="report-item-cvd-fill"
+                                        @click="openCvdFill"
+                                    >
+                                        {{ t('report_item.cvd_fill.button') }}
+                                    </v-btn>
                                 </v-col>
                                 <v-col
                                     cols="4"
@@ -355,47 +459,64 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row class="pb-4">
-                                <v-col cols="12">
+                            <!-- News items and remote reports: one block, so that empty selectors
+                                 leave no gaps between the header and the attributes. -->
+                            <div class="report-sources">
+                                <div v-if="canModify">
                                     <v-btn
-                                        v-if="canModify"
                                         :prepend-icon="ICONS.PLUS"
                                         color="primary"
                                         variant="flat"
-                                        class="mb-3"
                                         @click="newsItemSelectorRef?.openSelector()"
                                     >
                                         {{ t('assess.add_news_item') }}
                                     </v-btn>
-                                </v-col>
-                            </v-row>
+                                </div>
 
-                            <v-row v-if="!verticalView">
-                                <v-col cols="12">
-                                    <NewsItemSelector
-                                        ref="newsItemSelectorRef"
-                                        :attach="false"
-                                        :values="news_item_aggregates"
-                                        :modify="modify"
-                                        :report-item-id="report_item.id"
-                                        :edit="edit"
-                                        :vertical-view="false"
-                                        @items-changed="updateNewsItemAggregates"
-                                    />
-                                </v-col>
-                            </v-row>
+                                <NewsItemSelector
+                                    v-if="!verticalView"
+                                    ref="newsItemSelectorRef"
+                                    :attach="false"
+                                    :values="news_item_aggregates"
+                                    :modify="modify"
+                                    :report-item-id="report_item.id"
+                                    :edit="edit"
+                                    :vertical-view="false"
+                                    @items-changed="updateNewsItemAggregates"
+                                />
 
-                            <v-row>
-                                <v-col cols="12">
-                                    <RemoteReportItemSelector
-                                        :values="remote_report_items"
-                                        :modify="modify"
-                                        :edit="edit"
-                                        :report-item-id="report_item.id"
-                                        @remote-report-items-changed="updateRemoteAttributes"
-                                    />
-                                </v-col>
-                            </v-row>
+                                <RemoteReportItemSelector
+                                    class="pa-0"
+                                    :values="remote_report_items"
+                                    :modify="modify"
+                                    :edit="edit"
+                                    :report-item-id="report_item.id"
+                                    @remote-report-items-changed="updateRemoteAttributes"
+                                />
+                            </div>
+
+                            <!-- Required fields still empty: a reminder, nothing is blocked. -->
+                            <v-alert
+                                v-if="canModify && !readOnly && missingRequired.length > 0"
+                                type="warning"
+                                variant="tonal"
+                                density="compact"
+                                class="mb-3"
+                                data-test="report-item-required-missing"
+                            >
+                                <span class="me-2">{{ t('report_item.required_missing') }}</span>
+                                <v-chip
+                                    v-for="field in missingRequired"
+                                    :key="field.id"
+                                    size="small"
+                                    variant="outlined"
+                                    class="me-1 my-1"
+                                    data-test="report-item-required-missing-field"
+                                    @click="scrollToField(field.id)"
+                                >
+                                    <bdi dir="auto">{{ field.title }}</bdi>
+                                </v-chip>
+                            </v-alert>
 
                             <!-- Attribute Groups -->
                             <v-row>
@@ -410,8 +531,11 @@
                                         multiple
                                         class="mb-1"
                                     >
-                                        <v-expansion-panel>
-                                            <v-expansion-panel-title class="text-primary text-body-1 text-uppercase pa-3">
+                                        <v-expansion-panel class="group-panel">
+                                            <v-expansion-panel-title
+                                                static
+                                                class="text-primary text-body-1 text-uppercase"
+                                            >
                                                 <bdi dir="auto">{{ attribute_group.title }}</bdi>
                                             </v-expansion-panel-title>
                                             <v-expansion-panel-text>
@@ -422,17 +546,51 @@
                                                 >
                                                     <v-expansion-panel
                                                         v-for="attribute_item in attribute_group.attribute_group_items"
+                                                        v-show="!hiddenCvdField(attribute_item)"
                                                         :key="attribute_item.attribute_group_item.id"
-                                                        :class="['item-panel', { 'item-panel--half': isHalfWidth(attribute_item) }]"
+                                                        :class="[
+                                                            'item-panel',
+                                                            {
+                                                                'item-panel--half': isHalfWidth(attribute_item),
+                                                                'item-panel--missing': missingRequiredIds.has(
+                                                                    attribute_item.attribute_group_item.id
+                                                                )
+                                                            }
+                                                        ]"
+                                                        :data-field-id="attribute_item.attribute_group_item.id"
                                                         :hide-actions="isLabelOnlyAttribute(attribute_item)"
                                                         :readonly="isLabelOnlyAttribute(attribute_item)"
                                                     >
-                                                        <v-expansion-panel-title class="font-weight-bold text-primary rounded-0">
+                                                        <v-expansion-panel-title
+                                                            static
+                                                            class="font-weight-bold text-primary rounded-0"
+                                                        >
                                                             <div class="d-flex align-center w-100">
                                                                 <span class="text-truncate"
                                                                     ><bdi dir="auto">{{
                                                                         attribute_item.attribute_group_item.title
                                                                     }}</bdi></span
+                                                                >
+                                                                <template v-if="isRequiredField(attribute_item.attribute_group_item)">
+                                                                    <span
+                                                                        class="required-mark"
+                                                                        :title="t('error.required')"
+                                                                        aria-hidden="true"
+                                                                        data-test="report-item-required-mark"
+                                                                        >*</span
+                                                                    >
+                                                                    <span class="d-sr-only">{{ t('error.required') }}</span>
+                                                                </template>
+                                                                <!-- Only the GCVE record carries it (x_gcve); a CVE record does not. -->
+                                                                <v-chip
+                                                                    v-if="isGcveOnlyField(attribute_item)"
+                                                                    size="x-small"
+                                                                    variant="tonal"
+                                                                    color="primary"
+                                                                    class="ms-2 flex-shrink-0"
+                                                                    :title="t('gna.field_gcve_only')"
+                                                                    data-test="report-item-gcve-only"
+                                                                    >{{ GCVE_LABEL }}</v-chip
                                                                 >
                                                                 <v-tooltip
                                                                     v-if="attribute_item.attribute_group_item.description"
@@ -510,8 +668,9 @@
                                         density="compact"
                                         type="error"
                                         variant="tonal"
+                                        data-test="report-item-error"
                                     >
-                                        {{ t('report_item.error') }}
+                                        {{ error_message || t('report_item.error') }}
                                     </v-alert>
                                 </v-col>
                             </v-row>
@@ -536,6 +695,94 @@
                         />
                     </v-col>
                 </v-row>
+            </v-card>
+        </v-dialog>
+
+        <!-- Rejecting a CVE ID tells CVE Services why; the reason is part of the rejected record. -->
+        <v-dialog
+            v-model="reject_cve_dialog"
+            max-width="560"
+        >
+            <v-card data-test="report-item-reject-cve-dialog">
+                <v-card-title>{{ t('gna.cve.reject_title', { id: cve_status?.cve_id ?? '' }) }}</v-card-title>
+                <v-card-text>
+                    <p class="text-body-2 text-medium-emphasis mb-3">
+                        {{ cve_status?.state === 'PUBLISHED' ? t('gna.cve.reject_published_hint') : t('gna.cve.reject_reserved_hint') }}
+                    </p>
+                    <v-textarea
+                        v-model="reject_cve_reason"
+                        :label="t('gna.cve.reject_reason')"
+                        rows="3"
+                        auto-grow
+                        variant="outlined"
+                        dir="auto"
+                        data-test="report-item-reject-cve-reason"
+                    />
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn
+                        variant="text"
+                        @click="reject_cve_dialog = false"
+                    >
+                        {{ t('common.cancel') }}
+                    </v-btn>
+                    <v-btn
+                        color="error"
+                        variant="flat"
+                        :disabled="!reject_cve_reason.trim()"
+                        :loading="cve_busy"
+                        data-test="report-item-reject-cve-confirm"
+                        @click="rejectCve"
+                    >
+                        {{ t('gna.cve.reject') }}
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Filling a CVD Report from a CVE's published record: only the fields that hold nothing. -->
+        <v-dialog
+            v-model="cvd_fill_dialog"
+            max-width="560"
+        >
+            <v-card data-test="report-item-cvd-fill-dialog">
+                <v-card-title>{{ t('report_item.cvd_fill.title') }}</v-card-title>
+                <v-card-text>
+                    <p class="text-body-2 text-medium-emphasis mb-3">{{ t('report_item.cvd_fill.hint') }}</p>
+                    <v-text-field
+                        v-model="cvd_fill_cve"
+                        :label="t('report_item.cvd_fill.cve')"
+                        :readonly="!!cvdFieldCve"
+                        :hint="cvdFieldCve ? t('report_item.cvd_fill.cve_held') : ''"
+                        persistent-hint
+                        placeholder="CVE-2026-1234"
+                        variant="outlined"
+                        density="compact"
+                        dir="ltr"
+                        data-test="report-item-cvd-fill-cve"
+                        @keyup.enter="fillFromCve"
+                    />
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn
+                        variant="text"
+                        @click="cvd_fill_dialog = false"
+                    >
+                        {{ t('common.cancel') }}
+                    </v-btn>
+                    <v-btn
+                        color="primary"
+                        variant="flat"
+                        :disabled="!cvdFillCveValid"
+                        :loading="cvd_fill_busy"
+                        data-test="report-item-cvd-fill-confirm"
+                        @click="fillFromCve"
+                    >
+                        {{ t('report_item.cvd_fill.action') }}
+                    </v-btn>
+                </v-card-actions>
             </v-card>
         </v-dialog>
     </v-row>
@@ -565,10 +812,18 @@
         aiGenerate,
         translateReportItem,
         setReportItemTags,
-        uploadAttachment
+        uploadAttachment,
+        getCvdStatus,
+        reserveCveId,
+        rejectCveId,
+        getCveRecordCvd,
+        fillCvdFromCve
     } from '@/api/analyze'
     import { getEntityTypeStates } from '@/api/state'
+    import { cveColor as cveColorOf, cveStateKey as cveStateKeyOf, type CveStatus } from '@/utils/cveStatus'
     import AttributeContainer from '@/components/common/attribute/AttributeContainer.vue'
+    import { halfWidthItemIds } from '@/utils/attributeLayout'
+    import { emptyRequiredFields, hasContent, isRequiredField } from '@/utils/requiredFields'
     import {
         attributeWriteMark,
         attributeWritesPending,
@@ -589,7 +844,7 @@
     import { useLocaleFormatters } from '@/composables/useLocaleFormatters'
     import { createLinkReferences, provideLinkReferences } from '@/composables/useLinkReferences'
     import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
-    import { CITING_TYPES, isHttpUrl, numberLinks } from '@/utils/linkReferences'
+    import { CITING_TYPES, generateLinkKey, isHttpUrl, numberLinks } from '@/utils/linkReferences'
 
     type FormRef = {
         resetValidation?: () => void
@@ -649,6 +904,22 @@
     const showCloseConfirmation = ref<boolean>(false)
     const show_validation_error = ref<boolean>(false)
     const show_error = ref<boolean>(false)
+    // What core said when it refused to create the report (e.g. no GNA number for a CVD Report).
+    const error_message = ref<string>('')
+    // A CVD Report's GCVE identifier (see core's shared.gcve).
+    const gcve_id = ref<string | null>(null)
+    // Where a CVD Report's CVE record stands at CVE Services (core's cve_status), and the actions on it.
+    const cve_status = ref<CveStatus | null>(null)
+    const cve_busy = ref(false)
+    const reject_cve_dialog = ref(false)
+    const reject_cve_reason = ref('')
+    // Where the user's CVD Reports can be published: their organizations with a GNA number (GCVE) or a
+    // CVE Services account (CVE). A CVD Report belongs to one of them (``organization_id``).
+    type CvdOrganization = { id: number; name: string; gna_id: number | null; gna_configured: boolean; cna_configured: boolean }
+    const cvdStatus = ref<{ organizations: CvdOrganization[]; gna_configured: boolean; cna_configured: boolean } | null>(null)
+    const cvd_organization_id = ref<number | null>(null)
+    // The report's organization as core describes it (cvd_organization).
+    const cvd_organization = ref<CvdOrganization | null>(null)
     const key_timeout = ref<any>(null)
     const resync_timer = ref<ReturnType<typeof setTimeout> | null>(null)
     const initialFormState = ref<string | null>(null)
@@ -727,6 +998,89 @@
 
     const spellcheck = computed(() => settingsStore.getSettingBoolean(Settings.SPELLCHECK, true))
 
+    // The shipped CVD Report type (shared.gcve): written in English, and given a GCVE identifier
+    // when it is created - which core refuses while the GNA number is not set.
+    const CVD_TYPE_KEY = 'cvd'
+    const CVD_LANGUAGE = 'en'
+    // The only record type a CVE record is published for (shared.gcve.CVE_RECORD_TYPE).
+    const CVE_RECORD_TYPE = 'advisory'
+    // The Record type the form holds; advisory, its default, while it holds none.
+    function cvdFormRecordType(): string {
+        for (const group of attribute_groups.value) {
+            for (const item of group.attribute_group_items) {
+                if (String(item.attribute_group_item.title ?? '').toLowerCase() !== 'record type') continue
+                const held = item.values.find(
+                    (value: { remote?: boolean; value?: unknown }) => value.remote !== true && String(value.value ?? '').trim()
+                )
+                return held ? String(held.value).trim() : CVE_RECORD_TYPE
+            }
+        }
+        return CVE_RECORD_TYPE
+    }
+    const isCvd = computed<boolean>(() => selected_type.value?.system_key === CVD_TYPE_KEY)
+    watch(isCvd, async (cvd) => {
+        if (!cvd || cvdStatus.value) return
+        try {
+            const response = (await getCvdStatus()) as {
+                data?: { organizations?: CvdOrganization[]; gna_configured: boolean; cna_configured: boolean }
+            }
+            cvdStatus.value = response.data ? { ...response.data, organizations: response.data.organizations ?? [] } : null
+        } catch {
+            cvdStatus.value = null
+        }
+        // Written by the author's only organization that can publish it, unless they pick one.
+        const [only, ...others] = cvdOrganizations.value
+        if (!edit.value && cvd_organization_id.value == null && only && !others.length) {
+            cvd_organization_id.value = only.id
+        }
+    })
+    const cvdOrganizations = computed<CvdOrganization[]>(() => cvdStatus.value?.organizations ?? [])
+    const cvdOrganizationItems = computed(() =>
+        cvdOrganizations.value.map((organization) => ({
+            title: organization.gna_id ? `${organization.name} (GNA ${organization.gna_id})` : organization.name,
+            value: organization.id
+        }))
+    )
+    // Picked when written by a member of several; changed later only while it holds no GCVE or CVE ID.
+    const canPickCvdOrganization = computed<boolean>(() => {
+        if (cvdOrganizations.value.length < 2) return false
+        if (!edit.value) return true
+        return (
+            canModify.value &&
+            !props.readOnly &&
+            !gcve_id.value &&
+            (!cve_status.value || cve_status.value.state === 'REJECTED') &&
+            cvdOrganizations.value.some((organization) => organization.id === cvd_organization_id.value)
+        )
+    })
+    const cvdOrganizationChanged = (organizationId: number | null): void => {
+        if (!edit.value || !report_item.id || organizationId == null) return
+        updateReportItem(report_item.id, { update: true, organization_id: organizationId })
+            .then((response: { data?: { cvd_organization?: CvdOrganization } }) => {
+                cvd_organization.value = response?.data?.cvd_organization ?? cvd_organization.value
+            })
+            .catch(() => {})
+    }
+    const cveStateKey = computed(() => cveStateKeyOf(cve_status.value))
+    const cveColor = computed(() => cveColorOf(cve_status.value))
+    // A CVE record describes a vulnerability: only an advisory gets a CVE ID (core refuses the rest).
+    const canReserveCve = computed<boolean>(
+        () =>
+            canModify.value &&
+            !props.readOnly &&
+            !!cvd_organization.value?.cna_configured &&
+            cvdFormRecordType() === CVE_RECORD_TYPE &&
+            (!cve_status.value || cve_status.value.state === 'REJECTED')
+    )
+    const canRejectCve = computed<boolean>(
+        () =>
+            canModify.value &&
+            !props.readOnly &&
+            !!cvd_organization.value?.cna_configured &&
+            !!cve_status.value &&
+            cve_status.value.state !== 'REJECTED'
+    )
+
     // The report type's languages other than the report's own; all of them while it is not set.
     const variantLanguages = computed<string[]>(() =>
         ((selected_type.value?.languages as string[] | undefined) ?? []).filter((language) => language !== report_language.value)
@@ -794,8 +1148,8 @@
             : t('report_item.translation.source_not_set')
     )
 
-    // Link citations: the text attributes can cite the report's LINK values, numbered as the texts,
-    // read in form order, first cite them.
+    // Link citations: the text attributes can cite the report's LINK values (and a CVD Report's
+    // references), numbered as the texts, read in form order, first cite them.
     const attributeItemsOf = (types: readonly string[]) =>
         attribute_groups.value.flatMap((group) =>
             (group.attribute_group_items || []).filter((item) => types.includes(item.attribute_group_item?.attribute?.type))
@@ -803,7 +1157,7 @@
     const citingTexts = computed(() => attributeItemsOf(CITING_TYPES).flatMap((item) => (item.values || []).map((value) => value.value)))
     const reportLinks = computed(() =>
         numberLinks(
-            attributeItemsOf(['LINK']).flatMap((item) => item.values || []),
+            attributeItemsOf(['LINK', 'REFERENCE']).flatMap((item) => item.values || []),
             citingTexts.value
         )
     )
@@ -827,6 +1181,11 @@
         edit.value = false
         overlay.value = false
         show_error.value = false
+        error_message.value = ''
+        gcve_id.value = null
+        cve_status.value = null
+        cvd_organization_id.value = null
+        cvd_organization.value = null
         field_locks.title = false
         field_locks.title_prefix = false
         selected_type.value = null
@@ -856,6 +1215,7 @@
     const reportSelected = () => {
         attribute_groups.value = []
         expand_group_items.value = []
+        if (isCvd.value) report_language.value = CVD_LANGUAGE
 
         if (!selected_type.value?.attribute_groups) return
 
@@ -920,6 +1280,7 @@
 
         show_validation_error.value = false
         show_error.value = false
+        error_message.value = ''
         overlay.value = true
 
         report_item.report_item_type_id = selected_type.value.id
@@ -959,7 +1320,12 @@
 
         try {
             if (!report_item.id) {
-                const response = await createNewReportItem({ ...report_item, language: report_language.value, tag_ids: report_tags.value })
+                const response = await createNewReportItem({
+                    ...report_item,
+                    language: report_language.value,
+                    tag_ids: report_tags.value,
+                    ...(isCvd.value ? { organization_id: cvd_organization_id.value } : {})
+                })
                 report_item.id = response.data
             }
 
@@ -977,6 +1343,8 @@
             return true
         } catch (error) {
             console.error('Error creating report item:', error)
+            const reason = (error as { response?: { data?: { error?: unknown } } })?.response?.data?.error
+            error_message.value = typeof reason === 'string' ? reason : ''
             show_error.value = true
             overlay.value = false
             return false
@@ -1210,6 +1578,10 @@
                 applyRemoteField('state_id', data.state_id)
             }
 
+            gcve_id.value = data.gcve_id ?? null
+            cve_status.value = data.cve_status ?? null
+            cvd_organization_id.value = data.organization_id ?? null
+            cvd_organization.value = data.cvd_organization ?? null
             // Saved as soon as they change, so a refresh takes them as they are.
             report_language.value = data.language ?? null
             translations.value = data.translations ?? {}
@@ -1489,11 +1861,15 @@
         news_item_aggregates.value = Array.isArray(items) ? [...items] : []
     }
 
-    // Compact attribute types that only need a narrow field, so two can share a row.
-    const HALF_WIDTH_TYPES = ['DATE', 'CWE', 'CVE']
-    const isHalfWidth = (attributeItem) => {
-        const type = attributeItem?.attribute_group_item?.attribute?.type
-        return HALF_WIDTH_TYPES.includes(type)
+    // Two neighbouring compact attributes (dates, CVE, CWE) share a row; one on its own does not.
+    const halfWidthItems = computed(() => halfWidthItemIds(attribute_groups.value))
+    const isHalfWidth = (attributeItem) => halfWidthItems.value.has(attributeItem?.attribute_group_item?.id)
+
+    // Required fields (min occurrence 1 or more) without the values they need, in form order.
+    const missingRequired = computed(() => emptyRequiredFields(attribute_groups.value))
+    const missingRequiredIds = computed(() => new Set(missingRequired.value.map((field) => field.id)))
+    const scrollToField = (fieldId) => {
+        document.querySelector(`[data-field-id="${fieldId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
 
     // Label-only attributes hold no values, so the panel shows its title and nothing else.
@@ -1611,6 +1987,206 @@
         const defaultState = available_states.value.find((state) => state.is_default)
         if (defaultState) {
             report_item.state_id = defaultState.id
+        }
+    }
+
+    // A report type that is switched off is not offered for a new report; one already written keeps it.
+    const enabledReportTypes = computed(() => report_types.value.filter((type) => type.enabled !== false))
+
+    type CveResponse = { data?: { cve_status?: CveStatus | null } }
+    type ApiErrorResponse = { response?: { data?: { error?: string } } }
+    const notifyCveError = (error: unknown): void => {
+        const message = (error as ApiErrorResponse)?.response?.data?.error
+        const detail = message ? { type: 'error', message } : { type: 'error', loc: 'gna.cve.failed' }
+        window.dispatchEvent(new CustomEvent('notification', { detail }))
+    }
+
+    // Reserve a CVE ID now (to share it before disclosure); it lands in the report's CVE field.
+    const reserveCve = async (): Promise<void> => {
+        if (!report_item.id) return
+        cve_busy.value = true
+        try {
+            const response = (await reserveCveId(report_item.id)) as CveResponse
+            cve_status.value = response.data?.cve_status ?? null
+            await showDetail({ id: report_item.id }, false)
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: 'gna.cve.reserved', params: { id: cve_status.value?.cve_id ?? '' } }
+                })
+            )
+        } catch (error) {
+            notifyCveError(error)
+        } finally {
+            cve_busy.value = false
+        }
+    }
+
+    const openRejectCve = (): void => {
+        reject_cve_reason.value = ''
+        reject_cve_dialog.value = true
+    }
+
+    // Reject the CVE ID at CVE Services, with the reason given; the CVE field is freed.
+    const rejectCve = async (): Promise<void> => {
+        if (!report_item.id || !reject_cve_reason.value.trim()) return
+        cve_busy.value = true
+        try {
+            const response = (await rejectCveId(report_item.id, reject_cve_reason.value.trim())) as CveResponse
+            cve_status.value = response.data?.cve_status ?? null
+            reject_cve_dialog.value = false
+            await showDetail({ id: report_item.id }, false)
+            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'gna.cve.rejected' } }))
+        } catch (error) {
+            notifyCveError(error)
+        } finally {
+            cve_busy.value = false
+        }
+    }
+
+    // Filling a CVD Report from a CVE's published record (core's managers.cve_import): a field that
+    // holds something stays as it is. A report being written is filled here, a saved one by core.
+    const CVE_ID_PATTERN = /^CVE-[0-9]{4}-[0-9]{4,19}$/i
+    const CVE_FIELD_KEY = 'cve'
+    // Values of these types carry a citation key in value_description.
+    const LINK_ATTRIBUTE_TYPES = new Set(['LINK', 'REFERENCE'])
+    type ImportedValue = { value: string; value_description: string | null }
+    type CvdImport = { cve_id: string; title: string | null; fields: Record<string, ImportedValue[]>; skipped: string[] }
+    type CvdFillResult = { filled: string[]; kept: string[]; skipped: string[] }
+    type FormValue = { id?: number; index?: number; value?: unknown; value_description?: unknown; remote?: boolean; [key: string]: unknown }
+    const cvd_fill_dialog = ref(false)
+    const cvd_fill_cve = ref('')
+    const cvd_fill_busy = ref(false)
+    // The key a CVD field is known by (shared.gcve's CvdField.key).
+    const fieldKey = (title: unknown): string =>
+        String(title ?? '')
+            .toLowerCase()
+            .replaceAll(' ', '_')
+    const ownValues = (item: { values: FormValue[] }): FormValue[] => item.values.filter((value) => value.remote !== true)
+    // The CVE the report's CVE field holds; a report holding one is filled from that one.
+    const cvdFieldCve = computed<string>(() => {
+        for (const group of attribute_groups.value) {
+            for (const item of group.attribute_group_items) {
+                if (fieldKey(item.attribute_group_item.title) !== CVE_FIELD_KEY) continue
+                const held = ownValues(item).find((value) => String(value.value ?? '').trim())
+                if (held) return String(held.value).trim()
+            }
+        }
+        return ''
+    })
+    const canFillFromCve = computed<boolean>(() => isCvd.value && canModify.value && !props.readOnly)
+
+    // Fields only the GCVE record carries (its x_gcve): shown when the report's organization has a
+    // GNA, marked as GCVE-only; a CVE record has no such fields of its own.
+    const GCVE_ONLY_FIELDS = new Set(['record_type', 'related_records'])
+    // The name of the record format, not a word to translate.
+    const GCVE_LABEL = 'GCVE'
+    const cvdTarget = computed<CvdOrganization | null>(() =>
+        edit.value
+            ? cvd_organization.value
+            : (cvdOrganizations.value.find((organization) => organization.id === cvd_organization_id.value) ?? null)
+    )
+    const cvdPublishesGcve = computed<boolean>(() => cvdTarget.value?.gna_configured ?? true)
+    const isGcveOnlyField = (item: { attribute_group_item: { title?: unknown } }): boolean =>
+        isCvd.value && GCVE_ONLY_FIELDS.has(fieldKey(item.attribute_group_item.title))
+    const hiddenCvdField = (item: { attribute_group_item: { title?: unknown } }): boolean => isGcveOnlyField(item) && !cvdPublishesGcve.value
+    const cvdFillCveValid = computed<boolean>(() => CVE_ID_PATTERN.test(cvd_fill_cve.value.trim()))
+    const openCvdFill = (): void => {
+        cvd_fill_cve.value = cvdFieldCve.value
+        cvd_fill_dialog.value = true
+    }
+
+    // The citation keys the report's links already use, so a new reference gets one of its own.
+    const takenLinkKeys = (): string[] =>
+        attribute_groups.value.flatMap((group) =>
+            group.attribute_group_items
+                .filter((item: any) => LINK_ATTRIBUTE_TYPES.has(item.attribute_group_item.attribute?.type))
+                .flatMap((item: any) => item.values.map((value: FormValue) => String(value.value_description ?? '')).filter(Boolean))
+        )
+
+    // A report being written: its empty fields take the record's values, in the empty values they
+    // start with first, then in new ones; an empty title takes the record's.
+    const fillLocally = (imported: CvdImport): CvdFillResult => {
+        const filled: string[] = []
+        const kept: string[] = []
+        for (const group of attribute_groups.value) {
+            for (const item of group.attribute_group_items) {
+                const definition = item.attribute_group_item
+                const incoming = imported.fields[fieldKey(definition.title)]
+                if (!incoming?.length) continue
+                const type = definition.attribute?.type
+                const own = ownValues(item)
+                if (own.some((value) => hasContent(value as never, type))) {
+                    kept.push(definition.title)
+                    continue
+                }
+                const empty = [...own]
+                for (const entry of incoming) {
+                    const isLink = LINK_ATTRIBUTE_TYPES.has(type)
+                    const target = empty.shift()
+                    if (target) {
+                        target.value = entry.value
+                        target.value_description = entry.value_description ?? (isLink ? target.value_description : '') ?? ''
+                    } else {
+                        item.values.push({
+                            id: -1,
+                            index: item.values.length,
+                            value: entry.value,
+                            value_description: entry.value_description ?? (isLink ? generateLinkKey(takenLinkKeys()) : ''),
+                            user: null
+                        })
+                    }
+                }
+                filled.push(definition.title)
+            }
+        }
+        if (imported.title && !String(report_item.title ?? '').trim()) {
+            report_item.title = imported.title
+        }
+        return { filled, kept, skipped: imported.skipped ?? [] }
+    }
+
+    const notifyFilled = (cveId: string, result: CvdFillResult): void => {
+        const params = { cve: cveId, filled: result.filled.length, kept: result.kept.length, skipped: result.skipped.length }
+        const loc = !result.filled.length
+            ? 'report_item.cvd_fill.nothing'
+            : result.skipped.length
+              ? 'report_item.cvd_fill.done_skipped'
+              : 'report_item.cvd_fill.done'
+        const type = result.filled.length ? (result.skipped.length ? 'warning' : 'success') : 'info'
+        window.dispatchEvent(new CustomEvent('notification', { detail: { type, loc, params } }))
+    }
+
+    const fillFromCve = async (): Promise<void> => {
+        if (!cvdFillCveValid.value || cvd_fill_busy.value) return
+        const cveId = cvd_fill_cve.value.trim().toUpperCase()
+        cvd_fill_busy.value = true
+        try {
+            if (edit.value && report_item.id) {
+                const response = (await fillCvdFromCve(report_item.id, cveId)) as { data: CvdFillResult }
+                cvd_fill_dialog.value = false
+                await showDetail({ id: report_item.id }, false)
+                notifyFilled(cveId, response.data)
+            } else {
+                const response = (await getCveRecordCvd(cveId)) as { data: CvdImport }
+                cvd_fill_dialog.value = false
+                notifyFilled(cveId, fillLocally(response.data))
+            }
+        } catch (error) {
+            const message = (error as ApiErrorResponse)?.response?.data?.error
+            const detail = message ? { type: 'error', message } : { type: 'error', loc: 'report_item.cvd_fill.failed' }
+            window.dispatchEvent(new CustomEvent('notification', { detail }))
+        } finally {
+            cvd_fill_busy.value = false
+        }
+    }
+
+    const copyGcveId = async () => {
+        if (!gcve_id.value) return
+        try {
+            await navigator.clipboard.writeText(gcve_id.value)
+            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'success', loc: 'gna.gcve_id_copied' } }))
+        } catch (error) {
+            console.error('Could not copy the GCVE identifier:', error)
         }
     }
 
@@ -1850,10 +2426,53 @@
         justify-content: flex-start;
     }
 
+    /* The 8px gap is the only space between the attributes: an open panel's own margins
+       would add 16px above and below it. */
+    .items.v-expansion-panels > :deep(.v-expansion-panel.v-expansion-panel--active) {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .required-mark {
+        margin-inline-start: 4px;
+        color: rgb(var(--v-theme-error));
+    }
+
+    /* A required field still empty: its frame in the error colour. */
+    .items.v-expansion-panels > :deep(.item-panel--missing.v-expansion-panel) {
+        border-color: rgb(var(--v-theme-error)) !important;
+    }
+
     .item-panel--half {
         flex: 1 1 calc(50% - 4px);
         max-width: calc(50% - 4px);
         border-radius: 4px;
+    }
+
+    .report-sources {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 8px 0 12px;
+    }
+
+    /* Compact panels: a title row of 44px, and little padding around the values. */
+    .group-panel > :deep(.v-expansion-panel-title) {
+        min-height: 48px;
+        padding: 12px 16px;
+    }
+
+    .group-panel > :deep(.v-expansion-panel-text > .v-expansion-panel-text__wrapper) {
+        padding: 8px 12px 12px;
+    }
+
+    .item-panel > :deep(.v-expansion-panel-title) {
+        min-height: 44px;
+        padding: 8px 16px;
+    }
+
+    .item-panel > :deep(.v-expansion-panel-text > .v-expansion-panel-text__wrapper) {
+        padding: 8px 16px 12px;
     }
 
     :deep(.v-expansion-panel-title) {

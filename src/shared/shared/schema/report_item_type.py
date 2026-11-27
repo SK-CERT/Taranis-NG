@@ -203,6 +203,10 @@ class ReportItemTypeBaseSchema(Schema):
     translation_ai_provider_id = fields.Int(allow_none=True, load_default=None)
     label_language = fields.Str(allow_none=True, load_default=None)
     translations = fields.Dict(keys=fields.Str(), values=fields.Dict(keys=fields.Str(), values=fields.Str()), load_default=dict)
+    # Whether new reports can be written with it; a shipped one (system_key set) is locked.
+    enabled = fields.Bool(load_default=True)
+    system_key = fields.Str(dump_only=True, allow_none=True)
+    locked = fields.Bool(dump_only=True)
     # The labels in the language rendered (presenter input only).
     label = fields.Str(load_default=None, allow_none=True)
     description_label = fields.Str(load_default=None, allow_none=True)
@@ -247,6 +251,7 @@ class ReportItemType:
         label: str | None = None,
         description_label: str | None = None,
         icon: str | None = None,
+        enabled: bool = True,
     ) -> None:
         """Initialize a ReportItemType instance.
 
@@ -262,6 +267,7 @@ class ReportItemType:
             label (str): The name in the language asked for; set when rendering, never stored.
             description_label (str): The description in the language asked for; set when rendering.
             icon (str): The MDI icon it and its reports show; None for the default one.
+            enabled (bool): Whether new reports can be written with it.
         """
         self.id = id
         self.title = title
@@ -274,6 +280,7 @@ class ReportItemType:
         self.label = label
         self.description_label = description_label
         self.icon = icon
+        self.enabled = enabled
 
 
 class ReportItemTypeIdSchema(Schema):

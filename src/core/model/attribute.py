@@ -360,7 +360,17 @@ class Attribute(db.Model):
         "AttributeEnum",
         primaryjoin=and_(
             id == AttributeEnum.attribute_id,  # noqa: A003
-            or_(type == AttributeType.RADIO, type == AttributeType.ENUM, type == AttributeType.MULTI_CHOICE),  # noqa: A003
+            # The structured CVD types draw their vocabulary (roles, relationship types,
+            # reference tags, version statuses) from their constants too.
+            or_(
+                type == AttributeType.RADIO,  # noqa: A003
+                type == AttributeType.ENUM,  # noqa: A003
+                type == AttributeType.MULTI_CHOICE,  # noqa: A003
+                type == AttributeType.AFFECTED,  # noqa: A003
+                type == AttributeType.CREDIT,  # noqa: A003
+                type == AttributeType.RELATIONSHIP,  # noqa: A003
+                type == AttributeType.REFERENCE,  # noqa: A003
+            ),
         ),
         back_populates="attribute",
         lazy="subquery",
@@ -418,6 +428,12 @@ class Attribute(db.Model):
             AttributeType.CWE: "mdi-shield-alert",
             AttributeType.CVSS: "mdi-counter",
             AttributeType.MULTI_CHOICE: "mdi-checkbox-multiple-marked-outline",
+            AttributeType.AFFECTED: "mdi-package-variant-closed",
+            AttributeType.CREDIT: "mdi-account-star-outline",
+            AttributeType.TIMELINE: "mdi-timeline-clock-outline",
+            AttributeType.RELATIONSHIP: "mdi-link-variant",
+            AttributeType.REFERENCE: "mdi-bookmark-outline",
+            AttributeType.JSON: "mdi-code-json",
         }
         self.tag = switcher.get(self.type, "mdi-textbox")
 
@@ -526,6 +542,27 @@ class Attribute(db.Model):
         attribute.validator = updated_attribute.validator
         attribute.validator_parameter = updated_attribute.validator_parameter
         db.session.commit()
+
+    @classmethod
+    def shipped_type_using(cls, attribute_id: int) -> str | None:
+        """The title of a report type Taranis ships (locked) built on this attribute, if there is one.
+
+        Such an attribute and its constants cannot be changed: the shipped type relies on them. The
+        CVE and CWE attributes, which hold the imported dictionaries, stay editable.
+        """
+        from model.report_item_type import AttributeGroup, AttributeGroupItem, ReportItemType  # noqa: PLC0415
+
+        attribute = db.session.get(cls, attribute_id)
+        if attribute is None or attribute.type in (AttributeType.CVE, AttributeType.CWE):
+            return None
+        row = (
+            db.session.query(ReportItemType.title)
+            .join(AttributeGroup, AttributeGroup.report_item_type_id == ReportItemType.id)
+            .join(AttributeGroupItem, AttributeGroupItem.attribute_group_id == AttributeGroup.id)
+            .filter(AttributeGroupItem.attribute_id == attribute_id, ReportItemType.system_key.isnot(None))
+            .first()
+        )
+        return row[0] if row else None
 
     @classmethod
     # `id` shadows the builtin; it is part of this classmethod's existing call signature.

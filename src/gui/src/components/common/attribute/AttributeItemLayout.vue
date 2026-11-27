@@ -1,65 +1,59 @@
 <template>
-    <!-- Inner rows must be w-100: without a width, each row's flex-basis is its content's
-         max-content size, so rows can end up sharing a flex line (off-center content) and the
-         content width tracks text length (layout jumps when values change). -->
-    <v-row
-        justify="center"
-        class="attribute-item-layout pt-1"
-    >
-        <v-row class="w-100">
-            <slot name="header">
-                <v-row justify="center">
-                    <!-- SORT -->
-                    <v-chip-group
-                        v-if="values.length > 1"
-                        active-class="success"
-                        color=""
-                        class="pe-4"
+    <!-- One column: the sort chips (only with several values), the values, the add button.
+         Plain flex boxes rather than v-rows: Vuetify 4 puts a 24px gap between sibling rows,
+         which left most of every attribute empty. -->
+    <div class="attribute-item-layout">
+        <slot name="header">
+            <div
+                v-if="values.length > 1"
+                class="attribute-item-layout__sort"
+            >
+                <v-chip-group
+                    active-class="success"
+                    color=""
+                >
+                    <v-chip
+                        size="small"
+                        :title="t('report_item.tooltip.sort_time')"
+                        @click="sort(false)"
                     >
-                        <v-chip
-                            class="me-1"
-                            :title="t('report_item.tooltip.sort_time')"
-                            @click="sort(false)"
-                        >
-                            <v-icon class="px-1">
-                                {{ ICONS.CLOCK }}
-                            </v-icon>
-                        </v-chip>
-                        <v-chip
-                            class="me-1"
-                            :title="t('report_item.tooltip.sort_user')"
-                            @click="sort(true, currentUserName)"
-                        >
-                            <v-icon class="px-1">
-                                {{ ICONS.ACCOUNT }}
-                            </v-icon>
-                        </v-chip>
-                    </v-chip-group>
-                </v-row>
-            </slot>
-        </v-row>
-        <v-row class="ms-0 me-4 w-100">
+                        <v-icon>
+                            {{ ICONS.CLOCK }}
+                        </v-icon>
+                    </v-chip>
+                    <v-chip
+                        size="small"
+                        :title="t('report_item.tooltip.sort_user')"
+                        @click="sort(true, currentUserName)"
+                    >
+                        <v-icon>
+                            {{ ICONS.ACCOUNT }}
+                        </v-icon>
+                    </v-chip>
+                </v-chip-group>
+            </div>
+        </slot>
+        <div class="attribute-item-layout__values">
             <slot name="content" />
-        </v-row>
-        <v-row class="ms-3 me-5 w-100">
-            <slot
-                name="footer"
-                class="pe-0"
+        </div>
+        <slot name="footer">
+            <div
+                v-if="addButton"
+                class="attribute-item-layout__add"
             >
                 <v-btn
-                    v-if="addButton"
-                    variant="flat"
+                    variant="text"
                     size="small"
-                    block
-                    class="mt-1"
+                    color="primary"
+                    :prepend-icon="ICONS.PLUS"
                     :title="t('report_item.tooltip.add_value')"
                     @click="handleAdd"
                 >
-                    <v-icon>{{ ICONS.PLUS }}</v-icon>
+                    {{ t('attribute.add_value') }}
                 </v-btn>
-            </slot>
-        </v-row>
-    </v-row>
+            </div>
+        </slot>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -133,10 +127,36 @@
 
 <style scoped>
     .attribute-item-layout {
-        padding-inline-start: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
     }
 
-    .attribute-item-layout :deep(.v-chip-group) {
+    /* Each value takes the whole width: a value sized to its content would make the editors
+       and fields change width as their text changes. */
+    .attribute-item-layout__values {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .attribute-item-layout__values > :deep(*) {
+        width: 100%;
+    }
+
+    .attribute-item-layout__sort {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .attribute-item-layout__sort :deep(.v-chip-group) {
         gap: 4px;
+        padding: 0;
+    }
+
+    .attribute-item-layout__add {
+        display: flex;
     }
 </style>

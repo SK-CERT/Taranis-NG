@@ -32,6 +32,8 @@
                             :ref="(editor) => setEditor(index, editor)"
                             v-model="value.value"
                             :placeholder="t('report_item.enter_rich_text')"
+                            min-height="120px"
+                            max-height="480px"
                             :citations="references.enabled ? citations : null"
                             @focus="onFocus(index)"
                             @blur="onBlur(index)"
@@ -150,6 +152,11 @@
 </script>
 
 <style scoped>
+    /* The editor takes the whole width of the attribute, whatever its text. */
+    .value-holder {
+        width: 100%;
+    }
+
     .line-clamp-4 {
         display: -webkit-box;
         -webkit-line-clamp: 4;
