@@ -190,6 +190,7 @@
         "username_collision": "Ein Konto mit diesem Benutzernamen ist bereits vorhanden. Bitten Sie Ihren Administrator, diese Identität damit zu verknüpfen.",
         "account_not_linked": "Diese Identität ist mit keinem Konto verknüpft. Wenden Sie sich an Ihren Administrator.",
         "domain_not_allowed": "Ihre E-Mail-Domain ist nicht für die Registrierung zugelassen. Wenden Sie sich an Ihren Administrator.",
+        "idp_not_authoritative": "Der Anmeldedienst Ihrer Organisation kann für dieses Konto nicht verwendet werden. Wenden Sie sich an Ihren Administrator.",
         "auth_cancelled": "Die Anmeldung wurde abgebrochen. Versuchen Sie es erneut.",
         "provider_misconfigured": "Diese Anmeldemethode ist falsch konfiguriert. Wenden Sie sich an Ihren Administrator.",
         "totp_invalid": "Ungültiger Authentifizierungscode.",

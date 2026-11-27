@@ -608,12 +608,15 @@ class SamlAcs(Resource):
         if not saml_response:
             return _login_error_redirect(goto_url, "auth_failed")
 
-        identity = authenticator.handle_response(
-            saml_response,
-            relay_state.get("request_id"),
-            relay_state.get("acs_url"),
-            relay_state.get("idp_entity_id"),
-        )
+        try:
+            identity = authenticator.handle_response(
+                saml_response,
+                relay_state.get("request_id"),
+                relay_state.get("acs_url"),
+                relay_state.get("idp_entity_id"),
+            )
+        except saml_authenticator.ScopeMismatchError:
+            return _login_error_redirect(goto_url, "scope_mismatch")
         if not identity:
             return _login_error_redirect(goto_url, "auth_failed")
 

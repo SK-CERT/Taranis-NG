@@ -261,6 +261,18 @@ describe('NewAuthProvider dialog', () => {
         expect(warning.text()).toContain('LDAP traffic is not protected by TLS')
     })
 
+    it('does not warn about LDAP TLS for an ldaps:// URL, which is always TLS', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: { server_url: 'LDAPS://ldap.example.org', use_tls: false, user_dn_template: 'uid={username},dc=x' }
+        })
+
+        expect(wrapper.vm.insecureConfigurationWarnings.join(' ')).not.toContain('LDAP traffic is not protected by TLS')
+    })
+
     it('warns about unencrypted authentication endpoints', async () => {
         const wrapper = await mountDialog()
         await openEdit(wrapper, {
@@ -596,6 +608,39 @@ describe('NewAuthProvider dialog', () => {
 
         expect(config.use_tls).toBe(false)
         expect(config.server_url).toBe('ldaps://ldap.example.org')
+    })
+
+    it('keeps TLS for a stored LDAP config without use_tls, as the login reads it', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: { server_url: 'ldap://ldap.example.org', user_dn_template: 'uid={username},dc=x', ca_cert: 'PEM' }
+        })
+
+        const config = wrapper.vm.buildConfig()
+
+        expect(config.use_tls).toBe(true)
+        expect(config.ca_cert).toBe('PEM')
+        expect(wrapper.vm.insecureConfigurationWarnings).toEqual([])
+    })
+
+    it('keeps the CA certificate of an ldaps:// URL with the TLS switch off', async () => {
+        const wrapper = await mountDialog()
+        await openEdit(wrapper, {
+            ...SAML_PROVIDER,
+            id: 4,
+            kind: 'ldap',
+            config: {
+                server_url: 'ldaps://ldap.example.org',
+                use_tls: false,
+                ca_cert: '-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----',
+                user_dn_template: 'uid={username},dc=x'
+            }
+        })
+
+        expect(wrapper.vm.buildConfig().ca_cert).toContain('BEGIN CERTIFICATE')
     })
 
     it('does not send a hidden CA certificate when TLS is disabled', async () => {
@@ -954,6 +999,20 @@ describe('LDAP provider fields', () => {
         const caField = wrapper.findComponent({ name: 'VTextarea' })
         expect(caField.exists()).toBe(true)
         expect(caField.props('label')).toContain('optional')
+    })
+
+    it('shows TLS on for a config that does not say', () => {
+        const wrapper = mountWithPlugins(LdapFields, { props: { config: { server_url: 'ldap://ldap.example.org' }, saving: false } })
+
+        expect(wrapper.vm.useTls).toBe(true)
+        expect(wrapper.find('[data-test="ldap-ca-certificate"]').exists()).toBe(true)
+    })
+
+    it('shows the CA input for an ldaps:// URL even with the TLS switch off', () => {
+        const config = { use_tls: false, server_url: 'ldaps://ldap.example.org' }
+        const wrapper = mountWithPlugins(LdapFields, { props: { config, saving: false } })
+
+        expect(wrapper.find('[data-test="ldap-ca-certificate"]').exists()).toBe(true)
     })
 
     it('keeps both bind modes visible and wires Direct bind help to a real tooltip', async () => {

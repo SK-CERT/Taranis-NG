@@ -185,6 +185,16 @@ describe('Login page', () => {
         expect(wrapper.find('[data-test="login-error"]').text()).toContain('awaiting administrator approval')
     })
 
+    it.each(['scope_mismatch', 'idp_mismatch'])('warns that the organization cannot sign in to the account (%s)', async (code) => {
+        routeQuery = { login_error: code }
+        const { wrapper } = await mountLogin()
+
+        expect(wrapper.vm.alertType).toBe('warning')
+        expect(wrapper.find('[data-test="login-error"]').text()).toContain(
+            "Your organization's sign-in service cannot be used for this account"
+        )
+    })
+
     // ── MFA step ──────────────────────────────────
     it('switches to the MFA step when the backend demands a second factor', async () => {
         const { wrapper, authStore } = await mountLogin()

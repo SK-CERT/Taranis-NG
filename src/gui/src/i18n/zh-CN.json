@@ -190,6 +190,7 @@
         "username_collision": "已存在使用此用户名的账户。请让管理员将此身份与该账户关联。",
         "account_not_linked": "此身份未与任何账户关联。请联系管理员。",
         "domain_not_allowed": "您的电子邮件域名不允许注册。请联系管理员。",
+        "idp_not_authoritative": "您所在组织的登录服务不能用于此账户。请联系管理员。",
         "auth_cancelled": "登录已取消。请重试。",
         "provider_misconfigured": "此登录方式配置有误。请联系管理员。",
         "totp_invalid": "身份验证代码无效。",

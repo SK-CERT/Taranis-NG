@@ -190,6 +190,7 @@
         "username_collision": "Er bestaat al een account met deze gebruikersnaam. Vraag uw beheerder om deze identiteit eraan te koppelen.",
         "account_not_linked": "Deze identiteit is niet aan een account gekoppeld. Neem contact op met uw beheerder.",
         "domain_not_allowed": "Uw e-maildomein mag zich niet registreren. Neem contact op met uw beheerder.",
+        "idp_not_authoritative": "De inlogdienst van uw organisatie kan niet voor dit account worden gebruikt. Neem contact op met uw beheerder.",
         "auth_cancelled": "Het aanmelden is geannuleerd. Probeer het opnieuw.",
         "provider_misconfigured": "Deze inlogmethode is verkeerd geconfigureerd. Neem contact op met uw beheerder.",
         "totp_invalid": "Ongeldige authenticatiecode.",

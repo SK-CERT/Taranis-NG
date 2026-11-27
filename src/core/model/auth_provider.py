@@ -511,6 +511,10 @@ class AuthProviderRole(db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey("role.id", ondelete="CASCADE"), primary_key=True)
 
 
+class IdentityIssuerMismatchError(Exception):
+    """An identity link is bound to another identity provider than the one vouching now."""
+
+
 class UserAuthIdentity(db.Model):
     """Link between a local user account and an identity at an authentication provider.
 
@@ -524,6 +528,9 @@ class UserAuthIdentity(db.Model):
         external_username (str): Username at the provider (admin-enterable).
         external_id (str): Stable identifier at the provider (OIDC ``sub`` /
             LDAP DN), backfilled at first login.
+        issuer (str): The SAML IdP entityID that vouched for the identity. A SAML
+            provider in federation mode stands for many IdPs, and the link only
+            ever works through the IdP it is bound to.
         created_at (datetime): When the link was created.
         last_login_at (datetime): Last successful login through this identity.
     """
@@ -533,6 +540,7 @@ class UserAuthIdentity(db.Model):
     auth_provider_id = db.Column(db.Integer, db.ForeignKey("auth_provider.id", ondelete="CASCADE"), nullable=False)
     external_username = db.Column(db.String(), nullable=False)
     external_id = db.Column(db.String(), nullable=True)
+    issuer = db.Column(db.String(), nullable=True)
     created_at = db.Column(db.DateTime)
     last_login_at = db.Column(db.DateTime)
 
@@ -550,30 +558,99 @@ class UserAuthIdentity(db.Model):
     user = db.relationship("User", back_populates="auth_identities")
     provider = db.relationship("AuthProvider")
 
-    def __init__(self, user_id: int | None, auth_provider_id: int, external_username: str, external_id: str | None = None) -> None:
+    def __init__(
+        self,
+        user_id: int | None,
+        auth_provider_id: int,
+        external_username: str,
+        external_id: str | None = None,
+        issuer: str | None = None,
+    ) -> None:
         """Create a new identity link."""
         self.user_id = user_id
         self.auth_provider_id = auth_provider_id
         self.external_username = external_username
         self.external_id = external_id
+        self.issuer = issuer
         self.created_at = datetime.now(TZ)
 
+    @staticmethod
+    def binds_issuer(provider: AuthProvider) -> bool:
+        """Tell whether the provider's identity links are bound to the IdP that created them.
+
+        Only a SAML provider in federation mode stands for more than one identity
+        provider; every other provider has one issuer, chosen by the administrator.
+
+        Args:
+            provider (AuthProvider): The provider.
+
+        Returns:
+            bool: True for a SAML provider in federation mode.
+        """
+        from auth.saml_federation import is_federation_mode  # noqa: PLC0415 - avoid an import cycle at module load
+
+        return provider.kind == "saml" and is_federation_mode(provider.config)
+
     @classmethod
-    def find_by_external(cls, provider_id: int, external_id: str | None, external_username: str | None) -> UserAuthIdentity | None:
+    def find_by_external(
+        cls,
+        provider_id: int,
+        external_id: str | None,
+        external_username: str | None,
+        issuer: str | None = None,
+        *,
+        bind_issuer: bool = False,
+        scoped: bool = False,
+    ) -> UserAuthIdentity | None:
         """Find the identity matching an externally authenticated subject.
 
         Matches by (provider, external_id) first; falls back to
         (provider, external_username) only when the stored identity has no
         conflicting external_id, in which case the external_id is backfilled.
 
+        With ``bind_issuer`` (see :meth:`binds_issuer`) a match is only accepted
+        from the IdP the link is bound to. A link from before issuers were recorded
+        (or entered by an administrator) has none yet: it is bound by the first
+        login whose *scoped* username - already checked against the IdP's
+        federation scopes - equals its external_username, and refused otherwise.
+        Without ``bind_issuer`` the issuer is only recorded.
+
         Args:
             provider_id (int): The authentication provider ID.
             external_id (str): Stable subject identifier from the provider.
             external_username (str): Username reported by the provider.
+            issuer (str): The IdP that vouched for the subject.
+            bind_issuer (bool): Refuse a link bound to another issuer.
+            scoped (bool): ``external_username`` passed the issuer's scope check.
 
         Returns:
             UserAuthIdentity: The matching identity or None.
+
+        Raises:
+            IdentityIssuerMismatchError: When the matching link belongs to another IdP.
+                It is never a "no match": provisioning must not run either.
         """
+        identity = cls._match(provider_id, external_id, external_username)
+        if identity is None:
+            return None
+        if bind_issuer and not cls._issuer_accepted(identity, issuer, external_username, scoped=scoped):
+            msg = f"identity link {identity.id} is bound to '{identity.issuer}', not to '{issuer}'"
+            raise IdentityIssuerMismatchError(msg)
+        changed = False
+        if external_id and not identity.external_id:
+            identity.external_id = external_id
+            changed = True
+        if issuer and identity.issuer != issuer:
+            # bound: only ever a backfill of a link without an issuer
+            identity.issuer = issuer
+            changed = True
+        if changed:
+            db.session.commit()
+        return identity
+
+    @classmethod
+    def _match(cls, provider_id: int, external_id: str | None, external_username: str | None) -> UserAuthIdentity | None:
+        """The link matching the subject by external_id, else by a username without a conflicting id."""
         if external_id:
             identity = cls.query.filter_by(auth_provider_id=provider_id, external_id=external_id).first()
             if identity:
@@ -581,11 +658,15 @@ class UserAuthIdentity(db.Model):
         if external_username:
             identity = cls.query.filter_by(auth_provider_id=provider_id, external_username=external_username).first()
             if identity and (not identity.external_id or identity.external_id == external_id):
-                if external_id and not identity.external_id:
-                    identity.external_id = external_id
-                    db.session.commit()
                 return identity
         return None
+
+    @staticmethod
+    def _issuer_accepted(identity: UserAuthIdentity, issuer: str | None, external_username: str | None, *, scoped: bool) -> bool:
+        """Tell whether ``issuer`` may log in through a link of a provider that binds issuers."""
+        if identity.issuer:
+            return identity.issuer == issuer
+        return bool(issuer and scoped and external_username and identity.external_username == external_username)
 
     @classmethod
     def count_for_provider(cls, provider_id: int) -> int:

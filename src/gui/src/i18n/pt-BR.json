@@ -190,6 +190,7 @@
         "username_collision": "Já existe uma conta com este nome de usuário. Peça ao administrador para vincular esta identidade a ela.",
         "account_not_linked": "Esta identidade não está vinculada a nenhuma conta. Entre em contato com o administrador.",
         "domain_not_allowed": "Seu domínio de e-mail não tem permissão para se cadastrar. Entre em contato com o administrador.",
+        "idp_not_authoritative": "O serviço de login da sua organização não pode ser usado para esta conta. Entre em contato com o administrador.",
         "auth_cancelled": "O login foi cancelado. Tente novamente.",
         "provider_misconfigured": "Este método de login está configurado incorretamente. Contate o administrador.",
         "totp_invalid": "Código de autenticação inválido.",

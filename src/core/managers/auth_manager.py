@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     import Flask
+    from auth.base_authenticator import ExternalIdentity
     from shared.time_manager import SchedulerManager
 
 import os
@@ -34,7 +35,7 @@ from jwt.exceptions import InvalidTokenError
 from managers import ip_allowlist, log_manager, login_throttle, notification_manager, totp_manager, webauthn_manager
 from managers.db_manager import db
 from model.apikey import ApiKey
-from model.auth_provider import FORM_KINDS, OAUTH_KINDS, AuthProvider, UserAuthIdentity
+from model.auth_provider import FORM_KINDS, OAUTH_KINDS, AuthProvider, IdentityIssuerMismatchError, UserAuthIdentity
 from model.bots_node import BotsNode
 from model.collectors_node import CollectorsNode
 from model.news_item import NewsItem
@@ -377,7 +378,7 @@ def _finalize_login(provider: AuthProvider | None, user: User, *, passkey_used: 
     return BaseAuthenticator.generate_jwt(user)
 
 
-def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[dict, HTTPStatus]:
+def provision_and_issue_jwt(provider: AuthProvider, identity: ExternalIdentity) -> tuple[dict, HTTPStatus]:
     """Resolve an externally authenticated identity to a local user and issue the JWT.
 
     Matching order: existing identity link (by external id, then external
@@ -400,6 +401,10 @@ def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[d
     """
     try:
         return _provision_and_issue_jwt(provider, identity)
+    except IdentityIssuerMismatchError as ex:
+        # a concurrent login through another IdP of the federation won the race for this identity
+        db.session.rollback()
+        return _identity_of_another_idp(provider, identity, ex)
     except Exception as ex:
         db.session.rollback()
         log_manager.store_auth_error_activity(f"Provisioning of '{identity.username}' via provider '{provider.name}' failed", ex)
@@ -429,7 +434,27 @@ def _is_orphaned_account(user: User) -> bool:
     return not (user.password or user.auth_identities or user.webauthn_credentials)
 
 
-def _provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[dict, HTTPStatus]:
+def _identity_of_another_idp(provider: AuthProvider, identity: ExternalIdentity, error: Exception) -> tuple[dict, HTTPStatus]:
+    """Refuse a login whose identity link is bound to another IdP of the federation.
+
+    Args:
+        provider (AuthProvider): The provider the subject authenticated against.
+        identity (ExternalIdentity): The externally authenticated identity.
+        error (Exception): The mismatch, with both issuers.
+
+    Returns:
+        tuple: The IDP_MISMATCH error response.
+    """
+    log_manager.store_auth_error_activity(
+        f"Identity '{identity.username}' asserted by '{identity.issuer}' refused by provider '{provider.name}': {error}",
+    )
+    return BaseAuthenticator.generate_error_code(
+        "This account signs in through another organization. Contact your administrator.",
+        "IDP_MISMATCH",
+    )
+
+
+def _provision_and_issue_jwt(provider: AuthProvider, identity: ExternalIdentity) -> tuple[dict, HTTPStatus]:
     """Resolve the identity and issue the JWT (see :func:`provision_and_issue_jwt`).
 
     Args:
@@ -439,7 +464,18 @@ def _provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[
     Returns:
         tuple: The login response.
     """
-    identity_row = UserAuthIdentity.find_by_external(provider.id, identity.external_id, identity.username)
+    bind_issuer = UserAuthIdentity.binds_issuer(provider)
+    try:
+        identity_row = UserAuthIdentity.find_by_external(
+            provider.id,
+            identity.external_id,
+            identity.username,
+            identity.issuer,
+            bind_issuer=bind_issuer,
+            scoped=identity.scoped,
+        )
+    except IdentityIssuerMismatchError as ex:
+        return _identity_of_another_idp(provider, identity, ex)
     if identity_row:
         user = identity_row.user
         identity_row.touch_login()
@@ -466,7 +502,9 @@ def _provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[
 
     existing = User.find(identity.username)
     if existing:
-        if not _is_orphaned_account(existing):
+        # In a federation an unscoped username ("alice") may be asserted by any of
+        # its IdPs, so it proves nothing about which account it belongs to.
+        if not _is_orphaned_account(existing) or (bind_issuer and not identity.scoped):
             log_manager.store_auth_error_activity(
                 f"Provisioning of '{identity.username}' via provider '{provider.name}' collides with an existing username",
             )
@@ -474,7 +512,15 @@ def _provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[
                 "An account with this username already exists. Ask your administrator to link this identity to it.",
                 "USERNAME_COLLISION",
             )
-        user = User.adopt_external(provider, existing, identity.username, identity.name, identity.email, identity.external_id)
+        user = User.adopt_external(
+            provider,
+            existing,
+            identity.username,
+            identity.name,
+            identity.email,
+            identity.external_id,
+            issuer=identity.issuer,
+        )
         log_manager.store_user_activity(
             user,
             "PROVISION",
@@ -482,7 +528,14 @@ def _provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[
         )
         return _finalize_login(provider, user)
 
-    user = User.provision_external(provider, identity.username, identity.name, identity.email, identity.external_id)
+    user = User.provision_external(
+        provider,
+        identity.username,
+        identity.name,
+        identity.email,
+        identity.external_id,
+        issuer=identity.issuer,
+    )
     log_manager.store_user_activity(user, "PROVISION", f"Auto-created via auth provider '{provider.name}' with status '{user.status}'")
     return _finalize_login(provider, user)
 

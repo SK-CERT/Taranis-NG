@@ -29,7 +29,7 @@
             />
         </v-col>
         <v-col
-            v-if="useTls"
+            v-if="useTls || isLdapsUrl"
             cols="12"
             class="mb-n4"
         >
@@ -284,11 +284,19 @@
     }
     const { t } = useI18n()
     const useTls = computed({
-        get: () => props.config.use_tls ?? false,
+        // Left out of a stored config means TLS, as the login reads it: showing it off would save plain LDAP.
+        get: () => props.config.use_tls ?? true,
         set: (value: boolean) => {
             props.config.use_tls = value
         }
     })
+    /** An ldaps:// URL is always TLS with a checked certificate, so its CA matters even with the switch off. */
+    const isLdapsUrl = computed(() =>
+        String(props.config.server_url ?? '')
+            .trim()
+            .toLowerCase()
+            .startsWith('ldaps://')
+    )
 
     /**
      * The bind mode. A real local ref (not derived from config field presence)

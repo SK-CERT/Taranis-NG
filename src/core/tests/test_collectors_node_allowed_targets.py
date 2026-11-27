@@ -226,7 +226,8 @@ def test_the_migration_follows_the_publication_time_and_is_the_head() -> None:
 
     assert (module.revision, module.down_revision) == ("7a4c1e9b2d36", "5c915192b607")
     assert children("5c915192b607") == [MIGRATION.name]
-    assert children("7a4c1e9b2d36") == []
+    # A straight chain on: whatever follows it (test_auth_provider_migrations checks the single head).
+    assert len(children("7a4c1e9b2d36")) <= 1
 
 
 def test_the_column_is_the_one_the_model_declares(migration: tuple[ModuleType, _Op], monkeypatch: pytest.MonkeyPatch) -> None:

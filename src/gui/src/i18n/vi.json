@@ -190,6 +190,7 @@
         "username_collision": "Đã tồn tại tài khoản có tên người dùng này. Hãy yêu cầu quản trị viên liên kết danh tính này với tài khoản đó.",
         "account_not_linked": "Danh tính này chưa được liên kết với tài khoản nào. Hãy liên hệ với quản trị viên.",
         "domain_not_allowed": "Tên miền email của bạn không được phép đăng ký. Hãy liên hệ với quản trị viên.",
+        "idp_not_authoritative": "Không thể dùng dịch vụ đăng nhập của tổ chức bạn cho tài khoản này. Hãy liên hệ với quản trị viên.",
         "auth_cancelled": "Đã hủy đăng nhập. Vui lòng thử lại.",
         "provider_misconfigured": "Phương thức đăng nhập này bị cấu hình sai. Hãy liên hệ quản trị viên.",
         "totp_invalid": "Mã xác thực không hợp lệ.",

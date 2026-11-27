@@ -65,6 +65,7 @@ class UserIdentitySchema(Schema):
     provider_kind = fields.Str(attribute="provider.kind", dump_only=True)
     external_username = fields.Str()
     external_id = fields.Str(dump_only=True, allow_none=True)
+    issuer = fields.Str(dump_only=True, allow_none=True)
     last_login_at = fields.Str(dump_only=True, allow_none=True)
 
 

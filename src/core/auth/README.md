@@ -17,7 +17,18 @@ user-owned credentials, switched on in *Access Management → Security*.
 | `oauth2`  | browser redirect | generic authorization-code flow + userinfo endpoint |
 | `saml`    | browser redirect | SAML 2.0 web browser SSO (HTTP-Redirect request, HTTP-POST response) |
 
-### LDAP CA certificate
+### LDAP transport and CA certificate
+
+The server URL and the *Use TLS* switch together pick the transport:
+
+| Server URL            | Use TLS on                          | Use TLS off |
+|-----------------------|-------------------------------------|-------------|
+| `ldaps://host`        | LDAPS (port 636)                    | LDAPS (port 636) |
+| `ldap://host`         | StartTLS on port 389 before the bind | plain LDAP |
+| `host` (no scheme)    | LDAPS (port 636)                    | plain LDAP |
+
+Every TLS connection checks the server's certificate. StartTLS is required: when
+the server refuses it, the login fails and no password is sent.
 
 Paste the PEM CA certificate that validates the LDAP server into the LDAP
 provider's *CA certificate* field. When the field is empty, the system trust
@@ -315,6 +326,53 @@ filter=eyAgImFsbG93SG9zdGVsIjogdHJ1ZSB9
 
 This is the only federation-specific setting; the field is an opaque pass-through,
 so another federation's discovery parameters go in exactly the same place.
+
+#### Each IdP speaks only for its own users
+
+Every IdP in a federation can sign a valid assertion, and a federation has
+hundreds of them, so a valid signature alone says nothing about *whose* account
+the assertion may log into. Two checks keep each IdP to its own users:
+
+- **Scopes.** The federation metadata registers the domains each IdP may assert
+  scoped values for (`<shibmd:Scope>`, on the entity or its `IDPSSODescriptor`).
+  A username or stable identifier of the form `user@domain` must fall within one
+  of them: a literal scope covers its domain and subdomains (`example.org` covers
+  `cs.example.org`), a `regexp="true"` scope must match the whole domain. An
+  assertion outside the IdP's scopes is refused (login error `scope_mismatch`,
+  both sides in the audit log). An out-of-scope `mail` is not refused but
+  dropped, so it can neither pass the *allowed e-mail domains* filter nor land in
+  the profile. A scope whose regular expression does not compile is skipped.
+- **Issuer binding.** An identity link records the IdP (entityID) it was created
+  through and works only through that IdP; another IdP asserting the same
+  identifier gets login error `idp_mismatch` and is never provisioned instead.
+  Links from before this check, and links an administrator enters by hand, have
+  no IdP yet: the first login whose *scoped* username equals the link's username
+  binds it. A link's IdP is cleared by removing the link, saving the user, adding
+  it again and saving again; the next login with that scoped username binds it
+  anew (to whichever IdP that login comes through, so do it only when you know
+  which institution the user now signs in with).
+
+Use a scoped username attribute (`eduPersonPrincipalName`, or `subject-id`) in
+federation mode. An unscoped username (`alice`) proves nothing about the
+institution, so in federation mode it never adopts an orphaned account and never
+binds an existing link; new accounts it provisions are bound to their IdP as usual.
+Removing a link therefore does not help an unscoped username: the account is left
+without the link, the next login is refused as `USERNAME_COLLISION`, and adding
+the link back gives one without an IdP that this username can never bind. Two ways
+out: switch the provider's username attribute to a scoped one (existing links then
+bind at each user's next login, as above), or delete the account so that the next
+login provisions a new one with the provider's default roles.
+
+The stable identifier is checked like the username when it has the form
+`user@domain`. The default stable identifier is the NameID, which some IdPs set to
+the user's e-mail address: when that address is outside the IdP's scopes, every
+login through it is refused as `scope_mismatch`. Map the stable identifier to a
+scoped attribute instead (`pairwise-id`, `subject-id`, `eduPersonUniqueId`).
+An IdP that changes its entityID is a different IdP to its existing links: its
+users get `idp_mismatch` until each link's IdP is cleared as described above.
+
+A single-IdP provider has one IdP chosen by the administrator: no scopes are
+checked, and the issuer is only recorded on the link.
 
 ## User provisioning and identity linking
 

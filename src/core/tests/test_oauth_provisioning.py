@@ -43,7 +43,7 @@ def provisioning(monkeypatch) -> SimpleNamespace:  # noqa: ANN001
     log = auth_manager.log_manager
     monkeypatch.setattr(log, "store_auth_error_activity", lambda *args, **kwargs: activity.append(("error", args, kwargs)))
     monkeypatch.setattr(log, "store_user_activity", lambda *args: activity.append(("user", args)))
-    monkeypatch.setattr(auth_manager.UserAuthIdentity, "find_by_external", classmethod(lambda _cls, *_args: None))
+    monkeypatch.setattr(auth_manager.UserAuthIdentity, "find_by_external", classmethod(lambda _cls, *_args, **_kwargs: None))
     issue_jwt = lambda _provider, user: ({"access_token": f"jwt-for-{user.username}"}, HTTPStatus.OK)  # noqa: E731
     monkeypatch.setattr(auth_manager, "_finalize_login", issue_jwt)
     return SimpleNamespace(session=session, activity=activity)
@@ -53,6 +53,8 @@ def _provider(**overrides) -> SimpleNamespace:  # noqa: ANN003
     defaults = {
         "id": 17,
         "name": "Corporate login",
+        "kind": "oidc",
+        "config": {},
         "provisioning_mode": "automatic",
         "organization": "Default org",
         "default_roles": ["Reader"],
@@ -79,7 +81,7 @@ def _orphan(**overrides) -> SimpleNamespace:  # noqa: ANN003
     return SimpleNamespace(**{**defaults, **overrides})
 
 
-def _never_adopt(*_args: object) -> None:
+def _never_adopt(*_args: object, **_kwargs: object) -> None:
     """Fail the test: an account that can still be logged into must never be adopted."""
     pytest.fail("a reachable account must never be adopted")
 
@@ -93,7 +95,16 @@ def test_orphaned_account_is_adopted_instead_of_dead_ending(monkeypatch, provisi
     adopted: list = []
     monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, _username: orphan))
 
-    def adopt(_cls: type, provider: object, user: object, username: str, name: str, email: str, external_id: str) -> object:
+    def adopt(
+        _cls: type,
+        provider: object,
+        user: object,
+        username: str,
+        name: str,
+        email: str,
+        external_id: str,
+        **_kwargs: object,
+    ) -> object:
         adopted.append((provider, user, username, name, email, external_id))
         return user
 
@@ -182,7 +193,7 @@ def test_manual_mode_rejects_before_it_could_adopt(monkeypatch, provisioning) ->
 
 def test_a_failure_after_the_account_is_written_rolls_back(monkeypatch, provisioning) -> None:  # noqa: ANN001
     monkeypatch.setattr(auth_manager.User, "find", classmethod(lambda _cls, _username: None))
-    provision = lambda *_args: SimpleNamespace(username="alice", status="active")  # noqa: E731
+    provision = lambda *_args, **_kwargs: SimpleNamespace(username="alice", status="active")  # noqa: E731
     monkeypatch.setattr(auth_manager.User, "provision_external", classmethod(provision))
 
     def explode(_provider: object, _user: object) -> None:
