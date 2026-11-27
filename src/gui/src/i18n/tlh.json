@@ -1703,6 +1703,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "ja'ghach Seghmey wIvmeH mIw yIchoH",
+                "select_all": "Hoch yIwIv",
+                "unselect_all": "Hoch yIwIvHa'"
+            },
             "fields_in_use": "ja'ghachmey lo'taHbogh 'ay'mey vIteqlaHbe': {fields}",
             "in_use": "ja'ghach Segh vIQaw'laHbe': lo' ja'ghachmey ({count})",
             "tab_description": "naDev ja'ghach Seghmey DaSeHlaH.",
@@ -1732,7 +1737,22 @@
             "no_ai_provider": "wa'DIch mughmeH De'wI' val nobwI' yIwIv",
             "translate_labels_failed": "'op permey vImughlaHbe' ({count})",
             "labels_translated": "permey mughlu'pu'",
-            "copy_original": "Hal ghItlh yIlI'"
+            "copy_original": "Hal ghItlh yIlI'",
+            "import": "yIqem",
+            "dialog_import": "ja'ghach Seghmey yIqem",
+            "export_selected": "wIvlu' ja'ghach Seghmey yIqam",
+            "file": "qemmeH ta",
+            "file_required": "qemmeH ta yIwIv",
+            "import_hint": "ja'ghach Seghmey lo'taHbogh ngoD Seghmey Dachbogh vaj chel; chenpu'bogh Daq SoH. pong bIngDaq neH ja'ghach Segh yItlhe'.",
+            "import_progress": "ja'ghach Seghmey qem...",
+            "import_success": "pagh ja'ghach Segh qemlu' | {count} ja'ghach Segh qemlu' | {count} ja'ghach Segh qemlu'",
+            "import_error": "ja'ghach Seghmey qemlaHbe'",
+            "import_skipped": "pagh ja'ghach Segh yItlhe'be' | {count} ja'ghach Segh chen neH yItlhe': {names} | {count} ja'ghach Segh chen neH yItlhe': {names}",
+            "import_fields_skipped": "pagh 'ay vIQaw' | {count} 'ay vIQaw': ngoD Segh Daq pagh lo': {names} | {count} 'ay vIQaw': ngoD Seghmey Daq pagh lo': {names}",
+            "import_nothing": "Daq pagh ja'ghach Segh qemmeH",
+            "export_progress": "ja'ghach Seghmey qam...",
+            "export_success": "ja'ghach Seghmey qammu'. Qapla'!",
+            "export_error": "ja'ghach Seghmey qamlaHbe'"
         },
         "attributes": {
             "in_use": "ngoD vIQaw'laHbe': lo' {types}",

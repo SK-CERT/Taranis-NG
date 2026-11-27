@@ -226,6 +226,16 @@ export function updateReportItemType(report_item_type) {
     return ApiService.put('/config/report-item-types/' + report_item_type.id, report_item_type)
 }
 
+export function exportReportTypes(data: { selection: Array<string | number> }) {
+    // Keep the response observable by the caller so the UI can report failures
+    // instead of treating a failed download as a successful export.
+    return ApiService.post('/config/export-report-types', data, { responseType: 'blob' })
+}
+
+export function importReportTypes(form_data) {
+    return ApiService.upload('/config/import-report-types', form_data)
+}
+
 // Translates labels of a report type being edited; nothing is stored until the type is saved.
 // A saved type's `report_item_type_id` adds its own glossary entries to the instance's.
 export function translateReportItemTypeLabels(data: {

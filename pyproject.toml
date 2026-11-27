@@ -207,6 +207,7 @@ error-on-warning = false  # exit 0 even when warning diagnostics are emitted
 missing-attribute = "warn"              # self.preset attrs (bots, collectors)
 missing-union-attribute = "warn"        # None-union attrs (bots, collectors)
 import-not-found = "warn"               # .app relative imports (bots, collectors, publishers)
+missing-module-member = "warn"          # split from `import-not-found` rule
 unresolved-reference = "warn"           # module-level name resolution (bots)
 invalid-argument-type = "warn"          # HTTPStatus vs int, SchedulerManager interval
 invalid-explicit-return = "warn"        # response.status_code (int) vs HTTPStatus signature

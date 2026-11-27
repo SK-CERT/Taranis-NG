@@ -1703,6 +1703,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Auswahlmodus für Berichtstypen umschalten",
+                "select_all": "Alle auswählen",
+                "unselect_all": "Auswahl aufheben"
+            },
             "fields_in_use": "Felder, die von Report-Elementen noch verwendet werden, können nicht entfernt werden: {fields}",
             "in_use": "Report-Typ kann nicht gelöscht werden: Er wird von Report-Elementen verwendet ({count})",
             "tab_description": "Hier können Sie Berichtstypen verwalten.",
@@ -1732,7 +1737,22 @@
             "no_ai_provider": "Wählen Sie zuerst einen KI-Anbieter für die Übersetzung",
             "translate_labels_failed": "Einige Beschriftungen konnten nicht übersetzt werden ({count})",
             "labels_translated": "Beschriftungen übersetzt",
-            "copy_original": "Original kopieren"
+            "copy_original": "Original kopieren",
+            "import": "Importieren",
+            "dialog_import": "Berichtstypen importieren",
+            "export_selected": "Ausgewählte Berichtstypen exportieren",
+            "file": "Importdatei",
+            "file_required": "Importdatei auswählen",
+            "import_hint": "Attributtypen, die die Berichtstypen verwenden, werden bei Bedarf angelegt; vorhandene bleiben unverändert. Ein Berichtstyp mit einem bereits vorhandenen Namen wird übersprungen.",
+            "import_progress": "Berichtstypen werden importiert...",
+            "import_success": "{count} Berichtstyp importiert | {count} Berichtstypen importiert",
+            "import_error": "Berichtstypen konnten nicht importiert werden",
+            "import_skipped": "{count} Berichtstyp existierte bereits und wurde übersprungen: {names} | {count} Berichtstypen existierten bereits und wurden übersprungen: {names}",
+            "import_fields_skipped": "{count} Feld wurde entfernt: sein Attribute-Typ existiert auf keiner Installation: {names} | {count} Felder wurden entfernt: ihre Attribute-Typen existieren auf keiner Installation: {names}",
+            "import_nothing": "Die Datei enthielt keinen zu importierenden Berichtstyp",
+            "export_progress": "Berichtstypen werden exportiert...",
+            "export_success": "Berichtstypen wurden exportiert",
+            "export_error": "Berichtstypen konnten nicht exportiert werden"
         },
         "attributes": {
             "in_use": "Attribut kann nicht gelöscht werden: Es wird von {types} verwendet",

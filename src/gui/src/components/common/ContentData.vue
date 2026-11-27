@@ -13,10 +13,13 @@
             :key="item.id"
             :card="item"
             :delete-permission="deletePermission"
+            :multi-select-active="multiSelectActive"
+            :preselected="selectedIds.includes(item.id)"
             :lock-default="lockDefault"
             list-mode
             @delete="handleDelete"
             @edit="handleEdit"
+            @selection-change="handleSelectionChange(item, $event)"
         />
 
         <!-- Empty state -->
@@ -103,10 +106,18 @@
         lockDefault: {
             type: Boolean,
             default: false
+        },
+        multiSelectActive: {
+            type: Boolean,
+            default: false
+        },
+        selectedIds: {
+            type: Array,
+            default: () => []
         }
     })
 
-    const emit = defineEmits(['delete', 'edit', 'refresh'])
+    const emit = defineEmits(['delete', 'edit', 'refresh', 'selection-change'])
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
@@ -131,6 +142,10 @@
 
     const handleEdit = (item: CardItem): void => {
         emit('edit', item)
+    }
+
+    const handleSelectionChange = (item: CardItem, selected: boolean): void => {
+        emit('selection-change', item, selected)
     }
 </script>
 

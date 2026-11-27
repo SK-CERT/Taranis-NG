@@ -1703,6 +1703,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Mód výberu typov reportov",
+                "select_all": "Vybrať všetko",
+                "unselect_all": "Zrušiť výber všetkého"
+            },
             "fields_in_use": "Nie je možné odstrániť polia, ktoré stále používajú reporty: {fields}",
             "in_use": "Typ reportu nie je možné odstrániť: používajú ho reporty ({count})",
             "tab_description": "Tu môžete spravovať typy reportov.",
@@ -1732,7 +1737,22 @@
             "no_ai_provider": "Najprv vyberte poskytovateľa AI na preklad",
             "translate_labels_failed": "Niektoré popisy sa nepodarilo preložiť ({count})",
             "labels_translated": "Popisy preložené",
-            "copy_original": "Skopírovať originál"
+            "copy_original": "Skopírovať originál",
+            "import": "Importovať",
+            "dialog_import": "Importovať typy reportov",
+            "export_selected": "Exportovať vybrané typy reportov",
+            "file": "Súbor na import",
+            "file_required": "Vyberte súbor na import",
+            "import_hint": "Typy atribútov, ktoré typy reportov používajú, sa vytvoria, ak chýbajú; existujúce zostávajú bez zmeny. Typ reportu, ktorý už existuje pod rovnakým názvom, sa preskočí.",
+            "import_progress": "Importujem typy reportov...",
+            "import_success": "Žiadny typ reportu nebol importovaný | Importovaný {count} typ reportu | Importované {count} typy reportov | Importovaných {count} typov reportov",
+            "import_error": "Nepodarilo sa importovať typy reportov",
+            "import_skipped": "Žiadny typ reportu nebol preskočený | {count} typ reportu už existoval a bol preskočený: {names} | {count} typy reportov už existovali a boli preskočené: {names} | {count} typov reportov už existovalo a bolo preskočených: {names}",
+            "import_fields_skipped": "Neodstránilo sa žiadne pole | {count} pole bolo odstránené: jeho typ atribútu neexistuje na nijakej inštalácii: {names} | {count} polia boli odstránené: ich typy atribútov neexistujú na nijakej inštalácii: {names} | {count} polí bolo odstránených: ich typy atribútov neexistujú na nijakej inštalácii: {names}",
+            "import_nothing": "Súbor neobsahoval žiadny typ reportu na import",
+            "export_progress": "Exportujem typy reportov...",
+            "export_success": "Typy reportov boli exportované",
+            "export_error": "Nepodarilo sa exportovať typy reportov"
         },
         "attributes": {
             "in_use": "Atribút nie je možné odstrániť: používa sa v {types}",

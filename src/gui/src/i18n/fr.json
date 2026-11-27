@@ -1703,6 +1703,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Activer ou désactiver le mode de sélection des types de rapport",
+                "select_all": "Tout sélectionner",
+                "unselect_all": "Tout désélectionner"
+            },
             "fields_in_use": "Impossible de supprimer des champs encore utilisés par des éléments de rapport : {fields}",
             "in_use": "Impossible de supprimer le type de rapport : il est utilisé par des éléments de rapport ({count})",
             "tab_description": "Vous pouvez gérer ici les types de rapports.",
@@ -1732,7 +1737,22 @@
             "no_ai_provider": "Choisissez d'abord un fournisseur d'IA pour la traduction",
             "translate_labels_failed": "Certains libellés n'ont pas pu être traduits ({count})",
             "labels_translated": "Libellés traduits",
-            "copy_original": "Copier l'original"
+            "copy_original": "Copier l'original",
+            "import": "Importer",
+            "dialog_import": "Importer des types de rapport",
+            "export_selected": "Exporter les types de rapport sélectionnés",
+            "file": "Fichier d’importation",
+            "file_required": "Sélectionnez un fichier d’importation",
+            "import_hint": "Les types d’attribut utilisés par les types de rapport sont créés s’ils manquent ; ceux qui existent restent inchangés. Un type de rapport dont le nom existe déjà est ignoré.",
+            "import_progress": "Importation des types de rapport...",
+            "import_success": "{count} type de rapport importé | {count} types de rapport importés",
+            "import_error": "Impossible d’importer les types de rapport",
+            "import_skipped": "{count} type de rapport existait déjà et a été ignoré : {names} | {count} types de rapport existaient déjà et ont été ignorés : {names}",
+            "import_fields_skipped": "{count} champ a été supprimé : son type d’attribut n’existe sur aucune installation : {names} | {count} champs ont été supprimés : leurs types d’attribut n’existent sur aucune installation : {names}",
+            "import_nothing": "Le fichier ne contenait aucun type de rapport à importer",
+            "export_progress": "Exportation des types de rapport...",
+            "export_success": "Les types de rapport ont été exportés",
+            "export_error": "Impossible d’exporter les types de rapport"
         },
         "attributes": {
             "in_use": "Impossible de supprimer l'attribut : il est utilisé par {types}",

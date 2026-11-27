@@ -263,6 +263,43 @@ describe('ToolbarGroup select all availability', () => {
         expect(button.attributes('disabled')).toBeDefined()
     })
 
+    describe('ToolbarGroup report type selection', () => {
+        /**
+         * Same contract as collectors.sources: the toolbar does not know which rows the view is
+         * rendering, so both buttons delegate - "select all" emits `select-all`, "unselect all"
+         * emits `clear-selection` - and the view fills or empties the selection. The store must
+         * stay in selection mode afterwards; only the toggle button turns it off.
+         */
+        it('delegates select-all and clear-selection to the view', async () => {
+            const { useUserStore } = await import('@/stores/user')
+            const { useReportTypesStore } = await import('@/stores/report_types')
+            useUserStore().setUser({ permissions: ['CONFIG_REPORT_TYPE_ACCESS'] })
+            const wrapper = mountWithPlugins(ToolbarGroup, { props: { view: 'reports.types' } })
+            const store = useReportTypesStore()
+            await flushPromises()
+
+            const selectAll = selectAllButton(wrapper)
+            expect(selectAll).toBeDefined()
+            expect(selectAll.attributes('disabled')).toBeDefined()
+
+            store.multiSelectReportType(true)
+            await flushPromises()
+
+            await selectAllButton(wrapper).trigger('click')
+            expect(wrapper.emitted('select-all')).toHaveLength(1)
+            expect(selectAllButton(wrapper).attributes('title')).toBe('Unselect All')
+
+            // The view fills the selection in response to `select-all`; emulate that.
+            store.selection = [{ id: 11 }, { id: 12 }]
+            await flushPromises()
+
+            await selectAllButton(wrapper).trigger('click')
+            expect(wrapper.emitted('clear-selection')).toHaveLength(1)
+            expect(store.getReportTypesMultiSelect).toBe(true)
+            wrapper.unmount()
+        })
+    })
+
     it('becomes usable once selection mode is on', async () => {
         const assessApi = await import('@/api/assess')
         vi.mocked(assessApi.selectAllNewsItems).mockResolvedValue({ data: { items: [{ id: 1 }] } })

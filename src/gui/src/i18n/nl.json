@@ -1703,6 +1703,11 @@
     },
     "reports": {
         "types": {
+            "tooltip": {
+                "toggle_selection": "Selectiemodus voor rapporttypes schakelen",
+                "select_all": "Alles selecteren",
+                "unselect_all": "Alles deselecteren"
+            },
             "fields_in_use": "Velden die rapportitems nog gebruiken kunnen niet worden verwijderd: {fields}",
             "in_use": "Rapporttype kan niet worden verwijderd: het wordt gebruikt door rapportitems ({count})",
             "tab_description": "Hier kunt u report types beheren.",
@@ -1732,7 +1737,22 @@
             "no_ai_provider": "Kies eerst een KI-aanbieder voor vertaling",
             "translate_labels_failed": "Sommige labels konden niet worden vertaald ({count})",
             "labels_translated": "Labels vertaald",
-            "copy_original": "Origineel kopiëren"
+            "copy_original": "Origineel kopiëren",
+            "import": "Importeren",
+            "dialog_import": "Rapporttypes importeren",
+            "export_selected": "Geselecteerde rapporttypes exporteren",
+            "file": "Importbestand",
+            "file_required": "Selecteer een importbestand",
+            "import_hint": "Attribuutttypen die de rapporttypes gebruiken worden aangemaakt als ze ontbreken; bestaande blijven ongewijzigd. Een rapporttype met een bestaande naam wordt overgeslagen.",
+            "import_progress": "Rapporttypes importeren...",
+            "import_success": "{count} rapporttype geïmporteerd | {count} rapporttypes geïmporteerd",
+            "import_error": "Kan de rapporttypes niet importeren",
+            "import_skipped": "{count} rapporttype bestond al en is overgeslagen: {names} | {count} rapporttypes bestonden al en zijn overgeslagen: {names}",
+            "import_fields_skipped": "{count} veld is verwijderd: het attribuuttype bestaat op geen van beide installaties: {names} | {count} velden zijn verwijderd: hun attribuutttypen bestaan op geen van beide installaties: {names}",
+            "import_nothing": "Het bestand bevatte geen rapporttype om te importeren",
+            "export_progress": "Rapporttypes exporteren...",
+            "export_success": "De rapporttypes zijn geëxporteerd",
+            "export_error": "Kan de rapporttypes niet exporteren"
         },
         "attributes": {
             "in_use": "Attribuut kan niet worden verwijderd: het wordt gebruikt door {types}",
