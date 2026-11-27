@@ -1424,11 +1424,13 @@ def decode_user_from_session(claims: dict | None) -> User | None:
 
     The session keeps the claims of the access token it was opened with - not the token, which
     would be a bearer credential lying in Redis for every container that reaches it - so the
-    checks a token gets are made here on those claims: not a scoped token, not expired, not
-    logged out, of the current authentication generation, and an active user.
+    checks a token gets are made here on those claims: not a scoped token, not expired, neither
+    it nor its sign-in logged out, of the current authentication generation, issued for the
+    account's present username and password, and an active user.
 
     Args:
-        claims (dict | None): ``sub``, ``jti``, ``exp`` and the auth generation, as stored.
+        claims (dict | None): ``sub``, ``jti``, ``exp``, the auth generation, the session id and
+            the credential, as stored.
 
     Returns:
         User: The active user, or None.
@@ -1438,10 +1440,10 @@ def decode_user_from_session(claims: dict | None) -> User | None:
     expires = claims.get("exp")
     if not isinstance(expires, int | float) or isinstance(expires, bool) or expires <= time.time():
         return None
-    if TokenBlacklist.is_blacklisted(claims.get("jti")):
+    if _token_revoked({}, claims):
         log_manager.store_auth_warning_activity("SSE session of a logged-out token refused")
         return None
-    if not _auth_generation_is_current({}, claims):
+    if not _session_token_valid({}, claims):
         return None
     return _find_active_user(claims.get("sub"))
 

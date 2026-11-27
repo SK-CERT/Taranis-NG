@@ -187,7 +187,17 @@ class SseInitResource(Resource):
                 # The token's claims, not the token: a bearer credential must not lie in Redis,
                 # which every container on the compose network can reach. The session lapses
                 # with the token; logout deletes it.
-                claims = {key: jwt_data.get(key) for key in ("sub", "jti", "exp", auth_manager.AUTH_GENERATION_CLAIM)}
+                # With the sign-in's session id and credential, so that logging out of the sign-in
+                # and a password change end the session as they end the token.
+                stored = (
+                    "sub",
+                    "jti",
+                    "exp",
+                    auth_manager.AUTH_GENERATION_CLAIM,
+                    auth_manager.SESSION_ID_CLAIM,
+                    auth_manager.CREDENTIAL_CLAIM,
+                )
+                claims = {key: jwt_data.get(key) for key in stored}
                 lifetime = int(claims["exp"] - time.time()) if isinstance(claims["exp"], int | float) else SseInitResource.SSE_TOKEN_TTL
                 lifetime = max(1, min(lifetime, SseInitResource.SSE_TOKEN_TTL))
                 redis_client.set(session_key(jwt_id), json.dumps(claims), ex=lifetime)

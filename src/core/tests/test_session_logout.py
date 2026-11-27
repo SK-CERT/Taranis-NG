@@ -52,7 +52,7 @@ def alice(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     monkeypatch.setattr(SecuritySettings, "get_session_max_hours", classmethod(lambda _cls: 24))
     monkeypatch.setattr(auth_manager.Config, "JWT_SECRET_KEY", SECRET)
     monkeypatch.setattr(auth_manager.db, "session", SimpleNamespace(is_active=True))
-    monkeypatch.setattr(auth_api, "redis_client", SimpleNamespace(delete=lambda _key: 1))
+    monkeypatch.setattr(auth_api, "redis_client", SimpleNamespace(delete=lambda *_keys: 1))
     for name in ("store_auth_error_activity", "store_auth_warning_activity", "store_user_activity", "store_user_auth_error_activity"):
         monkeypatch.setattr(auth_manager.log_manager, name, lambda *_args, **_kwargs: None)
     return account
@@ -142,6 +142,20 @@ def test_logging_out_ends_every_token_of_the_sign_in(app: Flask, alice: SimpleNa
     # Another sign-in of the same account is not affected.
     assert client.get("/me", headers=_bearer(other_sign_in)).status_code == HTTPStatus.OK
     assert auth_manager.decode_user_from_jwt(other_sign_in) is alice
+
+
+@pytest.mark.usefixtures("blacklist")
+def test_logging_out_with_redis_down_still_ends_the_sign_in(app: Flask, alice: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
+    # The SSE session lives in Redis; the token and its sign-in are revoked before it is touched.
+    def unreachable(*_keys: str) -> int:
+        raise ConnectionError
+
+    monkeypatch.setattr(auth_api, "redis_client", SimpleNamespace(delete=unreachable))
+    token = _sign_in(app, alice)
+    client = app.test_client()
+
+    assert client.post("/logout", headers=_bearer(token)).status_code == HTTPStatus.OK
+    assert client.get("/me", headers=_bearer(token)).status_code == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.usefixtures("blacklist")
