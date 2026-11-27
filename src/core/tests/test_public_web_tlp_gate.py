@@ -74,6 +74,21 @@ def test_a_product_without_tlp_follows_its_preset_s_template_for_the_web(templat
     assert public_web.public_on_web(product, 2) is False
 
 
+@pytest.mark.usefixtures("templates")
+def test_a_gcve_advisory_without_tlp_is_public_but_its_tlps_still_count() -> None:
+    advisory = _product(1)
+    advisory.product_preset = types.SimpleNamespace(is_gcve=True)
+    assert public_web.public_on_web(advisory, 1) is True  # no template of its own: the built-in would hide it
+
+    other = _product(2)
+    other.product_preset = types.SimpleNamespace(is_gcve=False)
+    assert public_web.public_on_web(other, 1) is False
+
+    restricted = _product(3, "RED")
+    restricted.product_preset = types.SimpleNamespace(is_gcve=True)
+    assert public_web.public_on_web(restricted, 1) is False
+
+
 @pytest.fixture
 def node() -> types.SimpleNamespace:
     return types.SimpleNamespace(

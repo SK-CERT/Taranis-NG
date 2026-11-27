@@ -125,7 +125,7 @@ def public_on_web(product: Product, web_id: int | None) -> bool:
     Decided here, not only on the node: the node is internet-facing, and its API key must not
     be a key to TLP:AMBER and TLP:RED products. Every TLP must be public; a value that is not a
     TLP at all counts as the most restrictive one. A product without any TLP is public only where
-    its preset's template says so.
+    its preset's template says so, or when it is a GCVE Advisory.
 
     Args:
         product (Product): A published product.
@@ -137,6 +137,11 @@ def public_on_web(product: Product, web_id: int | None) -> bool:
     tlps = _product_tlps(product)
     if tlps:
         return all(tlp in PUBLIC_TLPS for tlp in tlps)
+    preset = getattr(product, "product_preset", None)
+    if preset is not None and preset.is_gcve:
+        # A GCVE Advisory's CVD Reports carry no TLP: publishing the advisory is the decision to
+        # disclose it, and its records are public already. The node shows it on that ground too.
+        return True
     return not _requires_tlp_clear(product.product_preset_id, web_id)
 
 
