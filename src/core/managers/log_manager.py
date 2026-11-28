@@ -206,6 +206,15 @@ _SENSITIVE_JSON_KEYS = {
     "credentials",
     "totp",
     "otp",
+    # Completes MFA enrollment and so a login, for five minutes.
+    "enroll_token",
+    # A bearer token: the product preview takes the session's token in its body.
+    "jwt",
+    # The feedback mail password of a public web (its config, and the test mail).
+    "smtp_password",
+    # TLS private keys: of a public web, and the default certificate's in the routing settings.
+    "tls_key",
+    "default_key",
 }
 
 

@@ -35,7 +35,7 @@ from managers import (
 from managers.auth_manager import auth_required, get_user_from_jwt
 from managers.db_manager import db
 from managers.sse_manager import sse_manager
-from managers.stored_secrets import hide_secret_parameters, keep_stored_api_key
+from managers.stored_secrets import StoredSecretError, changed_destination, hide_secret_parameters, keep_stored_api_key, refuse_moved_secret
 from model import (
     acl_entry,
     ai_provider,
@@ -71,10 +71,10 @@ from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.state import StateDefinition, StateEntityType
 from model.tag import Tag, TagEntityType
-from shared.schema.ai_provider import AiProviderSchema
+from shared.schema.ai_provider import AiProviderPresentationSchema
 from shared.schema.attribute_extraction_rule import AttributeExtractionRuleSchema
 from shared.schema.auth_provider import AuthProviderSchema
-from shared.schema.data_provider import DataProviderSchema
+from shared.schema.data_provider import DataProviderPresentationSchema
 from shared.schema.role import PermissionSchema
 from shared.schema.security_settings import SecuritySettingsSchema
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
@@ -368,7 +368,8 @@ class AiProvidersResource(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             record = ai_provider.AiProvider.add_new(request.json, user.name)
-            schema = AiProviderSchema()
+            # The key is write-only here as in the list: never sent back, even to who saved it.
+            schema = AiProviderPresentationSchema()
             return schema.dump(record), HTTPStatus.OK
         except ValueError as ex:
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
@@ -497,7 +498,8 @@ class AiProviderResource(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             record = ai_provider.AiProvider.update(ai_provider_id, request.json, user.name)
-            schema = AiProviderSchema()
+            # The key is write-only here as in the list: never sent back, even to who saved it.
+            schema = AiProviderPresentationSchema()
             return schema.dump(record), HTTPStatus.OK
         except ValueError as ex:
             return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
@@ -725,6 +727,20 @@ class OAuthVerifyResource(Resource):
             secret = data.get("secret") or None
             if not secret and data.get("id"):
                 stored = auth_provider.AuthProvider.find(data["id"])
+                if stored and stored.secret:
+                    # Only for the identity provider it was saved for: the test sends it to the
+                    # token endpoint of the configuration it is given.
+                    if stored.kind != data.get("kind"):
+                        refuse_moved_secret(["kind"], "client secret")
+                    submitted = auth_provider.secret_destination(stored.kind, data.get("config"))
+                    refuse_moved_secret(
+                        changed_destination(
+                            submitted,
+                            auth_provider.secret_destination(stored.kind, stored.config),
+                            auth_provider.SECRET_DESTINATION_KEYS,
+                        ),
+                        "client secret",
+                    )
                 secret = stored.get_secret_plaintext() if stored else None
                 if stored and stored.secret and secret is None:
                     msg = (
@@ -792,8 +808,11 @@ class DataProviderResource(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             record = data_provider.DataProvider.update(data_provider_id, request.json, user.name)
-            schema = DataProviderSchema()
+            # The key is write-only here as in the list: never sent back, even to who saved it.
+            schema = DataProviderPresentationSchema()
             return schema.dump(record), HTTPStatus.OK
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update data provider"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -837,7 +856,8 @@ class DataProvidersResource(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             record = data_provider.DataProvider.add_new(request.json, user.name)
-            schema = DataProviderSchema()
+            # The key is write-only here as in the list: never sent back, even to who saved it.
+            schema = DataProviderPresentationSchema()
             return schema.dump(record), HTTPStatus.OK
         except Exception as ex:
             msg = "Could not create data provider"
@@ -1839,6 +1859,8 @@ class CollectorsNodeResource(Resource):
             return {"error": f"Allowed internal targets: {reason}"}, HTTPStatus.BAD_REQUEST
         try:
             collectors_manager.update_collectors_node(node_id, request.json)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update collectors node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2020,7 +2042,7 @@ class OSINTSourceGroupsResource(Resource):
             (dict): The OSINT source groups
         """
         search = request.args.get("search")
-        return osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
+        return hide_secret_parameters(osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False))
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:
@@ -2211,7 +2233,10 @@ class PublicWebNodeResource(Resource):
                 return {"error": "Public-web node not found"}, HTTPStatus.NOT_FOUND
 
             api_url = (data.get("api_url") or "").strip()
-            # An empty api_key means "keep the stored one" (see PublicWebNode.update).
+            # An empty api_key means "keep the stored one" (see PublicWebNode.update) - but only
+            # for the URL it was stored for: verify_node sends it to whatever api_url says.
+            if not data.get("api_key") and node.api_key:
+                refuse_moved_secret(changed_destination({"api_url": api_url}, node, ("api_url",)))
             api_key = data.get("api_key") or node.api_key
             connection_changed = api_url != (node.api_url or "") or api_key != node.api_key
             if api_url and connection_changed:
@@ -2227,6 +2252,8 @@ class PublicWebNodeResource(Resource):
                 # Switched off, the node stops serving its webs now rather than when its
                 # cache expires; switched on, it reads them again.
                 public_web_manager.reset_node(node)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update public-web node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2769,9 +2796,11 @@ class RemoteNodeResource(Resource):
             (dict, HTTPStatus): The result of the update
         """
         try:
-            data = keep_stored_api_key(request.json, remote.RemoteNode, remote_node_id)
+            data = keep_stored_api_key(request.json, remote.RemoteNode, remote_node_id, destination=("remote_url", "events_url"))
             if remote.RemoteNode.update(remote_node_id, data) is False:
                 remote_manager.disconnect_from_node(remote_node_id)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update remote node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2855,6 +2884,8 @@ class PresentersNodeResource(Resource):
         """
         try:
             presenters_manager.update_presenters_node(node_id, request.json)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update presenters node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -2917,6 +2948,8 @@ class PublishersNodeResource(Resource):
         """
         try:
             publishers_manager.update_publishers_node(node_id, request.json)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update publishers node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -3041,6 +3074,8 @@ class BotsNodeResource(Resource):
         """
         try:
             bots_manager.update_bots_node(node_id, request.json)
+        except StoredSecretError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         except Exception as ex:
             msg = "Could not update bots node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)

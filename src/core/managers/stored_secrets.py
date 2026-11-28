@@ -18,7 +18,43 @@ from managers.db_manager import db
 SECRET_PARAMETER = re.compile(r"(PASSWORD|TOKEN|SECRET|API_KEY|SSH_KEY)$")
 
 
-def keep_stored_api_key(data: object, model: type, record_id: object) -> object:
+class StoredSecretError(ValueError):
+    """A stored secret would go somewhere other than where it was saved for; the caller answers 400."""
+
+
+def _same_destination(submitted: object, stored: object) -> bool:
+    """Whether two URLs, hosts or names are the same destination (whitespace and a trailing / aside)."""
+    return _comparable(submitted) == _comparable(stored)
+
+
+def _comparable(value: object) -> str:
+    """A destination value as text: None and "" alike, a URL without its trailing /."""
+    return "" if value is None else str(value).strip().rstrip("/")
+
+
+def changed_destination(data: dict, stored: object, fields: tuple[str, ...]) -> list[str]:
+    """The ``fields`` the submitted ``data`` changes from ``stored`` (attributes, or a dict's keys)."""
+    read = stored.get if isinstance(stored, dict) else lambda field: getattr(stored, field, None)
+    return [field for field in fields if field in data and not _same_destination(data.get(field), read(field))]
+
+
+def refuse_moved_secret(changed: list[str], what: str = "API key") -> None:
+    """Raise StoredSecretError when a kept secret's destination changed.
+
+    "Saved empty keeps the stored secret" lets a dialog be saved without retyping a secret the
+    GUI never shows. Applied to a request that also changes where the secret is sent, it sent
+    the stored secret to whatever URL or host the request named - a secret no administrator can
+    read was handed to anyone who may edit the record. So the secret has to be typed in again.
+
+    Raises:
+        StoredSecretError: When ``changed`` names any field.
+    """
+    if changed:
+        msg = f"Enter the {what} again: {', '.join(changed)} changed, and the stored {what} is only sent where it was saved for"
+        raise StoredSecretError(msg)
+
+
+def keep_stored_api_key(data: object, model: type, record_id: object, destination: tuple[str, ...] = ()) -> object:
     """``data`` with the stored ``api_key`` of ``model`` ``record_id`` when the update leaves it empty.
 
     ``clear_api_key: true`` with an empty ``api_key`` removes the stored key instead (for a
@@ -28,9 +64,14 @@ def keep_stored_api_key(data: object, model: type, record_id: object) -> object:
         data: The submitted record.
         model: Its model class.
         record_id: Its id.
+        destination: The fields that say where the key is sent (``api_url``); when the update
+            changes any of them, the stored key is not kept (see :func:`refuse_moved_secret`).
 
     Returns:
         The data to update with.
+
+    Raises:
+        StoredSecretError: When the key is left empty while a destination field changes.
     """
     if isinstance(data, dict) and "clear_api_key" in data:
         # JSON true only: "false", or any other non-empty value, must not remove the key.
@@ -43,6 +84,7 @@ def keep_stored_api_key(data: object, model: type, record_id: object) -> object:
     stored = db.session.get(model, record_id)
     if stored is None or not stored.api_key:
         return data
+    refuse_moved_secret(changed_destination(data, stored, destination))
     return {**data, "api_key": stored.api_key}
 
 

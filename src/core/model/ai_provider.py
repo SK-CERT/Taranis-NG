@@ -154,7 +154,7 @@ class AiProvider(db.Model):
             AiProvider: The updated local AI model.
         """
         schema = AiProviderSchema()
-        new = schema.load(keep_stored_api_key(data, cls, id))
+        new = schema.load(keep_stored_api_key(data, cls, id, destination=("api_url",)))
         old = db.session.get(cls, id)
         old.name = new.name
         old.api_type = new.api_type

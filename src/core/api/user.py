@@ -19,7 +19,6 @@ from flask_restful import Resource
 from managers import api_key_manager, auth_manager, notification_manager, totp_manager, webauthn_manager
 from managers.auth_manager import auth_required
 from managers.db_manager import db
-from managers.stored_secrets import hide_secret_parameters
 from model.apikey import ApiKey
 from model.product_preset import ProductPreset
 from model.publishing_channel import PublishingChannel
@@ -126,6 +125,10 @@ class UserProductPresets(Resource):
         return ProductPreset.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
 
 
+# What someone who may publish learns of a channel: which channels there are, not their settings.
+USER_CHANNEL_FIELDS = ("id", "name", "description")
+
+
 class UserPublishingChannels(Resource):
     """A resource for handling user publishing channels.
 
@@ -135,13 +138,17 @@ class UserPublishingChannels(Resource):
 
     @auth_required("PUBLISH_ACCESS")
     def get(self) -> dict:
-        """Retrieve all publishing channels in JSON format.
+        """Retrieve all publishing channels: their ids, names and descriptions.
 
         Returns:
-            list: A list of all publishing channels in JSON format.
+            dict: ``{"total_count": int, "items": [...]}``.
         """
-        # Anyone who may publish lists the channels: never their passwords, tokens or keys.
-        return hide_secret_parameters(PublishingChannel.get_all_json(None))
+        # Anyone who may publish lists the channels. A channel's parameters are not only its
+        # passwords and keys: FTP_URL carries the user and password in the URL, the others
+        # mail, MISP and SFTP hosts and user names and proxy URLs. None of it is for them.
+        channels = PublishingChannel.get_all_json(None)
+        items = [{field: channel[field] for field in USER_CHANNEL_FIELDS if field in channel} for channel in channels.get("items") or []]
+        return {"total_count": channels.get("total_count", len(items)), "items": items}
 
 
 class UserTotp(Resource):

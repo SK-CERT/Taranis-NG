@@ -130,7 +130,7 @@ class DataProvider(db.Model):
             user_name (str): User who is updating the Data Provider.
         """
         schema = DataProviderSchema()
-        new = schema.load(keep_stored_api_key(data, cls, data_provider_id))
+        new = schema.load(keep_stored_api_key(data, cls, data_provider_id, destination=("api_url",)))
         old = db.session.get(cls, data_provider_id)
         old.name = new.name
         old.api_type = new.api_type
