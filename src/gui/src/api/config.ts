@@ -351,6 +351,11 @@ export function getAllExternalUsers(filter) {
     return ApiService.get('/config/external-users?search=' + filter.search)
 }
 
+/** Every user of the asset administrator's organizations (an asset group's allowed users), not only external ones. */
+export function getOrganizationMembers(filter) {
+    return ApiService.get('/config/external-users?members=1&search=' + encodeURIComponent(filter.search ?? ''))
+}
+
 export function createNewExternalUser(user) {
     return ApiService.post('/config/external-users', user)
 }

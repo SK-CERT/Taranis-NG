@@ -21,7 +21,8 @@ if TYPE_CHECKING:
 
     Handler = Callable[..., tuple[dict, HTTPStatus]]
 
-ADMIN = SimpleNamespace(id=1, username="admin", name="Admin")
+# Holds what the owner holds, so the permission ceiling (test_permission_ceiling.py) lets it act.
+ADMIN = SimpleNamespace(id=1, username="admin", name="Admin", get_permissions=lambda: ["ASSESS_ACCESS", "CONFIG_API_KEY_CREATE"])
 OWNER = SimpleNamespace(id=3, username="soar", name="SOAR", status="active", get_permissions=lambda: ["ASSESS_ACCESS"])
 PLAINTEXT = "tnk_the-plaintext-key"
 

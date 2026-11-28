@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from shared.schema.notification_template import EmailRecipientSchema, NotificationTemplatePresentationSchema, NotificationTemplateSchema
-from sqlalchemy import or_, orm
+from sqlalchemy import or_, orm, select
 
 if TYPE_CHECKING:
     from model.organization import Organization
@@ -149,24 +149,31 @@ class NotificationTemplate(db.Model):
         return db.session.get(cls, template_id)
 
     @classmethod
-    def get(cls, search: str | None, organization: Organization | None) -> tuple[list[NotificationTemplate], int]:
-        """Retrieve notification templates based on search criteria and organization.
+    def get(cls, search: str | None, organizations: list[Organization] | None) -> tuple[list[NotificationTemplate], int]:
+        """Retrieve notification templates based on search criteria and organizations.
 
         Args:
             search (str): The search string to filter notification templates by name or description.
-            organization (str): The organization to filter notification templates.
+            organizations (list[Organization] | None): Only templates of one of these
+                organizations; None: every template.
 
         Returns:
             tuple: A tuple containing:
-                A list of notification templates matching the search criteria and organization.
-                The count of notification templates matching the search criteria and organization.
+                A list of notification templates matching the search criteria and organizations.
+                The count of notification templates matching the search criteria and organizations.
         """
         query = cls.query
 
-        if organization is not None:
-            query = query.join(
-                NotificationTemplateOrganization,
-                NotificationTemplate.id == NotificationTemplateOrganization.notification_template_id,
+        if organizations is not None:
+            # The join alone, with no condition on the organization, listed every organization's
+            # templates - their recipients' addresses included. A subquery rather than a join, so
+            # a template of two of the organizations is listed once.
+            query = query.filter(
+                NotificationTemplate.id.in_(
+                    select(NotificationTemplateOrganization.notification_template_id).where(
+                        NotificationTemplateOrganization.organization_id.in_([organization.id for organization in organizations]),
+                    ),
+                ),
             )
 
         if search is not None:
@@ -190,12 +197,12 @@ class NotificationTemplate(db.Model):
             search (str): The search query.
 
         Returns:
-            dict: A dictionary containing the total count and a list of template items in JSON format.
+            dict: The total count and the templates of every organization of the user (those
+                update and delete accept), in JSON format.
         """
-        if user.organizations:
-            templates, count = cls.get(search, user.organizations[0])
-        else:
+        if not user.organizations:
             return {"total_count": 0, "items": []}
+        templates, count = cls.get(search, list(user.organizations))
         template_schema = NotificationTemplatePresentationSchema(many=True)
         return {"total_count": count, "items": template_schema.dump(templates)}
 

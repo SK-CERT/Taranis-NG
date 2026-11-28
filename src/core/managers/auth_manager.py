@@ -1114,6 +1114,9 @@ def auth_required(
             )
             # The endpoint asks for its user again (get_user_from_jwt): it is the one just checked.
             g.authenticated_user = user
+            # What this request may do: a restricted API key holds only part of its owner's
+            # permissions, and whatever the request grants others stays within that part.
+            g.active_permissions = set(active_permissions_set or ())
             return fn(*args, **kwargs)
 
         return wrapper

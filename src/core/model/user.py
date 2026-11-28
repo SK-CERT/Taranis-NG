@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from model.user import User
 
 from managers.db_manager import db
@@ -99,6 +101,24 @@ class NewHotkeySchema(HotkeySchema):
             Hotkey: A new Hotkey instance.
         """
         return Hotkey(**data)
+
+
+def is_external_user(user: User, external_permissions: Collection[str]) -> bool:
+    """Whether a user is an external (asset portal) user: no role, only external permissions, no login identity.
+
+    An account a login method provisioned holds no role while it waits for approval (or when the
+    method grants none). It is not the asset portal's: an asset administrator who set its password
+    would sign in as it once an administrator approves it and gives it roles. The portal never
+    links identities (``add_new_external`` drops them).
+
+    Args:
+        user (User): The user.
+        external_permissions (Collection[str]): The permissions an external user may hold.
+
+    Returns:
+        bool: True for an external user.
+    """
+    return not user.roles and not user.auth_identities and all(permission.id in external_permissions for permission in user.permissions)
 
 
 class User(db.Model):
@@ -258,23 +278,25 @@ class User(db.Model):
         return cls.query.order_by(db.asc(User.name)).all()
 
     @classmethod
-    def get(cls, search: str, organization: Organization | None) -> tuple[list[User], int]:
-        """Retrieve users based on search criteria and organization.
+    def get(cls, search: str, organizations: list[Organization] | None) -> tuple[list[User], int]:
+        """Retrieve users based on search criteria and organizations.
 
         Args:
             cls: The class object.
             search (str): The search string to filter users by name or username.
-            organization: The organization to filter users by.
+            organizations: Only users of one of these organizations; None: every user.
 
         Returns:
             tuple: A tuple containing two elements:
-                    A list of users matching the search criteria and organization, ordered by name.
-                    The total count of users matching the search criteria and organization.
+                    A list of users matching the search criteria and organizations, ordered by name.
+                    The total count of users matching the search criteria and organizations.
         """
         query = cls.query
 
-        if organization is not None:
-            query = query.join(UserOrganization, User.id == UserOrganization.user_id)
+        if organizations is not None:
+            # The join used to stop here, with no condition on the organization: every user of
+            # any organization came back.
+            query = query.filter(User.organizations.any(Organization.id.in_([organization.id for organization in organizations])))
 
         if search is not None:
             search_string = f"%{search}%"
@@ -298,23 +320,60 @@ class User(db.Model):
         return {"total_count": count, "items": user_schema.dump(users)}
 
     @classmethod
-    def get_all_external_json(cls, user: User, search: str) -> dict:
-        """Retrieve all external JSON data for a given user.
+    def get_all_external_json(cls, user: User, search: str, external_permissions: Collection[str], *, members: bool = False) -> dict:
+        """List the external users an organization's asset administrator manages.
 
         Args:
             cls (class): The class object.
-            user (User): The user object.
+            user (User): Who asks (holds MY_ASSETS_CONFIG).
             search (str): The search query.
+            external_permissions (Collection[str]): The permissions an external user may hold.
+            members (bool): List every user of the asker's organizations instead, for an asset
+                group's allowed users (read-only: they are not managed here), with their id,
+                username and name only.
 
         Returns:
-            dict: A dictionary containing the total count and items of the retrieved data.
+            dict: The external users (or all members) of the asker's organizations (see :meth:`is_external`).
         """
-        if user.organizations:
-            users, count = cls.get(search, user.organizations[0])
-        else:
+        if not user.organizations:
             return {"total_count": 0, "items": []}
+        users, _count = cls.get(search, list(user.organizations))
+        if members:
+            # The group's user picker shows a username and a name. Administrators are among the
+            # members, and their e-mail, roles, permissions, identity links and MFA state are not
+            # an asset administrator's to read.
+            return {"total_count": len(users), "items": UserSchemaBase(many=True, only=("id", "username", "name")).dump(users)}
+        listed = [one for one in users if is_external_user(one, external_permissions)]
         user_schema = UserPresentationSchema(many=True)
-        return {"total_count": count, "items": user_schema.dump(users)}
+        return {"total_count": len(listed), "items": user_schema.dump(listed)}
+
+    def is_external(self, external_permissions: Collection[str]) -> bool:
+        """Whether the user is an external (asset portal) user: no role, and only external permissions."""
+        return is_external_user(self, external_permissions)
+
+    @classmethod
+    def _managed_external(cls, actor: User, user_id: int, external_permissions: Collection[str]) -> User:
+        """The external user ``actor`` may change or delete through the asset portal.
+
+        The portal used to check only that the two shared an organization, so an asset
+        administrator (MY_ASSETS_CONFIG, nothing more) could rename, set the password of, or delete
+        any account of their organization - an administrator's included, whose roles stayed.
+
+        Raises:
+            ValueError: When the user does not exist, is not external, or belongs to an
+                organization the actor does not.
+        """
+        target = db.session.get(cls, user_id)
+        actor_organizations = {organization.id for organization in actor.organizations}
+        if (
+            target is None
+            or not is_external_user(target, external_permissions)
+            or not target.organizations
+            or not {organization.id for organization in target.organizations} <= actor_organizations
+        ):
+            msg = "Only external users of your own organization can be changed here"
+            raise ValueError(msg)
+        return target
 
     @classmethod
     def _validate_identities(cls, user_id: int | None, identities: list[dict]) -> None:
@@ -584,6 +643,11 @@ class User(db.Model):
         new_user = new_user_schema.load(data)
         new_user.roles = []
         new_user.organizations = user.organizations
+        # Account settings that are not the portal's to give: an identity link would let whoever
+        # holds that identity at a login provider into this account.
+        new_user.auth_identities = []
+        new_user.status = "active"
+        new_user.require_mfa = False
 
         for permission in new_user.permissions[:]:
             if permission.id not in permissions:
@@ -661,19 +725,17 @@ class User(db.Model):
         """
         schema = UpdateUserSchema()
         user_data = schema.load(data)
-        user = db.session.get(cls, user_id)
-
-        if any(org in current_user.organizations for org in user.organizations):
-            user.username = user_data["username"]
-            user.name = user_data["name"]
-            if user_data["password"]:  # update password only when user fill it
-                user.password = generate_password_hash(user_data["password"])
-            user.permissions = []
-            for p in user_data["permissions"]:
-                perm = Permission.find(p.id)
-                if perm and perm.id in assets_permissions:
-                    user.permissions.append(perm)
-            db.session.commit()
+        user = cls._managed_external(current_user, user_id, assets_permissions)
+        user.username = user_data["username"]
+        user.name = user_data["name"]
+        if user_data["password"]:  # update password only when user fill it
+            user.password = generate_password_hash(user_data["password"])
+        user.permissions = []
+        for p in user_data["permissions"]:
+            perm = Permission.find(p.id)
+            if perm and perm.id in assets_permissions:
+                user.permissions.append(perm)
+        db.session.commit()
 
     @classmethod
     def delete(cls, user_id: int) -> None:
@@ -688,18 +750,18 @@ class User(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete_external(cls, user: User, user_id: int) -> None:
+    def delete_external(cls, user: User, user_id: int, external_permissions: Collection[str]) -> None:
         """Delete an external user from the database.
 
         Args:
             cls (class): The class object.
             user (User): The user performing the deletion.
             user_id (int): The ID of the user to be deleted.
+            external_permissions (Collection[str]): The permissions an external user may hold.
         """
-        existing_user = db.session.get(cls, user_id)
-        if any(org in user.organizations for org in existing_user.organizations):
-            db.session.delete(existing_user)
-            db.session.commit()
+        existing_user = cls._managed_external(user, user_id, external_permissions)
+        db.session.delete(existing_user)
+        db.session.commit()
 
     def get_permissions(self) -> list[int]:
         """Return a list of all permissions associated with the user.
